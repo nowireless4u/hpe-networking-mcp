@@ -34,10 +34,7 @@ def register(mcp):
             return f"Error fetching AP details: {e}"
 
         if not resp:
-            return (
-                f"No AP found with serial number '{serial_number}'. "
-                "Verify the serial using central_find_device."
-            )
+            return f"No AP found with serial number '{serial_number}'. Verify the serial using central_find_device."
         return resp
 
     @mcp.tool(annotations=READ_ONLY)
@@ -61,20 +58,14 @@ def register(mcp):
             resp = retry_central_command(
                 central_conn=conn,
                 api_method="GET",
-                api_path=(
-                    f"network-monitoring/v1/switches/{serial_number}"
-                ),
+                api_path=(f"network-monitoring/v1/switches/{serial_number}"),
             )
         except Exception as e:
             return f"Error fetching switch details: {e}"
 
         code = resp.get("code", 0)
         if code == 404:
-            return (
-                f"No switch found with serial number "
-                f"'{serial_number}'. "
-                "Verify the serial using central_find_device."
-            )
+            return f"No switch found with serial number '{serial_number}'. Verify the serial using central_find_device."
         if not (200 <= code < 300):
             return f"Central API error (HTTP {code}): {resp.get('msg')}"
         return resp.get("msg", {})
@@ -106,8 +97,6 @@ def register(mcp):
 
         if not resp:
             return (
-                f"No gateway found with serial number "
-                f"'{serial_number}'. "
-                "Verify the serial using central_find_device."
+                f"No gateway found with serial number '{serial_number}'. Verify the serial using central_find_device."
             )
         return resp
