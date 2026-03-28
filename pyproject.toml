@@ -1,0 +1,85 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hpe-networking-mcp"
+version = "0.1.0"
+description = "Unified MCP server for Juniper Mist, Aruba Central, and HPE GreenLake"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+keywords = ["mcp", "networking", "mist", "aruba", "central", "greenlake", "hpe"]
+authors = [{ name = "Jon Adams" }]
+
+dependencies = [
+    # MCP framework — Central requires code-mode, Mist requires >=3.1.0
+    "fastmcp[code-mode]>=3.1.1",
+    # MCP protocol — GreenLake requires >=1.20.0, Mist requires >=1.9.2
+    "mcp[cli]>=1.20.0",
+    # Juniper Mist API client
+    "mistapi>=0.60.4",
+    # HPE Aruba Central API client
+    "pycentral==2.0a17",
+    # Async HTTP client for GreenLake
+    "httpx>=0.28.0",
+    # Data validation — GreenLake explicit, others via FastMCP
+    "pydantic>=2.12.0",
+    "pydantic-settings>=2.11.0",
+    # Environment/config loading
+    "python-dotenv>=1.2.0",
+    # Structured logging (used by GreenLake, adopted for unified server)
+    "loguru>=0.7.3",
+]
+
+[project.scripts]
+hpe-networking-mcp = "hpe_networking_mcp.__main__:main"
+
+[project.urls]
+Repository = "https://github.com/jonadams/hpe-networking-mcp"
+Issues = "https://github.com/jonadams/hpe-networking-mcp/issues"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatchling.build.targets.wheel]
+packages = ["src/hpe_networking_mcp"]
+
+[tool.hatchling.build.targets.sdist]
+include = ["/src", "/tests", "/README.md", "/pyproject.toml"]
+
+# Development dependencies
+[dependency-groups]
+dev = [
+    "pytest>=8.4.0",
+    "pytest-cov>=7.0.0",
+    "pytest-asyncio>=1.2.0",
+    "responses>=0.25.7",
+    "factory-boy>=3.3.3",
+    "ruff>=0.15.6",
+    "mypy>=1.18.0",
+]
+
+# Ruff configuration
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]
+
+# Mypy configuration
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+
+# Pytest configuration
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+]
+testpaths = ["tests"]

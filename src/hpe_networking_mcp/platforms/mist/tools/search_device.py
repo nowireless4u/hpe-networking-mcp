@@ -1,0 +1,160 @@
+"""
+--------------------------------------------------------------------------------
+-------------------------------- Mist MCP SERVER -------------------------------
+
+    Written by: Thomas Munzer (tmunzer@juniper.net)
+    Github    : https://github.com/tmunzer/mistmcp
+
+    This package is licensed under the MIT License.
+
+--------------------------------------------------------------------------------
+"""
+
+from enum import Enum
+from typing import Annotated
+from uuid import UUID
+
+import mistapi
+from fastmcp.exceptions import ToolError
+from pydantic import Field
+
+from loguru import logger
+from hpe_networking_mcp.platforms.mist.client import get_apisession
+from hpe_networking_mcp.platforms.mist.client import format_response
+from hpe_networking_mcp.platforms.mist.client import handle_network_error, process_response
+from hpe_networking_mcp.platforms.mist._registry import mcp
+
+
+class Device_type(Enum):
+    AP = "ap"
+    SWITCH = "switch"
+    GATEWAY = "gateway"
+
+
+class Status(Enum):
+    CONNECTED = "connected"
+    DISCONNECTED = "disconnected"
+
+
+@mcp.tool(
+    name="mist_search_device",
+    description="""Search a network device in the Organization Inventory. This tool provides a consolidated view of all devices within an organization, even those not assigned to any site. This can be used to quickly search for a device across the whole organization. It allows filtering by various attributes such as serial number, model, MAC address, firmware version, device type, and connection status. This tool is useful for quickly finding specific devices or getting an overview of the organization's inventory without needing to query each site separately.""",
+    tags={"devices"},
+    annotations={
+        "title": "Search device",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "openWorldHint": True,
+        "idempotentHint": True,
+    },
+)
+async def search_device(
+    org_id: Annotated[UUID, Field(description="""Organization ID""")],
+    site_id: Annotated[UUID, Field(description="""Site ID""", default=None)],
+    serial: Annotated[
+        str,
+        Field(
+            description="""Serial number of the device to filter inventory by""",
+            default=None,
+        ),
+    ],
+    model: Annotated[
+        str,
+        Field(
+            description="""Device model. Partial match allowed with wildcard * (e.g. `AP*` will match `AP43` and `AP41`)""",
+            default=None,
+        ),
+    ],
+    mac: Annotated[
+        str,
+        Field(
+            description="""MAC address. Partial match allowed with wildcard * (e.g. `*5b35*` will match `5c5b350e0001` and `5c5b35000301`)""",
+            default=None,
+        ),
+    ],
+    version: Annotated[
+        str,
+        Field(
+            description="""Firmware version of the device to filter inventory by""",
+            default=None,
+        ),
+    ],
+    vc_mac: Annotated[
+        str,
+        Field(
+            description="""MAC address of the virtual chassis (switch stack) to filter inventory by""",
+            default=None,
+        ),
+    ],
+    device_type: Annotated[
+        Device_type,
+        Field(
+            description="""Type of the device to filter inventory by""", default=None
+        ),
+    ],
+    status: Annotated[
+        Status,
+        Field(
+            description="""Connection status of the device to filter inventory by""",
+            default=None,
+        ),
+    ],
+    text: Annotated[
+        str,
+        Field(
+            description="""Text to search for in device attributes (name, serial number, MAC). Use the wildcard `*` for partial matches (e.g. `london` will match `london-1`, `london-2`, `my-london-device`...)""",
+            default=None,
+        ),
+    ],
+    limit: Annotated[
+        int, Field(description="""Max number of results per page""", default=20)
+    ] = 20,
+) -> dict | list | str:
+    """Search a network device in the Organization Inventory. This tool provides a consolidated view of all devices within an organization, even those not assigned to any site. This can be used to quickly search for a device across the whole organization. It allows filtering by various attributes such as serial number, model, MAC address, firmware version, device type, and connection status. This tool is useful for quickly finding specific devices or getting an overview of the organization's inventory without needing to query each site separately."""
+
+    logger.debug("Tool search_device called")
+    logger.debug(
+        "Input Parameters: org_id: %s, site_id: %s, serial: %s, model: %s, mac: %s, version: %s, vc_mac: %s, device_type: %s, status: %s, text: %s, limit: %s",
+        org_id,
+        site_id,
+        serial,
+        model,
+        mac,
+        version,
+        vc_mac,
+        device_type,
+        status,
+        text,
+        limit,
+    )
+
+    apisession, response_format = await get_apisession()
+
+    try:
+        response = mistapi.api.v1.orgs.inventory.searchOrgInventory(
+            apisession,
+            org_id=str(org_id),
+            serial=serial if serial else None,
+            model=model if model else None,
+            type=device_type.value if device_type else None,
+            mac=mac if mac else None,
+            site_id=str(site_id) if site_id else None,
+            vc_mac=vc_mac if vc_mac else None,
+            version=version if version else None,
+            text=text if text else None,
+            status=status.value if status else None,
+            limit=limit,
+        )
+        await process_response(response)
+        if isinstance(response.data, dict):
+            for device in response.data.get("results", []):
+                if device.get("vc_mac"):
+                    device["device_id"] = f"00000000-0000-0000-1000-{device['vc_mac']}"
+                else:
+                    device["device_id"] = f"00000000-0000-0000-1000-{device['mac']}"
+    except ToolError:
+        raise
+    except Exception as _exc:
+        await handle_network_error(_exc)
+
+    return format_response(response, response_format)

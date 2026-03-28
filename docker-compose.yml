@@ -1,0 +1,56 @@
+services:
+  hpe-networking-mcp:
+    build: .
+    ports:
+      - "${MCP_PORT:-8000}:8000"
+    environment:
+      - MCP_PORT=8000
+      - MCP_HOST=0.0.0.0
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - ENABLE_WRITE_TOOLS=${ENABLE_WRITE_TOOLS:-false}
+      - DISABLE_ELICITATION=${DISABLE_ELICITATION:-false}
+    secrets:
+      # Mist (remove lines for platforms you don't use)
+      - mist_api_token
+      - mist_host
+      # Aruba Central (remove lines for platforms you don't use)
+      - central_base_url
+      - central_client_id
+      - central_client_secret
+      # HPE GreenLake (remove lines for platforms you don't use)
+      - greenlake_api_base_url
+      - greenlake_client_id
+      - greenlake_client_secret
+      - greenlake_workspace_id
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; r = httpx.get('http://localhost:8000/mcp', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# Each secret is a separate file — create them from the .example templates:
+#   cp secrets/mist_api_token.example secrets/mist_api_token
+#   # edit with your real credentials
+secrets:
+  # Mist
+  mist_api_token:
+    file: ./secrets/mist_api_token
+  mist_host:
+    file: ./secrets/mist_host
+  # Aruba Central
+  central_base_url:
+    file: ./secrets/central_base_url
+  central_client_id:
+    file: ./secrets/central_client_id
+  central_client_secret:
+    file: ./secrets/central_client_secret
+  # HPE GreenLake
+  greenlake_api_base_url:
+    file: ./secrets/greenlake_api_base_url
+  greenlake_client_id:
+    file: ./secrets/greenlake_client_id
+  greenlake_client_secret:
+    file: ./secrets/greenlake_client_secret
+  greenlake_workspace_id:
+    file: ./secrets/greenlake_workspace_id

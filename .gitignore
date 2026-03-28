@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Type checking / linting
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Testing
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets - NEVER commit real secret files
+secrets.json
+secrets/*
+!secrets/*.example
+.env
+.env.*
+!.env.example
+
+# Docker
+docker-compose.override.yml
+
+# Logs
+*.log
+logs/
+
+# Claude Code project config
+.claude/
+
+# Original MCP servers (reference only, not part of this project)
+original-mcp-servers/
+
+# Internal project docs (not for public repo)
+HANDOFF.md
+TASKS.md
+CLAUDE.md
