@@ -3,9 +3,7 @@ from pycentral.new_monitoring.aps import MonitoringAPs
 from pycentral.new_monitoring.gateways import MonitoringGateways
 
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import (
-    retry_central_command,
-)
+from hpe_networking_mcp.platforms.central.utils import retry_central_command
 
 
 def register(mcp):
