@@ -10,19 +10,22 @@
 --------------------------------------------------------------------------------
 """
 
-import mistapi
-from fastmcp import Context
-from fastmcp.exceptions import ToolError
-from hpe_networking_mcp.platforms.mist.client import get_apisession
-from hpe_networking_mcp.platforms.mist.client import process_response, handle_network_error
-from hpe_networking_mcp.platforms.mist.client import format_response
-from hpe_networking_mcp.platforms.mist._registry import mcp
-from loguru import logger
-
-from pydantic import Field
+from enum import Enum
 from typing import Annotated
 from uuid import UUID
-from enum import Enum
+
+import mistapi
+from fastmcp.exceptions import ToolError
+from loguru import logger
+from pydantic import Field
+
+from hpe_networking_mcp.platforms.mist._registry import mcp
+from hpe_networking_mcp.platforms.mist.client import (
+    format_response,
+    get_apisession,
+    handle_network_error,
+    process_response,
+)
 
 
 class Query_type(Enum):
@@ -40,7 +43,12 @@ class Scope(Enum):
 
 @mcp.tool(
     name="mist_list_site_sle_info",
-    description="""List SLE metadata for a site scope. Use metrics to list available SLE metrics for a given scope, or classifiers to list the classifiers available for a specific metric.""",
+    description=(
+        "List SLE metadata for a site scope. Use metrics to "
+        "list available SLE metrics for a given scope, or "
+        "classifiers to list the classifiers available for "
+        "a specific metric."
+    ),
     tags={"sles"},
     annotations={
         "title": "List site sle info",
@@ -51,34 +59,48 @@ class Scope(Enum):
     },
 )
 async def list_site_sle_info(
-    site_id: Annotated[UUID, Field(description="""Site ID""")],
+    site_id: Annotated[UUID, Field(description="Site ID")],
     query_type: Annotated[
         Query_type,
         Field(
-            description="""Type of metadata to retrieve: metrics returns the list of available SLE metrics for the given scope; classifiers returns the list of classifiers for a specific metric (requires metric parameter)"""
+            description=(
+                "Type of metadata to retrieve: metrics "
+                "returns the list of available SLE metrics "
+                "for the given scope; classifiers returns "
+                "the list of classifiers for a specific "
+                "metric (requires metric parameter)"
+            )
         ),
     ],
     scope: Annotated[
         Scope,
-        Field(
-            description="""Scope of the SLE data: site, ap, client, gateway, or switch"""
-        ),
+        Field(description=("Scope of the SLE data: site, ap, client, gateway, or switch")),
     ],
     scope_id: Annotated[
         str,
         Field(
-            description="""ID of the scoped object: `site_id` if `scope=site`; `device_id` if `scope=ap`, `switch`, or `gateway`; `MAC address` if `scope=client`"""
+            description=(
+                "ID of the scoped object: `site_id` if "
+                "`scope=site`; `device_id` if `scope=ap`, "
+                "`switch`, or `gateway`; `MAC address` if "
+                "`scope=client`"
+            )
         ),
     ],
     metric: Annotated[
         str,
         Field(
-            description="""SLE metric name to retrieve classifiers for. Required when query_type is classifiers. Use query_type=metrics first to discover available metric names""",
+            description=(
+                "SLE metric name to retrieve classifiers "
+                "for. Required when query_type is "
+                "classifiers. Use query_type=metrics first "
+                "to discover available metric names"
+            ),
             default=None,
         ),
     ],
 ) -> dict | list | str:
-    """List SLE metadata for a site scope. Use metrics to list available SLE metrics for a given scope, or classifiers to list the classifiers available for a specific metric."""
+    """List SLE metadata for a site scope."""
 
     logger.debug("Tool list_site_sle_info called")
     logger.debug(
@@ -95,14 +117,13 @@ async def list_site_sle_info(
     try:
         object_type = query_type
 
-        if object_type.value == "classifiers":
-            if not metric:
-                raise ToolError(
-                    {
-                        "status_code": 400,
-                        "message": '`metric` parameter is required when `test` is "classifiers".',
-                    }
-                )
+        if object_type.value == "classifiers" and not metric:
+            raise ToolError(
+                {
+                    "status_code": 400,
+                    "message": ('`metric` parameter is required when `test` is "classifiers".'),
+                }
+            )
 
         match object_type.value:
             case "metrics":
@@ -127,7 +148,12 @@ async def list_site_sle_info(
                 raise ToolError(
                     {
                         "status_code": 400,
-                        "message": f"Invalid object_type: {object_type.value}. Valid values are: {[e.value for e in Query_type]}",
+                        "message": (
+                            f"Invalid object_type: "
+                            f"{object_type.value}. Valid values "
+                            f"are: "
+                            f"{[e.value for e in Query_type]}"
+                        ),
                     }
                 )
 

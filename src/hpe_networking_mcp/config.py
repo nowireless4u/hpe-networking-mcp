@@ -113,7 +113,11 @@ def _load_mist() -> MistSecrets | None:
         logger.info("Mist: disabled (mist_host secret not found)")
         return None
 
-    logger.info("Mist: credentials loaded (token: {}, host: {})", mask_secret(api_token), host)
+    logger.info(
+        "Mist: credentials loaded (token: {}, host: {})",
+        mask_secret(api_token),
+        host,
+    )
     return MistSecrets(api_token=api_token, host=host)
 
 
@@ -136,7 +140,11 @@ def _load_central() -> CentralSecrets | None:
         return None
 
     logger.info("Central: credentials loaded (base_url: {})", base_url)
-    return CentralSecrets(base_url=base_url, client_id=client_id, client_secret=client_secret)
+    return CentralSecrets(
+        base_url=base_url,
+        client_id=client_id,
+        client_secret=client_secret,
+    )
 
 
 def _load_greenlake() -> GreenLakeSecrets | None:
@@ -174,8 +182,8 @@ def load_config() -> ServerConfig:
 
     Secrets are read from files at /run/secrets/<name> (Docker Compose secrets).
     Server settings come from environment variables:
-        MCP_PORT, MCP_HOST, LOG_LEVEL, ENABLE_WRITE_TOOLS, DISABLE_ELICITATION,
-        MCP_TOOL_MODE
+        MCP_PORT, MCP_HOST, LOG_LEVEL, ENABLE_WRITE_TOOLS,
+        DISABLE_ELICITATION, MCP_TOOL_MODE
 
     Returns:
         ServerConfig with validated platform credentials.
@@ -189,12 +197,20 @@ def load_config() -> ServerConfig:
     port = int(os.getenv("MCP_PORT", "8000"))
     host = os.getenv("MCP_HOST", "0.0.0.0")
     log_level = os.getenv("LOG_LEVEL", "INFO").upper()
-    enable_write = os.getenv("ENABLE_WRITE_TOOLS", "false").lower() in ("true", "1", "yes")
-    disable_elicit = os.getenv("DISABLE_ELICITATION", "false").lower() in ("true", "1", "yes")
+    enable_write = os.getenv("ENABLE_WRITE_TOOLS", "false").lower() in (
+        "true",
+        "1",
+        "yes",
+    )
+    disable_elicit = os.getenv("DISABLE_ELICITATION", "false").lower() in (
+        "true",
+        "1",
+        "yes",
+    )
     debug = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
     log_file = os.getenv("LOG_FILE") or None
 
-    # GreenLake tool mode: "static" (10 dedicated tools) or "dynamic" (3 meta-tools)
+    # GreenLake tool mode: "static" or "dynamic"
     greenlake_tool_mode = os.getenv("MCP_TOOL_MODE", "static").lower().strip()
 
     # Load platform credentials from Docker secrets
@@ -218,8 +234,7 @@ def load_config() -> ServerConfig:
 
     if not config.enabled_platforms:
         logger.error(
-            "No platforms have valid credentials. "
-            "Create secret files in {} (see secrets/ directory for examples).",
+            "No platforms have valid credentials. Create secret files in {} (see secrets/ directory for examples).",
             SECRETS_DIR,
         )
         raise SystemExit(1)

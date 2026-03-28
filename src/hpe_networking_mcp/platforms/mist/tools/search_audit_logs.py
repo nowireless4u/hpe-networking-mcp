@@ -10,19 +10,22 @@
 --------------------------------------------------------------------------------
 """
 
-import mistapi
-from fastmcp import Context
-from fastmcp.exceptions import ToolError
-from hpe_networking_mcp.platforms.mist.client import get_apisession
-from hpe_networking_mcp.platforms.mist.client import process_response, handle_network_error
-from hpe_networking_mcp.platforms.mist.client import format_response
-from hpe_networking_mcp.platforms.mist._registry import mcp
-from loguru import logger
-
-from pydantic import Field
-from typing import Annotated
 from enum import Enum
+from typing import Annotated
 from uuid import UUID
+
+import mistapi
+from fastmcp.exceptions import ToolError
+from loguru import logger
+from pydantic import Field
+
+from hpe_networking_mcp.platforms.mist._registry import mcp
+from hpe_networking_mcp.platforms.mist.client import (
+    format_response,
+    get_apisession,
+    handle_network_error,
+    process_response,
+)
 
 
 class Scope(Enum):
@@ -32,7 +35,7 @@ class Scope(Enum):
 
 @mcp.tool(
     name="mist_search_audit_logs",
-    description="""Search audit logs for the current account or an organization""",
+    description=("Search audit logs for the current account or an organization"),
     tags={"events"},
     annotations={
         "title": "Search audit logs",
@@ -46,28 +49,48 @@ async def search_audit_logs(
     scope: Annotated[
         Scope,
         Field(
-            description="""Whether to retrieve audit logs for the account or a specific organization. If `org` is selected, the `org_id` parameter is required"""
+            description=(
+                "Whether to retrieve audit logs for the "
+                "account or a specific organization. If "
+                "`org` is selected, the `org_id` parameter "
+                "is required"
+            )
         ),
     ],
-    org_id: Annotated[UUID, Field(description="""Organization ID""", default=None)],
+    org_id: Annotated[
+        UUID,
+        Field(description="Organization ID", default=None),
+    ],
     start: Annotated[
-        int, Field(description="""Start of time range (epoch seconds)""", default=None)
+        int,
+        Field(
+            description="Start of time range (epoch seconds)",
+            default=None,
+        ),
     ],
     end: Annotated[
-        int, Field(description="""End of time range (epoch seconds)""", default=None)
+        int,
+        Field(
+            description="End of time range (epoch seconds)",
+            default=None,
+        ),
     ],
     message: Annotated[
         str,
         Field(
-            description="""Message to filter audit logs by (partial search)""",
+            description=("Message to filter audit logs by (partial search)"),
             default=None,
         ),
     ],
     limit: Annotated[
-        int, Field(description="""Max number of results per page""", default=20)
+        int,
+        Field(
+            description="Max number of results per page",
+            default=20,
+        ),
     ] = 20,
 ) -> dict | list | str:
-    """Search audit logs for the current account or an organization"""
+    """Search audit logs for the current account or an org."""
 
     logger.debug("Tool search_audit_logs called")
     logger.debug(
@@ -85,14 +108,13 @@ async def search_audit_logs(
     try:
         object_type = scope
 
-        if object_type.value == "org":
-            if not org_id:
-                raise ToolError(
-                    {
-                        "status_code": 400,
-                        "message": '`org_id` parameter is required when `scope` is "org".',
-                    }
-                )
+        if object_type.value == "org" and not org_id:
+            raise ToolError(
+                {
+                    "status_code": 400,
+                    "message": ('`org_id` parameter is required when `scope` is "org".'),
+                }
+            )
 
         match object_type.value:
             case "self":
@@ -100,7 +122,7 @@ async def search_audit_logs(
                     apisession,
                     start=str(start) if start else None,
                     end=str(end) if end else None,
-                    message=str(message) if message else None,
+                    message=(str(message) if message else None),
                     limit=limit,
                 )
                 await process_response(response)
@@ -110,7 +132,7 @@ async def search_audit_logs(
                     org_id=str(org_id),
                     start=str(start) if start else None,
                     end=str(end) if end else None,
-                    message=str(message) if message else None,
+                    message=(str(message) if message else None),
                     limit=limit,
                 )
                 await process_response(response)
@@ -119,7 +141,9 @@ async def search_audit_logs(
                 raise ToolError(
                     {
                         "status_code": 400,
-                        "message": f"Invalid object_type: {object_type.value}. Valid values are: {[e.value for e in Scope]}",
+                        "message": (
+                            f"Invalid object_type: {object_type.value}. Valid values are: {[e.value for e in Scope]}"
+                        ),
                     }
                 )
 

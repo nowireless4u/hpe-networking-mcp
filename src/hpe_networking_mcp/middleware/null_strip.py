@@ -28,4 +28,4 @@ class NullStripMiddleware(Middleware):
                 )
                 new_message = message.model_copy(update={"arguments": filtered})
                 context = context.copy(message=new_message)
-        return await call_next(context)
+        return await call_next(context)  # type: ignore[return-value]

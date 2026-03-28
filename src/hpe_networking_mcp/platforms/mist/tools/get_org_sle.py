@@ -10,23 +10,30 @@
 --------------------------------------------------------------------------------
 """
 
-import mistapi
-from fastmcp import Context
-from fastmcp.exceptions import ToolError
-from hpe_networking_mcp.platforms.mist.client import get_apisession
-from hpe_networking_mcp.platforms.mist.client import process_response, handle_network_error
-from hpe_networking_mcp.platforms.mist.client import format_response
-from hpe_networking_mcp.platforms.mist._registry import mcp
-from loguru import logger
-
-from pydantic import Field
 from typing import Annotated
 from uuid import UUID
+
+import mistapi
+from fastmcp.exceptions import ToolError
+from loguru import logger
+from pydantic import Field
+
+from hpe_networking_mcp.platforms.mist._registry import mcp
+from hpe_networking_mcp.platforms.mist.client import (
+    format_response,
+    get_apisession,
+    handle_network_error,
+    process_response,
+)
 
 
 @mcp.tool(
     name="mist_get_org_sle",
-    description="""Get Org SLEs (all/worst sites, Mx Edges, ...). Use the `mist_get_insight_metrics` tool to get the list of available SLE metrics""",
+    description=(
+        "Get Org SLEs (all/worst sites, Mx Edges, ...). "
+        "Use the `mist_get_insight_metrics` tool to get the "
+        "list of available SLE metrics"
+    ),
     tags={"sles"},
     annotations={
         "title": "Get org sle",
@@ -37,31 +44,50 @@ from uuid import UUID
     },
 )
 async def get_org_sle(
-    org_id: Annotated[UUID, Field(description="""Organization ID""")],
+    org_id: Annotated[UUID, Field(description="Organization ID")],
     metric: Annotated[
         str,
         Field(
-            description="""Metric to look at. Use the `mist_get_insight_metrics` tool to get the list of available SLE metrics"""
+            description=(
+                "Metric to look at. Use the `mist_get_insight_metrics` tool to get the list of available SLE metrics"
+            )
         ),
     ],
     sle: Annotated[
         str,
         Field(
-            description="""Type of SLE data to retrieve for the organization sites. Use the `mist_get_insight_metrics` tool to get the list of available SLE metrics""",
+            description=(
+                "Type of SLE data to retrieve for the "
+                "organization sites. Use the "
+                "`mist_get_insight_metrics` tool to get the "
+                "list of available SLE metrics"
+            ),
             default=None,
         ),
     ],
     start: Annotated[
-        int, Field(description="""Start of time range (epoch seconds)""", default=None)
+        int,
+        Field(
+            description="Start of time range (epoch seconds)",
+            default=None,
+        ),
     ],
     end: Annotated[
-        int, Field(description="""End of time range (epoch seconds)""", default=None)
+        int,
+        Field(
+            description="End of time range (epoch seconds)",
+            default=None,
+        ),
     ],
     limit: Annotated[
-        int, Field(description="""Max number of results per page""", default=20)
+        int,
+        Field(
+            description="Max number of results per page",
+            default=20,
+        ),
     ] = 20,
 ) -> dict | list | str:
-    """Get Org SLEs (all/worst sites, Mx Edges, ...). Use the `mist_get_insight_metrics` tool to get the list of available SLE metrics"""
+    """Get Org SLEs (all/worst sites, Mx Edges, ...)."""
 
     logger.debug("Tool get_org_sle called")
     logger.debug(

@@ -10,19 +10,22 @@
 --------------------------------------------------------------------------------
 """
 
-import mistapi
-from fastmcp import Context
-from fastmcp.exceptions import ToolError
-from hpe_networking_mcp.platforms.mist.client import get_apisession
-from hpe_networking_mcp.platforms.mist.client import process_response, handle_network_error
-from hpe_networking_mcp.platforms.mist.client import format_response
-from hpe_networking_mcp.platforms.mist._registry import mcp
-from loguru import logger
-
-from pydantic import Field
+from enum import Enum
 from typing import Annotated
 from uuid import UUID
-from enum import Enum
+
+import mistapi
+from fastmcp.exceptions import ToolError
+from loguru import logger
+from pydantic import Field
+
+from hpe_networking_mcp.platforms.mist._registry import mcp
+from hpe_networking_mcp.platforms.mist.client import (
+    format_response,
+    get_apisession,
+    handle_network_error,
+    process_response,
+)
 
 
 class Scope(Enum):
@@ -53,7 +56,13 @@ class Object_type(Enum):
 
 @mcp.tool(
     name="mist_get_site_sle",
-    description="""Provides Information about the Service Level Expectations (SLEs) for a given site. The SLEs are derived from the insight metrics and can be used to monitor the network user experience of the site against the defined SLEs""",
+    description=(
+        "Provides Information about the Service Level "
+        "Expectations (SLEs) for a given site. The SLEs are "
+        "derived from the insight metrics and can be used to "
+        "monitor the network user experience of the site "
+        "against the defined SLEs"
+    ),
     tags={"sles"},
     annotations={
         "title": "Get site sle",
@@ -64,46 +73,67 @@ class Object_type(Enum):
     },
 )
 async def get_site_sle(
-    site_id: Annotated[UUID, Field(description="""Site ID""")],
+    site_id: Annotated[UUID, Field(description="Site ID")],
     scope: Annotated[
         Scope,
         Field(
-            description="""Scope of the SLEs to retrieve. Can be 'client', 'ap', 'gateway', 'mxedge', 'switch' or 'site'"""
+            description=(
+                "Scope of the SLEs to retrieve. Can be 'client', 'ap', 'gateway', 'mxedge', 'switch' or 'site'"
+            )
         ),
     ],
-    scope_id: Annotated[str, Field(description="""ID of the Mist Scope""")],
+    scope_id: Annotated[str, Field(description="ID of the Mist Scope")],
     metric: Annotated[
         str,
         Field(
-            description="""Name of the metric to retrieve SLEs for. Use the tool`mist_get_constants` with `object_type=insight_metrics` to see available metrics"""
+            description=(
+                "Name of the metric to retrieve SLEs for. "
+                "Use the tool `mist_get_constants` with "
+                "`object_type=insight_metrics` to see "
+                "available metrics"
+            )
         ),
     ],
     object_type: Annotated[
-        Object_type, Field(description="""Type of object to retrieve metrics for""")
+        Object_type,
+        Field(description=("Type of object to retrieve metrics for")),
     ],
     start: Annotated[
-        int, Field(description="""Start of time range (epoch seconds)""", default=None)
+        int,
+        Field(
+            description="Start of time range (epoch seconds)",
+            default=None,
+        ),
     ],
     end: Annotated[
-        int, Field(description="""End of time range (epoch seconds)""", default=None)
+        int,
+        Field(
+            description="End of time range (epoch seconds)",
+            default=None,
+        ),
     ],
     classifier: Annotated[
         str,
         Field(
-            description="""Classifier name. Required when object_type is 'classifier_summary_trend'""",
+            description=("Classifier name. Required when object_type is 'classifier_summary_trend'"),
             default=None,
         ),
     ],
     duration: Annotated[
         str,
-        Field(description="""Time range duration (e.g. 1d, 1h, 10m)""", default=None),
+        Field(
+            description="Time range duration (e.g. 1d, 1h, 10m)",
+            default=None,
+        ),
     ],
 ) -> dict | list | str:
-    """Provides Information about the Service Level Expectations (SLEs) for a given site. The SLEs are derived from the insight metrics and can be used to monitor the network user experience of the site against the defined SLEs"""
+    """Provides Information about the SLEs for a given site."""
 
     logger.debug("Tool get_site_sle called")
     logger.debug(
-        "Input Parameters: site_id: %s, scope: %s, scope_id: %s, metric: %s, object_type: %s, start: %s, end: %s, classifier: %s, duration: %s",
+        "Input Parameters: site_id: %s, scope: %s, "
+        "scope_id: %s, metric: %s, object_type: %s, "
+        "start: %s, end: %s, classifier: %s, duration: %s",
         site_id,
         scope,
         scope_id,
@@ -118,14 +148,13 @@ async def get_site_sle(
     apisession, response_format = await get_apisession()
 
     try:
-        if object_type.value == "classifier_summary_trend":
-            if not classifier:
-                raise ToolError(
-                    {
-                        "status_code": 400,
-                        "message": '`classifier` parameter is required when `test` is "classifier_summary_trend".',
-                    }
-                )
+        if object_type.value == "classifier_summary_trend" and not classifier:
+            raise ToolError(
+                {
+                    "status_code": 400,
+                    "message": ('`classifier` parameter is required when `test` is "classifier_summary_trend".'),
+                }
+            )
 
         match object_type.value:
             case "summary":
@@ -137,7 +166,7 @@ async def get_site_sle(
                     metric=metric,
                     start=str(start) if start else None,
                     end=str(end) if end else None,
-                    duration=duration if duration else None,
+                    duration=(duration if duration else None),
                 )
                 await process_response(response)
             case "impact_summary":
@@ -149,7 +178,7 @@ async def get_site_sle(
                     metric=metric,
                     start=str(start) if start else None,
                     end=str(end) if end else None,
-                    duration=duration if duration else None,
+                    duration=(duration if duration else None),
                 )
                 await process_response(response)
             case "summary_trend":
@@ -161,7 +190,7 @@ async def get_site_sle(
                     metric=metric,
                     start=str(start) if start else None,
                     end=str(end) if end else None,
-                    duration=duration if duration else None,
+                    duration=(duration if duration else None),
                 )
                 await process_response(response)
             case "impacted_applications":
@@ -173,7 +202,7 @@ async def get_site_sle(
                     metric=metric,
                     start=str(start) if start else None,
                     end=str(end) if end else None,
-                    duration=duration if duration else None,
+                    duration=(duration if duration else None),
                 )
                 await process_response(response)
             case "impacted_aps":
@@ -185,7 +214,7 @@ async def get_site_sle(
                     metric=metric,
                     start=str(start) if start else None,
                     end=str(end) if end else None,
-                    duration=duration if duration else None,
+                    duration=(duration if duration else None),
                 )
                 await process_response(response)
             case "impacted_gateways":
@@ -197,7 +226,7 @@ async def get_site_sle(
                     metric=metric,
                     start=str(start) if start else None,
                     end=str(end) if end else None,
-                    duration=duration if duration else None,
+                    duration=(duration if duration else None),
                 )
                 await process_response(response)
             case "impacted_interfaces":
@@ -209,7 +238,7 @@ async def get_site_sle(
                     metric=metric,
                     start=str(start) if start else None,
                     end=str(end) if end else None,
-                    duration=duration if duration else None,
+                    duration=(duration if duration else None),
                 )
                 await process_response(response)
             case "impacted_switches":
@@ -221,7 +250,7 @@ async def get_site_sle(
                     metric=metric,
                     start=str(start) if start else None,
                     end=str(end) if end else None,
-                    duration=duration if duration else None,
+                    duration=(duration if duration else None),
                 )
                 await process_response(response)
             case "impacted_wireless_clients":
@@ -233,7 +262,7 @@ async def get_site_sle(
                     metric=metric,
                     start=str(start) if start else None,
                     end=str(end) if end else None,
-                    duration=duration if duration else None,
+                    duration=(duration if duration else None),
                 )
                 await process_response(response)
             case "impacted_wired_clients":
@@ -245,7 +274,7 @@ async def get_site_sle(
                     metric=metric,
                     start=str(start) if start else None,
                     end=str(end) if end else None,
-                    duration=duration if duration else None,
+                    duration=(duration if duration else None),
                 )
                 await process_response(response)
             case "impacted_chassis":
@@ -257,7 +286,7 @@ async def get_site_sle(
                     metric=metric,
                     start=str(start) if start else None,
                     end=str(end) if end else None,
-                    duration=duration if duration else None,
+                    duration=(duration if duration else None),
                 )
                 await process_response(response)
             case "histogram":
@@ -269,7 +298,7 @@ async def get_site_sle(
                     metric=metric,
                     start=str(start) if start else None,
                     end=str(end) if end else None,
-                    duration=duration if duration else None,
+                    duration=(duration if duration else None),
                 )
                 await process_response(response)
             case "classifier_summary_trend":
@@ -282,7 +311,7 @@ async def get_site_sle(
                     classifier=classifier,
                     start=str(start) if start else None,
                     end=str(end) if end else None,
-                    duration=duration if duration else None,
+                    duration=(duration if duration else None),
                 )
                 await process_response(response)
             case "threshold":
@@ -299,7 +328,12 @@ async def get_site_sle(
                 raise ToolError(
                     {
                         "status_code": 400,
-                        "message": f"Invalid object_type: {object_type.value}. Valid values are: {[e.value for e in Object_type]}",
+                        "message": (
+                            f"Invalid object_type: "
+                            f"{object_type.value}. Valid values "
+                            f"are: "
+                            f"{[e.value for e in Object_type]}"
+                        ),
                     }
                 )
 

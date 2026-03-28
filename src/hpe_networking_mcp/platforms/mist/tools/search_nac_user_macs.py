@@ -10,23 +10,31 @@
 --------------------------------------------------------------------------------
 """
 
-import mistapi
-from fastmcp import Context
-from fastmcp.exceptions import ToolError
-from hpe_networking_mcp.platforms.mist.client import get_apisession
-from hpe_networking_mcp.platforms.mist.client import process_response, handle_network_error
-from hpe_networking_mcp.platforms.mist.client import format_response
-from hpe_networking_mcp.platforms.mist._registry import mcp
-from loguru import logger
-
-from pydantic import Field
-from typing import Annotated, List
+from typing import Annotated
 from uuid import UUID
+
+import mistapi
+from fastmcp.exceptions import ToolError
+from loguru import logger
+from pydantic import Field
+
+from hpe_networking_mcp.platforms.mist._registry import mcp
+from hpe_networking_mcp.platforms.mist.client import (
+    format_response,
+    get_apisession,
+    handle_network_error,
+    process_response,
+)
 
 
 @mcp.tool(
     name="mist_search_nac_user_macs",
-    description="""Search for NAC user MAC addresses in an organization or site, with optional filters for associated SSID and time range. User MACs are used to perform MAC Authentication with Juniper Mist NAC.""",
+    description=(
+        "Search for NAC user MAC addresses in an "
+        "organization or site, with optional filters for "
+        "associated SSID and time range. User MACs are used "
+        "to perform MAC Authentication with Juniper Mist NAC."
+    ),
     tags={"orgs_nac"},
     annotations={
         "title": "Search nac user macs",
@@ -37,33 +45,54 @@ from uuid import UUID
     },
 )
 async def search_nac_user_macs(
-    org_id: Annotated[UUID, Field(description="""Organization ID""")],
+    org_id: Annotated[UUID, Field(description="Organization ID")],
     usermac_id: Annotated[
         str,
         Field(
-            description="""ID of the User MAC address to return details for. If specified, other filters are ignored and details for the specified User MAC address is returned if it exists""",
+            description=(
+                "ID of the User MAC address to return "
+                "details for. If specified, other filters "
+                "are ignored and details for the specified "
+                "User MAC address is returned if it exists"
+            ),
             default=None,
         ),
     ],
     mac: Annotated[
         str,
         Field(
-            description="""Partial / full Client MAC Address. Use `prefix*` for prefix search or `*substring*` for contains search (e.g. `aabbcc*` and `*bbcc*` match `aabbccddeeff`). Suffix-only wildcards (e.g. `*bccddeeff`) are not supported""",
+            description=(
+                "Partial / full Client MAC Address. Use "
+                "`prefix*` for prefix search or "
+                "`*substring*` for contains search (e.g. "
+                "`aabbcc*` and `*bbcc*` match "
+                "`aabbccddeeff`). Suffix-only wildcards "
+                "(e.g. `*bccddeeff`) are not supported"
+            ),
             default=None,
         ),
     ],
     labels: Annotated[
-        List[str],
+        list[str],
         Field(
-            description="""Comma separated list of labels to filter NAC endpoints by. A NAC endpoint must have all the specified labels to be included in the results""",
+            description=(
+                "Comma separated list of labels to filter "
+                "NAC endpoints by. A NAC endpoint must have "
+                "all the specified labels to be included "
+                "in the results"
+            ),
             default=None,
         ),
     ],
     limit: Annotated[
-        int, Field(description="""Max number of results per page""", default=20)
+        int,
+        Field(
+            description="Max number of results per page",
+            default=20,
+        ),
     ] = 20,
 ) -> dict | list | str:
-    """Search for NAC user MAC addresses in an organization or site, with optional filters for associated SSID and time range. User MACs are used to perform MAC Authentication with Juniper Mist NAC."""
+    """Search for NAC user MAC addresses in an org."""
 
     logger.debug("Tool search_nac_user_macs called")
     logger.debug(
@@ -80,7 +109,9 @@ async def search_nac_user_macs(
     try:
         if usermac_id:
             response = mistapi.api.v1.orgs.usermacs.getOrgUserMac(
-                apisession, org_id=str(org_id), usermac_id=str(usermac_id)
+                apisession,
+                org_id=str(org_id),
+                usermac_id=str(usermac_id),
             )
             await process_response(response)
         else:

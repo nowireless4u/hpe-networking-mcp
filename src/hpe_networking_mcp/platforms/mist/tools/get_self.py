@@ -10,18 +10,21 @@
 --------------------------------------------------------------------------------
 """
 
-import mistapi
-from fastmcp import Context
-from fastmcp.exceptions import ToolError
-from hpe_networking_mcp.platforms.mist.client import get_apisession
-from hpe_networking_mcp.platforms.mist.client import process_response, handle_network_error
-from hpe_networking_mcp.platforms.mist.client import format_response
-from hpe_networking_mcp.platforms.mist._registry import mcp
-from loguru import logger
-
-from pydantic import Field
-from typing import Annotated
 from enum import Enum
+from typing import Annotated
+
+import mistapi
+from fastmcp.exceptions import ToolError
+from loguru import logger
+from pydantic import Field
+
+from hpe_networking_mcp.platforms.mist._registry import mcp
+from hpe_networking_mcp.platforms.mist.client import (
+    format_response,
+    get_apisession,
+    handle_network_error,
+    process_response,
+)
 
 
 class Action_type(Enum):
@@ -32,11 +35,25 @@ class Action_type(Enum):
 
 @mcp.tool(
     name="mist_get_self",
-    description="""This tool can be used to retrieve information about the current user and account
-The information provided will depend on the `action_type` attribute:
-* `account_info`: will return information about the account including account ID, account name, and the list of orgs (and their respective `org_id`) the account has access to, with the permissions level (read or write) for each org
-* `api_usage`: will return information about the API usage of the account including the number of API calls made in the current hour cycle and the API call limit for the account
-* `login_failures`: will return information about the recent login failures for the account including the timestamp of the failure, the source IP address, and the reason for the failure""",
+    description=(
+        "This tool can be used to retrieve information about "
+        "the current user and account.\n"
+        "The information provided will depend on the "
+        "`action_type` attribute:\n"
+        "* `account_info`: will return information about the "
+        "account including account ID, account name, and the "
+        "list of orgs (and their respective `org_id`) the "
+        "account has access to, with the permissions level "
+        "(read or write) for each org\n"
+        "* `api_usage`: will return information about the API "
+        "usage of the account including the number of API "
+        "calls made in the current hour cycle and the API "
+        "call limit for the account\n"
+        "* `login_failures`: will return information about the "
+        "recent login failures for the account including the "
+        "timestamp of the failure, the source IP address, "
+        "and the reason for the failure"
+    ),
     tags={"self_account"},
     annotations={
         "title": "Get self",
@@ -50,15 +67,16 @@ async def get_self(
     action_type: Annotated[
         Action_type,
         Field(
-            description="""Type of information to retrieve about the current user and account. Possible values are `account_info`, `api_usage`, and `login_failures`"""
+            description=(
+                "Type of information to retrieve about the "
+                "current user and account. Possible values are "
+                "`account_info`, `api_usage`, and "
+                "`login_failures`"
+            )
         ),
     ],
 ) -> dict | list | str:
-    """This tool can be used to retrieve information about the current user and account
-    The information provided will depend on the `action_type` attribute:
-    * `account_info`: will return information about the account including account ID, account name, and the list of orgs (and their respective `org_id`) the account has access to, with the permissions level (read or write) for each org
-    * `api_usage`: will return information about the API usage of the account including the number of API calls made in the current hour cycle and the API call limit for the account
-    * `login_failures`: will return information about the recent login failures for the account including the timestamp of the failure, the source IP address, and the reason for the failure"""
+    """Retrieve information about the current user and account."""
 
     logger.debug("Tool get_self called")
     logger.debug("Input Parameters: action_type: %s", action_type)
@@ -75,16 +93,19 @@ async def get_self(
                 response = mistapi.api.v1.self.usage.getSelfApiUsage(apisession)
                 await process_response(response)
             case "login_failures":
-                response = mistapi.api.v1.self.login_failures.getSelfLoginFailures(
-                    apisession
-                )
+                response = mistapi.api.v1.self.login_failures.getSelfLoginFailures(apisession)
                 await process_response(response)
 
             case _:
                 raise ToolError(
                     {
                         "status_code": 400,
-                        "message": f"Invalid object_type: {object_type.value}. Valid values are: {[e.value for e in Action_type]}",
+                        "message": (
+                            f"Invalid object_type: "
+                            f"{object_type.value}. Valid values "
+                            f"are: "
+                            f"{[e.value for e in Action_type]}"
+                        ),
                     }
                 )
 

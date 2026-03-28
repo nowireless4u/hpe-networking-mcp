@@ -1,7 +1,8 @@
 # (c) Copyright 2025 Hewlett Packard Enterprise Development LP
 """GreenLake User tools.
 
-Ported from ``src/users/tools/implementations/get_users_identity_v1_users_get.py``
+Ported from ``src/users/tools/implementations/
+get_users_identity_v1_users_get.py``
 and ``get_user_detailed_identity_v1_users_id_get.py``.
 
 API base path: ``/identity/v1/users``
@@ -35,15 +36,17 @@ def _coerce_int(value: Any, name: str) -> int:
 # greenlake_get_users
 # ---------------------------------------------------------------------------
 
+
 @mcp.tool(
     name="greenlake_get_users",
     description=(
         "Retrieve a list of users in an HPE GreenLake workspace.\n\n"
-        "Supports OData-style filtering and pagination. All users are returned "
-        "when no filters are provided.\n\n"
-        "Filterable properties: id, username, userStatus, createdAt, updatedAt, lastLogin.\n"
-        "userStatus values (case-sensitive): UNVERIFIED, VERIFIED, BLOCKED, "
-        "DELETE_IN_PROGRESS, DELETED, SUSPENDED.\n\n"
+        "Supports OData-style filtering and pagination. All users "
+        "are returned when no filters are provided.\n\n"
+        "Filterable properties: id, username, userStatus, "
+        "createdAt, updatedAt, lastLogin.\n"
+        "userStatus values (case-sensitive): UNVERIFIED, VERIFIED, "
+        "BLOCKED, DELETE_IN_PROGRESS, DELETED, SUSPENDED.\n\n"
         "Rate limit: 300 requests/min per workspace."
     ),
     tags={"greenlake", "users"},
@@ -65,8 +68,10 @@ async def greenlake_get_users(
                 "OData filter expression. Examples:\n"
                 "- ``username eq 'user@example.com'``\n"
                 "- ``userStatus ne 'UNVERIFIED'``\n"
-                "- ``createdAt gt '2020-09-21T14:19:09.769747'``\n"
-                "All filter values must be enclosed in single quotes."
+                "- ``createdAt gt "
+                "'2020-09-21T14:19:09.769747'``\n"
+                "All filter values must be enclosed in "
+                "single quotes."
             ),
         ),
     ] = None,
@@ -74,14 +79,14 @@ async def greenlake_get_users(
         int | str | None,
         Field(
             default=300,
-            description="Maximum number of entries per page (max 600, default 300).",
+            description=("Maximum number of entries per page (max 600, default 300)."),
         ),
     ] = 300,
     offset: Annotated[
         int | str | None,
         Field(
             default=None,
-            description="Pagination offset (number of pages to skip).",
+            description=("Pagination offset (number of pages to skip)."),
         ),
     ] = None,
 ) -> dict[str, Any]:
@@ -108,9 +113,10 @@ async def greenlake_get_users(
 # greenlake_get_user_details
 # ---------------------------------------------------------------------------
 
+
 @mcp.tool(
     name="greenlake_get_user_details",
-    description="Retrieve a single HPE GreenLake user by user ID.",
+    description=("Retrieve a single HPE GreenLake user by user ID."),
     tags={"greenlake", "users"},
     annotations={
         "title": "Get GreenLake user details",
@@ -125,7 +131,7 @@ async def greenlake_get_user_details(
     id: Annotated[
         str,
         Field(
-            description="The unique identifier of the user. Example: 7600415a-8876-5722-9f3c-b0fd11112283",
+            description=("The unique identifier of the user. Example: 7600415a-8876-5722-9f3c-b0fd11112283"),
         ),
     ],
 ) -> dict[str, Any]:

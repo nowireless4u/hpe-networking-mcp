@@ -1,5 +1,6 @@
 """Mist API client — session management, response processing, and formatting."""
 
+import contextlib
 import json
 
 import mistapi
@@ -29,9 +30,16 @@ async def get_apisession() -> tuple[mistapi.APISession, str]:
     session = ctx.lifespan_context.get("mist_session")
     if session is None:
         raise ToolError(
-            {"status_code": 503, "message": "Mist API session not available. Check your Mist credentials."}
+            {
+                "status_code": 503,
+                "message": ("Mist API session not available. Check your Mist credentials."),
+            }
         )
-    logger.debug("Mist API request — host: {}, token: {}", session._cloud_uri, mask_secret(session._apitoken or ""))
+    logger.debug(
+        "Mist API request — host: {}, token: {}",
+        session._cloud_uri,
+        mask_secret(session._apitoken or ""),
+    )
     return session, "json"
 
 
@@ -39,7 +47,10 @@ async def process_response(response: APIResponse) -> None:
     """Validate an API response and raise ToolError on failure."""
     if response.status_code is None:
         raise ToolError(
-            {"status_code": 503, "message": "No response received from Mist API. Check network connectivity."}
+            {
+                "status_code": 503,
+                "message": ("No response received from Mist API. Check network connectivity."),
+            }
         )
     if response.status_code == 200:
         return
@@ -49,9 +60,12 @@ async def process_response(response: APIResponse) -> None:
         raise ToolError(
             {
                 "status_code": 403,
-                "message": "Permission Denied. This usually means you are using a tool with an invalid id "
-                "(e.g. org_id, site_id). Make sure to retrieve them from another tool "
-                "(e.g. use mist_get_self to retrieve the correct org_id).",
+                "message": (
+                    "Permission Denied. This usually means you are using "
+                    "a tool with an invalid id (e.g. org_id, site_id). "
+                    "Make sure to retrieve them from another tool "
+                    "(e.g. use mist_get_self to retrieve the correct org_id)."
+                ),
             }
         )
     api_error: dict = {"status_code": response.status_code, "message": ""}
@@ -68,7 +82,10 @@ async def process_response(response: APIResponse) -> None:
 async def handle_network_error(exc: Exception) -> None:
     """Convert network-level exceptions to clean ToolError messages."""
     raise ToolError(
-        {"status_code": 503, "message": f"API call failed: {type(exc).__name__}: {exc}"}
+        {
+            "status_code": 503,
+            "message": f"API call failed: {type(exc).__name__}: {exc}",
+        }
     ) from exc
 
 
@@ -76,15 +93,11 @@ def _get_total(response: APIResponse) -> int | None:
     """Extract total entries count from an API response."""
     total = None
     if response.headers and "X-Page-Total" in response.headers:
-        try:
+        with contextlib.suppress(ValueError):
             total = int(response.headers["X-Page-Total"])
-        except ValueError:
-            pass
     elif isinstance(response.data, dict) and "total" in response.data:
-        try:
+        with contextlib.suppress(ValueError, TypeError):
             total = int(response.data["total"])
-        except (ValueError, TypeError):
-            pass
     return total
 
 
@@ -95,7 +108,11 @@ def format_response_data(response: APIResponse) -> dict | list:
 
     if response.next:
         if isinstance(data, list):
-            data = {"results": data, "next": response.next, "has_more": True}
+            data = {
+                "results": data,
+                "next": response.next,
+                "has_more": True,
+            }
             if total is not None:
                 data["total"] = int(total)
         elif isinstance(data, dict):
@@ -112,12 +129,12 @@ def format_response_data(response: APIResponse) -> dict | list:
     return data
 
 
-def format_response(response: APIResponse | dict | list, response_format: str = "json") -> dict | list | str:
+def format_response(
+    response: APIResponse | dict | list,
+    response_format: str = "json",
+) -> dict | list | str:
     """Format an API response with pagination metadata and optional string serialization."""
-    if isinstance(response, APIResponse):
-        data = format_response_data(response)
-    else:
-        data = response
+    data = format_response_data(response) if isinstance(response, APIResponse) else response
     if response_format == "string":
         return json.dumps(data)
     return data

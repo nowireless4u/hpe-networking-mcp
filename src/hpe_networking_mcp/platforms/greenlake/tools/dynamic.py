@@ -10,6 +10,7 @@ Consolidated from the 5 original per-service dynamic tool implementations
 
 from __future__ import annotations
 
+import contextlib
 import copy
 from typing import Annotated, Any
 
@@ -21,7 +22,7 @@ from hpe_networking_mcp.platforms.greenlake._registry import mcp
 from hpe_networking_mcp.platforms.greenlake.client import GreenLakeHttpClient
 
 # ---------------------------------------------------------------------------
-# Unified endpoint registry — compiled from all 5 original services
+# Unified endpoint registry -- compiled from all 5 original services
 # ---------------------------------------------------------------------------
 
 # The list used by greenlake_list_endpoints (sorted order)
@@ -47,14 +48,14 @@ ALL_ENDPOINTS: list[str] = sorted(
 
 # Full schemas used by greenlake_get_endpoint_schema (rich descriptions)
 ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
-    # -----------------------------------------------------------------------
+    # -------------------------------------------------------------------
     # Audit Logs
-    # -----------------------------------------------------------------------
+    # -------------------------------------------------------------------
     "GET:/audit-log/v1/logs": {
         "path": "/audit-log/v1/logs",
         "method": "GET",
         "summary": "getauditlogs",
-        "description": "Retrieve HPE GreenLake audit logs with optional filtering and pagination.",
+        "description": ("Retrieve HPE GreenLake audit logs with optional filtering and pagination."),
         "operationId": "getauditlogs",
         "tags": ["audit-logs"],
         "deprecated": False,
@@ -63,11 +64,16 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
                 "name": "filter",
                 "type": "str",
                 "description": (
-                    "OData filter expression. Example: category eq 'User Management' "
-                    "and contains(description, 'logged out').\n\n"
-                    "**Important**: All filter values must be enclosed in single quotes.\n\n"
-                    "Filterable properties: additionalInfo, application, category, createdAt, "
-                    "description, generation, hasDetails, id, region, type, updatedAt, user, workspace"
+                    "OData filter expression. Example: "
+                    "category eq 'User Management' "
+                    "and contains(description, 'logged out')."
+                    "\n\n"
+                    "**Important**: All filter values must be "
+                    "enclosed in single quotes.\n\n"
+                    "Filterable properties: additionalInfo, "
+                    "application, category, createdAt, "
+                    "description, generation, hasDetails, id, "
+                    "region, type, updatedAt, user, workspace"
                 ),
                 "required": False,
                 "location": "query",
@@ -77,9 +83,11 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
                 "name": "select",
                 "type": "str",
                 "description": (
-                    "Comma-separated list of properties to include in the response. "
-                    "Supported: additionalInfo, createdAt, category, hasDetails, "
-                    "workspace/workspaceName, description, user/username."
+                    "Comma-separated list of properties to "
+                    "include in the response. Supported: "
+                    "additionalInfo, createdAt, category, "
+                    "hasDetails, workspace/workspaceName, "
+                    "description, user/username."
                 ),
                 "required": False,
                 "location": "query",
@@ -88,7 +96,7 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
             {
                 "name": "all",
                 "type": "str",
-                "description": "Free-text search across all audit log properties.",
+                "description": ("Free-text search across all audit log properties."),
                 "required": False,
                 "location": "query",
                 "schema": {"type": "string"},
@@ -96,7 +104,7 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
             {
                 "name": "limit",
                 "type": "int",
-                "description": "Maximum number of items to return (max 2000).",
+                "description": ("Maximum number of items to return (max 2000)."),
                 "required": False,
                 "location": "query",
                 "default": 50,
@@ -111,13 +119,18 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
                 "schema": {"type": "integer"},
             },
         ],
-        "responses": {"200": {"description": "Successful response", "content_type": "application/json"}},
+        "responses": {
+            "200": {
+                "description": "Successful response",
+                "content_type": "application/json",
+            }
+        },
     },
     "GET:/audit-log/v1/logs/{id}/detail": {
         "path": "/audit-log/v1/logs/{id}/detail",
         "method": "GET",
         "summary": "getauditlogdetails",
-        "description": "Get additional detail for an HPE GreenLake audit log entry.",
+        "description": ("Get additional detail for an HPE GreenLake audit log entry."),
         "operationId": "getauditlogdetails",
         "tags": ["audit-logs"],
         "deprecated": False,
@@ -125,24 +138,27 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
             {
                 "name": "id",
                 "type": "str",
-                "description": (
-                    "ID of the audit log record whose hasDetails value is true."
-                ),
+                "description": ("ID of the audit log record whose hasDetails value is true."),
                 "required": True,
                 "location": "path",
                 "schema": {"type": "string"},
             },
         ],
-        "responses": {"200": {"description": "Successful response", "content_type": "application/json"}},
+        "responses": {
+            "200": {
+                "description": "Successful response",
+                "content_type": "application/json",
+            }
+        },
     },
-    # -----------------------------------------------------------------------
+    # -------------------------------------------------------------------
     # Devices
-    # -----------------------------------------------------------------------
+    # -------------------------------------------------------------------
     "GET:/devices/v1/devices": {
         "path": "/devices/v1/devices",
         "method": "GET",
         "summary": "getdevicesv1",
-        "description": "List all devices registered in HPE GreenLake.",
+        "description": ("List all devices registered in HPE GreenLake."),
         "operationId": "getdevicesv1",
         "tags": ["devices"],
         "deprecated": False,
@@ -151,12 +167,18 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
                 "name": "filter",
                 "type": "str",
                 "description": (
-                    "Filter expressions using comparison operators (eq, ne, gt, ge, lt, le, in) "
-                    "joined by logical operators (and, or, not).\n\n"
-                    "**Important**: All filter values must be enclosed in single quotes.\n\n"
-                    "Filterable properties: application, archived, assignedState, createdAt, "
-                    "deviceType, id, location, macAddress, model, partNumber, region, "
-                    "serialNumber, subscription, tags, tenantWorkspaceId, type, updatedAt, warranty"
+                    "Filter expressions using comparison "
+                    "operators (eq, ne, gt, ge, lt, le, in) "
+                    "joined by logical operators "
+                    "(and, or, not).\n\n"
+                    "**Important**: All filter values must be "
+                    "enclosed in single quotes.\n\n"
+                    "Filterable properties: application, "
+                    "archived, assignedState, createdAt, "
+                    "deviceType, id, location, macAddress, "
+                    "model, partNumber, region, serialNumber, "
+                    "subscription, tags, tenantWorkspaceId, "
+                    "type, updatedAt, warranty"
                 ),
                 "required": False,
                 "location": "query",
@@ -166,9 +188,12 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
                 "name": "filter-tags",
                 "type": "str",
                 "description": (
-                    "Filter expressions applied to assigned tags or their values. "
-                    "Uses comparison operators (eq, ne, in) with logical operators (and, or, not).\n\n"
-                    "**Important**: All filter values must be enclosed in single quotes."
+                    "Filter expressions applied to assigned "
+                    "tags or their values. Uses comparison "
+                    "operators (eq, ne, in) with logical "
+                    "operators (and, or, not).\n\n"
+                    "**Important**: All filter values must be "
+                    "enclosed in single quotes."
                 ),
                 "required": False,
                 "location": "query",
@@ -178,8 +203,10 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
                 "name": "sort",
                 "type": "str",
                 "description": (
-                    "Comma-separated list of sort expressions. Optionally followed by "
-                    "asc or desc. Default is ascending. Example: serialNumber,macAddress desc"
+                    "Comma-separated list of sort expressions. "
+                    "Optionally followed by asc or desc. "
+                    "Default is ascending. "
+                    "Example: serialNumber,macAddress desc"
                 ),
                 "required": False,
                 "location": "query",
@@ -189,8 +216,7 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
                 "name": "select",
                 "type": "str",
                 "description": (
-                    "Comma-separated list of properties to include in the response. "
-                    "Example: serialNumber,macAddress"
+                    "Comma-separated list of properties to include in the response. Example: serialNumber,macAddress"
                 ),
                 "required": False,
                 "location": "query",
@@ -199,28 +225,36 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
             {
                 "name": "limit",
                 "type": "int",
-                "description": "Maximum number of results to return. Default 2000.",
+                "description": ("Maximum number of results to return. Default 2000."),
                 "required": False,
                 "location": "query",
                 "default": 2000,
-                "schema": {"type": "integer", "default": 2000},
+                "schema": {
+                    "type": "integer",
+                    "default": 2000,
+                },
             },
             {
                 "name": "offset",
                 "type": "int",
-                "description": "Zero-based resource offset. Default 0.",
+                "description": ("Zero-based resource offset. Default 0."),
                 "required": False,
                 "location": "query",
                 "schema": {"type": "integer"},
             },
         ],
-        "responses": {"200": {"description": "Successful response", "content_type": "application/json"}},
+        "responses": {
+            "200": {
+                "description": "Successful response",
+                "content_type": "application/json",
+            }
+        },
     },
     "GET:/devices/v1/devices/{id}": {
         "path": "/devices/v1/devices/{id}",
         "method": "GET",
         "summary": "getdevicebyidv1",
-        "description": "Get a single device by its unique identifier.",
+        "description": ("Get a single device by its unique identifier."),
         "operationId": "getdevicebyidv1",
         "tags": ["devices"],
         "deprecated": False,
@@ -228,22 +262,27 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
             {
                 "name": "id",
                 "type": "str",
-                "description": "The unique identifier of the device.",
+                "description": ("The unique identifier of the device."),
                 "required": True,
                 "location": "path",
                 "schema": {"type": "string"},
             },
         ],
-        "responses": {"200": {"description": "Successful response", "content_type": "application/json"}},
+        "responses": {
+            "200": {
+                "description": "Successful response",
+                "content_type": "application/json",
+            }
+        },
     },
-    # -----------------------------------------------------------------------
+    # -------------------------------------------------------------------
     # Subscriptions
-    # -----------------------------------------------------------------------
+    # -------------------------------------------------------------------
     "GET:/subscriptions/v1/subscriptions": {
         "path": "/subscriptions/v1/subscriptions",
         "method": "GET",
         "summary": "getsubscriptionsv1",
-        "description": "List all subscriptions in HPE GreenLake.",
+        "description": ("List all subscriptions in HPE GreenLake."),
         "operationId": "getsubscriptionsv1",
         "tags": ["subscriptions"],
         "deprecated": False,
@@ -252,12 +291,18 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
                 "name": "filter",
                 "type": "str",
                 "description": (
-                    "Filter expressions using comparison operators (eq, ne, gt, ge, lt, le, in) "
-                    "joined by logical operators (and, or, not).\n\n"
-                    "**Important**: All filter values must be enclosed in single quotes.\n\n"
-                    "Filterable properties: availableQuantity, contract, createdAt, endTime, id, "
-                    "isEval, key, productType, quantity, sku, skuDescription, startTime, "
-                    "subscriptionStatus, subscriptionType, tags, tier, type, updatedAt"
+                    "Filter expressions using comparison "
+                    "operators (eq, ne, gt, ge, lt, le, in) "
+                    "joined by logical operators "
+                    "(and, or, not).\n\n"
+                    "**Important**: All filter values must be "
+                    "enclosed in single quotes.\n\n"
+                    "Filterable properties: availableQuantity, "
+                    "contract, createdAt, endTime, id, isEval, "
+                    "key, productType, quantity, sku, "
+                    "skuDescription, startTime, "
+                    "subscriptionStatus, subscriptionType, "
+                    "tags, tier, type, updatedAt"
                 ),
                 "required": False,
                 "location": "query",
@@ -267,9 +312,12 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
                 "name": "filter-tags",
                 "type": "str",
                 "description": (
-                    "Filter expressions applied to assigned tags or their values. "
-                    "Uses comparison operators (eq, ne) with logical operators (and, or).\n\n"
-                    "**Important**: All filter values must be enclosed in single quotes."
+                    "Filter expressions applied to assigned "
+                    "tags or their values. Uses comparison "
+                    "operators (eq, ne) with logical operators "
+                    "(and, or).\n\n"
+                    "**Important**: All filter values must be "
+                    "enclosed in single quotes."
                 ),
                 "required": False,
                 "location": "query",
@@ -279,8 +327,7 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
                 "name": "sort",
                 "type": "str",
                 "description": (
-                    "Comma-separated sort expressions, optionally followed by asc or desc. "
-                    "Example: key, quote desc"
+                    "Comma-separated sort expressions, optionally followed by asc or desc. Example: key, quote desc"
                 ),
                 "required": False,
                 "location": "query",
@@ -289,10 +336,7 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
             {
                 "name": "select",
                 "type": "str",
-                "description": (
-                    "Comma-separated list of properties to include in the response. "
-                    "Example: id,key"
-                ),
+                "description": ("Comma-separated list of properties to include in the response. Example: id,key"),
                 "required": False,
                 "location": "query",
                 "schema": {"type": "string"},
@@ -300,28 +344,36 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
             {
                 "name": "limit",
                 "type": "int",
-                "description": "Maximum number of results to return. Default 50.",
+                "description": ("Maximum number of results to return. Default 50."),
                 "required": False,
                 "location": "query",
                 "default": 50,
-                "schema": {"type": "integer", "default": 50},
+                "schema": {
+                    "type": "integer",
+                    "default": 50,
+                },
             },
             {
                 "name": "offset",
                 "type": "int",
-                "description": "Zero-based resource offset. Default 0.",
+                "description": ("Zero-based resource offset. Default 0."),
                 "required": False,
                 "location": "query",
                 "schema": {"type": "integer"},
             },
         ],
-        "responses": {"200": {"description": "Successful response", "content_type": "application/json"}},
+        "responses": {
+            "200": {
+                "description": "Successful response",
+                "content_type": "application/json",
+            }
+        },
     },
     "GET:/subscriptions/v1/subscriptions/{id}": {
         "path": "/subscriptions/v1/subscriptions/{id}",
         "method": "GET",
         "summary": "getsubscriptiondetailsbyidv1",
-        "description": "Get subscription details by its unique identifier.",
+        "description": ("Get subscription details by its unique identifier."),
         "operationId": "getsubscriptiondetailsbyidv1",
         "tags": ["subscriptions"],
         "deprecated": False,
@@ -329,22 +381,27 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
             {
                 "name": "id",
                 "type": "str",
-                "description": "The unique identifier of the subscription.",
+                "description": ("The unique identifier of the subscription."),
                 "required": True,
                 "location": "path",
                 "schema": {"type": "string"},
             },
         ],
-        "responses": {"200": {"description": "Successful response", "content_type": "application/json"}},
+        "responses": {
+            "200": {
+                "description": "Successful response",
+                "content_type": "application/json",
+            }
+        },
     },
-    # -----------------------------------------------------------------------
+    # -------------------------------------------------------------------
     # Users
-    # -----------------------------------------------------------------------
+    # -------------------------------------------------------------------
     "GET:/identity/v1/users": {
         "path": "/identity/v1/users",
         "method": "GET",
         "summary": "get_users",
-        "description": "List all users in the HPE GreenLake workspace.",
+        "description": ("List all users in the HPE GreenLake workspace."),
         "operationId": "get_users_identity_v1_users_get",
         "tags": ["users"],
         "deprecated": False,
@@ -353,12 +410,17 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
                 "name": "filter",
                 "type": "str",
                 "description": (
-                    "OData 4.0 filter expression. Supported operators: eq, ne, gt, ge, lt "
-                    "with logical expressions and, or, not.\n\n"
-                    "Filterable properties: id, username, userStatus, createdAt, updatedAt, lastLogin.\n\n"
-                    "userStatus values: UNVERIFIED, VERIFIED, BLOCKED, DELETE_IN_PROGRESS, "
-                    "DELETED, SUSPENDED (case-sensitive).\n\n"
-                    "**Important**: All filter values must be enclosed in single quotes."
+                    "OData 4.0 filter expression. Supported "
+                    "operators: eq, ne, gt, ge, lt, le with "
+                    "logical expressions and, or, not.\n\n"
+                    "Filterable properties: id, username, "
+                    "userStatus, createdAt, updatedAt, "
+                    "lastLogin.\n\n"
+                    "userStatus values: UNVERIFIED, VERIFIED, "
+                    "BLOCKED, DELETE_IN_PROGRESS, DELETED, "
+                    "SUSPENDED (case-sensitive).\n\n"
+                    "**Important**: All filter values must be "
+                    "enclosed in single quotes."
                 ),
                 "required": False,
                 "location": "query",
@@ -367,7 +429,7 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
             {
                 "name": "offset",
                 "type": "int",
-                "description": "Pagination offset (number of pages to skip).",
+                "description": ("Pagination offset (number of pages to skip)."),
                 "required": False,
                 "location": "query",
                 "schema": {"type": "integer"},
@@ -375,47 +437,57 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
             {
                 "name": "limit",
                 "type": "int",
-                "description": "Maximum number of entries per page. Max 600, default 300.",
+                "description": ("Maximum number of entries per page. Max 600, default 300."),
                 "required": False,
                 "location": "query",
                 "default": 300,
-                "schema": {"type": "integer", "default": 300},
+                "schema": {
+                    "type": "integer",
+                    "default": 300,
+                },
             },
         ],
-        "responses": {"200": {"description": "Successful response", "content_type": "application/json"}},
+        "responses": {
+            "200": {
+                "description": "Successful response",
+                "content_type": "application/json",
+            }
+        },
     },
     "GET:/identity/v1/users/{id}": {
         "path": "/identity/v1/users/{id}",
         "method": "GET",
         "summary": "get_user_detailed",
-        "description": "Get detailed information for a single user by ID.",
-        "operationId": "get_user_detailed_identity_v1_users_id_get",
+        "description": ("Get detailed information for a single user by ID."),
+        "operationId": ("get_user_detailed_identity_v1_users_id_get"),
         "tags": ["users"],
         "deprecated": False,
         "parameters": [
             {
                 "name": "id",
                 "type": "str",
-                "description": (
-                    "The unique identifier of the user. "
-                    "Example: 7600415a-8876-5722-9f3c-b0fd11112283"
-                ),
+                "description": ("The unique identifier of the user. Example: 7600415a-8876-5722-9f3c-b0fd11112283"),
                 "required": True,
                 "location": "path",
                 "schema": {"type": "string"},
             },
         ],
-        "responses": {"200": {"description": "Successful response", "content_type": "application/json"}},
+        "responses": {
+            "200": {
+                "description": "Successful response",
+                "content_type": "application/json",
+            }
+        },
     },
-    # -----------------------------------------------------------------------
+    # -------------------------------------------------------------------
     # Workspaces
-    # -----------------------------------------------------------------------
+    # -------------------------------------------------------------------
     "GET:/workspaces/v1/workspaces/{workspaceId}": {
         "path": "/workspaces/v1/workspaces/{workspaceId}",
         "method": "GET",
         "summary": "get_workspace",
-        "description": "Get workspace information by its unique identifier.",
-        "operationId": "get_workspace_workspaces_v1_workspaces_workspaceid_get",
+        "description": ("Get workspace information by its unique identifier."),
+        "operationId": ("get_workspace_workspaces_v1_workspaces_workspaceid_get"),
         "tags": ["workspaces"],
         "deprecated": False,
         "parameters": [
@@ -423,22 +495,26 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
                 "name": "workspaceId",
                 "type": "str",
                 "description": (
-                    "The unique identifier of the workspace. "
-                    "Example: 7600415a-8876-5722-9f3c-b0fd11112283"
+                    "The unique identifier of the workspace. Example: 7600415a-8876-5722-9f3c-b0fd11112283"
                 ),
                 "required": True,
                 "location": "path",
                 "schema": {"type": "string"},
             },
         ],
-        "responses": {"200": {"description": "Successful response", "content_type": "application/json"}},
+        "responses": {
+            "200": {
+                "description": "Successful response",
+                "content_type": "application/json",
+            }
+        },
     },
     "GET:/workspaces/v1/workspaces/{workspaceId}/contact": {
-        "path": "/workspaces/v1/workspaces/{workspaceId}/contact",
+        "path": ("/workspaces/v1/workspaces/{workspaceId}/contact"),
         "method": "GET",
         "summary": "get_workspace_contact",
         "description": "Get workspace contact information.",
-        "operationId": "get_workspace_detailed_info_workspaces_v1_workspaces_wo_5c14f2bc",
+        "operationId": ("get_workspace_detailed_info_workspaces_v1_workspaces_wo_5c14f2bc"),
         "tags": ["workspaces"],
         "deprecated": False,
         "parameters": [
@@ -446,105 +522,244 @@ ENDPOINT_SCHEMAS: dict[str, dict[str, Any]] = {
                 "name": "workspaceId",
                 "type": "str",
                 "description": (
-                    "The unique identifier of the workspace. "
-                    "Example: 7600415a-8876-5722-9f3c-b0fd11112283"
+                    "The unique identifier of the workspace. Example: 7600415a-8876-5722-9f3c-b0fd11112283"
                 ),
                 "required": True,
                 "location": "path",
                 "schema": {"type": "string"},
             },
         ],
-        "responses": {"200": {"description": "Successful response", "content_type": "application/json"}},
+        "responses": {
+            "200": {
+                "description": "Successful response",
+                "content_type": "application/json",
+            }
+        },
     },
 }
 
-# Compact schemas used by greenlake_invoke_endpoint for validation and URL building.
-# These only contain the fields needed at invocation time (name, type, required, location).
+# Compact schemas used by greenlake_invoke_endpoint for validation
+# and URL building. These only contain the fields needed at invocation
+# time (name, type, required, location).
 INVOKE_SCHEMAS: dict[str, dict[str, Any]] = {
     "GET:/audit-log/v1/logs": {
         "path": "/audit-log/v1/logs",
         "method": "GET",
         "parameters": [
-            {"name": "filter", "type": "str", "required": False, "location": "query"},
-            {"name": "select", "type": "str", "required": False, "location": "query"},
-            {"name": "all", "type": "str", "required": False, "location": "query"},
-            {"name": "limit", "type": "int", "required": False, "location": "query", "default": 50},
-            {"name": "offset", "type": "int", "required": False, "location": "query"},
+            {
+                "name": "filter",
+                "type": "str",
+                "required": False,
+                "location": "query",
+            },
+            {
+                "name": "select",
+                "type": "str",
+                "required": False,
+                "location": "query",
+            },
+            {
+                "name": "all",
+                "type": "str",
+                "required": False,
+                "location": "query",
+            },
+            {
+                "name": "limit",
+                "type": "int",
+                "required": False,
+                "location": "query",
+                "default": 50,
+            },
+            {
+                "name": "offset",
+                "type": "int",
+                "required": False,
+                "location": "query",
+            },
         ],
     },
     "GET:/audit-log/v1/logs/{id}/detail": {
         "path": "/audit-log/v1/logs/{id}/detail",
         "method": "GET",
         "parameters": [
-            {"name": "id", "type": "str", "required": True, "location": "path"},
+            {
+                "name": "id",
+                "type": "str",
+                "required": True,
+                "location": "path",
+            },
         ],
     },
     "GET:/devices/v1/devices": {
         "path": "/devices/v1/devices",
         "method": "GET",
         "parameters": [
-            {"name": "filter", "type": "str", "required": False, "location": "query"},
-            {"name": "filter-tags", "type": "str", "required": False, "location": "query"},
-            {"name": "sort", "type": "str", "required": False, "location": "query"},
-            {"name": "select", "type": "str", "required": False, "location": "query"},
-            {"name": "limit", "type": "int", "required": False, "location": "query", "default": 2000},
-            {"name": "offset", "type": "int", "required": False, "location": "query"},
+            {
+                "name": "filter",
+                "type": "str",
+                "required": False,
+                "location": "query",
+            },
+            {
+                "name": "filter-tags",
+                "type": "str",
+                "required": False,
+                "location": "query",
+            },
+            {
+                "name": "sort",
+                "type": "str",
+                "required": False,
+                "location": "query",
+            },
+            {
+                "name": "select",
+                "type": "str",
+                "required": False,
+                "location": "query",
+            },
+            {
+                "name": "limit",
+                "type": "int",
+                "required": False,
+                "location": "query",
+                "default": 2000,
+            },
+            {
+                "name": "offset",
+                "type": "int",
+                "required": False,
+                "location": "query",
+            },
         ],
     },
     "GET:/devices/v1/devices/{id}": {
         "path": "/devices/v1/devices/{id}",
         "method": "GET",
         "parameters": [
-            {"name": "id", "type": "str", "required": True, "location": "path"},
+            {
+                "name": "id",
+                "type": "str",
+                "required": True,
+                "location": "path",
+            },
         ],
     },
     "GET:/subscriptions/v1/subscriptions": {
         "path": "/subscriptions/v1/subscriptions",
         "method": "GET",
         "parameters": [
-            {"name": "filter", "type": "str", "required": False, "location": "query"},
-            {"name": "filter-tags", "type": "str", "required": False, "location": "query"},
-            {"name": "sort", "type": "str", "required": False, "location": "query"},
-            {"name": "select", "type": "str", "required": False, "location": "query"},
-            {"name": "limit", "type": "int", "required": False, "location": "query", "default": 50},
-            {"name": "offset", "type": "int", "required": False, "location": "query"},
+            {
+                "name": "filter",
+                "type": "str",
+                "required": False,
+                "location": "query",
+            },
+            {
+                "name": "filter-tags",
+                "type": "str",
+                "required": False,
+                "location": "query",
+            },
+            {
+                "name": "sort",
+                "type": "str",
+                "required": False,
+                "location": "query",
+            },
+            {
+                "name": "select",
+                "type": "str",
+                "required": False,
+                "location": "query",
+            },
+            {
+                "name": "limit",
+                "type": "int",
+                "required": False,
+                "location": "query",
+                "default": 50,
+            },
+            {
+                "name": "offset",
+                "type": "int",
+                "required": False,
+                "location": "query",
+            },
         ],
     },
     "GET:/subscriptions/v1/subscriptions/{id}": {
         "path": "/subscriptions/v1/subscriptions/{id}",
         "method": "GET",
         "parameters": [
-            {"name": "id", "type": "str", "required": True, "location": "path"},
+            {
+                "name": "id",
+                "type": "str",
+                "required": True,
+                "location": "path",
+            },
         ],
     },
     "GET:/identity/v1/users": {
         "path": "/identity/v1/users",
         "method": "GET",
         "parameters": [
-            {"name": "filter", "type": "str", "required": False, "location": "query"},
-            {"name": "offset", "type": "int", "required": False, "location": "query"},
-            {"name": "limit", "type": "int", "required": False, "location": "query", "default": 300},
+            {
+                "name": "filter",
+                "type": "str",
+                "required": False,
+                "location": "query",
+            },
+            {
+                "name": "offset",
+                "type": "int",
+                "required": False,
+                "location": "query",
+            },
+            {
+                "name": "limit",
+                "type": "int",
+                "required": False,
+                "location": "query",
+                "default": 300,
+            },
         ],
     },
     "GET:/identity/v1/users/{id}": {
         "path": "/identity/v1/users/{id}",
         "method": "GET",
         "parameters": [
-            {"name": "id", "type": "str", "required": True, "location": "path"},
+            {
+                "name": "id",
+                "type": "str",
+                "required": True,
+                "location": "path",
+            },
         ],
     },
     "GET:/workspaces/v1/workspaces/{workspaceId}": {
         "path": "/workspaces/v1/workspaces/{workspaceId}",
         "method": "GET",
         "parameters": [
-            {"name": "workspaceId", "type": "str", "required": True, "location": "path"},
+            {
+                "name": "workspaceId",
+                "type": "str",
+                "required": True,
+                "location": "path",
+            },
         ],
     },
     "GET:/workspaces/v1/workspaces/{workspaceId}/contact": {
-        "path": "/workspaces/v1/workspaces/{workspaceId}/contact",
+        "path": ("/workspaces/v1/workspaces/{workspaceId}/contact"),
         "method": "GET",
         "parameters": [
-            {"name": "workspaceId", "type": "str", "required": True, "location": "path"},
+            {
+                "name": "workspaceId",
+                "type": "str",
+                "required": True,
+                "location": "path",
+            },
         ],
     },
 }
@@ -571,7 +786,10 @@ def _validate_parameters(
     parameters: dict[str, Any],
     schema: dict[str, Any],
 ) -> list[str]:
-    """Validate parameters against the endpoint schema. Returns a list of error strings."""
+    """Validate parameters against the endpoint schema.
+
+    Returns a list of error strings.
+    """
     errors: list[str] = []
     schema_params = {p["name"]: p for p in schema.get("parameters", [])}
 
@@ -594,9 +812,18 @@ def _validate_parameters(
                 int(param_value)
             except (ValueError, TypeError):
                 errors.append(f"Parameter '{param_name}' should be an integer")
-        elif expected_type == "boolean" and not isinstance(param_value, bool):
-            if str(param_value).lower() not in ("true", "false", "1", "0"):
-                errors.append(f"Parameter '{param_name}' should be a boolean")
+        elif (
+            expected_type == "boolean"
+            and not isinstance(param_value, bool)
+            and str(param_value).lower()
+            not in (
+                "true",
+                "false",
+                "1",
+                "0",
+            )
+        ):
+            errors.append(f"Parameter '{param_name}' should be a boolean")
 
     return errors
 
@@ -606,7 +833,10 @@ def _build_request_url(
     parameters: dict[str, Any],
     schema: dict[str, Any],
 ) -> tuple[str, dict[str, Any]]:
-    """Build the final URL (with path params substituted) and separate query params."""
+    """Build the final URL and separate query params.
+
+    Path params are substituted into the URL.
+    """
     url = base_path
     query_params: dict[str, Any] = {}
     schema_params = {p["name"]: p for p in schema.get("parameters", [])}
@@ -624,10 +854,8 @@ def _build_request_url(
         else:
             # Query parameter -- coerce integers
             if param_type == "int":
-                try:
+                with contextlib.suppress(ValueError):
                     param_value = _coerce_int(param_value, param_name)
-                except ValueError:
-                    pass  # validation already caught this
             query_params[param_name] = param_value
 
     return url, query_params
@@ -641,12 +869,14 @@ def _build_request_url(
 @mcp.tool(
     name="greenlake_list_endpoints",
     description=(
-        "Lists all available HPE GreenLake API endpoints across all 5 services "
-        "(audit-logs, devices, subscriptions, users, workspaces) as simple "
-        "identifiers in METHOD:PATH format for fast discovery.\n\n"
-        "Use this tool first to discover what endpoints are available, then use "
-        "greenlake_get_endpoint_schema to get parameter details, and finally "
-        "greenlake_invoke_endpoint to call the endpoint."
+        "Lists all available HPE GreenLake API endpoints across "
+        "all 5 services (audit-logs, devices, subscriptions, "
+        "users, workspaces) as simple identifiers in METHOD:PATH "
+        "format for fast discovery.\n\n"
+        "Use this tool first to discover what endpoints are "
+        "available, then use greenlake_get_endpoint_schema to get "
+        "parameter details, and finally greenlake_invoke_endpoint "
+        "to call the endpoint."
     ),
     tags={"greenlake", "dynamic"},
     annotations={
@@ -664,8 +894,9 @@ async def greenlake_list_endpoints(
         Field(
             default=None,
             description=(
-                "Optional keyword filter (case-insensitive substring match). "
-                "Example: 'devices' returns only device-related endpoints."
+                "Optional keyword filter (case-insensitive "
+                "substring match). Example: 'devices' returns "
+                "only device-related endpoints."
             ),
         ),
     ] = None,
@@ -675,10 +906,7 @@ async def greenlake_list_endpoints(
 
     filter_term = (filter or "").lower()
 
-    if filter_term:
-        endpoints = [ep for ep in ALL_ENDPOINTS if filter_term in ep.lower()]
-    else:
-        endpoints = list(ALL_ENDPOINTS)
+    endpoints = [ep for ep in ALL_ENDPOINTS if filter_term in ep.lower()] if filter_term else list(ALL_ENDPOINTS)
 
     return {
         "success": True,
@@ -695,11 +923,13 @@ async def greenlake_list_endpoints(
 @mcp.tool(
     name="greenlake_get_endpoint_schema",
     description=(
-        "Retrieves detailed parameter schema for a specific HPE GreenLake API "
-        "endpoint, including path parameters, query parameters, types, descriptions, "
-        "and validation rules.\n\n"
-        "Provide the endpoint identifier in METHOD:PATH format as returned by "
-        "greenlake_list_endpoints (e.g. 'GET:/audit-log/v1/logs')."
+        "Retrieves detailed parameter schema for a specific HPE "
+        "GreenLake API endpoint, including path parameters, query "
+        "parameters, types, descriptions, and validation rules."
+        "\n\n"
+        "Provide the endpoint identifier in METHOD:PATH format as "
+        "returned by greenlake_list_endpoints "
+        "(e.g. 'GET:/audit-log/v1/logs')."
     ),
     tags={"greenlake", "dynamic"},
     annotations={
@@ -717,7 +947,8 @@ async def greenlake_get_endpoint_schema(
         Field(
             description=(
                 "Endpoint identifier in METHOD:PATH format. "
-                "Example: 'GET:/audit-log/v1/logs' or 'GET:/devices/v1/devices/{id}'"
+                "Example: 'GET:/audit-log/v1/logs' or "
+                "'GET:/devices/v1/devices/{id}'"
             ),
         ),
     ],
@@ -725,19 +956,22 @@ async def greenlake_get_endpoint_schema(
         bool | None,
         Field(
             default=False,
-            description="Include example parameter values in the response.",
+            description=("Include example parameter values in the response."),
         ),
     ] = False,
 ) -> dict[str, Any]:
-    """Get the parameter schema for a single GreenLake API endpoint."""
-    logger.debug("greenlake_get_endpoint_schema called, endpoint={}", endpoint)
+    """Get the parameter schema for a single GreenLake endpoint."""
+    logger.debug(
+        "greenlake_get_endpoint_schema called, endpoint={}",
+        endpoint,
+    )
 
     endpoint = endpoint.strip()
     if not endpoint:
         return {
             "success": False,
             "error": "endpoint is required",
-            "message": "Please provide an endpoint identifier in METHOD:PATH format.",
+            "message": ("Please provide an endpoint identifier in METHOD:PATH format."),
         }
 
     if endpoint not in ENDPOINT_SCHEMAS:
@@ -776,12 +1010,14 @@ async def greenlake_get_endpoint_schema(
 @mcp.tool(
     name="greenlake_invoke_endpoint",
     description=(
-        "Executes any HPE GreenLake GET API endpoint dynamically with parameter "
-        "validation. Supports all 10 endpoints across audit-logs, devices, "
-        "subscriptions, users, and workspaces.\n\n"
-        "Provide the endpoint identifier in METHOD:PATH format and a params dict "
-        "containing the path and query parameters for that endpoint. Use "
-        "greenlake_get_endpoint_schema first to discover required parameters."
+        "Executes any HPE GreenLake GET API endpoint dynamically "
+        "with parameter validation. Supports all 10 endpoints "
+        "across audit-logs, devices, subscriptions, users, and "
+        "workspaces.\n\n"
+        "Provide the endpoint identifier in METHOD:PATH format and "
+        "a params dict containing the path and query parameters "
+        "for that endpoint. Use greenlake_get_endpoint_schema "
+        "first to discover required parameters."
     ),
     tags={"greenlake", "dynamic"},
     annotations={
@@ -797,10 +1033,7 @@ async def greenlake_invoke_endpoint(
     endpoint: Annotated[
         str,
         Field(
-            description=(
-                "Endpoint identifier in METHOD:PATH format. "
-                "Example: 'GET:/devices/v1/devices'"
-            ),
+            description=("Endpoint identifier in METHOD:PATH format. Example: 'GET:/devices/v1/devices'"),
         ),
     ],
     params: Annotated[
@@ -808,9 +1041,11 @@ async def greenlake_invoke_endpoint(
         Field(
             default=None,
             description=(
-                "Request parameters dict. Keys are parameter names, values are their "
-                "values. Path parameters (e.g. id, workspaceId) are substituted into "
-                "the URL; query parameters are appended as query string."
+                "Request parameters dict. Keys are parameter "
+                "names, values are their values. Path "
+                "parameters (e.g. id, workspaceId) are "
+                "substituted into the URL; query parameters "
+                "are appended as query string."
             ),
         ),
     ] = None,
@@ -826,14 +1061,14 @@ async def greenlake_invoke_endpoint(
         return {
             "success": False,
             "error": "endpoint is required",
-            "message": "Please provide an endpoint identifier in METHOD:PATH format.",
+            "message": ("Please provide an endpoint identifier in METHOD:PATH format."),
         }
 
     if ":" not in endpoint:
         return {
             "success": False,
             "error": "Invalid endpoint identifier format",
-            "message": "Expected format: METHOD:PATH (e.g., 'GET:/devices/v1/devices')",
+            "message": ("Expected format: METHOD:PATH (e.g., 'GET:/devices/v1/devices')"),
         }
 
     method, path = endpoint.split(":", 1)
@@ -844,7 +1079,7 @@ async def greenlake_invoke_endpoint(
         return {
             "success": False,
             "error": f"Unsupported HTTP method: {method}",
-            "message": "Only GET endpoints are supported in read-only mode.",
+            "message": ("Only GET endpoints are supported in read-only mode."),
         }
 
     # --- Look up the schema ---
@@ -896,7 +1131,7 @@ async def greenlake_invoke_endpoint(
         logger.error("greenlake_invoke_endpoint failed: {}", str(e))
         return {
             "success": False,
-            "error": f"Request failed: {str(e)}",
+            "error": f"Request failed: {e!s}",
             "endpoint": endpoint,
             "request": {
                 "url": final_url,

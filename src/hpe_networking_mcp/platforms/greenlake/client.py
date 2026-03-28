@@ -1,8 +1,9 @@
 # (c) Copyright 2025 Hewlett Packard Enterprise Development LP
 """Async HTTP client for the HPE GreenLake API.
 
-Ported from the per-service ``AuditLogsHttpClient`` / ``DevicesHttpClient`` etc.
-into a single shared ``GreenLakeHttpClient``.
+Ported from the per-service ``AuditLogsHttpClient`` /
+``DevicesHttpClient`` etc. into a single shared
+``GreenLakeHttpClient``.
 """
 
 from __future__ import annotations
@@ -27,7 +28,7 @@ class GreenLakeHttpClient:
             limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
         )
 
-    # -- HTTP verbs ---------------------------------------------------------
+    # -- HTTP verbs --------------------------------------------------------
 
     async def get(
         self,
@@ -47,7 +48,11 @@ class GreenLakeHttpClient:
             response.raise_for_status()
             return response.json()  # type: ignore[no-any-return]
         except httpx.HTTPStatusError as e:
-            logger.error("HTTP error {}: {}", e.response.status_code, e.response.text)
+            logger.error(
+                "HTTP error {}: {}",
+                e.response.status_code,
+                e.response.text,
+            )
             raise
         except Exception as e:
             logger.error("Request failed: {}", str(e))
@@ -71,16 +76,20 @@ class GreenLakeHttpClient:
             response.raise_for_status()
             return response.json()  # type: ignore[no-any-return]
         except httpx.HTTPStatusError as e:
-            logger.error("HTTP error {}: {}", e.response.status_code, e.response.text)
+            logger.error(
+                "HTTP error {}: {}",
+                e.response.status_code,
+                e.response.text,
+            )
             raise
         except Exception as e:
             logger.error("Request failed: {}", str(e))
             raise
 
-    # -- helpers ------------------------------------------------------------
+    # -- helpers -----------------------------------------------------------
 
     def _get_auth_headers(self) -> dict[str, str]:
-        """Build auth + accept headers, refreshing the token if needed."""
+        """Build auth + accept headers, refreshing if needed."""
         headers: dict[str, str] = self.token_manager.get_auth_headers()
         headers["Accept"] = "application/json"
         return headers
@@ -92,5 +101,10 @@ class GreenLakeHttpClient:
     async def __aenter__(self) -> GreenLakeHttpClient:
         return self
 
-    async def __aexit__(self, exc_type: object, exc_val: object, exc_tb: object) -> None:
+    async def __aexit__(
+        self,
+        exc_type: object,
+        exc_val: object,
+        exc_tb: object,
+    ) -> None:
         await self.close()

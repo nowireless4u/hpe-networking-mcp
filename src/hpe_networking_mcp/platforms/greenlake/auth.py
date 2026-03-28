@@ -13,10 +13,10 @@ import httpx
 from loguru import logger
 from pydantic import BaseModel, Field
 
-
 # ---------------------------------------------------------------------------
 # Models
 # ---------------------------------------------------------------------------
+
 
 class OAuth2TokenResponse(BaseModel):
     """OAuth2 token response from the GreenLake authorization endpoint."""
@@ -25,7 +25,10 @@ class OAuth2TokenResponse(BaseModel):
     token_type: str = Field(default="Bearer", description="Token type")
     expires_in: int | None = Field(default=None, description="Token lifetime in seconds")
     scope: str | None = Field(default=None, description="Token scope")
-    issued_at: float = Field(default_factory=time.time, description="Timestamp when token was issued")
+    issued_at: float = Field(
+        default_factory=time.time,
+        description="Timestamp when token was issued",
+    )
 
     @property
     def expires_at(self) -> float | None:
@@ -35,7 +38,7 @@ class OAuth2TokenResponse(BaseModel):
         return self.issued_at + self.expires_in
 
     def expires_at_timestamp(self) -> float | None:
-        """Get expiration timestamp (alias for expires_at property)."""
+        """Get expiration timestamp (alias for expires_at)."""
         return self.expires_at
 
 
@@ -44,16 +47,19 @@ class TokenInfo(BaseModel):
 
     token: str = Field(description="The JWT token")
     expires_at: float | None = Field(default=None, description="Token expiration timestamp")
-    created_at: float = Field(default_factory=time.time, description="Token creation timestamp")
+    created_at: float = Field(
+        default_factory=time.time,
+        description="Token creation timestamp",
+    )
 
     def is_expired(self, buffer_seconds: int = 300) -> bool:
-        """Return *True* if the token is expired (or will expire within *buffer_seconds*)."""
+        """Return True if the token is expired or will expire soon."""
         if self.expires_at is None:
             return False
         return time.time() >= (self.expires_at - buffer_seconds)
 
     def time_until_expiry(self) -> float | None:
-        """Seconds remaining until expiry, or *None* if unknown."""
+        """Seconds remaining until expiry, or None if unknown."""
         if self.expires_at is None:
             return None
         return max(0, self.expires_at - time.time())
@@ -62,6 +68,7 @@ class TokenInfo(BaseModel):
 # ---------------------------------------------------------------------------
 # OAuth2 Provider
 # ---------------------------------------------------------------------------
+
 
 class OAuth2Provider:
     """OAuth2 client-credentials provider for the GreenLake API."""
@@ -92,12 +99,15 @@ class OAuth2Provider:
             httpx.HTTPStatusError: On non-200 responses.
         """
         try:
-            logger.info("Requesting access token", token_url=self.token_url)
+            logger.info(
+                "Requesting access token",
+                token_url=self.token_url,
+            )
 
             with httpx.Client(timeout=30.0) as client:
                 response = client.post(
                     self.token_url,
-                    headers={"Content-Type": "application/x-www-form-urlencoded"},
+                    headers={"Content-Type": ("application/x-www-form-urlencoded")},
                     data={
                         "grant_type": "client_credentials",
                         "client_id": self.client_id,
@@ -123,7 +133,7 @@ class OAuth2Provider:
 
                 token_data = response.json()
 
-            # Normalise scope — the API may return a list or a string
+            # Normalise scope -- the API may return a list or string
             scope = token_data.get("scope")
             if isinstance(scope, list):
                 scope = " ".join(scope) if scope else None
@@ -143,11 +153,14 @@ class OAuth2Provider:
             return oauth_token
 
         except Exception:
-            logger.error("Failed to acquire access token", token_url=self.token_url)
+            logger.error(
+                "Failed to acquire access token",
+                token_url=self.token_url,
+            )
             raise
 
     def validate_token(self, token: str) -> bool:
-        """Return *True* if *token* is a non-empty string."""
+        """Return True if token is a non-empty string."""
         try:
             return bool(token and len(token.strip()) > 0)
         except Exception as e:
@@ -159,12 +172,13 @@ class OAuth2Provider:
 # Token Manager
 # ---------------------------------------------------------------------------
 
+
 class TokenManager:
     """Manages OAuth2 tokens for the GreenLake API.
 
-    Unlike the original implementation this class accepts credentials directly
-    as constructor parameters rather than pulling them from a global settings
-    singleton.
+    Unlike the original implementation this class accepts credentials
+    directly as constructor parameters rather than pulling them from a
+    global settings singleton.
     """
 
     def __init__(
@@ -193,14 +207,20 @@ class TokenManager:
 
         logger.info("Token manager initialized")
 
-    # -- internal helpers ---------------------------------------------------
+    # -- internal helpers --------------------------------------------------
 
     def _set_token(self, token: str, expires_at: float | None = None) -> None:
         self._token_info = TokenInfo(token=token, expires_at=expires_at)
-        logger.info("Token updated", has_expiry=self._token_info.expires_at is not None)
+        logger.info(
+            "Token updated",
+            has_expiry=self._token_info.expires_at is not None,
+        )
 
     def _set_token_from_oauth2_response(self, response: OAuth2TokenResponse) -> None:
-        self._set_token(response.access_token, response.expires_at_timestamp())
+        self._set_token(
+            response.access_token,
+            response.expires_at_timestamp(),
+        )
 
     def _generate_new_token(self) -> None:
         if not self._oauth2_provider:
@@ -221,10 +241,10 @@ class TokenManager:
             else:
                 raise RuntimeError("Token expired and no OAuth2 provider configured for renewal")
 
-    # -- public API ---------------------------------------------------------
+    # -- public API --------------------------------------------------------
 
     def get_auth_headers(self) -> dict[str, str]:
-        """Return authorization headers, refreshing the token if necessary."""
+        """Return authorization headers, refreshing if necessary."""
         self._ensure_valid_token()
         if not self._token_info:
             raise RuntimeError("No token available")
@@ -246,15 +266,15 @@ class TokenManager:
         self._generate_new_token()
 
     def is_token_valid(self) -> bool:
-        """Return *True* if a non-expired token is held."""
+        """Return True if a non-expired token is held."""
         return self._token_info is not None and not self._token_info.is_expired()
 
     def get_token_info(self) -> TokenInfo | None:
-        """Return the current :class:`TokenInfo`, or *None*."""
+        """Return the current TokenInfo, or None."""
         return self._token_info
 
     def get_raw_token(self) -> str | None:
-        """Return the raw token string, or *None*."""
+        """Return the raw token string, or None."""
         if self._token_info:
             return self._token_info.token
         return None

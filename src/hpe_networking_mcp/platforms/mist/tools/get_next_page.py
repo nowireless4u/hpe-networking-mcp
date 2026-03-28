@@ -12,20 +12,22 @@
 
 from typing import Annotated
 
+from fastmcp.exceptions import ToolError
+from loguru import logger
 from pydantic import Field
 
-from fastmcp import Context
-from fastmcp.exceptions import ToolError
-from hpe_networking_mcp.platforms.mist.client import get_apisession
-from hpe_networking_mcp.platforms.mist.client import process_response, handle_network_error
-from hpe_networking_mcp.platforms.mist.client import format_response
 from hpe_networking_mcp.platforms.mist._registry import mcp
-from loguru import logger
+from hpe_networking_mcp.platforms.mist.client import (
+    format_response,
+    get_apisession,
+    handle_network_error,
+    process_response,
+)
 
 
 @mcp.tool(
     name="mist_get_next_page",
-    description="Retrieve the next page of results using the '_next' URL returned by a previous tool call.",
+    description=("Retrieve the next page of results using the '_next' URL returned by a previous tool call."),
     tags={"info"},
     annotations={
         "title": "Get Next Page",
@@ -41,7 +43,7 @@ async def get_next_page(
         Field(description="The '_next' URL from a previous response"),
     ],
 ) -> dict | list | str:
-    """Retrieve the next page of results using the '_next' URL returned by a previous tool call."""
+    """Retrieve the next page of results using the '_next' URL."""
 
     logger.debug("Tool get_next_page called")
 

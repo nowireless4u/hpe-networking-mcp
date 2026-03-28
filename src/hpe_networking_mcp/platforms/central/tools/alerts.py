@@ -1,13 +1,15 @@
+from typing import Literal
+
 from fastmcp import Context
-from typing import Literal, Optional
+
 from hpe_networking_mcp.platforms.central.models import PaginatedAlerts
-from hpe_networking_mcp.platforms.central.utils import (
-    retry_central_command,
-    build_odata_filter,
-    FilterField,
-    clean_alert_data,
-)
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
+from hpe_networking_mcp.platforms.central.utils import (
+    FilterField,
+    build_odata_filter,
+    clean_alert_data,
+    retry_central_command,
+)
 
 # API hard cap; limit param must not exceed this
 ALERT_LIMIT = 100
@@ -26,25 +28,12 @@ def register(mcp):
     async def central_get_alerts(
         ctx: Context,
         site_id: str,
-        status: Optional[Literal["Active", "Cleared", "Deferred"]] = "Active",
-        device_type: Optional[
-            Literal["Access Point", "Gateway", "Switch", "Bridge"]
-        ] = None,
-        category: Optional[
-            Literal[
-                "Clients",
-                "System",
-                "LAN",
-                "WLAN",
-                "WAN",
-                "Cluster",
-                "Routing",
-                "Security",
-            ]
-        ] = None,
+        status: Literal["Active", "Cleared", "Deferred"] | None = "Active",
+        device_type: Literal["Access Point", "Gateway", "Switch", "Bridge"] | None = None,
+        category: Literal["Clients", "System", "LAN", "WLAN", "WAN", "Cluster", "Routing", "Security"] | None = None,
         sort: str = "severity desc",
         limit: int = 50,
-        cursor: Optional[int] = None,
+        cursor: int | None = None,
     ) -> PaginatedAlerts | str:
         """
         REQUIRES site_id — call central_get_sites(site_names=["<site name>"]) and extract
@@ -62,16 +51,18 @@ def register(mcp):
         If no alerts match the criteria, returns a message indicating so.
 
         Parameters:
-            - site_id: Site identifier. Obtain by calling central_get_sites(site_names=["<name>"]) and reading site_id from the result.
+            - site_id: Site identifier. Obtain by calling
+              central_get_sites(site_names=["<name>"]) and reading site_id from the result.
             - status: "Active" (default) for unresolved alerts, "Cleared" for resolved ones.
-            - device_type: Narrow to a device class — "Access Point", "Gateway", "Switch", or "Bridge".
-            - category: Narrow to an alert domain — "Clients", "System", "LAN", "WLAN", "WAN",
-              "Cluster", "Routing", or "Security".
-            - sort: Sort expression (default "severity desc" — most critical first). Examples:
-              "createdAt desc", "createdAt asc".
+            - device_type: Narrow to a device class — "Access Point", "Gateway", "Switch",
+              or "Bridge".
+            - category: Narrow to an alert domain — "Clients", "System", "LAN", "WLAN",
+              "WAN", "Cluster", "Routing", or "Security".
+            - sort: Sort expression (default "severity desc" — most critical first).
+              Examples: "createdAt desc", "createdAt asc".
             - limit: Number of alerts per page (default 50, max 100).
-            - cursor: Pagination cursor from a previous response's `next_cursor` field. Omit or
-              pass None to start from the first page.
+            - cursor: Pagination cursor from a previous response's `next_cursor` field.
+              Omit or pass None to start from the first page.
 
         Note: Each alert includes summary, name, category, severity, priority, status,
         deviceType, createdAt, updatedAt, updatedBy, and clearedReason.
@@ -84,7 +75,7 @@ def register(mcp):
         ]
         pairs = [(ALERT_FILTER_FIELDS[k], v) for k, v in raw_pairs if v is not None]
 
-        query_params = {"sort": sort}
+        query_params: dict = {"sort": sort}
         odata = build_odata_filter(pairs)
         if odata:
             query_params["filter"] = odata

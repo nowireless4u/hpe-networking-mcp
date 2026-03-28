@@ -10,19 +10,22 @@
 --------------------------------------------------------------------------------
 """
 
-import mistapi
-from fastmcp import Context
-from fastmcp.exceptions import ToolError
-from hpe_networking_mcp.platforms.mist.client import get_apisession
-from hpe_networking_mcp.platforms.mist.client import process_response, handle_network_error
-from hpe_networking_mcp.platforms.mist.client import format_response
-from hpe_networking_mcp.platforms.mist._registry import mcp
-from loguru import logger
-
-from pydantic import Field
+from enum import Enum
 from typing import Annotated
 from uuid import UUID
-from enum import Enum
+
+import mistapi
+from fastmcp.exceptions import ToolError
+from loguru import logger
+from pydantic import Field
+
+from hpe_networking_mcp.platforms.mist._registry import mcp
+from hpe_networking_mcp.platforms.mist.client import (
+    format_response,
+    get_apisession,
+    handle_network_error,
+    process_response,
+)
 
 
 class Rrm_info_type(Enum):
@@ -40,7 +43,15 @@ class Band(Enum):
 
 @mcp.tool(
     name="mist_get_site_rrm_info",
-    description="""Retrieve Radio Resource Management (RRM) information for a site. Use current_channel_planning to get the current channel plan, current_rrm_considerations to get RRM considerations for a specific device and band, current_rrm_neighbors to list current RRM neighbor APs for a band, or events to list RRM change events over a time range.""",
+    description=(
+        "Retrieve Radio Resource Management (RRM) information "
+        "for a site. Use current_channel_planning to get the "
+        "current channel plan, current_rrm_considerations to "
+        "get RRM considerations for a specific device and "
+        "band, current_rrm_neighbors to list current RRM "
+        "neighbor APs for a band, or events to list RRM "
+        "change events over a time range."
+    ),
     tags={"sites_rrm"},
     annotations={
         "title": "Get site rrm info",
@@ -51,49 +62,86 @@ class Band(Enum):
     },
 )
 async def get_site_rrm_info(
-    site_id: Annotated[UUID, Field(description="""Site ID""")],
+    site_id: Annotated[UUID, Field(description="Site ID")],
     rrm_info_type: Annotated[
         Rrm_info_type,
         Field(
-            description="""Type of RRM information to retrieve: current_channel_planning returns the current channel plan for the site; current_rrm_considerations returns per-AP RRM considerations (requires device_id and band); current_rrm_neighbors lists current RRM neighbor APs for a band (requires band); events lists RRM change events over a time range"""
+            description=(
+                "Type of RRM information to retrieve: "
+                "current_channel_planning returns the current "
+                "channel plan for the site; "
+                "current_rrm_considerations returns per-AP "
+                "RRM considerations (requires device_id and "
+                "band); current_rrm_neighbors lists current "
+                "RRM neighbor APs for a band (requires band); "
+                "events lists RRM change events over a time "
+                "range"
+            )
         ),
     ],
     device_id: Annotated[
         UUID,
         Field(
-            description="""ID of the AP to retrieve RRM considerations for. Required when rrm_info_type is current_rrm_considerations""",
+            description=(
+                "ID of the AP to retrieve RRM considerations "
+                "for. Required when rrm_info_type is "
+                "current_rrm_considerations"
+            ),
             default=None,
         ),
     ],
     band: Annotated[
         Band,
         Field(
-            description="""802.11 band. Required when rrm_info_type is current_rrm_considerations or current_rrm_neighbors""",
+            description=(
+                "802.11 band. Required when rrm_info_type is current_rrm_considerations or current_rrm_neighbors"
+            ),
             default=None,
         ),
     ],
     start: Annotated[
-        int, Field(description="""Start of time range (epoch seconds)""", default=None)
+        int,
+        Field(
+            description="Start of time range (epoch seconds)",
+            default=None,
+        ),
     ],
     end: Annotated[
-        int, Field(description="""End of time range (epoch seconds)""", default=None)
+        int,
+        Field(
+            description="End of time range (epoch seconds)",
+            default=None,
+        ),
     ],
     duration: Annotated[
         str,
-        Field(description="""Time range duration (e.g. 1d, 1h, 10m)""", default=None),
+        Field(
+            description="Time range duration (e.g. 1d, 1h, 10m)",
+            default=None,
+        ),
     ],
     limit: Annotated[
-        int, Field(description="""Max number of results per page""", default=200)
+        int,
+        Field(
+            description="Max number of results per page",
+            default=200,
+        ),
     ] = 200,
     page: Annotated[
-        int, Field(description="""Page number for pagination""", default=1)
+        int,
+        Field(
+            description="Page number for pagination",
+            default=1,
+        ),
     ] = 1,
 ) -> dict | list | str:
-    """Retrieve Radio Resource Management (RRM) information for a site. Use current_channel_planning to get the current channel plan, current_rrm_considerations to get RRM considerations for a specific device and band, current_rrm_neighbors to list current RRM neighbor APs for a band, or events to list RRM change events over a time range."""
+    """Retrieve Radio Resource Management (RRM) information."""
 
     logger.debug("Tool get_site_rrm_info called")
     logger.debug(
-        "Input Parameters: site_id: %s, rrm_info_type: %s, device_id: %s, band: %s, start: %s, end: %s, duration: %s, limit: %s, page: %s",
+        "Input Parameters: site_id: %s, rrm_info_type: %s, "
+        "device_id: %s, band: %s, start: %s, end: %s, "
+        "duration: %s, limit: %s, page: %s",
         site_id,
         rrm_info_type,
         device_id,
@@ -110,38 +158,37 @@ async def get_site_rrm_info(
     try:
         object_type = rrm_info_type
 
-        if object_type.value == "current_rrm_considerations":
-            if not device_id:
-                raise ToolError(
-                    {
-                        "status_code": 400,
-                        "message": '`device_id` parameter is required when `rrm_info_type` is "current_rrm_considerations".',
-                    }
-                )
+        if object_type.value == "current_rrm_considerations" and not device_id:
+            raise ToolError(
+                {
+                    "status_code": 400,
+                    "message": (
+                        '`device_id` parameter is required when `rrm_info_type` is "current_rrm_considerations".'
+                    ),
+                }
+            )
 
-        if object_type.value == "current_rrm_considerations":
-            if not band:
-                raise ToolError(
-                    {
-                        "status_code": 400,
-                        "message": '`band` parameter is required when `rrm_info_type` is "current_rrm_considerations".',
-                    }
-                )
+        if object_type.value == "current_rrm_considerations" and not band:
+            raise ToolError(
+                {
+                    "status_code": 400,
+                    "message": ('`band` parameter is required when `rrm_info_type` is "current_rrm_considerations".'),
+                }
+            )
 
-        if object_type.value == "current_rrm_neighbors":
-            if not band:
-                raise ToolError(
-                    {
-                        "status_code": 400,
-                        "message": '`band` parameter is required when `rrm_info_type` is "current_rrm_neighbors".',
-                    }
-                )
+        if object_type.value == "current_rrm_neighbors" and not band:
+            raise ToolError(
+                {
+                    "status_code": 400,
+                    "message": ('`band` parameter is required when `rrm_info_type` is "current_rrm_neighbors".'),
+                }
+            )
 
         if duration and rrm_info_type.value not in ["events"]:
             raise ToolError(
                 {
                     "status_code": 400,
-                    "message": '`duration` parameter can only be used when `rrm_info_type` is "events".',
+                    "message": ('`duration` parameter can only be used when `rrm_info_type` is "events".'),
                 }
             )
 
@@ -149,7 +196,7 @@ async def get_site_rrm_info(
             raise ToolError(
                 {
                     "status_code": 400,
-                    "message": '`limit` parameter can only be used when `rrm_info_type` is "events".',
+                    "message": ('`limit` parameter can only be used when `rrm_info_type` is "events".'),
                 }
             )
 
@@ -157,15 +204,13 @@ async def get_site_rrm_info(
             raise ToolError(
                 {
                     "status_code": 400,
-                    "message": '`page` parameter can only be used when `rrm_info_type` is "events".',
+                    "message": ('`page` parameter can only be used when `rrm_info_type` is "events".'),
                 }
             )
 
         match object_type.value:
             case "current_channel_planning":
-                response = mistapi.api.v1.sites.rrm.getSiteCurrentChannelPlanning(
-                    apisession, site_id=str(site_id)
-                )
+                response = mistapi.api.v1.sites.rrm.getSiteCurrentChannelPlanning(apisession, site_id=str(site_id))
                 await process_response(response)
             case "current_rrm_considerations":
                 response = mistapi.api.v1.sites.rrm.getSiteCurrentRrmConsiderations(
@@ -177,7 +222,9 @@ async def get_site_rrm_info(
                 await process_response(response)
             case "current_rrm_neighbors":
                 response = mistapi.api.v1.sites.rrm.listSiteCurrentRrmNeighbors(
-                    apisession, site_id=str(site_id), band=str(band.value)
+                    apisession,
+                    site_id=str(site_id),
+                    band=str(band.value),
                 )
                 await process_response(response)
             case "events":
@@ -197,7 +244,12 @@ async def get_site_rrm_info(
                 raise ToolError(
                     {
                         "status_code": 400,
-                        "message": f"Invalid object_type: {object_type.value}. Valid values are: {[e.value for e in Rrm_info_type]}",
+                        "message": (
+                            f"Invalid object_type: "
+                            f"{object_type.value}. Valid values "
+                            f"are: "
+                            f"{[e.value for e in Rrm_info_type]}"
+                        ),
                     }
                 )
 

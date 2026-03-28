@@ -1,16 +1,18 @@
-from dataclasses import dataclass
-from hpe_networking_mcp.platforms.central.models import SiteData, SiteMetrics
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timedelta, timezone
-from typing import List
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
 from hpe_networking_mcp.platforms.central.models import (
     Alert,
     Client,
     Device,
+    EventCategoryCount,
     EventFilters,
     EventNameCount,
     EventSourceTypeCount,
-    EventCategoryCount,
+    SiteData,
+    SiteMetrics,
 )
 
 
@@ -20,7 +22,9 @@ class FilterField:
     allowed_values: list[str] | None = None  # None = free text, list = enumerated
 
 
-def build_odata_filter(pairs: list[tuple["FilterField", str]]) -> str | None:
+def build_odata_filter(
+    pairs: list[tuple["FilterField", str]],
+) -> str | None:
     """
     Build an OData v4.0 filter string from (FilterField, value) pairs.
 
@@ -37,10 +41,7 @@ def build_odata_filter(pairs: list[tuple["FilterField", str]]) -> str | None:
             submitted = [v.strip() for v in value.split(",")]
             invalid = [v for v in submitted if v not in ff.allowed_values]
             if invalid:
-                raise ValueError(
-                    f"Invalid value(s) {invalid} for field '{ff.api_field}'. "
-                    f"Allowed: {ff.allowed_values}"
-                )
+                raise ValueError(f"Invalid value(s) {invalid} for field '{ff.api_field}'. Allowed: {ff.allowed_values}")
 
         if "," in value:
             values_list = [v.strip() for v in value.split(",")]
@@ -55,7 +56,9 @@ def build_odata_filter(pairs: list[tuple["FilterField", str]]) -> str | None:
 SITE_LIMIT = 100
 
 
-def fetch_site_data_parallel(central_conn) -> tuple:
+def fetch_site_data_parallel(
+    central_conn: Any,
+) -> dict[str, SiteData]:
     """
     Fetch site health, device health, and client health data in parallel.
 
@@ -63,7 +66,7 @@ def fetch_site_data_parallel(central_conn) -> tuple:
         central_conn: Central API connection object
 
     Returns:
-        tuple: (site_health_data, device_health_data, client_health_data)
+        dict mapping site names to SiteData objects
     """
     endpoints = [
         "network-monitoring/v1/sites-health",
@@ -72,18 +75,20 @@ def fetch_site_data_parallel(central_conn) -> tuple:
     ]
 
     with ThreadPoolExecutor(max_workers=3) as executor:
-        futures = [
-            executor.submit(paginated_fetch, central_conn, endpoint, SITE_LIMIT)
-            for endpoint in endpoints
-        ]
+        futures = [executor.submit(paginated_fetch, central_conn, endpoint, SITE_LIMIT) for endpoint in endpoints]
         results = [future.result() for future in futures]
 
     return process_site_health_data(*results)
 
 
-def process_site_health_data(site_health, device_health, client_health):
+def process_site_health_data(
+    site_health: list,
+    device_health: list,
+    client_health: list,
+) -> dict[str, SiteData]:
     """
-    Combine site health, device health, and client health data into unified site objects.
+    Combine site health, device health, and client health data into unified
+    site objects.
 
     Args:
         site_health: List of site health data
@@ -93,38 +98,33 @@ def process_site_health_data(site_health, device_health, client_health):
     Returns:
         dict: Dictionary of site names to SiteData objects
     """
-    processed_sites = {
-        site["name"]: transform_to_site_data(site) for site in site_health
-    }
+    processed_sites: dict[str, SiteData] = {site["name"]: transform_to_site_data(site) for site in site_health}
 
     for site in device_health:
         if site["name"] in processed_sites:
-            processed_sites[site["name"]].metrics.devices["Details"] = groups_to_map(
-                site["deviceTypes"]
-            )
+            processed_sites[site["name"]].metrics.devices["Details"] = groups_to_map(site["deviceTypes"])
 
     for site in client_health:
         if site["name"] in processed_sites:
-            processed_sites[site["name"]].metrics.clients["Details"] = groups_to_map(
-                site["clientTypes"]
-            )
+            processed_sites[site["name"]].metrics.clients["Details"] = groups_to_map(site["clientTypes"])
 
     return processed_sites
 
 
 def paginated_fetch(
-    central_conn,
+    central_conn: Any,
     api_path: str,
     limit: int,
     total_key: str = "total",
-    additional_params: dict = None,
+    additional_params: dict | None = None,
     use_cursor: bool = True,
-    different_response_key: str = None,
+    different_response_key: str | None = None,
     items_key: str = "items",
     offset_start: int = 0,
-):
+) -> list:
     """
-    Generic paginated fetch helper supporting both offset and cursor-based pagination.
+    Generic paginated fetch helper supporting both offset and cursor-based
+    pagination.
 
     Args:
         central_conn: Central API connection object
@@ -132,19 +132,24 @@ def paginated_fetch(
         limit: Number of items per request
         total_key: Key name for total count in response
         additional_params: Additional query parameters to include
-        use_cursor: If True, use cursor-based pagination (next). If False, use offset-based.
+        use_cursor: If True, use cursor-based pagination (next).
+            If False, use offset-based.
 
     Returns:
         list: All fetched items across all pages
     """
     total = None
-    items = []
+    items: list = []
     base_params = additional_params.copy() if additional_params else {}
     if use_cursor:
         # Cursor-based pagination (preferred for API stability)
-        next_cursor = 1
+        next_cursor: int | None = 1
         while total is None or next_cursor is not None:
-            params = {**base_params, "limit": limit, "next": next_cursor}
+            params = {
+                **base_params,
+                "limit": limit,
+                "next": next_cursor,
+            }
             response = retry_central_command(
                 central_conn,
                 api_method="GET",
@@ -162,7 +167,11 @@ def paginated_fetch(
         # Offset-based pagination (legacy fallback)
         offset = offset_start
         while total is None or len(items) < total:
-            params = {**base_params, "limit": limit, "offset": offset}
+            params = {
+                **base_params,
+                "limit": limit,
+                "offset": offset,
+            }
             response = retry_central_command(
                 central_conn,
                 api_method="GET",
@@ -180,20 +189,26 @@ def paginated_fetch(
 
 
 def retry_central_command(
-    central_conn, api_method, api_path, api_params=None, max_retries=5
-):
-    """Call central_conn.command and retry immediately up to max_retries on transient errors.
+    central_conn: Any,
+    api_method: str,
+    api_path: str,
+    api_params: dict | None = None,
+    max_retries: int = 5,
+) -> dict:
+    """Call central_conn.command and retry up to max_retries on transient errors.
 
-    Does not sleep between attempts. On persistent server errors (5xx) or rate-limit (429)
-    this raises APIRetryError so the caller can abort and avoid partial DB writes.
+    Does not sleep between attempts. On persistent server errors (5xx) or
+    rate-limit (429) this raises an exception so the caller can abort.
     Client errors (4xx) are raised immediately.
     """
     api_params = api_params or {}
-    last_response = None
+    last_response: dict | None = None
     for attempt in range(1, max_retries + 1):
         try:
             resp = central_conn.command(
-                api_method=api_method, api_path=api_path, api_params=api_params
+                api_method=api_method,
+                api_path=api_path,
+                api_params=api_params,
             )
         except Exception as exc:
             central_conn.logger.error(
@@ -238,11 +253,7 @@ def transform_to_site_data(site_raw: dict) -> SiteData:
     """Transform raw Central API data to standardized SiteData model."""
     health_obj = groups_to_map(site_raw.get("health", {}))
     if all(k in health_obj for k in ["Poor", "Fair", "Good"]):
-        health_obj["Summary"] = round(
-            (health_obj["Poor"] * 0)
-            + (health_obj["Fair"] * 0.5)
-            + (health_obj["Good"] * 1)
-        )
+        health_obj["Summary"] = round((health_obj["Poor"] * 0) + (health_obj["Fair"] * 0.5) + (health_obj["Good"] * 1))
         health_obj.pop("Total", None)
 
     devices_obj = groups_to_map(site_raw.get("devices", {}))
@@ -267,7 +278,7 @@ def transform_to_site_data(site_raw: dict) -> SiteData:
     )
 
 
-def groups_to_map(obj):
+def groups_to_map(obj: Any) -> Any:
     """
     Transform an object that either is {"groups":[...], ...}
     or wraps that as a parent (e.g. {"health": {"groups":[...], "count": ...}})
@@ -278,7 +289,7 @@ def groups_to_map(obj):
 
     # Handle list of device/client types
     if isinstance(obj, list):
-        result = {}
+        result: dict = {}
         for item in obj:
             if not isinstance(item, dict):
                 continue
@@ -311,9 +322,7 @@ def groups_to_map(obj):
     total = obj.get("count") or obj.get("totalCount") or obj.get("total")
     if total is None:
         try:
-            total = sum(
-                int(v) for v in flat.values() if isinstance(v, (int, float, str))
-            )
+            total = sum(int(v) for v in flat.values() if isinstance(v, (int, float, str)))
         except Exception:
             total = None
 
@@ -325,14 +334,10 @@ def groups_to_map(obj):
 
 def _groups_list_to_dict(groups: list) -> dict:
     """Convert list of {name, value/count} to dict."""
-    return {
-        g.get("name"): g.get("value", g.get("count"))
-        for g in groups
-        if g.get("name") is not None
-    }
+    return {g.get("name"): g.get("value", g.get("count")) for g in groups if g.get("name") is not None}
 
 
-def _safe_float(value):
+def _safe_float(value: Any) -> float | None:
     try:
         return float(value)
     except (TypeError, ValueError):
@@ -366,7 +371,7 @@ def clean_device_data(devices: list[dict]) -> list[Device]:
                     name=device.get("deviceName"),
                     function=device.get("deviceFunction"),
                     status=device.get("status"),
-                    is_provisioned=device.get("isProvisioned", "").lower() == "yes",
+                    is_provisioned=(device.get("isProvisioned", "").lower() == "yes"),
                     role=device.get("role"),
                     deployment=device.get("deployment"),
                     tier=device.get("tier"),
@@ -462,7 +467,7 @@ def clean_client_data(clients: list[dict]) -> list[Client]:
     return cleaned_clients
 
 
-def clean_alert_data(alerts: List[dict]) -> List[Alert]:
+def clean_alert_data(alerts: list[dict]) -> list[Alert]:
     cleaned_alerts = []
     for alert in alerts:
         cleaned_alerts.append(
@@ -485,28 +490,28 @@ def clean_alert_data(alerts: List[dict]) -> List[Alert]:
 
 def clean_event_filters(msg: dict) -> EventFilters:
     """Transform raw event-filters API response into a structured EventFilters model."""
-    categories = [
-        EventCategoryCount(category=c["category"], count=c["count"])
-        for c in msg.get("categories", [])
-    ]
+    categories = [EventCategoryCount(category=c["category"], count=c["count"]) for c in msg.get("categories", [])]
     return EventFilters(
         total=sum(c.count for c in categories),
         event_names=[
             EventNameCount(
-                event_id=e["eventId"], event_name=e["eventName"], count=e["count"]
+                event_id=e["eventId"],
+                event_name=e["eventName"],
+                count=e["count"],
             )
             for e in msg.get("eventNames", [])
         ],
         source_types=[
-            EventSourceTypeCount(source_type=s["sourceType"], count=s["count"])
-            for s in msg.get("sourceTypes", [])
+            EventSourceTypeCount(source_type=s["sourceType"], count=s["count"]) for s in msg.get("sourceTypes", [])
         ],
         categories=categories,
     )
 
 
-def compute_time_window(time_range: str) -> tuple[datetime, datetime]:
-    now = datetime.now(timezone.utc)
+def compute_time_window(
+    time_range: str,
+) -> tuple[datetime, datetime]:
+    now = datetime.now(UTC)
 
     if time_range == "last_1h":
         start = now - timedelta(hours=1)

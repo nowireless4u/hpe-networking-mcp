@@ -57,7 +57,5 @@ def register_all(mcp: FastMCP, mode: str = "static") -> int:
         logger.info("GreenLake: registering static tools (10 tools)")
         return _register_static(mcp)
     else:
-        logger.warning(
-            "GreenLake: unknown MCP_TOOL_MODE '{}', falling back to static", mode
-        )
+        logger.warning("GreenLake: unknown MCP_TOOL_MODE '{}', falling back to static", mode)
         return _register_static(mcp)

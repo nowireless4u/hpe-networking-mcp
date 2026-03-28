@@ -1,4 +1,5 @@
 """Central tool registry -- holds the FastMCP instance that tools register against."""
+
 from fastmcp import FastMCP
 
 # Set by platforms.central.register_tools() before tool modules are imported

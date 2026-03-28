@@ -10,19 +10,22 @@
 --------------------------------------------------------------------------------
 """
 
-import mistapi
-from fastmcp import Context
-from fastmcp.exceptions import ToolError
-from hpe_networking_mcp.platforms.mist.client import get_apisession
-from hpe_networking_mcp.platforms.mist.client import process_response, handle_network_error
-from hpe_networking_mcp.platforms.mist.client import format_response
-from hpe_networking_mcp.platforms.mist._registry import mcp
-from loguru import logger
-
-from pydantic import Field
+from enum import Enum
 from typing import Annotated
 from uuid import UUID
-from enum import Enum
+
+import mistapi
+from fastmcp.exceptions import ToolError
+from loguru import logger
+from pydantic import Field
+
+from hpe_networking_mcp.platforms.mist._registry import mcp
+from hpe_networking_mcp.platforms.mist.client import (
+    format_response,
+    get_apisession,
+    handle_network_error,
+    process_response,
+)
 
 
 class Query_type(Enum):
@@ -38,8 +41,12 @@ class Device_type(Enum):
 
 @mcp.tool(
     name="mist_search_device_config_history",
-    description="""Search for entries in device config history.
-This tool can be used to track configuration changes over time, useful for troubleshooting issues that started after a config change.""",
+    description=(
+        "Search for entries in device config history. "
+        "This tool can be used to track configuration "
+        "changes over time, useful for troubleshooting "
+        "issues that started after a config change."
+    ),
     tags={"configuration"},
     annotations={
         "title": "Search device config history",
@@ -50,36 +57,49 @@ This tool can be used to track configuration changes over time, useful for troub
     },
 )
 async def search_device_config_history(
-    site_id: Annotated[UUID, Field(description="""Site ID""")],
+    site_id: Annotated[UUID, Field(description="Site ID")],
     query_type: Annotated[
         Query_type,
         Field(
-            description="""Whether to search for config history entries or just retrieve the last config entry for each device"""
+            description=(
+                "Whether to search for config history entries or just retrieve the last config entry for each device"
+            )
         ),
     ],
     device_type: Annotated[
         Device_type,
-        Field(description="""Type of device to search config history for"""),
+        Field(description=("Type of device to search config history for")),
     ],
     device_mac: Annotated[
         str,
         Field(
-            description="""MAC address of the device to search config history for""",
+            description=("MAC address of the device to search config history for"),
             default=None,
         ),
     ],
     start: Annotated[
-        int, Field(description="""Start of time range (epoch seconds)""", default=None)
+        int,
+        Field(
+            description="Start of time range (epoch seconds)",
+            default=None,
+        ),
     ],
     end: Annotated[
-        int, Field(description="""End of time range (epoch seconds)""", default=None)
+        int,
+        Field(
+            description="End of time range (epoch seconds)",
+            default=None,
+        ),
     ],
     limit: Annotated[
-        int, Field(description="""Max number of results per page""", default=20)
+        int,
+        Field(
+            description="Max number of results per page",
+            default=20,
+        ),
     ] = 20,
 ) -> dict | list | str:
-    """Search for entries in device config history.
-    This tool can be used to track configuration changes over time, useful for troubleshooting issues that started after a config change."""
+    """Search for entries in device config history."""
 
     logger.debug("Tool search_device_config_history called")
     logger.debug(
@@ -102,8 +122,8 @@ async def search_device_config_history(
                 response = mistapi.api.v1.sites.devices.searchSiteDeviceConfigHistory(
                     apisession,
                     site_id=str(site_id),
-                    type=device_type.value if device_type else None,
-                    mac=str(device_mac) if device_mac else None,
+                    type=(device_type.value if device_type else None),
+                    mac=(str(device_mac) if device_mac else None),
                     start=str(start) if start else None,
                     end=str(end) if end else None,
                     limit=limit,
@@ -113,8 +133,8 @@ async def search_device_config_history(
                 response = mistapi.api.v1.sites.devices.searchSiteDeviceLastConfigs(
                     apisession,
                     site_id=str(site_id),
-                    device_type=device_type.value if device_type else None,
-                    mac=str(device_mac) if device_mac else None,
+                    device_type=(device_type.value if device_type else None),
+                    mac=(str(device_mac) if device_mac else None),
                     start=str(start) if start else None,
                     end=str(end) if end else None,
                     limit=limit,
@@ -125,7 +145,12 @@ async def search_device_config_history(
                 raise ToolError(
                     {
                         "status_code": 400,
-                        "message": f"Invalid object_type: {object_type.value}. Valid values are: {[e.value for e in Query_type]}",
+                        "message": (
+                            f"Invalid object_type: "
+                            f"{object_type.value}. Valid values "
+                            f"are: "
+                            f"{[e.value for e in Query_type]}"
+                        ),
                     }
                 )
 

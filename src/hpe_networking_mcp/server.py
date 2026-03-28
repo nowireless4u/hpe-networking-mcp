@@ -53,11 +53,18 @@ async def lifespan(server: FastMCP):
                 }
             )
             # Verify with lightweight call
-            resp = central_conn.command("GET", "network-monitoring/v1/sites-health", api_params={"limit": 1})
+            resp = central_conn.command(
+                "GET",
+                "network-monitoring/v1/sites-health",
+                api_params={"limit": 1},
+            )
             if resp.get("code") and 200 <= resp["code"] < 300:
                 logger.info("Central: connection verified")
             else:
-                logger.warning("Central: verification returned code {}", resp.get("code"))
+                logger.warning(
+                    "Central: verification returned code {}",
+                    resp.get("code"),
+                )
             context["central_conn"] = central_conn
         except Exception as e:
             logger.warning("Central: failed to initialize — {}", e)
@@ -68,7 +75,9 @@ async def lifespan(server: FastMCP):
     # --- GreenLake ---
     if config.greenlake:
         try:
-            from hpe_networking_mcp.platforms.greenlake.auth import TokenManager
+            from hpe_networking_mcp.platforms.greenlake.auth import (
+                TokenManager,
+            )
 
             gl_token_mgr = TokenManager(
                 api_base_url=config.greenlake.api_base_url,
@@ -96,7 +105,9 @@ async def lifespan(server: FastMCP):
 
 def create_server(config: ServerConfig) -> FastMCP:
     """Create and configure the FastMCP server with all enabled platform tools."""
-    from hpe_networking_mcp.middleware.elicitation import ElicitationMiddleware
+    from hpe_networking_mcp.middleware.elicitation import (
+        ElicitationMiddleware,
+    )
     from hpe_networking_mcp.middleware.null_strip import NullStripMiddleware
 
     mcp = FastMCP(

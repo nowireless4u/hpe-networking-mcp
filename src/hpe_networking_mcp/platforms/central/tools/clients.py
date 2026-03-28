@@ -1,13 +1,20 @@
+from typing import Literal
+
 from fastmcp import Context
-from typing import List, Optional, Literal
-from hpe_networking_mcp.platforms.central.models import Client
-from hpe_networking_mcp.platforms.central.utils import clean_client_data, build_odata_filter, FilterField
 from pycentral.new_monitoring.clients import Clients
+
+from hpe_networking_mcp.platforms.central.models import Client
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
+from hpe_networking_mcp.platforms.central.utils import (
+    FilterField,
+    build_odata_filter,
+    clean_client_data,
+)
 
 MISSING_CLIENT_RESPONSE = "Resource not found for the given input."
-# API field name mappings — Literal annotations in the function signature are the source of
-# truth for allowed values; Pydantic validates them before the tool body runs.
+# API field name mappings -- Literal annotations in the function signature are
+# the source of truth for allowed values; Pydantic validates them before the
+# tool body runs.
 CLIENT_FILTER_FIELDS: dict[str, FilterField] = {
     "status": FilterField("status"),
     "connection_type": FilterField("clientConnectionType"),
@@ -22,22 +29,23 @@ def register(mcp):
     @mcp.tool(annotations=READ_ONLY)
     async def central_get_clients(
         ctx: Context,
-        site_id: Optional[str] = None,
-        site_name: Optional[str] = None,
-        serial_number: Optional[str] = None,
-        connection_type: Optional[Literal["Wired", "Wireless"]] = None,
-        status: Optional[Literal["Connected", "Failed"]] = None,
-        wlan_name: Optional[str] = None,
-        vlan_id: Optional[str] = None,
-        tunnel_type: Optional[Literal["Port-based", "User-based", "Overlay"]] = None,
-        start_query_time: Optional[str] = None,
-        end_query_time: Optional[str] = None,
-    ) -> List[Client] | str:
+        site_id: str | None = None,
+        site_name: str | None = None,
+        serial_number: str | None = None,
+        connection_type: Literal["Wired", "Wireless"] | None = None,
+        status: Literal["Connected", "Failed"] | None = None,
+        wlan_name: str | None = None,
+        vlan_id: str | None = None,
+        tunnel_type: Literal["Port-based", "User-based", "Overlay"] | None = None,
+        start_query_time: str | None = None,
+        end_query_time: str | None = None,
+    ) -> list[Client] | str:
         """
         Returns a filtered list of clients from Central using OData v4.0 filter syntax.
 
         Prefer this over any full-inventory fetch for targeted queries by site, status, or
-        connection type. Call central_get_site_name_id_mapping first to obtain site_id values for filtering.
+        connection type. Call central_get_site_name_id_mapping first to obtain site_id values
+        for filtering.
 
         Parameters:
             - site_id: Exact site ID.
@@ -51,9 +59,9 @@ def register(mcp):
             - start_query_time: Start of the query time window (ISO 8601).
             - end_query_time: End of the query time window (ISO 8601).
 
-        Note: Wireless-only fields (wlan_name, wireless_band, wireless_channel, wireless_security,
-        key_management, bssid, radio_mac) are omitted for wired clients. The port field is omitted
-        for wireless clients.
+        Note: Wireless-only fields (wlan_name, wireless_band, wireless_channel,
+        wireless_security, key_management, bssid, radio_mac) are omitted for wired
+        clients. The port field is omitted for wireless clients.
         """
         raw_pairs = [
             ("status", status),
@@ -88,14 +96,15 @@ def register(mcp):
         mac_address: str,
     ) -> Client | str:
         """
-        Find a single client by MAC address. Returns the client if found, otherwise returns an error message.
+        Find a single client by MAC address. Returns the client if found,
+        otherwise returns an error message.
 
         Parameters:
         - mac_address: MAC address of the client to find.
 
-        Note: Wireless-only fields (wlan_name, wireless_band, wireless_channel, wireless_security,
-        key_management, bssid, radio_mac) are omitted for wired clients. The port field is omitted
-        for wireless clients.
+        Note: Wireless-only fields (wlan_name, wireless_band, wireless_channel,
+        wireless_security, key_management, bssid, radio_mac) are omitted for
+        wired clients. The port field is omitted for wireless clients.
         """
         try:
             result = Clients.get_client_details(
@@ -105,8 +114,7 @@ def register(mcp):
         except Exception as e:
             if MISSING_CLIENT_RESPONSE in str(e):
                 return f"No client found with MAC address '{mac_address}'."
-            else:
-                return f"Error occurred while fetching client details: {e}"
+            return f"Error occurred while fetching client details: {e}"
 
         if not result:
             return f"No client found with MAC address '{mac_address}'."

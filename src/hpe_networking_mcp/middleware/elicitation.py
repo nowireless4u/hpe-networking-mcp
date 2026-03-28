@@ -9,7 +9,11 @@ If elicitation support is detected, write tools are enabled for that session.
 import mcp.types
 from fastmcp import Context
 from fastmcp.client.elicitation import ElicitResult
-from fastmcp.server.elicitation import AcceptedElicitation, CancelledElicitation, DeclinedElicitation
+from fastmcp.server.elicitation import (
+    AcceptedElicitation,
+    CancelledElicitation,
+    DeclinedElicitation,
+)
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from loguru import logger
 
@@ -23,7 +27,7 @@ class ElicitationMiddleware(Middleware):
         result = await call_next(context)
         ctx = context.fastmcp_context
         if ctx is None:
-            return result
+            return result  # type: ignore[return-value]
 
         # Access server config from lifespan context
         try:
@@ -32,7 +36,7 @@ class ElicitationMiddleware(Middleware):
             config = None
 
         if config is None:
-            return result
+            return result  # type: ignore[return-value]
 
         enable_write = False
 
@@ -78,7 +82,7 @@ class ElicitationMiddleware(Middleware):
             await ctx.disable_components(tags={"write", "write_delete"}, components={"tool"})
             logger.debug("Elicitation: write tools disabled (no support detected)")
 
-        return result
+        return result  # type: ignore[return-value]
 
 
 async def elicitation_handler(message: str, ctx: Context) -> ElicitResult:

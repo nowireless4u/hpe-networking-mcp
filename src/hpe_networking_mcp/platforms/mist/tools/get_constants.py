@@ -10,18 +10,21 @@
 --------------------------------------------------------------------------------
 """
 
-import mistapi
-from fastmcp import Context
-from fastmcp.exceptions import ToolError
-from hpe_networking_mcp.platforms.mist.client import get_apisession
-from hpe_networking_mcp.platforms.mist.client import process_response, handle_network_error
-from hpe_networking_mcp.platforms.mist.client import format_response
-from hpe_networking_mcp.platforms.mist._registry import mcp
-from loguru import logger
-
-from pydantic import Field
-from typing import Annotated
 from enum import Enum
+from typing import Annotated
+
+import mistapi
+from fastmcp.exceptions import ToolError
+from loguru import logger
+from pydantic import Field
+
+from hpe_networking_mcp.platforms.mist._registry import mcp
+from hpe_networking_mcp.platforms.mist.client import (
+    format_response,
+    get_apisession,
+    handle_network_error,
+    process_response,
+)
 
 
 class Object_type(Enum):
@@ -40,7 +43,13 @@ class Object_type(Enum):
 
 @mcp.tool(
     name="mist_get_constants",
-    description="""Retrieve Mist platform constants including insight metrics, webhook topics, alarm definitions, device models, events definitions, and license types. Use this to understand available options and configurations for the Mist API.""",
+    description=(
+        "Retrieve Mist platform constants including insight "
+        "metrics, webhook topics, alarm definitions, device "
+        "models, events definitions, and license types. Use this "
+        "to understand available options and configurations for "
+        "the Mist API."
+    ),
     tags={"constants"},
     annotations={
         "title": "Get constants",
@@ -54,11 +63,18 @@ async def get_constants(
     object_type: Annotated[
         Object_type,
         Field(
-            description="""Type of constant to retrieve: fingerprint_types, insight_metrics, license_types, webhook_topics, device_models, device_events, mxedge_models, alarm_definitions, client_events, mxedge_events, or nac_events"""
+            description=(
+                "Type of constant to retrieve: "
+                "fingerprint_types, insight_metrics, "
+                "license_types, webhook_topics, device_models, "
+                "device_events, mxedge_models, "
+                "alarm_definitions, client_events, "
+                "mxedge_events, or nac_events"
+            )
         ),
     ],
 ) -> dict | list | str:
-    """Retrieve Mist platform constants including insight metrics, webhook topics, alarm definitions, device models, events definitions, and license types. Use this to understand available options and configurations for the Mist API."""
+    """Retrieve Mist platform constants."""
 
     logger.debug("Tool get_constants called")
     logger.debug("Input Parameters: object_type: %s", object_type)
@@ -68,72 +84,49 @@ async def get_constants(
     try:
         match object_type.value:
             case "fingerprint_types":
-                response = mistapi.api.v1.const.fingerprint_types.listFingerprintTypes(
-                    apisession
-                )
+                response = mistapi.api.v1.const.fingerprint_types.listFingerprintTypes(apisession)
                 await process_response(response)
             case "insight_metrics":
-                response = mistapi.api.v1.const.insight_metrics.listInsightMetrics(
-                    apisession
-                )
+                response = mistapi.api.v1.const.insight_metrics.listInsightMetrics(apisession)
                 await process_response(response)
             case "license_types":
-                response = mistapi.api.v1.const.license_types.listLicenseTypes(
-                    apisession
-                )
+                response = mistapi.api.v1.const.license_types.listLicenseTypes(apisession)
                 await process_response(response)
             case "webhook_topics":
-                response = mistapi.api.v1.const.webhook_topics.listWebhookTopics(
-                    apisession
-                )
+                response = mistapi.api.v1.const.webhook_topics.listWebhookTopics(apisession)
                 await process_response(response)
             case "device_models":
-                response = mistapi.api.v1.const.device_models.listDeviceModels(
-                    apisession
-                )
+                response = mistapi.api.v1.const.device_models.listDeviceModels(apisession)
                 await process_response(response)
             case "device_events":
-                response = (
-                    mistapi.api.v1.const.device_events.listDeviceEventsDefinitions(
-                        apisession
-                    )
-                )
+                response = mistapi.api.v1.const.device_events.listDeviceEventsDefinitions(apisession)
                 await process_response(response)
             case "mxedge_models":
-                response = mistapi.api.v1.const.mxedge_models.listMxEdgeModels(
-                    apisession
-                )
+                response = mistapi.api.v1.const.mxedge_models.listMxEdgeModels(apisession)
                 await process_response(response)
             case "alarm_definitions":
-                response = mistapi.api.v1.const.alarm_defs.listAlarmDefinitions(
-                    apisession
-                )
+                response = mistapi.api.v1.const.alarm_defs.listAlarmDefinitions(apisession)
                 await process_response(response)
             case "client_events":
-                response = (
-                    mistapi.api.v1.const.client_events.listClientEventsDefinitions(
-                        apisession
-                    )
-                )
+                response = mistapi.api.v1.const.client_events.listClientEventsDefinitions(apisession)
                 await process_response(response)
             case "mxedge_events":
-                response = (
-                    mistapi.api.v1.const.mxedge_events.listMxEdgeEventsDefinitions(
-                        apisession
-                    )
-                )
+                response = mistapi.api.v1.const.mxedge_events.listMxEdgeEventsDefinitions(apisession)
                 await process_response(response)
             case "nac_events":
-                response = mistapi.api.v1.const.nac_events.listNacEventsDefinitions(
-                    apisession
-                )
+                response = mistapi.api.v1.const.nac_events.listNacEventsDefinitions(apisession)
                 await process_response(response)
 
             case _:
                 raise ToolError(
                     {
                         "status_code": 400,
-                        "message": f"Invalid object_type: {object_type.value}. Valid values are: {[e.value for e in Object_type]}",
+                        "message": (
+                            f"Invalid object_type: "
+                            f"{object_type.value}. Valid values "
+                            f"are: "
+                            f"{[e.value for e in Object_type]}"
+                        ),
                     }
                 )
 

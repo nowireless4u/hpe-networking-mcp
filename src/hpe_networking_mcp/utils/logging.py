@@ -4,10 +4,10 @@ CRITICAL: MCP protocol requires stdout for JSON-RPC messages only.
 All diagnostic logs MUST go to stderr to avoid protocol corruption.
 """
 
+import contextlib
 import sys
 
 from loguru import logger
-
 
 # Remove all default loguru handlers immediately
 logger.remove()
@@ -39,10 +39,12 @@ def setup_logging(level: str = "INFO", log_file: str | None = None) -> None:
     """
     logger.remove()
 
+    fmt = "{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}"
+
     logger.add(
         sys.stderr,
         level=level.upper(),
-        format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
+        format=fmt,
         colorize=False,
         filter=_log_filter,
     )
@@ -53,14 +55,12 @@ def setup_logging(level: str = "INFO", log_file: str | None = None) -> None:
             rotation="10 MB",
             retention="7 days",
             level="DEBUG",
-            format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
+            format=fmt,
             filter=_log_filter,
         )
 
 
 def flush_logs() -> None:
     """Flush all log handlers. Called during graceful shutdown."""
-    try:
+    with contextlib.suppress(Exception):
         logger.complete()
-    except Exception:
-        pass

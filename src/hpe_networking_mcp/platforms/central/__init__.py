@@ -13,12 +13,12 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
     _registry.mcp = mcp
 
     from hpe_networking_mcp.platforms.central.tools import (
-        sites,
-        devices,
-        clients,
         alerts,
+        clients,
+        devices,
         events,
         prompts,
+        sites,
     )
 
     sites.register(mcp)

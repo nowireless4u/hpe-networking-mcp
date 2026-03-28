@@ -35,14 +35,18 @@ def _coerce_int(value: Any, name: str) -> int:
 # greenlake_get_audit_logs
 # ---------------------------------------------------------------------------
 
+
 @mcp.tool(
     name="greenlake_get_audit_logs",
     description=(
-        "Retrieve HPE GreenLake audit logs with optional filtering and pagination.\n\n"
+        "Retrieve HPE GreenLake audit logs with optional filtering "
+        "and pagination.\n\n"
         "Filter expressions use OData-style syntax: ``key eq 'value'``, "
-        "``contains(key, 'value')``, ``key in ('v1','v2')`` joined by ``and``.\n\n"
-        "Filterable fields: createdAt, category, description, additionalInfo/ipAddress, "
-        "user/username, workspace/workspaceName, application/id, region, hasDetails."
+        "``contains(key, 'value')``, ``key in ('v1','v2')`` joined by "
+        "``and``.\n\n"
+        "Filterable fields: createdAt, category, description, "
+        "additionalInfo/ipAddress, user/username, "
+        "workspace/workspaceName, application/id, region, hasDetails."
     ),
     tags={"greenlake", "audit_logs"},
     annotations={
@@ -60,7 +64,8 @@ async def greenlake_get_audit_logs(
         Field(
             default=None,
             description=(
-                "OData filter expression. Example: ``category eq 'User Management' "
+                "OData filter expression. Example: "
+                "``category eq 'User Management' "
                 "and contains(description, 'logged out')``.\n"
                 "All filter values must be enclosed in single quotes."
             ),
@@ -71,9 +76,10 @@ async def greenlake_get_audit_logs(
         Field(
             default=None,
             description=(
-                "Comma-separated list of properties to include in the response. "
-                "Supported: additionalInfo, createdAt, category, hasDetails, "
-                "workspace/workspaceName, description, user/username."
+                "Comma-separated list of properties to include in "
+                "the response. Supported: additionalInfo, createdAt, "
+                "category, hasDetails, workspace/workspaceName, "
+                "description, user/username."
             ),
         ),
     ] = None,
@@ -81,7 +87,7 @@ async def greenlake_get_audit_logs(
         str | None,
         Field(
             default=None,
-            description="Free-text search across all audit log properties.",
+            description=("Free-text search across all audit log properties."),
         ),
     ] = None,
     limit: Annotated[
@@ -126,9 +132,10 @@ async def greenlake_get_audit_logs(
 # greenlake_get_audit_log_details
 # ---------------------------------------------------------------------------
 
+
 @mcp.tool(
     name="greenlake_get_audit_log_details",
-    description="Get additional detail of an HPE GreenLake audit log entry.",
+    description=("Get additional detail of an HPE GreenLake audit log entry."),
     tags={"greenlake", "audit_logs"},
     annotations={
         "title": "Get GreenLake audit log details",
@@ -143,9 +150,7 @@ async def greenlake_get_audit_log_details(
     id: Annotated[
         str,
         Field(
-            description=(
-                "ID of the audit log record whose ``hasDetails`` value is ``true``."
-            ),
+            description=("ID of the audit log record whose ``hasDetails`` value is ``true``."),
         ),
     ],
 ) -> dict[str, Any]:

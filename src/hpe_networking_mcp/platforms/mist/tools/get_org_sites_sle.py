@@ -10,19 +10,22 @@
 --------------------------------------------------------------------------------
 """
 
-import mistapi
-from fastmcp import Context
-from fastmcp.exceptions import ToolError
-from hpe_networking_mcp.platforms.mist.client import get_apisession
-from hpe_networking_mcp.platforms.mist.client import process_response, handle_network_error
-from hpe_networking_mcp.platforms.mist.client import format_response
-from hpe_networking_mcp.platforms.mist._registry import mcp
-from loguru import logger
-
-from pydantic import Field
+from enum import Enum
 from typing import Annotated
 from uuid import UUID
-from enum import Enum
+
+import mistapi
+from fastmcp.exceptions import ToolError
+from loguru import logger
+from pydantic import Field
+
+from hpe_networking_mcp.platforms.mist._registry import mcp
+from hpe_networking_mcp.platforms.mist.client import (
+    format_response,
+    get_apisession,
+    handle_network_error,
+    process_response,
+)
 
 
 class Sle(Enum):
@@ -33,7 +36,7 @@ class Sle(Enum):
 
 @mcp.tool(
     name="mist_get_org_sites_sle",
-    description="""Get SLE summary for the organization sites.""",
+    description=("Get SLE summary for the organization sites."),
     tags={"sles"},
     annotations={
         "title": "Get org sites sle",
@@ -44,21 +47,33 @@ class Sle(Enum):
     },
 )
 async def get_org_sites_sle(
-    org_id: Annotated[UUID, Field(description="""Organization ID""")],
+    org_id: Annotated[UUID, Field(description="Organization ID")],
     sle: Annotated[
         Sle,
         Field(
-            description="""Type of SLE data to retrieve for the sites. Possible values are `wifi`, `wired`, and `wan`"""
+            description=("Type of SLE data to retrieve for the sites. Possible values are `wifi`, `wired`, and `wan`")
         ),
     ],
     start: Annotated[
-        int, Field(description="""Start of time range (epoch seconds)""", default=None)
+        int,
+        Field(
+            description="Start of time range (epoch seconds)",
+            default=None,
+        ),
     ],
     end: Annotated[
-        int, Field(description="""End of time range (epoch seconds)""", default=None)
+        int,
+        Field(
+            description="End of time range (epoch seconds)",
+            default=None,
+        ),
     ],
     limit: Annotated[
-        int, Field(description="""Max number of results per page""", default=20)
+        int,
+        Field(
+            description="Max number of results per page",
+            default=20,
+        ),
     ] = 20,
 ) -> dict | list | str:
     """Get SLE summary for the organization sites."""

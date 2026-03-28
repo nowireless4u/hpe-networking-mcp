@@ -19,14 +19,14 @@ from pydantic import Field
 from hpe_networking_mcp.platforms.greenlake._registry import mcp
 from hpe_networking_mcp.platforms.greenlake.client import GreenLakeHttpClient
 
-
 # ---------------------------------------------------------------------------
 # greenlake_get_workspace
 # ---------------------------------------------------------------------------
 
+
 @mcp.tool(
     name="greenlake_get_workspace",
-    description="Retrieve basic workspace information for a given HPE GreenLake workspace ID.",
+    description=("Retrieve basic workspace information for a given HPE GreenLake workspace ID."),
     tags={"greenlake", "workspaces"},
     annotations={
         "title": "Get GreenLake workspace",
@@ -38,15 +38,18 @@ from hpe_networking_mcp.platforms.greenlake.client import GreenLakeHttpClient
 )
 async def greenlake_get_workspace(
     ctx: Context,
-    workspaceId: Annotated[
+    workspaceId: Annotated[  # noqa: N803
         str,
         Field(
-            description="The unique identifier of the workspace. Example: 7600415a-8876-5722-9f3c-b0fd11112283",
+            description=("The unique identifier of the workspace. Example: 7600415a-8876-5722-9f3c-b0fd11112283"),
         ),
     ],
 ) -> dict[str, Any]:
     """Retrieve basic information for a single workspace."""
-    logger.debug("greenlake_get_workspace called, workspaceId={}", workspaceId)
+    logger.debug(
+        "greenlake_get_workspace called, workspaceId={}",
+        workspaceId,
+    )
 
     if not workspaceId or not workspaceId.strip():
         raise ValueError("workspaceId is required and cannot be empty")
@@ -63,9 +66,10 @@ async def greenlake_get_workspace(
 # greenlake_get_workspace_details
 # ---------------------------------------------------------------------------
 
+
 @mcp.tool(
     name="greenlake_get_workspace_details",
-    description="Retrieve detailed contact information for an HPE GreenLake workspace.",
+    description=("Retrieve detailed contact information for an HPE GreenLake workspace."),
     tags={"greenlake", "workspaces"},
     annotations={
         "title": "Get GreenLake workspace details",
@@ -77,15 +81,18 @@ async def greenlake_get_workspace(
 )
 async def greenlake_get_workspace_details(
     ctx: Context,
-    workspaceId: Annotated[
+    workspaceId: Annotated[  # noqa: N803
         str,
         Field(
-            description="The unique identifier of the workspace. Example: 7600415a-8876-5722-9f3c-b0fd11112283",
+            description=("The unique identifier of the workspace. Example: 7600415a-8876-5722-9f3c-b0fd11112283"),
         ),
     ],
 ) -> dict[str, Any]:
     """Retrieve detailed workspace information (contact info)."""
-    logger.debug("greenlake_get_workspace_details called, workspaceId={}", workspaceId)
+    logger.debug(
+        "greenlake_get_workspace_details called, workspaceId={}",
+        workspaceId,
+    )
 
     if not workspaceId or not workspaceId.strip():
         raise ValueError("workspaceId is required and cannot be empty")

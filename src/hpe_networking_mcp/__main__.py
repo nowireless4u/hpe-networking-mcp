@@ -14,9 +14,16 @@ def main() -> None:
     )
     parser.add_argument("--port", type=int, help="HTTP port (default: 8000, env: MCP_PORT)")
     parser.add_argument("--host", help="HTTP bind address (default: 0.0.0.0, env: MCP_HOST)")
-    parser.add_argument("--secrets-dir", help="Directory containing secret files (default: /run/secrets, env: SECRETS_DIR)")
+    parser.add_argument(
+        "--secrets-dir",
+        help="Directory containing secret files (default: /run/secrets, env: SECRETS_DIR)",
+    )
     parser.add_argument("--log-level", help="Log level (default: INFO, env: LOG_LEVEL)")
-    parser.add_argument("--enable-write-tools", action="store_true", help="Enable write/mutation tools")
+    parser.add_argument(
+        "--enable-write-tools",
+        action="store_true",
+        help="Enable write/mutation tools",
+    )
     parser.add_argument(
         "--disable-elicitation",
         action="store_true",

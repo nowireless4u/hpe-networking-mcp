@@ -35,15 +35,20 @@ def _coerce_int(value: Any, name: str) -> int:
 # greenlake_get_subscriptions
 # ---------------------------------------------------------------------------
 
+
 @mcp.tool(
     name="greenlake_get_subscriptions",
     description=(
-        "Retrieve subscriptions managed in an HPE GreenLake workspace.\n\n"
-        "Supports OData-style filtering, tag filtering, sorting, field selection, "
-        "and pagination. Rate limit: 60 requests/min per workspace.\n\n"
-        "Filterable properties: availableQuantity, contract, createdAt, endTime, "
-        "id, isEval, key, productType, quantity, sku, skuDescription, startTime, "
-        "subscriptionStatus, subscriptionType, tags, tier, type, updatedAt."
+        "Retrieve subscriptions managed in an HPE GreenLake "
+        "workspace.\n\n"
+        "Supports OData-style filtering, tag filtering, sorting, "
+        "field selection, and pagination. Rate limit: 60 "
+        "requests/min per workspace.\n\n"
+        "Filterable properties: availableQuantity, contract, "
+        "createdAt, endTime, id, isEval, key, productType, "
+        "quantity, sku, skuDescription, startTime, "
+        "subscriptionStatus, subscriptionType, tags, tier, type, "
+        "updatedAt."
     ),
     tags={"greenlake", "subscriptions"},
     annotations={
@@ -63,9 +68,12 @@ async def greenlake_get_subscriptions(
             description=(
                 "OData filter expression. Examples:\n"
                 "- ``key eq 'STIQQ4L04'``\n"
-                "- ``subscriptionType in 'CENTRAL_STORAGE', 'CENTRAL_CONTROLLER'``\n"
-                "- ``startTime gt '2024-01-23T00:00:00.000Z' and endTime lt '2025-02-22T00:00:00.000Z'``\n"
-                "All filter values must be enclosed in single quotes."
+                "- ``subscriptionType in 'CENTRAL_STORAGE', "
+                "'CENTRAL_CONTROLLER'``\n"
+                "- ``startTime gt '2024-01-23T00:00:00.000Z' "
+                "and endTime lt '2025-02-22T00:00:00.000Z'``\n"
+                "All filter values must be enclosed in "
+                "single quotes."
             ),
         ),
     ] = None,
@@ -74,23 +82,21 @@ async def greenlake_get_subscriptions(
         Field(
             default=None,
             alias="filter-tags",
-            description=(
-                "Tag filter expression. Example: ``'city' eq 'London' and 'street' eq 'Piccadilly'``."
-            ),
+            description=("Tag filter expression. Example: ``'city' eq 'London' and 'street' eq 'Piccadilly'``."),
         ),
     ] = None,
     sort: Annotated[
         str | None,
         Field(
             default=None,
-            description="Comma-separated sort expressions. Example: ``key, quote desc``.",
+            description=("Comma-separated sort expressions. Example: ``key, quote desc``."),
         ),
     ] = None,
     select: Annotated[
         list[str] | None,
         Field(
             default=None,
-            description="List of property names to include in the response. Example: ``['id','key']``.",
+            description=("List of property names to include in the response. Example: ``['id','key']``."),
         ),
     ] = None,
     limit: Annotated[
@@ -137,10 +143,12 @@ async def greenlake_get_subscriptions(
 # greenlake_get_subscription_details
 # ---------------------------------------------------------------------------
 
+
 @mcp.tool(
     name="greenlake_get_subscription_details",
     description=(
-        "Get detailed information for a single HPE GreenLake subscription by ID.\n\n"
+        "Get detailed information for a single HPE GreenLake "
+        "subscription by ID.\n\n"
         "Rate limit: 20 requests/min per workspace."
     ),
     tags={"greenlake", "subscriptions"},

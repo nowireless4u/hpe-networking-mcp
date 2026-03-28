@@ -10,19 +10,22 @@
 --------------------------------------------------------------------------------
 """
 
-import mistapi
-from fastmcp import Context
-from fastmcp.exceptions import ToolError
-from hpe_networking_mcp.platforms.mist.client import get_apisession
-from hpe_networking_mcp.platforms.mist.client import process_response, handle_network_error
-from hpe_networking_mcp.platforms.mist.client import format_response
-from hpe_networking_mcp.platforms.mist._registry import mcp
-from loguru import logger
-
-from pydantic import Field
-from typing import Annotated
 from enum import Enum
+from typing import Annotated
 from uuid import UUID
+
+import mistapi
+from fastmcp.exceptions import ToolError
+from loguru import logger
+from pydantic import Field
+
+from hpe_networking_mcp.platforms.mist._registry import mcp
+from hpe_networking_mcp.platforms.mist.client import (
+    format_response,
+    get_apisession,
+    handle_network_error,
+    process_response,
+)
 
 
 class Info_type(Enum):
@@ -32,7 +35,7 @@ class Info_type(Enum):
 
 @mcp.tool(
     name="mist_get_org_or_site_info",
-    description="""Search information about the organizations or sites""",
+    description=("Search information about the organizations or sites"),
     tags={"info"},
     annotations={
         "title": "Get org or site info",
@@ -45,14 +48,12 @@ class Info_type(Enum):
 async def get_org_or_site_info(
     info_type: Annotated[
         Info_type,
-        Field(
-            description="""Type of information to search for. Possible values are `org` and `site`"""
-        ),
+        Field(description=("Type of information to search for. Possible values are `org` and `site`")),
     ],
-    org_id: Annotated[UUID, Field(description="""Organization ID""")],
-    site_id: Annotated[UUID, Field(description="""Site ID""", default=None)],
+    org_id: Annotated[UUID, Field(description="Organization ID")],
+    site_id: Annotated[UUID, Field(description="Site ID", default=None)],
 ) -> dict | list | str:
-    """Search information about the organizations or sites"""
+    """Search information about the organizations or sites."""
 
     logger.debug("Tool get_org_or_site_info called")
     logger.debug(
@@ -68,27 +69,26 @@ async def get_org_or_site_info(
         object_type = info_type
         match object_type.value:
             case "org":
-                response = mistapi.api.v1.orgs.orgs.getOrg(
-                    apisession, org_id=str(org_id)
-                )
+                response = mistapi.api.v1.orgs.orgs.getOrg(apisession, org_id=str(org_id))
                 await process_response(response)
             case "site":
                 if site_id:
-                    response = mistapi.api.v1.sites.sites.getSiteInfo(
-                        apisession, site_id=str(site_id)
-                    )
+                    response = mistapi.api.v1.sites.sites.getSiteInfo(apisession, site_id=str(site_id))
                     await process_response(response)
                 else:
-                    response = mistapi.api.v1.orgs.sites.listOrgSites(
-                        apisession, org_id=str(org_id)
-                    )
+                    response = mistapi.api.v1.orgs.sites.listOrgSites(apisession, org_id=str(org_id))
                     await process_response(response)
 
             case _:
                 raise ToolError(
                     {
                         "status_code": 400,
-                        "message": f"Invalid object_type: {object_type.value}. Valid values are: {[e.value for e in Info_type]}",
+                        "message": (
+                            f"Invalid object_type: "
+                            f"{object_type.value}. Valid values "
+                            f"are: "
+                            f"{[e.value for e in Info_type]}"
+                        ),
                     }
                 )
 

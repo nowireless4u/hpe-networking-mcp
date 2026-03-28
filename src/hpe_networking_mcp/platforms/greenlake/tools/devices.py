@@ -35,15 +35,20 @@ def _coerce_int(value: Any, name: str) -> int:
 # greenlake_get_devices
 # ---------------------------------------------------------------------------
 
+
 @mcp.tool(
     name="greenlake_get_devices",
     description=(
-        "Retrieve a list of devices managed in an HPE GreenLake workspace.\n\n"
-        "Supports OData-style filtering, tag filtering, sorting, field selection, "
-        "and pagination. Rate limit: 160 requests/min per workspace.\n\n"
-        "Filterable properties: application, archived, assignedState, createdAt, "
-        "deviceType, id, location, macAddress, model, partNumber, region, "
-        "serialNumber, subscription, tags, tenantWorkspaceId, type, updatedAt, warranty."
+        "Retrieve a list of devices managed in an HPE GreenLake "
+        "workspace.\n\n"
+        "Supports OData-style filtering, tag filtering, sorting, "
+        "field selection, and pagination. Rate limit: 160 "
+        "requests/min per workspace.\n\n"
+        "Filterable properties: application, archived, "
+        "assignedState, createdAt, deviceType, id, location, "
+        "macAddress, model, partNumber, region, serialNumber, "
+        "subscription, tags, tenantWorkspaceId, type, updatedAt, "
+        "warranty."
     ),
     tags={"greenlake", "devices"},
     annotations={
@@ -74,23 +79,23 @@ async def greenlake_get_devices(
         Field(
             default=None,
             alias="filter-tags",
-            description=(
-                "Tag filter expression. Example: ``'city' eq 'London' and 'street' eq 'Piccadilly'``."
-            ),
+            description=("Tag filter expression. Example: ``'city' eq 'London' and 'street' eq 'Piccadilly'``."),
         ),
     ] = None,
     sort: Annotated[
         str | None,
         Field(
             default=None,
-            description="Comma-separated sort expressions. Example: ``serialNumber,macAddress desc``.",
+            description=("Comma-separated sort expressions. Example: ``serialNumber,macAddress desc``."),
         ),
     ] = None,
     select: Annotated[
         list[str] | None,
         Field(
             default=None,
-            description="List of property names to include in the response. Example: ``['serialNumber','macAddress']``.",
+            description=(
+                "List of property names to include in the response. Example: ``['serialNumber','macAddress']``."
+            ),
         ),
     ] = None,
     limit: Annotated[
@@ -137,10 +142,12 @@ async def greenlake_get_devices(
 # greenlake_get_device_by_id
 # ---------------------------------------------------------------------------
 
+
 @mcp.tool(
     name="greenlake_get_device_by_id",
     description=(
-        "Get details on a specific HPE GreenLake device by its resource ID.\n\n"
+        "Get details on a specific HPE GreenLake device by its "
+        "resource ID.\n\n"
         "Rate limit: 40 requests/min per workspace."
     ),
     tags={"greenlake", "devices"},
