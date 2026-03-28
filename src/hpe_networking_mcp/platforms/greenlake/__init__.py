@@ -16,9 +16,12 @@ def register_tools(mcp_instance: FastMCP, config: ServerConfig) -> int:
 
     _registry.mcp = mcp_instance
 
-    # Register static tools for all 5 services
+    # Determine tool mode from config
+    mode = config.greenlake_tool_mode
+
+    # Register tools using the selected mode
     from hpe_networking_mcp.platforms.greenlake.tools import register_all
 
-    count = register_all(mcp_instance)
-    logger.info("GreenLake: registered {} tools", count)
+    count = register_all(mcp_instance, mode=mode)
+    logger.info("GreenLake: registered {} tools (mode={})", count, mode)
     return count

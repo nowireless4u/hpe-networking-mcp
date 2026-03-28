@@ -9,6 +9,7 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - ENABLE_WRITE_TOOLS=${ENABLE_WRITE_TOOLS:-false}
       - DISABLE_ELICITATION=${DISABLE_ELICITATION:-false}
+      - MCP_TOOL_MODE=${MCP_TOOL_MODE:-static}
     secrets:
       # Mist (remove lines for platforms you don't use)
       - mist_api_token

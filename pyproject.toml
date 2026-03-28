@@ -58,6 +58,9 @@ dev = [
     "factory-boy>=3.3.3",
     "ruff>=0.15.6",
     "mypy>=1.18.0",
+    "bandit>=1.8.0",
+    "pip-audit>=2.7.0",
+    "pre-commit>=4.0.0",
 ]
 
 # Ruff configuration
@@ -83,3 +86,8 @@ markers = [
     "integration: Integration tests",
 ]
 testpaths = ["tests"]
+
+# Bandit configuration
+[tool.bandit]
+exclude_dirs = ["tests"]
+skips = ["B101"]  # Allow assert in tests

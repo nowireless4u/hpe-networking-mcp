@@ -65,6 +65,9 @@ class ServerConfig:
     debug: bool = False
     log_file: str | None = None
 
+    # GreenLake tool mode: "static" (10 dedicated tools) or "dynamic" (3 meta-tools)
+    greenlake_tool_mode: str = "static"
+
     # Platform secrets — None means platform is disabled
     mist: MistSecrets | None = None
     central: CentralSecrets | None = None
@@ -171,7 +174,8 @@ def load_config() -> ServerConfig:
 
     Secrets are read from files at /run/secrets/<name> (Docker Compose secrets).
     Server settings come from environment variables:
-        MCP_PORT, MCP_HOST, LOG_LEVEL, ENABLE_WRITE_TOOLS, DISABLE_ELICITATION
+        MCP_PORT, MCP_HOST, LOG_LEVEL, ENABLE_WRITE_TOOLS, DISABLE_ELICITATION,
+        MCP_TOOL_MODE
 
     Returns:
         ServerConfig with validated platform credentials.
@@ -190,6 +194,9 @@ def load_config() -> ServerConfig:
     debug = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
     log_file = os.getenv("LOG_FILE") or None
 
+    # GreenLake tool mode: "static" (10 dedicated tools) or "dynamic" (3 meta-tools)
+    greenlake_tool_mode = os.getenv("MCP_TOOL_MODE", "static").lower().strip()
+
     # Load platform credentials from Docker secrets
     mist = _load_mist()
     central = _load_central()
@@ -203,6 +210,7 @@ def load_config() -> ServerConfig:
         disable_elicitation=disable_elicit,
         debug=debug,
         log_file=log_file,
+        greenlake_tool_mode=greenlake_tool_mode,
         mist=mist,
         central=central,
         greenlake=greenlake,
@@ -217,4 +225,6 @@ def load_config() -> ServerConfig:
         raise SystemExit(1)
 
     logger.info("Enabled platforms: {}", ", ".join(config.enabled_platforms))
+    if greenlake_tool_mode != "static":
+        logger.info("GreenLake tool mode: {}", greenlake_tool_mode)
     return config

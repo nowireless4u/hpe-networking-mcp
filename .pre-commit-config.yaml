@@ -1,0 +1,31 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.6
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.18.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - pydantic>=2.12.0
+          - pydantic-settings>=2.11.0
+          - loguru>=0.7.3
+        args: [--ignore-missing-imports]
+        pass_filenames: false
+        entry: mypy src/
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.3
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.8.3
+    hooks:
+      - id: bandit
+        args: [-r, src/, -c, pyproject.toml]
+        pass_filenames: false
