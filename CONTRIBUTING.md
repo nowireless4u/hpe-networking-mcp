@@ -6,6 +6,7 @@ Thank you for your interest in contributing! This guide covers how to set up you
 
 - [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
 - [Git](https://git-scm.com/)
+- [GitHub CLI](https://cli.github.com/) (`gh`)
 - A GitHub account
 
 ## Development Setup
@@ -39,33 +40,50 @@ docker compose logs          # Verify all platforms initialize
 ### 4. Run Tests
 
 ```bash
-docker compose run --rm hpe-networking-mcp uv run pytest
-docker compose run --rm hpe-networking-mcp uv run pytest -m unit        # Unit tests only
-docker compose run --rm hpe-networking-mcp uv run pytest -m integration # Integration tests only
+docker compose -f docker-compose.yml -f docker-compose.test.yml run --rm \
+  hpe-networking-mcp uv run pytest tests/ -v
 ```
 
-### 5. Lint and Type Check
+### 5. Run Full CI Check Locally
+
+Run this before pushing to catch issues early:
 
 ```bash
-docker compose run --rm hpe-networking-mcp uv run ruff check .
-docker compose run --rm hpe-networking-mcp uv run ruff format --check .
-docker compose run --rm hpe-networking-mcp uv run mypy src/
+docker compose -f docker-compose.yml -f docker-compose.test.yml run --rm \
+  hpe-networking-mcp sh -c \
+  "uv run ruff check . && uv run ruff format --check . && uv run mypy src/ --ignore-missing-imports && uv run pytest tests/ -q"
 ```
 
 ## Making Changes
 
-### Branching
+### Branch Protection
+
+The `main` branch is protected. All changes must go through a pull request with passing CI checks:
+- **Lint & Format** (ruff check + ruff format)
+- **Type Check** (mypy)
+- **Tests** (pytest)
+- **Docker Build**
+
+Direct pushes to `main` are not allowed.
+
+### Workflow
 
 1. Create a feature branch from `main`:
    ```bash
    git checkout -b feature/your-feature-name
    ```
 2. Make your changes
-3. Rebuild and test:
+3. Run the full CI check locally (see above)
+4. Push your branch:
    ```bash
-   docker compose up -d --build
-   docker compose logs
+   git push -u origin feature/your-feature-name
    ```
+5. Create a pull request:
+   ```bash
+   gh pr create --title "Add your feature" --body "Description of changes"
+   ```
+6. CI runs automatically on the PR — fix any failures on your branch
+7. Once CI passes, the PR can be merged
 
 ### Adding a New Tool
 
@@ -76,6 +94,7 @@ Tools are organized by platform in `src/hpe_networking_mcp/platforms/<platform>/
 3. Use the `@mcp.tool()` decorator with proper annotations
 4. Follow the platform's naming convention (`mist_*`, `central_*`, `greenlake_*`)
 5. For Mist tools, add the tool name to the `TOOLS` dict in `platforms/mist/__init__.py`
+6. Register the new module in the platform's `__init__.py`
 
 ### Adding a New Platform
 
@@ -90,21 +109,24 @@ Tools are organized by platform in `src/hpe_networking_mcp/platforms/<platform>/
 ## Code Standards
 
 - **Python 3.12+**
-- **Formatting**: `ruff format`
+- **Line length**: 120 characters (enforced by ruff)
+- **Formatting**: `ruff format` (double quotes, trailing commas)
 - **Linting**: `ruff check`
-- **Type hints**: Use them for function signatures
+- **Type hints**: Use them for function signatures and class attributes
 - **Tool prefixes**: Always prefix tool names by platform (`mist_*`, `central_*`, `greenlake_*`)
 - **Logging**: Use `from loguru import logger` — all output to stderr
 - **Secrets**: Never log credentials; use `mask_secret()` from `utils/logging.py`
+- **File limits**: Max 500 lines per file; functions under 50 lines
 
 ## Pull Request Process
 
-1. Ensure your branch is up to date with `main`
-2. Verify the Docker build succeeds: `docker compose up -d --build`
-3. Verify all tests pass
-4. Verify linting passes
+1. Create a branch from `main` (`feature/*`, `fix/*`, `docs/*`)
+2. Run the full CI check locally before pushing
+3. Push your branch and create a PR via `gh pr create`
+4. All 4 CI checks must pass before merging
 5. Write a clear PR description explaining what changed and why
 6. Link related issues (e.g., "Closes #5")
+7. Squash merge recommended for clean history
 
 ## Reporting Issues
 
