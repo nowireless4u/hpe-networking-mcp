@@ -14,12 +14,16 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
 
     from hpe_networking_mcp.platforms.central.tools import (
         alerts,
+        applications,
+        audit_logs,
         clients,
         devices,
         events,
         monitoring,
         prompts,
         sites,
+        stats,
+        troubleshooting,
         wlans,
     )
 
@@ -30,7 +34,11 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
     events.register(mcp)
     monitoring.register(mcp)
     wlans.register(mcp)
+    audit_logs.register(mcp)
+    stats.register(mcp)
+    applications.register(mcp)
+    troubleshooting.register(mcp)
     prompts.register(mcp)
 
     logger.info("Central: registered tools and prompts")
-    return 14  # 13 tools + 11 prompts registered
+    return 27  # 26 tools + 11 prompts registered

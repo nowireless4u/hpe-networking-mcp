@@ -13,9 +13,9 @@ Managing HPE networking infrastructure with AI assistants today means juggling t
 
 | Platform | What You Get |
 |----------|-------------|
-| **Juniper Mist** | Wi-Fi, SD-WAN, wired management, SLE metrics, Marvis troubleshooting, alarms, events, device config (30+ tools) |
-| **Aruba Central** | Site health, device inventory, client connectivity, alerts, events, guided prompts (13+ tools) |
-| **HPE GreenLake** | Audit logs, device inventory, subscriptions, user management, workspaces (5+ services) |
+| **Juniper Mist** | Wi-Fi, SD-WAN, wired management, SLE metrics, Marvis troubleshooting, alarms, events, device config, WLAN listing, site health overview, device details (34 tools) |
+| **Aruba Central** | Site health, device inventory, client connectivity, alerts, events, audit logs, device stats, troubleshooting (ping/traceroute/cable test), application visibility, guided prompts (26 tools + 11 prompts) |
+| **HPE GreenLake** | Audit logs, device inventory, subscriptions, user management, workspaces (3 dynamic or 10 static tools) |
 
 ---
 
@@ -178,7 +178,7 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 │   ┌────────────┐ ┌────────────┐ ┌────────────────┐  │
 │   │   Mist     │ │  Central   │ │   GreenLake    │  │
 │   │  mist_*    │ │ central_*  │ │  greenlake_*   │  │
-│   │  30+ tools │ │ 13+ tools  │ │  5+ services   │  │
+│   │  34 tools  │ │ 26 tools   │ │  3/10 tools    │  │
 │   └─────┬──────┘ └─────┬──────┘ └───────┬────────┘  │
 │         │              │                │            │
 └─────────┼──────────────┼────────────────┼────────────┘

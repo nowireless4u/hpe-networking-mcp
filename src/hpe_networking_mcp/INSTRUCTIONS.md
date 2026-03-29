@@ -35,7 +35,9 @@ Tools are namespaced by platform:
 - **Account & Organization**: mist_get_self, mist_get_org_or_site_info, mist_get_org_licenses
 - **Configuration Objects (Read)**: mist_get_configuration_objects, mist_get_configuration_object_schema
 - **Configuration Objects (Write)**: mist_change_org/site_configuration_objects, mist_update_org/site_configuration_objects
-- **Device Management**: mist_search_device, mist_get_stats
+- **WLANs**: mist_get_wlans
+- **Device Management**: mist_search_device, mist_get_stats, mist_get_ap_details, mist_get_switch_details, mist_get_gateway_details
+- **Site Health**: mist_get_site_health
 - **Client Management**: mist_search_client, mist_search_nac_user_macs, mist_search_guest_authorization
 - **Events & Alarms**: mist_search_events, mist_search_alarms, mist_search_audit_logs
 - **Performance & SLE**: mist_get_insight_metrics, mist_get_site_sle, mist_get_org_sle, mist_get_org_sites_sle, mist_list_site_sle_info
@@ -63,10 +65,15 @@ When a Mist tool response includes a `_next` field, use `mist_get_next_page(url=
 
 ## Tool Categories
 - **Sites**: central_get_sites, central_get_site_name_id_mapping
-- **Devices**: central_get_devices, central_find_device
+- **Devices**: central_get_devices, central_find_device, central_get_ap_details, central_get_switch_details, central_get_gateway_details
+- **Device Stats**: central_get_ap_stats, central_get_ap_utilization, central_get_gateway_stats, central_get_gateway_utilization, central_get_gateway_wan_availability, central_get_tunnel_health
+- **WLANs**: central_get_wlans
 - **Clients**: central_get_clients, central_find_client
 - **Alerts**: central_get_alerts
 - **Events**: central_get_events, central_get_events_count
+- **Audit Logs**: central_get_audit_logs, central_get_audit_log_detail
+- **Applications**: central_get_applications
+- **Troubleshooting**: central_ping, central_traceroute, central_cable_test, central_show_commands
 
 ## Guidelines
 - ALWAYS start with `central_get_site_name_id_mapping` for a lightweight overview.
