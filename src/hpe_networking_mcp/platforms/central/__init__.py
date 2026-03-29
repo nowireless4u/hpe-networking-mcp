@@ -41,4 +41,4 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
     prompts.register(mcp)
 
     logger.info("Central: registered tools and prompts")
-    return 27  # 26 tools + 11 prompts registered
+    return 27  # 26 tools + 10 prompts registered

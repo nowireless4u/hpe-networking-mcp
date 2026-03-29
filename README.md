@@ -11,11 +11,46 @@ A unified [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server
 
 Managing HPE networking infrastructure with AI assistants today means juggling three separate MCP servers — each with its own setup, credentials, and quirks. This project consolidates them into one:
 
-| Platform | What You Get |
-|----------|-------------|
-| **Juniper Mist** | Wi-Fi, SD-WAN, wired management, SLE metrics, Marvis troubleshooting, alarms, events, device config, WLAN listing, site health overview, device details (34 tools) |
-| **Aruba Central** | Site health, device inventory, client connectivity, alerts, events, audit logs, device stats, troubleshooting (ping/traceroute/cable test), application visibility, guided prompts (26 tools + 11 prompts) |
-| **HPE GreenLake** | Audit logs, device inventory, subscriptions, user management, workspaces (3 dynamic or 10 static tools) |
+| Category | Mist | Central | GreenLake |
+|----------|:----:|:-------:|:---------:|
+| **Sites / Health Overview** | ✅ | ✅ | — |
+| **WLANs / SSIDs** | ✅ | ✅ | — |
+| **Device Inventory** | ✅ | ✅ | ✅ |
+| **Device Details (AP/Switch/GW)** | ✅ | ✅ | — |
+| **Device Stats & Utilization** | ✅ | ✅ | — |
+| **Client Connectivity** | ✅ | ✅ | — |
+| **Events** | ✅ | ✅ | — |
+| **Alerts / Alarms** | ✅ | ✅ | — |
+| **Audit Logs** | ✅ | ✅ | ✅ |
+| **Application Visibility** | — | ✅ | — |
+| **SLE / Performance Metrics** | ✅ | — | — |
+| **Troubleshooting (Ping/Traceroute)** | ✅ | ✅ | — |
+| **Configuration Management** | ✅ | — | — |
+| **Configuration Write (CRUD)** | ✅ | — | — |
+| **Radio Resource Management** | ✅ | — | — |
+| **Rogue AP Detection** | ✅ | — | — |
+| **Firmware Management** | ✅ | — | — |
+| **Subscriptions / Licensing** | — | — | ✅ |
+| **User Management** | — | — | ✅ |
+| **Workspaces** | — | — | ✅ |
+| **Guided Prompts** | — | ✅ | — |
+| **Dynamic API Discovery** | — | — | ✅ |
+| **Tools** | **34** | **26 + 10 prompts** | **3 or 10** |
+
+### Aruba Central Guided Prompts
+
+The Central module includes 10 guided prompts — multi-step workflow templates that walk the AI through common network operations tasks using the available tools. These prompts orchestrate multiple tool calls in the correct order, so you can simply invoke the prompt and let the AI handle the rest.
+
+- **Network Health Overview** — Assess the health of all sites across your network, flagging those with poor scores or high alert counts for deeper investigation.
+- **Troubleshoot Site** — Deep-dive into a specific site: check health metrics, review active alerts by severity, list all devices, and recommend next steps.
+- **Client Connectivity Check** — Investigate a client by MAC address: find the client, check the connected device's health, review site-level alerts, and identify the likely root cause.
+- **Investigate Device Events** — Pull recent events for a specific device to build a timeline of what happened, highlight recurring issues, and suggest follow-up actions.
+- **Site Event Summary** — Summarize all events at a site over a time window, grouped by category and type, to spot patterns and anomalies.
+- **Failed Clients Investigation** — Find all failed client connections at a site, check the health of the devices they were connected to, and identify common failure patterns.
+- **Site Client Overview** — Get a breakdown of all clients at a site by connection type, status, VLAN, and WLAN to understand the connectivity landscape.
+- **Device Type Health** — Check the health of all devices of a specific type (AP, switch, or gateway) at a site, including alerts and recent event activity.
+- **Critical Alerts Review** — Review all active critical alerts across the entire network, grouped by site and category, with recommended immediate actions.
+- **Compare Site Health** — Side-by-side comparison of health scores, device counts, client counts, and alert breakdowns across multiple sites.
 
 ---
 
@@ -178,7 +213,7 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 │   ┌────────────┐ ┌────────────┐ ┌────────────────┐  │
 │   │   Mist     │ │  Central   │ │   GreenLake    │  │
 │   │  mist_*    │ │ central_*  │ │  greenlake_*   │  │
-│   │  34 tools  │ │ 26 tools   │ │  3/10 tools    │  │
+│   │  34 tools  │ │ 26+10 prmt │ │  3/10 tools    │  │
 │   └─────┬──────┘ └─────┬──────┘ └───────┬────────┘  │
 │         │              │                │            │
 └─────────┼──────────────┼────────────────┼────────────┘

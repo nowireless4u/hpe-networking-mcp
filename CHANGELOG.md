@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Mist tool count: 29 → 34
-- Central tool count: 13 → 26 (+ 11 prompts)
+- Central tool count: 13 → 26 (+ 10 prompts)
 - Total tools: 63 (dynamic mode) or 70 (static mode)
 
 [v0.5.0]: https://github.com/nowireless4u/hpe-networking-mcp/releases/tag/v0.5.0
@@ -45,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `central_get_gateway_details` — Detailed gateway monitoring (interfaces, tunnels, health)
 
 ### Changed
-- Central tool count: 9 → 13 tools (+ 11 prompts)
+- Central tool count: 9 → 13 tools (+ 10 prompts)
 - Total tools across all platforms: 45 (dynamic mode) or 52 (static mode)
 
 [v0.4.0]: https://github.com/nowireless4u/hpe-networking-mcp/releases/tag/v0.4.0
