@@ -1,6 +1,9 @@
 services:
   hpe-networking-mcp:
-    build: .
+    # Pre-built image (default — no build required)
+    image: ghcr.io/nowireless4u/hpe-networking-mcp:latest
+    # To build from source instead, comment out 'image' and uncomment 'build':
+    # build: .
     ports:
       - "${MCP_PORT:-8000}:8000"
     environment:

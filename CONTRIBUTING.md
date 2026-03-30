@@ -40,7 +40,7 @@ docker compose logs          # Verify all platforms initialize
 ### 4. Run Tests
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.test.yml run --rm \
+docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm \
   hpe-networking-mcp uv run pytest tests/ -v
 ```
 
@@ -49,7 +49,7 @@ docker compose -f docker-compose.yml -f docker-compose.test.yml run --rm \
 Run this before pushing to catch issues early:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.test.yml run --rm \
+docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm \
   hpe-networking-mcp sh -c \
   "uv run ruff check . && uv run ruff format --check . && uv run mypy src/ --ignore-missing-imports && uv run pytest tests/ -q"
 ```

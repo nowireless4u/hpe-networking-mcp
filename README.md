@@ -60,12 +60,14 @@ The Central module includes 10 guided prompts — multi-step workflow templates 
 
 - [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
 
-### 1. Clone
+### 1. Get the Project
 
 ```bash
-git clone https://github.com/<org>/hpe-networking-mcp.git
+git clone https://github.com/nowireless4u/hpe-networking-mcp.git
 cd hpe-networking-mcp
 ```
+
+> **No build required.** The `docker-compose.yml` pulls a pre-built image from GitHub Container Registry by default. To build from source instead, edit `docker-compose.yml` and swap `image:` for `build: .`.
 
 ### 2. Configure Secrets
 
@@ -102,10 +104,25 @@ docker compose up -d
 ### 4. Verify
 
 ```bash
-curl http://localhost:8000/mcp
+docker compose logs
 ```
 
-That's it. Your MCP server is running at `http://localhost:8000/mcp`.
+Look for lines like `Mist: registered 34 tools` and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`.
+
+### Docker Image
+
+The pre-built image is available on GitHub Container Registry:
+
+```
+ghcr.io/nowireless4u/hpe-networking-mcp:latest
+ghcr.io/nowireless4u/hpe-networking-mcp:0.5.0
+```
+
+You can also pull it directly:
+
+```bash
+docker pull ghcr.io/nowireless4u/hpe-networking-mcp:latest
+```
 
 ---
 
@@ -256,43 +273,50 @@ Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) ar
 | `LOG_LEVEL` | `info` | Logging level (`debug`, `info`, `warning`, `error`) |
 | `ENABLE_WRITE_TOOLS` | `false` | Enable write/mutation tools |
 | `DISABLE_ELICITATION` | `false` | Disable write confirmation prompts |
+| `MCP_TOOL_MODE` | `dynamic` | GreenLake tool mode: `dynamic` (3 meta-tools) or `static` (10 dedicated tools) |
 
 ---
 
 ## Development
 
-### Local Setup (without Docker)
+All development happens inside Docker containers.
+
+### Build from Source
+
+Edit `docker-compose.yml` — comment out `image:` and uncomment `build:`:
+
+```yaml
+services:
+  hpe-networking-mcp:
+    # image: ghcr.io/nowireless4u/hpe-networking-mcp:latest
+    build: .
+```
+
+Then rebuild:
 
 ```bash
-# Install uv (if not already installed)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Install dependencies
-uv sync
-
-# Create secret files for local dev
-mkdir -p secrets
-cp secrets/mist_api_token.example secrets/mist_api_token
-cp secrets/mist_host.example secrets/mist_host
-# Edit with your real credentials
-
-# Run the server (point to local secrets dir)
-SECRETS_DIR=./secrets uv run python -m hpe_networking_mcp
+docker compose up -d --build
 ```
 
 ### Running Tests
 
 ```bash
-uv run pytest
+docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm \
+  hpe-networking-mcp uv run pytest tests/ -v
 ```
 
-### Linting and Formatting
+### Full CI Check
+
+Run this before pushing to catch issues early:
 
 ```bash
-uv run ruff check .
-uv run ruff format .
-uv run mypy .
+docker compose -f docker-compose.yml -f docker-compose.dev.yml run --rm \
+  hpe-networking-mcp sh -c \
+  "uv run ruff check . && uv run ruff format --check . && \
+   uv run mypy src/ --ignore-missing-imports && uv run pytest tests/ -q"
 ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development workflow.
 
 ---
 
@@ -300,76 +324,133 @@ uv run mypy .
 
 ```
 hpe-networking-mcp/
-├── src/
-│   └── hpe_networking_mcp/
-│       ├── __init__.py
-│       ├── __main__.py          # Entry point
-│       ├── server.py            # FastMCP server setup
-│       ├── config.py            # Secrets loading and validation
-│       ├── middleware/          # Elicitation, logging, etc.
-│       ├── platforms/
-│       │   ├── mist/           # Mist tools and API client
-│       │   ├── central/        # Central tools and API client
-│       │   └── greenlake/      # GreenLake tools and API client
-│       └── utils/              # Shared utilities
-├── tests/
-├── Dockerfile
-├── docker-compose.yml
-├── pyproject.toml
+├── src/hpe_networking_mcp/
+│   ├── __main__.py              # CLI entry point
+│   ├── server.py                # FastMCP server setup and lifespan
+│   ├── config.py                # Docker secrets loading and validation
+│   ├── INSTRUCTIONS.md          # LLM instructions for all platforms
+│   ├── middleware/              # Elicitation and null-strip middleware
+│   └── platforms/
+│       ├── mist/                # 34 Mist tools + API client
+│       ├── central/             # 26 Central tools + 10 prompts + API client
+│       └── greenlake/           # 3 dynamic or 10 static tools + OAuth2 client
+├── tests/                       # Unit and integration tests (119 tests)
+├── docs/                        # PRD, PRP, tool reference
 ├── secrets/                     # Secret files (only .example committed)
-│   ├── mist_api_token.example
-│   ├── mist_host.example
-│   ├── central_*.example
-│   └── greenlake_*.example
-├── .gitignore
-├── .dockerignore
-├── PRD.md
-└── README.md
+├── .github/workflows/           # CI, security, Docker publish
+├── Dockerfile                   # Multi-stage build, non-root user
+├── docker-compose.yml           # Production (pulls GHCR image)
+└── docker-compose.dev.yml       # Development (mounts tests)
 ```
 
 ---
 
 ## Troubleshooting
 
-### Server starts but a platform is disabled
+### Viewing Logs
 
-Check the logs for credential validation errors:
-
-```bash
-docker compose logs hpe-networking-mcp
-```
-
-The server logs which platforms were enabled and which were skipped due to missing or invalid credentials.
-
-### Connection refused on port 8000
-
-Ensure the container is running and the port mapping is correct:
+Always start here when something isn't working:
 
 ```bash
-docker compose ps
+docker compose logs                        # All logs
+docker compose logs --tail 50              # Last 50 lines
+docker compose logs -f                     # Follow live
 ```
 
-### Tools not appearing in your AI client
+### Platform Disabled at Startup
 
-1. Verify the server is reachable: `curl http://localhost:8000/mcp`
-2. Check that your client config uses `streamable-http` as the transport type
-3. Restart your AI client after adding the MCP server config
+If a platform shows as disabled, its secret files are missing or empty:
 
-### Write tools not visible
+```
+Mist: disabled (mist_api_token secret not found)
+Central: disabled (missing secrets: central_client_id, central_client_secret)
+```
 
-Write tools are disabled by default. Set `ENABLE_WRITE_TOOLS=true` in your `docker-compose.yml` environment section and restart the container.
+**Fix:** Verify the secret files exist in `secrets/` and contain valid values (no extra whitespace or newlines). Each file should contain exactly one value.
+
+### Authentication Failures
+
+**Mist** — `Permission Denied` or `401 Unauthorized`:
+- Verify your API token is valid in the Mist Dashboard
+- Check that `mist_host` matches your region (`api.mist.com`, `api.eu.mist.com`, `api.gc1.mist.com`)
+
+**Central** — `Login Failed` or token errors:
+- Verify `central_base_url` matches your Central instance (e.g., `https://us5.api.central.arubanetworks.com`)
+- Ensure the OAuth2 client ID and secret are correct and not expired
+- Check that the API client has the correct scopes in HPE GreenLake Platform
+
+**GreenLake** — `Access token acquisition failed`:
+- Verify `greenlake_api_base_url` (typically `https://global.api.greenlake.hpe.com`)
+- Check that the client credentials are valid and the workspace ID is correct
+- Token refresh happens automatically — if it fails, check the logs for details
+
+### Connection Refused on Port 8000
+
+```bash
+docker compose ps                          # Check container is running
+docker compose restart                     # Restart the container
+```
+
+If port 8000 is already in use by another service, change the port in `docker-compose.yml`:
+```yaml
+ports:
+  - "8080:8000"    # Map to port 8080 instead
+```
+
+### Tools Not Appearing in AI Client
+
+1. Check the server is running: `docker compose logs | grep "registered"`
+2. Verify the endpoint is reachable: `curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/mcp` (expect `406` — this is normal for a plain GET)
+3. Ensure your client config uses `streamable-http` as the transport type
+4. **Restart your AI client** after adding or changing the MCP server config — tools are discovered at session start
+
+### GreenLake Tools Missing
+
+If you expect 10 GreenLake tools but only see 3 (or vice versa), check the `MCP_TOOL_MODE` setting:
+
+```bash
+docker compose logs | grep "GreenLake"
+# "GreenLake: registered 3 tools (mode=dynamic)"  → dynamic mode
+# "GreenLake: registered 10 tools (mode=static)"  → static mode
+```
+
+Change the mode in `docker-compose.yml` under `environment`:
+```yaml
+- MCP_TOOL_MODE=static    # 10 dedicated tools
+- MCP_TOOL_MODE=dynamic   # 3 meta-tools (default)
+```
+
+### Write Tools Not Visible
+
+Write tools are disabled by default. Enable them in `docker-compose.yml`:
+
+```yaml
+- ENABLE_WRITE_TOOLS=true
+```
+
+Then restart: `docker compose restart`
+
+### Container Crashes or Restarts
+
+Check the exit code and logs:
+
+```bash
+docker compose ps -a                       # Check exit code
+docker compose logs --tail 100             # Check recent logs
+```
+
+Common causes:
+- **No valid credentials** — the server exits if zero platforms can be initialized
+- **Port conflict** — another service is using port 8000
+- **Out of memory** — increase Docker's memory allocation
 
 ---
 
 ## Contributing
 
-Contributions are welcome! Please:
+Contributions are welcome! The `main` branch is protected — all changes go through pull requests with CI checks. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development workflow.
 
-1. Fork the repository
-2. Create a feature branch
-3. Ensure tests pass (`uv run pytest`)
-4. Ensure linting passes (`uv run ruff check .`)
-5. Open a pull request
+For a complete list of every tool and its parameters, see [docs/TOOLS.md](docs/TOOLS.md).
 
 ---
 

@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.6.0] - 2026-03-30
+
+### Changed
+- `docker-compose.yml` defaults to GHCR pre-built image instead of local build
+- Renamed `docker-compose.test.yml` to `docker-compose.dev.yml`
+- README: Complete rewrite of Quick Start with GHCR image pull instructions
+- README: Expanded troubleshooting section (auth, tokens, port conflicts, tool modes)
+- README: Updated Development section to Docker-only workflow
+- README: Added `MCP_TOOL_MODE` to configuration table
+
+### Added
+- `docs/TOOLS.md` — Complete tool reference for all 60+ tools with parameters
+- GHCR image pull instructions: `ghcr.io/nowireless4u/hpe-networking-mcp:latest`
+- Release documentation checklist in project conventions
+
+### Fixed
+- Prompt count corrected from 11 to 10 across all documentation
+
+[v0.6.0]: https://github.com/nowireless4u/hpe-networking-mcp/releases/tag/v0.6.0
+
 ## [v0.5.0] - 2026-03-29
 
 ### Added — Central
