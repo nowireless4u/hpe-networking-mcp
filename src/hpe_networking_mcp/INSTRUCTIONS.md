@@ -125,7 +125,7 @@ When asked to bounce a port or cycle PoE on any switch or gateway:
 7. **To translate a port number**, look up the device's interface list first:
    - **Aruba CX**: Access ports use `1/1/N` format (member/slot/port). "Port 1" = `1/1/1`, "Port 2" = `1/1/2`. For stack member 2: `2/1/1`.
    - **Juniper EX**: Access ports use `ge-0/0/N` or `mge-0/0/N` depending on the model. Juniper port numbering starts at 0, so subtract 1 from the user's port number: user "port N" = `ge-0/0/(N-1)`. Examples: "port 1" = `ge-0/0/0`, "port 5" = `ge-0/0/4`, "port 24" = `ge-0/0/23`. For stack member 2: `ge-1/0/0`.
-   - **Formula**: Aruba CX port N = `1/1/N`. Juniper EX port N = `ge-0/0/(N-1)` or `mge-0/0/(N-1)`.
+   - **Formula**: Aruba CX port N = `1/1/N` (stack member M = `M/1/N`). Juniper EX port N = `ge-0/0/(N-1)` or `mge-0/0/(N-1)` (stack member M = `ge-(M-1)/0/(N-1)`).
 8. **When asked to bounce a port on "all switches"**, the AI must:
    - Get all switches from both Central and Mist
    - For each switch, look up the interface list to find the correct port name
