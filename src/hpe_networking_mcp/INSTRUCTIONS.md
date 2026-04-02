@@ -101,6 +101,7 @@ When a Mist tool response includes a `_next` field, use `mist_get_next_page(url=
 
 When asked to bounce a port or cycle PoE on any switch or gateway:
 
+### Switch Safety
 1. **Only use on edge/access layer switches** — switches with end-user devices, APs, cameras, or phones directly connected. **NEVER bounce ports on core or aggregation switches** — these have downstream switches connected and bouncing a port will disconnect an entire switch and all of its clients.
 2. **Always look up the device first** using the appropriate detail tool (`central_get_switch_details`, `mist_search_device`) and determine if it is an edge/access switch by checking:
    - **Device name** — names containing "access", "edge", "closet", or floor/room identifiers are typically edge switches
@@ -108,21 +109,30 @@ When asked to bounce a port or cycle PoE on any switch or gateway:
    - **Switch model** — smaller form factor switches (e.g., CX 6100, 6200, 6300, EX2300, EX4100) are typically edge; larger chassis switches (e.g., CX 8360, 8400, EX4650, QFX) are typically core/aggregation
    - **Check the port configuration** — access/untagged ports are edge ports (safe to bounce). Trunk ports are inter-switch links (never bounce). L3 ports with IP addresses assigned are routed uplinks (never bounce)
    - **If uncertain, ask the user** before proceeding with any port bounce
-7. **Before bouncing across multiple switches** (on any platform — Central or Mist), check each port first:
+3. **Never bounce uplink ports, stack ports, trunk ports, inter-switch links, or aggregation ports** — these carry traffic for multiple devices and VLANs.
+4. **Only bounce ports with APs or end-user devices connected** — these are the only safe ports to reset.
+
+### Pre-Bounce Verification
+5. **Before bouncing across multiple switches** (on any platform — Central or Mist), check each port first:
    - For PoE bounce: verify the port has active PoE power draw — if PoE consumption is zero, skip that port (nothing is powered on it)
    - For port bounce: verify a client or AP is connected to the port — if nothing is connected, skip it
    - This prevents bouncing empty ports and avoids accidentally bouncing uplinks that don't draw PoE
    - **Central**: Use `central_get_switch_details` to check port PoE and client status
    - **Mist**: Use `mist_get_stats` or `mist_get_switch_details` to check port PoE and client status
-3. **Never bounce uplink ports, stack ports, trunk ports, inter-switch links, or aggregation ports** — these carry traffic for multiple devices and VLANs.
-4. **Only bounce ports with APs or end-user devices connected** — these are the only safe ports to reset.
-5. **Port numbering differs by platform:**
-   - Aruba CX: `1/1/1` (member/slot/port). Port 1 = `1/1/1`.
-   - Juniper EX: `ge-0/0/0` (1G), `mge-0/0/0` (multi-gig), `xe-0/0/0` (10G SFP+). Port 1 = `ge-0/0/0` or `mge-0/0/0`.
-   - Stack members increment the first number on both platforms.
-6. When the user says "bounce port 1" without specifying format, translate to the correct platform format:
-   - Aruba CX → `1/1/1`
-   - Juniper EX → `ge-0/0/0` (or `mge-0/0/0` for multi-gig models)
+
+### Unified Port Translation
+6. **Users refer to ports by simple number** (e.g., "port 1", "the first port", "bounce port 3"). The AI must translate this to the correct platform-specific format for each switch. Treat "port 1", "the 1st port", and "the first port" identically — they all mean the first access port on the switch.
+7. **To translate a port number**, look up the device's interface list first:
+   - **Aruba CX**: Access ports use `1/1/N` format (member/slot/port). "Port 1" = `1/1/1`, "Port 2" = `1/1/2`. For stack member 2: `2/1/1`.
+   - **Juniper EX**: Access ports use `ge-0/0/N` or `mge-0/0/N` depending on the model. "Port 1" = `ge-0/0/0` or `mge-0/0/0` (first port is 0, not 1). "Port 2" = `ge-0/0/1` or `mge-0/0/1`. For stack member 2: `ge-1/0/0`.
+   - **Important**: Aruba CX starts at port 1 (`1/1/1`), Juniper EX starts at port 0 (`ge-0/0/0`). "Port 1" means the first port on both — `1/1/1` on CX and `ge-0/0/0` on EX.
+8. **When asked to bounce a port on "all switches"**, the AI must:
+   - Get all switches from both Central and Mist
+   - For each switch, look up the interface list to find the correct port name
+   - Translate the user's port number to the platform-specific format for that specific switch
+   - Verify the port has a client/AP connected or PoE draw before bouncing
+   - Execute the bounce on each qualifying switch
+   - Report which switches were bounced and which were skipped (and why)
 
 ---
 
