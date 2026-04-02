@@ -289,18 +289,18 @@ def register(mcp):
                 skipped.append({"port": port_id, "reason": "port not found"})
             elif info.get("uplink"):
                 skipped.append({"port": port_id, "reason": "uplink port"})
-            elif info.get("vlanMode") == "Trunk":
-                skipped.append({"port": port_id, "reason": "trunk port"})
-            elif info.get("poeStatus") == "Not Used":
+            elif info.get("poeStatus") in (None, "Not Used", ""):
+                # No PoE draw — nothing powered, skip regardless
+                # of trunk/access mode
                 skipped.append(
                     {
                         "port": port_id,
                         "reason": "no PoE draw — nothing powered",
                     }
                 )
-            elif info.get("operStatus") == "Down":
-                skipped.append({"port": port_id, "reason": "port down — nothing connected"})
             else:
+                # Port has active PoE draw — safe to bounce PoE
+                # even if trunk (AP on trunk is valid)
                 safe_ports.append(port_id)
 
         if not safe_ports:
