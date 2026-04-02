@@ -124,8 +124,8 @@ When asked to bounce a port or cycle PoE on any switch or gateway:
 6. **Users refer to ports by simple number** (e.g., "port 1", "the first port", "bounce port 3"). The AI must translate this to the correct platform-specific format for each switch. Treat "port 1", "the 1st port", and "the first port" identically — they all mean the first access port on the switch.
 7. **To translate a port number**, look up the device's interface list first:
    - **Aruba CX**: Access ports use `1/1/N` format (member/slot/port). "Port 1" = `1/1/1`, "Port 2" = `1/1/2`. For stack member 2: `2/1/1`.
-   - **Juniper EX**: Access ports use `ge-0/0/N` or `mge-0/0/N` depending on the model. "Port 1" = `ge-0/0/0` or `mge-0/0/0` (first port is 0, not 1). "Port 2" = `ge-0/0/1` or `mge-0/0/1`. For stack member 2: `ge-1/0/0`.
-   - **Important**: Aruba CX starts at port 1 (`1/1/1`), Juniper EX starts at port 0 (`ge-0/0/0`). "Port 1" means the first port on both — `1/1/1` on CX and `ge-0/0/0` on EX.
+   - **Juniper EX**: Access ports use `ge-0/0/N` or `mge-0/0/N` depending on the model. Juniper port numbering starts at 0, so subtract 1 from the user's port number: user "port N" = `ge-0/0/(N-1)`. Examples: "port 1" = `ge-0/0/0`, "port 5" = `ge-0/0/4`, "port 24" = `ge-0/0/23`. For stack member 2: `ge-1/0/0`.
+   - **Formula**: Aruba CX port N = `1/1/N`. Juniper EX port N = `ge-0/0/(N-1)` or `mge-0/0/(N-1)`.
 8. **When asked to bounce a port on "all switches"**, the AI must:
    - Get all switches from both Central and Mist
    - For each switch, look up the interface list to find the correct port name
