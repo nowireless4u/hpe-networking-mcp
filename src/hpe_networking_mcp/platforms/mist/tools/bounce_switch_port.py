@@ -44,20 +44,50 @@ def _check_mist_ports(
         # Mist if_stat uses .0 suffix (e.g., ge-0/0/0.0)
         stat_key = f"{port_id}.0"
         info = if_stat.get(stat_key, if_stat.get(port_id))
+        resolved_port = port_id
+
+        # Auto-resolve ge- <-> mge- if port not found
+        if info is None and port_id.startswith("ge-"):
+            alt = port_id.replace("ge-", "mge-", 1)
+            alt_key = f"{alt}.0"
+            info = if_stat.get(alt_key, if_stat.get(alt))
+            if info is not None:
+                resolved_port = alt
+                logger.info(
+                    "Port %s not found, resolved to %s",
+                    port_id,
+                    alt,
+                )
+        elif info is None and port_id.startswith("mge-"):
+            alt = port_id.replace("mge-", "ge-", 1)
+            alt_key = f"{alt}.0"
+            info = if_stat.get(alt_key, if_stat.get(alt))
+            if info is not None:
+                resolved_port = alt
+                logger.info(
+                    "Port %s not found, resolved to %s",
+                    port_id,
+                    alt,
+                )
 
         if info is None:
-            skipped.append({"port": port_id, "reason": "port not found in stats"})
-        elif port_id.startswith("xe-"):
-            skipped.append({"port": port_id, "reason": "uplink port (xe-)"})
-        elif not info.get("up", False):
             skipped.append(
                 {
                     "port": port_id,
+                    "reason": "port not found in device stats",
+                }
+            )
+        elif resolved_port.startswith("xe-"):
+            skipped.append({"port": resolved_port, "reason": "uplink port (xe-)"})
+        elif not info.get("up", False):
+            skipped.append(
+                {
+                    "port": resolved_port,
                     "reason": "port down — nothing connected",
                 }
             )
         else:
-            safe_ports.append(port_id)
+            safe_ports.append(resolved_port)
 
     return safe_ports, skipped
 
