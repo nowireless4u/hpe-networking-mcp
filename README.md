@@ -24,7 +24,8 @@ Managing HPE networking infrastructure with AI assistants today means juggling t
 | **Audit Logs** | ✅ | ✅ | ✅ |
 | **Application Visibility** | — | ✅ | — |
 | **SLE / Performance Metrics** | ✅ | — | — |
-| **Troubleshooting (Ping/Traceroute)** | ✅ | ✅ | — |
+| **Troubleshooting (Ping/Traceroute/Bounce)** | ✅ | ✅ | — |
+| **Client Disconnect** | — | ✅ | — |
 | **Configuration Management** | ✅ | — | — |
 | **Configuration Write (CRUD)** | ✅ | — | — |
 | **Radio Resource Management** | ✅ | — | — |
@@ -35,7 +36,7 @@ Managing HPE networking infrastructure with AI assistants today means juggling t
 | **Workspaces** | — | — | ✅ |
 | **Guided Prompts** | — | ✅ | — |
 | **Dynamic API Discovery** | — | — | ✅ |
-| **Tools** | **34** | **26 + 10 prompts** | **3 or 10** |
+| **Tools** | **35** | **35 + 10 prompts** | **3 or 10** |
 
 ### Aruba Central Guided Prompts
 
@@ -107,7 +108,7 @@ docker compose up -d
 docker compose logs
 ```
 
-Look for lines like `Mist: registered 34 tools` and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`.
+Look for lines like `Mist: registered 35 tools` and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`.
 
 ### Docker Image
 
@@ -115,7 +116,7 @@ The pre-built image is available on GitHub Container Registry:
 
 ```
 ghcr.io/nowireless4u/hpe-networking-mcp:latest
-ghcr.io/nowireless4u/hpe-networking-mcp:0.5.0
+ghcr.io/nowireless4u/hpe-networking-mcp:0.6.0
 ```
 
 You can also pull it directly:
@@ -232,7 +233,7 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 │   ┌────────────┐ ┌────────────┐ ┌────────────────┐  │
 │   │   Mist     │ │  Central   │ │   GreenLake    │  │
 │   │  mist_*    │ │ central_*  │ │  greenlake_*   │  │
-│   │  34 tools  │ │ 26+10 prmt │ │  3/10 tools    │  │
+│   │  35 tools  │ │ 35+10 prmt │ │  3/10 tools    │  │
 │   └─────┬──────┘ └─────┬──────┘ └───────┬────────┘  │
 │         │              │                │            │
 └─────────┼──────────────┼────────────────┼────────────┘
@@ -333,8 +334,8 @@ hpe-networking-mcp/
 │   ├── INSTRUCTIONS.md          # LLM instructions for all platforms
 │   ├── middleware/              # Elicitation and null-strip middleware
 │   └── platforms/
-│       ├── mist/                # 34 Mist tools + API client
-│       ├── central/             # 26 Central tools + 10 prompts + API client
+│       ├── mist/                # 35 Mist tools + API client
+│       ├── central/             # 35 Central tools + 10 prompts + API client
 │       └── greenlake/           # 3 dynamic or 10 static tools + OAuth2 client
 ├── tests/                       # Unit and integration tests (119 tests)
 ├── docs/                        # PRD, PRP, tool reference

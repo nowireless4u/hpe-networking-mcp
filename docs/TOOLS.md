@@ -8,8 +8,8 @@ and `greenlake_*` (HPE GreenLake).
 
 | Platform | Read-Only Tools | Write Tools | Prompts | Total |
 |----------|----------------|-------------|---------|-------|
-| Juniper Mist | 30 | 4 | -- | 34 |
-| Aruba Central | 26 | -- | 10 | 36 |
+| Juniper Mist | 31 | 4 | -- | 35 |
+| Aruba Central | 35 | -- | 10 | 45 |
 | HPE GreenLake (static mode) | 10 | -- | -- | 10 |
 | HPE GreenLake (dynamic mode) | 3 | -- | -- | 3 |
 
@@ -25,7 +25,7 @@ GreenLake supports two mutually exclusive tool modes controlled by
 
 ---
 
-## Juniper Mist (34 tools)
+## Juniper Mist (35 tools)
 
 ### Account and Organization
 
@@ -205,6 +205,16 @@ GreenLake supports two mutually exclusive tool modes controlled by
 |-----------|------|----------|-------------|
 | site_id | UUID | Yes | Site ID. |
 | device_id | UUID | Yes | Gateway device ID (use `mist_search_device` to find it). |
+
+#### `mist_bounce_switch_port`
+
+> Bounce ports on a Juniper EX switch to reset link state. Only bounce edge/access ports — never uplinks, stack, or aggregation ports.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| site_id | UUID | Yes | Site ID. |
+| device_id | UUID | Yes | Device ID of the EX switch (use `mist_search_device` to find it). |
+| ports | str | Yes | Comma-separated port names (e.g., `ge-0/0/0,ge-0/0/1`). Juniper format: `ge-0/0/0` (1G), `mge-0/0/0` (multi-gig). |
 
 ### Events, Alarms, and Audit Logs
 
@@ -485,7 +495,7 @@ GreenLake supports two mutually exclusive tool modes controlled by
 
 ---
 
-## Aruba Central (26 tools + 10 prompts)
+## Aruba Central (35 tools + 10 prompts)
 
 ### Sites
 
@@ -794,6 +804,85 @@ No parameters. Returns a dict sorted by health score (worst first).
 | serial_number | str | Yes | Device serial number. |
 | device_type | str | Yes | `aos-s`, `cx`, or `gateways`. |
 | commands | str | Yes | Comma-separated show commands (e.g. `show version,show interfaces`). |
+
+#### `central_disconnect_users_ssid`
+
+> Disconnect all users from a specific SSID.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| serial_number | str | Yes | AP serial number. |
+| ssid | str | Yes | SSID name to disconnect all users from. |
+
+#### `central_disconnect_users_ap`
+
+> Disconnect all users from a specific AP.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| serial_number | str | Yes | AP serial number. |
+
+#### `central_disconnect_client_ap`
+
+> Disconnect a specific client by MAC address from an AP.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| serial_number | str | Yes | AP serial number. |
+| mac_address | str | Yes | Client MAC address. |
+
+#### `central_disconnect_client_gateway`
+
+> Disconnect a specific client by MAC address from a gateway.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| serial_number | str | Yes | Gateway serial number. |
+| mac_address | str | Yes | Client MAC address. |
+
+#### `central_disconnect_clients_gateway`
+
+> Disconnect all clients from a gateway.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| serial_number | str | Yes | Gateway serial number. |
+
+#### `central_port_bounce_switch`
+
+> Bounce a port on a CX switch to reset link state.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| serial_number | str | Yes | Switch serial number. |
+| ports | str | Yes | Comma-separated port list in CX format (e.g. `1/1/1,1/1/2`). |
+
+#### `central_poe_bounce_switch`
+
+> Cycle PoE power on a CX switch port to reset a connected PoE device.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| serial_number | str | Yes | Switch serial number. |
+| ports | str | Yes | Comma-separated port list in CX format (e.g. `1/1/1,1/1/2`). |
+
+#### `central_port_bounce_gateway`
+
+> Bounce a port on a gateway to reset link state.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| serial_number | str | Yes | Gateway serial number. |
+| ports | str | Yes | Comma-separated port list. |
+
+#### `central_poe_bounce_gateway`
+
+> Cycle PoE power on a gateway port to reset a connected PoE device.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| serial_number | str | Yes | Gateway serial number. |
+| ports | str | Yes | Comma-separated port list. |
 
 ### Guided Prompts
 

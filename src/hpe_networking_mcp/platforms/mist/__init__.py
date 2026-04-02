@@ -22,6 +22,7 @@ TOOLS = {
         "mist_get_ap_details",
         "mist_get_switch_details",
         "mist_get_gateway_details",
+        "mist_bounce_switch_port",
     ],
     "events": [
         "mist_search_events",

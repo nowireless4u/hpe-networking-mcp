@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.6.0] - 2026-04-02
+
+### Added — Central
+- `central_disconnect_users_ssid` — Disconnect all users from a specific SSID
+- `central_disconnect_users_ap` — Disconnect all users from an AP
+- `central_disconnect_client_ap` — Disconnect client by MAC from an AP
+- `central_disconnect_client_gateway` — Disconnect client by MAC from a gateway
+- `central_disconnect_clients_gateway` — Disconnect all clients from a gateway
+- `central_port_bounce_switch` — Port bounce on CX switch
+- `central_poe_bounce_switch` — PoE bounce on CX switch
+- `central_port_bounce_gateway` — Port bounce on gateway
+- `central_poe_bounce_gateway` — PoE bounce on gateway
+
+### Added — Mist
+- `mist_bounce_switch_port` — Port bounce on Juniper EX switch
+
+### Added — Safety
+- Port safety rules in INSTRUCTIONS.md — AI must check interfaces before bouncing
+- Platform-specific port naming guidance (Aruba CX vs Juniper EX)
+
+### Changed
+- Mist tool count: 34 → 35
+- Central tool count: 26 → 35 (+ 10 prompts)
+- Total tools: 73 (dynamic mode) or 80 (static mode)
+
+[v0.6.0]: https://github.com/nowireless4u/hpe-networking-mcp/releases/tag/v0.6.0
+
 ## [v0.5.1] - 2026-04-02
 
 ### Fixed

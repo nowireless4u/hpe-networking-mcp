@@ -36,7 +36,7 @@ Tools are namespaced by platform:
 - **Configuration Objects (Read)**: mist_get_configuration_objects, mist_get_configuration_object_schema
 - **Configuration Objects (Write)**: mist_change_org/site_configuration_objects, mist_update_org/site_configuration_objects
 - **WLANs**: mist_get_wlans
-- **Device Management**: mist_search_device, mist_get_stats, mist_get_ap_details, mist_get_switch_details, mist_get_gateway_details
+- **Device Management**: mist_search_device, mist_get_stats, mist_get_ap_details, mist_get_switch_details, mist_get_gateway_details, mist_bounce_switch_port
 - **Site Health**: mist_get_site_health
 - **Client Management**: mist_search_client, mist_search_nac_user_macs, mist_search_guest_authorization
 - **Events & Alarms**: mist_search_events, mist_search_alarms, mist_search_audit_logs
@@ -73,7 +73,7 @@ When a Mist tool response includes a `_next` field, use `mist_get_next_page(url=
 - **Events**: central_get_events, central_get_events_count
 - **Audit Logs**: central_get_audit_logs, central_get_audit_log_detail
 - **Applications**: central_get_applications
-- **Troubleshooting**: central_ping, central_traceroute, central_cable_test, central_show_commands
+- **Troubleshooting**: central_ping, central_traceroute, central_cable_test, central_show_commands, central_disconnect_users_ssid, central_disconnect_users_ap, central_disconnect_client_ap, central_disconnect_client_gateway, central_disconnect_clients_gateway, central_port_bounce_switch, central_poe_bounce_switch, central_port_bounce_gateway, central_poe_bounce_gateway
 
 ## Guidelines
 - ALWAYS start with `central_get_site_name_id_mapping` for a lightweight overview.
@@ -92,6 +92,37 @@ When a Mist tool response includes a `_next` field, use `mist_get_next_page(url=
 - **Users**: greenlake_get_users, greenlake_get_user_details
 - **Workspaces**: greenlake_get_workspace, greenlake_get_workspace_details
 - **Dynamic Tools**: greenlake_list_endpoints, greenlake_get_endpoint_schema, greenlake_invoke_endpoint
+
+---
+
+## Port Bounce and PoE Bounce Safety Rules
+
+**CRITICAL: Port and PoE bounce tools can cause network outages if used incorrectly.**
+
+When asked to bounce a port or cycle PoE on any switch or gateway:
+
+1. **Only use on edge/access layer switches** — switches with end-user devices, APs, cameras, or phones directly connected. **NEVER bounce ports on core or aggregation switches** — these have downstream switches connected and bouncing a port will disconnect an entire switch and all of its clients.
+2. **Always look up the device first** using the appropriate detail tool (`central_get_switch_details`, `mist_search_device`) and determine if it is an edge/access switch by checking:
+   - **Device name** — names containing "access", "edge", "closet", or floor/room identifiers are typically edge switches
+   - **Connected devices on ports** — if ports show APs, phones, cameras, or workstations connected, it is an edge switch. If ports show other switches connected, it is a core/aggregation switch
+   - **Switch model** — smaller form factor switches (e.g., CX 6100, 6200, 6300, EX2300, EX4100) are typically edge; larger chassis switches (e.g., CX 8360, 8400, EX4650, QFX) are typically core/aggregation
+   - **Check the port configuration** — access/untagged ports are edge ports (safe to bounce). Trunk ports are inter-switch links (never bounce). L3 ports with IP addresses assigned are routed uplinks (never bounce)
+   - **If uncertain, ask the user** before proceeding with any port bounce
+7. **Before bouncing across multiple switches** (on any platform — Central or Mist), check each port first:
+   - For PoE bounce: verify the port has active PoE power draw — if PoE consumption is zero, skip that port (nothing is powered on it)
+   - For port bounce: verify a client or AP is connected to the port — if nothing is connected, skip it
+   - This prevents bouncing empty ports and avoids accidentally bouncing uplinks that don't draw PoE
+   - **Central**: Use `central_get_switch_details` to check port PoE and client status
+   - **Mist**: Use `mist_get_stats` or `mist_get_switch_details` to check port PoE and client status
+3. **Never bounce uplink ports, stack ports, trunk ports, inter-switch links, or aggregation ports** — these carry traffic for multiple devices and VLANs.
+4. **Only bounce ports with APs or end-user devices connected** — these are the only safe ports to reset.
+5. **Port numbering differs by platform:**
+   - Aruba CX: `1/1/1` (member/slot/port). Port 1 = `1/1/1`.
+   - Juniper EX: `ge-0/0/0` (1G), `mge-0/0/0` (multi-gig), `xe-0/0/0` (10G SFP+). Port 1 = `ge-0/0/0` or `mge-0/0/0`.
+   - Stack members increment the first number on both platforms.
+6. When the user says "bounce port 1" without specifying format, translate to the correct platform format:
+   - Aruba CX → `1/1/1`
+   - Juniper EX → `ge-0/0/0` (or `mge-0/0/0` for multi-gig models)
 
 ---
 
