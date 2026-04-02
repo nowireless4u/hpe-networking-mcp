@@ -130,18 +130,20 @@ docker pull ghcr.io/nowireless4u/hpe-networking-mcp:latest
 
 ### Claude Desktop
 
-Add to your `claude_desktop_config.json`:
+Claude Desktop requires a stdio-to-HTTP bridge since it doesn't natively support streamable HTTP. Add to your `claude_desktop_config.json` (located at `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
 
 ```json
 {
   "mcpServers": {
     "hpe-networking": {
-      "type": "streamable-http",
-      "url": "http://localhost:8000/mcp"
+      "command": "npx",
+      "args": ["-y", "supergateway", "--streamableHttp", "http://localhost:8000/mcp"]
     }
   }
 }
 ```
+
+> **Requires Node.js** — [install Node.js](https://nodejs.org/) if you don't have `npx` available. The `supergateway` package is downloaded automatically on first launch.
 
 ### Claude Code
 
@@ -151,11 +153,11 @@ claude mcp add hpe-networking --transport http http://localhost:8000/mcp
 
 ### VS Code / GitHub Copilot
 
-Add to your `.vscode/mcp.json` or MCP settings:
+Add to your `.vscode/mcp.json` or VS Code MCP settings:
 
 ```json
 {
-  "mcpServers": {
+  "servers": {
     "hpe-networking": {
       "type": "streamable-http",
       "url": "http://localhost:8000/mcp"
@@ -401,8 +403,27 @@ ports:
 
 1. Check the server is running: `docker compose logs | grep "registered"`
 2. Verify the endpoint is reachable: `curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/mcp` (expect `406` — this is normal for a plain GET)
-3. Ensure your client config uses `streamable-http` as the transport type
-4. **Restart your AI client** after adding or changing the MCP server config — tools are discovered at session start
+3. **Restart your AI client** after adding or changing the MCP server config — tools are discovered at session start
+
+### Claude Desktop: "Not a valid MCP server configuration"
+
+Claude Desktop doesn't natively support streamable HTTP — it requires a stdio bridge. Use `supergateway`:
+
+```json
+{
+  "mcpServers": {
+    "hpe-networking": {
+      "command": "npx",
+      "args": ["-y", "supergateway", "--streamableHttp", "http://localhost:8000/mcp"]
+    }
+  }
+}
+```
+
+If tools time out after ~4 minutes, check that:
+- The Docker container is running and healthy: `docker compose ps`
+- Node.js is installed: `npx --version`
+- The container didn't lose connectivity after sleep: `docker compose restart`
 
 ### GreenLake Tools Missing
 

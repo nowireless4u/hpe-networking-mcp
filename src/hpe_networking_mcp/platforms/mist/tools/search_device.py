@@ -101,13 +101,6 @@ async def search_device(
             default=None,
         ),
     ],
-    vc_mac: Annotated[
-        str,
-        Field(
-            description=("MAC address of the virtual chassis (switch stack) to filter inventory by"),
-            default=None,
-        ),
-    ],
     device_type: Annotated[
         Device_type,
         Field(
@@ -149,15 +142,13 @@ async def search_device(
     logger.debug(
         "Input Parameters: org_id: %s, site_id: %s, "
         "serial: %s, model: %s, mac: %s, version: %s, "
-        "vc_mac: %s, device_type: %s, status: %s, "
-        "text: %s, limit: %s",
+        "device_type: %s, status: %s, text: %s, limit: %s",
         org_id,
         site_id,
         serial,
         model,
         mac,
         version,
-        vc_mac,
         device_type,
         status,
         text,
@@ -167,19 +158,29 @@ async def search_device(
     apisession, response_format = await get_apisession()
 
     try:
+        kwargs: dict = {
+            "org_id": str(org_id),
+            "limit": limit,
+        }
+        if serial:
+            kwargs["serial"] = serial
+        if model:
+            kwargs["model"] = model
+        if device_type:
+            kwargs["type"] = device_type.value
+        if mac:
+            kwargs["mac"] = mac
+        if site_id:
+            kwargs["site_id"] = str(site_id)
+        if version:
+            kwargs["version"] = version
+        if text:
+            kwargs["text"] = text
+        if status:
+            kwargs["status"] = status.value
         response = mistapi.api.v1.orgs.inventory.searchOrgInventory(
             apisession,
-            org_id=str(org_id),
-            serial=serial if serial else None,
-            model=model if model else None,
-            type=(device_type.value if device_type else None),
-            mac=mac if mac else None,
-            site_id=str(site_id) if site_id else None,
-            vc_mac=vc_mac if vc_mac else None,
-            version=version if version else None,
-            text=text if text else None,
-            status=(status.value if status else None),
-            limit=limit,
+            **kwargs,
         )
         await process_response(response)
         if isinstance(response.data, dict):

@@ -1,9 +1,9 @@
 services:
   hpe-networking-mcp:
-    # Pre-built image (default — no build required)
-    image: ghcr.io/nowireless4u/hpe-networking-mcp:latest
-    # To build from source instead, comment out 'image' and uncomment 'build':
-    # build: .
+    # Pre-built image (uncomment for amd64 systems — no build required):
+    # image: ghcr.io/nowireless4u/hpe-networking-mcp:latest
+    # Build from source (required for Apple Silicon / ARM):
+    build: .
     ports:
       - "${MCP_PORT:-8000}:8000"
     environment:
@@ -28,7 +28,7 @@ services:
       - greenlake_workspace_id
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "import httpx; r = httpx.get('http://localhost:8000/mcp', timeout=5)"]
+      test: ["CMD", "uv", "run", "--no-sync", "python", "-c", "import httpx; r = httpx.get('http://localhost:8000/mcp', timeout=5)"]
       interval: 30s
       timeout: 10s
       retries: 3

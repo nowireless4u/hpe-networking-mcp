@@ -5,25 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v0.6.0] - 2026-03-30
-
-### Changed
-- `docker-compose.yml` defaults to GHCR pre-built image instead of local build
-- Renamed `docker-compose.test.yml` to `docker-compose.dev.yml`
-- README: Complete rewrite of Quick Start with GHCR image pull instructions
-- README: Expanded troubleshooting section (auth, tokens, port conflicts, tool modes)
-- README: Updated Development section to Docker-only workflow
-- README: Added `MCP_TOOL_MODE` to configuration table
-
-### Added
-- `docs/TOOLS.md` — Complete tool reference for all 60+ tools with parameters
-- GHCR image pull instructions: `ghcr.io/nowireless4u/hpe-networking-mcp:latest`
-- Release documentation checklist in project conventions
+## [v0.5.1] - 2026-04-02
 
 ### Fixed
-- Prompt count corrected from 11 to 10 across all documentation
+- `mist_search_device`: removed `vc_mac` parameter not supported by installed `mistapi` SDK version — fixes 503 errors on device search
+- `mist_search_device`: use kwargs dict to only pass non-None parameters to SDK — prevents unexpected keyword argument errors
+- Claude Desktop: switched from `mcp-remote` to `supergateway` for stdio-to-HTTP bridging — fixes tool call timeouts and session loss after system sleep
+- Docker health check: use `uv run --no-sync python` instead of bare `python` to find httpx in the virtual environment — fixes persistent "unhealthy" status
+- Docker Compose: default to local `build: .` instead of GHCR image for Apple Silicon / ARM compatibility
 
-[v0.6.0]: https://github.com/nowireless4u/hpe-networking-mcp/releases/tag/v0.6.0
+### Changed
+- README: Claude Desktop setup now uses `supergateway` bridge with full troubleshooting guide
+- README: Added troubleshooting for Claude Desktop configuration errors and tool timeouts
+
+[v0.5.1]: https://github.com/nowireless4u/hpe-networking-mcp/releases/tag/v0.5.1
 
 ## [v0.5.0] - 2026-03-29
 
