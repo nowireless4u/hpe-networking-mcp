@@ -1,9 +1,9 @@
 services:
   hpe-networking-mcp:
-    # Pre-built image (uncomment for amd64 systems — no build required):
-    # image: ghcr.io/nowireless4u/hpe-networking-mcp:latest
-    # Build from source (required for Apple Silicon / ARM):
-    build: .
+    # Pre-built image (default — supports amd64 and arm64):
+    image: ghcr.io/nowireless4u/hpe-networking-mcp:latest
+    # To build from source instead, comment out 'image' and uncomment 'build':
+    # build: .
     ports:
       - "${MCP_PORT:-8000}:8000"
     environment:
