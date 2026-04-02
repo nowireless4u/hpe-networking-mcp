@@ -17,10 +17,13 @@ from hpe_networking_mcp.platforms.mist.client import (
 @mcp.tool(
     name="mist_bounce_switch_port",
     description=(
-        "Bounce ports on a Juniper EX switch to reset link state. "
-        "Only bounce edge/access ports with APs or clients connected "
-        "— never bounce uplink (xe-), stack, or aggregation ports. "
-        "Use mist_search_device to find the device_id and check interfaces before bouncing."
+        "Bounce ports on a Juniper EX switch. "
+        "BEFORE calling this tool, you MUST: "
+        "1) Use mist_get_stats or mist_get_switch_details to verify "
+        "it is an edge/access switch and check that the target port "
+        "has a client or AP connected with active PoE draw. "
+        "2) Skip ports with no PoE consumption or no connected devices. "
+        "3) NEVER bounce uplink (xe-), stack, or aggregation ports."
     ),
     tags={"devices"},
     annotations={
@@ -66,9 +69,9 @@ async def bounce_switch_port(
     apisession, _response_format = await get_apisession()
 
     try:
-        from mistapi.api.v1.sites.devices import utilities as device_utils
+        import mistapi.api.v1.sites.devices
 
-        response = device_utils.bouncePort(
+        response = mistapi.api.v1.sites.devices.bounceDevicePort(
             apisession,
             site_id=str(site_id),
             device_id=str(device_id),

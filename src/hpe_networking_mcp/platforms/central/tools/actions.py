@@ -183,22 +183,23 @@ def register(mcp):
         ports: str,
     ) -> dict | str:
         """
-        Bounce ports on an Aruba CX edge/access switch to reset link state.
+        Bounce ports on an Aruba CX edge/access switch.
 
-        SAFETY: Only use on edge/access layer switches with end-user
-        devices or APs connected. NEVER use on core or aggregation
-        switches — bouncing ports on those will disconnect downstream
-        switches and cause network-wide outages. Only bounce ports
-        with clients or APs connected — never bounce uplink, stack,
-        trunk, or inter-switch ports.
+        BEFORE calling this tool, you MUST:
+        1. Call central_get_switch_details to verify it is an
+           edge/access switch (not core/aggregation)
+        2. Check that the target port has a client or AP connected
+           with active PoE draw — skip ports with no PoE consumption
+        3. Verify the port is an access port (not uplink/trunk/stack)
 
-        Use central_get_switch_details to verify the switch role and
-        identify safe edge ports before bouncing.
+        NEVER bounce ports on core or aggregation switches — this
+        will disconnect downstream switches and cause outages.
+
         Port format: 1/1/1 (member/slot/port).
 
         Parameters:
-            serial_number: Edge/access CX switch serial number (required).
-            ports: Comma-separated port list, e.g. "1/1/1,1/1/2" (required).
+            serial_number: Edge/access CX switch serial number.
+            ports: Comma-separated port list, e.g. "1/1/1,1/1/2".
         """
         conn = ctx.lifespan_context["central_conn"]
         port_list = [p.strip() for p in ports.split(",")]
@@ -224,21 +225,22 @@ def register(mcp):
         ports: str,
     ) -> dict | str:
         """
-        Cycle PoE power on Aruba CX edge/access switch ports to
-        reset connected PoE devices (APs, cameras, phones).
+        Cycle PoE power on Aruba CX edge/access switch ports.
 
-        SAFETY: Only use on edge/access layer switches with end-user
-        devices or APs connected. NEVER use on core or aggregation
-        switches. Only bounce ports with PoE-powered devices — never
-        bounce uplink, stack, trunk, or inter-switch ports.
+        BEFORE calling this tool, you MUST:
+        1. Call central_get_switch_details to verify it is an
+           edge/access switch (not core/aggregation)
+        2. Check that the target port has active PoE power draw
+           — if PoE consumption is zero, SKIP that port
+        3. Verify the port is an access port (not uplink/trunk/stack)
 
-        Use central_get_switch_details to verify the switch role and
-        identify safe edge ports before bouncing.
+        NEVER use on core or aggregation switches.
+
         Port format: 1/1/1 (member/slot/port).
 
         Parameters:
-            serial_number: CX switch serial number (required).
-            ports: Comma-separated port list, e.g. "1/1/1,1/1/2" (required).
+            serial_number: Edge/access CX switch serial number.
+            ports: Comma-separated port list, e.g. "1/1/1,1/1/2".
         """
         conn = ctx.lifespan_context["central_conn"]
         port_list = [p.strip() for p in ports.split(",")]
@@ -266,15 +268,14 @@ def register(mcp):
         """
         Bounce ports on a gateway to reset link state.
 
-        SAFETY: Only bounce edge/access ports with end-user devices
-        connected. NEVER bounce uplink, WAN, or inter-switch ports
-        — this will cause connectivity loss for downstream devices.
-
-        Use central_get_gateway_details to identify safe ports.
+        BEFORE calling this tool, you MUST:
+        1. Call central_get_gateway_details to check the port status
+        2. Verify the port has a client connected — skip empty ports
+        3. NEVER bounce uplink, WAN, or inter-switch ports
 
         Parameters:
-            serial_number: Gateway serial number (required).
-            ports: Comma-separated port list (required).
+            serial_number: Gateway serial number.
+            ports: Comma-separated port list.
         """
         conn = ctx.lifespan_context["central_conn"]
         port_list = [p.strip() for p in ports.split(",")]
@@ -300,12 +301,12 @@ def register(mcp):
         ports: str,
     ) -> dict | str:
         """
-        Cycle PoE power on gateway ports to reset connected PoE devices.
+        Cycle PoE power on gateway ports to reset PoE devices.
 
-        SAFETY: Only bounce edge/access ports with PoE-powered devices
-        connected. NEVER bounce uplink, WAN, or inter-switch ports.
-
-        Use central_get_gateway_details to identify safe ports.
+        BEFORE calling this tool, you MUST:
+        1. Call central_get_gateway_details to check port PoE status
+        2. Verify the port has active PoE draw — skip if zero
+        3. NEVER bounce uplink, WAN, or inter-switch ports
 
         Parameters:
             serial_number: Gateway serial number (required).
