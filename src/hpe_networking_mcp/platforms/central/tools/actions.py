@@ -174,6 +174,23 @@ def register(mcp):
             return "Disconnect clients from gateway returned no results."
         return resp
 
+    # ── Helpers ──────────────────────────────────────────────────────
+
+    def _get_switch_ports(conn, serial_number: str) -> dict:
+        """Fetch port status for a switch. Returns {port_id: port_info}."""
+        from hpe_networking_mcp.platforms.central.utils import (
+            retry_central_command,
+        )
+
+        resp = retry_central_command(
+            central_conn=conn,
+            api_method="GET",
+            api_path=(f"network-monitoring/v1/switches/{serial_number}/interfaces"),
+            api_params={"limit": 200},
+        )
+        items = resp.get("msg", {}).get("items", [])
+        return {p["id"]: p for p in items if "id" in p}
+
     # ── Port / PoE Bounce Tools ──────────────────────────────────────
 
     @mcp.tool(annotations=OPERATIONAL)
@@ -183,40 +200,61 @@ def register(mcp):
         ports: str,
     ) -> dict | str:
         """
-        Bounce ports on an Aruba CX edge/access switch.
-
-        BEFORE calling this tool, you MUST:
-        1. Call central_get_switch_details to verify it is an
-           edge/access switch (not core/aggregation)
-        2. Check that the target port has a client or AP connected
-           with active PoE draw — skip ports with no PoE consumption
-        3. Verify the port is an access port (not uplink/trunk/stack)
-
-        NEVER bounce ports on core or aggregation switches — this
-        will disconnect downstream switches and cause outages.
+        Bounce ports on an Aruba CX switch. Safety checks are
+        enforced automatically — ports that are down, uplinks,
+        or trunks will be skipped.
 
         Port format: 1/1/1 (member/slot/port).
 
         Parameters:
-            serial_number: Edge/access CX switch serial number.
+            serial_number: CX switch serial number.
             ports: Comma-separated port list, e.g. "1/1/1,1/1/2".
         """
         conn = ctx.lifespan_context["central_conn"]
         port_list = [p.strip() for p in ports.split(",")]
 
         try:
+            port_info = _get_switch_ports(conn, serial_number)
+        except Exception as e:
+            return f"Error checking port status: {e}"
+
+        safe_ports = []
+        skipped = []
+        for port_id in port_list:
+            info = port_info.get(port_id)
+            if not info:
+                skipped.append({"port": port_id, "reason": "port not found"})
+            elif info.get("uplink"):
+                skipped.append({"port": port_id, "reason": "uplink port"})
+            elif info.get("vlanMode") == "Trunk":
+                skipped.append({"port": port_id, "reason": "trunk port"})
+            elif info.get("operStatus") == "Down":
+                skipped.append({"port": port_id, "reason": "port down — nothing connected"})
+            else:
+                safe_ports.append(port_id)
+
+        if not safe_ports:
+            return {
+                "bounced": [],
+                "skipped": skipped,
+                "message": "No ports qualified for bounce.",
+            }
+
+        try:
             resp = Troubleshooting.port_bounce_test(
                 central_conn=conn,
                 device_type="cx",
                 serial_number=serial_number,
-                ports=port_list,
+                ports=safe_ports,
             )
         except Exception as e:
             return f"Error bouncing switch ports: {e}"
 
-        if not resp:
-            return "Port bounce returned no results."
-        return resp
+        return {
+            "bounced": safe_ports,
+            "skipped": skipped,
+            "result": resp if resp else "bounce completed",
+        }
 
     @mcp.tool(annotations=OPERATIONAL)
     async def central_poe_bounce_switch(
@@ -225,39 +263,68 @@ def register(mcp):
         ports: str,
     ) -> dict | str:
         """
-        Cycle PoE power on Aruba CX edge/access switch ports.
-
-        BEFORE calling this tool, you MUST:
-        1. Call central_get_switch_details to verify it is an
-           edge/access switch (not core/aggregation)
-        2. Check that the target port has active PoE power draw
-           — if PoE consumption is zero, SKIP that port
-        3. Verify the port is an access port (not uplink/trunk/stack)
-
-        NEVER use on core or aggregation switches.
+        Cycle PoE power on Aruba CX switch ports. Safety checks
+        are enforced automatically — ports with no PoE draw,
+        uplinks, or trunks will be skipped.
 
         Port format: 1/1/1 (member/slot/port).
 
         Parameters:
-            serial_number: Edge/access CX switch serial number.
+            serial_number: CX switch serial number.
             ports: Comma-separated port list, e.g. "1/1/1,1/1/2".
         """
         conn = ctx.lifespan_context["central_conn"]
         port_list = [p.strip() for p in ports.split(",")]
 
         try:
+            port_info = _get_switch_ports(conn, serial_number)
+        except Exception as e:
+            return f"Error checking port status: {e}"
+
+        safe_ports = []
+        skipped = []
+        for port_id in port_list:
+            info = port_info.get(port_id)
+            if not info:
+                skipped.append({"port": port_id, "reason": "port not found"})
+            elif info.get("uplink"):
+                skipped.append({"port": port_id, "reason": "uplink port"})
+            elif info.get("vlanMode") == "Trunk":
+                skipped.append({"port": port_id, "reason": "trunk port"})
+            elif info.get("poeStatus") == "Not Used":
+                skipped.append(
+                    {
+                        "port": port_id,
+                        "reason": "no PoE draw — nothing powered",
+                    }
+                )
+            elif info.get("operStatus") == "Down":
+                skipped.append({"port": port_id, "reason": "port down — nothing connected"})
+            else:
+                safe_ports.append(port_id)
+
+        if not safe_ports:
+            return {
+                "bounced": [],
+                "skipped": skipped,
+                "message": "No ports qualified for PoE bounce.",
+            }
+
+        try:
             resp = Troubleshooting.poe_bounce_test(
                 central_conn=conn,
                 device_type="cx",
                 serial_number=serial_number,
-                ports=port_list,
+                ports=safe_ports,
             )
         except Exception as e:
             return f"Error bouncing PoE on switch ports: {e}"
 
-        if not resp:
-            return "PoE bounce returned no results."
-        return resp
+        return {
+            "bounced": safe_ports,
+            "skipped": skipped,
+            "result": resp if resp else "PoE bounce completed",
+        }
 
     @mcp.tool(annotations=OPERATIONAL)
     async def central_port_bounce_gateway(
