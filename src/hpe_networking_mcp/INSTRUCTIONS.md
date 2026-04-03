@@ -136,6 +136,30 @@ When asked to bounce a port or cycle PoE on any switch or gateway:
 
 ---
 
+## Device Model Numbering
+
+### Switches and Gateways (4-digit models)
+- **Aruba CX edge/access**: 6100, 6200, 6300, 6400
+- **Aruba CX core/aggregation**: 8325, 8360, 8400
+- **ArubaOS-Switch (AOS-S)**: 2930F, 2540
+- **Aruba Gateways**: 9240
+- **Juniper edge**: EX2300, EX4100, EX4000
+- **Juniper core**: EX4650, QFX
+
+### Access Points (3-digit models: AP-XYZ)
+- **X** = Wi-Fi generation family
+- **Y** = Series within the family
+- **Z** = Antenna type:
+  - 3 = software-definable antennas (omni or directional)
+  - 4 = external antennas
+  - 5 = internal omni-directional antenna
+  - 7 = internal 90x90 directional antenna
+- **70x–75x** = indoor APs
+- **76x–77x** = outdoor APs
+- Example: AP-755 = Wi-Fi 7, 5-series, internal omni (flagship indoor)
+
+---
+
 # STYLING
 
 ## Tables
