@@ -56,8 +56,8 @@ def register(mcp):
             "keys": keys,
             "members": [],
         }
-        total_poe_available = 0
-        total_poe_consumption = 0
+        total_poe_available = 0.0
+        total_poe_consumption = 0.0
 
         for m in metrics:
             member = {
