@@ -127,6 +127,26 @@ docker pull ghcr.io/nowireless4u/hpe-networking-mcp:latest
 
 ---
 
+## Platform Auto-Disable
+
+You don't need credentials for all three platforms. The server automatically detects which platforms have valid secrets and only enables those:
+
+- **All three platforms configured** → All tools available (Mist + Central + GreenLake)
+- **Only Mist configured** → Only `mist_*` tools available; Central and GreenLake disabled
+- **Only Central configured** → Only `central_*` tools available; Mist and GreenLake disabled
+- **No valid credentials** → Server refuses to start with a clear error message
+
+This means you can start with just one platform and add others later by creating their secret files and restarting the container. The server logs which platforms are enabled at startup:
+
+```
+Mist: credentials loaded (token: abcd...wxyz, host: api.mist.com)
+Central: disabled (missing secrets: central_client_id, central_client_secret)
+GreenLake: disabled (missing secrets: greenlake_client_id)
+Enabled platforms: mist
+```
+
+---
+
 ## Connect Your AI Client
 
 ### Claude Desktop

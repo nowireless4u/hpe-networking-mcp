@@ -12,6 +12,33 @@ OPERATIONAL = ToolAnnotations(
 )
 
 
+def _resolve_switch_id(conn, serial_number: str) -> str:
+    """Resolve a switch serial to its stack ID if stacked.
+
+    The Central troubleshooting API returns 404 for stacked switch
+    serials — it requires the stack ID instead. This checks the
+    switch details and returns the stack ID if present, otherwise
+    returns the original serial number.
+    """
+    from hpe_networking_mcp.platforms.central.utils import (
+        retry_central_command,
+    )
+
+    try:
+        resp = retry_central_command(
+            central_conn=conn,
+            api_method="GET",
+            api_path=(f"network-monitoring/v1/switches/{serial_number}"),
+        )
+        msg = resp.get("msg", {})
+        stack_id = msg.get("stackId")
+        if stack_id:
+            return stack_id
+    except Exception:
+        pass
+    return serial_number
+
+
 def register(mcp):
 
     # ── Disconnect Tools ─────────────────────────────────────────────
@@ -24,23 +51,24 @@ def register(mcp):
         ssid: str,
     ) -> dict | str:
         """
-        Disconnect all users from a specific SSID/WLAN on an access point.
+        Disconnect all users from a specific SSID/WLAN on a switch.
 
         Use central_find_device to get the serial number and
         central_get_wlans to get the SSID name.
 
         Parameters:
-            serial_number: AP serial number (required).
-            device_type: AP type — "aos-s" or "cx" (required).
+            serial_number: Switch serial number (required).
+            device_type: Switch type — "aos-s" or "cx" (required).
             ssid: SSID/WLAN name to disconnect users from (required).
         """
         conn = ctx.lifespan_context["central_conn"]
+        resolved_id = _resolve_switch_id(conn, serial_number)
 
         try:
             resp = Troubleshooting.disconnect_all_users_ssid(
                 central_conn=conn,
                 device_type=device_type,
-                serial_number=serial_number,
+                serial_number=resolved_id,
                 network=ssid,
             )
         except Exception as e:
@@ -57,21 +85,22 @@ def register(mcp):
         device_type: Literal["aos-s", "cx"],
     ) -> dict | str:
         """
-        Disconnect all users from an access point.
+        Disconnect all users from a switch.
 
-        Use central_find_device to get the AP serial number.
+        Use central_find_device to get the switch serial number.
 
         Parameters:
-            serial_number: AP serial number (required).
-            device_type: AP type — "aos-s" or "cx" (required).
+            serial_number: Switch serial number (required).
+            device_type: Switch type — "aos-s" or "cx" (required).
         """
         conn = ctx.lifespan_context["central_conn"]
+        resolved_id = _resolve_switch_id(conn, serial_number)
 
         try:
             resp = Troubleshooting.disconnect_all_users(
                 central_conn=conn,
                 device_type=device_type,
-                serial_number=serial_number,
+                serial_number=resolved_id,
             )
         except Exception as e:
             return f"Error disconnecting users from AP: {e}"
@@ -88,23 +117,24 @@ def register(mcp):
         mac_address: str,
     ) -> dict | str:
         """
-        Disconnect a specific client by MAC address from an access point.
+        Disconnect a specific client by MAC address from a switch.
 
         Use central_find_client to get the MAC address and
-        central_find_device to get the AP serial number.
+        central_find_device to get the switch serial number.
 
         Parameters:
-            serial_number: AP serial number (required).
-            device_type: AP type — "aos-s" or "cx" (required).
+            serial_number: Switch serial number (required).
+            device_type: Switch type — "aos-s" or "cx" (required).
             mac_address: Client MAC address to disconnect (required).
         """
         conn = ctx.lifespan_context["central_conn"]
+        resolved_id = _resolve_switch_id(conn, serial_number)
 
         try:
             resp = Troubleshooting.disconnect_client_mac_addr(
                 central_conn=conn,
                 device_type=device_type,
-                serial_number=serial_number,
+                serial_number=resolved_id,
                 mac_address=mac_address,
             )
         except Exception as e:
@@ -211,6 +241,7 @@ def register(mcp):
             ports: Comma-separated port list, e.g. "1/1/1,1/1/2".
         """
         conn = ctx.lifespan_context["central_conn"]
+        resolved_id = _resolve_switch_id(conn, serial_number)
         port_list = [p.strip() for p in ports.split(",")]
 
         try:
@@ -244,7 +275,7 @@ def register(mcp):
             resp = Troubleshooting.port_bounce_test(
                 central_conn=conn,
                 device_type="cx",
-                serial_number=serial_number,
+                serial_number=resolved_id,
                 ports=safe_ports,
             )
         except Exception as e:
@@ -274,6 +305,7 @@ def register(mcp):
             ports: Comma-separated port list, e.g. "1/1/1,1/1/2".
         """
         conn = ctx.lifespan_context["central_conn"]
+        resolved_id = _resolve_switch_id(conn, serial_number)
         port_list = [p.strip() for p in ports.split(",")]
 
         try:
@@ -290,8 +322,6 @@ def register(mcp):
             elif info.get("uplink"):
                 skipped.append({"port": port_id, "reason": "uplink port"})
             elif info.get("poeStatus") in (None, "Not Used", ""):
-                # No PoE draw — nothing powered, skip regardless
-                # of trunk/access mode
                 skipped.append(
                     {
                         "port": port_id,
@@ -299,8 +329,6 @@ def register(mcp):
                     }
                 )
             else:
-                # Port has active PoE draw — safe to bounce PoE
-                # even if trunk (AP on trunk is valid)
                 safe_ports.append(port_id)
 
         if not safe_ports:
@@ -314,7 +342,7 @@ def register(mcp):
             resp = Troubleshooting.poe_bounce_test(
                 central_conn=conn,
                 device_type="cx",
-                serial_number=serial_number,
+                serial_number=resolved_id,
                 ports=safe_ports,
             )
         except Exception as e:

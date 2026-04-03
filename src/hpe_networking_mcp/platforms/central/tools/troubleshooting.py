@@ -6,6 +6,17 @@ from pycentral.troubleshooting.troubleshooting import Troubleshooting
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 
 
+def _resolve_if_switch(conn, serial_number: str, device_type: str) -> str:
+    """Resolve stack ID for switches (aos-s, cx). Returns serial unchanged for other types."""
+    if device_type not in ("cx", "aos-s"):
+        return serial_number
+    from hpe_networking_mcp.platforms.central.tools.actions import (
+        _resolve_switch_id,
+    )
+
+    return _resolve_switch_id(conn, serial_number)
+
+
 def register(mcp):
 
     @mcp.tool(annotations=READ_ONLY)
@@ -32,10 +43,11 @@ def register(mcp):
             packet_size: Ping packet size in bytes.
         """
         conn = ctx.lifespan_context["central_conn"]
+        resolved_id = _resolve_if_switch(conn, serial_number, device_type)
 
         kwargs: dict = {
             "central_conn": conn,
-            "serial_number": serial_number,
+            "serial_number": resolved_id,
             "destination": destination,
         }
         if count is not None:
@@ -77,6 +89,7 @@ def register(mcp):
             device_type: Type of device — "ap", "cx", or "gateway" (required).
         """
         conn = ctx.lifespan_context["central_conn"]
+        resolved_id = _resolve_if_switch(conn, serial_number, device_type)
 
         method_map = {
             "ap": Troubleshooting.traceroute_aps_test,
@@ -87,7 +100,7 @@ def register(mcp):
         try:
             resp = method_map[device_type](
                 central_conn=conn,
-                serial_number=serial_number,
+                serial_number=resolved_id,
                 destination=destination,
             )
         except Exception as e:
@@ -116,13 +129,14 @@ def register(mcp):
             ports: Comma-separated port list, e.g. "1/1/1,1/1/2" (required).
         """
         conn = ctx.lifespan_context["central_conn"]
+        resolved_id = _resolve_if_switch(conn, serial_number, device_type)
         port_list = [p.strip() for p in ports.split(",")]
 
         try:
             resp = Troubleshooting.cable_test(
                 central_conn=conn,
                 device_type=device_type,
-                serial_number=serial_number,
+                serial_number=resolved_id,
                 ports=port_list,
             )
         except Exception as e:
@@ -151,13 +165,14 @@ def register(mcp):
             commands: Comma-separated show commands, e.g. "show version,show interfaces" (required).
         """
         conn = ctx.lifespan_context["central_conn"]
+        resolved_id = _resolve_if_switch(conn, serial_number, device_type)
         command_list = [c.strip() for c in commands.split(",")]
 
         try:
             resp = Troubleshooting.run_show_commands(
                 central_conn=conn,
                 device_type=device_type,
-                serial_number=serial_number,
+                serial_number=resolved_id,
                 commands=command_list,
             )
         except Exception as e:
