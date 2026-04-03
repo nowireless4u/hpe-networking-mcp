@@ -68,7 +68,57 @@ def register(mcp):
             return f"No switch found with serial number '{serial_number}'. Verify the serial using central_find_device."
         if not (200 <= code < 300):
             return f"Central API error (HTTP {code}): {resp.get('msg')}"
-        return resp.get("msg", {})
+
+        result = resp.get("msg", {})
+
+        # Enrich with hardware-trends PoE data for all stack
+        # members (switchTrends only shows the conductor)
+        try:
+            hw_resp = retry_central_command(
+                central_conn=conn,
+                api_method="GET",
+                api_path=(f"network-monitoring/v1/switches/{serial_number}/hardware-trends"),
+            )
+            hw_data = hw_resp.get("msg", {})
+            hw_response = hw_data.get("response", hw_data)
+            metrics = hw_response.get("switchMetrics", [])
+
+            if metrics:
+                total_poe_available = 0.0
+                total_poe_consumption = 0.0
+                members_poe = []
+
+                for m in metrics:
+                    member_serial = m.get("serialNumber", "?")
+                    member_role = m.get("switchRole", "")
+                    # Get latest non-None sample
+                    for s in reversed(m.get("samples", [])):
+                        vals = s.get("data", [])
+                        if len(vals) >= 5 and vals[3] is not None:
+                            poe_a = float(vals[3]) if vals[3] else 0
+                            poe_c = float(vals[4]) if vals[4] else 0
+                            total_poe_available += poe_a
+                            total_poe_consumption += poe_c
+                            members_poe.append(
+                                {
+                                    "serial": member_serial,
+                                    "role": member_role,
+                                    "poe_available": poe_a,
+                                    "poe_consumption": poe_c,
+                                }
+                            )
+                            break
+
+                result["poe_summary"] = {
+                    "total_poe_available_watts": total_poe_available,
+                    "total_poe_consumption_watts": total_poe_consumption,
+                    "member_count": len(metrics),
+                    "members": members_poe,
+                }
+        except Exception:
+            pass  # If hardware-trends fails, return base data
+
+        return result
 
     @mcp.tool(annotations=READ_ONLY)
     async def central_get_gateway_details(
