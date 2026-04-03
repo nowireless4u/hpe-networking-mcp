@@ -68,6 +68,8 @@ When a Mist tool response includes a `_next` field, use `mist_get_next_page(url=
 - **Devices**: central_get_devices, central_find_device, central_get_ap_details, central_get_switch_details, central_get_gateway_details
 - **Device Stats**: central_get_ap_stats, central_get_ap_utilization, central_get_gateway_stats, central_get_gateway_utilization, central_get_gateway_wan_availability, central_get_tunnel_health
 - **Switch PoE & Trends**: central_get_switch_hardware_trends, central_get_switch_poe
+  - **ALWAYS use `central_get_switch_hardware_trends` for PoE capacity/consumption data** — it returns all stack members with per-member PoE data. Do NOT use `central_get_switch_details` for PoE as it only returns the conductor's data for stacked switches.
+  - Use `central_get_switch_poe` for per-port PoE wattage (which port is drawing how many watts).
 - **WLANs**: central_get_wlans
 - **Clients**: central_get_clients, central_find_client
 - **Alerts**: central_get_alerts
