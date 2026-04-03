@@ -495,11 +495,12 @@ def tree_to_mermaid(
         else:
             # COLLECTION types -- determine if it acts as a site (has device children)
             has_device_child = _has_device_descendant(tree, node_id)
-            children_types = [
-                (tree.get_node(c.tag).data or {}).get("device", {}).get("type", "")
-                for c in tree.children(node_id)
-                if tree.get_node(c.tag) is not None and tree.get_node(c.tag).data is not None
-            ]
+            children_types = []
+            for c in tree.children(node_id):
+                cnode = tree.get_node(c.tag)
+                if cnode is not None and cnode.data is not None:
+                    dtype = cnode.data.get("device", {}).get("type", "")
+                    children_types.append(dtype)
             is_site = has_device_child and any(t == "DEVICE" for t in children_types)
             if is_site:
                 label = f"{scope_name} Site"
