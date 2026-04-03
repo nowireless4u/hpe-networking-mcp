@@ -442,7 +442,11 @@ def tree_to_mermaid(
     include_resources: bool = False,
     include_devices: bool = True,
 ) -> str:
-    """Build a Mermaid flowchart string from the scope tree.
+    """Build a Mermaid flowchart with compact circle nodes and a legend.
+
+    Hierarchy flow: Global → Site Collections → Sites → Devices.
+    Device groups shown as separate islands with dashed links
+    to their member devices (they add config independently).
 
     Args:
         tree: The scope tree.
@@ -454,88 +458,126 @@ def tree_to_mermaid(
         Mermaid flowchart string.
     """
     if tree.root is None:
-        return 'flowchart TD\n    EMPTY["No scope data available"]'
+        return 'flowchart TD\n    EMPTY["No scope data"]'
 
     root = scope_id if scope_id else tree.root
     if tree.get_node(root) is None:
         return f"flowchart TD\n    EMPTY[\"Scope '{root}' not found\"]"
 
     lines: list[str] = ["flowchart TD"]
-    styles: list[str] = []
+    class_assignments: dict[str, str] = {}  # m_id -> class name
+    device_group_links: list[tuple[str, str]] = []  # (group_id, device_id)
     _counter = {"n": 0}
 
     def next_id(prefix: str) -> str:
         _counter["n"] += 1
         return f"{prefix}{_counter['n']}"
 
-    def render_node(node_id: str, parent_mermaid_id: str | None) -> None:
+    def _get_node_class(
+        node_type: str,
+        device: dict,
+        tree: Tree,
+        node_id: str,
+    ) -> tuple[str, str]:
+        """Return (short_label, css_class) for a node."""
+        scope_name = _get_scope_name(device)
+        if node_type == "DEVICE":
+            meta = device.get("meta") or {}
+            cat = classify_device(meta.get("device_type"))
+            model = meta.get("device_model", "")
+            serial = meta.get("serial_number", "")
+            short = serial if serial else scope_name
+            if model and model != "N/A":
+                short = f"{model}"
+            return short, cat.lower()
+        if node_type == "GLOBAL":
+            return scope_name, "global_scope"
+        # COLLECTION — check if it's a site
+        if _has_device_descendant(tree, node_id):
+            children_types = []
+            for c in tree.children(node_id):
+                cn = tree.get_node(c.tag)
+                if cn is not None and cn.data is not None:
+                    dt = cn.data.get("device", {}).get("type", "")
+                    children_types.append(dt)
+            if any(t == "DEVICE" for t in children_types):
+                return scope_name, "site"
+        return scope_name, "collection"
+
+    def render_node(
+        node_id: str,
+        parent_mermaid_id: str | None,
+    ) -> None:
         node = tree.get_node(node_id)
         if node is None or node.data is None:
             return
         device = node.data.get("device", {})
         node_type = device.get("type", "")
-        scope_name = _get_scope_name(device)
 
-        # Determine if this is a device leaf
         is_device = node_type == "DEVICE"
         if is_device and not include_devices:
             return
 
-        # Pick label and color
-        if is_device:
-            meta = device.get("meta") or {}
-            category = classify_device(meta.get("device_type"))
-            model = meta.get("device_model", "")
-            serial = meta.get("serial_number", "")
-            label = f"{model} {serial}".strip() if model != "N/A" else scope_name
-            color = MERMAID_COLORS.get(category, MERMAID_COLORS["OTHER"])
-        elif node_type == "GLOBAL":
-            label = "Global Scope"
-            color = MERMAID_COLORS["GLOBAL"]
-        else:
-            # COLLECTION types -- determine if it acts as a site (has device children)
-            has_device_child = _has_device_descendant(tree, node_id)
-            children_types = []
-            for c in tree.children(node_id):
-                cnode = tree.get_node(c.tag)
-                if cnode is not None and cnode.data is not None:
-                    dtype = cnode.data.get("device", {}).get("type", "")
-                    children_types.append(dtype)
-            is_site = has_device_child and any(t == "DEVICE" for t in children_types)
-            if is_site:
-                label = f"{scope_name} Site"
-                color = MERMAID_COLORS["SITE"]
-            else:
-                label = f"{scope_name} Collection"
-                color = MERMAID_COLORS["COLLECTION"]
+        label, css_class = _get_node_class(node_type, device, tree, node_id)
 
-        m_id = _safe_id(scope_name) if not is_device else next_id("D")
-        # Ensure unique IDs by appending counter for non-device nodes too
-        if not is_device:
-            m_id = f"{m_id}_{_counter['n']}"
-            _counter["n"] += 1
+        m_id = next_id("N")
 
-        lines.append(f'    {m_id}["{label}"]')
+        # Circle syntax for compact nodes
+        lines.append(f"    {m_id}(({label}))")
         if parent_mermaid_id:
             lines.append(f"    {parent_mermaid_id} --> {m_id}")
-        styles.append(f"    style {m_id} fill:{color},color:#fff")
+        class_assignments[m_id] = css_class
 
-        # Optionally render resources
+        # Resources as small dashed links
         if include_resources and not is_device:
             res_tree: Tree | None = (node.data or {}).get("resources")
             if res_tree is not None and res_tree.root is not None:
-                for persona_node in res_tree.children(res_tree.root):
-                    for rn in res_tree.children(persona_node.tag):
+                for pn in res_tree.children(res_tree.root):
+                    for rn in res_tree.children(pn.tag):
                         r_id = next_id("R")
-                        lines.append(f'    {r_id}["{persona_node.tag}: {rn.tag}"]')
+                        short_res = rn.tag.split("/")[-1]
+                        lines.append(f"    {r_id}[/{short_res}/]")
                         lines.append(f"    {m_id} -.-> {r_id}")
+                        class_assignments[r_id] = "resource"
 
         # Recurse children
         for child in tree.children(node_id):
             render_node(child.tag, m_id)
 
     render_node(root, None)
-    lines.extend(styles)
+
+    # Class definitions
+    lines.append("")
+    lines.append("    classDef global_scope fill:#808080,color:#fff,stroke-width:0")
+    lines.append("    classDef collection fill:#4CAF50,color:#fff,stroke-width:0")
+    lines.append("    classDef site fill:#FF9800,color:#fff,stroke-width:0")
+    lines.append("    classDef ap fill:#2196F3,color:#fff,stroke-width:0")
+    lines.append("    classDef switch fill:#9C27B0,color:#fff,stroke-width:0")
+    lines.append("    classDef gateway fill:#F44336,color:#fff,stroke-width:0")
+    lines.append("    classDef other fill:#607D8B,color:#fff,stroke-width:0")
+    lines.append("    classDef devgroup fill:#607D8B,color:#fff,stroke-dasharray:5")
+    lines.append("    classDef resource fill:#E0E0E0,color:#333,stroke-width:0")
+
+    # Apply classes
+    for m_id, cls in class_assignments.items():
+        lines.append(f"    class {m_id} {cls}")
+
+    # Device group dashed links
+    for gid, did in device_group_links:
+        lines.append(f"    {gid} -.-> {did}")
+
+    # Legend
+    lines.append("")
+    lines.append("    subgraph Legend")
+    lines.append("        direction LR")
+    lines.append("        L1((Global)):::global_scope")
+    lines.append("        L2((Collection)):::collection")
+    lines.append("        L3((Site)):::site")
+    lines.append("        L4((AP)):::ap")
+    lines.append("        L5((Switch)):::switch")
+    lines.append("        L6((Gateway)):::gateway")
+    lines.append("    end")
+
     return "\n".join(lines)
 
 
