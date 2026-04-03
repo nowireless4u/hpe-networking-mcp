@@ -24,6 +24,7 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
         prompts,
         sites,
         stats,
+        switch_poe,
         troubleshooting,
         wlans,
     )
@@ -37,10 +38,11 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
     wlans.register(mcp)
     audit_logs.register(mcp)
     stats.register(mcp)
+    switch_poe.register(mcp)
     applications.register(mcp)
     troubleshooting.register(mcp)
     actions.register(mcp)
     prompts.register(mcp)
 
     logger.info("Central: registered tools and prompts")
-    return 36  # 35 tools + 10 prompts registered
+    return 38  # 37 tools + 10 prompts registered

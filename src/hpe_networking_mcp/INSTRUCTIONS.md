@@ -67,6 +67,7 @@ When a Mist tool response includes a `_next` field, use `mist_get_next_page(url=
 - **Sites**: central_get_sites, central_get_site_name_id_mapping
 - **Devices**: central_get_devices, central_find_device, central_get_ap_details, central_get_switch_details, central_get_gateway_details
 - **Device Stats**: central_get_ap_stats, central_get_ap_utilization, central_get_gateway_stats, central_get_gateway_utilization, central_get_gateway_wan_availability, central_get_tunnel_health
+- **Switch PoE & Trends**: central_get_switch_hardware_trends, central_get_switch_poe
 - **WLANs**: central_get_wlans
 - **Clients**: central_get_clients, central_find_client
 - **Alerts**: central_get_alerts

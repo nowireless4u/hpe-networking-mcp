@@ -36,7 +36,7 @@ Managing HPE networking infrastructure with AI assistants today means juggling t
 | **Workspaces** | — | — | ✅ |
 | **Guided Prompts** | — | ✅ | — |
 | **Dynamic API Discovery** | — | — | ✅ |
-| **Tools** | **35** | **35 + 10 prompts** | **3 or 10** |
+| **Tools** | **35** | **37 + 10 prompts** | **3 or 10** |
 
 ### Aruba Central Guided Prompts
 
@@ -253,7 +253,7 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 │   ┌────────────┐ ┌────────────┐ ┌────────────────┐  │
 │   │   Mist     │ │  Central   │ │   GreenLake    │  │
 │   │  mist_*    │ │ central_*  │ │  greenlake_*   │  │
-│   │  35 tools  │ │ 35+10 prmt │ │  3/10 tools    │  │
+│   │  35 tools  │ │ 37+10 prmt │ │  3/10 tools    │  │
 │   └─────┬──────┘ └─────┬──────┘ └───────┬────────┘  │
 │         │              │                │            │
 └─────────┼──────────────┼────────────────┼────────────┘

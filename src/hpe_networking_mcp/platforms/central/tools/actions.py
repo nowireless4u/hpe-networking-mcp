@@ -206,6 +206,35 @@ def register(mcp):
 
     # ── Helpers ──────────────────────────────────────────────────────
 
+    def _get_switch_total_poe(conn, serial_number: str) -> float:
+        """Get total PoE consumption for a switch via hardware-trends.
+
+        Returns total watts consumed across all stack members.
+        Returns 0 if no data available.
+        """
+        from hpe_networking_mcp.platforms.central.utils import (
+            retry_central_command,
+        )
+
+        try:
+            resp = retry_central_command(
+                central_conn=conn,
+                api_method="GET",
+                api_path=(f"network-monitoring/v1/switches/{serial_number}/hardware-trends"),
+            )
+            msg = resp.get("msg", {})
+            data = msg.get("response", msg)
+            total = 0.0
+            for m in data.get("switchMetrics", []):
+                for s in reversed(m.get("samples", [])):
+                    vals = s.get("data", [])
+                    if len(vals) >= 5 and vals[4] is not None:
+                        total += float(vals[4])
+                        break
+            return total
+        except Exception:
+            return 0.0
+
     def _get_switch_ports(conn, serial_number: str) -> dict:
         """Fetch port status for a switch. Returns {port_id: port_info}."""
         from hpe_networking_mcp.platforms.central.utils import (
@@ -308,6 +337,17 @@ def register(mcp):
         resolved_id = _resolve_switch_id(conn, serial_number)
         port_list = [p.strip() for p in ports.split(",")]
 
+        # Quick pre-check: if total switch PoE consumption is 0,
+        # skip the entire switch without checking individual ports
+        total_poe = _get_switch_total_poe(conn, serial_number)
+        if total_poe == 0:
+            return {
+                "bounced": [],
+                "skipped": [{"port": p, "reason": "switch has zero total PoE draw"} for p in port_list],
+                "message": ("Switch has no PoE consumption — nothing powered on any port."),
+                "total_poe_watts": 0,
+            }
+
         try:
             port_info = _get_switch_ports(conn, serial_number)
         except Exception as e:
@@ -336,6 +376,7 @@ def register(mcp):
                 "bounced": [],
                 "skipped": skipped,
                 "message": "No ports qualified for PoE bounce.",
+                "total_poe_watts": total_poe,
             }
 
         try:
