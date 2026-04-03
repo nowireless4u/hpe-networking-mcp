@@ -30,6 +30,8 @@ dependencies = [
     "python-dotenv>=1.2.0",
     # Structured logging (used by GreenLake, adopted for unified server)
     "loguru>=0.7.3",
+    # Tree data structure for Central scope hierarchy
+    "treelib>=1.7.0",
 ]
 
 [project.scripts]

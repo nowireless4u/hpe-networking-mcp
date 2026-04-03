@@ -34,9 +34,12 @@ Managing HPE networking infrastructure with AI assistants today means juggling t
 | **Subscriptions / Licensing** | — | — | ✅ |
 | **User Management** | — | — | ✅ |
 | **Workspaces** | — | — | ✅ |
+| **Scope & Configuration Hierarchy** | — | ✅ | — |
 | **Guided Prompts** | — | ✅ | — |
 | **Dynamic API Discovery** | — | — | ✅ |
-| **Tools** | **35** | **37 + 10 prompts** | **3 or 10** |
+| **Tools** | **35** | **42 + 10 prompts** | **3 or 10** |
+
+> **GreenLake tool count**: 3 tools in **dynamic mode** (default) — a meta-tool system that can discover and invoke any GreenLake API endpoint. 10 tools in **static mode** — dedicated tools for each endpoint. Set via `MCP_TOOL_MODE` environment variable.
 
 ### Aruba Central Guided Prompts
 
@@ -253,7 +256,7 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 │   ┌────────────┐ ┌────────────┐ ┌────────────────┐  │
 │   │   Mist     │ │  Central   │ │   GreenLake    │  │
 │   │  mist_*    │ │ central_*  │ │  greenlake_*   │  │
-│   │  35 tools  │ │ 37+10 prmt │ │  3/10 tools    │  │
+│   │  35 tools  │ │ 42+10 prmt │ │  3/10 tools    │  │
 │   └─────┬──────┘ └─────┬──────┘ └───────┬────────┘  │
 │         │              │                │            │
 └─────────┼──────────────┼────────────────┼────────────┘

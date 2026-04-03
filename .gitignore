@@ -56,6 +56,9 @@ logs/
 # Original MCP servers (reference only, not part of this project)
 original-mcp-servers/
 
+# Functions to import (reference code from other projects, not part of this project)
+functions_to_import/
+
 # Internal project docs (not for public repo)
 HANDOFF.md
 TASKS.md

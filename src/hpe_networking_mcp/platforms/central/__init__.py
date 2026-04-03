@@ -22,6 +22,7 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
         events,
         monitoring,
         prompts,
+        scope,
         sites,
         stats,
         switch_poe,
@@ -42,7 +43,8 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
     applications.register(mcp)
     troubleshooting.register(mcp)
     actions.register(mcp)
+    scope.register(mcp)
     prompts.register(mcp)
 
     logger.info("Central: registered tools and prompts")
-    return 38  # 37 tools + 10 prompts registered
+    return 43  # 42 tools + 10 prompts registered (was 37+10, added 5 scope tools)

@@ -70,6 +70,11 @@ When a Mist tool response includes a `_next` field, use `mist_get_next_page(url=
 - **Switch PoE & Trends**: central_get_switch_hardware_trends, central_get_switch_poe
   - **ALWAYS use `central_get_switch_hardware_trends` for PoE capacity/consumption data** — it returns all stack members with per-member PoE data. Do NOT use `central_get_switch_details` for PoE as it only returns the conductor's data for stacked switches.
   - Use `central_get_switch_poe` for per-port PoE wattage (which port is drawing how many watts).
+- **Scope & Configuration**: central_get_scope_tree, central_get_scope_resources, central_get_effective_config, central_get_devices_in_scope, central_get_scope_diagram
+  - Use `central_get_scope_tree` to view the full scope hierarchy (Global → Collections → Sites → Devices)
+  - Use `central_get_scope_resources` to see what configuration profiles are assigned at a specific scope level
+  - Use `central_get_effective_config` to see what configuration a device inherits and from where
+  - Use `central_get_scope_diagram` to generate a Mermaid flowchart of the scope hierarchy — render it directly, the string is pre-built
 - **WLANs**: central_get_wlans
 - **Clients**: central_get_clients, central_find_client
 - **Alerts**: central_get_alerts

@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.7.0] - 2026-04-03
+
+### Added — Central Scope & Configuration Tools
+- `central_get_scope_tree` — Full scope hierarchy (Global → Collections → Sites → Devices) with committed or effective view
+- `central_get_scope_resources` — Configuration resources at a specific scope level, filterable by persona (AP, Switch, Gateway)
+- `central_get_effective_config` — Show what configuration a device inherits and from which scope level
+- `central_get_devices_in_scope` — List devices within a scope, filterable by device type
+- `central_get_scope_diagram` — Pre-built Mermaid flowchart of the scope hierarchy with color-coded device types
+
+### Added — Dependencies
+- `treelib>=1.7.0` — Tree data structure for scope hierarchy building
+
+### Changed
+- Central tool count: 37 → 42 (+ 10 prompts)
+- Total tools: 80 (dynamic mode) or 87 (static mode)
+
+[v0.7.0]: https://github.com/nowireless4u/hpe-networking-mcp/releases/tag/v0.7.0
+
 ## [v0.6.6] - 2026-04-03
 
 ### Added
