@@ -476,8 +476,6 @@ def tree_to_mermaid(
     def _get_node_class(
         node_type: str,
         device: dict,
-        tree: Tree,
-        node_id: str,
     ) -> tuple[str, str]:
         """Return (short_label, css_class) for a node."""
         scope_name = _get_scope_name(device)
@@ -485,24 +483,22 @@ def tree_to_mermaid(
             meta = device.get("meta") or {}
             cat = classify_device(meta.get("device_type"))
             model = meta.get("device_model", "")
-            serial = meta.get("serial_number", "")
-            short = serial if serial else scope_name
-            if model and model != "N/A":
-                short = f"{model}"
+            short = model if model and model != "N/A" else scope_name
             return short, cat.lower()
         if node_type == "GLOBAL":
             return scope_name, "global_scope"
-        # COLLECTION — check if it's a site
-        if _has_device_descendant(tree, node_id):
-            children_types = []
-            for c in tree.children(node_id):
-                cn = tree.get_node(c.tag)
-                if cn is not None and cn.data is not None:
-                    dt = cn.data.get("device", {}).get("type", "")
-                    children_types.append(dt)
-            if any(t == "DEVICE" for t in children_types):
-                return scope_name, "site"
+        if node_type == "DEVICE_COLLECTION":
+            return scope_name, "devgroup"
+        if node_type == "SITE":
+            return scope_name, "site"
+        if node_type == "SITE_COLLECTION":
+            return scope_name, "collection"
         return scope_name, "collection"
+
+    # Track device mermaid IDs for device group linking
+    device_scope_to_mid: dict[str, str] = {}
+    # Track device groups to render separately
+    dev_groups: list[tuple[str, str]] = []
 
     def render_node(
         node_id: str,
@@ -518,15 +514,25 @@ def tree_to_mermaid(
         if is_device and not include_devices:
             return
 
-        label, css_class = _get_node_class(node_type, device, tree, node_id)
+        # Device groups rendered separately
+        if node_type == "DEVICE_COLLECTION":
+            label, css_class = _get_node_class(node_type, device)
+            m_id = next_id("DG")
+            lines.append(f"    {m_id}(({label}))")
+            class_assignments[m_id] = css_class
+            dev_groups.append((node_id, m_id))
+            return
 
+        label, css_class = _get_node_class(node_type, device)
         m_id = next_id("N")
 
-        # Circle syntax for compact nodes
         lines.append(f"    {m_id}(({label}))")
         if parent_mermaid_id:
             lines.append(f"    {parent_mermaid_id} --> {m_id}")
         class_assignments[m_id] = css_class
+
+        if is_device:
+            device_scope_to_mid[node_id] = m_id
 
         # Resources as small dashed links
         if include_resources and not is_device:
@@ -540,11 +546,21 @@ def tree_to_mermaid(
                         lines.append(f"    {m_id} -.-> {r_id}")
                         class_assignments[r_id] = "resource"
 
-        # Recurse children
         for child in tree.children(node_id):
             render_node(child.tag, m_id)
 
     render_node(root, None)
+
+    # Link device groups to their member devices
+    for dg_nid, dg_mid in dev_groups:
+        for child in tree.children(dg_nid):
+            cn = tree.get_node(child.tag)
+            if cn is None or cn.data is None:
+                continue
+            if cn.data.get("device", {}).get("type") == "DEVICE":
+                dev_mid = device_scope_to_mid.get(child.tag)
+                if dev_mid:
+                    lines.append(f"    {dg_mid} -.-> {dev_mid}")
 
     # Class definitions
     lines.append("")
