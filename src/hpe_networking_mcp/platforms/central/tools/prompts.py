@@ -181,3 +181,47 @@ status="Active" to get active alert counts by severity.
 count, client count, alert breakdown (Critical/High/Medium/Low).
 5. Rank sites from worst to best health.
         """.strip()
+
+    @mcp.prompt
+    def scope_configuration_overview(scope_name: str) -> str:
+        """View committed configuration resources at a scope in the hierarchy."""
+        return f"""
+Show the committed configuration at scope "{scope_name}":
+
+1. Call `central_get_scope_tree(view="committed")` to get the full hierarchy.
+2. Search the tree for the scope matching "{scope_name}" by scope_name. \
+Note its scope_id.
+3. Call `central_get_scope_resources(scope_id=<scope_id>)` for that scope.
+4. Present the results as follows:
+   - Show the scope name, type, and position in the hierarchy.
+   - For each persona, show the persona name, total resource count, and \
+category breakdown (e.g. policy: 5, vlan: 3, profile: 2).
+   - List resources grouped by category, not as a flat list.
+   - Use a table or indented list for readability.
+5. Summarize: total resource count across all personas, dominant persona, \
+and any notable patterns (e.g. shared policies, unique resources).
+6. Suggest using `central_get_effective_config` if the user wants to see \
+inherited configuration, or `central_get_scope_diagram` for a visual map.
+        """.strip()
+
+    @mcp.prompt
+    def scope_effective_config(scope_name: str) -> str:
+        """View effective (inherited + committed) configuration at a scope."""
+        return f"""
+Show the effective configuration at scope "{scope_name}":
+
+1. Call `central_get_scope_tree(view="committed")` to get the hierarchy.
+2. Search for the scope matching "{scope_name}" by scope_name. Note its \
+scope_id.
+3. Call `central_get_effective_config(scope_id=<scope_id>)` for that scope.
+4. Present the inheritance path first: show each level from Global down to \
+this scope with how many resources each level contributes.
+5. Then group resources by origin scope. For each origin:
+   - Show the scope name and type (e.g. "Global", "Site Collection").
+   - List the resources contributed at that level, grouped by category.
+6. Highlight any resources that appear at multiple inheritance levels \
+(overrides). When the same resource name appears from different origins, \
+note which level takes precedence (closest scope wins).
+7. Summarize: total effective resource count, how many are inherited vs \
+committed locally, and the inheritance depth.
+        """.strip()

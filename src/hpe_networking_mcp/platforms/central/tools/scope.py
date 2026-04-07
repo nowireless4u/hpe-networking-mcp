@@ -11,9 +11,12 @@ from fastmcp import Context
 
 from hpe_networking_mcp.platforms.central.scope_builder import (
     build_scope_tree,
+    tree_to_dict,
+)
+from hpe_networking_mcp.platforms.central.scope_queries import (
+    build_inheritance_path,
     get_devices_in_scope,
     get_effective_resources_for_node,
-    tree_to_dict,
     tree_to_mermaid,
 )
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
@@ -113,6 +116,7 @@ def register(mcp):
         ctx: Context,
         scope_id: str,
         persona: str | None = None,
+        include_details: bool = False,
     ) -> dict | str:
         """
         Get the effective (inherited + committed) configuration for a scope node.
@@ -124,10 +128,12 @@ def register(mcp):
         Parameters:
             scope_id: The scope ID to query.
             persona: Optional persona filter (e.g. "access_point", "switch").
+            include_details: If True, include full resource configuration data.
 
         Returns:
-            Dict with scope_id, scope_name, and effective_resources list.
-            Each resource group has a name and list of instances showing
+            Dict with scope_id, scope_name, inheritance_path (ordered from
+            Global root to this scope), and effective_resources list. Each
+            resource group has a name and list of instances showing
             origin_scope_id, origin_scope_name, persona, and has_details.
         """
         conn = ctx.lifespan_context["central_conn"]
@@ -142,12 +148,14 @@ def register(mcp):
 
         device = node.data.get("device", {})
         meta = device.get("meta") or {}
-        effective = get_effective_resources_for_node(tree, scope_id, persona)
+        effective = get_effective_resources_for_node(tree, scope_id, persona, include_details)
+        path = build_inheritance_path(tree, scope_id)
 
         return {
             "scope_id": device.get("scope_id"),
             "scope_name": meta.get("scope_name", scope_id),
             "type": device.get("type", ""),
+            "inheritance_path": path,
             "effective_resources": effective,
         }
 

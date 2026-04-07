@@ -1,5 +1,7 @@
 services:
   hpe-networking-mcp:
+    build: .
     volumes:
+      - ./src:/app/src:ro
       - ./tests:/app/tests
       - ./pyproject.toml:/app/pyproject.toml:ro
