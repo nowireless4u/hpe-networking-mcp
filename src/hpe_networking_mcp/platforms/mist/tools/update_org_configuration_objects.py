@@ -34,6 +34,7 @@ from hpe_networking_mcp.platforms.mist.client import (
 
 class Object_type(Enum):
     ALARMTEMPLATES = "alarmtemplates"
+    SITES = "sites"
     WLANS = "wlans"
     SITEGROUPS = "sitegroups"
     AVPROFILES = "avprofiles"
@@ -195,6 +196,21 @@ async def update_org_configuration_objects(
                     await process_response(response)
                 else:
                     response = mistapi.api.v1.orgs.alarmtemplates.createOrgAlarmTemplate(
+                        apisession,
+                        org_id=org,
+                        body=payload,
+                    )
+                    await process_response(response)
+            case "sites":
+                if obj:
+                    response = mistapi.api.v1.sites.sites.updateSiteInfo(
+                        apisession,
+                        site_id=obj,
+                        body=payload,
+                    )
+                    await process_response(response)
+                else:
+                    response = mistapi.api.v1.orgs.sites.createOrgSite(
                         apisession,
                         org_id=org,
                         body=payload,
