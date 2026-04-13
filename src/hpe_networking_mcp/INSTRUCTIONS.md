@@ -73,8 +73,9 @@ When a Mist tool response includes a `_next` field, use `mist_get_next_page(url=
 - **Scope & Configuration**: central_get_scope_tree, central_get_scope_resources, central_get_effective_config, central_get_devices_in_scope, central_get_scope_diagram
   - Use `central_get_scope_tree` to view the full scope hierarchy (Global → Collections → Sites → Devices)
   - Use `central_get_scope_resources` to see what configuration profiles are assigned at a specific scope level
-  - Use `central_get_effective_config` to see what configuration a device inherits and from where
+  - Use `central_get_effective_config` to see what configuration a device inherits and from where — pass `include_details=true` for full resource configuration data
   - Use `central_get_scope_diagram` to generate a Mermaid flowchart of the scope hierarchy — render it directly, the string is pre-built
+  - **Presenting scope data**: Each scope node includes `persona_count`, `resource_count`, and per-persona `categories` (e.g. policy, vlan, profile). Present as an indented hierarchy with counts at each level. Group resources by category, not as flat lists. For effective config, show the `inheritance_path` first (Global → Collection → Site), then group resources by origin scope to show what each level contributes. Use the `scope_configuration_overview` or `scope_effective_config` prompts for guided workflows.
 - **WLANs**: central_get_wlans
 - **Clients**: central_get_clients, central_find_client
 - **Alerts**: central_get_alerts
