@@ -28,6 +28,7 @@ from hpe_networking_mcp.platforms.mist.client import (
     handle_network_error,
     process_response,
 )
+from hpe_networking_mcp.platforms.mist.tools.guardrails import validate_org_write
 
 
 class Object_type(Enum):
@@ -176,11 +177,17 @@ async def change_org_configuration_objects(
             )
         action_wording = "delete an existing"
 
+    guardrails = validate_org_write(object_type.value, action_type.value, payload)
+    guardrail_notice = ""
+    if guardrails.warnings:
+        guardrail_notice = "\n\n" + "\n".join(guardrails.warnings[:3])
+
     if ctx:
         try:
             elicitation_response = await elicitation_handler(
                 message=(
-                    f"The LLM wants to {action_wording} {object_type.value}. Do you accept to trigger the API call?"
+                    f"The LLM wants to {action_wording} {object_type.value}. "
+                    f"Do you accept to trigger the API call?{guardrail_notice}"
                 ),
                 ctx=ctx,
             )
@@ -664,4 +671,7 @@ async def change_org_configuration_objects(
     except Exception as _exc:
         await handle_network_error(_exc)
 
-    return format_response(response, response_format)
+    result = format_response(response, response_format)
+    if guardrails.suggestions and isinstance(result, dict):
+        result["_best_practice_suggestions"] = guardrails.suggestions
+    return result

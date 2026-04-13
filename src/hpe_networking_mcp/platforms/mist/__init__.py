@@ -82,4 +82,13 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
             except Exception as e:
                 logger.warning("Mist: failed to load tool {} -- {}", tool_name, e)
 
+    # Register prompts (not in TOOLS dict — prompts don't follow mist_* naming)
+    try:
+        from hpe_networking_mcp.platforms.mist.tools import prompts as mist_prompts
+
+        mist_prompts.register(mcp)
+        logger.debug("Mist: loaded prompts")
+    except Exception as e:
+        logger.warning("Mist: failed to load prompts -- {}", e)
+
     return len(loaded)

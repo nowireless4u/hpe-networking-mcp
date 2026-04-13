@@ -48,6 +48,40 @@ Tools are namespaced by platform:
 ## Pagination
 When a Mist tool response includes a `_next` field, use `mist_get_next_page(url=<_next>)` for more results.
 
+## Mist Best Practices
+
+### Configuration Hierarchy
+Push configuration as high as possible: Org-level templates → Site group assignment → Site-level → Device-level. Device-level overrides are a last resort — they cannot be managed in bulk and cause drift.
+
+### WLANs
+- **ALWAYS** create SSIDs as org-level WLANs inside WLAN templates. Assign templates to site groups.
+- **NEVER** create site-level WLANs. If asked to create a WLAN at a site, create an org-level WLAN in a WLAN template and assign the template to the site's site group instead.
+- When cloning or copying a site's config, do NOT copy site-level WLANs. Ensure all SSIDs come from org-level WLAN templates.
+- Organize WLAN templates by function: Corporate/Dot1X, MPSK/IoT, Guest, Onboarding.
+
+### RADIUS / Template Variables
+- Use template variables (`{{auth_srv1}}`, `{{auth_srv2}}`) for RADIUS server IPs in auth_servers and acct_servers fields. Never hardcode IP addresses — the same template should work across sites with different RADIUS infrastructure.
+
+### RF Templates
+- Let Mist AI RRM manage channel selection and TX power automatically. Do not set fixed channels or power in RF templates unless explicitly requested with justification.
+- Use 20 MHz only for 2.4 GHz, 40-80 MHz for 5 GHz, 80-160 MHz for 6 GHz.
+- Assign a baseline RF template at the site-group level. Do not create unique RF templates per site.
+
+### PSKs
+- Prefer Cloud PSK (per-user unique passphrase with VLAN assignment) over static shared PSKs. Cloud PSK allows individual key rotation and per-device segmentation.
+
+### Site Groups
+- Assign WLAN templates and RF templates to site groups, not individual sites. New sites added to a group automatically inherit all templates.
+
+### Firmware
+- Auto-upgrade should be enabled at the org level with a maintenance window.
+
+### Site Provisioning
+When asked to create a new site based on an existing site:
+- Use the `provision_site_from_template` prompt for single sites
+- Use the `bulk_provision_sites` prompt for multiple sites
+- NEVER copy site-level WLANs — always use org-level WLAN templates assigned via site groups
+
 ---
 
 # ARUBA CENTRAL (central_* tools)
