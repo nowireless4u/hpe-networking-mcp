@@ -43,6 +43,7 @@ class ElicitationMiddleware(Middleware):
         # DANGER ZONE: both flags set — skip elicitation entirely
         if config.enable_write_tools and config.disable_elicitation:
             enable_write = True
+            await ctx.set_state("disable_elicitation", True)
             logger.warning(
                 "Elicitation: enable_write_tools AND disable_elicitation both set — "
                 "write tools enabled WITHOUT confirmation. Use with caution!"
