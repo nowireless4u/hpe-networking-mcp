@@ -154,7 +154,20 @@ Enabled platforms: mist
 
 ### Claude Desktop
 
-Claude Desktop requires a stdio-to-HTTP bridge since it doesn't natively support streamable HTTP. Add to your `claude_desktop_config.json` (located at `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+Claude Desktop doesn't natively support streamable HTTP, so it needs a stdio-to-HTTP bridge called `supergateway`. This bridge translates between Claude Desktop's stdio protocol and the MCP server's HTTP endpoint.
+
+**Prerequisites:** [Node.js](https://nodejs.org/) must be installed on your machine. Verify with `npx --version` in your terminal.
+
+**Step 1:** Open the Claude Desktop configuration file in a text editor:
+
+| OS | File Location |
+|----|---------------|
+| **macOS** | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| **Windows** | `%APPDATA%\Claude\claude_desktop_config.json` |
+
+> **Tip:** You can also open this file from within Claude Desktop: go to **Settings** (gear icon) > **Developer** > **Edit Config**.
+
+**Step 2:** If the file is empty or doesn't exist, paste this entire block as-is:
 
 ```json
 {
@@ -167,9 +180,36 @@ Claude Desktop requires a stdio-to-HTTP bridge since it doesn't natively support
 }
 ```
 
-> **Requires Node.js** — [install Node.js](https://nodejs.org/) if you don't have `npx` available. The `supergateway` package is downloaded automatically on first launch.
+If you **already have other MCP servers** configured, add the `"hpe-networking"` entry inside the existing `"mcpServers"` object. Do **not** create a second `"mcpServers"` key. For example, if you already have a server called `"my-other-server"`:
+
+```json
+{
+  "mcpServers": {
+    "my-other-server": {
+      "command": "some-command",
+      "args": ["some-args"]
+    },
+    "hpe-networking": {
+      "command": "npx",
+      "args": ["-y", "supergateway", "--streamableHttp", "http://localhost:8000/mcp"]
+    }
+  }
+}
+```
+
+> **Common mistakes:**
+> - Missing comma between server entries (add a `,` after the closing `}` of the previous server)
+> - Duplicate `"mcpServers"` keys (only one is allowed — merge your servers into it)
+> - Trailing comma after the last entry (JSON does not allow trailing commas)
+> - Editing the wrong file or creating a new file instead of editing the existing one
+
+**Step 3:** Save the file and **fully restart Claude Desktop** (quit and reopen, not just close the window). MCP servers are discovered at startup — changes won't take effect until you restart.
+
+**Step 4:** Verify the server connected. In Claude Desktop, look for the MCP server icon (hammer) in the chat input area. Click it — you should see `hpe-networking` listed with its tools.
 
 ### Claude Code
+
+No config file needed — run this single command:
 
 ```bash
 claude mcp add hpe-networking --transport http http://localhost:8000/mcp
@@ -177,7 +217,7 @@ claude mcp add hpe-networking --transport http http://localhost:8000/mcp
 
 ### VS Code / GitHub Copilot
 
-Add to your `.vscode/mcp.json` or VS Code MCP settings:
+Add to your `.vscode/mcp.json` (create the file if it doesn't exist) or VS Code MCP settings:
 
 ```json
 {
