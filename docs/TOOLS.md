@@ -465,7 +465,7 @@ GreenLake supports two mutually exclusive tool modes controlled by
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | org_id | UUID | Yes | Organization ID. |
-| object_type | str | Yes | Object type (e.g. `wlans`, `networktemplates`, `deviceprofiles`). |
+| object_type | str | Yes | `alarmtemplates`, `sites`, `wlans`, `sitegroups`, `avprofiles`, `deviceprofiles`, `gatewaytemplates`, `idpprofiles`, `aamwprofiles`, `nactags`, `nacrules`, `networktemplates`, `networks`, `psks`, `rftemplates`, `services`, `servicepolicies`, `sitetemplates`, `vpns`, `webhooks`, `wlantemplates`, `wxrules`, or `wxtags`. |
 | object_id | UUID | No | ID of the object to update. Omit to create new. |
 | body | dict | Yes | Configuration object body. |
 
@@ -489,7 +489,7 @@ GreenLake supports two mutually exclusive tool modes controlled by
 |-----------|------|----------|-------------|
 | action_type | str | Yes | `create`, `update`, or `delete`. |
 | org_id | UUID | Yes | Organization ID. |
-| object_type | str | Yes | Object type (e.g. `wlans`, `networktemplates`, `deviceprofiles`). |
+| object_type | str | Yes | `alarmtemplates`, `sites`, `wlans`, `sitegroups`, `avprofiles`, `deviceprofiles`, `gatewaytemplates`, `idpprofiles`, `aamwprofiles`, `nactags`, `nacrules`, `networktemplates`, `networks`, `psks`, `rftemplates`, `services`, `servicepolicies`, `sitetemplates`, `vpns`, `webhooks`, `wlantemplates`, `wxrules`, or `wxtags`. |
 | object_id | UUID | No | ID of the object to update or delete. |
 | body | dict | No | Configuration object body. Required for create/update. |
 

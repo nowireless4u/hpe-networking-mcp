@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.7.11] - 2026-04-13
+
+### Added
+- `sites` object type for `mist_change_org_configuration_objects` and `mist_update_org_configuration_objects` — enables site create, update, and delete via write tools
+
+### Fixed
+- Write tools failing with "AI App does not support elicitation" when both `ENABLE_WRITE_TOOLS=true` and `DISABLE_ELICITATION=true` — missing `ctx.set_state("disable_elicitation", True)` in the elicitation middleware
+
+### Changed
+- `__version__` now reads dynamically from package metadata instead of being hardcoded
+- `pyproject.toml` is the single source of truth for version
+
+[v0.7.11]: https://github.com/nowireless4u/hpe-networking-mcp/releases/tag/v0.7.11
+
 ## [v0.7.0] - 2026-04-03
 
 ### Added — Central Scope & Configuration Tools
