@@ -203,9 +203,8 @@ async def update_org_configuration_objects(
                     await process_response(response)
             case "sites":
                 if obj:
-                    response = mistapi.api.v1.orgs.sites.updateOrgSite(
+                    response = mistapi.api.v1.sites.sites.updateSiteInfo(
                         apisession,
-                        org_id=org,
                         site_id=obj,
                         body=payload,
                     )

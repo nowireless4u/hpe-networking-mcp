@@ -232,9 +232,8 @@ async def change_org_configuration_objects(
                     await process_response(response)
             case "sites":
                 if action_type.value == "update":
-                    response = mistapi.api.v1.orgs.sites.updateOrgSite(
+                    response = mistapi.api.v1.sites.sites.updateSiteInfo(
                         apisession,
-                        org_id=org,
                         site_id=obj,
                         body=payload,
                     )
@@ -243,7 +242,7 @@ async def change_org_configuration_objects(
                     response = mistapi.api.v1.orgs.sites.createOrgSite(apisession, org_id=org, body=payload)
                     await process_response(response)
                 else:
-                    response = mistapi.api.v1.orgs.sites.deleteOrgSite(apisession, org_id=org, site_id=obj)
+                    response = mistapi.api.v1.sites.sites.deleteSite(apisession, site_id=obj)
                     await process_response(response)
             case "wlans":
                 if action_type.value == "update":
