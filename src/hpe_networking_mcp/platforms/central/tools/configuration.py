@@ -206,6 +206,15 @@ async def _execute_config_action(
         ctx=ctx,
     )
     if elicitation_response.action == "decline":
+        if await ctx.get_state("elicitation_mode") == "chat_confirm":
+            return {
+                "status": "confirmation_required",
+                "message": (
+                    f"This operation will {action_wording} {resource_name}. "
+                    "Please confirm with the user before proceeding. "
+                    "Call this tool again with the same parameters after the user confirms."
+                ),
+            }
         return {"message": "Action declined by user."}
     elif elicitation_response.action == "cancel":
         return {"message": "Action canceled by user."}

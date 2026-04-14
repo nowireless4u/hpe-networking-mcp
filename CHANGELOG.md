@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.7.16] - 2026-04-14
+
+### Fixed — Write Tool Confirmation
+- When `DISABLE_ELICITATION=false` and the client doesn't support elicitation prompts, write tools now return a `confirmation_required` response instructing the AI to confirm with the user in chat before re-calling the tool
+- Previously, write tools auto-accepted silently when the client lacked elicitation support, bypassing user confirmation entirely
+
+### Changed
+- Elicitation middleware now tracks three modes: `disabled` (auto-accept), `prompt` (elicitation dialog), `chat_confirm` (AI asks user in conversation)
+
+[v0.7.16]: https://github.com/nowireless4u/hpe-networking-mcp/releases/tag/v0.7.16
+
 ## [v0.7.15] - 2026-04-14
 
 ### Changed — Central Dynamic Registration (Issue #80)

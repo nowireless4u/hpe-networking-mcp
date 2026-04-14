@@ -1,12 +1,13 @@
 """Elicitation middleware and handler for write tool confirmation.
 
 The ElicitationMiddleware runs at session init to enable write tools
-based on config flags. Write tools are always enabled when the config
-says so — regardless of whether the client supports elicitation prompts.
+based on config flags and detect client elicitation support.
 
 The elicitation_handler function is called by individual write tools
-to prompt the user for confirmation. If the client does not support
-elicitation, it auto-accepts with a warning log.
+to get user confirmation. Behavior depends on config and client:
+- DISABLE_ELICITATION=true: auto-accept, no confirmation
+- Client supports elicitation: show confirmation prompt dialog
+- Client lacks elicitation: decline and instruct AI to ask user in chat
 """
 
 import mcp.types
@@ -47,12 +48,11 @@ class ElicitationMiddleware(Middleware):
         if not any_write:
             return result  # type: ignore[return-value]
 
-        # Determine whether to auto-accept or prompt
+        # Determine confirmation mode
         if config.disable_elicitation:
-            await ctx.set_state("disable_elicitation", True)
+            await ctx.set_state("elicitation_mode", "disabled")
             logger.warning("Elicitation: DISABLE_ELICITATION=true — write tools will execute without confirmation")
         else:
-            # Check if client supports elicitation
             client_supports = False
             try:
                 caps = context.message.params.capabilities
@@ -62,14 +62,16 @@ class ElicitationMiddleware(Middleware):
                 pass
 
             if client_supports:
-                await ctx.set_state("disable_elicitation", False)
+                await ctx.set_state("elicitation_mode", "prompt")
                 logger.debug("Elicitation: client supports elicitation prompts")
             else:
-                # Client doesn't support elicitation — auto-accept
-                await ctx.set_state("disable_elicitation", True)
-                logger.info("Elicitation: client does not support elicitation, write tools will auto-accept")
+                await ctx.set_state("elicitation_mode", "chat_confirm")
+                logger.info(
+                    "Elicitation: client does not support elicitation — "
+                    "write tools will require AI to confirm with user in chat"
+                )
 
-        # Enable write tools — always, when config says enabled
+        # Enable write tools
         if mist_write:
             await ctx.enable_components(tags={"mist_write", "mist_write_delete"}, components={"tool"})
         if central_write:
@@ -80,28 +82,37 @@ class ElicitationMiddleware(Middleware):
 
 
 async def elicitation_handler(message: str, ctx: Context) -> ElicitResult:
-    """Prompt user for confirmation before write operations.
+    """Get user confirmation before a write operation.
 
-    If the client supports elicitation, shows a confirmation prompt.
-    If the client does not support elicitation or DISABLE_ELICITATION=true,
-    auto-accepts the operation.
+    Returns:
+        ElicitResult with action "accept", "decline", or "cancel".
+        On "decline" when chat confirmation is needed, the calling tool
+        should return a confirmation request message to the AI.
     """
-    if await ctx.get_state("disable_elicitation") is True:
-        logger.debug("Elicitation: auto-accepting — {}", message)
+    mode = await ctx.get_state("elicitation_mode")
+
+    # DISABLE_ELICITATION=true — skip all confirmation
+    if mode == "disabled":
+        logger.debug("Elicitation: auto-accepting (disabled) — {}", message)
         return ElicitResult(action="accept")
 
-    try:
-        logger.debug("Elicitation: prompting user — {}", message)
-        result = await ctx.elicit(message, response_type=None)
-        match result:
-            case AcceptedElicitation():
-                return ElicitResult(action="accept")
-            case DeclinedElicitation():
-                return ElicitResult(action="decline")
-            case CancelledElicitation():
-                return ElicitResult(action="cancel")
-            case _:
-                return ElicitResult(action="cancel")
-    except Exception:
-        logger.warning("Elicitation: client cannot prompt, auto-accepting write operation")
-        return ElicitResult(action="accept")
+    # Client supports elicitation — show prompt dialog
+    if mode == "prompt":
+        try:
+            logger.debug("Elicitation: prompting user — {}", message)
+            result = await ctx.elicit(message, response_type=None)
+            match result:
+                case AcceptedElicitation():
+                    return ElicitResult(action="accept")
+                case DeclinedElicitation():
+                    return ElicitResult(action="decline")
+                case CancelledElicitation():
+                    return ElicitResult(action="cancel")
+                case _:
+                    return ElicitResult(action="cancel")
+        except Exception:
+            logger.warning("Elicitation: prompt failed, falling through to chat confirm")
+
+    # Client lacks elicitation — tell AI to ask the user in chat
+    logger.debug("Elicitation: chat confirmation required — {}", message)
+    return ElicitResult(action="decline")
