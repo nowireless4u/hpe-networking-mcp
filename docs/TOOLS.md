@@ -8,8 +8,8 @@ and `greenlake_*` (HPE GreenLake).
 
 | Platform | Read-Only Tools | Write Tools | Prompts | Total |
 |----------|----------------|-------------|---------|-------|
-| Juniper Mist | 31 | 4 | -- | 35 |
-| Aruba Central | 35 | -- | 10 | 45 |
+| Juniper Mist | 31 | 4 | 2 | 37 |
+| Aruba Central | 42 | -- | 12 | 54 |
 | HPE GreenLake (static mode) | 10 | -- | -- | 10 |
 | HPE GreenLake (dynamic mode) | 3 | -- | -- | 3 |
 
@@ -25,7 +25,7 @@ GreenLake supports two mutually exclusive tool modes controlled by
 
 ---
 
-## Juniper Mist (35 tools)
+## Juniper Mist (35 tools + 2 prompts)
 
 ### Account and Organization
 
@@ -493,9 +493,16 @@ GreenLake supports two mutually exclusive tool modes controlled by
 | object_id | UUID | No | ID of the object to update or delete. |
 | body | dict | No | Configuration object body. Required for create/update. |
 
+### Guided Prompts
+
+| Prompt | Parameters | Description |
+|--------|------------|-------------|
+| `provision_site_from_template` | source_site_name, target_site_name, target_address | Clone a site's configuration using org-level templates. Never copies site-level WLANs. |
+| `bulk_provision_sites` | source_site_name, site_list_description | Bulk provision multiple sites from a template site. Analyzes source config once, creates each site with template assignments. |
+
 ---
 
-## Aruba Central (35 tools + 10 prompts)
+## Aruba Central (42 tools + 12 prompts)
 
 ### Sites
 
@@ -901,6 +908,8 @@ LLM through a recommended sequence of tool calls for common network operations.
 | `device_type_health` | site_name, device_type | Health check for all devices of a type at a site. |
 | `critical_alerts_review` | (none) | Review all active critical alerts across the network. |
 | `compare_site_health` | site_names (list) | Compare health metrics across multiple sites. |
+| `scope_configuration_overview` | scope_name | View committed configuration resources at a scope with category grouping. |
+| `scope_effective_config` | scope_name | View effective (inherited + committed) configuration as a layered inheritance view. |
 
 ---
 

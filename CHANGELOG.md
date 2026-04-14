@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.7.13] - 2026-04-13
+
+### Added — Mist Best-Practice Guardrails
+- `guardrails.py` validation module — inspects write tool payloads and warns when operations violate Mist best practices (site-level WLAN creation, hardcoded RADIUS IPs, fixed RF channels/power, static PSKs)
+- Guardrails integrated into all 4 Mist write tools — warnings in elicitation message, suggestions in tool response
+- `provision_site_from_template` prompt — guided workflow for cloning a site using templates
+- `bulk_provision_sites` prompt — guided workflow for bulk site creation with source config analysis done once
+- Mist Best Practices section in INSTRUCTIONS.md
+
+### Added — Central Scope Tool Improvements
+- Enriched scope tree output with `persona_count`, `resource_count`, `child_scope_count`, `device_count`, per-persona `categories` breakdown
+- `include_details` parameter on `central_get_effective_config` — exposes full resource configuration data
+- `inheritance_path` in effective config output — ordered path from Global to target scope
+- `scope_configuration_overview` and `scope_effective_config` guided prompts
+- Split `scope_builder.py` into `scope_builder.py` + `scope_queries.py`
+- Mermaid diagram device labels now use hostnames instead of model numbers
+
+### Changed
+- Mist tool count: 35 tools + 2 prompts
+- Central tool count: 42 tools + 12 prompts (was 10)
+- Test count: 176 (was 119)
+
+[v0.7.13]: https://github.com/nowireless4u/hpe-networking-mcp/releases/tag/v0.7.13
+
+## [v0.7.12] - 2026-04-13
+
+### Fixed
+- Site update/delete calling nonexistent `mistapi.api.v1.orgs.sites.updateOrgSite` / `deleteOrgSite` — fixed to `mistapi.api.v1.sites.sites.updateSiteInfo(site_id)` and `deleteSite(site_id)`
+
+[v0.7.12]: https://github.com/nowireless4u/hpe-networking-mcp/releases/tag/v0.7.12
+
 ## [v0.7.11] - 2026-04-13
 
 ### Added

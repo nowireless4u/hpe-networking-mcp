@@ -35,9 +35,9 @@ Managing HPE networking infrastructure with AI assistants today means juggling t
 | **User Management** | — | — | ✅ |
 | **Workspaces** | — | — | ✅ |
 | **Scope & Configuration Hierarchy** | — | ✅ | — |
-| **Guided Prompts** | — | ✅ | — |
+| **Guided Prompts** | ✅ | ✅ | — |
 | **Dynamic API Discovery** | — | — | ✅ |
-| **Tools** | **35** | **42 + 10 prompts** | **3 or 10** |
+| **Tools** | **35 + 2 prompts** | **42 + 12 prompts** | **3 or 10** |
 
 > **GreenLake tool count**: 3 tools in **dynamic mode** (default) — a meta-tool system that can discover and invoke any GreenLake API endpoint. 10 tools in **static mode** — dedicated tools for each endpoint. Set via `MCP_TOOL_MODE` environment variable.
 
@@ -111,7 +111,7 @@ docker compose up -d
 docker compose logs
 ```
 
-Look for lines like `Mist: registered 35 tools` and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`.
+Look for lines like `Mist: registered 35 tools` and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. Mist also registers 2 guided prompts for site provisioning workflows.
 
 ### Docker Image
 
@@ -296,7 +296,7 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 │   ┌────────────┐ ┌────────────┐ ┌────────────────┐  │
 │   │   Mist     │ │  Central   │ │   GreenLake    │  │
 │   │  mist_*    │ │ central_*  │ │  greenlake_*   │  │
-│   │  35 tools  │ │ 42+10 prmt │ │  3/10 tools    │  │
+│   │ 35+2 prmt  │ │ 42+12 prmt │ │  3/10 tools    │  │
 │   └─────┬──────┘ └─────┬──────┘ └───────┬────────┘  │
 │         │              │                │            │
 └─────────┼──────────────┼────────────────┼────────────┘
@@ -397,10 +397,10 @@ hpe-networking-mcp/
 │   ├── INSTRUCTIONS.md          # LLM instructions for all platforms
 │   ├── middleware/              # Elicitation and null-strip middleware
 │   └── platforms/
-│       ├── mist/                # 35 Mist tools + API client
-│       ├── central/             # 35 Central tools + 10 prompts + API client
+│       ├── mist/                # 35 Mist tools + 2 prompts + API client
+│       ├── central/             # 42 Central tools + 12 prompts + API client
 │       └── greenlake/           # 3 dynamic or 10 static tools + OAuth2 client
-├── tests/                       # Unit and integration tests (119 tests)
+├── tests/                       # Unit and integration tests (176 tests)
 ├── docs/                        # PRD, PRP, tool reference
 ├── secrets/                     # Secret files (only .example committed)
 ├── .github/workflows/           # CI, security, Docker publish
