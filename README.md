@@ -37,7 +37,7 @@ Managing HPE networking infrastructure with AI assistants today means juggling t
 | **Scope & Configuration Hierarchy** | — | ✅ | — |
 | **Guided Prompts** | ✅ | ✅ | — |
 | **Dynamic API Discovery** | — | — | ✅ |
-| **Tools** | **35 + 2 prompts** | **42 + 12 prompts** | **3 or 10** |
+| **Tools** | **35 + 2 prompts** | **45 + 12 prompts** | **3 or 10** |
 
 > **GreenLake tool count**: 3 tools in **dynamic mode** (default) — a meta-tool system that can discover and invoke any GreenLake API endpoint. 10 tools in **static mode** — dedicated tools for each endpoint. Set via `MCP_TOOL_MODE` environment variable.
 
@@ -296,7 +296,7 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 │   ┌────────────┐ ┌────────────┐ ┌────────────────┐  │
 │   │   Mist     │ │  Central   │ │   GreenLake    │  │
 │   │  mist_*    │ │ central_*  │ │  greenlake_*   │  │
-│   │ 35+2 prmt  │ │ 42+12 prmt │ │  3/10 tools    │  │
+│   │ 35+2 prmt  │ │ 45+12 prmt │ │  3/10 tools    │  │
 │   └─────┬──────┘ └─────┬──────┘ └───────┬────────┘  │
 │         │              │                │            │
 └─────────┼──────────────┼────────────────┼────────────┘
@@ -398,7 +398,7 @@ hpe-networking-mcp/
 │   ├── middleware/              # Elicitation and null-strip middleware
 │   └── platforms/
 │       ├── mist/                # 35 Mist tools + 2 prompts + API client
-│       ├── central/             # 42 Central tools + 12 prompts + API client
+│       ├── central/             # 45 Central tools + 12 prompts + API client
 │       └── greenlake/           # 3 dynamic or 10 static tools + OAuth2 client
 ├── tests/                       # Unit and integration tests (176 tests)
 ├── docs/                        # PRD, PRP, tool reference

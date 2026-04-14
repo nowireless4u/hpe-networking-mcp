@@ -9,7 +9,7 @@ and `greenlake_*` (HPE GreenLake).
 | Platform | Read-Only Tools | Write Tools | Prompts | Total |
 |----------|----------------|-------------|---------|-------|
 | Juniper Mist | 31 | 4 | 2 | 37 |
-| Aruba Central | 42 | -- | 12 | 54 |
+| Aruba Central | 42 | 3 | 12 | 57 |
 | HPE GreenLake (static mode) | 10 | -- | -- | 10 |
 | HPE GreenLake (dynamic mode) | 3 | -- | -- | 3 |
 
@@ -502,7 +502,7 @@ GreenLake supports two mutually exclusive tool modes controlled by
 
 ---
 
-## Aruba Central (42 tools + 12 prompts)
+## Aruba Central (45 tools + 12 prompts)
 
 ### Sites
 
@@ -890,6 +890,38 @@ No parameters. Returns a dict sorted by health score (worst first).
 |-----------|------|----------|-------------|
 | serial_number | str | Yes | Gateway serial number. |
 | ports | str | Yes | Comma-separated port list. |
+
+### Write Tools (disabled by default)
+
+#### `central_manage_site`
+
+> Create, update, or delete a site in Aruba Central. Requires `ENABLE_WRITE_TOOLS=true`.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| action_type | str | Yes | `create`, `update`, or `delete`. |
+| payload | dict | Yes | Site payload. For create: `address` required (or `latitude` + `longitude`). Optional: `name`, `city`, `state`, `country`, `zipcode`, `timezone`. |
+| site_id | str | No | Site ID. Required for update and delete. |
+
+#### `central_manage_site_collection`
+
+> Create, update, or delete a site collection in Aruba Central. Requires `ENABLE_WRITE_TOOLS=true`.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| action_type | str | Yes | `create`, `update`, or `delete`. |
+| payload | dict | Yes | Site collection payload. For create: `scopeName` required. Optional: `description`, `siteIds`. |
+| collection_id | str | No | Collection ID. Required for update and delete. |
+
+#### `central_manage_device_group`
+
+> Create, update, or delete a device group in Aruba Central. Requires `ENABLE_WRITE_TOOLS=true`.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| action_type | str | Yes | `create`, `update`, or `delete`. |
+| payload | dict | Yes | Device group payload. For create: `scopeName` required. Optional: `description`. |
+| group_id | str | No | Group ID. Required for update and delete. |
 
 ### Guided Prompts
 
