@@ -231,9 +231,9 @@ async def _execute_config_action(
     api_method = method_map[action_type]
     full_path = f"{api_path}/{resource_id}" if resource_id else api_path
 
-    api_params: dict = {}
+    api_data: dict = {}
     if action_type != ActionType.DELETE:
-        api_params = payload
+        api_data = payload
 
     logger.info("Central config: {} {} — path: {}", api_method, resource_name, full_path)
 
@@ -241,7 +241,7 @@ async def _execute_config_action(
         central_conn=conn,
         api_method=api_method,
         api_path=full_path,
-        api_params=api_params,
+        api_data=api_data,
     )
 
     code = response.get("code", 0)
