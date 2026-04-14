@@ -76,7 +76,7 @@ async def central_manage_site(
         ctx=ctx,
         action_type=action_type,
         resource_name="site",
-        api_path="network-config/v1/sites",
+        api_path="network-config/v1alpha1/sites",
         resource_id=site_id,
         payload=payload,
     )
@@ -118,7 +118,7 @@ async def central_manage_site_collection(
         ctx=ctx,
         action_type=action_type,
         resource_name="site collection",
-        api_path="network-config/v1/site-collections",
+        api_path="network-config/v1alpha1/site-collections",
         resource_id=collection_id,
         payload=payload,
     )
@@ -160,7 +160,7 @@ async def central_manage_device_group(
         ctx=ctx,
         action_type=action_type,
         resource_name="device group",
-        api_path="network-config/v1/device-groups",
+        api_path="network-config/v1alpha1/device-groups",
         resource_id=group_id,
         payload=payload,
     )
@@ -185,7 +185,7 @@ async def _execute_config_action(
         ctx: MCP context with lifespan_context containing central_conn.
         action_type: CREATE, UPDATE, or DELETE.
         resource_name: Human-readable name for elicitation messages.
-        api_path: Base API path (e.g. "network-config/v1/sites").
+        api_path: Base API path (e.g. "network-config/v1alpha1/sites").
         resource_id: Resource ID for update/delete operations.
         payload: Request payload for create/update.
 
