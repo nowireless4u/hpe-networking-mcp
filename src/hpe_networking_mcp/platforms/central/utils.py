@@ -193,15 +193,23 @@ def retry_central_command(
     api_method: str,
     api_path: str,
     api_params: dict | None = None,
+    api_data: dict | None = None,
     max_retries: int = 5,
 ) -> dict:
     """Call central_conn.command and retry up to max_retries on transient errors.
 
-    Does not sleep between attempts. On persistent server errors (5xx) or
-    rate-limit (429) this raises an exception so the caller can abort.
+    Args:
+        central_conn: pycentral connection object.
+        api_method: HTTP method (GET, POST, PUT, DELETE).
+        api_path: API endpoint path.
+        api_params: URL query parameters.
+        api_data: Request body payload (sent as JSON for POST/PUT).
+        max_retries: Max retry attempts for transient errors.
+
     Client errors (4xx) are raised immediately.
     """
     api_params = api_params or {}
+    api_data = api_data or {}
     last_response: dict | None = None
     for attempt in range(1, max_retries + 1):
         try:
@@ -209,6 +217,7 @@ def retry_central_command(
                 api_method=api_method,
                 api_path=api_path,
                 api_params=api_params,
+                api_data=api_data,
             )
         except Exception as exc:
             central_conn.logger.error(
