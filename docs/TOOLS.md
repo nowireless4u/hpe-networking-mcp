@@ -916,13 +916,14 @@ No parameters. Returns a dict sorted by health score (worst first).
 
 #### `central_manage_site_collection`
 
-> Create, update, or delete a site collection in Aruba Central. Requires `ENABLE_CENTRAL_WRITE_TOOLS=true`.
+> Create, update, delete, or manage sites within a site collection. Requires `ENABLE_CENTRAL_WRITE_TOOLS=true`.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| action_type | str | Yes | `create`, `update`, or `delete`. |
-| payload | dict | Yes | Site collection payload. For create: `scopeName` required. Optional: `description`, `siteIds`. |
-| collection_id | str | No | Collection ID. Required for update and delete. |
+| action_type | str | Yes | `create`, `update`, `delete`, `add_sites`, or `remove_sites`. |
+| payload | dict | Yes | For create: `scopeName` required, optional `description`, `siteIds`. For add_sites/remove_sites: `siteIds` list required. |
+| collection_id | str | No | Collection ID. Required for update, delete, add_sites, remove_sites. |
+| confirmed | bool | No | Set to true after user confirms update/delete in chat. |
 
 #### `central_manage_device_group`
 

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hpe-networking-mcp"
-version = "0.7.21"
+version = "0.8.0"
 description = "Unified MCP server for Juniper Mist, Aruba Central, and HPE GreenLake"
 readme = "README.md"
 license = "MIT"

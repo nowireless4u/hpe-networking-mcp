@@ -143,6 +143,13 @@ async def change_org_configuration_objects(
         ),
     ],
     ctx: Context,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Set to true when the user has confirmed the operation in chat. Required for update/delete.",
+            default=False,
+        ),
+    ],
 ) -> dict | list | str:
     """Update, create or delete configuration object for a specified org."""
 
@@ -183,7 +190,7 @@ async def change_org_configuration_objects(
         guardrail_notice = "\n\n" + "\n".join(guardrails.warnings[:3])
 
     # Confirm with user for update and delete operations only
-    if action_type != Action_type.CREATE:
+    if action_type != Action_type.CREATE and not confirmed:
         elicitation_response = await elicitation_handler(
             message=(
                 f"The LLM wants to {action_wording} {object_type.value}. "
@@ -198,7 +205,7 @@ async def change_org_configuration_objects(
                     "message": (
                         f"This operation will {action_wording} {object_type.value}. "
                         "Please confirm with the user before proceeding. "
-                        "Call this tool again with the same parameters after the user confirms."
+                        "Call this tool again with the same parameters and confirmed=true after the user confirms."
                     ),
                 }
             return {"message": "Action declined by user."}
