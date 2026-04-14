@@ -143,16 +143,14 @@ class TestCreateServer:
         mock_gl.assert_not_called()
 
     def test_applies_visibility_transform_when_write_tools_disabled(self, mist_secrets):
-        """create_server() adds a Visibility transform when enable_write_tools is False."""
-        config = ServerConfig(mist=mist_secrets, enable_write_tools=False)
+        """create_server() adds Visibility transforms when per-platform write flags are False."""
+        config = ServerConfig(mist=mist_secrets, enable_mist_write_tools=False, enable_central_write_tools=False)
 
         with patch("hpe_networking_mcp.server._register_mist_tools"):
             from hpe_networking_mcp.server import create_server
 
             mcp = create_server(config)
 
-        # The server should have at least one transform applied (the Visibility transform)
-        # FastMCP stores transforms in _transforms list
         transforms = getattr(mcp, "_transforms", [])
         from fastmcp.server.transforms import Visibility
 
@@ -163,8 +161,8 @@ class TestCreateServer:
         )
 
     def test_no_visibility_transform_when_write_tools_enabled(self, mist_secrets):
-        """create_server() does NOT add a Visibility transform when enable_write_tools is True."""
-        config = ServerConfig(mist=mist_secrets, enable_write_tools=True)
+        """create_server() does NOT add Mist Visibility transform when Mist write is enabled."""
+        config = ServerConfig(mist=mist_secrets, enable_mist_write_tools=True, enable_central_write_tools=True)
 
         with patch("hpe_networking_mcp.server._register_mist_tools"):
             from hpe_networking_mcp.server import create_server

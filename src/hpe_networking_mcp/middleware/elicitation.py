@@ -1,9 +1,12 @@
-"""Elicitation middleware — detects client support and enables write tools accordingly.
+"""Elicitation middleware and handler for write tool confirmation.
 
-During MCP initialization, detects whether the client supports elicitation
-(via MCP capabilities) or has explicitly opted out via HTTP headers/query params.
-Write tools are disabled by default via the server-level Visibility transform.
-If elicitation support is detected, write tools are enabled for that session.
+The ElicitationMiddleware runs at session init to enable write tools
+based on config flags. Write tools are always enabled when the config
+says so — regardless of whether the client supports elicitation prompts.
+
+The elicitation_handler function is called by individual write tools
+to prompt the user for confirmation. If the client does not support
+elicitation, it auto-accepts with a warning log.
 """
 
 import mcp.types
@@ -29,7 +32,6 @@ class ElicitationMiddleware(Middleware):
         if ctx is None:
             return result  # type: ignore[return-value]
 
-        # Access server config from lifespan context
         try:
             config = ctx.lifespan_context.get("config")
         except Exception:
@@ -38,79 +40,68 @@ class ElicitationMiddleware(Middleware):
         if config is None:
             return result  # type: ignore[return-value]
 
-        any_write = config.enable_write_tools or config.enable_mist_write_tools or config.enable_central_write_tools
+        mist_write = config.enable_mist_write_tools
+        central_write = config.enable_central_write_tools
+        any_write = mist_write or central_write
 
-        enable_write = False
+        if not any_write:
+            return result  # type: ignore[return-value]
 
-        # DANGER ZONE: write enabled + elicitation disabled — skip prompts
-        if any_write and config.disable_elicitation:
-            enable_write = True
+        # Determine whether to auto-accept or prompt
+        if config.disable_elicitation:
             await ctx.set_state("disable_elicitation", True)
-            logger.warning(
-                "Elicitation: write tools AND disable_elicitation both set — "
-                "write tools enabled WITHOUT confirmation. Use with caution!"
-            )
-
-        # Check if client supports elicitation via MCP capabilities
-        elif any_write:
+            logger.warning("Elicitation: DISABLE_ELICITATION=true — write tools will execute without confirmation")
+        else:
+            # Check if client supports elicitation
+            client_supports = False
             try:
                 caps = context.message.params.capabilities
                 if caps is not None and caps.elicitation is not None:
-                    enable_write = True
-                    await ctx.set_state("disable_elicitation", False)
-                    logger.debug("Elicitation: client supports elicitation")
-            except Exception as exc:
-                logger.error("Elicitation: error checking capabilities — {}", exc)
-
-            # HTTP transport: check headers/query params for bypass
-            try:
-                from fastmcp.server.dependencies import get_http_request
-
-                request = get_http_request()
-                if request.headers.get("X-Disable-Elicitation", "false").lower() == "true":
-                    enable_write = True
-                    await ctx.set_state("disable_elicitation", True)
-                    logger.debug("Elicitation: X-Disable-Elicitation header detected")
-                elif request.query_params.get("disable_elicitation", "false").lower() == "true":
-                    enable_write = True
-                    await ctx.set_state("disable_elicitation", True)
-                    logger.debug("Elicitation: disable_elicitation query param detected")
+                    client_supports = True
             except Exception:
-                pass  # Not HTTP transport or request not available
+                pass
 
-        if enable_write:
-            # Enable per-platform based on individual flags
-            mist_write = config.enable_write_tools or config.enable_mist_write_tools
-            central_write = config.enable_write_tools or config.enable_central_write_tools
-            if mist_write:
-                await ctx.enable_components(tags={"mist_write", "mist_write_delete"}, components={"tool"})
-            if central_write:
-                await ctx.enable_components(tags={"central_write_delete"}, components={"tool"})
-            logger.debug("Elicitation: write tools enabled (mist=%s, central=%s)", mist_write, central_write)
-        else:
-            await ctx.disable_components(
-                tags={"mist_write", "mist_write_delete", "central_write_delete"},
-                components={"tool"},
-            )
-            logger.debug("Elicitation: write tools disabled (no support detected)")
+            if client_supports:
+                await ctx.set_state("disable_elicitation", False)
+                logger.debug("Elicitation: client supports elicitation prompts")
+            else:
+                # Client doesn't support elicitation — auto-accept
+                await ctx.set_state("disable_elicitation", True)
+                logger.info("Elicitation: client does not support elicitation, write tools will auto-accept")
+
+        # Enable write tools — always, when config says enabled
+        if mist_write:
+            await ctx.enable_components(tags={"mist_write", "mist_write_delete"}, components={"tool"})
+        if central_write:
+            await ctx.enable_components(tags={"central_write_delete"}, components={"tool"})
+        logger.info("Elicitation: write tools enabled (mist=%s, central=%s)", mist_write, central_write)
 
         return result  # type: ignore[return-value]
 
 
 async def elicitation_handler(message: str, ctx: Context) -> ElicitResult:
-    """Prompt user for confirmation before write operations."""
+    """Prompt user for confirmation before write operations.
+
+    If the client supports elicitation, shows a confirmation prompt.
+    If the client does not support elicitation or DISABLE_ELICITATION=true,
+    auto-accepts the operation.
+    """
     if await ctx.get_state("disable_elicitation") is True:
-        logger.debug("Elicitation: auto-accepting (elicitation disabled for this client)")
+        logger.debug("Elicitation: auto-accepting — {}", message)
         return ElicitResult(action="accept")
 
-    logger.debug("Elicitation: prompting user — {}", message)
-    result = await ctx.elicit(message, response_type=None)
-    match result:
-        case AcceptedElicitation():
-            return ElicitResult(action="accept")
-        case DeclinedElicitation():
-            return ElicitResult(action="decline")
-        case CancelledElicitation():
-            return ElicitResult(action="cancel")
-        case _:
-            return ElicitResult(action="cancel")
+    try:
+        logger.debug("Elicitation: prompting user — {}", message)
+        result = await ctx.elicit(message, response_type=None)
+        match result:
+            case AcceptedElicitation():
+                return ElicitResult(action="accept")
+            case DeclinedElicitation():
+                return ElicitResult(action="decline")
+            case CancelledElicitation():
+                return ElicitResult(action="cancel")
+            case _:
+                return ElicitResult(action="cancel")
+    except Exception:
+        logger.warning("Elicitation: client cannot prompt, auto-accepting write operation")
+        return ElicitResult(action="accept")

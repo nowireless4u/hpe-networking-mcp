@@ -159,34 +159,17 @@ async def change_site_configuration_objects(
     if guardrails.warnings:
         guardrail_notice = "\n\n" + "\n".join(guardrails.warnings[:3])
 
-    if ctx:
-        try:
-            elicitation_response = await elicitation_handler(
-                message=(
-                    f"The LLM wants to {action_wording} {object_type.value}. "
-                    f"Do you accept to trigger the API call?{guardrail_notice}"
-                ),
-                ctx=ctx,
-            )
-        except Exception as exc:
-            raise ToolError(
-                {
-                    "status_code": 400,
-                    "message": (
-                        "AI App does not support elicitation. "
-                        "You cannot use it to modify "
-                        "configuration objects. Please use the "
-                        "Mist API directly or use an AI App "
-                        "with elicitation support to modify "
-                        "configuration objects."
-                    ),
-                }
-            ) from exc
-
-        if elicitation_response.action == "decline":
-            return {"message": "Action declined by user."}
-        elif elicitation_response.action == "cancel":
-            return {"message": "Action canceled by user."}
+    elicitation_response = await elicitation_handler(
+        message=(
+            f"The LLM wants to {action_wording} {object_type.value}. "
+            f"Do you accept to trigger the API call?{guardrail_notice}"
+        ),
+        ctx=ctx,
+    )
+    if elicitation_response.action == "decline":
+        return {"message": "Action declined by user."}
+    elif elicitation_response.action == "cancel":
+        return {"message": "Action canceled by user."}
 
     site = str(site_id)
     obj = str(object_id)

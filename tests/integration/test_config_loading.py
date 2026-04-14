@@ -165,29 +165,31 @@ class TestLoadConfig:
 
         assert config.log_level == "DEBUG"
 
-    def test_env_var_override_enable_write_tools(self, tmp_path, monkeypatch):
-        """ENABLE_WRITE_TOOLS=true environment variable enables write tools."""
+    def test_env_var_override_enable_mist_write_tools(self, tmp_path, monkeypatch):
+        """ENABLE_MIST_WRITE_TOOLS=true enables Mist write tools."""
         import hpe_networking_mcp.config as config_module
 
         _write_mist_secrets(tmp_path)
         monkeypatch.setattr(config_module, "SECRETS_DIR", str(tmp_path))
-        monkeypatch.setenv("ENABLE_WRITE_TOOLS", "true")
+        monkeypatch.setenv("ENABLE_MIST_WRITE_TOOLS", "true")
 
         config = config_module.load_config()
 
-        assert config.enable_write_tools is True
+        assert config.enable_mist_write_tools is True
 
     def test_enable_write_tools_defaults_to_false(self, tmp_path, monkeypatch):
-        """ENABLE_WRITE_TOOLS defaults to False when not set."""
+        """Per-platform write flags default to False when not set."""
         import hpe_networking_mcp.config as config_module
 
         _write_mist_secrets(tmp_path)
         monkeypatch.setattr(config_module, "SECRETS_DIR", str(tmp_path))
-        monkeypatch.delenv("ENABLE_WRITE_TOOLS", raising=False)
+        monkeypatch.delenv("ENABLE_MIST_WRITE_TOOLS", raising=False)
+        monkeypatch.delenv("ENABLE_CENTRAL_WRITE_TOOLS", raising=False)
 
         config = config_module.load_config()
 
-        assert config.enable_write_tools is False
+        assert config.enable_mist_write_tools is False
+        assert config.enable_central_write_tools is False
 
     def test_partial_platform_secrets_disables_that_platform(self, tmp_path, monkeypatch):
         """A platform with only some of its required secrets is disabled (returns None)."""

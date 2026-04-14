@@ -20,11 +20,6 @@ def main() -> None:
     )
     parser.add_argument("--log-level", help="Log level (default: INFO, env: LOG_LEVEL)")
     parser.add_argument(
-        "--enable-write-tools",
-        action="store_true",
-        help="Enable write/mutation tools",
-    )
-    parser.add_argument(
         "--disable-elicitation",
         action="store_true",
         help="DANGER: Skip user confirmation for write tools",
@@ -44,8 +39,6 @@ def main() -> None:
         os.environ["MCP_HOST"] = args.host
     if args.log_level:
         os.environ["LOG_LEVEL"] = args.log_level
-    if args.enable_write_tools:
-        os.environ["ENABLE_WRITE_TOOLS"] = "true"
     if args.disable_elicitation:
         os.environ["DISABLE_ELICITATION"] = "true"
     if args.debug:

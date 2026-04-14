@@ -1,52 +1,95 @@
 """Aruba Central platform module."""
 
+import importlib
+
 from fastmcp import FastMCP
 from loguru import logger
 
 from hpe_networking_mcp.config import ServerConfig
 
+# Tool categories mapped to module names and their tool names
+TOOLS = {
+    "sites": ["central_get_sites", "central_get_site_name_id_mapping"],
+    "devices": ["central_get_devices", "central_find_device"],
+    "clients": ["central_get_clients", "central_find_client"],
+    "alerts": ["central_get_alerts"],
+    "events": ["central_get_events", "central_get_events_count"],
+    "monitoring": [
+        "central_get_ap_details",
+        "central_get_switch_details",
+        "central_get_gateway_details",
+    ],
+    "wlans": ["central_get_wlans"],
+    "audit_logs": ["central_get_audit_logs", "central_get_audit_log_detail"],
+    "stats": [
+        "central_get_ap_stats",
+        "central_get_ap_utilization",
+        "central_get_gateway_stats",
+        "central_get_gateway_utilization",
+        "central_get_gateway_wan_availability",
+        "central_get_tunnel_health",
+    ],
+    "switch_poe": ["central_get_switch_hardware_trends", "central_get_switch_poe"],
+    "applications": ["central_get_applications"],
+    "troubleshooting": [
+        "central_ping",
+        "central_traceroute",
+        "central_cable_test",
+        "central_show_commands",
+    ],
+    "actions": [
+        "central_disconnect_users_ssid",
+        "central_disconnect_users_ap",
+        "central_disconnect_client_ap",
+        "central_disconnect_client_gateway",
+        "central_disconnect_clients_gateway",
+        "central_port_bounce_switch",
+        "central_poe_bounce_switch",
+        "central_port_bounce_gateway",
+        "central_poe_bounce_gateway",
+    ],
+    "scope": [
+        "central_get_scope_tree",
+        "central_get_scope_resources",
+        "central_get_effective_config",
+        "central_get_devices_in_scope",
+        "central_get_scope_diagram",
+    ],
+    "configuration": [
+        "central_manage_site",
+        "central_manage_site_collection",
+        "central_manage_device_group",
+    ],
+}
+
 
 def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
-    """Load and register all Central tool modules. Returns count of registered tools + prompts."""
+    """Dynamically load and register all Central tool modules. Returns count of loaded tools."""
     from hpe_networking_mcp.platforms.central import _registry
 
     _registry.mcp = mcp
 
-    from hpe_networking_mcp.platforms.central.tools import (
-        actions,
-        alerts,
-        applications,
-        audit_logs,
-        clients,
-        configuration,
-        devices,
-        events,
-        monitoring,
-        prompts,
-        scope,
-        sites,
-        stats,
-        switch_poe,
-        troubleshooting,
-        wlans,
-    )
+    write_enabled = config.enable_central_write_tools
+    loaded: list[str] = []
 
-    sites.register(mcp)
-    devices.register(mcp)
-    clients.register(mcp)
-    alerts.register(mcp)
-    events.register(mcp)
-    monitoring.register(mcp)
-    wlans.register(mcp)
-    audit_logs.register(mcp)
-    stats.register(mcp)
-    switch_poe.register(mcp)
-    applications.register(mcp)
-    troubleshooting.register(mcp)
-    actions.register(mcp)
-    configuration.register(mcp)
-    scope.register(mcp)
-    prompts.register(mcp)
+    for category, tool_names in TOOLS.items():
+        if category == "configuration" and not write_enabled:
+            logger.info("Central: write tools disabled, skipping {} tools", len(tool_names))
+            continue
+        try:
+            importlib.import_module(f"hpe_networking_mcp.platforms.central.tools.{category}")
+            loaded.extend(tool_names)
+            logger.debug("Central: loaded module {}", category)
+        except Exception as e:
+            logger.warning("Central: failed to load module {} -- {}", category, e)
 
-    logger.info("Central: registered tools and prompts")
-    return 46  # 42 read + 3 write tools + 12 prompts registered
+    # Register prompts (these use register(mcp) pattern, not _registry)
+    try:
+        from hpe_networking_mcp.platforms.central.tools import prompts
+
+        prompts.register(mcp)
+        logger.debug("Central: loaded prompts")
+    except Exception as e:
+        logger.warning("Central: failed to load prompts -- {}", e)
+
+    return len(loaded)

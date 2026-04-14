@@ -14,7 +14,7 @@ and `greenlake_*` (HPE GreenLake).
 | HPE GreenLake (dynamic mode) | 3 | -- | -- | 3 |
 
 Write tools (`mist_update_*`, `mist_change_*`) are disabled by default. Set
-`ENABLE_WRITE_TOOLS=true` to enable them.
+`ENABLE_MIST_WRITE_TOOLS=true` or `ENABLE_CENTRAL_WRITE_TOOLS=true` to enable them per platform.
 
 GreenLake supports two mutually exclusive tool modes controlled by
 `GREENLAKE_TOOL_MODE`:
@@ -449,7 +449,7 @@ GreenLake supports two mutually exclusive tool modes controlled by
 
 #### `mist_update_site_configuration_objects`
 
-> Update or create a configuration object for a site. Requires `ENABLE_WRITE_TOOLS=true`.
+> Update or create a configuration object for a site. Requires `ENABLE_MIST_WRITE_TOOLS=true`.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -460,7 +460,7 @@ GreenLake supports two mutually exclusive tool modes controlled by
 
 #### `mist_update_org_configuration_objects`
 
-> Update or create a configuration object for an organization. Requires `ENABLE_WRITE_TOOLS=true`.
+> Update or create a configuration object for an organization. Requires `ENABLE_MIST_WRITE_TOOLS=true`.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -471,7 +471,7 @@ GreenLake supports two mutually exclusive tool modes controlled by
 
 #### `mist_change_site_configuration_objects`
 
-> Create, update, or delete a site-level configuration object. Requires `ENABLE_WRITE_TOOLS=true`.
+> Create, update, or delete a site-level configuration object. Requires `ENABLE_MIST_WRITE_TOOLS=true`.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -483,7 +483,7 @@ GreenLake supports two mutually exclusive tool modes controlled by
 
 #### `mist_change_org_configuration_objects`
 
-> Create, update, or delete an org-level configuration object. Requires `ENABLE_WRITE_TOOLS=true`.
+> Create, update, or delete an org-level configuration object. Requires `ENABLE_MIST_WRITE_TOOLS=true`.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -895,7 +895,7 @@ No parameters. Returns a dict sorted by health score (worst first).
 
 #### `central_manage_site`
 
-> Create, update, or delete a site in Aruba Central. Requires `ENABLE_WRITE_TOOLS=true`.
+> Create, update, or delete a site in Aruba Central. Requires `ENABLE_CENTRAL_WRITE_TOOLS=true`.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -905,7 +905,7 @@ No parameters. Returns a dict sorted by health score (worst first).
 
 #### `central_manage_site_collection`
 
-> Create, update, or delete a site collection in Aruba Central. Requires `ENABLE_WRITE_TOOLS=true`.
+> Create, update, or delete a site collection in Aruba Central. Requires `ENABLE_CENTRAL_WRITE_TOOLS=true`.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -915,7 +915,7 @@ No parameters. Returns a dict sorted by health score (worst first).
 
 #### `central_manage_device_group`
 
-> Create, update, or delete a device group in Aruba Central. Requires `ENABLE_WRITE_TOOLS=true`.
+> Create, update, or delete a device group in Aruba Central. Requires `ENABLE_CENTRAL_WRITE_TOOLS=true`.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|

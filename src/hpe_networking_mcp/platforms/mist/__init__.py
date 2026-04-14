@@ -67,9 +67,13 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
 
     _registry.mcp = mcp
 
+    write_enabled = config.enable_mist_write_tools
     loaded: list[str] = []
 
     for _category, tool_names in TOOLS.items():
+        if _category in ("write", "write_delete") and not write_enabled:
+            logger.info("Mist: write tools disabled, skipping {} tools", len(tool_names))
+            continue
         for tool_name in tool_names:
             if tool_name in loaded:
                 continue

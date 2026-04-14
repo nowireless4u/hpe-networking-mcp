@@ -133,12 +133,9 @@ def create_server(config: ServerConfig) -> FastMCP:
     # --- Write tool visibility (per-platform) ---
     from fastmcp.server.transforms import Visibility
 
-    mist_write = config.enable_write_tools or config.enable_mist_write_tools
-    central_write = config.enable_write_tools or config.enable_central_write_tools
-
-    if not mist_write:
+    if not config.enable_mist_write_tools:
         mcp.add_transform(Visibility(False, tags={"mist_write", "mist_write_delete"}, components={"tool"}))
-    if not central_write:
+    if not config.enable_central_write_tools:
         mcp.add_transform(Visibility(False, tags={"central_write_delete"}, components={"tool"}))
 
     return mcp

@@ -15,6 +15,7 @@ from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import elicitation_handler
+from hpe_networking_mcp.platforms.central._registry import mcp
 from hpe_networking_mcp.platforms.central.utils import retry_central_command
 
 WRITE = ToolAnnotations(
@@ -38,129 +39,131 @@ class ActionType(Enum):
     DELETE = "delete"
 
 
-def register(mcp):
-    """Register Central configuration write tools."""
+# ------------------------------------------------------------------
+# Sites
+# ------------------------------------------------------------------
 
-    # ------------------------------------------------------------------
-    # Sites
-    # ------------------------------------------------------------------
 
-    @mcp.tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-    async def central_manage_site(
-        ctx: Context,
-        action_type: Annotated[
-            ActionType,
-            Field(description="Action to perform: create, update, or delete."),
-        ],
-        payload: Annotated[
-            dict,
-            Field(
-                description=(
-                    "Site configuration payload. For create: 'address' is required "
-                    "(or 'latitude' + 'longitude'). Optional fields: name, city, state, "
-                    "country, zipcode, timezone (object with timezoneName, timezoneId, "
-                    "rawOffset). For update: include only fields to change. "
-                    "For delete: payload is ignored."
-                )
-            ),
-        ],
-        site_id: Annotated[
-            str | None,
-            Field(
-                description="Site ID. Required for update and delete. Obtain from central_get_sites.",
-                default=None,
-            ),
-        ],
-    ) -> dict | str:
-        """Create, update, or delete a site in Aruba Central."""
-        return await _execute_config_action(
-            ctx=ctx,
-            action_type=action_type,
-            resource_name="site",
-            api_path="network-config/v1/sites",
-            resource_id=site_id,
-            payload=payload,
-        )
+@mcp.tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+async def central_manage_site(
+    ctx: Context,
+    action_type: Annotated[
+        ActionType,
+        Field(description="Action to perform: create, update, or delete."),
+    ],
+    payload: Annotated[
+        dict,
+        Field(
+            description=(
+                "Site configuration payload. For create: 'address' is required "
+                "(or 'latitude' + 'longitude'). Optional fields: name, city, state, "
+                "country, zipcode, timezone (object with timezoneName, timezoneId, "
+                "rawOffset). For update: include only fields to change. "
+                "For delete: payload is ignored."
+            )
+        ),
+    ],
+    site_id: Annotated[
+        str | None,
+        Field(
+            description="Site ID. Required for update and delete. Obtain from central_get_sites.",
+            default=None,
+        ),
+    ],
+) -> dict | str:
+    """Create, update, or delete a site in Aruba Central."""
+    return await _execute_config_action(
+        ctx=ctx,
+        action_type=action_type,
+        resource_name="site",
+        api_path="network-config/v1/sites",
+        resource_id=site_id,
+        payload=payload,
+    )
 
-    # ------------------------------------------------------------------
-    # Site Collections
-    # ------------------------------------------------------------------
 
-    @mcp.tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-    async def central_manage_site_collection(
-        ctx: Context,
-        action_type: Annotated[
-            ActionType,
-            Field(description="Action to perform: create, update, or delete."),
-        ],
-        payload: Annotated[
-            dict,
-            Field(
-                description=(
-                    "Site collection payload. For create: 'scopeName' is required. "
-                    "Optional: 'description', 'siteIds' (list of site IDs to include). "
-                    "For update: include only fields to change. "
-                    "For delete: payload is ignored."
-                )
-            ),
-        ],
-        collection_id: Annotated[
-            str | None,
-            Field(
-                description=("Site collection ID. Required for update and delete. Obtain from central_get_scope_tree."),
-                default=None,
-            ),
-        ],
-    ) -> dict | str:
-        """Create, update, or delete a site collection in Aruba Central."""
-        return await _execute_config_action(
-            ctx=ctx,
-            action_type=action_type,
-            resource_name="site collection",
-            api_path="network-config/v1/site-collections",
-            resource_id=collection_id,
-            payload=payload,
-        )
+# ------------------------------------------------------------------
+# Site Collections
+# ------------------------------------------------------------------
 
-    # ------------------------------------------------------------------
-    # Device Groups
-    # ------------------------------------------------------------------
 
-    @mcp.tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-    async def central_manage_device_group(
-        ctx: Context,
-        action_type: Annotated[
-            ActionType,
-            Field(description="Action to perform: create, update, or delete."),
-        ],
-        payload: Annotated[
-            dict,
-            Field(
-                description=(
-                    "Device group payload. For create: 'scopeName' is required. "
-                    "Optional: 'description'. "
-                    "For update: include only fields to change. "
-                    "For delete: payload is ignored."
-                )
-            ),
-        ],
-        group_id: Annotated[
-            str | None,
-            Field(
-                description=("Device group ID. Required for update and delete. Obtain from central_get_scope_tree."),
-                default=None,
-            ),
-        ],
-    ) -> dict | str:
-        """Create, update, or delete a device group in Aruba Central."""
-        return await _execute_config_action(
-            ctx=ctx,
-            action_type=action_type,
-            resource_name="device group",
-            api_path="network-config/v1/device-groups",
-            resource_id=group_id,
-            payload=payload,
-        )
+@mcp.tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+async def central_manage_site_collection(
+    ctx: Context,
+    action_type: Annotated[
+        ActionType,
+        Field(description="Action to perform: create, update, or delete."),
+    ],
+    payload: Annotated[
+        dict,
+        Field(
+            description=(
+                "Site collection payload. For create: 'scopeName' is required. "
+                "Optional: 'description', 'siteIds' (list of site IDs to include). "
+                "For update: include only fields to change. "
+                "For delete: payload is ignored."
+            )
+        ),
+    ],
+    collection_id: Annotated[
+        str | None,
+        Field(
+            description=("Site collection ID. Required for update and delete. Obtain from central_get_scope_tree."),
+            default=None,
+        ),
+    ],
+) -> dict | str:
+    """Create, update, or delete a site collection in Aruba Central."""
+    return await _execute_config_action(
+        ctx=ctx,
+        action_type=action_type,
+        resource_name="site collection",
+        api_path="network-config/v1/site-collections",
+        resource_id=collection_id,
+        payload=payload,
+    )
+
+
+# ------------------------------------------------------------------
+# Device Groups
+# ------------------------------------------------------------------
+
+
+@mcp.tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+async def central_manage_device_group(
+    ctx: Context,
+    action_type: Annotated[
+        ActionType,
+        Field(description="Action to perform: create, update, or delete."),
+    ],
+    payload: Annotated[
+        dict,
+        Field(
+            description=(
+                "Device group payload. For create: 'scopeName' is required. "
+                "Optional: 'description'. "
+                "For update: include only fields to change. "
+                "For delete: payload is ignored."
+            )
+        ),
+    ],
+    group_id: Annotated[
+        str | None,
+        Field(
+            description=("Device group ID. Required for update and delete. Obtain from central_get_scope_tree."),
+            default=None,
+        ),
+    ],
+) -> dict | str:
+    """Create, update, or delete a device group in Aruba Central."""
+    return await _execute_config_action(
+        ctx=ctx,
+        action_type=action_type,
+        resource_name="device group",
+        api_path="network-config/v1/device-groups",
+        resource_id=group_id,
+        payload=payload,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -198,16 +201,10 @@ async def _execute_config_action(
         ActionType.DELETE: "delete an existing",
     }[action_type]
 
-    try:
-        elicitation_response = await elicitation_handler(
-            message=(f"The LLM wants to {action_wording} {resource_name}. Do you accept to trigger the API call?"),
-            ctx=ctx,
-        )
-    except Exception as exc:
-        raise ToolError(
-            "AI client does not support elicitation. Cannot execute configuration changes without user confirmation."
-        ) from exc
-
+    elicitation_response = await elicitation_handler(
+        message=(f"The LLM wants to {action_wording} {resource_name}. Do you accept to trigger the API call?"),
+        ctx=ctx,
+    )
     if elicitation_response.action == "decline":
         return {"message": "Action declined by user."}
     elif elicitation_response.action == "cancel":

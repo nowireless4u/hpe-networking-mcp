@@ -164,13 +164,15 @@ class TestLoadConfig:
     def test_reads_env_overrides(self, patch_secrets_dir, monkeypatch):
         monkeypatch.setenv("MCP_PORT", "9090")
         monkeypatch.setenv("LOG_LEVEL", "debug")
-        monkeypatch.setenv("ENABLE_WRITE_TOOLS", "true")
+        monkeypatch.setenv("ENABLE_MIST_WRITE_TOOLS", "true")
+        monkeypatch.setenv("ENABLE_CENTRAL_WRITE_TOOLS", "yes")
         monkeypatch.setenv("DISABLE_ELICITATION", "yes")
         monkeypatch.setenv("DEBUG", "1")
         config = load_config()
         assert config.port == 9090
         assert config.log_level == "DEBUG"
-        assert config.enable_write_tools is True
+        assert config.enable_mist_write_tools is True
+        assert config.enable_central_write_tools is True
         assert config.disable_elicitation is True
         assert config.debug is True
 
