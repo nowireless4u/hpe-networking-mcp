@@ -64,7 +64,7 @@ class Object_type(Enum):
         "discover the attributes of the configuration "
         "object and which of them are required"
     ),
-    tags={"write"},
+    tags={"mist_write"},
     annotations={
         "title": "Update site configuration objects",
         "readOnlyHint": False,

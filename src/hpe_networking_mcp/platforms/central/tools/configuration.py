@@ -45,7 +45,7 @@ def register(mcp):
     # Sites
     # ------------------------------------------------------------------
 
-    @mcp.tool(annotations=WRITE_DELETE, tags={"write_delete"})
+    @mcp.tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
     async def central_manage_site(
         ctx: Context,
         action_type: Annotated[
@@ -86,7 +86,7 @@ def register(mcp):
     # Site Collections
     # ------------------------------------------------------------------
 
-    @mcp.tool(annotations=WRITE_DELETE, tags={"write_delete"})
+    @mcp.tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
     async def central_manage_site_collection(
         ctx: Context,
         action_type: Annotated[
@@ -126,7 +126,7 @@ def register(mcp):
     # Device Groups
     # ------------------------------------------------------------------
 
-    @mcp.tool(annotations=WRITE_DELETE, tags={"write_delete"})
+    @mcp.tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
     async def central_manage_device_group(
         ctx: Context,
         action_type: Annotated[

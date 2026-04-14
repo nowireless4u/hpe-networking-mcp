@@ -319,13 +319,15 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 
 Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) are supported with safety controls:
 
-- **Disabled by default** — set `ENABLE_WRITE_TOOLS=true` to expose write tools
+- **Disabled by default** — enable per-platform with `ENABLE_MIST_WRITE_TOOLS=true` or `ENABLE_CENTRAL_WRITE_TOOLS=true`
 - **Elicitation required** — write tools prompt for user confirmation before executing
 - **Annotation-based** — all tools carry MCP annotations (`readOnlyHint`, `destructiveHint`, etc.)
 
 | Environment Variable | Default | Effect |
 |---------------------|---------|--------|
-| `ENABLE_WRITE_TOOLS` | `false` | Expose write/mutation tools in the tool registry |
+| `ENABLE_WRITE_TOOLS` | `false` | Enable write tools for **all** platforms (global override) |
+| `ENABLE_MIST_WRITE_TOOLS` | `false` | Enable Mist write tools only |
+| `ENABLE_CENTRAL_WRITE_TOOLS` | `false` | Enable Central write tools only |
 | `DISABLE_ELICITATION` | `false` | Skip user confirmation for write tools (**use with caution**) |
 
 ---
@@ -337,7 +339,9 @@ Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) ar
 | `MCP_PORT` | `8000` | Port the MCP server listens on |
 | `SECRETS_DIR` | `/run/secrets` | Directory containing Docker secret files |
 | `LOG_LEVEL` | `info` | Logging level (`debug`, `info`, `warning`, `error`) |
-| `ENABLE_WRITE_TOOLS` | `false` | Enable write/mutation tools |
+| `ENABLE_WRITE_TOOLS` | `false` | Enable write tools for all platforms (global override) |
+| `ENABLE_MIST_WRITE_TOOLS` | `false` | Enable Mist write tools only |
+| `ENABLE_CENTRAL_WRITE_TOOLS` | `false` | Enable Central write tools only |
 | `DISABLE_ELICITATION` | `false` | Disable write confirmation prompts |
 | `MCP_TOOL_MODE` | `dynamic` | GreenLake tool mode: `dynamic` (3 meta-tools) or `static` (10 dedicated tools) |
 

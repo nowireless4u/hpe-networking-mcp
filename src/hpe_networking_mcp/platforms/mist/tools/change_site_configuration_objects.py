@@ -66,7 +66,7 @@ class Action_type(Enum):
         "discover the attributes of the configuration object and "
         "which of them are required\n"
     ),
-    tags={"write_delete"},
+    tags={"mist_write_delete"},
     annotations={
         "title": "Change site configuration objects",
         "readOnlyHint": False,

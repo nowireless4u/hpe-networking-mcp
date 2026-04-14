@@ -61,6 +61,8 @@ class ServerConfig:
     host: str = "0.0.0.0"
     log_level: str = "INFO"
     enable_write_tools: bool = False
+    enable_mist_write_tools: bool = False
+    enable_central_write_tools: bool = False
     disable_elicitation: bool = False
     debug: bool = False
     log_file: str | None = None
@@ -204,11 +206,10 @@ def load_config() -> ServerConfig:
     port = int(os.getenv("MCP_PORT", "8000"))
     host = os.getenv("MCP_HOST", "0.0.0.0")
     log_level = os.getenv("LOG_LEVEL", "INFO").upper()
-    enable_write = os.getenv("ENABLE_WRITE_TOOLS", "false").lower() in (
-        "true",
-        "1",
-        "yes",
-    )
+    _truthy = ("true", "1", "yes")
+    enable_write = os.getenv("ENABLE_WRITE_TOOLS", "false").lower() in _truthy
+    enable_mist_write = os.getenv("ENABLE_MIST_WRITE_TOOLS", "false").lower() in _truthy
+    enable_central_write = os.getenv("ENABLE_CENTRAL_WRITE_TOOLS", "false").lower() in _truthy
     disable_elicit = os.getenv("DISABLE_ELICITATION", "false").lower() in (
         "true",
         "1",
@@ -230,6 +231,8 @@ def load_config() -> ServerConfig:
         host=host,
         log_level=log_level,
         enable_write_tools=enable_write,
+        enable_mist_write_tools=enable_mist_write,
+        enable_central_write_tools=enable_central_write,
         disable_elicitation=disable_elicit,
         debug=debug,
         log_file=log_file,

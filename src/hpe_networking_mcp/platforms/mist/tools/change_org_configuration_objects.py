@@ -89,7 +89,7 @@ class Action_type(Enum):
         "tool before creating the WLAN and use the ID of the newly "
         "created template in the WLAN payload\n"
     ),
-    tags={"write_delete"},
+    tags={"mist_write_delete"},
     annotations={
         "title": "Change org configuration objects",
         "readOnlyHint": False,
