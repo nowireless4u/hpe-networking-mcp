@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.7.14] - 2026-04-13
+
+### Added — Central Write Tools
+- `central_manage_site` — create, update, and delete sites via `network-config/v1/sites`
+- `central_manage_site_collection` — create, update, and delete site collections via `network-config/v1/site-collections`
+- `central_manage_device_group` — create, update, and delete device groups via `network-config/v1/device-groups`
+- All write tools gated behind `ENABLE_WRITE_TOOLS=true` with elicitation confirmation
+
+### Fixed
+- Write tool visibility: server.py Visibility transform and elicitation middleware now handle both `write` and `write_delete` tags consistently
+
+### Changed
+- Central tool count: 42 → 45 (+ 12 prompts)
+
+[v0.7.14]: https://github.com/nowireless4u/hpe-networking-mcp/releases/tag/v0.7.14
+
 ## [v0.7.13] - 2026-04-13
 
 ### Added — Mist Best-Practice Guardrails

@@ -37,7 +37,7 @@ Managing HPE networking infrastructure with AI assistants today means juggling t
 | **Scope & Configuration Hierarchy** | — | ✅ | — |
 | **Guided Prompts** | ✅ | ✅ | — |
 | **Dynamic API Discovery** | — | — | ✅ |
-| **Tools** | **35 + 2 prompts** | **42 + 12 prompts** | **3 or 10** |
+| **Tools** | **35 + 2 prompts** | **45 + 12 prompts** | **3 or 10** |
 
 > **GreenLake tool count**: 3 tools in **dynamic mode** (default) — a meta-tool system that can discover and invoke any GreenLake API endpoint. 10 tools in **static mode** — dedicated tools for each endpoint. Set via `MCP_TOOL_MODE` environment variable.
 
@@ -296,7 +296,7 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 │   ┌────────────┐ ┌────────────┐ ┌────────────────┐  │
 │   │   Mist     │ │  Central   │ │   GreenLake    │  │
 │   │  mist_*    │ │ central_*  │ │  greenlake_*   │  │
-│   │ 35+2 prmt  │ │ 42+12 prmt │ │  3/10 tools    │  │
+│   │ 35+2 prmt  │ │ 45+12 prmt │ │  3/10 tools    │  │
 │   └─────┬──────┘ └─────┬──────┘ └───────┬────────┘  │
 │         │              │                │            │
 └─────────┼──────────────┼────────────────┼────────────┘
@@ -319,13 +319,15 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 
 Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) are supported with safety controls:
 
-- **Disabled by default** — set `ENABLE_WRITE_TOOLS=true` to expose write tools
+- **Disabled by default** — enable per-platform with `ENABLE_MIST_WRITE_TOOLS=true` or `ENABLE_CENTRAL_WRITE_TOOLS=true`
 - **Elicitation required** — write tools prompt for user confirmation before executing
 - **Annotation-based** — all tools carry MCP annotations (`readOnlyHint`, `destructiveHint`, etc.)
 
 | Environment Variable | Default | Effect |
 |---------------------|---------|--------|
-| `ENABLE_WRITE_TOOLS` | `false` | Expose write/mutation tools in the tool registry |
+| `ENABLE_WRITE_TOOLS` | `false` | Enable write tools for **all** platforms (global override) |
+| `ENABLE_MIST_WRITE_TOOLS` | `false` | Enable Mist write tools only |
+| `ENABLE_CENTRAL_WRITE_TOOLS` | `false` | Enable Central write tools only |
 | `DISABLE_ELICITATION` | `false` | Skip user confirmation for write tools (**use with caution**) |
 
 ---
@@ -337,7 +339,9 @@ Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) ar
 | `MCP_PORT` | `8000` | Port the MCP server listens on |
 | `SECRETS_DIR` | `/run/secrets` | Directory containing Docker secret files |
 | `LOG_LEVEL` | `info` | Logging level (`debug`, `info`, `warning`, `error`) |
-| `ENABLE_WRITE_TOOLS` | `false` | Enable write/mutation tools |
+| `ENABLE_WRITE_TOOLS` | `false` | Enable write tools for all platforms (global override) |
+| `ENABLE_MIST_WRITE_TOOLS` | `false` | Enable Mist write tools only |
+| `ENABLE_CENTRAL_WRITE_TOOLS` | `false` | Enable Central write tools only |
 | `DISABLE_ELICITATION` | `false` | Disable write confirmation prompts |
 | `MCP_TOOL_MODE` | `dynamic` | GreenLake tool mode: `dynamic` (3 meta-tools) or `static` (10 dedicated tools) |
 
@@ -398,7 +402,7 @@ hpe-networking-mcp/
 │   ├── middleware/              # Elicitation and null-strip middleware
 │   └── platforms/
 │       ├── mist/                # 35 Mist tools + 2 prompts + API client
-│       ├── central/             # 42 Central tools + 12 prompts + API client
+│       ├── central/             # 45 Central tools + 12 prompts + API client
 │       └── greenlake/           # 3 dynamic or 10 static tools + OAuth2 client
 ├── tests/                       # Unit and integration tests (176 tests)
 ├── docs/                        # PRD, PRP, tool reference

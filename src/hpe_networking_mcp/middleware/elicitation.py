@@ -38,19 +38,21 @@ class ElicitationMiddleware(Middleware):
         if config is None:
             return result  # type: ignore[return-value]
 
+        any_write = config.enable_write_tools or config.enable_mist_write_tools or config.enable_central_write_tools
+
         enable_write = False
 
-        # DANGER ZONE: both flags set — skip elicitation entirely
-        if config.enable_write_tools and config.disable_elicitation:
+        # DANGER ZONE: write enabled + elicitation disabled — skip prompts
+        if any_write and config.disable_elicitation:
             enable_write = True
             await ctx.set_state("disable_elicitation", True)
             logger.warning(
-                "Elicitation: enable_write_tools AND disable_elicitation both set — "
+                "Elicitation: write tools AND disable_elicitation both set — "
                 "write tools enabled WITHOUT confirmation. Use with caution!"
             )
 
         # Check if client supports elicitation via MCP capabilities
-        elif config.enable_write_tools:
+        elif any_write:
             try:
                 caps = context.message.params.capabilities
                 if caps is not None and caps.elicitation is not None:
@@ -77,10 +79,19 @@ class ElicitationMiddleware(Middleware):
                 pass  # Not HTTP transport or request not available
 
         if enable_write:
-            await ctx.enable_components(tags={"write"}, components={"tool"})
-            logger.debug("Elicitation: write tools enabled for this session")
+            # Enable per-platform based on individual flags
+            mist_write = config.enable_write_tools or config.enable_mist_write_tools
+            central_write = config.enable_write_tools or config.enable_central_write_tools
+            if mist_write:
+                await ctx.enable_components(tags={"mist_write", "mist_write_delete"}, components={"tool"})
+            if central_write:
+                await ctx.enable_components(tags={"central_write_delete"}, components={"tool"})
+            logger.debug("Elicitation: write tools enabled (mist=%s, central=%s)", mist_write, central_write)
         else:
-            await ctx.disable_components(tags={"write", "write_delete"}, components={"tool"})
+            await ctx.disable_components(
+                tags={"mist_write", "mist_write_delete", "central_write_delete"},
+                components={"tool"},
+            )
             logger.debug("Elicitation: write tools disabled (no support detected)")
 
         return result  # type: ignore[return-value]

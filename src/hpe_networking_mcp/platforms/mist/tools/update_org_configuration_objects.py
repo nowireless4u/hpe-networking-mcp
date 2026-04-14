@@ -90,7 +90,7 @@ class Object_type(Enum):
         "the WLAN and use the ID of the newly created "
         "template in the WLAN payload\n"
     ),
-    tags={"write"},
+    tags={"mist_write"},
     annotations={
         "title": "Update org configuration objects",
         "readOnlyHint": False,

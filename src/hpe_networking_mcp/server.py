@@ -130,11 +130,16 @@ def create_server(config: ServerConfig) -> FastMCP:
     if config.greenlake:
         _register_greenlake_tools(mcp, config)
 
-    # --- Write tool visibility ---
-    if not config.enable_write_tools:
-        from fastmcp.server.transforms import Visibility
+    # --- Write tool visibility (per-platform) ---
+    from fastmcp.server.transforms import Visibility
 
-        mcp.add_transform(Visibility(False, tags={"write"}, components={"tool"}))
+    mist_write = config.enable_write_tools or config.enable_mist_write_tools
+    central_write = config.enable_write_tools or config.enable_central_write_tools
+
+    if not mist_write:
+        mcp.add_transform(Visibility(False, tags={"mist_write", "mist_write_delete"}, components={"tool"}))
+    if not central_write:
+        mcp.add_transform(Visibility(False, tags={"central_write_delete"}, components={"tool"}))
 
     return mcp
 
