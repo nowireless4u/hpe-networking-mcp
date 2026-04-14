@@ -55,11 +55,14 @@ async def central_manage_site(
         dict,
         Field(
             description=(
-                "Site configuration payload. For create: 'address' is required "
-                "(or 'latitude' + 'longitude'). Optional fields: name, city, state, "
-                "country, zipcode, timezone (object with timezoneName, timezoneId, "
-                "rawOffset). For update: include only fields to change. "
-                "For delete: payload is ignored."
+                "Site configuration payload. IMPORTANT: All fields must use full names, "
+                "no abbreviations (e.g. 'Indiana' not 'IN', 'United States' not 'US'). "
+                "Required fields for create: address, name, city, state, country, zipcode, "
+                "and timezone. The timezone object must include timezoneName (e.g. "
+                "'Eastern Standard Time'), timezoneId (e.g. 'America/Indiana/Indianapolis'), "
+                "and rawOffset in milliseconds (e.g. -18000000 for EST). "
+                "Determine the correct timezone based on the site address. "
+                "For update: include only fields to change. For delete: payload is ignored."
             )
         ),
     ],

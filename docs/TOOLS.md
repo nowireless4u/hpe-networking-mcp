@@ -900,7 +900,7 @@ No parameters. Returns a dict sorted by health score (worst first).
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | action_type | str | Yes | `create`, `update`, or `delete`. |
-| payload | dict | Yes | Site payload. For create: `address` required (or `latitude` + `longitude`). Optional: `name`, `city`, `state`, `country`, `zipcode`, `timezone`. |
+| payload | dict | Yes | Site payload. All values must use full names (no abbreviations). For create: `address`, `name`, `city`, `state`, `country`, `zipcode`, and `timezone` (object with `timezoneName`, `timezoneId`, `rawOffset` in ms) are required. |
 | site_id | str | No | Site ID. Required for update and delete. |
 
 #### `central_manage_site_collection`

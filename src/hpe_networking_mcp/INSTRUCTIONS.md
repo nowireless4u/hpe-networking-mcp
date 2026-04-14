@@ -117,7 +117,8 @@ When asked to create a new site based on an existing site:
 - **Audit Logs**: central_get_audit_logs, central_get_audit_log_detail
 - **Applications**: central_get_applications
 - **Troubleshooting**: central_ping, central_traceroute, central_cable_test, central_show_commands, central_disconnect_users_ssid, central_disconnect_users_ap, central_disconnect_client_ap, central_disconnect_client_gateway, central_disconnect_clients_gateway, central_port_bounce_switch, central_poe_bounce_switch, central_port_bounce_gateway, central_poe_bounce_gateway
-- **Configuration (Write)**: central_manage_site, central_manage_site_collection, central_manage_device_group — requires `ENABLE_WRITE_TOOLS=true`
+- **Configuration (Write)**: central_manage_site, central_manage_site_collection, central_manage_device_group — requires `ENABLE_CENTRAL_WRITE_TOOLS=true`
+  - **Site creation payload**: All fields must use full names, no abbreviations (e.g. "Indiana" not "IN", "United States" not "US"). The `timezone` object is required and must include `timezoneName` (e.g. "Eastern Standard Time"), `timezoneId` (e.g. "America/Indiana/Indianapolis"), and `rawOffset` in milliseconds (e.g. -18000000 for EST). Determine the correct timezone from the address.
 
 ## Guidelines
 - ALWAYS start with `central_get_site_name_id_mapping` for a lightweight overview.
