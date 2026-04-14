@@ -9,7 +9,7 @@ and `greenlake_*` (HPE GreenLake).
 | Platform | Read-Only Tools | Write Tools | Prompts | Total |
 |----------|----------------|-------------|---------|-------|
 | Juniper Mist | 31 | 4 | 2 | 37 |
-| Aruba Central | 43 | 3 | 12 | 58 |
+| Aruba Central | 44 | 4 | 15 | 63 |
 | HPE GreenLake (static mode) | 10 | -- | -- | 10 |
 | HPE GreenLake (dynamic mode) | 3 | -- | -- | 3 |
 
@@ -502,7 +502,7 @@ GreenLake supports two mutually exclusive tool modes controlled by
 
 ---
 
-## Aruba Central (46 tools + 12 prompts)
+## Aruba Central (48 tools + 15 prompts)
 
 ### Sites
 
@@ -902,6 +902,27 @@ No parameters. Returns a dict sorted by health score (worst first).
 | serial_number | str | Yes | Gateway serial number. |
 | ports | str | Yes | Comma-separated port list. |
 
+### WLAN Profiles
+
+#### `central_get_wlan_profiles`
+
+> Read WLAN SSID profiles from Central's configuration library. Returns full config data.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| ssid | str | No | Specific SSID name. If omitted, returns all profiles. |
+
+#### `central_manage_wlan_profile`
+
+> Create, update, or delete a WLAN SSID profile. Requires `ENABLE_CENTRAL_WRITE_TOOLS=true`.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| ssid | str | Yes | SSID name (used as identifier in API path). |
+| action_type | str | Yes | `create`, `update`, or `delete`. |
+| payload | dict | Yes | WLAN profile config. Key fields: essid, opmode, forward-mode, vlan-name. |
+| confirmed | bool | No | Set to true after user confirms update/delete in chat. |
+
 ### Write Tools (disabled by default)
 
 #### `central_manage_site`
@@ -954,6 +975,9 @@ LLM through a recommended sequence of tool calls for common network operations.
 | `compare_site_health` | site_names (list) | Compare health metrics across multiple sites. |
 | `scope_configuration_overview` | scope_name | View committed configuration resources at a scope with category grouping. |
 | `scope_effective_config` | scope_name | View effective (inherited + committed) configuration as a layered inheritance view. |
+| `sync_wlans_mist_to_central` | (none) | Sync WLAN profiles from Mist to Central. |
+| `sync_wlans_central_to_mist` | (none) | Sync WLAN profiles from Central to Mist. |
+| `sync_wlans_bidirectional` | (none) | Compare and sync WLANs between both platforms. |
 
 ---
 

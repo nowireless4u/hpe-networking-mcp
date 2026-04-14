@@ -55,6 +55,10 @@ TOOLS = {
         "central_get_devices_in_scope",
         "central_get_scope_diagram",
     ],
+    "wlan_profiles": [
+        "central_get_wlan_profiles",
+        "central_manage_wlan_profile",
+    ],
     "configuration": [
         "central_manage_site",
         "central_manage_site_collection",

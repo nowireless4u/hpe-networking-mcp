@@ -120,8 +120,19 @@ When asked to create a new site based on an existing site:
 - **Audit Logs**: central_get_audit_logs, central_get_audit_log_detail
 - **Applications**: central_get_applications
 - **Troubleshooting**: central_ping, central_traceroute, central_cable_test, central_show_commands, central_disconnect_users_ssid, central_disconnect_users_ap, central_disconnect_client_ap, central_disconnect_client_gateway, central_disconnect_clients_gateway, central_port_bounce_switch, central_poe_bounce_switch, central_port_bounce_gateway, central_poe_bounce_gateway
+- **WLAN Profiles**: central_get_wlan_profiles, central_manage_wlan_profile
+  - Use `central_get_wlan_profiles` to read WLAN SSID profile configurations from the library
+  - Use `central_manage_wlan_profile` to create, update, or delete WLAN profiles — requires `ENABLE_CENTRAL_WRITE_TOOLS=true`
 - **Configuration (Write)**: central_manage_site, central_manage_site_collection, central_manage_device_group — requires `ENABLE_CENTRAL_WRITE_TOOLS=true`
   - **Site creation payload**: All fields must use full names, no abbreviations (e.g. "Indiana" not "IN", "United States" not "US"). The `timezone` object is required and must include `timezoneName` (e.g. "Eastern Standard Time"), `timezoneId` (e.g. "America/Indiana/Indianapolis"), and `rawOffset` in milliseconds (e.g. -18000000 for EST). Determine the correct timezone from the address.
+
+## Cross-Platform WLAN Sync
+When asked to sync WLANs between Mist and Central:
+- Use `sync_wlans_mist_to_central`, `sync_wlans_central_to_mist`, or `sync_wlans_bidirectional` prompts
+- Only migrate bridged (non-tunneled) SSIDs. Skip tunneled SSIDs automatically.
+- From Mist: only migrate WLANs that are in templates (not site-level)
+- From Central: deduplicate — if same SSID appears in multiple scopes, create only one Mist WLAN
+- Assignment mapping: Global→org, site collection→site group, specific sites→specific sites
 
 ## Guidelines
 - ALWAYS start with `central_get_site_name_id_mapping` for a lightweight overview.

@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Central update operations now pass `scopeId` in request body instead of URL path
 - Confirmation loop fix: added `confirmed` parameter to all write tools (Mist + Central). When `confirmed=true`, skips re-prompting. The AI sets this after the user confirms in chat.
 
+### Added — Cross-Platform WLAN Sync (#94-98)
+- `central_get_wlan_profiles` — read WLAN SSID profiles from Central's config library (`GET /network-config/v1alpha1/wlan-ssids`)
+- `central_manage_wlan_profile` — create, update, delete WLAN SSID profiles in Central
+- `wlan_mapper.py` — field translation module between Central and Mist WLAN formats
+- 3 guided prompts: `sync_wlans_mist_to_central`, `sync_wlans_central_to_mist`, `sync_wlans_bidirectional`
+- Tunneled SSIDs automatically excluded from migration
+
 ### Added — Site Collection Management
 - `add_sites` and `remove_sites` action types for `central_manage_site_collection`
 - Uses `POST /network-config/v1/site-collection-add-sites` and `DELETE /network-config/v1/site-collection-remove-sites`
