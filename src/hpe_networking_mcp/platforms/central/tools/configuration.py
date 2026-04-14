@@ -201,23 +201,25 @@ async def _execute_config_action(
         ActionType.DELETE: "delete an existing",
     }[action_type]
 
-    elicitation_response = await elicitation_handler(
-        message=(f"The LLM wants to {action_wording} {resource_name}. Do you accept to trigger the API call?"),
-        ctx=ctx,
-    )
-    if elicitation_response.action == "decline":
-        if await ctx.get_state("elicitation_mode") == "chat_confirm":
-            return {
-                "status": "confirmation_required",
-                "message": (
-                    f"This operation will {action_wording} {resource_name}. "
-                    "Please confirm with the user before proceeding. "
-                    "Call this tool again with the same parameters after the user confirms."
-                ),
-            }
-        return {"message": "Action declined by user."}
-    elif elicitation_response.action == "cancel":
-        return {"message": "Action canceled by user."}
+    # Confirm with user for update and delete operations only
+    if action_type != ActionType.CREATE:
+        elicitation_response = await elicitation_handler(
+            message=(f"The LLM wants to {action_wording} {resource_name}. Do you accept to trigger the API call?"),
+            ctx=ctx,
+        )
+        if elicitation_response.action == "decline":
+            if await ctx.get_state("elicitation_mode") == "chat_confirm":
+                return {
+                    "status": "confirmation_required",
+                    "message": (
+                        f"This operation will {action_wording} {resource_name}. "
+                        "Please confirm with the user before proceeding. "
+                        "Call this tool again with the same parameters after the user confirms."
+                    ),
+                }
+            return {"message": "Action declined by user."}
+        elif elicitation_response.action == "cancel":
+            return {"message": "Action canceled by user."}
 
     conn = ctx.lifespan_context["central_conn"]
 

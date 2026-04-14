@@ -158,26 +158,28 @@ async def update_org_configuration_objects(
     if guardrails.warnings:
         guardrail_notice = "\n\n" + "\n".join(guardrails.warnings[:3])
 
-    elicitation_response = await elicitation_handler(
-        message=(
-            f"The LLM wants to {action_wording} {object_type.value}. "
-            f"Do you accept to trigger the API call?{guardrail_notice}"
-        ),
-        ctx=ctx,
-    )
-    if elicitation_response.action == "decline":
-        if await ctx.get_state("elicitation_mode") == "chat_confirm":
-            return {
-                "status": "confirmation_required",
-                "message": (
-                    f"This operation will {action_wording} {object_type.value}. "
-                    "Please confirm with the user before proceeding. "
-                    "Call this tool again with the same parameters after the user confirms."
-                ),
-            }
-        return {"message": "Action declined by user."}
-    elif elicitation_response.action == "cancel":
-        return {"message": "Action canceled by user."}
+    # Confirm with user for update operations only (object_id present = update)
+    if object_id:
+        elicitation_response = await elicitation_handler(
+            message=(
+                f"The LLM wants to {action_wording} {object_type.value}. "
+                f"Do you accept to trigger the API call?{guardrail_notice}"
+            ),
+            ctx=ctx,
+        )
+        if elicitation_response.action == "decline":
+            if await ctx.get_state("elicitation_mode") == "chat_confirm":
+                return {
+                    "status": "confirmation_required",
+                    "message": (
+                        f"This operation will {action_wording} {object_type.value}. "
+                        "Please confirm with the user before proceeding. "
+                        "Call this tool again with the same parameters after the user confirms."
+                    ),
+                }
+            return {"message": "Action declined by user."}
+        elif elicitation_response.action == "cancel":
+            return {"message": "Action canceled by user."}
 
     org = str(org_id)
     obj = str(object_id) if object_id else None
