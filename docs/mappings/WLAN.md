@@ -47,10 +47,27 @@ Central and Mist have fundamentally different naming models:
 
 ## VLAN
 
+Central uses named VLANs. Mist uses VLAN IDs. Resolution workflow:
+
+**Central → Mist:**
+1. Get `vlan-name` from WLAN profile (e.g. "USER-VLAN")
+2. Call `central_get_named_vlans(name="USER-VLAN")` to get the named VLAN config
+3. If the named VLAN has a VLAN ID directly → use that ID
+4. If the named VLAN uses an alias → call `central_get_aliases(alias_name=...)` to resolve
+5. In Mist: set `vlan_enabled=true`, `dynamic_vlan.enabled=true`,
+   `dynamic_vlan.type="airespace-interface-name"`, use the resolved VLAN ID as
+   `dynamic_vlan.default_vlan_ids`, and the named VLAN name as the key
+
+**Mist → Central:**
+1. If Mist has `dynamic_vlan.enabled=true` with entries, use the first entry only
+2. The VLAN name becomes the Central `vlan-name`
+3. The VLAN ID becomes the Central named VLAN's ID (may need to create the named VLAN)
+
 | Central | Mist | Status |
 |---------|------|--------|
 | vlan-selector ("NAMED_VLAN") | vlan_enabled (bool) | **[MAPPED]** translate |
-| vlan-name ("USER-VLAN") | vlan_id (104) | **[NEEDS REVIEW]** named VLAN ↔ VLAN ID requires user input or lookup table |
+| vlan-name ("USER-VLAN") | dynamic_vlan.vlans (first entry name) | **[MAPPED]** requires named VLAN lookup |
+| (resolved VLAN ID) | dynamic_vlan.default_vlan_ids[0] | **[MAPPED]** requires named VLAN lookup |
 | vlan-id-range | (none) | **[UNMAPPED]** Central only |
 | (none) | vlan_pooling | **[UNMAPPED]** Mist only |
 | (none) | vlan_ids (array) | **[UNMAPPED]** Mist only |
@@ -85,12 +102,24 @@ Central and Mist have fundamentally different naming models:
 ### RADIUS / Server Groups
 
 Central uses named server groups. Mist uses inline server definitions.
-This is a fundamental architectural difference.
+Resolution workflow:
+
+**Central → Mist:**
+1. Get `auth-server-group` name from WLAN profile (e.g. "NAC-RADIUS")
+2. Call `central_get_server_groups(name="NAC-RADIUS")` to resolve to actual servers
+3. Map each server in the group to a Mist `auth_servers` entry (host, port, secret)
+4. Same for `acct-server-group` → `acct_servers`
+
+**Mist → Central:**
+1. Get individual servers from `auth_servers` array
+2. Check if a matching server group already exists in Central
+3. If not, the sync should note that a server group needs to be created manually
+   (or create one if write tools support it)
 
 | Central | Mist | Status |
 |---------|------|--------|
-| auth-server-group ("NAC-RADIUS") | auth_servers [{host, port, secret}] | **[NEEDS REVIEW]** requires server group resolution |
-| acct-server-group ("NAC-RADIUS") | acct_servers [{host, port, secret}] | **[NEEDS REVIEW]** requires server group resolution |
+| auth-server-group ("NAC-RADIUS") | auth_servers [{host, port, secret}] | **[MAPPED]** requires server group resolution |
+| acct-server-group ("NAC-RADIUS") | acct_servers [{host, port, secret}] | **[MAPPED]** requires server group resolution |
 | primary-auth-server (when no group) | auth_servers[0].host | **[MAPPED]** direct |
 | backup-auth-server (when no group) | auth_servers[1].host | **[MAPPED]** direct |
 | primary-acct-server (when no group) | acct_servers[0].host | **[MAPPED]** direct |
@@ -297,10 +326,12 @@ broadcast control.
 UNMAPPED fields are platform-specific and preserved on their native
 platform during sync. They are not modified or deleted.
 
-### Open Questions
+### Resolved Questions
 
-1. **RADIUS server groups** — Central uses named server groups, Mist uses inline servers.
-   Is there a Central API to resolve a group to its member servers?
-2. **VLAN name→ID** — Central uses named VLANs, Mist uses VLAN IDs.
-   Should the sync prompt the user for the ID, or is there a lookup?
-3. **Captive portal** — Very different models. Should we attempt to map, or skip portal SSIDs?
+1. **RADIUS server groups** — Resolved via `central_get_server_groups` tool
+   (`GET /network-config/v1alpha1/server-groups/{name}`)
+2. **VLAN name→ID** — Resolved via `central_get_named_vlans` tool
+   (`GET /network-config/v1alpha1/named-vlan/{name}`). If the named VLAN
+   uses an alias, resolve via `central_get_aliases`.
+3. **Captive portal** — Deferred to a future release. Portal SSIDs will be
+   synced with a note that portal configuration requires manual setup.
