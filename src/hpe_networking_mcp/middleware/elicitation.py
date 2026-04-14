@@ -77,7 +77,7 @@ class ElicitationMiddleware(Middleware):
                 pass  # Not HTTP transport or request not available
 
         if enable_write:
-            await ctx.enable_components(tags={"write"}, components={"tool"})
+            await ctx.enable_components(tags={"write", "write_delete"}, components={"tool"})
             logger.debug("Elicitation: write tools enabled for this session")
         else:
             await ctx.disable_components(tags={"write", "write_delete"}, components={"tool"})

@@ -134,7 +134,7 @@ def create_server(config: ServerConfig) -> FastMCP:
     if not config.enable_write_tools:
         from fastmcp.server.transforms import Visibility
 
-        mcp.add_transform(Visibility(False, tags={"write"}, components={"tool"}))
+        mcp.add_transform(Visibility(False, tags={"write", "write_delete"}, components={"tool"}))
 
     return mcp
 

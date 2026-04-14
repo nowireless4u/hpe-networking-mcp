@@ -18,6 +18,7 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
         applications,
         audit_logs,
         clients,
+        configuration,
         devices,
         events,
         monitoring,
@@ -43,8 +44,9 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
     applications.register(mcp)
     troubleshooting.register(mcp)
     actions.register(mcp)
+    configuration.register(mcp)
     scope.register(mcp)
     prompts.register(mcp)
 
     logger.info("Central: registered tools and prompts")
-    return 43  # 42 tools + 10 prompts registered (was 37+10, added 5 scope tools)
+    return 46  # 42 read + 3 write tools + 12 prompts registered
