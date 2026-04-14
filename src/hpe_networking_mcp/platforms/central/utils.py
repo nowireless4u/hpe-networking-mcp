@@ -98,15 +98,19 @@ def process_site_health_data(
     Returns:
         dict: Dictionary of site names to SiteData objects
     """
-    processed_sites: dict[str, SiteData] = {site["name"]: transform_to_site_data(site) for site in site_health}
+    processed_sites: dict[str, SiteData] = {
+        site["name"]: transform_to_site_data(site) for site in site_health if "name" in site
+    }
 
     for site in device_health:
-        if site["name"] in processed_sites:
-            processed_sites[site["name"]].metrics.devices["Details"] = groups_to_map(site["deviceTypes"])
+        site_name = site.get("name", "")
+        if site_name in processed_sites:
+            processed_sites[site_name].metrics.devices["Details"] = groups_to_map(site["deviceTypes"])
 
     for site in client_health:
-        if site["name"] in processed_sites:
-            processed_sites[site["name"]].metrics.clients["Details"] = groups_to_map(site["clientTypes"])
+        site_name = site.get("name", "")
+        if site_name in processed_sites:
+            processed_sites[site_name].metrics.clients["Details"] = groups_to_map(site["clientTypes"])
 
     return processed_sites
 

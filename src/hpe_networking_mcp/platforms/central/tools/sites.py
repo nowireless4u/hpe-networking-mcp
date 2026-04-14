@@ -7,13 +7,62 @@ from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import (
     fetch_site_data_parallel,
     groups_to_map,
+    retry_central_command,
 )
 
 
 @mcp.tool(annotations=READ_ONLY)
-async def central_get_sites(ctx: Context, site_names: list[str] | None = None) -> list[SiteData]:
+async def central_get_sites(
+    ctx: Context,
+    filter: str | None = None,
+    sort: str | None = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> dict | str:
     """
-    Returns detailed metrics for one or more sites.
+    Returns site configuration data from Aruba Central (address, timezone, etc.).
+
+    Use this tool when you need site details like address, city, state, country,
+    zipcode, timezone, or scopeName. For site health metrics and device/client
+    counts, use central_get_site_health instead.
+
+    Parameters:
+        filter: OData 4.0 filter string. Supports filtering on scopeName,
+            address, city, state, country, zipcode, collectionName.
+            Example: "scopeName eq 'Moms House'" or "state eq 'Indiana'"
+        sort: Sort by field. One of scopeName, address, state, country, city,
+            deviceCount, collectionName, zipcode, timezone, longitude, latitude.
+        limit: Number of sites to return (1-100, default 100).
+        offset: Offset for pagination (default 0).
+
+    Returns:
+        Dict with sites list and pagination info.
+    """
+    conn = ctx.lifespan_context["central_conn"]
+    api_params: dict = {"limit": limit, "offset": offset}
+    if filter:
+        api_params["filter"] = filter
+    if sort:
+        api_params["sort"] = sort
+
+    response = retry_central_command(
+        central_conn=conn,
+        api_method="GET",
+        api_path="network-config/v1/sites",
+        api_params=api_params,
+    )
+    return response.get("msg", {})
+
+
+@mcp.tool(annotations=READ_ONLY)
+async def central_get_site_health(
+    ctx: Context,
+    site_names: list[str] | None = None,
+) -> list[SiteData]:
+    """
+    Returns health metrics and device/client counts for sites.
+
+    For site configuration data (address, timezone, etc.), use central_get_sites.
 
     Prefer calling with a site_names filter targeting only the sites you care about.
     Do NOT call without a filter unless the user explicitly requests data for all
@@ -25,8 +74,8 @@ async def central_get_sites(ctx: Context, site_names: list[str] | None = None) -
     this tool with those specific site names.
 
     Parameters:
-    - site_names: One or more site name to filter by. Supports exact matches.
-      If omitted, all sites are returned (use sparingly or when explicitly requested).
+        site_names: One or more site names to filter by (exact match).
+            If omitted, all sites are returned (use sparingly).
     """
     sites_data = fetch_site_data_parallel(ctx.lifespan_context["central_conn"])
     if site_names:
@@ -42,7 +91,7 @@ async def central_get_site_name_id_mapping(ctx: Context) -> dict:
     to help quickly identify sites that may need attention. Sites with
     unknown/None health values are placed last.
 
-    Use this before calling central_get_sites or any endpoint that requires a
+    Use this before calling central_get_site_health or any endpoint that requires a
     site_id. It is especially useful when the user provides a partial or ambiguous
     site name — verify the correct name here, then pass it to the appropriate tool.
     The health score also helps identify sites with issues before drilling down

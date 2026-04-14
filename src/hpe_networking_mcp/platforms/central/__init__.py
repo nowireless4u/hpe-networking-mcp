@@ -9,7 +9,7 @@ from hpe_networking_mcp.config import ServerConfig
 
 # Tool categories mapped to module names and their tool names
 TOOLS = {
-    "sites": ["central_get_sites", "central_get_site_name_id_mapping"],
+    "sites": ["central_get_sites", "central_get_site_health", "central_get_site_name_id_mapping"],
     "devices": ["central_get_devices", "central_find_device"],
     "clients": ["central_get_clients", "central_find_client"],
     "alerts": ["central_get_alerts"],

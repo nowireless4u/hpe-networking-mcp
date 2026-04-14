@@ -95,10 +95,13 @@ When asked to create a new site based on an existing site:
 
 ## Starting a Central Session
 1. `central_get_site_name_id_mapping` → lightweight overview of all sites with health scores
-2. `central_get_sites(site_names=[...])` → detailed metrics for specific sites of interest
+2. `central_get_site_health(site_names=[...])` → detailed health metrics for specific sites
+3. `central_get_sites` → site configuration data (address, timezone, etc.) from network-config API
 
 ## Tool Categories
-- **Sites**: central_get_sites, central_get_site_name_id_mapping
+- **Sites**: central_get_sites, central_get_site_health, central_get_site_name_id_mapping
+  - Use `central_get_sites` for site configuration data (address, timezone, scopeName). Supports OData filter on scopeName, address, city, state, country, zipcode, collectionName.
+  - Use `central_get_site_health` for health metrics and device/client counts. Pass site_names to filter.
 - **Devices**: central_get_devices, central_find_device, central_get_ap_details, central_get_switch_details, central_get_gateway_details
 - **Device Stats**: central_get_ap_stats, central_get_ap_utilization, central_get_gateway_stats, central_get_gateway_utilization, central_get_gateway_wan_availability, central_get_tunnel_health
 - **Switch PoE & Trends**: central_get_switch_hardware_trends, central_get_switch_poe
@@ -122,7 +125,7 @@ When asked to create a new site based on an existing site:
 
 ## Guidelines
 - ALWAYS start with `central_get_site_name_id_mapping` for a lightweight overview.
-- Call `central_get_sites` with a `site_names` filter — never without a filter unless explicitly requested.
+- Call `central_get_site_health` with a `site_names` filter for health data — never without a filter unless explicitly requested.
 - Recommendations must be based strictly on API response data.
 - Direct users to HPE Aruba Networking Central for authoritative view and remediation.
 

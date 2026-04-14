@@ -9,7 +9,7 @@ and `greenlake_*` (HPE GreenLake).
 | Platform | Read-Only Tools | Write Tools | Prompts | Total |
 |----------|----------------|-------------|---------|-------|
 | Juniper Mist | 31 | 4 | 2 | 37 |
-| Aruba Central | 42 | 3 | 12 | 57 |
+| Aruba Central | 43 | 3 | 12 | 58 |
 | HPE GreenLake (static mode) | 10 | -- | -- | 10 |
 | HPE GreenLake (dynamic mode) | 3 | -- | -- | 3 |
 
@@ -502,13 +502,24 @@ GreenLake supports two mutually exclusive tool modes controlled by
 
 ---
 
-## Aruba Central (45 tools + 12 prompts)
+## Aruba Central (46 tools + 12 prompts)
 
 ### Sites
 
 #### `central_get_sites`
 
-> Returns detailed metrics for one or more sites. Prefer calling with a site_names filter.
+> Returns site configuration data (address, timezone, scopeName) from the network-config API. Use for site details. For health metrics, use `central_get_site_health`.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| filter | str | No | OData 4.0 filter on scopeName, address, city, state, country, zipcode, collectionName. |
+| sort | str | No | Sort by scopeName, address, state, country, city, deviceCount, collectionName, zipcode, timezone, longitude, latitude. |
+| limit | int | No | Results per page (1-100, default 100). |
+| offset | int | No | Pagination offset (default 0). |
+
+#### `central_get_site_health`
+
+> Returns health metrics and device/client counts for sites. For site config data, use `central_get_sites`.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|

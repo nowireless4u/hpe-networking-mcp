@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.7.21] - 2026-04-14
+
+### Added
+- `central_get_sites` — new tool returning site configuration data (address, timezone, scopeName) from `network-config/v1/sites` with OData filter and sort support
+
+### Changed
+- Renamed old `central_get_sites` → `central_get_site_health` to accurately reflect it returns health metrics, not site config data
+- Central tool count: 45 → 46 (+ 12 prompts)
+
+### Fixed
+- `central_get_site_health` crash (`KeyError: 'name'`) when sites returned from the health API lack a `name` field (e.g. newly created sites)
+
+[v0.7.21]: https://github.com/nowireless4u/hpe-networking-mcp/releases/tag/v0.7.21
+
 ## [v0.7.20] - 2026-04-14
 
 ### Fixed
