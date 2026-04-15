@@ -9,7 +9,7 @@ and `greenlake_*` (HPE GreenLake).
 | Platform | Read-Only Tools | Write Tools | Prompts | Total |
 |----------|----------------|-------------|---------|-------|
 | Juniper Mist | 31 | 4 | 2 | 37 |
-| Aruba Central | 48 | 5 | 12 | 65 |
+| Aruba Central | 51 | 5 | 12 | 68 |
 | Cross-Platform | -- | 1 | 3 | 4 |
 | HPE GreenLake (static mode) | 10 | -- | -- | 10 |
 | HPE GreenLake (dynamic mode) | 3 | -- | -- | 3 |
@@ -503,7 +503,7 @@ GreenLake supports two mutually exclusive tool modes controlled by
 
 ---
 
-## Aruba Central (53 tools + 12 prompts)
+## Aruba Central (56 tools + 12 prompts)
 
 ### Sites
 
@@ -558,6 +558,33 @@ No parameters. Returns a dict sorted by health score (worst first).
 |-----------|------|----------|-------------|
 | serial_number | str | No | Device serial number (preferred). |
 | device_name | str | No | Device display name. Provide only one identifier. |
+
+### AP Monitoring
+
+#### `central_get_aps`
+
+> List access points with AP-specific filters (status, model, firmware, deployment, cluster, site).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| site_id | str | No | Filter by site ID. |
+| site_name | str | No | Filter by site name. |
+| serial_number | str | No | AP serial (comma-separated for multiple). |
+| device_name | str | No | AP name (comma-separated for multiple). |
+| status | str | No | `ONLINE` or `OFFLINE`. |
+| model | str | No | AP model (comma-separated). |
+| firmware_version | str | No | Firmware version (comma-separated). |
+| deployment | str | No | `Standalone`, `Cluster`, or `Unspecified`. |
+| sort | str | No | Sort expression (e.g. `deviceName asc`). |
+
+#### `central_get_ap_wlans`
+
+> Get WLANs currently active on a specific AP. Useful for troubleshooting which SSIDs an AP is broadcasting.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| serial_number | str | Yes | AP serial number. |
+| wlan_name | str | No | Filter by exact WLAN name (client-side). |
 
 ### Device Monitoring
 
@@ -672,6 +699,17 @@ No parameters. Returns a dict sorted by health score (worst first).
 | filter | str | No | OData filter string. |
 | sort | str | No | Sort expression (e.g. `essid asc`). |
 | limit | int | No | Default: 100. |
+
+#### `central_get_wlan_stats`
+
+> Get throughput trend data (tx/rx time-series in bps) for a specific WLAN over a time window.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| wlan_name | str | Yes | WLAN name (SSID) to get stats for. |
+| time_range | str | No | `last_1h` (default), `last_6h`, `last_24h`, `last_7d`, `last_30d`, `today`, `yesterday`. |
+| start_time | str | No | RFC 3339 format. Overrides time_range when combined with end_time. |
+| end_time | str | No | RFC 3339 format. |
 
 ### Audit Logs
 

@@ -37,7 +37,7 @@ Managing HPE networking infrastructure with AI assistants today means juggling t
 | **Scope & Configuration Hierarchy** | — | ✅ | — |
 | **Guided Prompts** | ✅ | ✅ | — |
 | **Dynamic API Discovery** | — | — | ✅ |
-| **Tools** | **35 + 2 prompts** | **53 + 12 prompts** | **3 or 10** |
+| **Tools** | **35 + 2 prompts** | **56 + 12 prompts** | **3 or 10** |
 | **Cross-Platform** | **1 tool + 3 prompts** | **1 tool + 3 prompts** | — |
 
 > **GreenLake tool count**: 3 tools in **dynamic mode** (default) — a meta-tool system that can discover and invoke any GreenLake API endpoint. 10 tools in **static mode** — dedicated tools for each endpoint. Set via `MCP_TOOL_MODE` environment variable.

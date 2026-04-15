@@ -553,3 +553,24 @@ def compute_time_window(
         raise ValueError("Invalid time_range")
 
     return start, now
+
+
+def format_rfc3339(dt: datetime) -> str:
+    """Format a datetime as an RFC 3339 string with millisecond precision."""
+    return dt.strftime("%Y-%m-%dT%H:%M:%S.") + f"{dt.microsecond // 1000:03d}Z"
+
+
+def resolve_time_window(
+    time_range: str,
+    start_time: str | None,
+    end_time: str | None,
+) -> tuple[str, str]:
+    """Return (start_at, end_at) as RFC 3339 strings.
+
+    If both start_time and end_time are provided, use them as-is.
+    Otherwise compute the window from the time_range preset.
+    """
+    if start_time and end_time:
+        return start_time, end_time
+    start_dt, end_dt = compute_time_window(time_range)
+    return format_rfc3339(start_dt), format_rfc3339(end_dt)

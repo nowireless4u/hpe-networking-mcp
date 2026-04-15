@@ -102,6 +102,9 @@ When asked to create a new site based on an existing site:
 - **Sites**: central_get_sites, central_get_site_health, central_get_site_name_id_mapping
   - Use `central_get_sites` for site configuration data (address, timezone, scopeName). Supports OData filter on scopeName, address, city, state, country, zipcode, collectionName.
   - Use `central_get_site_health` for health metrics and device/client counts. Pass site_names to filter.
+- **AP Monitoring**: central_get_aps, central_get_ap_wlans
+  - Use `central_get_aps` for filtered AP listing (status, model, firmware, deployment, site). More AP-specific filters than `central_get_devices`.
+  - Use `central_get_ap_wlans` to see which WLANs a specific AP is broadcasting (by serial number).
 - **Devices**: central_get_devices, central_find_device, central_get_ap_details, central_get_switch_details, central_get_gateway_details
 - **Device Stats**: central_get_ap_stats, central_get_ap_utilization, central_get_gateway_stats, central_get_gateway_utilization, central_get_gateway_wan_availability, central_get_tunnel_health
 - **Switch PoE & Trends**: central_get_switch_hardware_trends, central_get_switch_poe
@@ -113,7 +116,9 @@ When asked to create a new site based on an existing site:
   - Use `central_get_effective_config` to see what configuration a device inherits and from where — pass `include_details=true` for full resource configuration data
   - Use `central_get_scope_diagram` to generate a Mermaid flowchart of the scope hierarchy — render it directly, the string is pre-built
   - **Presenting scope data**: Each scope node includes `persona_count`, `resource_count`, and per-persona `categories` (e.g. policy, vlan, profile). Present as an indented hierarchy with counts at each level. Group resources by category, not as flat lists. For effective config, show the `inheritance_path` first (Global → Collection → Site), then group resources by origin scope to show what each level contributes. Use the `scope_configuration_overview` or `scope_effective_config` prompts for guided workflows.
-- **WLANs**: central_get_wlans
+- **WLANs**: central_get_wlans, central_get_wlan_stats
+  - Use `central_get_wlan_stats` for throughput trends (tx/rx time-series) for a specific SSID over a time window
+  - Use `central_get_ap_wlans` (in AP Monitoring) to see which WLANs a specific AP is broadcasting
 - **Clients**: central_get_clients, central_find_client
 - **Alerts**: central_get_alerts
 - **Events**: central_get_events, central_get_events_count
