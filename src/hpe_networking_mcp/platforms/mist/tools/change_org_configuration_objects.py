@@ -88,6 +88,11 @@ class Action_type(Enum):
         "Template. If needed, create a new WLAN Template using this "
         "tool before creating the WLAN and use the ID of the newly "
         "created template in the WLAN payload\n"
+        "\nWhen asked to add, copy, or sync a WLAN from Central to Mist, "
+        "use the sync_wlans_central_to_mist prompt instead of calling "
+        "this tool directly. The prompt handles field translation, "
+        "alias resolution, server group mapping, VLAN resolution, and "
+        "data rate profile mapping automatically.\n"
     ),
     tags={"mist_write_delete"},
     annotations={
