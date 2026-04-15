@@ -37,8 +37,8 @@ Managing HPE networking infrastructure with AI assistants today means juggling t
 | **Scope & Configuration Hierarchy** | — | ✅ | — |
 | **Guided Prompts** | ✅ | ✅ | — |
 | **Dynamic API Discovery** | — | — | ✅ |
-| **Tools** | **35 + 2 prompts** | **51 + 12 prompts** | **3 or 10** |
-| **Cross-Platform Sync** | **3 shared prompts** | **3 shared prompts** | — |
+| **Tools** | **35 + 2 prompts** | **53 + 12 prompts** | **3 or 10** |
+| **Cross-Platform** | **1 tool + 3 prompts** | **1 tool + 3 prompts** | — |
 
 > **GreenLake tool count**: 3 tools in **dynamic mode** (default) — a meta-tool system that can discover and invoke any GreenLake API endpoint. 10 tools in **static mode** — dedicated tools for each endpoint. Set via `MCP_TOOL_MODE` environment variable.
 
@@ -59,12 +59,13 @@ The Central module includes 12 guided prompts — multi-step workflow templates 
 - **Scope Configuration Overview** — View committed configuration resources at a scope level, grouped by persona and category.
 - **Scope Effective Config** — View effective (inherited + committed) configuration at a scope, showing what each level contributes.
 
-### Cross-Platform WLAN Sync Prompts
+### Cross-Platform WLAN Sync
 
-3 shared prompts that orchestrate WLAN migration workflows between Juniper Mist and Aruba Central. These are registered when both platforms are enabled and handle alias resolution, server group mapping, template variable creation, named VLAN resolution, and comparison/diff logic automatically.
+1 unified tool + 3 prompts for WLAN migration between Juniper Mist and Aruba Central. Registered when both platforms are enabled.
 
-- **Sync WLANs Mist → Central** — Resolve Mist template variables, map fields, create/compare Central WLAN profiles with server groups and named VLANs.
-- **Sync WLANs Central → Mist** — Resolve Central aliases, server groups, and named VLANs, map fields, create Mist WLANs with template variables for per-site RADIUS.
+- **Manage WLAN Profile** (`manage_wlan_profile`) — The primary entry point for all WLAN operations. Automatically checks both Mist and Central for the SSID and returns the correct sync workflow. Detects cross-platform scenarios without relying on the AI to follow instructions.
+- **Sync WLANs Mist → Central** — Resolve Mist template variables, map fields, create Central WLAN profiles, assign to matching scopes.
+- **Sync WLANs Central → Mist** — Resolve Central aliases, server groups, and named VLANs, create Mist WLANs with template variables.
 - **Sync WLANs Bidirectional** — Compare WLANs across both platforms, show field-level differences, and sync in either direction.
 
 ---

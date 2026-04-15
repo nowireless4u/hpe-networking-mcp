@@ -9,8 +9,8 @@ and `greenlake_*` (HPE GreenLake).
 | Platform | Read-Only Tools | Write Tools | Prompts | Total |
 |----------|----------------|-------------|---------|-------|
 | Juniper Mist | 31 | 4 | 2 | 37 |
-| Aruba Central | 47 | 4 | 12 | 63 |
-| Cross-Platform | -- | -- | 3 | 3 |
+| Aruba Central | 48 | 5 | 12 | 65 |
+| Cross-Platform | -- | 1 | 3 | 4 |
 | HPE GreenLake (static mode) | 10 | -- | -- | 10 |
 | HPE GreenLake (dynamic mode) | 3 | -- | -- | 3 |
 
@@ -503,7 +503,7 @@ GreenLake supports two mutually exclusive tool modes controlled by
 
 ---
 
-## Aruba Central (51 tools + 12 prompts)
+## Aruba Central (53 tools + 12 prompts)
 
 ### Sites
 
@@ -1001,6 +1001,30 @@ to translate between Central's named/aliased config and Mist's inline config.
 | payload | dict | Yes | Device group payload. For create: `scopeName` required. Optional: `description`. |
 | group_id | str | No | Group ID. Required for update and delete. |
 
+### Config Assignments
+
+#### `central_get_config_assignments`
+
+> Read which configuration profiles are assigned to which scopes and device functions.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| scope_id | str | No | Scope ID to filter. Get from `central_get_scope_tree`. |
+| device_function | str | No | Device function filter. `CAMPUS_AP` for WLANs, `ACCESS_SWITCH` for switches, etc. |
+
+#### `central_manage_config_assignment`
+
+> Assign or remove a configuration profile at a scope in Central's hierarchy. Requires `ENABLE_CENTRAL_WRITE_TOOLS=true`. This is how WLAN profiles, roles, and policies get applied to scopes.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| action_type | str | Yes | `assign` or `remove`. |
+| scope_id | str | Yes | Scope ID. Get from `central_get_scope_tree`. |
+| device_function | str | Yes | `CAMPUS_AP` for WLANs. Others: `ACCESS_SWITCH`, `BRANCH_GW`, `MOBILITY_GW`, `ALL`, etc. |
+| profile_type | str | Yes | Profile type: `wlan-ssids`, `roles`, `policies`, `auth-server-groups`, `named-vlans`, `aliases`. |
+| profile_instance | str | Yes | Profile name (e.g. the SSID name for WLAN profiles). |
+| confirmed | bool | No | Set to true after user confirms. |
+
 ### Guided Prompts
 
 Prompts are pre-built workflows that chain multiple tools together. They guide the
@@ -1023,16 +1047,37 @@ LLM through a recommended sequence of tool calls for common network operations.
 
 ---
 
-## Cross-Platform Sync (3 prompts)
+## Cross-Platform (1 tool + 3 prompts)
 
-These prompts are registered when both Mist and Central platforms are enabled.
-They orchestrate WLAN migration workflows with alias resolution, server group
-mapping, template variable creation, and named VLAN resolution.
+Registered when both Mist and Central platforms are enabled.
+
+### `manage_wlan_profile`
+
+> **Primary entry point for all WLAN operations.** Automatically checks both Mist and Central for the SSID and returns the correct workflow. Detects cross-platform scenarios without relying on AI instructions.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| ssid | str | Yes | The SSID name to create, update, delete, or sync. |
+| action_type | str | Yes | `create`, `update`, `delete`, or `sync`. |
+| target_platform | str | No | `central`, `mist`, or `both` (default). |
+| payload | dict | No | WLAN profile payload for create/update. Empty dict for sync/delete. |
+
+**Behavior by scenario:**
+
+| Scenario | Response |
+|----------|----------|
+| SSID in Mist only, target Central | Mist→Central sync workflow with field mapping and scope assignment |
+| SSID in Central only, target Mist | Central→Mist sync workflow with alias resolution |
+| SSID on both platforms | Returns both configs, asks user to choose source |
+| New SSID (neither platform) | Directs to platform-specific create tool |
+| action_type="sync" | Compares both platforms regardless of target |
+
+### Prompts
 
 | Prompt | Parameters | Description |
 |--------|-----------|-------------|
-| `sync_wlans_mist_to_central` | (none) | Sync WLAN profiles from Mist to Central. Resolves Mist template variables, maps to Central server groups and named VLANs. |
-| `sync_wlans_central_to_mist` | (none) | Sync WLAN profiles from Central to Mist. Resolves Central aliases, creates Mist template variables for per-site RADIUS. |
+| `sync_wlans_mist_to_central` | (none) | Sync WLAN profiles from Mist to Central with full field mapping and scope assignment. |
+| `sync_wlans_central_to_mist` | (none) | Sync WLAN profiles from Central to Mist with alias resolution and template variables. |
 | `sync_wlans_bidirectional` | (none) | Compare WLANs across both platforms, show field-level differences, sync in either direction. |
 
 ---

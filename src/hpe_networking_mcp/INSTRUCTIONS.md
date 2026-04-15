@@ -130,6 +130,9 @@ When asked to create a new site based on an existing site:
   - Use `central_get_aliases` to resolve alias names used in WLAN profiles (SSID aliases, PSK aliases), server groups, and VLANs. Aliases can be scoped per-site.
   - Use `central_get_server_groups` to resolve a server group name (from auth-server-group) to actual RADIUS server addresses (FQDN or IP), ports, and settings
   - Use `central_get_named_vlans` to resolve a named VLAN (from vlan-name) to its actual VLAN ID. If the VLAN ID uses an alias, resolve via `central_get_aliases`
+- **Config Assignments**: central_get_config_assignments, central_manage_config_assignment
+  - Use `central_get_config_assignments` to read which profiles are assigned to which scopes. Filter by scope_id and device_function (e.g. `CAMPUS_AP` for WLANs).
+  - Use `central_manage_config_assignment` to assign or remove a profile at a scope. Required for WLAN sync — assigns the profile after creating it. Parameters: scope_id (from `central_get_scope_tree`), device_function (`CAMPUS_AP`), profile_type (`wlan-ssids`), profile_instance (SSID name).
 - **Configuration (Write)**: central_manage_site, central_manage_site_collection, central_manage_device_group — requires `ENABLE_CENTRAL_WRITE_TOOLS=true`
   - **Site creation payload**: All fields must use full names, no abbreviations (e.g. "Indiana" not "IN", "United States" not "US"). The `timezone` object is required and must include `timezoneName` (e.g. "Eastern Standard Time"), `timezoneId` (e.g. "America/Indiana/Indianapolis"), and `rawOffset` in milliseconds (e.g. -18000000 for EST). Determine the correct timezone from the address.
 
