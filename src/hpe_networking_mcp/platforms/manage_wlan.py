@@ -38,17 +38,44 @@ c. For each site_id, call `mist_get_configuration_objects(org_id=\
 site name.
 
 **STEP 4** — Map Mist fields to Central format:
+**Opmode:**
 - auth.type="psk" + pairwise=["wpa2-ccmp"] → opmode="WPA2_PERSONAL"
 - auth.type="psk" + pairwise=["wpa3"] → opmode="WPA3_SAE"
 - auth.type="eap" + pairwise=["wpa2-ccmp"] → opmode="WPA2_ENTERPRISE"
 - auth.type="eap" + pairwise=["wpa3","wpa2-ccmp"] → \
 opmode="WPA3_ENTERPRISE_CCM_128"
 - dynamic_psk.enabled=true → opmode="WPA2_MPSK_AES"
-- bands array → rf-band enum (["24","5"]→"24GHZ_5GHZ", \
-["24","5","6"]→"BAND_ALL")
-- vlan_id → vlan-id-range, rateset → data rate profile
+**RF bands:**
+- bands ["24","5"] → rf-band="24GHZ_5GHZ"
+- bands ["24","5","6"] → rf-band="BAND_ALL"
+- bands ["5"] → rf-band="5GHZ"
+- bands ["5","6"] → rf-band="5GHZ_6GHZ"
+**Data rates (use exact values — do NOT set custom rates):**
+- rateset template="high-density" → g-legacy-rates: \
+{{"basic-rates":["RATE_24MB","RATE_36MB"],"tx-rates":\
+["RATE_24MB","RATE_36MB","RATE_48MB","RATE_54MB"]}}, \
+a-legacy-rates: same values
+- rateset template="no-legacy" → g-legacy-rates: \
+{{"basic-rates":["RATE_12MB","RATE_24MB"],"tx-rates":\
+["RATE_12MB","RATE_18MB","RATE_24MB","RATE_36MB","RATE_48MB",\
+"RATE_54MB"]}}, a-legacy-rates: same values
+- rateset template="compatible" → g-legacy-rates: \
+{{"basic-rates":["RATE_1MB","RATE_2MB"],"tx-rates":\
+["RATE_1MB","RATE_2MB","RATE_5_5MB","RATE_6MB","RATE_9MB",\
+"RATE_11MB","RATE_12MB","RATE_18MB","RATE_24MB","RATE_36MB",\
+"RATE_48MB","RATE_54MB"]}}, a-legacy-rates: {{"basic-rates":\
+["RATE_6MB"],"tx-rates":["RATE_6MB","RATE_9MB","RATE_12MB",\
+"RATE_18MB","RATE_24MB","RATE_36MB","RATE_48MB","RATE_54MB"]}}
+**Other fields:**
 - auth.psk → personal-security.wpa-passphrase
+- vlan_id → vlan-id-range: ["<vlan_id>"], vlan-selector: "VLAN_RANGES"
 - roam_mode="11r" → dot11r=true
+- disable_11be=true → extremely-high-throughput: {{"enable": false}}
+- arp_filter=true → broadcast-filter-ipv4: "BCAST_FILTER_ARP"
+- isolation=true → client-isolation: true
+- dtim → dtim-period
+- max_idletime → inactivity-timeout
+- max_num_clients → max-clients-threshold
 
 **STEP 5** — Call `central_manage_wlan_profile(ssid="{ssid}", \
 action_type="create", payload=<mapped>)` to create the profile.
@@ -89,12 +116,37 @@ to resolve the VLAN ID.
 the correct Mist org_id.
 
 **STEP 4** — Map Central fields to Mist format:
+**Opmode:**
 - opmode="WPA2_PERSONAL" → auth.type="psk", pairwise=["wpa2-ccmp"]
 - opmode="WPA3_SAE" → auth.type="psk", pairwise=["wpa3"]
 - opmode="WPA2_ENTERPRISE" → auth.type="eap", pairwise=["wpa2-ccmp"]
-- rf-band enum → bands array
-- Use template variables ({{auth_srv1}}) for RADIUS, never hardcode IPs
-- Define resolved addresses in site vars
+- opmode="WPA3_ENTERPRISE_CCM_128" → auth.type="eap", \
+pairwise=["wpa3","wpa2-ccmp"]
+- opmode="WPA2_MPSK_AES" → auth.type="psk", dynamic_psk.enabled=true
+**RF bands:**
+- rf-band="24GHZ_5GHZ" → bands=["24","5"]
+- rf-band="BAND_ALL" → bands=["24","5","6"]
+- rf-band="5GHZ" → bands=["5"]
+- rf-band="5GHZ_6GHZ" → bands=["5","6"]
+**Data rates (use exact template names — do NOT set custom rates):**
+- g/a-legacy basic-rates contains RATE_24MB or higher only → \
+rateset: {{"24":{{"template":"high-density"}},"5":{{"template":"high-density"}}}}
+- g/a-legacy basic-rates contains RATE_12MB → \
+rateset: {{"24":{{"template":"no-legacy"}},"5":{{"template":"no-legacy"}}}}
+- g-legacy basic-rates contains RATE_1MB or RATE_2MB → \
+rateset: {{"24":{{"template":"compatible"}},"5":{{"template":"compatible"}}}}
+**Other fields:**
+- personal-security.wpa-passphrase → auth.psk
+- vlan-id-range → vlan_id (first entry), vlan_enabled=true
+- dot11r=true → roam_mode="11r"
+- extremely-high-throughput.enable=false → disable_11be=true
+- broadcast-filter-ipv4="BCAST_FILTER_ARP" → arp_filter=true
+- client-isolation → isolation
+- dtim-period → dtim
+- inactivity-timeout → max_idletime
+- max-clients-threshold → max_num_clients
+**RADIUS:** Use template variables ({{auth_srv1}}) for server IPs, \
+never hardcode. Define resolved addresses in site vars.
 
 **STEP 5** — Create a Mist WLAN template using \
 `mist_change_org_configuration_objects(action_type="create", \
