@@ -141,8 +141,9 @@ def create_server(config: ServerConfig) -> FastMCP:
     if config.greenlake:
         _register_greenlake_tools(mcp, config)
 
-    # --- Cross-platform prompts (require both Mist and Central) ---
+    # --- Cross-platform tools and prompts (require both Mist and Central) ---
     if config.mist and config.central:
+        _register_sync_tools(mcp)
         _register_sync_prompts(mcp)
 
     # --- Write tool visibility (per-platform) ---
@@ -178,6 +179,17 @@ def _register_greenlake_tools(mcp: FastMCP, config: ServerConfig) -> None:
 
     count = register_tools(mcp, config)
     logger.info("GreenLake: registered {} tools", count)
+
+
+def _register_sync_tools(mcp: FastMCP) -> None:
+    """Register cross-platform WLAN management tool (requires both Mist and Central)."""
+    try:
+        from hpe_networking_mcp.platforms.manage_wlan import register
+
+        register(mcp)
+        logger.info("Cross-platform: registered manage_wlan_profile tool")
+    except Exception as e:
+        logger.warning("Cross-platform: failed to load manage_wlan_profile — {}", e)
 
 
 def _register_sync_prompts(mcp: FastMCP) -> None:
