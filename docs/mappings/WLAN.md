@@ -90,6 +90,11 @@ Central uses named VLANs. Mist uses VLAN IDs. Resolution workflow:
 
 ### PSK / MPSK
 
+When Central uses `wpa-passphrase-alias`, resolve via
+`central_get_aliases(alias_name=<alias>)` to get the actual PSK value
+before mapping to Mist `auth.psk`. Like RADIUS aliases, PSK aliases
+can be scoped per-site for different passphrases at different locations.
+
 | Central | Mist | Status |
 |---------|------|--------|
 | personal-security.wpa-passphrase | auth.psk | **[MAPPED]** direct for simple PSK |
@@ -101,20 +106,67 @@ Central uses named VLANs. Mist uses VLAN IDs. Resolution workflow:
 
 ### RADIUS / Server Groups
 
-Central uses named server groups. Mist uses inline server definitions.
-Resolution workflow:
+Central uses named server groups with aliases for server IPs.
+Mist uses inline server definitions with template variables for server IPs.
+Both platforms use indirection to allow the same WLAN profile to resolve
+to different RADIUS servers per site.
+
+#### Central Alias Resolution
+
+Central server groups reference servers by FQDN, IP address, or by
+**alias**. Aliases are named references that resolve to actual values
+(e.g. an alias `radius_primary` → `10.1.1.100` or `radius.corp.local`).
+Aliases can be scoped at different levels in the hierarchy (Global, Site
+Collection, Site) so the same WLAN profile resolves to different RADIUS
+servers per site.
+
+**Resolution steps:**
+1. Get `auth-server-group` name from WLAN profile (e.g. "NAC-RADIUS")
+2. Call `central_get_server_groups(name="NAC-RADIUS")` to get the server list
+3. For each server in the group, check if the host uses an alias
+4. If aliased: call `central_get_aliases(alias_name=<alias>)` to resolve
+   the alias to the actual FQDN or IP address
+5. Note: aliases may have per-site overrides. The effective value depends
+   on the scope where the WLAN is applied (Global → Site Collection → Site)
+
+#### Mist Template Variable Resolution
+
+Mist WLANs use **template variables** in server `host` fields (e.g.
+`{{auth_srv1}}`). Variables are resolved from site settings (`vars` dict)
+at runtime. This allows a single org-level WLAN template to point to
+different RADIUS servers (FQDN or IP) at each site.
+
+**Resolution steps:**
+1. Get `auth_servers` from the WLAN — each entry has a `host` field
+2. If `host` matches `{{variable_name}}` pattern → it's a template variable
+3. Call `mist_get_org_or_site_info(org_id=<org_id>, site_id=<site_id>,
+   info_type=setting)` to get site settings including `vars`
+4. Look up the variable name in `vars` to get the actual FQDN or IP address
+5. Variables inherit: org `vars` → sitegroup `vars` → site `vars`
+   (closest scope wins, like Central aliases)
+
+#### Sync Workflow
 
 **Central → Mist:**
 1. Get `auth-server-group` name from WLAN profile (e.g. "NAC-RADIUS")
-2. Call `central_get_server_groups(name="NAC-RADIUS")` to resolve to actual servers
-3. Map each server in the group to a Mist `auth_servers` entry (host, port, secret)
-4. Same for `acct-server-group` → `acct_servers`
+2. Call `central_get_server_groups(name="NAC-RADIUS")` to resolve to servers
+3. For each server, resolve any aliases via `central_get_aliases`
+4. In Mist: use template variables (`{{auth_srv1}}`, `{{auth_srv2}}`) in
+   `auth_servers[].host` — do NOT hardcode IPs in the WLAN definition
+5. Define the resolved addresses in each Mist site's `vars` dict:
+   `{"auth_srv1": "10.1.1.100", "auth_srv2": "radius2.corp.local"}`
+6. Same pattern for `acct-server-group` → `acct_servers` with variables
+   like `{{acct_srv1}}`
+7. Map port, secret, and other server attributes directly
 
 **Mist → Central:**
-1. Get individual servers from `auth_servers` array
-2. Check if a matching server group already exists in Central
-3. If not, the sync should note that a server group needs to be created manually
-   (or create one if write tools support it)
+1. Get `auth_servers` from the Mist WLAN
+2. If hosts use template variables → resolve from site settings `vars`
+3. Check if a matching server group already exists in Central
+4. If not, the sync should note that a server group needs to be created
+   manually (or create one if write tools support it)
+5. For per-site variation: create Central aliases matching the variable
+   names and set per-scope values to match each site's `vars`
 
 | Central | Mist | Status |
 |---------|------|--------|

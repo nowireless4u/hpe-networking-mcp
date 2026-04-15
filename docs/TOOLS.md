@@ -9,7 +9,8 @@ and `greenlake_*` (HPE GreenLake).
 | Platform | Read-Only Tools | Write Tools | Prompts | Total |
 |----------|----------------|-------------|---------|-------|
 | Juniper Mist | 31 | 4 | 2 | 37 |
-| Aruba Central | 44 | 4 | 15 | 63 |
+| Aruba Central | 47 | 4 | 12 | 63 |
+| Cross-Platform | -- | -- | 3 | 3 |
 | HPE GreenLake (static mode) | 10 | -- | -- | 10 |
 | HPE GreenLake (dynamic mode) | 3 | -- | -- | 3 |
 
@@ -502,7 +503,7 @@ GreenLake supports two mutually exclusive tool modes controlled by
 
 ---
 
-## Aruba Central (48 tools + 15 prompts)
+## Aruba Central (51 tools + 12 prompts)
 
 ### Sites
 
@@ -923,6 +924,35 @@ No parameters. Returns a dict sorted by health score (worst first).
 | payload | dict | Yes | WLAN profile config. Key fields: essid, opmode, forward-mode, vlan-name. |
 | confirmed | bool | No | Set to true after user confirms update/delete in chat. |
 
+### Aliases, Server Groups, Named VLANs
+
+These tools resolve named references used in WLAN profiles. Used by sync prompts
+to translate between Central's named/aliased config and Mist's inline config.
+
+#### `central_get_aliases`
+
+> Get alias configurations from Aruba Central. Aliases are named references used in WLAN profiles (SSID aliases, PSK aliases), server groups, and VLAN definitions.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| alias_name | str | No | Specific alias name. If omitted, returns all aliases. |
+
+#### `central_get_server_groups`
+
+> Get RADIUS/auth server group configurations. Resolve a server group name (from a WLAN profile's auth-server-group field) to its actual server addresses and settings.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| name | str | No | Specific server group name. If omitted, returns all groups. |
+
+#### `central_get_named_vlans`
+
+> Get named VLAN configurations. Resolve a named VLAN (from a WLAN profile's vlan-name field) to its actual VLAN ID.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| name | str | No | Specific named VLAN name. If omitted, returns all named VLANs. |
+
 ### Write Tools (disabled by default)
 
 #### `central_manage_site`
@@ -975,9 +1005,20 @@ LLM through a recommended sequence of tool calls for common network operations.
 | `compare_site_health` | site_names (list) | Compare health metrics across multiple sites. |
 | `scope_configuration_overview` | scope_name | View committed configuration resources at a scope with category grouping. |
 | `scope_effective_config` | scope_name | View effective (inherited + committed) configuration as a layered inheritance view. |
-| `sync_wlans_mist_to_central` | (none) | Sync WLAN profiles from Mist to Central. |
-| `sync_wlans_central_to_mist` | (none) | Sync WLAN profiles from Central to Mist. |
-| `sync_wlans_bidirectional` | (none) | Compare and sync WLANs between both platforms. |
+
+---
+
+## Cross-Platform Sync (3 prompts)
+
+These prompts are registered when both Mist and Central platforms are enabled.
+They orchestrate WLAN migration workflows with alias resolution, server group
+mapping, template variable creation, and named VLAN resolution.
+
+| Prompt | Parameters | Description |
+|--------|-----------|-------------|
+| `sync_wlans_mist_to_central` | (none) | Sync WLAN profiles from Mist to Central. Resolves Mist template variables, maps to Central server groups and named VLANs. |
+| `sync_wlans_central_to_mist` | (none) | Sync WLAN profiles from Central to Mist. Resolves Central aliases, creates Mist template variables for per-site RADIUS. |
+| `sync_wlans_bidirectional` | (none) | Compare WLANs across both platforms, show field-level differences, sync in either direction. |
 
 ---
 

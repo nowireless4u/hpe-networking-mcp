@@ -37,13 +37,14 @@ Managing HPE networking infrastructure with AI assistants today means juggling t
 | **Scope & Configuration Hierarchy** | — | ✅ | — |
 | **Guided Prompts** | ✅ | ✅ | — |
 | **Dynamic API Discovery** | — | — | ✅ |
-| **Tools** | **35 + 2 prompts** | **48 + 15 prompts** | **3 or 10** |
+| **Tools** | **35 + 2 prompts** | **51 + 12 prompts** | **3 or 10** |
+| **Cross-Platform Sync** | **3 shared prompts** | **3 shared prompts** | — |
 
 > **GreenLake tool count**: 3 tools in **dynamic mode** (default) — a meta-tool system that can discover and invoke any GreenLake API endpoint. 10 tools in **static mode** — dedicated tools for each endpoint. Set via `MCP_TOOL_MODE` environment variable.
 
 ### Aruba Central Guided Prompts
 
-The Central module includes 10 guided prompts — multi-step workflow templates that walk the AI through common network operations tasks using the available tools. These prompts orchestrate multiple tool calls in the correct order, so you can simply invoke the prompt and let the AI handle the rest.
+The Central module includes 12 guided prompts — multi-step workflow templates that walk the AI through common network operations tasks using the available tools. These prompts orchestrate multiple tool calls in the correct order, so you can simply invoke the prompt and let the AI handle the rest.
 
 - **Network Health Overview** — Assess the health of all sites across your network, flagging those with poor scores or high alert counts for deeper investigation.
 - **Troubleshoot Site** — Deep-dive into a specific site: check health metrics, review active alerts by severity, list all devices, and recommend next steps.
@@ -55,6 +56,16 @@ The Central module includes 10 guided prompts — multi-step workflow templates 
 - **Device Type Health** — Check the health of all devices of a specific type (AP, switch, or gateway) at a site, including alerts and recent event activity.
 - **Critical Alerts Review** — Review all active critical alerts across the entire network, grouped by site and category, with recommended immediate actions.
 - **Compare Site Health** — Side-by-side comparison of health scores, device counts, client counts, and alert breakdowns across multiple sites.
+- **Scope Configuration Overview** — View committed configuration resources at a scope level, grouped by persona and category.
+- **Scope Effective Config** — View effective (inherited + committed) configuration at a scope, showing what each level contributes.
+
+### Cross-Platform WLAN Sync Prompts
+
+3 shared prompts that orchestrate WLAN migration workflows between Juniper Mist and Aruba Central. These are registered when both platforms are enabled and handle alias resolution, server group mapping, template variable creation, named VLAN resolution, and comparison/diff logic automatically.
+
+- **Sync WLANs Mist → Central** — Resolve Mist template variables, map fields, create/compare Central WLAN profiles with server groups and named VLANs.
+- **Sync WLANs Central → Mist** — Resolve Central aliases, server groups, and named VLANs, map fields, create Mist WLANs with template variables for per-site RADIUS.
+- **Sync WLANs Bidirectional** — Compare WLANs across both platforms, show field-level differences, and sync in either direction.
 
 ---
 
