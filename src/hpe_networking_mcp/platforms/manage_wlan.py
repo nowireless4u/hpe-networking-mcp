@@ -53,15 +53,16 @@ opmode="WPA3_ENTERPRISE_CCM_128"
 **STEP 5** — Call `central_manage_wlan_profile(ssid="{ssid}", \
 action_type="create", payload=<mapped>)` to create the profile.
 
-**STEP 6 — Assignment (REQUIRED — do not skip):**
-Report to the user where this WLAN is assigned in Mist and where it \
-needs to be assigned in Central:
+**STEP 6 — Report assignment to the user (REQUIRED — do not skip):**
+Tell the user where this WLAN is assigned in Mist and where they need \
+to assign it in Central. Note: there is no tool to assign a WLAN \
+profile to a scope in Central — this must be done manually in the \
+Central UI.
 - "In Mist, this WLAN is in template '<name>' assigned to site groups: \
 <list> and/or sites: <list>."
-- "In Central, assign the profile to matching site collections: <list> \
-and/or sites: <list>."
-If a matching Central site collection does not exist, tell the user it \
-needs to be created first.
+- "To complete the setup, assign the WLAN profile '{ssid}' in Aruba \
+Central to the matching scope (site collection or site) via the \
+Central UI: Configuration > Scope > select scope > assign WLAN profile."
 """
 
 # Central → Mist sync workflow returned when SSID exists in Central
@@ -99,30 +100,30 @@ the correct Mist org_id.
 object_type="wlantemplates", payload=...)`, then create the WLAN \
 inside it with `object_type="wlans"` and the new template_id.
 
-**STEP 6 — Assignment (REQUIRED — do not skip):**
-Check what scope/site collection the Central WLAN is assigned to. \
-Assign the Mist WLAN template to matching site groups. Report: \
-"In Central, this WLAN is assigned to scope: <scope>. In Mist, \
-assign the template to site group: <matching group>."
+**STEP 6 — Report assignment to the user (REQUIRED — do not skip):**
+Tell the user where the Central WLAN is assigned and which Mist site \
+groups the template should be assigned to. Use \
+`mist_change_org_configuration_objects` to update the site group's \
+template assignment if possible, or tell the user to do it manually.
+- "In Central, this WLAN is assigned to scope: <scope>."
+- "In Mist, assign the WLAN template to matching site group: <group>."
 """
 
 # Both platforms have it
 _BOTH_PLATFORMS_WORKFLOW = """
-This SSID exists on BOTH platforms:
-- **Mist**: {mist_status}
-- **Central**: {central_status}
+This SSID "{ssid}" exists on BOTH platforms. The full configs from \
+each platform are included in this response under `mist_wlan` and \
+`central_profile`.
 
-Compare the configurations and ask the user:
-1. "Use Mist as source" (update Central to match Mist)
-2. "Use Central as source" (update Mist to match Central)
-3. "Skip — leave both as-is"
+You MUST ask the user which source to use before making any changes:
+1. "Use Mist as source" → update Central to match Mist
+2. "Use Central as source" → update Mist to match Central
+3. "Leave both as-is"
 
-To compare, retrieve the full config from both platforms:
-- Call `mist_get_configuration_objects(org_id=<org_id>, \
-object_type=org_wlans, name="{ssid}")` for Mist config
-- The Central config is: {central_status}
+Show a comparison table of key fields (auth type, PSK, VLAN, bands, \
+etc.) so the user can see the differences before deciding.
 
-Then show a side-by-side table of differences.
+Do NOT proceed with any create or update until the user chooses.
 """
 
 
