@@ -133,9 +133,9 @@ When asked to create a new site based on an existing site:
 - **Configuration (Write)**: central_manage_site, central_manage_site_collection, central_manage_device_group — requires `ENABLE_CENTRAL_WRITE_TOOLS=true`
   - **Site creation payload**: All fields must use full names, no abbreviations (e.g. "Indiana" not "IN", "United States" not "US"). The `timezone` object is required and must include `timezoneName` (e.g. "Eastern Standard Time"), `timezoneId` (e.g. "America/Indiana/Indianapolis"), and `rawOffset` in milliseconds (e.g. -18000000 for EST). Determine the correct timezone from the address.
 
-## Cross-Platform WLAN Sync (shared prompts — requires both Mist and Central)
+## Cross-Platform WLAN Management
 
-**MANDATORY**: When the user asks to add, copy, sync, port, migrate, or create a WLAN that involves BOTH platforms (e.g. "add this Mist WLAN to Central", "copy SSID X from Central to Mist", "sync WLANs"), you MUST use the sync prompts below. Do NOT call `central_manage_wlan_profile` or `mist_change_org_configuration_objects` directly for cross-platform WLAN operations. Doing so will produce incorrect configurations because:
+**MANDATORY**: When the user asks to add, copy, sync, port, migrate, or create a WLAN — regardless of whether it involves one or both platforms — ALWAYS call `manage_wlan_profile` first. This tool checks both Mist and Central for the SSID and returns the correct workflow. Do NOT call `central_manage_wlan_profile` or `mist_change_org_configuration_objects` directly for WLAN create operations. Doing so will produce incorrect configurations because:
 1. Opmode values differ between platforms and require translation
 2. RADIUS server groups, aliases, and template variables need resolution
 3. VLAN names vs IDs need mapping
