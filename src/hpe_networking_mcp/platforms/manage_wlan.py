@@ -53,15 +53,17 @@ opmode="WPA3_ENTERPRISE_CCM_128"
 **STEP 5** — Call `central_manage_wlan_profile(ssid="{ssid}", \
 action_type="create", payload=<mapped>)` to create the profile.
 
-**STEP 6 — Assignment (REQUIRED — do not skip):**
-Report to the user where this WLAN is assigned in Mist and where it \
-needs to be assigned in Central:
-- "In Mist, this WLAN is in template '<name>' assigned to site groups: \
-<list> and/or sites: <list>."
-- "In Central, assign the profile to matching site collections: <list> \
-and/or sites: <list>."
-If a matching Central site collection does not exist, tell the user it \
-needs to be created first.
+**STEP 6 — Assign the profile to a scope (REQUIRED — do not skip):**
+a. Call `central_get_scope_tree(view="committed")` to find the scope \
+that matches the Mist template assignment from Step 3.
+b. Match Mist site groups → Central site collections by name. Match \
+Mist sites → Central sites by name. Note the `scope_id` for each match.
+c. For each matching scope, call `central_manage_config_assignment(\
+action_type="assign", scope_id=<scope_id>, \
+device_function="CAMPUS_AP", profile_type="wlan-ssids", \
+profile_instance="{ssid}")` to assign the WLAN profile.
+d. Report: "In Mist, this WLAN is in template '<name>' assigned to \
+site groups: <list>. In Central, assigned to scopes: <list>."
 """
 
 # Central → Mist sync workflow returned when SSID exists in Central
@@ -99,30 +101,32 @@ the correct Mist org_id.
 object_type="wlantemplates", payload=...)`, then create the WLAN \
 inside it with `object_type="wlans"` and the new template_id.
 
-**STEP 6 — Assignment (REQUIRED — do not skip):**
-Check what scope/site collection the Central WLAN is assigned to. \
-Assign the Mist WLAN template to matching site groups. Report: \
-"In Central, this WLAN is assigned to scope: <scope>. In Mist, \
-assign the template to site group: <matching group>."
+**STEP 6 — Assign the template to site groups (REQUIRED — do not skip):**
+a. Call `central_get_config_assignments(device_function="CAMPUS_AP")` \
+to find where the Central WLAN is assigned. Look for entries with \
+profile_instance="{ssid}" to find the scope.
+b. Match Central scopes → Mist site groups by name.
+c. For each matching site group, update the site group to include the \
+new template using `mist_change_org_configuration_objects`.
+d. Report: "In Central, this WLAN is assigned to scope: <scope>. In \
+Mist, assigned template to site groups: <list>."
 """
 
 # Both platforms have it
 _BOTH_PLATFORMS_WORKFLOW = """
-This SSID exists on BOTH platforms:
-- **Mist**: {mist_status}
-- **Central**: {central_status}
+This SSID "{ssid}" exists on BOTH platforms. The full configs from \
+each platform are included in this response under `mist_wlan` and \
+`central_profile`.
 
-Compare the configurations and ask the user:
-1. "Use Mist as source" (update Central to match Mist)
-2. "Use Central as source" (update Mist to match Central)
-3. "Skip — leave both as-is"
+You MUST ask the user which source to use before making any changes:
+1. "Use Mist as source" → update Central to match Mist
+2. "Use Central as source" → update Mist to match Central
+3. "Leave both as-is"
 
-To compare, retrieve the full config from both platforms:
-- Call `mist_get_configuration_objects(org_id=<org_id>, \
-object_type=org_wlans, name="{ssid}")` for Mist config
-- The Central config is: {central_status}
+Show a comparison table of key fields (auth type, PSK, VLAN, bands, \
+etc.) so the user can see the differences before deciding.
 
-Then show a side-by-side table of differences.
+Do NOT proceed with any create or update until the user chooses.
 """
 
 

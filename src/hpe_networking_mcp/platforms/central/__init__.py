@@ -62,6 +62,10 @@ TOOLS = {
         "central_get_wlan_profiles",
         "central_manage_wlan_profile",
     ],
+    "config_assignments": [
+        "central_get_config_assignments",
+        "central_manage_config_assignment",
+    ],
     "configuration": [
         "central_manage_site",
         "central_manage_site_collection",
