@@ -51,12 +51,17 @@ opmode="WPA3_ENTERPRISE_CCM_128"
 - roam_mode="11r" → dot11r=true
 
 **STEP 5** — Call `central_manage_wlan_profile(ssid="{ssid}", \
-action_type="create", source_platform="central", payload=<mapped>)` \
-to create the profile.
+action_type="create", payload=<mapped>)` to create the profile.
 
-**STEP 6** — Report assignment: "In Mist, this WLAN is in template \
-'<name>' assigned to site groups: <list> and/or sites: <list>. In \
-Central, assign the profile to matching site collections and/or sites."
+**STEP 6 — Assignment (REQUIRED — do not skip):**
+Report to the user where this WLAN is assigned in Mist and where it \
+needs to be assigned in Central:
+- "In Mist, this WLAN is in template '<name>' assigned to site groups: \
+<list> and/or sites: <list>."
+- "In Central, assign the profile to matching site collections: <list> \
+and/or sites: <list>."
+If a matching Central site collection does not exist, tell the user it \
+needs to be created first.
 """
 
 # Central → Mist sync workflow returned when SSID exists in Central
@@ -89,11 +94,16 @@ the correct Mist org_id.
 - Use template variables ({{auth_srv1}}) for RADIUS, never hardcode IPs
 - Define resolved addresses in site vars
 
-**STEP 5** — Create a Mist WLAN template, then create the WLAN inside \
-it using `mist_change_org_configuration_objects`.
+**STEP 5** — Create a Mist WLAN template using \
+`mist_change_org_configuration_objects(action_type="create", \
+object_type="wlantemplates", payload=...)`, then create the WLAN \
+inside it with `object_type="wlans"` and the new template_id.
 
-**STEP 6** — Check Central scope assignment and assign the Mist \
-template to matching site groups.
+**STEP 6 — Assignment (REQUIRED — do not skip):**
+Check what scope/site collection the Central WLAN is assigned to. \
+Assign the Mist WLAN template to matching site groups. Report: \
+"In Central, this WLAN is assigned to scope: <scope>. In Mist, \
+assign the template to site group: <matching group>."
 """
 
 # Both platforms have it
