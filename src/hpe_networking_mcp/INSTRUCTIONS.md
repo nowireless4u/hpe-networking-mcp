@@ -131,6 +131,11 @@ When asked to create a new site based on an existing site:
   - **Valid opmode values**: OPEN, WPA2_PERSONAL, WPA3_SAE, WPA2_ENTERPRISE, WPA3_ENTERPRISE_CCM_128, WPA2_MPSK_AES, ENHANCED_OPEN, DPP. Note: `WPA2_PSK_AES` does NOT exist — use `WPA2_PERSONAL` for WPA2 PSK.
   - **Mist-to-Central opmode mapping**: Mist psk → `WPA2_PERSONAL`, Mist psk+wpa3 → `WPA3_SAE`, Mist eap → `WPA2_ENTERPRISE`, Mist eap+wpa3+wpa2 → `WPA3_ENTERPRISE_CCM_128`
   - **NEVER call this tool directly for cross-platform WLAN sync** — use the sync prompts instead
+- **Roles**: central_get_roles, central_manage_role
+  - Use `central_get_roles` to read role configurations (VLAN, QoS, ACLs, bandwidth contracts)
+  - Use `central_manage_role` to create, update, or delete roles — requires `ENABLE_CENTRAL_WRITE_TOOLS=true`
+  - Roles can be shared (library-level) or local (scoped to a site/collection). Use `scope_id` and `device_function` params for local roles.
+  - After creating, use `central_manage_config_assignment` to assign the role to a scope
 - **Aliases, Server Groups, Named VLANs**: central_get_aliases, central_get_server_groups, central_get_named_vlans
   - Use `central_get_aliases` to resolve alias names used in WLAN profiles (SSID aliases, PSK aliases), server groups, and VLANs. Aliases can be scoped per-site.
   - Use `central_get_server_groups` to resolve a server group name (from auth-server-group) to actual RADIUS server addresses (FQDN or IP), ports, and settings

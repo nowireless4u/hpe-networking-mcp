@@ -64,6 +64,10 @@ TOOLS = {
         "central_get_wlan_profiles",
         "central_manage_wlan_profile",
     ],
+    "roles": [
+        "central_get_roles",
+        "central_manage_role",
+    ],
     "config_assignments": [
         "central_get_config_assignments",
         "central_manage_config_assignment",

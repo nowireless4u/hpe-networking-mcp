@@ -9,7 +9,7 @@ and `greenlake_*` (HPE GreenLake).
 | Platform | Read-Only Tools | Write Tools | Prompts | Total |
 |----------|----------------|-------------|---------|-------|
 | Juniper Mist | 31 | 4 | 2 | 37 |
-| Aruba Central | 51 | 5 | 12 | 68 |
+| Aruba Central | 52 | 6 | 12 | 70 |
 | Cross-Platform | -- | 1 | 3 | 4 |
 | HPE GreenLake (static mode) | 10 | -- | -- | 10 |
 | HPE GreenLake (dynamic mode) | 3 | -- | -- | 3 |
@@ -503,7 +503,7 @@ GreenLake supports two mutually exclusive tool modes controlled by
 
 ---
 
-## Aruba Central (56 tools + 12 prompts)
+## Aruba Central (58 tools + 12 prompts)
 
 ### Sites
 
@@ -1062,6 +1062,29 @@ to translate between Central's named/aliased config and Mist's inline config.
 | profile_type | str | Yes | Profile type: `wlan-ssids`, `roles`, `policies`, `auth-server-groups`, `named-vlans`, `aliases`. |
 | profile_instance | str | Yes | Profile name (e.g. the SSID name for WLAN profiles). |
 | confirmed | bool | No | Set to true after user confirms. |
+
+### Roles
+
+#### `central_get_roles`
+
+> Get role configurations. Roles define network access (VLAN, QoS, ACLs, bandwidth contracts) for clients and are used in WLAN profiles, switch ports, NAC policies, and firewall rules.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| name | str | No | Specific role name. If omitted, returns all roles. |
+
+#### `central_manage_role`
+
+> Create, update, or delete a role. Requires `ENABLE_CENTRAL_WRITE_TOOLS=true`. Roles can be shared (library) or local (scoped to a site/collection).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| name | str | Yes | Role name (identifier in API path). |
+| action_type | str | Yes | `create`, `update`, or `delete`. |
+| payload | dict | Yes | Role config (VLAN, ACLs, QoS, bandwidth, etc.). Empty dict for delete. |
+| scope_id | str | No | Scope ID for local roles. Omit for shared/library roles. |
+| device_function | str | No | `CAMPUS_AP`, `ACCESS_SWITCH`, `BRANCH_GW`, etc. Required with scope_id. |
+| confirmed | bool | No | Set to true after user confirms update/delete. |
 
 ### Guided Prompts
 
