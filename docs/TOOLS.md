@@ -916,13 +916,28 @@ No parameters. Returns a dict sorted by health score (worst first).
 #### `central_manage_wlan_profile`
 
 > Create, update, or delete a WLAN SSID profile. Requires `ENABLE_CENTRAL_WRITE_TOOLS=true`.
+>
+> **For cross-platform WLAN sync, use the sync prompts instead of calling this tool directly.**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | ssid | str | Yes | SSID name (used as identifier in API path). |
 | action_type | str | Yes | `create`, `update`, or `delete`. |
-| payload | dict | Yes | WLAN profile config. Key fields: essid, opmode, forward-mode, vlan-name. |
+| payload | dict | Yes | WLAN profile config (see valid values below). |
 | confirmed | bool | No | Set to true after user confirms update/delete in chat. |
+
+**Valid `opmode` values** (do NOT invent values — use only these):
+
+`OPEN`, `WPA2_PERSONAL`, `WPA3_SAE`, `WPA2_ENTERPRISE`, `WPA3_ENTERPRISE_CCM_128`,
+`WPA3_ENTERPRISE_GCM_256`, `WPA3_ENTERPRISE_CNSA`, `WPA_ENTERPRISE`, `WPA_PERSONAL`,
+`WPA2_MPSK_AES`, `WPA2_MPSK_LOCAL`, `ENHANCED_OPEN`, `DPP`, `WPA2_PSK_AES_DPP`,
+`WPA2_AES_DPP`, `WPA3_SAE_DPP`, `WPA3_AES_CCM_128_DPP`, `WPA3_AES_GCM_256_DPP`,
+`BOTH_WPA_WPA2_PSK`, `BOTH_WPA_WPA2_DOT1X`, `STATIC_WEP`, `DYNAMIC_WEP`
+
+**Other key enums**: `forward-mode`: `FORWARD_MODE_BRIDGE`, `FORWARD_MODE_L2` |
+`rf-band`: `BAND_ALL`, `24GHZ_5GHZ`, `5GHZ_6GHZ`, `24GHZ`, `5GHZ`, `6GHZ`, `BAND_NONE` |
+`vlan-selector`: `NAMED_VLAN` (with `vlan-name`), `VLAN_RANGES` (with `vlan-id-range`) |
+`out-of-service`: `NONE`, `UPLINK_DOWN`, `TUNNEL_DOWN`
 
 ### Aliases, Server Groups, Named VLANs
 

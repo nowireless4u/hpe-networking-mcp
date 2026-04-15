@@ -123,6 +123,9 @@ When asked to create a new site based on an existing site:
 - **WLAN Profiles**: central_get_wlan_profiles, central_manage_wlan_profile
   - Use `central_get_wlan_profiles` to read WLAN SSID profile configurations from the library
   - Use `central_manage_wlan_profile` to create, update, or delete WLAN profiles — requires `ENABLE_CENTRAL_WRITE_TOOLS=true`
+  - **Valid opmode values**: OPEN, WPA2_PERSONAL, WPA3_SAE, WPA2_ENTERPRISE, WPA3_ENTERPRISE_CCM_128, WPA2_MPSK_AES, ENHANCED_OPEN, DPP. Note: `WPA2_PSK_AES` does NOT exist — use `WPA2_PERSONAL` for WPA2 PSK.
+  - **Mist-to-Central opmode mapping**: Mist psk → `WPA2_PERSONAL`, Mist psk+wpa3 → `WPA3_SAE`, Mist eap → `WPA2_ENTERPRISE`, Mist eap+wpa3+wpa2 → `WPA3_ENTERPRISE_CCM_128`
+  - **NEVER call this tool directly for cross-platform WLAN sync** — use the sync prompts instead
 - **Aliases, Server Groups, Named VLANs**: central_get_aliases, central_get_server_groups, central_get_named_vlans
   - Use `central_get_aliases` to resolve alias names used in WLAN profiles (SSID aliases, PSK aliases), server groups, and VLANs. Aliases can be scoped per-site.
   - Use `central_get_server_groups` to resolve a server group name (from auth-server-group) to actual RADIUS server addresses (FQDN or IP), ports, and settings
@@ -131,14 +134,24 @@ When asked to create a new site based on an existing site:
   - **Site creation payload**: All fields must use full names, no abbreviations (e.g. "Indiana" not "IN", "United States" not "US"). The `timezone` object is required and must include `timezoneName` (e.g. "Eastern Standard Time"), `timezoneId` (e.g. "America/Indiana/Indianapolis"), and `rawOffset` in milliseconds (e.g. -18000000 for EST). Determine the correct timezone from the address.
 
 ## Cross-Platform WLAN Sync (shared prompts — requires both Mist and Central)
-When asked to add, copy, sync, or port a WLAN from one platform to another — **ALWAYS use the sync prompts**. Do NOT call write tools directly for cross-platform WLAN operations.
+
+**MANDATORY**: When the user asks to add, copy, sync, port, migrate, or create a WLAN that involves BOTH platforms (e.g. "add this Mist WLAN to Central", "copy SSID X from Central to Mist", "sync WLANs"), you MUST use the sync prompts below. Do NOT call `central_manage_wlan_profile` or `mist_change_org_configuration_objects` directly for cross-platform WLAN operations. Doing so will produce incorrect configurations because:
+1. Opmode values differ between platforms and require translation
+2. RADIUS server groups, aliases, and template variables need resolution
+3. VLAN names vs IDs need mapping
+4. Template/scope assignments must be checked and replicated
+5. Data rate profiles need translation
+
+**Prompts**:
 - Use `sync_wlans_mist_to_central` to sync Mist WLANs to Central
 - Use `sync_wlans_central_to_mist` to sync Central WLANs to Mist
 - Use `sync_wlans_bidirectional` to compare and sync both directions
+
+**Rules**:
 - Only sync bridged (non-tunneled) SSIDs. Skip tunneled SSIDs automatically.
-- From Mist: only sync WLANs that are in templates (not site-level)
+- From Mist: only sync WLANs that are in templates (not site-level). Always look up which template the WLAN belongs to and which site groups the template is assigned to.
 - From Central: deduplicate — if same SSID appears in multiple scopes, create only one Mist WLAN
-- Assignment mapping: Global→org, site collection→site group, specific sites→specific sites
+- Assignment mapping: Global→org, site collection→site group, specific sites→specific sites. Always check and replicate assignments — do not just create the profile without assigning it.
 
 ### Resolution Workflows
 The sync prompts handle these resolution steps automatically:

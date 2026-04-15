@@ -73,10 +73,29 @@ async def central_manage_wlan_profile(
         dict,
         Field(
             description=(
-                "WLAN SSID profile payload. For create/update: the full or partial "
-                "profile configuration. Key fields include essid.name, opmode, "
-                "forward-mode, vlan-name, personal-security, dot1x, rf-band. "
-                "For delete: payload is ignored."
+                "WLAN SSID profile payload. For delete: payload is ignored. "
+                "For create/update, key fields and their valid values:\n"
+                "- essid: {name: str} or {alias: str, use-alias: true}\n"
+                "- opmode (REQUIRED): OPEN, WPA2_PERSONAL, WPA3_SAE, "
+                "WPA2_ENTERPRISE, WPA3_ENTERPRISE_CCM_128, WPA3_ENTERPRISE_GCM_256, "
+                "WPA3_ENTERPRISE_CNSA, WPA_ENTERPRISE, WPA_PERSONAL, WPA2_MPSK_AES, "
+                "WPA2_MPSK_LOCAL, ENHANCED_OPEN, DPP, WPA2_PSK_AES_DPP, "
+                "WPA2_AES_DPP, WPA3_SAE_DPP, WPA3_AES_CCM_128_DPP, "
+                "WPA3_AES_GCM_256_DPP, BOTH_WPA_WPA2_PSK, BOTH_WPA_WPA2_DOT1X, "
+                "STATIC_WEP, DYNAMIC_WEP. "
+                "For PSK WLANs use WPA2_PERSONAL (not WPA2_PSK_AES which is invalid). "
+                "For WPA3 PSK use WPA3_SAE. "
+                "For WPA3+WPA2 transition use WPA3_SAE with wpa3-transition-mode-enable: true\n"
+                "- personal-security: {passphrase-format: 'STRING', wpa-passphrase: str}\n"
+                "- forward-mode: FORWARD_MODE_BRIDGE, FORWARD_MODE_L2\n"
+                "- rf-band: BAND_ALL, 24GHZ_5GHZ, 5GHZ_6GHZ, 24GHZ_6GHZ, "
+                "24GHZ, 5GHZ, 6GHZ, BAND_NONE\n"
+                "- vlan-selector: NAMED_VLAN (with vlan-name) or VLAN_RANGES "
+                "(with vlan-id-range: [str])\n"
+                "- out-of-service: NONE, UPLINK_DOWN, TUNNEL_DOWN\n"
+                "- broadcast-filter-ipv4: BCAST_FILTER_ARP, FILTER_NONE\n"
+                "- See existing profiles via central_get_wlan_profiles for "
+                "complete field reference."
             )
         ),
     ],
@@ -91,18 +110,24 @@ async def central_manage_wlan_profile(
     """
     Create, update, or delete a WLAN SSID profile in Central's library.
 
-    The SSID name is the identifier — it appears in the API path.
-    Profiles created here are added to the Central WLAN library.
-    They must be assigned to scopes (Global, site collections, or sites)
-    separately to take effect on APs.
+    **STOP — CHECK BEFORE CALLING**: If the user asked to add, copy, sync,
+    port, or migrate a WLAN from Mist to Central (or vice versa), you MUST
+    use the sync prompts instead of calling this tool directly:
+    - sync_wlans_mist_to_central
+    - sync_wlans_central_to_mist
+    - sync_wlans_bidirectional
+    Those prompts handle field translation, opmode mapping, alias resolution,
+    server group mapping, template variable creation, VLAN resolution, and
+    scope assignment automatically. Calling this tool directly for cross-
+    platform operations will produce incorrect configurations.
 
-    IMPORTANT: When creating a WLAN from Mist data or when asked to
-    add/copy/sync a WLAN between platforms, use the sync_wlans_mist_to_central
-    or sync_wlans_central_to_mist prompts instead of calling this tool
-    directly. Those prompts handle field translation, alias resolution,
-    server group mapping, and VLAN resolution automatically.
-
-    Do not sync tunneled SSIDs (forward-mode != FORWARD_MODE_BRIDGE).
+    When calling this tool directly (for Central-only operations):
+    - The SSID name is the identifier — it appears in the API path.
+    - Profiles are added to the Central WLAN library.
+    - They must be assigned to scopes (Global, site collections, or sites)
+      separately to take effect on APs.
+    - Do not create tunneled SSIDs (forward-mode != FORWARD_MODE_BRIDGE)
+      unless explicitly requested.
     """
     if action_type not in ("create", "update", "delete"):
         raise ToolError(f"Invalid action_type: {action_type}. Must be 'create', 'update', or 'delete'.")
