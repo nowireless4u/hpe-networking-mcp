@@ -123,10 +123,14 @@ When asked to create a new site based on an existing site:
 - **WLAN Profiles**: central_get_wlan_profiles, central_manage_wlan_profile
   - Use `central_get_wlan_profiles` to read WLAN SSID profile configurations from the library
   - Use `central_manage_wlan_profile` to create, update, or delete WLAN profiles — requires `ENABLE_CENTRAL_WRITE_TOOLS=true`
+- **Aliases, Server Groups, Named VLANs**: central_get_aliases, central_get_server_groups, central_get_named_vlans
+  - Use `central_get_aliases` to resolve alias names used in WLAN profiles (SSID aliases, PSK aliases), server groups, and VLANs. Aliases can be scoped per-site.
+  - Use `central_get_server_groups` to resolve a server group name (from auth-server-group) to actual RADIUS server addresses (FQDN or IP), ports, and settings
+  - Use `central_get_named_vlans` to resolve a named VLAN (from vlan-name) to its actual VLAN ID. If the VLAN ID uses an alias, resolve via `central_get_aliases`
 - **Configuration (Write)**: central_manage_site, central_manage_site_collection, central_manage_device_group — requires `ENABLE_CENTRAL_WRITE_TOOLS=true`
   - **Site creation payload**: All fields must use full names, no abbreviations (e.g. "Indiana" not "IN", "United States" not "US"). The `timezone` object is required and must include `timezoneName` (e.g. "Eastern Standard Time"), `timezoneId` (e.g. "America/Indiana/Indianapolis"), and `rawOffset` in milliseconds (e.g. -18000000 for EST). Determine the correct timezone from the address.
 
-## Cross-Platform WLAN Sync
+## Cross-Platform WLAN Sync (shared prompts — requires both Mist and Central)
 When asked to add, copy, sync, or port a WLAN from one platform to another — **ALWAYS use the sync prompts**. Do NOT call write tools directly for cross-platform WLAN operations.
 - Use `sync_wlans_mist_to_central` to sync Mist WLANs to Central
 - Use `sync_wlans_central_to_mist` to sync Central WLANs to Mist
@@ -135,7 +139,27 @@ When asked to add, copy, sync, or port a WLAN from one platform to another — *
 - From Mist: only sync WLANs that are in templates (not site-level)
 - From Central: deduplicate — if same SSID appears in multiple scopes, create only one Mist WLAN
 - Assignment mapping: Global→org, site collection→site group, specific sites→specific sites
-- The prompts handle field translation, alias resolution, server group mapping, named VLAN resolution, and data rate profile mapping automatically.
+
+### Resolution Workflows
+The sync prompts handle these resolution steps automatically:
+- **Central aliases**: SSID aliases (`essid.use-alias`), PSK aliases (`wpa-passphrase-alias`), and server host aliases are resolved via `central_get_aliases`. Aliases can have per-site values.
+- **Central server groups**: `auth-server-group` and `acct-server-group` are resolved via `central_get_server_groups` to get actual RADIUS server FQDN/IP addresses.
+- **Central named VLANs**: `vlan-name` is resolved via `central_get_named_vlans` to get actual VLAN IDs.
+- **Mist template variables**: RADIUS server hosts using `{{variable}}` patterns are resolved from site settings `vars` via `mist_get_org_or_site_info(info_type=setting)`.
+- **Central → Mist RADIUS**: use template variables (`{{auth_srv1}}`) in Mist WLANs — never hardcode IPs. Define resolved addresses in each site's `vars` dict.
+- **Mist → Central RADIUS**: match or create server groups. For per-site variation, create Central aliases matching Mist variable names.
+
+## Cross-Platform Site Groups / Site Collections
+Mist **site groups** and Central **site collections** serve the same purpose: grouping sites for bulk template/policy assignment. When the user asks to create, update, or delete a site group or site collection **without specifying a platform**, perform the operation on **both** platforms:
+
+- **Create**: create a Mist site group (`mist_change_org_configuration_objects(object_type=sitegroups, action_type=create)`) AND a Central site collection (`central_manage_site_collection(action_type=create)`) with the same name.
+- **Add/remove sites**: update both the Mist site group's `site_ids` list AND use `central_manage_site_collection(action_type=add_sites/remove_sites)`.
+- **Delete**: delete on both platforms.
+- **Sync**: when asked to sync site groups/collections, compare by name across platforms. Create missing ones on the other platform and reconcile site membership.
+
+The same cross-platform behavior applies to **sites** — when asked generically to create a site, create it on both platforms. When asked to add a site to a group/collection, add it on both.
+
+**Naming convention**: use the same name on both platforms so they can be matched during sync operations.
 
 ## Guidelines
 - ALWAYS start with `central_get_site_name_id_mapping` for a lightweight overview.
