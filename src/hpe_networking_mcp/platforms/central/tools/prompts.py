@@ -238,27 +238,36 @@ object_type=org_wlantemplates)` to list all WLAN templates.
 3. For each template, call `mist_get_configuration_objects(org_id=<org_id>, \
 object_type=org_wlans)` and filter WLANs by template_id to get WLANs \
 in that template.
-4. Only migrate WLANs that are part of a template (skip site-level WLANs).
+4. Only sync WLANs that are part of a template (skip site-level WLANs).
 5. Deduplicate: if the same SSID name appears in multiple templates, \
-only create one Central WLAN profile.
+only process it once.
 6. Skip tunneled SSIDs (interface field set to tunnel modes).
 7. For each unique WLAN:
    a. Call `central_get_wlan_profiles(ssid=<ssid_name>)` to check if \
-it already exists in Central. If it does, skip it and note it.
-   b. Map the Mist WLAN fields to Central format: ssid→essid.name, \
-auth.type→opmode, auth.psk→personal-security.wpa-passphrase, \
-vlan_id→vlan-name, interface→rf-band, dtim→dtim-period, \
-isolation→client-isolation.
-   c. Call `central_manage_wlan_profile(ssid=<ssid_name>, \
-action_type=create, payload=<mapped_profile>)` to create the profile.
+it already exists in Central.
+   b. If it EXISTS in Central: compare the mapped fields between \
+the Mist WLAN and the Central profile. Show the user a table of \
+differences (field name, Mist value, Central value). If there are \
+differences, ask the user: "Use Mist as source (overwrite Central)?", \
+"Keep Central as-is?", or "Skip this SSID?". If no differences, \
+report as "in sync" and skip.
+   c. If it does NOT exist in Central: map the Mist WLAN fields to \
+Central format. Key mappings: ssid→essid.name, auth.type→opmode, \
+auth.psk→personal-security.wpa-passphrase, dynamic_psk→mpsk settings, \
+vlan_id→vlan-name, bands→rf-band, dtim→dtim-period, \
+isolation→client-isolation, rateset→data rate profile, \
+arp_filter→broadcast-filter-ipv4, roam_mode→dot11r. \
+Resolve RADIUS servers from Mist auth_servers to Central server groups. \
+Resolve VLANs from Mist VLAN IDs to Central named VLANs. \
+Call `central_manage_wlan_profile` to create the profile.
 8. Assignment mapping:
    - Mist template applies to org → Note: assign at Central Global scope
    - Mist template assigned to site group → Note: assign to matching \
 Central site collection (create if missing, prompt user)
    - Mist template assigned to specific sites → Note: assign to those \
 Central sites (create if missing, prompt user)
-9. Report summary: WLANs created, skipped (already exist), skipped \
-(tunneled), and assignment recommendations.
+9. Report summary: WLANs created, updated, in sync, skipped (tunneled), \
+and assignment recommendations.
         """.strip()
 
     @mcp.prompt
@@ -269,30 +278,38 @@ Sync WLAN profiles from Aruba Central to Juniper Mist:
 
 1. Call `central_get_wlan_profiles` to list all WLAN SSID profiles.
 2. Skip tunneled SSIDs (forward-mode != FORWARD_MODE_BRIDGE).
-3. Call `mist_get_self(action_type=account_info)` to get org_id.
-4. For each Central WLAN profile:
+3. For each Central WLAN profile, resolve the actual SSID name: \
+if essid.use-alias is set, call `central_get_aliases(alias_name=...)` \
+to get the broadcasted SSID name. Otherwise use essid.name.
+4. Call `mist_get_self(action_type=account_info)` to get org_id.
+5. For each Central WLAN profile:
    a. Call `mist_get_configuration_objects(org_id=<org_id>, \
 object_type=org_wlans)` and check if SSID already exists in Mist \
-(match by ssid name). If it does, skip it and note it.
-   b. Map the Central WLAN fields to Mist format: essid.name→ssid, \
-opmode→auth.type, personal-security.wpa-passphrase→auth.psk, \
-vlan-name→vlan_id, rf-band→interface, dtim-period→dtim, \
-client-isolation→isolation.
-   c. Create a Mist WLAN template: call \
-`mist_change_org_configuration_objects(action_type=create, \
-object_type=wlantemplates, payload={name: <ssid_name>+" Template"})`.
-   d. Create the WLAN inside the template: call \
-`mist_change_org_configuration_objects(action_type=create, \
-object_type=wlans, payload={...mapped fields..., \
-template_id: <new_template_id>})`.
-5. Assignment mapping:
+(match by resolved SSID name).
+   b. If it EXISTS in Mist: compare the mapped fields between \
+the Central profile and the Mist WLAN. Show the user a table of \
+differences (field name, Central value, Mist value). If there are \
+differences, ask the user: "Use Central as source (overwrite Mist)?", \
+"Keep Mist as-is?", or "Skip this SSID?". If no differences, \
+report as "in sync" and skip.
+   c. If it does NOT exist in Mist: map the Central WLAN fields to \
+Mist format. Key mappings: essid.name (or resolved alias)→ssid, \
+opmode→auth.type+auth.pairwise, personal-security→auth.psk, \
+vlan-name→dynamic_vlan (resolve named VLAN via central_get_named_vlans), \
+rf-band→bands, dtim-period→dtim, client-isolation→isolation, \
+data rates→rateset template (compatible/no-legacy/high-density based on MBR), \
+broadcast-filter-ipv4→arp_filter, dot11r→roam_mode. \
+Resolve RADIUS from Central server groups via central_get_server_groups. \
+Use the Central profile name as the Mist WLAN template name. \
+Create the template, then create the WLAN inside it.
+6. Assignment mapping:
    - Central Global assignment → Assign Mist template at org level
    - Central site collection → Assign Mist template to matching site \
 group (create if missing, prompt user)
    - Central specific sites → Assign Mist template to those sites \
 (create if missing, prompt user)
-6. Report summary: WLANs created, skipped (already exist), skipped \
-(tunneled), and assignment recommendations.
+7. Report summary: WLANs created, updated, in sync, skipped (tunneled), \
+and assignment recommendations.
         """.strip()
 
     @mcp.prompt
@@ -307,17 +324,26 @@ Compare and sync WLAN profiles between Juniper Mist and Aruba Central:
 object_type=org_wlantemplates)` and then `org_wlans` to get all \
 template-based Mist WLANs.
    c. Call `central_get_wlan_profiles` to get all Central profiles.
+   d. For Central profiles with aliases, resolve via `central_get_aliases`.
 2. Filter out tunneled SSIDs from both sides.
-3. Compare by SSID name:
-   - WLANs in both platforms → report as "synced"
-   - WLANs only in Mist → report as "missing in Central"
-   - WLANs only in Central → report as "missing in Mist"
-4. Present a comparison table: SSID Name, In Mist, In Central, Status.
-5. Ask the user which direction to sync:
-   - "Sync Mist → Central" (create missing Central profiles)
-   - "Sync Central → Mist" (create missing Mist WLANs)
-   - "Sync both directions"
-6. Execute the chosen sync using the sync_wlans_mist_to_central \
-or sync_wlans_central_to_mist workflow for the missing WLANs.
-7. Report final summary.
+3. Compare by SSID name (using resolved alias for Central):
+   - WLANs in both platforms with identical mapped fields → "in sync"
+   - WLANs in both platforms with differences → "out of sync" — show \
+a table of differences for each (field, Mist value, Central value)
+   - WLANs only in Mist → "missing in Central"
+   - WLANs only in Central → "missing in Mist"
+4. Present a summary table: SSID Name, In Mist, In Central, Status \
+(in sync / out of sync / missing).
+5. For "out of sync" WLANs, ask the user for each one:
+   - "Use Mist as source" (update Central to match Mist)
+   - "Use Central as source" (update Mist to match Central)
+   - "Skip"
+6. For "missing" WLANs, ask the user:
+   - "Sync missing to both platforms" (create on the platform where missing)
+   - "Sync Mist → Central only"
+   - "Sync Central → Mist only"
+   - "Skip missing WLANs"
+7. Execute the chosen actions using the field mapping and resolution \
+workflows (alias, server group, named VLAN, data rate profile).
+8. Report final summary: created, updated, in sync, skipped.
         """.strip()
