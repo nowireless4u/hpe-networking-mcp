@@ -113,9 +113,7 @@ def map_central_radius_to_mist(
     if not (is_enterprise or has_mac_auth):
         return
 
-    auth_servers = resolved_servers or _inline_servers(
-        profile, "primary-auth-server", "backup-auth-server", 1812
-    )
+    auth_servers = resolved_servers or _inline_servers(profile, "primary-auth-server", "backup-auth-server", 1812)
     if auth_servers:
         mist_wlan["auth_servers"] = auth_servers
         mist_wlan["auth_server_selection"] = "ordered"
@@ -149,13 +147,15 @@ def extract_coa_servers(
 ) -> list[dict]:
     """Extract CoA server entries from resolved servers with DAC enabled."""
     coa_servers = []
-    for server in (resolved_servers or []):
+    for server in resolved_servers or []:
         if server.get("dynamic-authorization-enable"):
-            coa_servers.append({
-                "ip": server.get("host", ""),
-                "port": server.get("coa-port", 3799),
-                "secret": server.get("secret", ""),
-            })
+            coa_servers.append(
+                {
+                    "ip": server.get("host", ""),
+                    "port": server.get("coa-port", 3799),
+                    "secret": server.get("secret", ""),
+                }
+            )
     return coa_servers
 
 

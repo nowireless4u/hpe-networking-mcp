@@ -184,9 +184,7 @@ class TestCentralToMistRadius:
 
     def test_nas_id_and_ip(self):
         profile = {"opmode": "WPA2_ENTERPRISE", "primary-auth-server": "10.1.1.1"}
-        result = central_to_mist(
-            profile, resolved_nas_id="my-nas", resolved_nas_ip="10.0.0.1"
-        )
+        result = central_to_mist(profile, resolved_nas_id="my-nas", resolved_nas_ip="10.0.0.1")
         assert result["auth_servers_nas_id"] == "my-nas"
         assert result["auth_servers_nas_ip"] == "10.0.0.1"
 
@@ -494,9 +492,7 @@ class TestMistToCentralRadius:
                 {"host": "{{auth_srv2}}", "port": 1812},
             ],
         }
-        result = mist_to_central(
-            wlan, resolved_auth_hosts=["10.1.1.100", "10.1.1.101"]
-        )
+        result = mist_to_central(wlan, resolved_auth_hosts=["10.1.1.100", "10.1.1.101"])
         assert result["primary-auth-server"] == "10.1.1.100"
         assert result["backup-auth-server"] == "10.1.1.101"
 
@@ -693,15 +689,11 @@ class TestMistToCentralPerformance:
 @pytest.mark.unit
 class TestTemplateVarResolution:
     def test_resolves_variable(self):
-        result = resolve_mist_template_var(
-            "{{auth_srv1}}", {"auth_srv1": "10.1.1.100"}
-        )
+        result = resolve_mist_template_var("{{auth_srv1}}", {"auth_srv1": "10.1.1.100"})
         assert result == "10.1.1.100"
 
     def test_resolves_fqdn(self):
-        result = resolve_mist_template_var(
-            "{{radius_primary}}", {"radius_primary": "radius.corp.local"}
-        )
+        result = resolve_mist_template_var("{{radius_primary}}", {"radius_primary": "radius.corp.local"})
         assert result == "radius.corp.local"
 
     def test_passthrough_literal_ip(self):
