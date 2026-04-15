@@ -93,11 +93,11 @@ Central uses named VLANs. Mist uses VLAN IDs. Resolution workflow:
 | Central | Mist | Status |
 |---------|------|--------|
 | personal-security.wpa-passphrase | auth.psk | **[MAPPED]** direct for simple PSK |
+| personal-security.wpa-passphrase-alias | auth.psk (resolved via alias lookup) | **[MAPPED]** resolve alias to get PSK value |
 | personal-security.mpsk-cloud-auth | dynamic_psk.enabled + dynamic_psk.source="cloud" | **[MAPPED]** translate |
-| personal-security.mpsk-local-profile | dynamic_psk.enabled + dynamic_psk.source="local" | **[NEEDS REVIEW]** |
-| personal-security.wpa-passphrase-alias | (none) | **[UNMAPPED]** Central uses aliases |
-| (none) | dynamic_psk.default_psk | **[UNMAPPED]** Mist only |
-| (none) | dynamic_psk.default_vlan_id | **[UNMAPPED]** Mist only |
+| personal-security.mpsk-local-profile | dynamic_psk (local) | **[DEFERRED]** complex: Central MPSK local uses a profile with PSKs tied to Aruba user roles (role→VLAN). Mapping would require creating a role + VLAN + PSK entry. Deferred to future release. |
+| (Central default VLAN via role) | dynamic_psk.default_vlan_id | **[DEFERRED]** part of MPSK local mapping |
+| (none) | dynamic_psk.default_psk | **[UNMAPPED]** Mist only (no equivalent in Central MPSK local) |
 
 ### RADIUS / Server Groups
 
@@ -122,19 +122,19 @@ Resolution workflow:
 | acct-server-group ("NAC-RADIUS") | acct_servers [{host, port, secret}] | **[MAPPED]** requires server group resolution |
 | primary-auth-server (when no group) | auth_servers[0].host | **[MAPPED]** direct |
 | backup-auth-server (when no group) | auth_servers[1].host | **[MAPPED]** direct |
+| primary/backup server ordering | auth_server_selection ("ordered") | **[MAPPED]** Central primary/backup = Mist ordered selection |
 | primary-acct-server (when no group) | acct_servers[0].host | **[MAPPED]** direct |
 | backup-acct-server (when no group) | acct_servers[1].host | **[MAPPED]** direct |
 | radius-accounting (bool) | (presence of acct_servers) | **[MAPPED]** translate |
 | radius-interim-accounting-interval | acct_interim_interval | **[MAPPED]** direct |
+| nas-identifier (in server config) | auth_servers_nas_id | **[MAPPED]** different location (server vs WLAN) |
+| nas-ip-address (in server config) | auth_servers_nas_ip | **[MAPPED]** different location (server vs WLAN) |
+| dynamic-authorization-enable (in server) | coa_servers (list) | **[MAPPED]** Central enables per-server, Mist defines separate CoA entries |
+| enable-radsec (in server config) | radsec.enabled | **[MAPPED]** both support RadSec |
 | radius-reauth-interval | (none) | **[UNMAPPED]** Central only |
 | cloud-auth | (none) | **[UNMAPPED]** Central only |
-| (none) | auth_servers_nas_id | **[UNMAPPED]** Mist only |
-| (none) | auth_servers_nas_ip | **[UNMAPPED]** Mist only |
 | (none) | auth_servers_retries | **[UNMAPPED]** Mist only |
 | (none) | auth_servers_timeout | **[UNMAPPED]** Mist only |
-| (none) | auth_server_selection | **[UNMAPPED]** Mist only |
-| (none) | coa_servers | **[UNMAPPED]** Mist only (not supported with MPSK RADIUS) |
-| (none) | radsec | **[UNMAPPED]** Mist only |
 
 ### MAC Auth
 
@@ -312,16 +312,20 @@ mist_nac, hotspot20, app_limit
 
 | Category | Count |
 |----------|-------|
-| **MAPPED** (direct or translatable) | ~30 |
-| **NEEDS REVIEW** | ~6 |
-| **UNMAPPED** Central-only | ~80+ |
-| **UNMAPPED** Mist-only | ~30+ |
+| **MAPPED** (direct or translatable) | ~38 |
+| **DEFERRED** (complex, future release) | ~2 (MPSK local) |
+| **UNMAPPED** Central-only | ~75+ |
+| **UNMAPPED** Mist-only | ~25+ |
 
 The MAPPED fields cover the essential settings for a functional WLAN sync:
-SSID identity (with alias resolution), enabled state, auth mode, PSK/MPSK,
-RADIUS (when not using server groups), VLAN, RF band, DTIM, max clients,
-idle timeout, fast roaming, client isolation, WMM, ARP filter, and
-broadcast control.
+SSID identity (with alias resolution), enabled state, auth mode, PSK
+(including alias resolution), MPSK cloud, RADIUS (with server group
+resolution, NAS ID/IP, CoA, RadSec), VLAN (with named VLAN resolution),
+RF band, DTIM, max clients, idle timeout, fast roaming, client isolation,
+WMM, ARP filter, and broadcast control.
+
+DEFERRED: MPSK local mapping requires creating Aruba user roles with VLAN
+assignments — complex and deferred to a future release.
 
 UNMAPPED fields are platform-specific and preserved on their native
 platform during sync. They are not modified or deleted.
