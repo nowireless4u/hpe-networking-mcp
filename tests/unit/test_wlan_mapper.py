@@ -1,7 +1,6 @@
 """Unit tests for cross-platform WLAN field mapper."""
 
 import pytest
-
 from hpe_networking_mcp.platforms.wlan_mapper import (
     central_to_mist,
     is_tunneled_central,

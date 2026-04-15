@@ -161,10 +161,7 @@ def extract_coa_servers(
 
 def has_radsec(resolved_servers: list[dict] | None) -> bool:
     """Check if any resolved server has RadSec enabled."""
-    for server in (resolved_servers or []):
-        if server.get("enable-radsec"):
-            return True
-    return False
+    return any(server.get("enable-radsec") for server in (resolved_servers or []))
 
 
 def map_mist_radius_to_central(
