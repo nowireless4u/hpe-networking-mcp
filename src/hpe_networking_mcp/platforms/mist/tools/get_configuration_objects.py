@@ -27,6 +27,7 @@ from hpe_networking_mcp.platforms.mist.client import (
     get_apisession,
     handle_network_error,
     process_response,
+    validate_org_id,
 )
 
 
@@ -229,6 +230,7 @@ async def get_configuration_objects(
         limit,
     )
 
+    validate_org_id(str(org_id))
     apisession, response_format = await get_apisession()
 
     response = None

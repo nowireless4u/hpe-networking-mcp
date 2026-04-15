@@ -99,6 +99,19 @@ async def central_manage_wlan_profile(
             )
         ),
     ],
+    source_platform: Annotated[
+        str,
+        Field(
+            description=(
+                "Where is this WLAN coming from? Set to 'new' if creating a "
+                "brand new SSID that does not exist on any platform. Set to "
+                "'mist' if the SSID already exists in Mist and is being added, "
+                "copied, ported, or synced to Central. Set to 'central' if "
+                "this is a Central-only modification."
+            ),
+            default="new",
+        ),
+    ],
     confirmed: Annotated[
         bool,
         Field(
@@ -110,27 +123,70 @@ async def central_manage_wlan_profile(
     """
     Create, update, or delete a WLAN SSID profile in Central's library.
 
-    **STOP — CHECK BEFORE CALLING**: If the user asked to add, copy, sync,
-    port, or migrate a WLAN from Mist to Central (or vice versa), you MUST
-    use the sync prompts instead of calling this tool directly:
-    - sync_wlans_mist_to_central
-    - sync_wlans_central_to_mist
-    - sync_wlans_bidirectional
-    Those prompts handle field translation, opmode mapping, alias resolution,
-    server group mapping, template variable creation, VLAN resolution, and
-    scope assignment automatically. Calling this tool directly for cross-
-    platform operations will produce incorrect configurations.
-
-    When calling this tool directly (for Central-only operations):
-    - The SSID name is the identifier — it appears in the API path.
-    - Profiles are added to the Central WLAN library.
-    - They must be assigned to scopes (Global, site collections, or sites)
-      separately to take effect on APs.
-    - Do not create tunneled SSIDs (forward-mode != FORWARD_MODE_BRIDGE)
-      unless explicitly requested.
+    The SSID name is the identifier — it appears in the API path.
+    Profiles are added to the Central WLAN library and must be assigned
+    to scopes (Global, site collections, or sites) separately.
     """
     if action_type not in ("create", "update", "delete"):
         raise ToolError(f"Invalid action_type: {action_type}. Must be 'create', 'update', or 'delete'.")
+
+    # Redirect cross-platform operations to the sync workflow
+    if source_platform == "mist":
+        return {
+            "status": "redirect",
+            "message": (
+                "This SSID is being synced from Mist. Do NOT call this tool "
+                "directly for cross-platform operations. Instead, follow the "
+                "sync_wlans_mist_to_central workflow:\n"
+                "1. Call mist_get_self(action_type=account_info) to get org_id\n"
+                "2. Call mist_get_configuration_objects(org_id=<org_id>, "
+                "object_type=org_wlans, name=<ssid>) to get the full WLAN config\n"
+                "3. Note the template_id, then look up the template to find "
+                "sitegroup_ids and site_ids for assignment mapping\n"
+                "4. Translate fields: Mist auth.type=psk → Central opmode=WPA2_PERSONAL, "
+                "Mist auth.type=eap → Central opmode=WPA2_ENTERPRISE, "
+                "Mist bands → Central rf-band, Mist vlan_id → Central vlan-id-range\n"
+                "5. Create the profile with correctly mapped fields\n"
+                "6. Report which Central scopes to assign the profile to "
+                "based on the Mist template assignment"
+            ),
+        }
+
+    # Validate opmode on create/update to catch cross-platform translation errors
+    if action_type in ("create", "update") and "opmode" in payload:
+        valid_opmodes = {
+            "OPEN",
+            "WPA2_PERSONAL",
+            "WPA2_ENTERPRISE",
+            "ENHANCED_OPEN",
+            "WPA3_SAE",
+            "WPA3_ENTERPRISE_CCM_128",
+            "WPA3_ENTERPRISE_GCM_256",
+            "WPA3_ENTERPRISE_CNSA",
+            "WPA_ENTERPRISE",
+            "WPA_PERSONAL",
+            "WPA2_MPSK_AES",
+            "WPA2_MPSK_LOCAL",
+            "DPP",
+            "WPA2_PSK_AES_DPP",
+            "WPA2_AES_DPP",
+            "WPA3_SAE_DPP",
+            "WPA3_AES_CCM_128_DPP",
+            "WPA3_AES_GCM_256_DPP",
+            "BOTH_WPA_WPA2_PSK",
+            "BOTH_WPA_WPA2_DOT1X",
+            "STATIC_WEP",
+            "DYNAMIC_WEP",
+        }
+        opmode = payload["opmode"]
+        if opmode not in valid_opmodes:
+            raise ToolError(
+                f"Invalid opmode '{opmode}'. "
+                "If you are syncing a WLAN from Mist, use the "
+                "sync_wlans_mist_to_central prompt instead of calling this "
+                "tool directly — it handles opmode translation automatically. "
+                f"Valid opmodes: {', '.join(sorted(valid_opmodes))}"
+            )
 
     api_path = f"network-config/v1alpha1/wlan-ssids/{ssid}"
 

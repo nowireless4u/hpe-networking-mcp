@@ -31,6 +31,17 @@ async def lifespan(server: FastMCP):
             if hasattr(mist_session, "set_verbose"):
                 mist_session.set_verbose(False)
             context["mist_session"] = mist_session
+            # Resolve org_id from API token at startup
+            try:
+                self_resp = mistapi.api.v1.self.self.getSelf(mist_session)
+                if self_resp.status_code == 200 and self_resp.data:
+                    privileges = self_resp.data.get("privileges", [])
+                    org_privs = [p for p in privileges if p.get("scope") == "org"]
+                    if org_privs:
+                        context["mist_org_id"] = org_privs[0]["org_id"]
+                        logger.info("Mist: resolved org_id={}", context["mist_org_id"])
+            except Exception as e:
+                logger.warning("Mist: failed to resolve org_id at startup — {}", e)
             logger.info("Mist: API session initialized")
         except Exception as e:
             logger.warning("Mist: failed to initialize — {}", e)

@@ -43,6 +43,30 @@ async def get_apisession() -> tuple[mistapi.APISession, str]:
     return session, "json"
 
 
+def validate_org_id(org_id: str) -> str:
+    """Validate an org_id against the token's actual org_id.
+
+    If the org_id doesn't match the token's org, raises a ToolError
+    with the correct org_id so the AI can self-correct without an
+    extra API call.
+
+    Args:
+        org_id: The org_id provided by the AI.
+
+    Returns:
+        The validated org_id (may be corrected).
+    """
+    ctx = get_context()
+    correct_org_id = ctx.lifespan_context.get("mist_org_id")
+    if correct_org_id and str(org_id) != str(correct_org_id):
+        raise ToolError(
+            f"Wrong org_id '{org_id}'. The correct org_id for this "
+            f"API token is '{correct_org_id}'. Use this org_id for "
+            f"all Mist API calls."
+        )
+    return str(org_id)
+
+
 async def process_response(response: APIResponse) -> None:
     """Validate an API response and raise ToolError on failure."""
     if response.status_code is None:

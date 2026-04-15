@@ -148,6 +148,20 @@ async def change_org_configuration_objects(
         ),
     ],
     ctx: Context,
+    source_platform: Annotated[
+        str,
+        Field(
+            description=(
+                "Where is this configuration coming from? Set to 'new' if "
+                "creating a brand new object. Set to 'central' if the WLAN "
+                "already exists in Aruba Central and is being added, copied, "
+                "ported, or synced to Mist. Set to 'mist' for Mist-only "
+                "modifications. Only relevant when object_type is 'wlans' "
+                "or 'wlantemplates'."
+            ),
+            default="new",
+        ),
+    ],
     confirmed: Annotated[
         bool,
         Field(
@@ -166,6 +180,28 @@ async def change_org_configuration_objects(
         payload,
         object_id,
     )
+
+    # Redirect cross-platform WLAN operations to the sync workflow
+    if source_platform == "central" and object_type.value in ("wlans", "wlantemplates"):
+        return {
+            "status": "redirect",
+            "message": (
+                "This WLAN is being synced from Central. Do NOT call this tool "
+                "directly for cross-platform operations. Instead, follow the "
+                "sync_wlans_central_to_mist workflow:\n"
+                "1. Call central_get_wlan_profiles to get the full WLAN config\n"
+                "2. Resolve Central aliases (SSID, PSK) via central_get_aliases\n"
+                "3. Resolve server groups via central_get_server_groups\n"
+                "4. Resolve named VLANs via central_get_named_vlans\n"
+                "5. Translate fields: Central opmode=WPA2_PERSONAL → Mist "
+                "auth.type=psk, Central rf-band → Mist bands array, etc.\n"
+                "6. Use template variables ({{auth_srv1}}) for RADIUS servers, "
+                "never hardcode IPs\n"
+                "7. Create the WLAN template, then create the WLAN inside it\n"
+                "8. Check Central scope assignment and assign the Mist template "
+                "to matching site groups"
+            ),
+        }
 
     apisession, response_format = await get_apisession()
 
