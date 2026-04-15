@@ -27,13 +27,18 @@ belongs to.
 b. If `template_id` is present: call \
 `mist_get_configuration_objects(org_id=<org_id>, \
 object_type=org_wlantemplates, object_id=<template_id>)` to get the \
-template. Note the template `name` and `sitegroup_ids` array — these \
-are the site groups the template is assigned to.
+template. Note the template `name`, `sitegroup_ids` array (site groups \
+the template is assigned to), and `site_ids` array (specific sites \
+the template is assigned to).
 c. If `sitegroup_ids` is not empty: for each sitegroup_id, call \
 `mist_get_configuration_objects(org_id=<org_id>, \
 object_type=org_sitegroups, object_id=<sitegroup_id>)` to get the \
 site group name. Record the site group names for assignment mapping.
-d. If no `template_id` — this is a site-level WLAN. Note this for \
+d. If `site_ids` is not empty: for each site_id, call \
+`mist_get_configuration_objects(org_id=<org_id>, \
+object_type=org_sites, object_id=<site_id>)` to get the site name. \
+Record the site names for assignment mapping.
+e. If no `template_id` — this is a site-level WLAN. Note this for \
 the user but still proceed if they want to sync it.
 
 **STEP 3 — Skip tunneled SSIDs**
@@ -81,15 +86,18 @@ Call `central_manage_wlan_profile` with the mapped payload.
 
 **STEP 9 — Assignment mapping (REQUIRED — do not skip)**
 Based on the template assignment found in Step 2:
-- If Mist template has no `sitegroup_ids` (org-wide) → tell user \
-to assign at Central Global scope
+- If Mist template has no `sitegroup_ids` and no `site_ids` (org-wide) \
+→ tell user to assign at Central Global scope
 - If Mist template has `sitegroup_ids` → for each site group name \
 found in Step 2c, check if a matching Central site collection exists. \
 Tell the user which site collections to assign the profile to. If \
 a matching collection doesn't exist, tell the user it needs to be created.
+- If Mist template has `site_ids` → for each site name found in \
+Step 2d, check if a matching Central site exists. Tell the user which \
+Central sites to assign the profile to.
 - Report: "In Mist, this WLAN is in template '<name>' assigned to \
-site groups: <list>. In Central, assign the profile to matching \
-site collections: <list>."
+site groups: <list> and/or sites: <list>. In Central, assign the \
+profile to matching site collections: <list> and/or sites: <list>."
 
 **STEP 10 — Report summary**
 WLANs created, updated, in sync, skipped (tunneled), variables \
