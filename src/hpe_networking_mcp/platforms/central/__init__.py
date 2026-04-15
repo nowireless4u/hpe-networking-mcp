@@ -15,11 +15,13 @@ TOOLS = {
     "alerts": ["central_get_alerts"],
     "events": ["central_get_events", "central_get_events_count"],
     "monitoring": [
+        "central_get_aps",
+        "central_get_ap_wlans",
         "central_get_ap_details",
         "central_get_switch_details",
         "central_get_gateway_details",
     ],
-    "wlans": ["central_get_wlans"],
+    "wlans": ["central_get_wlans", "central_get_wlan_stats"],
     "audit_logs": ["central_get_audit_logs", "central_get_audit_log_detail"],
     "stats": [
         "central_get_ap_stats",

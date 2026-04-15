@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastmcp import Context
 from pycentral.new_monitoring.aps import MonitoringAPs
 from pycentral.new_monitoring.gateways import MonitoringGateways
@@ -5,6 +7,106 @@ from pycentral.new_monitoring.gateways import MonitoringGateways
 from hpe_networking_mcp.platforms.central._registry import mcp
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import retry_central_command
+
+
+@mcp.tool(annotations=READ_ONLY)
+async def central_get_aps(
+    ctx: Context,
+    site_id: str | None = None,
+    site_name: str | None = None,
+    serial_number: str | None = None,
+    device_name: str | None = None,
+    status: Literal["ONLINE", "OFFLINE"] | None = None,
+    model: str | None = None,
+    firmware_version: str | None = None,
+    deployment: Literal["Standalone", "Cluster", "Unspecified"] | None = None,
+    sort: str | None = None,
+) -> list[dict] | str:
+    """
+    List access points with AP-specific filters.
+
+    Returns AP name, serial, model, status, firmware, site, IP,
+    radio info, and deployment type. Supports filtering by site,
+    status, model, firmware, and deployment type.
+
+    Parameters:
+        site_id: Filter by site ID.
+        site_name: Filter by site name.
+        serial_number: AP serial number (comma-separated for multiple).
+        device_name: AP name (comma-separated for multiple).
+        status: ONLINE or OFFLINE.
+        model: AP model (comma-separated for multiple).
+        firmware_version: Firmware version (comma-separated for multiple).
+        deployment: Standalone, Cluster, or Unspecified.
+        sort: Sort expression (e.g. 'deviceName asc'). Supported fields:
+            siteId, serialNumber, deviceName, model, status, deployment.
+    """
+    conn = ctx.lifespan_context["central_conn"]
+
+    filter_parts = []
+    filter_map = {
+        "siteId": site_id,
+        "siteName": site_name,
+        "serialNumber": serial_number,
+        "deviceName": device_name,
+        "status": status,
+        "model": model,
+        "firmwareVersion": firmware_version,
+        "deployment": deployment,
+    }
+    for field, value in filter_map.items():
+        if value is not None:
+            filter_parts.append(f"{field} eq '{value}'")
+    filter_str = " and ".join(filter_parts) if filter_parts else None
+
+    try:
+        kwargs: dict = {"central_conn": conn}
+        if filter_str:
+            kwargs["filter_str"] = filter_str
+        if sort:
+            kwargs["sort"] = sort
+        aps = MonitoringAPs.get_all_aps(**kwargs)
+    except Exception as e:
+        return f"Error fetching access points: {e}"
+
+    if not aps:
+        return "No access points found matching the specified criteria."
+    return aps
+
+
+@mcp.tool(annotations=READ_ONLY)
+async def central_get_ap_wlans(
+    ctx: Context,
+    serial_number: str,
+    wlan_name: str | None = None,
+) -> list[dict] | str:
+    """
+    Get WLANs currently active on a specific AP.
+
+    Returns the WLANs being broadcast by the AP identified by serial
+    number. Useful for troubleshooting — "which SSIDs is this AP
+    broadcasting?" Use central_find_device to get the serial number.
+
+    Parameters:
+        serial_number: AP serial number (required).
+        wlan_name: Filter by exact WLAN name (SSID). Applied client-side.
+    """
+    conn = ctx.lifespan_context["central_conn"]
+    try:
+        resp = MonitoringAPs.get_ap_wlans(
+            central_conn=conn,
+            serial_number=serial_number,
+        )
+    except Exception as e:
+        return f"Error fetching AP WLANs: {e}"
+
+    items = resp.get("items", []) if isinstance(resp, dict) else []
+    if wlan_name:
+        items = [w for w in items if w.get("wlanName") == wlan_name]
+
+    if not items:
+        return f"No WLANs found for AP '{serial_number}'."
+    return items
 
 
 @mcp.tool(annotations=READ_ONLY)
