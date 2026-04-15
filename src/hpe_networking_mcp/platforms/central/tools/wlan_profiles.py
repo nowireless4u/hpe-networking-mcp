@@ -99,19 +99,6 @@ async def central_manage_wlan_profile(
             )
         ),
     ],
-    source_platform: Annotated[
-        str,
-        Field(
-            description=(
-                "Where is this WLAN coming from? Set to 'new' if creating a "
-                "brand new SSID that does not exist on any platform. Set to "
-                "'mist' if the SSID already exists in Mist and is being added, "
-                "copied, ported, or synced to Central. Set to 'central' if "
-                "this is a Central-only modification."
-            ),
-            default="new",
-        ),
-    ],
     confirmed: Annotated[
         bool,
         Field(
@@ -129,28 +116,6 @@ async def central_manage_wlan_profile(
     """
     if action_type not in ("create", "update", "delete"):
         raise ToolError(f"Invalid action_type: {action_type}. Must be 'create', 'update', or 'delete'.")
-
-    # Redirect cross-platform operations to the sync workflow
-    if source_platform == "mist":
-        return {
-            "status": "redirect",
-            "message": (
-                "This SSID is being synced from Mist. Do NOT call this tool "
-                "directly for cross-platform operations. Instead, follow the "
-                "sync_wlans_mist_to_central workflow:\n"
-                "1. Call mist_get_self(action_type=account_info) to get org_id\n"
-                "2. Call mist_get_configuration_objects(org_id=<org_id>, "
-                "object_type=org_wlans, name=<ssid>) to get the full WLAN config\n"
-                "3. Note the template_id, then look up the template to find "
-                "sitegroup_ids and site_ids for assignment mapping\n"
-                "4. Translate fields: Mist auth.type=psk → Central opmode=WPA2_PERSONAL, "
-                "Mist auth.type=eap → Central opmode=WPA2_ENTERPRISE, "
-                "Mist bands → Central rf-band, Mist vlan_id → Central vlan-id-range\n"
-                "5. Create the profile with correctly mapped fields\n"
-                "6. Report which Central scopes to assign the profile to "
-                "based on the Mist template assignment"
-            ),
-        }
 
     # Validate opmode on create/update to catch cross-platform translation errors
     if action_type in ("create", "update") and "opmode" in payload:
