@@ -127,12 +127,15 @@ When asked to create a new site based on an existing site:
   - **Site creation payload**: All fields must use full names, no abbreviations (e.g. "Indiana" not "IN", "United States" not "US"). The `timezone` object is required and must include `timezoneName` (e.g. "Eastern Standard Time"), `timezoneId` (e.g. "America/Indiana/Indianapolis"), and `rawOffset` in milliseconds (e.g. -18000000 for EST). Determine the correct timezone from the address.
 
 ## Cross-Platform WLAN Sync
-When asked to sync WLANs between Mist and Central:
-- Use `sync_wlans_mist_to_central`, `sync_wlans_central_to_mist`, or `sync_wlans_bidirectional` prompts
-- Only migrate bridged (non-tunneled) SSIDs. Skip tunneled SSIDs automatically.
-- From Mist: only migrate WLANs that are in templates (not site-level)
+When asked to add, copy, sync, or port a WLAN from one platform to another — **ALWAYS use the sync prompts**. Do NOT call write tools directly for cross-platform WLAN operations.
+- Use `sync_wlans_mist_to_central` to sync Mist WLANs to Central
+- Use `sync_wlans_central_to_mist` to sync Central WLANs to Mist
+- Use `sync_wlans_bidirectional` to compare and sync both directions
+- Only sync bridged (non-tunneled) SSIDs. Skip tunneled SSIDs automatically.
+- From Mist: only sync WLANs that are in templates (not site-level)
 - From Central: deduplicate — if same SSID appears in multiple scopes, create only one Mist WLAN
 - Assignment mapping: Global→org, site collection→site group, specific sites→specific sites
+- The prompts handle field translation, alias resolution, server group mapping, named VLAN resolution, and data rate profile mapping automatically.
 
 ## Guidelines
 - ALWAYS start with `central_get_site_name_id_mapping` for a lightweight overview.

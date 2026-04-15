@@ -96,7 +96,13 @@ async def central_manage_wlan_profile(
     They must be assigned to scopes (Global, site collections, or sites)
     separately to take effect on APs.
 
-    IMPORTANT: Do not migrate tunneled SSIDs (forward-mode != FORWARD_MODE_BRIDGE).
+    IMPORTANT: When creating a WLAN from Mist data or when asked to
+    add/copy/sync a WLAN between platforms, use the sync_wlans_mist_to_central
+    or sync_wlans_central_to_mist prompts instead of calling this tool
+    directly. Those prompts handle field translation, alias resolution,
+    server group mapping, and VLAN resolution automatically.
+
+    Do not sync tunneled SSIDs (forward-mode != FORWARD_MODE_BRIDGE).
     """
     if action_type not in ("create", "update", "delete"):
         raise ToolError(f"Invalid action_type: {action_type}. Must be 'create', 'update', or 'delete'.")
