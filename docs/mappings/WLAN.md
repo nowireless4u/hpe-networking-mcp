@@ -236,15 +236,36 @@ Resolution workflow:
 
 ---
 
-## Radio Capabilities (Central only — Mist manages via RF template)
+## Data Rates / Radio Capabilities
+
+Central bundles data rates with other settings into network config profiles.
+Mist separates data rates (`rateset`) from other features (arp_filter, roam_mode, etc.).
+
+### Data Rate Profile Mapping
+
+| Central Profile | Central MBR | Mist rateset template | Notes |
+|----------------|-------------|----------------------|-------|
+| Most Compatible | 1-2 Mbps | `compatible` | Both enable all rates |
+| Balanced | 12 Mbps | `no-legacy` | Both disable legacy 802.11b |
+| High Density | 24 Mbps | `high-density` | Both set 24 Mbps MBR |
+| Custom | varies | closest match | Map to nearest profile based on MBR. Never use custom in Mist unless user explicitly requests it. |
+
+**MBR-based mapping logic for custom Central rates:**
+- MBR ≤ 2 Mbps → Mist `compatible`
+- MBR 6-12 Mbps → Mist `no-legacy`
+- MBR ≥ 24 Mbps → Mist `high-density`
+
+**Note:** Central's profiles also set broadcast filter, 11r, 11k, OKC/PMK.
+These are mapped separately in Mist (arp_filter, roam_mode, dot11k is Central-only).
 
 | Central | Mist | Status |
 |---------|------|--------|
-| high-throughput (all fields) | (none) | **[UNMAPPED]** |
-| high-efficiency (all fields) | (none) | **[UNMAPPED]** |
-| extremely-high-throughput (all fields) | (none) | **[UNMAPPED]** |
-| g-legacy-rates (all fields) | (none) | **[UNMAPPED]** |
-| a-legacy-rates (all fields) | (none) | **[UNMAPPED]** |
+| g-legacy-rates.basic-rates | rateset.24.template | **[MAPPED]** translate to profile name |
+| a-legacy-rates.basic-rates | rateset.5.template | **[MAPPED]** translate to profile name |
+| (none) | rateset.6.template | **[UNMAPPED]** Mist only (6 GHz rates) |
+| high-throughput (HT/VHT settings) | (none) | **[UNMAPPED]** Central only (Mist auto-negotiates) |
+| high-efficiency (HE settings) | (none) | **[UNMAPPED]** Central only |
+| extremely-high-throughput (EHT) | disable_11be (inverted) | **[MAPPED]** EHT enable=true → disable_11be=false |
 
 ---
 
