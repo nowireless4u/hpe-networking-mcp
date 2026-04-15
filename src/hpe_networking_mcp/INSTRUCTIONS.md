@@ -9,7 +9,7 @@ Tools are namespaced by platform:
 - `greenlake_*` — HPE GreenLake (Platform services, subscriptions, workspaces)
 
 # CRITICAL RULES
-1. **Never assume IDs or MAC addresses.** Always retrieve them with the appropriate tools before using them.
+1. **Never assume IDs or MAC addresses.** Always retrieve them with the appropriate tools before using them. This especially applies to org_id — ALWAYS call `mist_get_self(action_type=account_info)` first to get the correct org_id. Do NOT use an org_id from memory, a previous conversation, or any other source.
 2. **Only send parameters that are needed.** Do not pass empty, null, or irrelevant parameters.
 3. **Only answer based on data returned by tools.** Never infer, estimate, or fabricate network state.
 4. If a tool returns no data or an error, say so explicitly. Do not guess.

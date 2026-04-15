@@ -14,59 +14,86 @@ def register(mcp):
         return """
 Sync WLAN profiles from Juniper Mist to Aruba Central:
 
-1. Call `mist_get_self(action_type=account_info)` to get org_id.
-2. Call `mist_get_configuration_objects(org_id=<org_id>, \
-object_type=org_wlantemplates)` to list all WLAN templates.
-3. For each template, call `mist_get_configuration_objects(org_id=<org_id>, \
-object_type=org_wlans)` and filter WLANs by template_id to get WLANs \
-in that template.
-4. Only sync WLANs that are part of a template (skip site-level WLANs).
-5. Deduplicate: if the same SSID name appears in multiple templates, \
-only process it once.
-6. Skip tunneled SSIDs (interface field set to tunnel modes).
-7. Resolve Mist template variables for each WLAN:
-   a. **RADIUS servers**: for each entry in `auth_servers` and \
+**STEP 1 — Get Mist org_id (MANDATORY FIRST STEP)**
+Call `mist_get_self(action_type=account_info)` to get the correct org_id. \
+Do NOT use any org_id from memory or previous conversations. The org_id \
+returned by this call is the ONLY valid org_id.
+
+**STEP 2 — Find the WLAN and its template assignment**
+a. Call `mist_get_configuration_objects(org_id=<org_id>, \
+object_type=org_wlans, name=<ssid_name>)` to find the target WLAN. \
+Note the `template_id` field — this tells you which WLAN template it \
+belongs to.
+b. If `template_id` is present: call \
+`mist_get_configuration_objects(org_id=<org_id>, \
+object_type=org_wlantemplates, object_id=<template_id>)` to get the \
+template. Note the template `name` and `sitegroup_ids` array — these \
+are the site groups the template is assigned to.
+c. If `sitegroup_ids` is not empty: for each sitegroup_id, call \
+`mist_get_configuration_objects(org_id=<org_id>, \
+object_type=org_sitegroups, object_id=<sitegroup_id>)` to get the \
+site group name. Record the site group names for assignment mapping.
+d. If no `template_id` — this is a site-level WLAN. Note this for \
+the user but still proceed if they want to sync it.
+
+**STEP 3 — Skip tunneled SSIDs**
+If the WLAN has `interface` set to a tunnel mode (not "all" or \
+"ethernet"), skip it and tell the user.
+
+**STEP 4 — Resolve Mist template variables**
+a. **RADIUS servers**: for each entry in `auth_servers` and \
 `acct_servers`, check if `host` uses a template variable \
 (e.g. `{{auth_srv1}}`). If so, call \
 `mist_get_org_or_site_info(org_id=<org_id>, site_id=<site_id>, \
 info_type=setting)` for a representative site to get `vars` and \
 resolve the variable to the actual FQDN or IP address.
-   b. **PSK**: get `auth.psk` directly (Mist PSKs are inline values).
-   c. **VLAN**: get VLAN IDs from `dynamic_vlan` or `vlan_id` directly.
-8. For each unique WLAN:
-   a. Call `central_get_wlan_profiles(ssid=<ssid_name>)` to check if \
-it already exists in Central.
-   b. If it EXISTS in Central: compare the mapped fields between \
-the Mist WLAN and the Central profile. Show the user a table of \
-differences (field name, Mist value, Central value). If there are \
-differences, ask the user: "Use Mist as source (overwrite Central)?", \
-"Keep Central as-is?", or "Skip this SSID?". If no differences, \
-report as "in sync" and skip.
-   c. If it does NOT exist in Central: map the Mist WLAN fields to \
-Central format. Key mappings: ssid→essid.name, auth.type→opmode, \
-auth.psk→personal-security.wpa-passphrase, dynamic_psk→mpsk settings, \
-vlan_id→vlan-name, bands→rf-band, dtim→dtim-period, \
+b. **PSK**: get `auth.psk` directly (Mist PSKs are inline values).
+c. **VLAN**: get VLAN IDs from `dynamic_vlan` or `vlan_id` directly.
+
+**STEP 5 — Check if SSID already exists in Central**
+Call `central_get_wlan_profiles(ssid=<ssid_name>)` to check.
+a. If it EXISTS: compare mapped fields. Show the user a table of \
+differences (field name, Mist value, Central value). Ask: \
+"Use Mist as source (overwrite Central)?", "Keep Central as-is?", \
+or "Skip?". If no differences, report "in sync" and skip.
+b. If it does NOT exist: proceed to create.
+
+**STEP 6 — Map fields from Mist to Central format**
+Key opmode mappings (use ONLY these valid Central values):
+- Mist auth.type="psk" + pairwise=["wpa2-ccmp"] → opmode="WPA2_PERSONAL"
+- Mist auth.type="psk" + pairwise=["wpa3"] → opmode="WPA3_SAE"
+- Mist auth.type="eap" + pairwise=["wpa2-ccmp"] → opmode="WPA2_ENTERPRISE"
+- Mist auth.type="eap" + pairwise=["wpa3","wpa2-ccmp"] → opmode="WPA3_ENTERPRISE_CCM_128"
+- Mist dynamic_psk.enabled=true → opmode="WPA2_MPSK_AES"
+Other field mappings: ssid→essid.name, auth.psk→personal-security.wpa-passphrase, \
+vlan_id→vlan-id-range, bands→rf-band, dtim→dtim-period, \
 isolation→client-isolation, rateset→data rate profile, \
-arp_filter→broadcast-filter-ipv4, roam_mode→dot11r.
-9. RADIUS server mapping (use server groups, never inline servers):
-   a. Check if a matching server group exists: call \
+arp_filter→broadcast-filter-ipv4, roam_mode="11r"→dot11r=true.
+
+**STEP 7 — RADIUS server mapping**
+a. Check if a matching server group exists: call \
 `central_get_server_groups` and compare server addresses.
-   b. If no match: note that a server group needs to be created \
-manually or create one if write tools support it.
-   c. For per-site variation: create Central aliases matching the \
-Mist variable names and set per-scope values to match each site's vars.
-   d. Map NAS ID/IP, CoA, and RadSec settings directly.
-10. Resolve VLANs from Mist VLAN IDs to Central named VLANs. \
-Call `central_manage_wlan_profile` to create the profile.
-11. Assignment mapping:
-   - Mist template applies to org → Note: assign at Central Global scope
-   - Mist template assigned to site group → Note: assign to matching \
-Central site collection (create if missing, prompt user)
-   - Mist template assigned to specific sites → Note: assign to those \
-Central sites (create if missing, prompt user)
-12. Report summary: WLANs created, updated, in sync, skipped (tunneled), \
-variables resolved, server groups matched/created, and assignment \
-recommendations.
+b. If no match: note that a server group needs to be created.
+c. Map NAS ID/IP, CoA, and RadSec settings directly.
+
+**STEP 8 — Create the Central WLAN profile**
+Call `central_manage_wlan_profile` with the mapped payload.
+
+**STEP 9 — Assignment mapping (REQUIRED — do not skip)**
+Based on the template assignment found in Step 2:
+- If Mist template has no `sitegroup_ids` (org-wide) → tell user \
+to assign at Central Global scope
+- If Mist template has `sitegroup_ids` → for each site group name \
+found in Step 2c, check if a matching Central site collection exists. \
+Tell the user which site collections to assign the profile to. If \
+a matching collection doesn't exist, tell the user it needs to be created.
+- Report: "In Mist, this WLAN is in template '<name>' assigned to \
+site groups: <list>. In Central, assign the profile to matching \
+site collections: <list>."
+
+**STEP 10 — Report summary**
+WLANs created, updated, in sync, skipped (tunneled), variables \
+resolved, and assignment recommendations.
         """.strip()
 
     @mcp.prompt
