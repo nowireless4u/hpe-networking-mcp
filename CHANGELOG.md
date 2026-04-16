@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.8.3.0] - 2026-04-16
+
+### Added — Central Roles & Policy Tools
+- `central_get_net_groups` / `central_manage_net_group` — netdestinations (hosts, FQDNs, subnets, IP ranges, VLANs, ports)
+- `central_get_net_services` / `central_manage_net_service` — protocol/port definitions
+- `central_get_object_groups` / `central_manage_object_group` — named collections for ACL references
+- `central_get_role_acls` / `central_manage_role_acl` — role-based access control lists
+- `central_get_policies` / `central_manage_policy` — firewall policies (ordered rule sets)
+- `central_get_policy_groups` / `central_manage_policy_group` — policy evaluation ordering
+- `central_get_role_gpids` / `central_manage_role_gpid` — role to policy group ID mapping
+- All write tools support shared (library) and local (scoped) objects via scope_id and device_function params
+- Central tool count: 58 → 72
+
+[v0.8.3.0]: https://github.com/nowireless4u/hpe-networking-mcp/releases/tag/v0.8.3.0
+
 ## [v0.8.2.0] - 2026-04-15
 
 ### Added — Central Role Management
