@@ -9,7 +9,7 @@ and `greenlake_*` (HPE GreenLake).
 | Platform | Read-Only Tools | Write Tools | Prompts | Total |
 |----------|----------------|-------------|---------|-------|
 | Juniper Mist | 31 | 4 | 2 | 37 |
-| Aruba Central | 52 | 6 | 12 | 70 |
+| Aruba Central | 59 | 13 | 12 | 84 |
 | Cross-Platform | -- | 1 | 3 | 4 |
 | HPE GreenLake (static mode) | 10 | -- | -- | 10 |
 | HPE GreenLake (dynamic mode) | 3 | -- | -- | 3 |
@@ -503,7 +503,7 @@ GreenLake supports two mutually exclusive tool modes controlled by
 
 ---
 
-## Aruba Central (58 tools + 12 prompts)
+## Aruba Central (72 tools + 12 prompts)
 
 ### Sites
 
@@ -1085,6 +1085,40 @@ to translate between Central's named/aliased config and Mist's inline config.
 | scope_id | str | No | Scope ID for local roles. Omit for shared/library roles. |
 | device_function | str | No | `CAMPUS_AP`, `ACCESS_SWITCH`, `BRANCH_GW`, etc. Required with scope_id. |
 | confirmed | bool | No | Set to true after user confirms update/delete. |
+
+### Security & Policy
+
+All tools below follow the same CRUD pattern. Read tools accept an optional `name` to get a specific
+resource or omit for all. Write tools accept `name`, `action_type` (create/update/delete), `payload`,
+and optional `scope_id` + `device_function` for local (scoped) objects.
+
+#### `central_get_net_groups` / `central_manage_net_group`
+
+> Network groups (netdestinations) — reusable named objects defining hosts, FQDNs, subnets, IP ranges, VLANs, ports for use in ACLs and policies.
+
+#### `central_get_net_services` / `central_manage_net_service`
+
+> Network service definitions — protocol and port combinations (TCP/443, UDP/53, etc.) for identifying traffic types in policies.
+
+#### `central_get_object_groups` / `central_manage_object_group`
+
+> Object groups — named collections of addresses, services, or other objects for ACL references.
+
+#### `central_get_role_acls` / `central_manage_role_acl`
+
+> Role ACLs — access control lists with ordered permit/deny rules referencing net-groups and net-services.
+
+#### `central_get_policies` / `central_manage_policy`
+
+> Firewall policies — ordered rule sets that match traffic and apply actions (permit, deny, NAT, redirect, policy-based routing).
+
+#### `central_get_policy_groups` / `central_manage_policy_group`
+
+> Policy groups — define the evaluation sequence for all firewall policies. Collection-level resource (no per-name path).
+
+#### `central_get_role_gpids` / `central_manage_role_gpid`
+
+> Role GPIDs — map roles to policy group IDs. Controls which policy group is assigned to each role.
 
 ### Guided Prompts
 

@@ -136,6 +136,10 @@ When asked to create a new site based on an existing site:
   - Use `central_manage_role` to create, update, or delete roles — requires `ENABLE_CENTRAL_WRITE_TOOLS=true`
   - Roles can be shared (library-level) or local (scoped to a site/collection). Use `scope_id` and `device_function` params for local roles.
   - After creating, use `central_manage_config_assignment` to assign the role to a scope
+- **Security & Policy**: central_get_net_groups, central_manage_net_group, central_get_net_services, central_manage_net_service, central_get_object_groups, central_manage_object_group, central_get_role_acls, central_manage_role_acl, central_get_policies, central_manage_policy, central_get_policy_groups, central_manage_policy_group, central_get_role_gpids, central_manage_role_gpid
+  - Net-groups define WHERE traffic goes (hosts, FQDNs, subnets). Net-services define WHAT traffic is (protocol/port).
+  - Role-ACLs use net-groups + net-services to build permit/deny rules. Policies group ACL rules. Policy-groups order policies. Role-GPIDs map roles to policy-groups.
+  - All write tools support shared (library) and local (scoped) objects via scope_id + device_function params.
 - **Aliases, Server Groups, Named VLANs**: central_get_aliases, central_get_server_groups, central_get_named_vlans
   - Use `central_get_aliases` to resolve alias names used in WLAN profiles (SSID aliases, PSK aliases), server groups, and VLANs. Aliases can be scoped per-site.
   - Use `central_get_server_groups` to resolve a server group name (from auth-server-group) to actual RADIUS server addresses (FQDN or IP), ports, and settings
