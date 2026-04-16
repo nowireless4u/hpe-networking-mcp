@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All write tools support shared (library) and local (scoped) objects via scope_id and device_function params
 - Central tool count: 58 → 72
 
+### Fixed
+- Docker publish workflow now supports 4-digit versioning. Switched from `type=semver` (3-digit only) to `type=ref,event=tag` which uses the git tag as-is.
+
 [v0.8.3.0]: https://github.com/nowireless4u/hpe-networking-mcp/releases/tag/v0.8.3.0
 
 ## [v0.8.2.0] - 2026-04-15
