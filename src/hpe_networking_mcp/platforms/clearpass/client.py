@@ -76,9 +76,7 @@ class ClearPassTokenManager:
             raise ClearPassAuthError(f"ClearPass OAuth2 request failed: {e}") from e
 
         if response.status_code != 200:
-            raise ClearPassAuthError(
-                f"ClearPass OAuth2 failed with HTTP {response.status_code}: {response.text[:200]}"
-            )
+            raise ClearPassAuthError(f"ClearPass OAuth2 failed with HTTP {response.status_code}: {response.text[:200]}")
 
         try:
             data = response.json()
@@ -108,7 +106,7 @@ def _is_auth_error(response: Any) -> bool:
     return isinstance(status, int) and status in _AUTH_ERROR_STATUSES
 
 
-_TOKEN_MANAGER_ATTR = "_hpe_token_manager"
+_TOKEN_MANAGER_ATTR = "_hpe_token_manager"  # nosec B105 — attribute name, not a credential
 _PATCH_MARKER = "_hpe_auth_retry_patched"
 
 
