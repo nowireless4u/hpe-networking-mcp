@@ -147,7 +147,7 @@ async def clearpass_generate_guest_pass(
         from pyclearpass.api_guestactions import ApiGuestActions
 
         client = await get_clearpass_session(ApiGuestActions)
-        endpoint = "pass" if pass_type == "digital" else "receipt"
+        endpoint = "pass" if pass_type == "digital" else "receipt"  # nosec B105 — API path, not a password
         return client._send_request(f"/guest/{guest_id}/{endpoint}", "post", query={})
     except Exception as e:
         return f"Error generating guest pass: {e}"
