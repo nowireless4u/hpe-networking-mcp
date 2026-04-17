@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.9.0.1] - 2026-04-17
+
+### Fixed
+- **ClearPass tools returning 403 after ~8 hours** (#130) — OAuth2 access tokens
+  issued via `client_credentials` expire after 8 hours, but the server cached the
+  startup token indefinitely. After the token aged out every `clearpass_*` tool
+  returned `403 Forbidden` even for Super Administrator clients. Replaced the
+  single-shot cache with a pycentral-style reactive refresh: on any 401/403 the
+  token is invalidated, a fresh one is fetched from `/oauth`, and the original
+  request is replayed once. Implemented as a class-level patch on
+  `ClearPassAPILogin._send_request` since pyclearpass methods bypass
+  instance-level overrides.
+
 ## [v0.9.0.0] - 2026-04-16
 
 ### Added — Aruba ClearPass Platform

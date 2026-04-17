@@ -107,34 +107,22 @@ async def lifespan(server: FastMCP):
     # --- ClearPass ---
     if config.clearpass:
         try:
-            from pyclearpass.api_localserverconfiguration import ApiLocalServerConfiguration
+            from hpe_networking_mcp.platforms.clearpass.client import ClearPassTokenManager
 
-            test_client = ApiLocalServerConfiguration(
-                server=config.clearpass.server,
-                granttype="client_credentials",
-                clientid=config.clearpass.client_id,
-                clientsecret=config.clearpass.client_secret,
-            )
-            test_client.verify_ssl = config.clearpass.verify_ssl
-            version_info = test_client.get_server_version()
-            # Check if auth failed — pyclearpass returns error dicts instead of raising
-            if not test_client.api_token:
-                error_detail = (
-                    version_info.get("detail", "unknown error") if isinstance(version_info, dict) else str(version_info)
-                )
-                raise RuntimeError(f"OAuth2 authentication failed: {error_detail}")
-            # Cache token for reuse across all tool calls
-            context["clearpass_token"] = test_client.api_token
+            token_manager = ClearPassTokenManager(config.clearpass)
+            # Acquire an initial token so bad credentials fail loudly at startup
+            # instead of on the first tool call.
+            token_manager.get_token()
+            context["clearpass_token_manager"] = token_manager
             context["clearpass_config"] = config.clearpass
-            version_str = version_info.get("app_major_version", "unknown") if isinstance(version_info, dict) else "?"
-            logger.info("ClearPass: connection verified (version: {})", version_str)
+            logger.info("ClearPass: connection verified")
         except Exception as e:
             logger.warning("ClearPass: failed to initialize — {}", e)
             context["clearpass_config"] = None
-            context["clearpass_token"] = None
+            context["clearpass_token_manager"] = None
     else:
         context["clearpass_config"] = None
-        context["clearpass_token"] = None
+        context["clearpass_token_manager"] = None
 
     try:
         yield context
