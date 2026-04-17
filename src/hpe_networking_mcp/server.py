@@ -119,7 +119,9 @@ async def lifespan(server: FastMCP):
             version_info = test_client.get_server_version()
             # Check if auth failed — pyclearpass returns error dicts instead of raising
             if not test_client.api_token:
-                error_detail = version_info.get("detail", "unknown error") if isinstance(version_info, dict) else str(version_info)
+                error_detail = (
+                    version_info.get("detail", "unknown error") if isinstance(version_info, dict) else str(version_info)
+                )
                 raise RuntimeError(f"OAuth2 authentication failed: {error_detail}")
             # Cache token for reuse across all tool calls
             context["clearpass_token"] = test_client.api_token
