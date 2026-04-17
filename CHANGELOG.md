@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.9.1.0] - 2026-04-17
+
+### Added — Cross-Platform Site Health Check
+- New `site_health_check` tool that aggregates site health across every
+  enabled platform in a single call. Resolves the site on Mist and Central,
+  pulls stats/alerts/alarms in parallel, and — when ClearPass is configured —
+  matches the site's network access devices by IP to count active sessions
+  and recent auth failures. Returns a compact report with overall status
+  (healthy/degraded/critical), top alerts, and concrete next-step tool
+  recommendations. Replaces ~8–12 separate tool calls, cutting response
+  tokens by an order of magnitude for common site-health queries.
+- Registered when at least Mist or Central is enabled; ClearPass is additive.
+
 ## [v0.9.0.2] - 2026-04-17
 
 ### Fixed

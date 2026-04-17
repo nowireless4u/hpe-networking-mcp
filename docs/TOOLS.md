@@ -11,7 +11,7 @@ Tools are namespaced by platform: `mist_*` (Juniper Mist), `central_*` (Aruba Ce
 | Juniper Mist | 31 | 4 | 2 | 37 |
 | Aruba Central | 59 | 13 | 12 | 84 |
 | Aruba ClearPass | 55 | 72 | -- | 127 |
-| Cross-Platform | -- | 1 | 3 | 4 |
+| Cross-Platform | 1 | 1 | 3 | 5 |
 | HPE GreenLake (static mode) | 10 | -- | -- | 10 |
 | HPE GreenLake (dynamic mode) | 3 | -- | -- | 3 |
 
@@ -1144,9 +1144,29 @@ LLM through a recommended sequence of tool calls for common network operations.
 
 ---
 
-## Cross-Platform (1 tool + 3 prompts)
+## Cross-Platform (2 tools + 3 prompts)
 
-Registered when both Mist and Central platforms are enabled.
+Tools that span multiple platforms. Each replaces several individual tool calls with a single aggregated response.
+
+### `site_health_check`
+
+> **One-call site health snapshot across every enabled platform.** Aggregates Mist, Central, and (optionally) ClearPass into a single compact report. Replaces ~8–12 separate tool calls. Registered when at least Mist or Central is enabled; ClearPass is additive.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| site_name | str | Yes | Exact site name as shown in Mist and/or Central. |
+| time_window_hours | int | No | Lookback window for alarms, sessions, and events (1–168, default 24). |
+
+**What it returns:**
+
+- `overall_status` — `healthy`, `degraded`, `critical`, or `unknown`.
+- `headline` — One-line summary suitable for the user.
+- `mist` — Site stats (device/client counts, connected/offline), top alarms, critical count.
+- `central` — Health score, device/client totals, active alerts, critical count, top alerts.
+- `clearpass` — NADs matched to the site's device IPs, active session count, recent auth-failure count (when ClearPass is configured).
+- `recommendations` — Concrete follow-up tool calls with the right site_id already filled in, targeting only the platforms and categories that showed issues.
+
+**Typical use:** "How is site X doing?", "Is site X healthy?", "Give me a status on site X." After reviewing the summary, follow the recommendations for deeper investigation — do not re-query the per-platform health tools unless needed.
 
 ### `manage_wlan_profile`
 

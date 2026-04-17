@@ -192,6 +192,12 @@ The same cross-platform behavior applies to **sites** — when asked generically
 
 **Naming convention**: use the same name on both platforms so they can be matched during sync operations.
 
+## Cross-Platform Site Health Check
+
+**PREFER**: When the user asks how a site is doing, whether a site is healthy, or for an at-a-glance status of a specific site, call `site_health_check(site_name=<name>)` first. It aggregates Mist site stats and alarms, Central site health and active alerts, and (when ClearPass is configured) session and auth-failure counts for the site's NADs — returning a single compact report with overall status and concrete next-step recommendations. This replaces ~8–12 individual tool calls.
+
+After reading the report, drill down into specific issues using the exact tool calls the report recommends. Only fall back to calling the per-platform health tools directly if `site_health_check` is unavailable or the user explicitly asks for platform-specific detail beyond what the summary returns.
+
 ## Guidelines
 - ALWAYS start with `central_get_site_name_id_mapping` for a lightweight overview.
 - Call `central_get_site_health` with a `site_names` filter for health data — never without a filter unless explicitly requested.

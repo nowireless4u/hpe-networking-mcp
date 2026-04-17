@@ -42,7 +42,7 @@ Managing HPE networking infrastructure with AI assistants today means juggling m
 | **Guided Prompts** | ✅ | ✅ | — | — |
 | **Dynamic API Discovery** | — | — | ✅ | — |
 | **Tools** | **35 + 2 prompts** | **72 + 12 prompts** | **3 or 10** | **127** |
-| **Cross-Platform** | **1 tool + 3 prompts** | **1 tool + 3 prompts** | — | — |
+| **Cross-Platform** | **2 tools + 3 prompts** | **2 tools + 3 prompts** | — | **1 tool** |
 
 > **GreenLake tool count**: 3 tools in **dynamic mode** (default) — a meta-tool system that can discover and invoke any GreenLake API endpoint. 10 tools in **static mode** — dedicated tools for each endpoint. Set via `MCP_TOOL_MODE` environment variable.
 
@@ -63,11 +63,15 @@ The Central module includes 12 guided prompts — multi-step workflow templates 
 - **Scope Configuration Overview** — View committed configuration resources at a scope level, grouped by persona and category.
 - **Scope Effective Config** — View effective (inherited + committed) configuration at a scope, showing what each level contributes.
 
-### Cross-Platform WLAN Sync
+### Cross-Platform Tools
 
-1 unified tool + 3 prompts for WLAN migration between Juniper Mist and Aruba Central. Registered when both platforms are enabled.
+Tools that span multiple platforms and return pre-aggregated results — each one replaces several individual tool calls, so the AI gets a compact answer instead of paging through raw responses.
 
-- **Manage WLAN Profile** (`manage_wlan_profile`) — The primary entry point for all WLAN operations. Automatically checks both Mist and Central for the SSID and returns the correct sync workflow. Detects cross-platform scenarios without relying on the AI to follow instructions.
+- **Site Health Check** (`site_health_check`) — One call returns a unified health report for a site across every enabled platform: Mist site stats and alarms, Central site health and active alerts, and (when ClearPass is configured) session and auth-failure counts for the site's network access devices. Replaces ~8–12 separate tool calls with a compact report including overall status, top alerts, and concrete next-step recommendations. Registered when at least Mist or Central is enabled; ClearPass is additive.
+- **Manage WLAN Profile** (`manage_wlan_profile`) — The primary entry point for all WLAN operations. Automatically checks both Mist and Central for the SSID and returns the correct sync workflow. Detects cross-platform scenarios without relying on the AI to follow instructions. Requires both Mist and Central.
+
+#### Cross-Platform WLAN Sync Prompts
+
 - **Sync WLANs Mist → Central** — Resolve Mist template variables, map fields, create Central WLAN profiles, assign to matching scopes.
 - **Sync WLANs Central → Mist** — Resolve Central aliases, server groups, and named VLANs, create Mist WLANs with template variables.
 - **Sync WLANs Bidirectional** — Compare WLANs across both platforms, show field-level differences, and sync in either direction.
@@ -435,7 +439,10 @@ hpe-networking-mcp/
 │       ├── mist/                # 35 Mist tools + 2 prompts + API client
 │       ├── central/             # 72 Central tools + 12 prompts + API client
 │       ├── greenlake/           # 3 dynamic or 10 static tools + OAuth2 client
-│       └── clearpass/           # 127 ClearPass tools + pyclearpass SDK client
+│       ├── clearpass/           # 127 ClearPass tools + pyclearpass SDK client
+│       ├── manage_wlan.py       # Cross-platform WLAN management tool
+│       ├── sync_prompts.py      # Cross-platform WLAN sync prompts
+│       └── site_health_check.py # Cross-platform site health aggregator
 ├── tests/                       # Unit and integration tests (176 tests)
 ├── docs/                        # PRD, PRP, tool reference
 ├── secrets/                     # Secret files (only .example committed)

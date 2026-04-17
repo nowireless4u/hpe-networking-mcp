@@ -168,6 +168,10 @@ def create_server(config: ServerConfig) -> FastMCP:
         _register_sync_tools(mcp)
         _register_sync_prompts(mcp)
 
+    # --- Cross-platform site health check (requires at least Mist or Central) ---
+    if config.mist or config.central:
+        _register_site_health_check(mcp, config)
+
     # --- Write tool visibility (per-platform) ---
     from fastmcp.server.transforms import Visibility
 
@@ -233,3 +237,13 @@ def _register_sync_prompts(mcp: FastMCP) -> None:
         logger.info("Cross-platform: registered sync prompts")
     except Exception as e:
         logger.warning("Cross-platform: failed to load sync prompts — {}", e)
+
+
+def _register_site_health_check(mcp: FastMCP, config: ServerConfig) -> None:
+    """Register the cross-platform site_health_check aggregation tool."""
+    try:
+        from hpe_networking_mcp.platforms.site_health_check import register
+
+        register(mcp, config)
+    except Exception as e:
+        logger.warning("Cross-platform: failed to load site_health_check — {}", e)
