@@ -59,7 +59,7 @@ class GreenLakeSecrets:
 
 @dataclass
 class ClearPassSecrets:
-    server: str  # e.g. https://clearpass.example.com:443/api
+    server: str  # e.g. https://clearpass.example.com/api
     client_id: str
     client_secret: str
     verify_ssl: bool = True

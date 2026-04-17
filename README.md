@@ -302,36 +302,45 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 | `greenlake_client_secret` | OAuth2 client secret | HPE GreenLake Platform > API Clients |
 | `greenlake_workspace_id` | GreenLake workspace ID | HPE GreenLake Platform > Workspaces |
 
+#### Aruba ClearPass
+
+| Secret File | Description | How to Obtain |
+|-------------|-------------|---------------|
+| `clearpass_server` | ClearPass API URL | `https://your-clearpass-server/api` — the CPPM server hostname with `/api` path |
+| `clearpass_client_id` | OAuth2 client ID | ClearPass Admin > API Clients > Create API Client |
+| `clearpass_client_secret` | OAuth2 client secret | ClearPass Admin > API Clients > Client Secret |
+| `clearpass_verify_ssl` | SSL verification (optional) | `true` (default) or `false` for self-signed certificates |
+
 ---
 
 ## Architecture
 
 ```
-┌──────────────────────────────────────────────────────┐
-│              MCP Client (Claude, VS Code, etc.)       │
-└──────────────────────┬───────────────────────────────┘
-                       │ Streamable HTTP
-                       ▼
-┌──────────────────────────────────────────────────────┐
-│           HPE Networking MCP Server (:8000)           │
-│                                                      │
-│   ┌────────────┐ ┌────────────┐ ┌────────────────┐  │
-│   │   Mist     │ │  Central   │ │   GreenLake    │  │
-│   │  mist_*    │ │ central_*  │ │  greenlake_*   │  │
-│   │ 35+2 prmt  │ │ 48+15 prmt │ │  3/10 tools    │  │
-│   └─────┬──────┘ └─────┬──────┘ └───────┬────────┘  │
-│         │              │                │            │
-└─────────┼──────────────┼────────────────┼────────────┘
-          ▼              ▼                ▼
-   Mist Cloud API   Aruba Central   GreenLake API
-                       API
+┌─────────────────────────────────────────────────────────────────────┐
+│                MCP Client (Claude, VS Code, etc.)                   │
+└────────────────────────────┬────────────────────────────────────────┘
+                             │ Streamable HTTP
+                             ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                 HPE Networking MCP Server (:8000)                    │
+│                                                                     │
+│  ┌──────────┐ ┌──────────┐ ┌──────────────┐ ┌──────────────────┐  │
+│  │   Mist   │ │ Central  │ │  GreenLake   │ │    ClearPass     │  │
+│  │  mist_*  │ │central_* │ │ greenlake_*  │ │   clearpass_*    │  │
+│  │35+2 prmt │ │48+15 prmt│ │  3/10 tools  │ │   127 tools      │  │
+│  └────┬─────┘ └────┬─────┘ └──────┬───────┘ └────────┬─────────┘  │
+│       │            │              │                   │             │
+└───────┼────────────┼──────────────┼───────────────────┼─────────────┘
+        ▼            ▼              ▼                   ▼
+  Mist Cloud    Aruba Central   GreenLake API    ClearPass CPPM
+     API            API                              API
 ```
 
 **Key design decisions:**
 
 - **FastMCP** framework with Python 3.12+
 - **Streamable HTTP** transport (modern MCP standard)
-- **Tool namespacing** — `mist_*`, `central_*`, `greenlake_*` prefixes prevent collisions
+- **Tool namespacing** — `mist_*`, `central_*`, `greenlake_*`, `clearpass_*` prefixes prevent collisions
 - **Platform isolation** — each module manages its own API client and auth; a failing platform doesn't affect the others
 - **Non-root container** — runs as `mcpuser` (uid 1000)
 
@@ -341,7 +350,7 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 
 Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) are supported with safety controls:
 
-- **Disabled by default** — enable per-platform with `ENABLE_MIST_WRITE_TOOLS=true` or `ENABLE_CENTRAL_WRITE_TOOLS=true`
+- **Disabled by default** — enable per-platform with `ENABLE_MIST_WRITE_TOOLS=true`, `ENABLE_CENTRAL_WRITE_TOOLS=true`, or `ENABLE_CLEARPASS_WRITE_TOOLS=true`
 - **Elicitation required** — write tools prompt for user confirmation before executing
 - **Annotation-based** — all tools carry MCP annotations (`readOnlyHint`, `destructiveHint`, etc.)
 
@@ -349,6 +358,7 @@ Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) ar
 |---------------------|---------|--------|
 | `ENABLE_MIST_WRITE_TOOLS` | `false` | Enable Mist write/mutation tools |
 | `ENABLE_CENTRAL_WRITE_TOOLS` | `false` | Enable Central write/mutation tools |
+| `ENABLE_CLEARPASS_WRITE_TOOLS` | `false` | Enable ClearPass write/mutation tools |
 | `DISABLE_ELICITATION` | `false` | Skip user confirmation for write tools (**use with caution**) |
 
 ---
@@ -362,6 +372,7 @@ Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) ar
 | `LOG_LEVEL` | `info` | Logging level (`debug`, `info`, `warning`, `error`) |
 | `ENABLE_MIST_WRITE_TOOLS` | `false` | Enable Mist write/mutation tools |
 | `ENABLE_CENTRAL_WRITE_TOOLS` | `false` | Enable Central write/mutation tools |
+| `ENABLE_CLEARPASS_WRITE_TOOLS` | `false` | Enable ClearPass write/mutation tools |
 | `DISABLE_ELICITATION` | `false` | Disable write confirmation prompts |
 | `MCP_TOOL_MODE` | `dynamic` | GreenLake tool mode: `dynamic` (3 meta-tools) or `static` (10 dedicated tools) |
 
@@ -422,8 +433,9 @@ hpe-networking-mcp/
 │   ├── middleware/              # Elicitation and null-strip middleware
 │   └── platforms/
 │       ├── mist/                # 35 Mist tools + 2 prompts + API client
-│       ├── central/             # 48 Central tools + 15 prompts + API client
-│       └── greenlake/           # 3 dynamic or 10 static tools + OAuth2 client
+│       ├── central/             # 72 Central tools + 12 prompts + API client
+│       ├── greenlake/           # 3 dynamic or 10 static tools + OAuth2 client
+│       └── clearpass/           # 127 ClearPass tools + pyclearpass SDK client
 ├── tests/                       # Unit and integration tests (176 tests)
 ├── docs/                        # PRD, PRP, tool reference
 ├── secrets/                     # Secret files (only .example committed)
@@ -473,6 +485,12 @@ Central: disabled (missing secrets: central_client_id, central_client_secret)
 - Verify `greenlake_api_base_url` (typically `https://global.api.greenlake.hpe.com`)
 - Check that the client credentials are valid and the workspace ID is correct
 - Token refresh happens automatically — if it fails, check the logs for details
+
+**ClearPass** — `ClearPass: failed to initialize`:
+- Verify `clearpass_server` is the correct CPPM hostname with `/api` path (e.g., `https://clearpass.example.com/api`)
+- Ensure the OAuth2 API client has been created in ClearPass Admin with `client_credentials` grant type
+- For self-signed certificates, set `clearpass_verify_ssl` to `false`
+- Check the logs for the specific error: `docker compose logs | grep ClearPass`
 
 ### Connection Refused on Port 8000
 
@@ -531,10 +549,12 @@ Change the mode in `docker-compose.yml` under `environment`:
 
 ### Write Tools Not Visible
 
-Write tools are disabled by default. Enable them in `docker-compose.yml`:
+Write tools are disabled by default. Enable them per-platform in `docker-compose.yml`:
 
 ```yaml
-- ENABLE_WRITE_TOOLS=true
+- ENABLE_MIST_WRITE_TOOLS=true
+- ENABLE_CENTRAL_WRITE_TOOLS=true
+- ENABLE_CLEARPASS_WRITE_TOOLS=true
 ```
 
 Then restart: `docker compose restart`
