@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.9.1.1] - 2026-04-17
+
+### Fixed
+- **`site_health_check` ClearPass matching missed gateway VIPs and subnet NADs.**
+  The initial implementation matched site device IPs against ClearPass NAD
+  `ip_address` fields using exact-string equality, so any NAD defined as a
+  CIDR (`10.1.1.0/24`) or dashed range (`10.1.1.1-10.1.1.50`) was skipped
+  even when site devices sat inside it. And because session `nasipaddress`
+  fields point at the device that actually sourced the RADIUS request —
+  usually a gateway cluster VIP in tunneled Aruba deployments — sessions
+  coming from a VIP that wasn't in the Mist/Central device inventory were
+  invisible to the aggregator.
+- NADs are now parsed into IP/CIDR/range matchers using Python's
+  `ipaddress` module. A NAD is treated as a "site NAD" if its address
+  space *contains* any Mist/Central device IP at the site. Sessions are
+  pulled time-bounded and filtered client-side by testing whether each
+  session's `nasipaddress` falls inside any site NAD's address space —
+  catching VIP-sourced sessions even when the VIP itself isn't in any
+  device inventory. System events are counted similarly, filtered by
+  description mentions of matched NAD names.
+- `ClearPassSummary` gained `matched_nad_names: list[str]` so the report
+  shows which NADs were matched (first 10).
+
 ## [v0.9.1.0] - 2026-04-17
 
 ### Added — Cross-Platform Site Health Check
