@@ -51,6 +51,7 @@ class CentralSummary(BaseModel):
 class ClearPassSummary(BaseModel):
     queried: bool = False
     matched_nads: int = 0
+    matched_nad_names: list[str] = Field(default_factory=list)
     active_sessions: int | None = None
     recent_auth_failures: int | None = None
     note: str | None = None
@@ -271,11 +272,77 @@ def _extract_mist_device_ips(ctx: Context, site_id: str) -> list[str]:
 # --- ClearPass collection ------------------------------------------------
 
 
+def _parse_nad_address(raw: str) -> Any:
+    """Parse a ClearPass NAD ip_address value into a containment matcher.
+
+    ClearPass NADs can be defined as a single IP, CIDR subnet, or dashed
+    IP range (e.g., "10.1.1.0/24", "10.1.1.1-10.1.1.50", "10.1.1.1").
+    Returns an object with a `__contains__` method that accepts an
+    IPv4Address or IPv6Address. Returns None if the value can't be parsed.
+    """
+    from ipaddress import AddressValueError, IPv4Address, IPv4Network, ip_network
+
+    if not raw:
+        return None
+    val = raw.strip()
+    try:
+        if "-" in val:
+            start_s, end_s = (p.strip() for p in val.split("-", 1))
+            # NADs are effectively v4 in practice; constrain the range
+            # matcher to IPv4 so ordered comparisons are type-consistent.
+            start = IPv4Address(start_s)
+            end = IPv4Address(end_s)
+
+            class _RangeMatcher:
+                def __contains__(self, candidate: Any) -> bool:
+                    try:
+                        c = candidate if isinstance(candidate, IPv4Address) else IPv4Address(str(candidate))
+                        return start <= c <= end
+                    except (ValueError, AddressValueError):
+                        return False
+
+            return _RangeMatcher()
+        if "/" in val:
+            return ip_network(val, strict=False)
+        # Single IP — normalize to a /32 network for uniform containment check
+        return IPv4Network(f"{IPv4Address(val)}/32")
+    except (ValueError, AddressValueError):
+        return None
+
+
+def _ip_in_any(ip_str: str, matchers: list[Any]) -> bool:
+    from ipaddress import AddressValueError, ip_address
+
+    if not ip_str or not matchers:
+        return False
+    try:
+        ip = ip_address(ip_str.split("/")[0])
+    except (ValueError, AddressValueError):
+        return False
+    return any(ip in m for m in matchers)
+
+
 async def _collect_clearpass(
     ctx: Context,
     site_device_ips: list[str],
     window_hours: int,
 ) -> ClearPassSummary:
+    """Collect ClearPass data for a site using subnet-aware NAD matching.
+
+    Algorithm:
+      1. Fetch every ClearPass NAD once.
+      2. Parse each NAD's ip_address (single, CIDR, or range) into a matcher.
+      3. A NAD is a "site NAD" if its address space contains any site
+         device IP — this is what the user's gateway VIP pattern requires:
+         the VIP itself isn't in the device inventory, but the physical
+         gateway(s) sit in the same subnet that the NAD covers.
+      4. Pull recent time-bounded sessions (no NAS filter) and count those
+         whose nasipaddress falls inside any site NAD's address space.
+         This catches sessions sourced from the VIP that the device
+         inventory doesn't surface.
+      5. Same idea for system events (filtered by site NAD names in the
+         event text) as a best-effort auth-failure signal.
+    """
     if not site_device_ips:
         return ClearPassSummary(
             queried=False,
@@ -300,41 +367,76 @@ async def _collect_clearpass(
             "get",
         )
         all_nads = nad_resp.get("_embedded", {}).get("items", []) if isinstance(nad_resp, dict) else []
-        ip_set = set(site_device_ips)
-        matched = [n for n in all_nads if n.get("ip_address") in ip_set]
-        summary.matched_nads = len(matched)
-        if not matched:
-            summary.note = "No ClearPass NADs matched site device IPs."
-            return summary
     except Exception as e:
         logger.warning("site_health_check: ClearPass NAD fetch failed — {}", e)
         summary.error = f"NAD fetch failed: {e}"
         return summary
 
-    matched_ips = [n["ip_address"] for n in matched if n.get("ip_address")]
+    # Parse each NAD's address and find NADs whose address space contains
+    # any site device IP. A single NAD can be a subnet covering the whole
+    # site, a range covering a gateway cluster, or a single IP.
+    site_nad_matchers: list[Any] = []
+    site_nad_names: list[str] = []
+    for nad in all_nads:
+        matcher = _parse_nad_address(nad.get("ip_address", ""))
+        if matcher is None:
+            continue
+        if any(_ip_in_any(ip, [matcher]) for ip in site_device_ips):
+            site_nad_matchers.append(matcher)
+            name = nad.get("name") or nad.get("ip_address") or f"NAD {nad.get('id')}"
+            site_nad_names.append(name)
 
+    summary.matched_nads = len(site_nad_matchers)
+    summary.matched_nad_names = site_nad_names[:10]
+    if not site_nad_matchers:
+        summary.note = (
+            "No ClearPass NADs cover any site device IPs. "
+            "Sessions may still exist but can't be attributed to this site from IP alone."
+        )
+        return summary
+
+    # Pull recent sessions with only a time filter, then filter client-side
+    # by matching each session's nasipaddress against the site NAD address
+    # space. Catches sessions sourced from gateway VIPs that aren't in the
+    # device inventory.
+    cutoff = int(time.time()) - window_hours * 3600
     try:
         session_client = await get_clearpass_session(ApiSessionControl)
-        filter_json = json.dumps({"nasipaddress": {"$in": matched_ips}})
+        sess_filter = json.dumps({"acctstarttime": {"$gt": cutoff}})
         sess_resp = await asyncio.to_thread(
             session_client._send_request,
-            f"/session?filter={filter_json}&limit=500",
+            f"/session?filter={sess_filter}&limit=500",
             "get",
         )
-        summary.active_sessions = sess_resp.get("count", 0) if isinstance(sess_resp, dict) else 0
+        items = sess_resp.get("_embedded", {}).get("items", []) if isinstance(sess_resp, dict) else []
+        matched_count = sum(1 for s in items if _ip_in_any(s.get("nasipaddress", ""), site_nad_matchers))
+        summary.active_sessions = matched_count
+        if len(items) >= 500:
+            summary.note = (
+                summary.note + " " if summary.note else ""
+            ) + "Session pull capped at 500 — actual count may be higher."
     except Exception as e:
         logger.warning("site_health_check: ClearPass sessions fetch failed — {}", e)
-        summary.error = (summary.error or "") + f"; sessions fetch failed: {e}"
+        summary.error = (summary.error or "") + f"sessions fetch failed: {e}; "
 
+    # System events: count recent ERROR-level events that reference any
+    # site NAD by name. Best effort — ClearPass doesn't expose a per-NAD
+    # auth-failure counter over REST.
     try:
-        cutoff = int(time.time()) - window_hours * 3600
         event_filter = json.dumps({"timestamp_utc": {"$gt": cutoff}, "level": "ERROR"})
         events_resp = await asyncio.to_thread(
             session_client._send_request,
-            f"/system-event?filter={event_filter}&limit=1",
+            f"/system-event?filter={event_filter}&limit=500",
             "get",
         )
-        summary.recent_auth_failures = events_resp.get("count", 0) if isinstance(events_resp, dict) else 0
+        event_items = events_resp.get("_embedded", {}).get("items", []) if isinstance(events_resp, dict) else []
+        name_set = {n.lower() for n in site_nad_names}
+        if name_set:
+            summary.recent_auth_failures = sum(
+                1 for e in event_items if any(nm in str(e.get("description", "")).lower() for nm in name_set)
+            )
+        else:
+            summary.recent_auth_failures = 0
     except Exception as e:
         logger.warning("site_health_check: ClearPass system events fetch failed — {}", e)
 
