@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.9.0.0] - 2026-04-16
+
+### Added — Aruba ClearPass Platform
+- Complete ClearPass Policy Manager integration using `pyclearpass` SDK with OAuth2 client credentials
+- 127 new tools (55 read + 72 write) across 16 read modules and 15 write modules
+- **Network Devices** — list, get, create, update, delete, clone, configure SNMP/RadSec/CLI/on-connect
+- **Guest Management** — guest user CRUD, credential delivery (SMS/email), digital pass generation, sponsor workflows
+- **Guest Configuration** — pass templates, print templates, web login pages, authentication and manager settings
+- **Endpoints** — endpoint CRUD, device profiler fingerprinting
+- **Session Control** — active session listing, disconnect (by session/username/MAC/IP/bulk), Change of Authorization (CoA)
+- **Roles & Enforcement** — roles, role mappings, enforcement policies, enforcement profiles
+- **Authentication** — authentication sources (LDAP/AD/RADIUS) and methods, with backup/filter/attribute configuration
+- **Certificates** — trust list, client/server/service certificates, CSR generation, enable/disable server certs
+- **Audit & Insight** — login audit, system events, endpoint insights (by MAC/IP/time), Insight alerts and reports with enable/disable/mute/run
+- **Identities** — API clients, local users, static host lists, devices, deny-listed users
+- **Policy Elements** — configuration services (enable/disable), posture policies, device groups, proxy targets, RADIUS/TACACS/application dictionaries
+- **Server Configuration** — admin users/privileges, operator profiles, licenses (online/offline activation), cluster parameters, password policies, attributes, data filters, backup servers, messaging, SNMP trap receivers, policy manager zones
+- **Local Configuration** — server access controls, Active Directory domain join/leave, cluster server management, service start/stop
+- **Integrations** — extensions (start/stop/restart), syslog targets, syslog export filters, endpoint context servers
+- **Utilities** — random password/MPSK generation, connection testing
+- Docker secrets: `clearpass_server`, `clearpass_client_id`, `clearpass_client_secret`, `clearpass_verify_ssl` (optional)
+- Write tools gated behind `ENABLE_CLEARPASS_WRITE_TOOLS` (default: disabled)
+- Token caching — single OAuth2 token acquired at startup, shared across all tool calls
+- SSL verification configurable via `clearpass_verify_ssl` secret (default: true)
+
+### Changed
+- Platform count: 3 → 4 (Mist, Central, GreenLake, ClearPass)
+- Total tool count: ~117 → ~244
+
+[v0.9.0.0]: https://github.com/nowireless4u/hpe-networking-mcp/releases/tag/v0.9.0.0
+
 ## [v0.8.3.0] - 2026-04-16
 
 ### Added — Central Roles & Policy Tools

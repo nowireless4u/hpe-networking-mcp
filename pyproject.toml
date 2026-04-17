@@ -4,12 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hpe-networking-mcp"
-version = "0.8.3.0"
-description = "Unified MCP server for Juniper Mist, Aruba Central, and HPE GreenLake"
+version = "0.9.0.0"
+description = "Unified MCP server for Juniper Mist, Aruba Central, HPE GreenLake, and ClearPass"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
-keywords = ["mcp", "networking", "mist", "aruba", "central", "greenlake", "hpe"]
+keywords = ["mcp", "networking", "mist", "aruba", "central", "greenlake", "clearpass", "hpe"]
 authors = [{ name = "Jon Adams" }]
 
 dependencies = [
@@ -32,6 +32,8 @@ dependencies = [
     "loguru>=0.7.3",
     # Tree data structure for Central scope hierarchy
     "treelib>=1.7.0",
+    # Aruba ClearPass API client
+    "pyclearpass>=1.0.0",
 ]
 
 [project.scripts]
@@ -93,6 +95,7 @@ disallow_untyped_defs = false
 module = [
     "mistapi.*",
     "pycentral.*",
+    "pyclearpass.*",
 ]
 ignore_missing_imports = true
 

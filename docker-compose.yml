@@ -10,9 +10,10 @@ services:
       - MCP_PORT=8000
       - MCP_HOST=0.0.0.0
       - LOG_LEVEL=${LOG_LEVEL:-info}
-      - ENABLE_MIST_WRITE_TOOLS=${ENABLE_MIST_WRITE_TOOLS:-false}
-      - ENABLE_CENTRAL_WRITE_TOOLS=${ENABLE_CENTRAL_WRITE_TOOLS:-false}
-      - DISABLE_ELICITATION=${DISABLE_ELICITATION:-false}
+      - ENABLE_MIST_WRITE_TOOLS=${ENABLE_MIST_WRITE_TOOLS:-true}
+      - ENABLE_CENTRAL_WRITE_TOOLS=${ENABLE_CENTRAL_WRITE_TOOLS:-true}
+      - ENABLE_CLEARPASS_WRITE_TOOLS=${ENABLE_CLEARPASS_WRITE_TOOLS:-true}
+      - DISABLE_ELICITATION=${DISABLE_ELICITATION:-true}
       - MCP_TOOL_MODE=${MCP_TOOL_MODE:-dynamic}
     secrets:
       # Mist (remove lines for platforms you don't use)
@@ -27,6 +28,11 @@ services:
       - greenlake_client_id
       - greenlake_client_secret
       - greenlake_workspace_id
+      # ClearPass (remove lines for platforms you don't use)
+      - clearpass_server
+      - clearpass_client_id
+      - clearpass_client_secret
+      - clearpass_verify_ssl
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "uv", "run", "--no-sync", "python", "-c", "import httpx; r = httpx.get('http://localhost:8000/mcp', timeout=5)"]
@@ -59,3 +65,12 @@ secrets:
     file: ./secrets/greenlake_client_secret
   greenlake_workspace_id:
     file: ./secrets/greenlake_workspace_id
+  # ClearPass
+  clearpass_server:
+    file: ./secrets/clearpass_server
+  clearpass_client_id:
+    file: ./secrets/clearpass_client_id
+  clearpass_client_secret:
+    file: ./secrets/clearpass_client_secret
+  clearpass_verify_ssl:
+    file: ./secrets/clearpass_verify_ssl

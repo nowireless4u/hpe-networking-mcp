@@ -43,7 +43,8 @@ class ElicitationMiddleware(Middleware):
 
         mist_write = config.enable_mist_write_tools
         central_write = config.enable_central_write_tools
-        any_write = mist_write or central_write
+        clearpass_write = config.enable_clearpass_write_tools
+        any_write = mist_write or central_write or clearpass_write
 
         if not any_write:
             return result  # type: ignore[return-value]
@@ -76,7 +77,14 @@ class ElicitationMiddleware(Middleware):
             await ctx.enable_components(tags={"mist_write", "mist_write_delete"}, components={"tool"})
         if central_write:
             await ctx.enable_components(tags={"central_write_delete"}, components={"tool"})
-        logger.info("Elicitation: write tools enabled (mist=%s, central=%s)", mist_write, central_write)
+        if clearpass_write:
+            await ctx.enable_components(tags={"clearpass_write_delete"}, components={"tool"})
+        logger.info(
+            "Elicitation: write tools enabled (mist=%s, central=%s, clearpass=%s)",
+            mist_write,
+            central_write,
+            clearpass_write,
+        )
 
         return result  # type: ignore[return-value]
 

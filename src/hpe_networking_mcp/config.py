@@ -18,6 +18,10 @@ Secret file mapping:
     /run/secrets/greenlake_client_id
     /run/secrets/greenlake_client_secret
     /run/secrets/greenlake_workspace_id
+    /run/secrets/clearpass_server
+    /run/secrets/clearpass_client_id
+    /run/secrets/clearpass_client_secret
+    /run/secrets/clearpass_verify_ssl (optional, default true)
 """
 
 import os
@@ -54,6 +58,14 @@ class GreenLakeSecrets:
 
 
 @dataclass
+class ClearPassSecrets:
+    server: str  # e.g. https://clearpass.example.com:443/api
+    client_id: str
+    client_secret: str
+    verify_ssl: bool = True
+
+
+@dataclass
 class ServerConfig:
     """Global server configuration."""
 
@@ -62,6 +74,7 @@ class ServerConfig:
     log_level: str = "INFO"
     enable_mist_write_tools: bool = False
     enable_central_write_tools: bool = False
+    enable_clearpass_write_tools: bool = False
     disable_elicitation: bool = False
     debug: bool = False
     log_file: str | None = None
@@ -73,6 +86,7 @@ class ServerConfig:
     mist: MistSecrets | None = None
     central: CentralSecrets | None = None
     greenlake: GreenLakeSecrets | None = None
+    clearpass: ClearPassSecrets | None = None
 
     @property
     def enabled_platforms(self) -> list[str]:
@@ -83,6 +97,8 @@ class ServerConfig:
             platforms.append("central")
         if self.greenlake:
             platforms.append("greenlake")
+        if self.clearpass:
+            platforms.append("clearpass")
         return platforms
 
 
@@ -185,6 +201,40 @@ def _load_greenlake() -> GreenLakeSecrets | None:
     )
 
 
+def _load_clearpass() -> ClearPassSecrets | None:
+    """Load ClearPass credentials from Docker secrets."""
+    server = _read_secret("clearpass_server")
+    client_id = _read_secret("clearpass_client_id")
+    client_secret = _read_secret("clearpass_client_secret")
+    verify_ssl_str = _read_secret("clearpass_verify_ssl")
+
+    missing = []
+    if not server:
+        missing.append("clearpass_server")
+    if not client_id:
+        missing.append("clearpass_client_id")
+    if not client_secret:
+        missing.append("clearpass_client_secret")
+
+    if missing:
+        logger.info("ClearPass: disabled (missing secrets: {})", ", ".join(missing))
+        return None
+
+    assert server is not None
+    assert client_id is not None
+    assert client_secret is not None
+
+    verify_ssl = verify_ssl_str.lower() not in ("false", "0", "no") if verify_ssl_str else True
+
+    logger.info("ClearPass: credentials loaded (server: {})", server)
+    return ClearPassSecrets(
+        server=server,
+        client_id=client_id,
+        client_secret=client_secret,
+        verify_ssl=verify_ssl,
+    )
+
+
 def load_config() -> ServerConfig:
     """Load server configuration from Docker secrets and environment variables.
 
@@ -208,6 +258,7 @@ def load_config() -> ServerConfig:
     _truthy = ("true", "1", "yes")
     enable_mist_write = os.getenv("ENABLE_MIST_WRITE_TOOLS", "false").lower() in _truthy
     enable_central_write = os.getenv("ENABLE_CENTRAL_WRITE_TOOLS", "false").lower() in _truthy
+    enable_clearpass_write = os.getenv("ENABLE_CLEARPASS_WRITE_TOOLS", "false").lower() in _truthy
     disable_elicit = os.getenv("DISABLE_ELICITATION", "false").lower() in _truthy
     debug = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
     log_file = os.getenv("LOG_FILE") or None
@@ -219,6 +270,7 @@ def load_config() -> ServerConfig:
     mist = _load_mist()
     central = _load_central()
     greenlake = _load_greenlake()
+    clearpass = _load_clearpass()
 
     config = ServerConfig(
         port=port,
@@ -226,6 +278,7 @@ def load_config() -> ServerConfig:
         log_level=log_level,
         enable_mist_write_tools=enable_mist_write,
         enable_central_write_tools=enable_central_write,
+        enable_clearpass_write_tools=enable_clearpass_write,
         disable_elicitation=disable_elicit,
         debug=debug,
         log_file=log_file,
@@ -233,6 +286,7 @@ def load_config() -> ServerConfig:
         mist=mist,
         central=central,
         greenlake=greenlake,
+        clearpass=clearpass,
     )
 
     if not config.enabled_platforms:

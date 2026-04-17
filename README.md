@@ -3,42 +3,46 @@
 [![CI](https://github.com/nowireless4u/hpe-networking-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/nowireless4u/hpe-networking-mcp/actions/workflows/ci.yml)
 [![Security](https://github.com/nowireless4u/hpe-networking-mcp/actions/workflows/security.yml/badge.svg)](https://github.com/nowireless4u/hpe-networking-mcp/actions/workflows/security.yml)
 
-A unified [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that brings **Juniper Mist**, **Aruba Central**, and **HPE GreenLake** together into a single, deployable service. One container. One endpoint. All your HPE networking tools.
+A unified [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that brings **Juniper Mist**, **Aruba Central**, **HPE GreenLake**, and **Aruba ClearPass** together into a single, deployable service. One container. One endpoint. All your HPE networking tools.
 
 ---
 
 ## Why?
 
-Managing HPE networking infrastructure with AI assistants today means juggling three separate MCP servers — each with its own setup, credentials, and quirks. This project consolidates them into one:
+Managing HPE networking infrastructure with AI assistants today means juggling multiple separate MCP servers — each with its own setup, credentials, and quirks. This project consolidates them into one:
 
-| Category | Mist | Central | GreenLake |
-|----------|:----:|:-------:|:---------:|
-| **Sites / Health Overview** | ✅ | ✅ | — |
-| **WLANs / SSIDs** | ✅ | ✅ | — |
-| **Device Inventory** | ✅ | ✅ | ✅ |
-| **Device Details (AP/Switch/GW)** | ✅ | ✅ | — |
-| **Device Stats & Utilization** | ✅ | ✅ | — |
-| **Client Connectivity** | ✅ | ✅ | — |
-| **Events** | ✅ | ✅ | — |
-| **Alerts / Alarms** | ✅ | ✅ | — |
-| **Audit Logs** | ✅ | ✅ | ✅ |
-| **Application Visibility** | — | ✅ | — |
-| **SLE / Performance Metrics** | ✅ | — | — |
-| **Troubleshooting (Ping/Traceroute/Bounce)** | ✅ | ✅ | — |
-| **Client Disconnect** | — | ✅ | — |
-| **Configuration Management** | ✅ | — | — |
-| **Configuration Write (CRUD)** | ✅ | — | — |
-| **Radio Resource Management** | ✅ | — | — |
-| **Rogue AP Detection** | ✅ | — | — |
-| **Firmware Management** | ✅ | — | — |
-| **Subscriptions / Licensing** | — | — | ✅ |
-| **User Management** | — | — | ✅ |
-| **Workspaces** | — | — | ✅ |
-| **Scope & Configuration Hierarchy** | — | ✅ | — |
-| **Guided Prompts** | ✅ | ✅ | — |
-| **Dynamic API Discovery** | — | — | ✅ |
-| **Tools** | **35 + 2 prompts** | **72 + 12 prompts** | **3 or 10** |
-| **Cross-Platform** | **1 tool + 3 prompts** | **1 tool + 3 prompts** | — |
+| Category | Mist | Central | GreenLake | ClearPass |
+|----------|:----:|:-------:|:---------:|:---------:|
+| **Sites / Health Overview** | ✅ | ✅ | — | — |
+| **WLANs / SSIDs** | ✅ | ✅ | — | — |
+| **Device Inventory** | ✅ | ✅ | ✅ | ✅ |
+| **Device Details (AP/Switch/GW)** | ✅ | ✅ | — | — |
+| **Device Stats & Utilization** | ✅ | ✅ | — | — |
+| **Client Connectivity** | ✅ | ✅ | — | — |
+| **Events** | ✅ | ✅ | — | ✅ |
+| **Alerts / Alarms** | ✅ | ✅ | — | ✅ |
+| **Audit Logs** | ✅ | ✅ | ✅ | ✅ |
+| **Application Visibility** | — | ✅ | — | — |
+| **SLE / Performance Metrics** | ✅ | — | — | — |
+| **Troubleshooting (Ping/Traceroute/Bounce)** | ✅ | ✅ | — | — |
+| **Session Control / Client Disconnect** | — | ✅ | — | ✅ |
+| **Configuration Management** | ✅ | — | — | ✅ |
+| **Configuration Write (CRUD)** | ✅ | — | — | ✅ |
+| **Radio Resource Management** | ✅ | — | — | — |
+| **Rogue AP Detection** | ✅ | — | — | — |
+| **Firmware Management** | ✅ | — | — | — |
+| **Subscriptions / Licensing** | — | — | ✅ | ✅ |
+| **User Management** | — | — | ✅ | ✅ |
+| **Workspaces** | — | — | ✅ | — |
+| **Scope & Configuration Hierarchy** | — | ✅ | — | — |
+| **Guest Management** | — | — | — | ✅ |
+| **NAC / Policy Management** | — | — | — | ✅ |
+| **Endpoint Profiling** | — | — | — | ✅ |
+| **Certificates** | — | — | — | ✅ |
+| **Guided Prompts** | ✅ | ✅ | — | — |
+| **Dynamic API Discovery** | — | — | ✅ | — |
+| **Tools** | **35 + 2 prompts** | **72 + 12 prompts** | **3 or 10** | **127** |
+| **Cross-Platform** | **1 tool + 3 prompts** | **1 tool + 3 prompts** | — | — |
 
 > **GreenLake tool count**: 3 tools in **dynamic mode** (default) — a meta-tool system that can discover and invoke any GreenLake API endpoint. 10 tools in **static mode** — dedicated tools for each endpoint. Set via `MCP_TOOL_MODE` environment variable.
 
@@ -105,6 +109,12 @@ cp secrets/greenlake_api_base_url.example secrets/greenlake_api_base_url
 cp secrets/greenlake_client_id.example secrets/greenlake_client_id
 cp secrets/greenlake_client_secret.example secrets/greenlake_client_secret
 cp secrets/greenlake_workspace_id.example secrets/greenlake_workspace_id
+
+# ClearPass (optional)
+cp secrets/clearpass_server.example secrets/clearpass_server
+cp secrets/clearpass_client_id.example secrets/clearpass_client_id
+cp secrets/clearpass_client_secret.example secrets/clearpass_client_secret
+cp secrets/clearpass_verify_ssl.example secrets/clearpass_verify_ssl
 ```
 
 Each file contains a single value (e.g., your API token). The server auto-disables platforms with missing secret files.
@@ -123,7 +133,7 @@ docker compose up -d
 docker compose logs
 ```
 
-Look for lines like `Mist: registered 35 tools` and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. Mist also registers 2 guided prompts for site provisioning workflows.
+Look for lines like `Mist: registered 35 tools`, `ClearPass: registered 127 tools`, and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. Mist also registers 2 guided prompts for site provisioning workflows.
 
 ### Docker Image
 
@@ -144,11 +154,11 @@ docker pull ghcr.io/nowireless4u/hpe-networking-mcp:latest
 
 ## Platform Auto-Disable
 
-You don't need credentials for all three platforms. The server automatically detects which platforms have valid secrets and only enables those:
+You don't need credentials for all four platforms. The server automatically detects which platforms have valid secrets and only enables those:
 
-- **All three platforms configured** → All tools available (Mist + Central + GreenLake)
-- **Only Mist configured** → Only `mist_*` tools available; Central and GreenLake disabled
-- **Only Central configured** → Only `central_*` tools available; Mist and GreenLake disabled
+- **All four platforms configured** → All tools available (Mist + Central + GreenLake + ClearPass)
+- **Only Mist configured** → Only `mist_*` tools available; other platforms disabled
+- **Only ClearPass configured** → Only `clearpass_*` tools available; other platforms disabled
 - **No valid credentials** → Server refuses to start with a clear error message
 
 This means you can start with just one platform and add others later by creating their secret files and restarting the container. The server logs which platforms are enabled at startup:

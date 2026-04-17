@@ -104,6 +104,32 @@ async def lifespan(server: FastMCP):
     else:
         context["greenlake_token_manager"] = None
 
+    # --- ClearPass ---
+    if config.clearpass:
+        try:
+            from pyclearpass.api_localserverconfiguration import ApiLocalServerConfiguration
+
+            test_client = ApiLocalServerConfiguration(
+                server=config.clearpass.server,
+                granttype="client_credentials",
+                clientid=config.clearpass.client_id,
+                clientsecret=config.clearpass.client_secret,
+            )
+            test_client.verify_ssl = config.clearpass.verify_ssl
+            version_info = test_client.get_server_version()
+            # Cache token for reuse across all tool calls
+            context["clearpass_token"] = test_client.api_token
+            context["clearpass_config"] = config.clearpass
+            version_str = version_info.get("app_major_version", "unknown") if isinstance(version_info, dict) else "?"
+            logger.info("ClearPass: connection verified (version: {})", version_str)
+        except Exception as e:
+            logger.warning("ClearPass: failed to initialize — {}", e)
+            context["clearpass_config"] = None
+            context["clearpass_token"] = None
+    else:
+        context["clearpass_config"] = None
+        context["clearpass_token"] = None
+
     try:
         yield context
     finally:
@@ -140,6 +166,8 @@ def create_server(config: ServerConfig) -> FastMCP:
         _register_central_tools(mcp, config)
     if config.greenlake:
         _register_greenlake_tools(mcp, config)
+    if config.clearpass:
+        _register_clearpass_tools(mcp, config)
 
     # --- Cross-platform tools and prompts (require both Mist and Central) ---
     if config.mist and config.central:
@@ -153,6 +181,8 @@ def create_server(config: ServerConfig) -> FastMCP:
         mcp.add_transform(Visibility(False, tags={"mist_write", "mist_write_delete"}, components={"tool"}))
     if not config.enable_central_write_tools:
         mcp.add_transform(Visibility(False, tags={"central_write_delete"}, components={"tool"}))
+    if not config.enable_clearpass_write_tools:
+        mcp.add_transform(Visibility(False, tags={"clearpass_write_delete"}, components={"tool"}))
 
     return mcp
 
@@ -179,6 +209,14 @@ def _register_greenlake_tools(mcp: FastMCP, config: ServerConfig) -> None:
 
     count = register_tools(mcp, config)
     logger.info("GreenLake: registered {} tools", count)
+
+
+def _register_clearpass_tools(mcp: FastMCP, config: ServerConfig) -> None:
+    """Register all ClearPass platform tools."""
+    from hpe_networking_mcp.platforms.clearpass import register_tools
+
+    count = register_tools(mcp, config)
+    logger.info("ClearPass: registered {} tools", count)
 
 
 def _register_sync_tools(mcp: FastMCP) -> None:

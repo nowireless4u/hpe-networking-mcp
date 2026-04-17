@@ -2,7 +2,7 @@
 
 Complete reference for all tools registered by the HPE Networking MCP Server.
 Tools are namespaced by platform: `mist_*` (Juniper Mist), `central_*` (Aruba Central),
-and `greenlake_*` (HPE GreenLake).
+`greenlake_*` (HPE GreenLake), and `clearpass_*` (Aruba ClearPass).
 
 ## Overview
 
@@ -10,12 +10,14 @@ and `greenlake_*` (HPE GreenLake).
 |----------|----------------|-------------|---------|-------|
 | Juniper Mist | 31 | 4 | 2 | 37 |
 | Aruba Central | 59 | 13 | 12 | 84 |
+| Aruba ClearPass | 55 | 72 | -- | 127 |
 | Cross-Platform | -- | 1 | 3 | 4 |
 | HPE GreenLake (static mode) | 10 | -- | -- | 10 |
 | HPE GreenLake (dynamic mode) | 3 | -- | -- | 3 |
 
-Write tools (`mist_update_*`, `mist_change_*`) are disabled by default. Set
-`ENABLE_MIST_WRITE_TOOLS=true` or `ENABLE_CENTRAL_WRITE_TOOLS=true` to enable them per platform.
+Write tools are disabled by default per platform. Enable them with environment variables:
+`ENABLE_MIST_WRITE_TOOLS=true`, `ENABLE_CENTRAL_WRITE_TOOLS=true`, or
+`ENABLE_CLEARPASS_WRITE_TOOLS=true`.
 
 GreenLake supports two mutually exclusive tool modes controlled by
 `GREENLAKE_TOOL_MODE`:
@@ -1326,3 +1328,217 @@ When `GREENLAKE_TOOL_MODE=static` (default), the following dedicated tools are r
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | workspaceId | str | Yes | Workspace ID. |
+
+---
+
+## Aruba ClearPass (127 tools)
+
+ClearPass tools use the `pyclearpass` SDK with OAuth2 client credentials. Write tools require
+`ENABLE_CLEARPASS_WRITE_TOOLS=true`. Update/delete operations require user confirmation.
+
+### Network Devices (4 read + 1 write)
+
+| Tool | Description |
+|------|-------------|
+| `clearpass_get_network_devices` | List or get NADs (RADIUS/TACACS+ clients) by ID or name |
+| `clearpass_get_network_device_stats` | Get detailed device record by ID |
+| `clearpass_test_device_connectivity` | Fetch device record for connectivity review |
+| `clearpass_validate_device_config` | Validate device configuration for missing fields |
+| `clearpass_manage_network_device` | Create, update, delete, clone, configure SNMP/RadSec/CLI/on-connect |
+
+### Guest Management (1 read + 4 write)
+
+| Tool | Description |
+|------|-------------|
+| `clearpass_get_guest_users` | List or get guest users by ID or username |
+| `clearpass_manage_guest_user` | Create, update, delete guest users |
+| `clearpass_send_guest_credentials` | Send credentials via SMS or email (`delivery_method`: sms/email) |
+| `clearpass_generate_guest_pass` | Generate digital pass or receipt (`pass_type`: digital/receipt) |
+| `clearpass_process_sponsor_action` | Approve or reject guest sponsorship requests |
+
+### Guest Configuration (5 read + 4 write)
+
+| Tool | Description |
+|------|-------------|
+| `clearpass_get_pass_templates` | List or get digital pass templates |
+| `clearpass_get_print_templates` | List or get print receipt templates |
+| `clearpass_get_weblogin_pages` | List or get captive portal web login pages |
+| `clearpass_get_guest_auth_settings` | Get guest authentication global settings |
+| `clearpass_get_guest_manager_settings` | Get guest manager global settings |
+| `clearpass_manage_pass_template` | Create, update, replace, delete pass templates |
+| `clearpass_manage_print_template` | Create, update, replace, delete print templates |
+| `clearpass_manage_weblogin_page` | Create, update, replace, delete web login pages |
+| `clearpass_manage_guest_settings` | Update guest authentication and manager settings |
+
+### Endpoints (2 read + 1 write)
+
+| Tool | Description |
+|------|-------------|
+| `clearpass_get_endpoints` | List or get endpoints by ID or MAC address |
+| `clearpass_get_endpoint_profiler` | Get device profiler fingerprint data |
+| `clearpass_manage_endpoint` | Create, update, delete endpoints |
+
+### Session Control (3 read + 2 write)
+
+| Tool | Description |
+|------|-------------|
+| `clearpass_get_sessions` | List active sessions or get session by ID |
+| `clearpass_get_session_action_status` | Check status of disconnect/CoA action |
+| `clearpass_get_reauth_profiles` | Get reauthorization profiles for a session |
+| `clearpass_disconnect_session` | Disconnect session(s) — `target_type`: session_id/username/mac/ip/bulk |
+| `clearpass_perform_coa` | Change of Authorization — `target_type`: session_id/username/mac/ip/bulk |
+
+### Roles & Role Mappings (2 read + 2 write)
+
+| Tool | Description |
+|------|-------------|
+| `clearpass_get_roles` | List or get roles by ID or name |
+| `clearpass_get_role_mappings` | List or get role mappings by ID or name |
+| `clearpass_manage_role` | Create, update, delete roles |
+| `clearpass_manage_role_mapping` | Create, update, delete role mappings |
+
+### Enforcement (3 read + 2 write)
+
+| Tool | Description |
+|------|-------------|
+| `clearpass_get_enforcement_policies` | List or get enforcement policies |
+| `clearpass_get_enforcement_profiles` | List or get enforcement profiles |
+| `clearpass_get_profile_templates` | Reference list of common enforcement profile patterns |
+| `clearpass_manage_enforcement_policy` | Create, update, delete enforcement policies |
+| `clearpass_manage_enforcement_profile` | Create, update, delete enforcement profiles |
+
+### Authentication (4 read + 2 write)
+
+| Tool | Description |
+|------|-------------|
+| `clearpass_get_auth_sources` | List or get authentication sources (LDAP/AD/RADIUS) |
+| `clearpass_get_auth_source_status` | Get auth source connection status and statistics |
+| `clearpass_test_auth_source` | Fetch auth source details for connectivity review |
+| `clearpass_get_auth_methods` | List or get authentication methods (EAP, certificates) |
+| `clearpass_manage_auth_source` | Create, update, delete, configure_backup, configure_filters, configure_radius_attrs |
+| `clearpass_manage_auth_method` | Create, update, delete authentication methods |
+
+### Certificates (4 read + 2 write)
+
+| Tool | Description |
+|------|-------------|
+| `clearpass_get_trust_list` | List or get certificate trust list entries |
+| `clearpass_get_client_certificates` | List or get client certificates |
+| `clearpass_get_server_certificates` | List or get server certificates |
+| `clearpass_get_service_certificates` | List service certificates |
+| `clearpass_manage_certificate` | Import/delete trust list, delete client cert, enable/disable server cert |
+| `clearpass_create_csr` | Generate Certificate Signing Request |
+
+### Audit & Insight (5 read + 3 write)
+
+| Tool | Description |
+|------|-------------|
+| `clearpass_get_audit_logs` | Get admin login audit records by username |
+| `clearpass_get_system_events` | List system events with filtering |
+| `clearpass_get_insight_alerts` | List or get Insight alert configurations |
+| `clearpass_get_insight_reports` | List or get Insight report configurations |
+| `clearpass_get_endpoint_insights` | Endpoint insights by MAC, IP, IP range, or time range |
+| `clearpass_manage_insight_alert` | Create, update, delete, enable, disable, mute, unmute alerts |
+| `clearpass_manage_insight_report` | Create, delete, enable, disable, run reports |
+| `clearpass_create_system_event` | Create a custom system event |
+
+### Identities (5 read + 5 write)
+
+| Tool | Description |
+|------|-------------|
+| `clearpass_get_api_clients` | List or get API clients |
+| `clearpass_get_local_users` | List or get local users |
+| `clearpass_get_static_host_lists` | List or get static host lists |
+| `clearpass_get_devices` | List or get devices by ID or MAC |
+| `clearpass_get_deny_listed_users` | List or get deny-listed users |
+| `clearpass_manage_api_client` | Create, update, delete API clients |
+| `clearpass_manage_local_user` | Create, update, delete local users |
+| `clearpass_manage_static_host_list` | Create, update, delete static host lists |
+| `clearpass_manage_device` | Create, update, delete devices |
+| `clearpass_manage_deny_listed_user` | Create, delete deny-listed users |
+
+### Policy Elements (7 read + 7 write)
+
+| Tool | Description |
+|------|-------------|
+| `clearpass_get_services` | List or get configuration services |
+| `clearpass_get_posture_policies` | List or get posture policies |
+| `clearpass_get_device_groups` | List or get network device groups |
+| `clearpass_get_proxy_targets` | List or get proxy targets |
+| `clearpass_get_radius_dictionaries` | List or get RADIUS dictionaries |
+| `clearpass_get_tacacs_dictionaries` | List or get TACACS+ service dictionaries |
+| `clearpass_get_application_dictionaries` | List or get application dictionaries |
+| `clearpass_manage_service` | Create, update, delete, enable, disable config services |
+| `clearpass_manage_device_group` | Create, update, delete device groups |
+| `clearpass_manage_posture_policy` | Create, update, delete posture policies |
+| `clearpass_manage_proxy_target` | Create, update, delete proxy targets |
+| `clearpass_manage_radius_dictionary` | Create, update, delete, enable, disable RADIUS dictionaries |
+| `clearpass_manage_tacacs_dictionary` | Create, update, delete TACACS+ dictionaries |
+| `clearpass_manage_application_dictionary` | Create, update, delete application dictionaries |
+
+### Server Configuration (13 read + 12 write)
+
+| Tool | Description |
+|------|-------------|
+| `clearpass_get_admin_users` | List or get admin users |
+| `clearpass_get_admin_privileges` | List or get admin privilege sets |
+| `clearpass_get_operator_profiles` | List or get operator profiles |
+| `clearpass_get_licenses` | List licenses, get details, or get summary |
+| `clearpass_get_cluster_params` | Get cluster parameters |
+| `clearpass_get_password_policies` | Get admin and local user password policies |
+| `clearpass_get_attributes` | List or get custom attributes |
+| `clearpass_get_data_filters` | List or get data filters |
+| `clearpass_get_file_backup_servers` | List or get file backup servers |
+| `clearpass_get_messaging_setup` | Get messaging (email/SMS) configuration |
+| `clearpass_get_snmp_trap_receivers` | List or get SNMP trap receivers |
+| `clearpass_get_policy_manager_zones` | List or get policy manager zones |
+| `clearpass_get_oauth_privileges` | Get OAuth privileges |
+| `clearpass_manage_admin_user` | Create, update, delete admin users |
+| `clearpass_manage_admin_privilege` | Create, update, delete admin privileges |
+| `clearpass_manage_operator_profile` | Create, update, delete operator profiles |
+| `clearpass_manage_license` | Create, delete, activate_online, activate_offline |
+| `clearpass_manage_cluster_params` | Update cluster parameters |
+| `clearpass_manage_password_policy` | Update admin or local user password policies |
+| `clearpass_manage_attribute` | Create, update, delete attributes |
+| `clearpass_manage_data_filter` | Create, update, delete data filters |
+| `clearpass_manage_file_backup_server` | Create, update, delete backup servers |
+| `clearpass_manage_messaging_setup` | Create, update, delete messaging config |
+| `clearpass_manage_snmp_trap_receiver` | Create, update, delete SNMP trap receivers |
+| `clearpass_manage_policy_manager_zone` | Create, update, delete policy manager zones |
+
+### Local Configuration (6 read + 4 write)
+
+| Tool | Description |
+|------|-------------|
+| `clearpass_get_access_controls` | Get server access controls by UUID and/or resource |
+| `clearpass_get_ad_domains` | List or get Active Directory domains |
+| `clearpass_get_server_version` | Get ClearPass version, cluster info |
+| `clearpass_get_fips_status` | Get server FIPS status |
+| `clearpass_get_server_services` | List or get server services |
+| `clearpass_get_server_snmp` | Get server SNMP configuration |
+| `clearpass_manage_access_control` | Update, delete server access controls |
+| `clearpass_manage_ad_domain` | Join, leave, configure_password_servers for AD domains |
+| `clearpass_manage_cluster_server` | Update cluster server configuration |
+| `clearpass_manage_server_service` | Start, stop server services |
+
+### Integrations (6 read + 4 write)
+
+| Tool | Description |
+|------|-------------|
+| `clearpass_get_extensions` | List or get extension instances |
+| `clearpass_get_syslog_targets` | List or get syslog targets |
+| `clearpass_get_syslog_export_filters` | List or get syslog export filters |
+| `clearpass_get_event_sources` | List or get event sources |
+| `clearpass_get_context_servers` | List or get context server actions |
+| `clearpass_get_endpoint_context_servers` | List or get endpoint context servers |
+| `clearpass_manage_extension` | Start, stop, restart, delete extensions |
+| `clearpass_manage_syslog_target` | Create, update, delete syslog targets |
+| `clearpass_manage_syslog_export_filter` | Create, update, delete syslog export filters |
+| `clearpass_manage_endpoint_context_server` | Create, update, delete, trigger_poll context servers |
+
+### Utilities (2 tools)
+
+| Tool | Description |
+|------|-------------|
+| `clearpass_generate_random_password` | Generate random password or MPSK |
+| `clearpass_test_connection` | Test ClearPass connectivity and get server version |
