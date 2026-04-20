@@ -1126,24 +1126,29 @@ and optional `scope_id` + `device_function` for local (scoped) objects.
 
 #### `central_recommend_firmware`
 
-> Applies an LSR-preferred upgrade policy on top of Central's built-in `recommendedVersion`. For APs and Gateways running AOS 10, classifies the current train as LSR or SSR using a hand-maintained mapping and recommends accordingly: LSR trains get Central's latest-in-train version; SSR trains are recommended to move to the next LSR train. Switches and legacy AOS 8 devices pass Central's recommendation through unchanged.
+> Applies an LSR-preferred upgrade policy on top of Central's built-in `recommendedVersion`. The LSR/SSR classification comes directly from the `firmwareClassification` field in the firmware-details API response — no hand-maintained mapping. For devices classified as SSR, the "next LSR" target is mined live from the same response: the highest LSR version observed across the fleet for that device type.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | serial_number | str | No | Narrow to one device. |
-| device_type | str | No | `ACCESS_POINT`, `SWITCH`, or `GATEWAY`. LSR/SSR policy only applies to the first two. |
+| device_type | str | No | `ACCESS_POINT`, `SWITCH`, or `GATEWAY`. Filtering this narrows the pool used to mine the newest LSR target for SSR devices — leave unset for best SSR recommendations. |
 | site_id | str | No | Limit to a site by ID. |
 | site_name | str | No | Limit to a site by exact name. |
 | include_up_to_date | bool | No | If True, include devices already on Central's recommended version. Default False. |
 | max_pages | int | No | Safety cap on paginated fetches (1000 items × max_pages). Default 10. |
 
+**Policy:**
+
+- Classified **LSR** → upgrade in place to Central's recommended version (latest in same train).
+- Classified **SSR** → move to the newest LSR version seen in the fleet for that device type (mined live).
+- Classified **empty / unclassified** (typically AOS 8) → pass Central's recommendation through.
+- No LSR device of the same type in the fleet → SSR devices fall back to Central's recommendation with a note.
+
 **Returned report:**
 
-- `lsr_train_reference` — the LSR/SSR mapping the tool used, for transparency.
-- `total_devices_scanned`, `up_to_date`, `on_lsr_train`, `on_ssr_train`, `on_aos8`, `unknown_train`, `needs_action` — fleet-level counts.
-- `recommendations[]` — per-device records: current version/train, release type, Central's recommendation, our recommendation, action (`upgrade_in_place`, `move_to_lsr_train`, `follow_central`, `up_to_date`, `unknown`), and a rationale string.
-
-**Mapping source of truth:** Aruba's supported-devices-AOS10 documentation. When a new LSR train is designated, update `AOS10_AP_GW_RELEASE_TYPES` in [src/hpe_networking_mcp/platforms/central/tools/firmware.py](../src/hpe_networking_mcp/platforms/central/tools/firmware.py).
+- `discovered_lsr_targets` — `{device_type: newest LSR version}` mined from the response. Empty if no LSR devices were observed.
+- `total_devices_scanned`, `up_to_date`, `on_lsr`, `on_ssr`, `unclassified`, `needs_action` — fleet-level counts.
+- `recommendations[]` — per-device records: current version, release type (`LSR`/`SSR`/`UNCLASSIFIED`), Central's recommendation, our recommendation, action (`upgrade_in_place`, `move_to_lsr_train`, `follow_central`, `up_to_date`), and a rationale string.
 
 ### Guided Prompts
 

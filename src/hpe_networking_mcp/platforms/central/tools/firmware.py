@@ -1,23 +1,23 @@
 """Firmware recommendation tool.
 
 Reads `/network-services/v1/firmware-details` and applies an LSR-preferred
-upgrade policy on top of Central's built-in `recommendedVersion`:
+upgrade policy on top of Central's built-in `recommendedVersion`. The
+LSR vs SSR classification comes directly from the `firmwareClassification`
+field in the API response — no hand-maintained mapping.
 
-- APs and Gateways on an LSR train → trust Central's recommendation
-  (latest in the same major.minor train).
-- APs and Gateways on an SSR train → override Central and recommend moving
-  to the next LSR train (Central will happily keep you on SSR otherwise).
-- Legacy AOS 8 devices → pass Central's recommendation through unchanged.
-- Switches and unknown trains → pass Central's recommendation through with
-  a note, since the LSR/SSR concept in the bundled mapping only covers
-  AP and Gateway AOS 10 trains.
+Policy:
 
-LSR/SSR mapping is hand-maintained per Aruba's supported-devices-AOS10
-documentation. Update `AOS10_AP_GW_RELEASE_TYPES` when new trains are
-designated.
+- APs/Gateways classified as LSR → trust Central's `recommendedVersion`
+  (it will be latest-in-same-train, which is what we want).
+- APs/Gateways classified as SSR → override Central and recommend the
+  newest LSR version discovered elsewhere in the fleet for the same
+  device type. Central would otherwise happily keep the device on SSR.
+- Devices with an empty classification (legacy AOS 8 or anything the API
+  doesn't classify) → pass Central's recommendation through unchanged.
+- If no LSR devices exist in the fleet to mine a target from, SSR devices
+  fall back to Central's recommendation with a note.
 """
 
-import re
 from typing import Annotated, Literal
 
 from fastmcp import Context
@@ -27,21 +27,6 @@ from hpe_networking_mcp.platforms.central._registry import mcp
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import retry_central_command
 
-# AOS 10 release-type mapping for Access Points and Gateways.
-# Source: Aruba supported-devices-AOS10 documentation. Switches and
-# controllers have separate cadences not covered here.
-AOS10_AP_GW_RELEASE_TYPES: dict[str, Literal["LSR", "SSR"]] = {
-    "10.3": "SSR",
-    "10.4": "LSR",
-    "10.5": "SSR",
-    "10.6": "SSR",
-    "10.7": "SSR",
-    "10.8": "LSR",
-}
-
-_AOS10_VERSION_RE = re.compile(r"^10\.(\d+)\.")
-_AOS8_VERSION_RE = re.compile(r"^8\.\d+\.")
-
 
 class FirmwareRecommendation(BaseModel):
     serial_number: str
@@ -49,8 +34,7 @@ class FirmwareRecommendation(BaseModel):
     device_type: str  # ACCESS_POINT, SWITCH, GATEWAY
     site_name: str | None = None
     current_version: str
-    current_train: str | None = None  # major.minor, e.g. "10.8"
-    release_type: Literal["LSR", "SSR", "AOS8", "UNKNOWN"]
+    release_type: Literal["LSR", "SSR", "UNCLASSIFIED"]
     central_recommended_version: str | None = None
     our_recommended_version: str | None = None
     action: Literal[
@@ -58,169 +42,161 @@ class FirmwareRecommendation(BaseModel):
         "upgrade_in_place",
         "move_to_lsr_train",
         "follow_central",
-        "unknown",
     ]
     rationale: str
 
 
 class FirmwareRecommendationReport(BaseModel):
-    lsr_train_reference: dict[str, str]
+    discovered_lsr_targets: dict[str, str]  # device_type -> newest LSR version seen in fleet
     total_devices_scanned: int
     up_to_date: int
-    on_lsr_train: int
-    on_ssr_train: int
-    on_aos8: int
-    unknown_train: int
+    on_lsr: int
+    on_ssr: int
+    unclassified: int
     needs_action: int
     recommendations: list[FirmwareRecommendation]
 
 
-def _parse_train(version: str | None) -> tuple[str | None, Literal["LSR", "SSR", "AOS8", "UNKNOWN"]]:
-    """Return (major_minor_train, release_type) for a firmware version.
+def _parse_version_tuple(version: str) -> tuple[int, ...]:
+    """Parse a firmware version string into a comparable tuple.
 
-    Examples:
-      "10.8.1010"        -> ("10.8", "LSR")
-      "10.5.0.1_80123"   -> ("10.5", "SSR")
-      "8.5.2.0_59123"    -> ("8.5", "AOS8")
-      "garbage"          -> (None, "UNKNOWN")
+    Strips any build suffix after an underscore and splits on dots.
+    Non-numeric segments terminate the parse (so "10.5.0.1_80123" → (10, 5, 0, 1)
+    and "8.6.0.6_77023" → (8, 6, 0, 6)). Empty input → ().
     """
     if not version:
-        return (None, "UNKNOWN")
-    m = _AOS10_VERSION_RE.match(version)
-    if m:
-        train = f"10.{m.group(1)}"
-        return (train, AOS10_AP_GW_RELEASE_TYPES.get(train, "UNKNOWN"))
-    if _AOS8_VERSION_RE.match(version):
-        # Grab "major.minor" for AOS 8 — LSR/SSR concept doesn't apply
-        parts = version.split(".")
-        return (f"{parts[0]}.{parts[1]}", "AOS8")
-    return (None, "UNKNOWN")
+        return ()
+    base = version.split("_", 1)[0]
+    parts: list[int] = []
+    for seg in base.split("."):
+        try:
+            parts.append(int(seg))
+        except ValueError:
+            break
+    return tuple(parts)
 
 
-def _next_lsr_train(current_train: str | None) -> str | None:
-    """Return the next LSR train at or above the current train, or None."""
-    if not current_train:
-        return None
-    # Sort trains by their minor number (we're inside AOS 10 here)
-    try:
-        current_minor = int(current_train.split(".")[1])
-    except (IndexError, ValueError):
-        return None
-    lsr_trains = sorted(
-        (t for t, rt in AOS10_AP_GW_RELEASE_TYPES.items() if rt == "LSR"),
-        key=lambda t: int(t.split(".")[1]),
-    )
-    for train in lsr_trains:
-        if int(train.split(".")[1]) >= current_minor:
-            return train
-    return None
+def _classify(item: dict) -> Literal["LSR", "SSR", "UNCLASSIFIED"]:
+    """Extract the release classification the API reports for this device."""
+    raw = (item.get("firmwareClassification") or "").strip().upper()
+    if raw == "LSR":
+        return "LSR"
+    if raw == "SSR":
+        return "SSR"
+    return "UNCLASSIFIED"
+
+
+def _find_newest_lsr_per_type(items: list[dict]) -> dict[str, str]:
+    """Mine the firmware-details records for the newest LSR version per deviceType.
+
+    We look at both `firmwareVersion` (current install, for LSR-classified
+    devices) and `recommendedVersion` (Central's latest-in-train suggestion
+    for LSR-classified devices) since Central's recommendation for an LSR
+    device will itself be an LSR version in the same train.
+    """
+    by_type: dict[str, str] = {}
+
+    def _consider(device_type: str, version: str | None) -> None:
+        if not device_type or not version:
+            return
+        existing = by_type.get(device_type)
+        if existing is None or _parse_version_tuple(version) > _parse_version_tuple(existing):
+            by_type[device_type] = version
+
+    for item in items:
+        if _classify(item) != "LSR":
+            continue
+        dtype = str(item.get("deviceType", ""))
+        _consider(dtype, str(item.get("firmwareVersion") or ""))
+        _consider(dtype, str(item.get("recommendedVersion") or ""))
+
+    return by_type
 
 
 def _recommend(
-    device_type: str,
-    current_version: str,
-    central_recommended: str | None,
-    upgrade_status: str | None,
-) -> tuple[
-    Literal["LSR", "SSR", "AOS8", "UNKNOWN"],
-    str | None,
-    str | None,
-    Literal["up_to_date", "upgrade_in_place", "move_to_lsr_train", "follow_central", "unknown"],
-    str,
-]:
-    """Apply the recommendation policy to one device's firmware status.
+    item: dict,
+    newest_lsr_by_type: dict[str, str],
+) -> FirmwareRecommendation:
+    """Apply the recommendation policy to one device's firmware record."""
+    serial = str(item.get("serialNumber", ""))
+    name = str(item.get("deviceName", ""))
+    dtype = str(item.get("deviceType", ""))
+    site_name = item.get("siteName")
+    current_version = str(item.get("firmwareVersion", ""))
+    central_rec = item.get("recommendedVersion") or None
+    upgrade_status = (item.get("upgradeStatus") or "").strip().lower()
+    release_type = _classify(item)
+    already_up_to_date = upgrade_status == "up to date"
 
-    Returns: (release_type, current_train, our_recommended_version, action, rationale)
-    """
-    train, release_type = _parse_train(current_version)
-    already_up_to_date = (upgrade_status or "").strip().lower() == "up to date"
-
-    if device_type not in ("ACCESS_POINT", "GATEWAY"):
-        # LSR/SSR mapping only applies to AP/GW; pass through Central's view.
-        if already_up_to_date:
-            return (release_type, train, None, "up_to_date", "Already on Central's recommended version.")
-        return (
-            release_type,
-            train,
-            central_recommended,
-            "follow_central",
-            f"{device_type} is outside the LSR/SSR mapping — deferring to Central's recommendation.",
+    def _build(
+        our_rec: str | None,
+        action: Literal["up_to_date", "upgrade_in_place", "move_to_lsr_train", "follow_central"],
+        rationale: str,
+    ) -> FirmwareRecommendation:
+        return FirmwareRecommendation(
+            serial_number=serial,
+            device_name=name,
+            device_type=dtype,
+            site_name=site_name,
+            current_version=current_version,
+            release_type=release_type,
+            central_recommended_version=central_rec,
+            our_recommended_version=our_rec,
+            action=action,
+            rationale=rationale,
         )
 
-    if release_type == "AOS8":
+    if release_type == "UNCLASSIFIED":
         if already_up_to_date:
-            return (release_type, train, None, "up_to_date", "Legacy AOS 8 device already on Central's recommendation.")
-        return (
-            release_type,
-            train,
-            central_recommended,
+            return _build(
+                None,
+                "up_to_date",
+                (
+                    "Already on Central's recommended version. No classification reported "
+                    "(commonly AOS 8 or a non-classified build)."
+                ),
+            )
+        return _build(
+            central_rec,
             "follow_central",
-            "Legacy AOS 8 device — LSR/SSR classification only applies to AOS 10. Deferring to Central.",
+            "API did not classify this build as LSR or SSR. Deferring to Central's recommendation.",
         )
 
     if release_type == "LSR":
         if already_up_to_date:
-            return (
-                release_type,
-                train,
-                None,
-                "up_to_date",
-                f"On LSR train {train} and current with Central's recommended version.",
-            )
-        return (
-            release_type,
-            train,
-            central_recommended,
+            return _build(None, "up_to_date", "On LSR and current with Central's recommended version.")
+        return _build(
+            central_rec,
             "upgrade_in_place",
-            (f"On LSR train {train}. Upgrade to latest in the same LSR train ({central_recommended})."),
+            f"On LSR — upgrade in place to Central's recommended version ({central_rec}).",
         )
 
-    if release_type == "SSR":
-        next_lsr = _next_lsr_train(train)
-        if next_lsr is None:
-            return (
-                release_type,
-                train,
-                central_recommended,
-                "follow_central",
-                (
-                    f"On SSR train {train} and no newer LSR train is known in the bundled "
-                    "mapping. Following Central's recommendation until the mapping is updated."
-                ),
-            )
-        return (
-            release_type,
-            train,
-            f"{next_lsr}.x (latest LSR build)",
-            "move_to_lsr_train",
+    # SSR
+    target = newest_lsr_by_type.get(dtype)
+    if target is None:
+        return _build(
+            central_rec,
+            "follow_central",
             (
-                f"On SSR train {train}. Recommending move to next LSR train {next_lsr} — "
-                f"Central's suggestion was '{central_recommended}'. "
-                "Pick the latest available build in that train from Central's firmware catalog."
+                "Classified as SSR but no LSR version was discovered for this device type "
+                f"({dtype}) elsewhere in the fleet. Following Central's recommendation."
             ),
         )
-
-    # UNKNOWN — either garbage version string or an AOS 10 train beyond the
-    # bundled mapping. Defer but flag loudly.
-    if already_up_to_date:
-        return (
-            release_type,
-            train,
-            None,
-            "up_to_date",
+    if _parse_version_tuple(current_version) >= _parse_version_tuple(target):
+        return _build(
+            central_rec,
+            "follow_central",
             (
-                "Current version isn't in the LSR/SSR mapping but Central considers it up to date. "
-                "Update AOS10_AP_GW_RELEASE_TYPES if this train should be classified."
+                f"Classified as SSR but current version {current_version} is at or above the "
+                f"newest LSR seen in the fleet for {dtype} ({target}). Following Central."
             ),
         )
-    return (
-        release_type,
-        train,
-        central_recommended,
-        "unknown",
+    return _build(
+        target,
+        "move_to_lsr_train",
         (
-            f"Current train {train} is not in the bundled LSR/SSR mapping. "
-            "Update AOS10_AP_GW_RELEASE_TYPES to classify this train and re-run."
+            f"On SSR. Recommending move to {target} — newest LSR seen in the fleet for "
+            f"{dtype}. Central's suggestion was '{central_rec}'."
         ),
     )
 
@@ -258,9 +234,10 @@ async def central_recommend_firmware(
         Literal["ACCESS_POINT", "SWITCH", "GATEWAY"] | None,
         Field(
             description=(
-                "Optional — limit to a single device type. The LSR/SSR policy "
-                "only applies to ACCESS_POINT and GATEWAY; SWITCH entries are "
-                "passed through with Central's recommendation."
+                "Optional — limit to a single device type. Note: filtering out "
+                "ACCESS_POINT or GATEWAY reduces the pool used to mine the "
+                "newest LSR target for SSR devices. Leave unset for best SSR "
+                "recommendations."
             ),
             default=None,
         ),
@@ -299,20 +276,20 @@ async def central_recommend_firmware(
 ) -> FirmwareRecommendationReport:
     """Apply an LSR-preferred upgrade policy to every device's firmware.
 
-    Central's built-in `recommendedVersion` will happily keep a device on an
-    SSR train. This tool fetches `/network-services/v1/firmware-details` for
-    every device, classifies the current version as LSR, SSR, AOS 8, or
-    unknown, and returns a concrete recommendation:
+    The tool calls `/network-services/v1/firmware-details`, classifies each
+    device from the `firmwareClassification` field the API returns (LSR,
+    SSR, or empty), and recommends accordingly:
 
     - On LSR → upgrade to Central's recommended version (latest in same train)
-    - On SSR → move to the next LSR train at or above the current train
-    - On AOS 8 or non-AP/GW → pass Central's recommendation through
-    - Unknown train → flag the device so the user can extend the bundled
-      LSR/SSR mapping (`AOS10_AP_GW_RELEASE_TYPES` in this module)
+    - On SSR → move to the newest LSR version discovered elsewhere in the
+      fleet for the same device type (Central would otherwise keep the
+      device on SSR)
+    - Unclassified (typically AOS 8) → pass Central's recommendation through
 
-    The report includes counts by state and the LSR/SSR mapping used, so the
-    user can see at a glance whether their fleet needs an LSR shift and which
-    trains are classified.
+    The "newest LSR" target is mined live from the same response — no
+    hand-maintained train mapping. If no LSR device of the same type exists
+    in the fleet, SSR devices fall back to Central's recommendation with
+    a note.
     """
     conn = ctx.lifespan_context["central_conn"]
 
@@ -344,68 +321,36 @@ async def central_recommend_firmware(
         if not next_cursor:
             break
 
+    newest_lsr = _find_newest_lsr_per_type(all_items)
+
     recommendations: list[FirmwareRecommendation] = []
-    counts = {
-        "up_to_date": 0,
-        "on_lsr_train": 0,
-        "on_ssr_train": 0,
-        "on_aos8": 0,
-        "unknown_train": 0,
-    }
+    counts = {"up_to_date": 0, "on_lsr": 0, "on_ssr": 0, "unclassified": 0}
 
     for item in all_items:
-        current_version = str(item.get("firmwareVersion", ""))
-        central_rec = item.get("recommendedVersion") or None
-        upgrade_status = item.get("upgradeStatus")
-        dtype = str(item.get("deviceType", ""))
+        rec = _recommend(item, newest_lsr)
 
-        release_type, train, our_rec, action, rationale = _recommend(
-            dtype,
-            current_version,
-            central_rec,
-            upgrade_status,
-        )
-
-        if action == "up_to_date":
+        if rec.action == "up_to_date":
             counts["up_to_date"] += 1
-        if release_type == "LSR":
-            counts["on_lsr_train"] += 1
-        elif release_type == "SSR":
-            counts["on_ssr_train"] += 1
-        elif release_type == "AOS8":
-            counts["on_aos8"] += 1
-        elif release_type == "UNKNOWN":
-            counts["unknown_train"] += 1
+        if rec.release_type == "LSR":
+            counts["on_lsr"] += 1
+        elif rec.release_type == "SSR":
+            counts["on_ssr"] += 1
+        else:
+            counts["unclassified"] += 1
 
-        if action == "up_to_date" and not include_up_to_date:
+        if rec.action == "up_to_date" and not include_up_to_date:
             continue
-
-        recommendations.append(
-            FirmwareRecommendation(
-                serial_number=str(item.get("serialNumber", "")),
-                device_name=str(item.get("deviceName", "")),
-                device_type=dtype,
-                site_name=item.get("siteName"),
-                current_version=current_version,
-                current_train=train,
-                release_type=release_type,
-                central_recommended_version=central_rec,
-                our_recommended_version=our_rec,
-                action=action,
-                rationale=rationale,
-            )
-        )
+        recommendations.append(rec)
 
     needs_action = sum(1 for r in recommendations if r.action != "up_to_date")
 
     return FirmwareRecommendationReport(
-        lsr_train_reference={k: v for k, v in AOS10_AP_GW_RELEASE_TYPES.items()},
+        discovered_lsr_targets=newest_lsr,
         total_devices_scanned=len(all_items),
         up_to_date=counts["up_to_date"],
-        on_lsr_train=counts["on_lsr_train"],
-        on_ssr_train=counts["on_ssr_train"],
-        on_aos8=counts["on_aos8"],
-        unknown_train=counts["unknown_train"],
+        on_lsr=counts["on_lsr"],
+        on_ssr=counts["on_ssr"],
+        unclassified=counts["unclassified"],
         needs_action=needs_action,
         recommendations=recommendations,
     )

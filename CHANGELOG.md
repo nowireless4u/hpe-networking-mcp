@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.9.2.1] - 2026-04-20
+
+### Changed
+- **`central_recommend_firmware` now reads LSR/SSR classification directly
+  from the API.** The hand-maintained `AOS10_AP_GW_RELEASE_TYPES` mapping
+  has been removed. The tool now uses the `firmwareClassification` field
+  returned by `/network-services/v1/firmware-details` (values: `"LSR"`,
+  `"SSR"`, or empty for unclassified devices such as AOS 8).
+- For SSR devices, the "next LSR train" target is now mined live from the
+  same response: the tool scans every LSR-classified device in the fleet
+  (across both `firmwareVersion` and `recommendedVersion`) and picks the
+  highest version seen per device type. No more hardcoded train list to
+  keep in sync with Aruba's release docs.
+- Report schema: `lsr_train_reference` removed; replaced with
+  `discovered_lsr_targets` showing the mined LSR targets per device type.
+  Count field `on_aos8` and `unknown_train` collapsed into `unclassified`.
+  `release_type` field now only emits `LSR`, `SSR`, or `UNCLASSIFIED`
+  (the old `AOS8` and `UNKNOWN` buckets fold into the last).
+- If no LSR device of a given type exists in the fleet, SSR devices of
+  that type fall back to Central's recommendation with a note.
+
 ## [v0.9.2.0] - 2026-04-20
 
 ### Added — Central firmware recommendation tool
