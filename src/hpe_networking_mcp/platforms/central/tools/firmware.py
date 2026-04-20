@@ -196,7 +196,7 @@ def _recommend(
             (
                 f"On SSR train {train}. Recommending move to next LSR train {next_lsr} — "
                 f"Central's suggestion was '{central_recommended}'. "
-                "Select the latest available build in that train from Central's firmware catalog."
+                "Pick the latest available build in that train from Central's firmware catalog."
             ),
         )
 
