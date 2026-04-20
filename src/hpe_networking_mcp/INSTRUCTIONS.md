@@ -150,6 +150,10 @@ When asked to create a new site based on an existing site:
   - Use `central_manage_config_assignment` to assign or remove a profile at a scope. Required for WLAN sync — assigns the profile after creating it. Parameters: scope_id (from `central_get_scope_tree`), device_function (`CAMPUS_AP`), profile_type (`wlan-ssids`), profile_instance (SSID name).
 - **Configuration (Write)**: central_manage_site, central_manage_site_collection, central_manage_device_group — requires `ENABLE_CENTRAL_WRITE_TOOLS=true`
   - **Site creation payload**: All fields must use full names, no abbreviations (e.g. "Indiana" not "IN", "United States" not "US"). The `timezone` object is required and must include `timezoneName` (e.g. "Eastern Standard Time"), `timezoneId` (e.g. "America/Indiana/Indianapolis"), and `rawOffset` in milliseconds (e.g. -18000000 for EST). Determine the correct timezone from the address.
+- **Firmware Recommendations**: central_recommend_firmware
+  - Use when the user asks what firmware version a device or fleet should be on, whether any devices need upgrades, or for a firmware audit. The tool applies an LSR-preferred upgrade policy on top of Central's built-in `recommendedVersion`: APs and Gateways on an SSR train are recommended to move to the next LSR train, rather than staying on SSR as Central would suggest.
+  - Filter with `device_type`, `site_id`, `site_name`, or `serial_number`. Default behavior omits devices already on Central's recommended version; pass `include_up_to_date=True` to see them too.
+  - The `release_type` field on each recommendation indicates LSR, SSR, AOS8, or UNKNOWN. LSR/SSR classification only covers AOS 10 APs and Gateways — switches and AOS 8 devices fall back to Central's recommendation with a pass-through action.
 
 ## Cross-Platform WLAN Management
 

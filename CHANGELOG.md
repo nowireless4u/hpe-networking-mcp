@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.9.2.0] - 2026-04-20
+
+### Added — Central firmware recommendation tool
+- New `central_recommend_firmware` tool that reads Central's
+  `/network-services/v1/firmware-details` endpoint and applies an
+  LSR-preferred upgrade policy on top of Central's built-in
+  `recommendedVersion`.
+- Classifies each AP or Gateway's current AOS 10 train as LSR or SSR using
+  a hand-maintained mapping (`AOS10_AP_GW_RELEASE_TYPES`, currently
+  covering 10.3–10.8). Switches and AOS 8 devices are passed through with
+  Central's recommendation — the LSR/SSR concept doesn't apply to them.
+- Output includes per-device current train, release type, current version,
+  Central's recommended version, our recommended version or next LSR
+  train, a rationale string, and a fleet-level count breakdown (on LSR,
+  on SSR, on AOS 8, unknown train, needs action).
+- Filters by `serial_number`, `device_type`, `site_id`, or `site_name`
+  (server-side OData). Defaults to omitting devices that are already on
+  Central's recommended version to keep the report actionable.
+- Update `AOS10_AP_GW_RELEASE_TYPES` in
+  `src/hpe_networking_mcp/platforms/central/tools/firmware.py` when Aruba
+  designates a new LSR train.
+
 ## [v0.9.1.1] - 2026-04-17
 
 ### Fixed

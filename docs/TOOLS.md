@@ -9,7 +9,7 @@ Tools are namespaced by platform: `mist_*` (Juniper Mist), `central_*` (Aruba Ce
 | Platform | Read-Only Tools | Write Tools | Prompts | Total |
 |----------|----------------|-------------|---------|-------|
 | Juniper Mist | 31 | 4 | 2 | 37 |
-| Aruba Central | 59 | 13 | 12 | 84 |
+| Aruba Central | 60 | 13 | 12 | 85 |
 | Aruba ClearPass | 55 | 72 | -- | 127 |
 | Cross-Platform | 1 | 1 | 3 | 5 |
 | HPE GreenLake (static mode) | 10 | -- | -- | 10 |
@@ -505,7 +505,7 @@ GreenLake supports two mutually exclusive tool modes controlled by
 
 ---
 
-## Aruba Central (72 tools + 12 prompts)
+## Aruba Central (73 tools + 12 prompts)
 
 ### Sites
 
@@ -1121,6 +1121,29 @@ and optional `scope_id` + `device_function` for local (scoped) objects.
 #### `central_get_role_gpids` / `central_manage_role_gpid`
 
 > Role GPIDs — map roles to policy group IDs. Controls which policy group is assigned to each role.
+
+### Firmware
+
+#### `central_recommend_firmware`
+
+> Applies an LSR-preferred upgrade policy on top of Central's built-in `recommendedVersion`. For APs and Gateways running AOS 10, classifies the current train as LSR or SSR using a hand-maintained mapping and recommends accordingly: LSR trains get Central's latest-in-train version; SSR trains are recommended to move to the next LSR train. Switches and legacy AOS 8 devices pass Central's recommendation through unchanged.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| serial_number | str | No | Narrow to one device. |
+| device_type | str | No | `ACCESS_POINT`, `SWITCH`, or `GATEWAY`. LSR/SSR policy only applies to the first two. |
+| site_id | str | No | Limit to a site by ID. |
+| site_name | str | No | Limit to a site by exact name. |
+| include_up_to_date | bool | No | If True, include devices already on Central's recommended version. Default False. |
+| max_pages | int | No | Safety cap on paginated fetches (1000 items × max_pages). Default 10. |
+
+**Returned report:**
+
+- `lsr_train_reference` — the LSR/SSR mapping the tool used, for transparency.
+- `total_devices_scanned`, `up_to_date`, `on_lsr_train`, `on_ssr_train`, `on_aos8`, `unknown_train`, `needs_action` — fleet-level counts.
+- `recommendations[]` — per-device records: current version/train, release type, Central's recommendation, our recommendation, action (`upgrade_in_place`, `move_to_lsr_train`, `follow_central`, `up_to_date`, `unknown`), and a rationale string.
+
+**Mapping source of truth:** Aruba's supported-devices-AOS10 documentation. When a new LSR train is designated, update `AOS10_AP_GW_RELEASE_TYPES` in [src/hpe_networking_mcp/platforms/central/tools/firmware.py](../src/hpe_networking_mcp/platforms/central/tools/firmware.py).
 
 ### Guided Prompts
 

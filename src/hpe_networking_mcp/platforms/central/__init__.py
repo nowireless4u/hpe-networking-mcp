@@ -95,6 +95,7 @@ TOOLS = {
         "central_manage_site_collection",
         "central_manage_device_group",
     ],
+    "firmware": ["central_recommend_firmware"],
 }
 
 
