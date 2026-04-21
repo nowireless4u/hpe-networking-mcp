@@ -963,8 +963,11 @@ No parameters. Returns a dict sorted by health score (worst first).
 |-----------|------|----------|-------------|
 | ssid | str | Yes | SSID name (used as identifier in API path). |
 | action_type | str | Yes | `create`, `update`, or `delete`. |
-| payload | dict | Yes | WLAN profile config (see valid values below). |
+| payload | dict | Yes | WLAN profile config. For `update` (default), pass only the fields you want to change — the tool issues a `PATCH` and Central merges. For `create`, pass a full profile. For `delete`, payload is ignored. |
+| replace_existing | bool | No | Destructive flag. When True, `update` issues a `PUT` that replaces the entire profile — fields not in the payload will be dropped. Default False (safe partial-patch). |
 | confirmed | bool | No | Set to true after user confirms update/delete in chat. |
+
+**Update semantics:** By default, `action_type="update"` issues `PATCH /network-config/v1alpha1/wlan-ssids/{ssid}` and the Central API merges the payload with the existing profile server-side. Pass only the fields you want to change; everything else is preserved. The elicitation prompt fetches the current profile and shows a per-field `before → after` diff before applying the change. Set `replace_existing=True` only when you have the complete profile in `payload` and genuinely want a wholesale swap (uses `PUT`).
 
 **Valid `opmode` values** (do NOT invent values — use only these):
 

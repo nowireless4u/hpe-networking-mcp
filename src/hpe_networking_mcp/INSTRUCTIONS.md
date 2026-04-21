@@ -129,6 +129,8 @@ When asked to create a new site based on an existing site:
 - **WLAN Profiles**: central_get_wlan_profiles, central_manage_wlan_profile
   - Use `central_get_wlan_profiles` to read WLAN SSID profile configurations from the library
   - Use `central_manage_wlan_profile` to create, update, or delete WLAN profiles — requires `ENABLE_CENTRAL_WRITE_TOOLS=true`
+  - **Update semantics are partial-patch by default**: when `action_type="update"`, pass only the fields you want to change. The tool issues `PATCH` and Central merges with the existing profile — untouched fields are preserved. Do NOT send a full profile copy thinking the tool will reconcile it.
+  - **Only set `replace_existing=True`** when the user explicitly wants to wholesale-swap the entire profile AND the payload contains the full desired configuration. Any field missing from the payload in that mode will be dropped. If in doubt, leave it False.
   - **Valid opmode values**: OPEN, WPA2_PERSONAL, WPA3_SAE, WPA2_ENTERPRISE, WPA3_ENTERPRISE_CCM_128, WPA2_MPSK_AES, ENHANCED_OPEN, DPP. Note: `WPA2_PSK_AES` does NOT exist — use `WPA2_PERSONAL` for WPA2 PSK.
   - **Mist-to-Central opmode mapping**: Mist psk → `WPA2_PERSONAL`, Mist psk+wpa3 → `WPA3_SAE`, Mist eap → `WPA2_ENTERPRISE`, Mist eap+wpa3+wpa2 → `WPA3_ENTERPRISE_CCM_128`
   - **NEVER call this tool directly for cross-platform WLAN sync** — use the sync prompts instead

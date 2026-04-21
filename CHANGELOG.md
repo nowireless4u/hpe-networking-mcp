@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.9.2.2] - 2026-04-21
+
+### Fixed — `central_manage_wlan_profile` silently clobbered entire profiles on update (#141)
+- Reported by Zach Jennings. An update with a partial payload (e.g.
+  `{"dtim-period": 2}`) was issued to Central as a `PUT`, which is
+  full-resource replacement — every field missing from the payload was
+  dropped. Security, VLAN, QoS, and client settings on the affected
+  profiles were lost silently.
+- `action_type="update"` now issues `PATCH /network-config/v1alpha1/wlan-ssids/{ssid}`
+  and Central merges the payload with the existing profile server-side.
+  Callers pass only the fields they want to change; untouched fields are
+  preserved. One round trip, atomic on the server, uses Central's own
+  merge semantics.
+- Added `replace_existing: bool = False` parameter. When True, the tool
+  falls back to the old `PUT` full-replacement behavior. The payload
+  description and elicitation message make the consequences explicit.
+- Elicitation prompt for partial updates now fetches the current profile
+  and shows a per-field before → after diff, so the user sees exactly
+  what will change before approving. Failures in the diff lookup are
+  non-blocking — the write proceeds with a generic message if the GET
+  fails.
+
 ## [v0.9.2.1] - 2026-04-20
 
 ### Changed
