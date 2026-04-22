@@ -174,7 +174,7 @@ docker pull ghcr.io/nowireless4u/hpe-networking-mcp:latest
 
 You don't need credentials for all four platforms. The server automatically detects which platforms have valid secrets and only enables those:
 
-- **All four platforms configured** → All tools available (Mist + Central + GreenLake + ClearPass)
+- **All five platforms configured** → All tools available (Mist + Central + GreenLake + ClearPass + Apstra)
 - **Only Mist configured** → Only `mist_*` tools available; other platforms disabled
 - **Only ClearPass configured** → Only `clearpass_*` tools available; other platforms disabled
 - **No valid credentials** → Server refuses to start with a clear error message
@@ -334,31 +334,31 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                MCP Client (Claude, VS Code, etc.)                   │
-└────────────────────────────┬────────────────────────────────────────┘
-                             │ Streamable HTTP
-                             ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                 HPE Networking MCP Server (:8000)                    │
-│                                                                     │
-│  ┌──────────┐ ┌──────────┐ ┌──────────────┐ ┌──────────────────┐  │
-│  │   Mist   │ │ Central  │ │  GreenLake   │ │    ClearPass     │  │
-│  │  mist_*  │ │central_* │ │ greenlake_*  │ │   clearpass_*    │  │
-│  │35+2 prmt │ │73+12 prmt│ │  3/10 tools  │ │   127 tools      │  │
-│  └────┬─────┘ └────┬─────┘ └──────┬───────┘ └────────┬─────────┘  │
-│       │            │              │                   │             │
-└───────┼────────────┼──────────────┼───────────────────┼─────────────┘
-        ▼            ▼              ▼                   ▼
-  Mist Cloud    Aruba Central   GreenLake API    ClearPass CPPM
-     API            API                              API
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│                     MCP Client (Claude, VS Code, etc.)                            │
+└────────────────────────────────────┬──────────────────────────────────────────────┘
+                                     │ Streamable HTTP
+                                     ▼
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│                         HPE Networking MCP Server (:8000)                         │
+│                                                                                   │
+│ ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐        │
+│ │    Mist    │ │  Central   │ │ GreenLake  │ │ ClearPass  │ │   Apstra   │        │
+│ │   mist_*   │ │ central_*  │ │greenlake_* │ │clearpass_* │ │  apstra_*  │        │
+│ │ 35+2 prmt  │ │ 73+12 prmt │ │ 3/10 tools │ │ 127 tools  │ │  21 tools  │        │
+│ └──────┬─────┘ └──────┬─────┘ └──────┬─────┘ └──────┬─────┘ └──────┬─────┘        │
+│        │              │              │              │              │              │
+└────────┼──────────────┼──────────────┼──────────────┼──────────────┼──────────────┘
+         ▼              ▼              ▼              ▼              ▼
+    Mist Cloud     Aruba Central   GreenLake API  ClearPass CPPM    Apstra
+       API             API                             API        Fabric API
 ```
 
 **Key design decisions:**
 
 - **FastMCP** framework with Python 3.12+
 - **Streamable HTTP** transport (modern MCP standard)
-- **Tool namespacing** — `mist_*`, `central_*`, `greenlake_*`, `clearpass_*` prefixes prevent collisions
+- **Tool namespacing** — `mist_*`, `central_*`, `greenlake_*`, `clearpass_*`, `apstra_*` prefixes prevent collisions
 - **Platform isolation** — each module manages its own API client and auth; a failing platform doesn't affect the others
 - **Non-root container** — runs as `mcpuser` (uid 1000)
 
@@ -456,10 +456,11 @@ hpe-networking-mcp/
 │       ├── central/             # 73 Central tools + 12 prompts + API client
 │       ├── greenlake/           # 3 dynamic or 10 static tools + OAuth2 client
 │       ├── clearpass/           # 127 ClearPass tools + pyclearpass SDK client
+│       ├── apstra/              # 21 Apstra tools + async httpx client
 │       ├── manage_wlan.py       # Cross-platform WLAN management tool
 │       ├── sync_prompts.py      # Cross-platform WLAN sync prompts
 │       └── site_health_check.py # Cross-platform site health aggregator
-├── tests/                       # Unit and integration tests (176 tests)
+├── tests/                       # Unit and integration tests (315 unit tests)
 ├── docs/                        # PRD, PRP, tool reference
 ├── secrets/                     # Secret files (only .example committed)
 ├── .github/workflows/           # CI, security, Docker publish
@@ -514,6 +515,13 @@ Central: disabled (missing secrets: central_client_id, central_client_secret)
 - Ensure the OAuth2 API client has been created in ClearPass Admin with `client_credentials` grant type
 - For self-signed certificates, set `clearpass_verify_ssl` to `false`
 - Check the logs for the specific error: `docker compose logs | grep ClearPass`
+
+**Apstra** — `Apstra: failed to initialize` or login errors:
+- Verify `apstra_server` is just the hostname (no scheme, no port), e.g., `apstra.example.com`
+- Set `apstra_port` only if your Apstra server listens somewhere other than `443`
+- Ensure `apstra_username` and `apstra_password` belong to an Apstra account that can reach `/api/user/login`
+- For self-signed Apstra certificates, set `apstra_verify_ssl` to `false` (defaults to `true`)
+- Check the logs for the specific error: `docker compose logs | grep Apstra`
 
 ### Connection Refused on Port 8000
 
