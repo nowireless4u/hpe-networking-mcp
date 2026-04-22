@@ -13,38 +13,43 @@ A unified [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server
 
 Managing HPE networking infrastructure with AI assistants today means juggling multiple separate MCP servers — each with its own setup, credentials, and quirks. This project consolidates them into one:
 
-| Category | Mist | Central | GreenLake | ClearPass |
-|----------|:----:|:-------:|:---------:|:---------:|
-| **Sites / Health Overview** | ✅ | ✅ | — | — |
-| **WLANs / SSIDs** | ✅ | ✅ | — | — |
-| **Device Inventory** | ✅ | ✅ | ✅ | ✅ |
-| **Device Details (AP/Switch/GW)** | ✅ | ✅ | — | — |
-| **Device Stats & Utilization** | ✅ | ✅ | — | — |
-| **Client Connectivity** | ✅ | ✅ | — | — |
-| **Events** | ✅ | ✅ | — | ✅ |
-| **Alerts / Alarms** | ✅ | ✅ | — | ✅ |
-| **Audit Logs** | ✅ | ✅ | ✅ | ✅ |
-| **Application Visibility** | — | ✅ | — | — |
-| **SLE / Performance Metrics** | ✅ | — | — | — |
-| **Troubleshooting (Ping/Traceroute/Bounce)** | ✅ | ✅ | — | — |
-| **Session Control / Client Disconnect** | — | ✅ | — | ✅ |
-| **Configuration Management** | ✅ | — | — | ✅ |
-| **Configuration Write (CRUD)** | ✅ | — | — | ✅ |
-| **Radio Resource Management** | ✅ | — | — | — |
-| **Rogue AP Detection** | ✅ | — | — | — |
-| **Firmware Management** | ✅ | — | — | — |
-| **Subscriptions / Licensing** | — | — | ✅ | ✅ |
-| **User Management** | — | — | ✅ | ✅ |
-| **Workspaces** | — | — | ✅ | — |
-| **Scope & Configuration Hierarchy** | — | ✅ | — | — |
-| **Guest Management** | — | — | — | ✅ |
-| **NAC / Policy Management** | — | — | — | ✅ |
-| **Endpoint Profiling** | — | — | — | ✅ |
-| **Certificates** | — | — | — | ✅ |
-| **Guided Prompts** | ✅ | ✅ | — | — |
-| **Dynamic API Discovery** | — | — | ✅ | — |
-| **Tools** | **35 + 2 prompts** | **73 + 12 prompts** | **3 or 10** | **127** |
-| **Cross-Platform** | **2 tools + 3 prompts** | **2 tools + 3 prompts** | — | **1 tool** |
+| Category | Mist | Central | GreenLake | ClearPass | Apstra |
+|----------|:----:|:-------:|:---------:|:---------:|:------:|
+| **Sites / Health Overview** | ✅ | ✅ | — | — | — |
+| **WLANs / SSIDs** | ✅ | ✅ | — | — | — |
+| **Device Inventory** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Device Details (AP/Switch/GW)** | ✅ | ✅ | — | — | — |
+| **Device Stats & Utilization** | ✅ | ✅ | — | — | — |
+| **Client Connectivity** | ✅ | ✅ | — | — | — |
+| **Events** | ✅ | ✅ | — | ✅ | — |
+| **Alerts / Alarms** | ✅ | ✅ | — | ✅ | ✅ |
+| **Audit Logs** | ✅ | ✅ | ✅ | ✅ | — |
+| **Application Visibility** | — | ✅ | — | — | — |
+| **SLE / Performance Metrics** | ✅ | — | — | — | — |
+| **Troubleshooting (Ping/Traceroute/Bounce)** | ✅ | ✅ | — | — | — |
+| **Session Control / Client Disconnect** | — | ✅ | — | ✅ | — |
+| **Configuration Management** | ✅ | — | — | ✅ | ✅ |
+| **Configuration Write (CRUD)** | ✅ | — | — | ✅ | ✅ |
+| **Radio Resource Management** | ✅ | — | — | — | — |
+| **Rogue AP Detection** | ✅ | — | — | — | — |
+| **Firmware Management** | ✅ | — | — | — | — |
+| **Subscriptions / Licensing** | — | — | ✅ | ✅ | — |
+| **User Management** | — | — | ✅ | ✅ | — |
+| **Workspaces** | — | — | ✅ | — | — |
+| **Scope & Configuration Hierarchy** | — | ✅ | — | — | — |
+| **Guest Management** | — | — | — | ✅ | — |
+| **NAC / Policy Management** | — | — | — | ✅ | — |
+| **Endpoint Profiling** | — | — | — | ✅ | — |
+| **Certificates** | — | — | — | ✅ | — |
+| **Datacenter Blueprints / Templates** | — | — | — | — | ✅ |
+| **Virtual Networks / EVPN / Routing Zones** | — | — | — | — | ✅ |
+| **Connectivity Templates / Policy Apply** | — | — | — | — | ✅ |
+| **Fabric Deploy / Diff Status** | — | — | — | — | ✅ |
+| **BGP / Protocol Session Monitoring** | — | — | — | — | ✅ |
+| **Guided Prompts** | ✅ | ✅ | — | — | — |
+| **Dynamic API Discovery** | — | — | ✅ | — | — |
+| **Tools** | **35 + 2 prompts** | **73 + 12 prompts** | **3 or 10** | **127** | **21** |
+| **Cross-Platform** | **2 tools + 3 prompts** | **2 tools + 3 prompts** | — | **1 tool** | — |
 
 > **GreenLake tool count**: 3 tools in **dynamic mode** (default) — a meta-tool system that can discover and invoke any GreenLake API endpoint. 10 tools in **static mode** — dedicated tools for each endpoint. Set via `MCP_TOOL_MODE` environment variable.
 
