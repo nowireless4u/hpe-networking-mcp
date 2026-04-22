@@ -5,7 +5,7 @@
 
 > **Unofficial / community project.** This repository is an independent, community-driven project. It is not affiliated with, endorsed by, sponsored by, or supported by Hewlett Packard Enterprise, Aruba Networks, or Juniper Networks. "HPE", "Aruba", "Aruba Central", "Aruba ClearPass", "HPE GreenLake", "Juniper", and "Juniper Mist" are trademarks of their respective owners and are used here only to describe what this software interoperates with. Please direct support and licensing questions about those products to the respective vendors.
 
-A unified [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that brings **Juniper Mist**, **Aruba Central**, **HPE GreenLake**, and **Aruba ClearPass** together into a single, deployable service. One container. One endpoint. All your HPE networking tools.
+A unified [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that brings **Juniper Mist**, **Aruba Central**, **HPE GreenLake**, **Aruba ClearPass**, and **Juniper Apstra** together into a single, deployable service. One container. One endpoint. All your HPE networking tools.
 
 ---
 
@@ -121,6 +121,13 @@ cp secrets/clearpass_server.example secrets/clearpass_server
 cp secrets/clearpass_client_id.example secrets/clearpass_client_id
 cp secrets/clearpass_client_secret.example secrets/clearpass_client_secret
 cp secrets/clearpass_verify_ssl.example secrets/clearpass_verify_ssl
+
+# Juniper Apstra (optional)
+cp secrets/apstra_server.example secrets/apstra_server
+cp secrets/apstra_port.example secrets/apstra_port
+cp secrets/apstra_username.example secrets/apstra_username
+cp secrets/apstra_password.example secrets/apstra_password
+cp secrets/apstra_verify_ssl.example secrets/apstra_verify_ssl
 ```
 
 Each file contains a single value (e.g., your API token). The server auto-disables platforms with missing secret files.
@@ -356,7 +363,7 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 
 Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) are supported with safety controls:
 
-- **Disabled by default** — enable per-platform with `ENABLE_MIST_WRITE_TOOLS=true`, `ENABLE_CENTRAL_WRITE_TOOLS=true`, or `ENABLE_CLEARPASS_WRITE_TOOLS=true`
+- **Disabled by default** — enable per-platform with `ENABLE_MIST_WRITE_TOOLS=true`, `ENABLE_CENTRAL_WRITE_TOOLS=true`, `ENABLE_CLEARPASS_WRITE_TOOLS=true`, or `ENABLE_APSTRA_WRITE_TOOLS=true`
 - **Elicitation required** — write tools prompt for user confirmation before executing
 - **Annotation-based** — all tools carry MCP annotations (`readOnlyHint`, `destructiveHint`, etc.)
 
@@ -365,6 +372,7 @@ Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) ar
 | `ENABLE_MIST_WRITE_TOOLS` | `false` | Enable Mist write/mutation tools |
 | `ENABLE_CENTRAL_WRITE_TOOLS` | `false` | Enable Central write/mutation tools |
 | `ENABLE_CLEARPASS_WRITE_TOOLS` | `false` | Enable ClearPass write/mutation tools |
+| `ENABLE_APSTRA_WRITE_TOOLS` | `false` | Enable Apstra write/mutation tools |
 | `DISABLE_ELICITATION` | `false` | Skip user confirmation for write tools (**use with caution**) |
 
 ---
@@ -379,6 +387,7 @@ Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) ar
 | `ENABLE_MIST_WRITE_TOOLS` | `false` | Enable Mist write/mutation tools |
 | `ENABLE_CENTRAL_WRITE_TOOLS` | `false` | Enable Central write/mutation tools |
 | `ENABLE_CLEARPASS_WRITE_TOOLS` | `false` | Enable ClearPass write/mutation tools |
+| `ENABLE_APSTRA_WRITE_TOOLS` | `false` | Enable Apstra write/mutation tools |
 | `DISABLE_ELICITATION` | `false` | Disable write confirmation prompts |
 | `MCP_TOOL_MODE` | `dynamic` | GreenLake tool mode: `dynamic` (3 meta-tools) or `static` (10 dedicated tools) |
 

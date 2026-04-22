@@ -136,7 +136,8 @@ class TestLoadConfig:
         assert config.mist is not None
         assert config.central is not None
         assert config.greenlake is not None
-        assert set(config.enabled_platforms) == {"mist", "central", "greenlake"}
+        assert config.apstra is not None
+        assert set(config.enabled_platforms) == {"mist", "central", "greenlake", "apstra"}
 
     def test_raises_system_exit_when_no_platforms_have_credentials(self, tmp_path, monkeypatch):
         """An empty secrets directory means zero platforms -- must exit."""
@@ -145,7 +146,7 @@ class TestLoadConfig:
             load_config()
 
     def test_returns_config_with_only_mist_enabled(self, patch_secrets_dir):
-        # Remove Central and GreenLake secrets
+        # Remove Central, GreenLake, and Apstra secrets
         for name in [
             "central_base_url",
             "central_client_id",
@@ -154,12 +155,18 @@ class TestLoadConfig:
             "greenlake_client_id",
             "greenlake_client_secret",
             "greenlake_workspace_id",
+            "apstra_server",
+            "apstra_port",
+            "apstra_username",
+            "apstra_password",
+            "apstra_verify_ssl",
         ]:
             (patch_secrets_dir / name).unlink()
         config = load_config()
         assert config.enabled_platforms == ["mist"]
         assert config.central is None
         assert config.greenlake is None
+        assert config.apstra is None
 
     def test_reads_env_overrides(self, patch_secrets_dir, monkeypatch):
         monkeypatch.setenv("MCP_PORT", "9090")

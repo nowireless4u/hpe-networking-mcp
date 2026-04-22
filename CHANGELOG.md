@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.9.3.0] - 2026-04-22
+
+### Added — Juniper Apstra platform (21 tools)
+- New `apstra_*` tool namespace covering datacenter blueprint
+  management, virtual networks, connectivity templates, routing zones,
+  remote EVPN gateways, anomalies, BGP sessions, and deployment.
+  14 read-only tools + 7 write tools.
+- Docker secrets: `apstra_server`, `apstra_port` (optional, default 443),
+  `apstra_username`, `apstra_password`, `apstra_verify_ssl` (optional,
+  default `true`).
+- `verify_ssl` defaults to **true**. The standalone Apstra MCP server
+  it is ported from hardcoded `verify=False` on every HTTPS call;
+  operators must now opt out explicitly.
+- Login is sent with an `httpx` JSON body (`json={...}`) rather than
+  f-string–interpolated payloads. The standalone server was vulnerable
+  to injection if a password contained a `"` character.
+- Async `httpx.AsyncClient` with in-memory token cache, `asyncio.Lock`
+  serializing login, automatic refresh-and-retry on `HTTP 401`, split
+  30s request / 10s authentication timeouts.
+- Write tools (deploy, delete, create VN/gateway/blueprint, CT-policy
+  apply) require user confirmation via the existing elicitation
+  middleware and are gated behind `ENABLE_APSTRA_WRITE_TOOLS=true`.
+- Tool renaming: the terse source names (`get_bp`, `get_rz`,
+  `create_vn`) are now the descriptive `apstra_get_blueprints`,
+  `apstra_get_routing_zones`, `apstra_create_virtual_network`, and so
+  on, matching the established `mist_*`/`central_*`/`clearpass_*` style.
+- The standalone `-f/--config-file`, `-t/--transport`, `-H/--host`,
+  `-p/--port` CLI flags and the `apstra_config.json` plaintext
+  credentials file are retired. Apstra now uses the unified server's
+  transport wiring and Docker secrets at `/run/secrets/`.
+- Legacy config field aliases (`aos_server`, `aos_port`) and the
+  combined `"host:port"` server-string form are not supported. Use
+  the canonical `apstra_server` and `apstra_port` secrets.
+
 ## [v0.9.2.2] - 2026-04-21
 
 ### Fixed — `central_manage_wlan_profile` silently clobbered entire profiles on update (#141)

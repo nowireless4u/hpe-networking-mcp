@@ -20,6 +20,11 @@ def secrets_dir(tmp_path):
         "greenlake_client_id": "greenlake-client-id-value",
         "greenlake_client_secret": "greenlake-client-secret-value",
         "greenlake_workspace_id": "greenlake-workspace-id-value",
+        "apstra_server": "apstra.test.example.com",
+        "apstra_port": "443",
+        "apstra_username": "admin",
+        "apstra_password": "apstra-test-password",
+        "apstra_verify_ssl": "true",
     }
     for name, value in secrets.items():
         (tmp_path / name).write_text(value)

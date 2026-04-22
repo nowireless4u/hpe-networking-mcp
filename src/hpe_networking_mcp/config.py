@@ -22,6 +22,11 @@ Secret file mapping:
     /run/secrets/clearpass_client_id
     /run/secrets/clearpass_client_secret
     /run/secrets/clearpass_verify_ssl (optional, default true)
+    /run/secrets/apstra_server
+    /run/secrets/apstra_port (optional, default 443)
+    /run/secrets/apstra_username
+    /run/secrets/apstra_password
+    /run/secrets/apstra_verify_ssl (optional, default true)
 """
 
 import os
@@ -66,6 +71,15 @@ class ClearPassSecrets:
 
 
 @dataclass
+class ApstraSecrets:
+    server: str  # hostname only, e.g. apstra.example.com
+    username: str
+    password: str
+    port: int = 443
+    verify_ssl: bool = True
+
+
+@dataclass
 class ServerConfig:
     """Global server configuration."""
 
@@ -75,6 +89,7 @@ class ServerConfig:
     enable_mist_write_tools: bool = False
     enable_central_write_tools: bool = False
     enable_clearpass_write_tools: bool = False
+    enable_apstra_write_tools: bool = False
     disable_elicitation: bool = False
     debug: bool = False
     log_file: str | None = None
@@ -87,6 +102,7 @@ class ServerConfig:
     central: CentralSecrets | None = None
     greenlake: GreenLakeSecrets | None = None
     clearpass: ClearPassSecrets | None = None
+    apstra: ApstraSecrets | None = None
 
     @property
     def enabled_platforms(self) -> list[str]:
@@ -99,6 +115,8 @@ class ServerConfig:
             platforms.append("greenlake")
         if self.clearpass:
             platforms.append("clearpass")
+        if self.apstra:
+            platforms.append("apstra")
         return platforms
 
 
@@ -235,6 +253,54 @@ def _load_clearpass() -> ClearPassSecrets | None:
     )
 
 
+def _load_apstra() -> ApstraSecrets | None:
+    """Load Apstra credentials from Docker secrets."""
+    server = _read_secret("apstra_server")
+    port_str = _read_secret("apstra_port")
+    username = _read_secret("apstra_username")
+    password = _read_secret("apstra_password")
+    verify_ssl_str = _read_secret("apstra_verify_ssl")
+
+    missing = []
+    if not server:
+        missing.append("apstra_server")
+    if not username:
+        missing.append("apstra_username")
+    if not password:
+        missing.append("apstra_password")
+
+    if missing:
+        logger.info("Apstra: disabled (missing secrets: {})", ", ".join(missing))
+        return None
+
+    assert server is not None
+    assert username is not None
+    assert password is not None
+
+    try:
+        port = int(port_str) if port_str else 443
+    except ValueError:
+        logger.warning("Apstra: invalid apstra_port value '{}', defaulting to 443", port_str)
+        port = 443
+
+    verify_ssl = verify_ssl_str.lower() not in ("false", "0", "no") if verify_ssl_str else True
+
+    logger.info(
+        "Apstra: credentials loaded (server: {}, port: {}, user: {}, verify_ssl: {})",
+        server,
+        port,
+        username,
+        verify_ssl,
+    )
+    return ApstraSecrets(
+        server=server,
+        username=username,
+        password=password,
+        port=port,
+        verify_ssl=verify_ssl,
+    )
+
+
 def load_config() -> ServerConfig:
     """Load server configuration from Docker secrets and environment variables.
 
@@ -259,6 +325,7 @@ def load_config() -> ServerConfig:
     enable_mist_write = os.getenv("ENABLE_MIST_WRITE_TOOLS", "false").lower() in _truthy
     enable_central_write = os.getenv("ENABLE_CENTRAL_WRITE_TOOLS", "false").lower() in _truthy
     enable_clearpass_write = os.getenv("ENABLE_CLEARPASS_WRITE_TOOLS", "false").lower() in _truthy
+    enable_apstra_write = os.getenv("ENABLE_APSTRA_WRITE_TOOLS", "false").lower() in _truthy
     disable_elicit = os.getenv("DISABLE_ELICITATION", "false").lower() in _truthy
     debug = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
     log_file = os.getenv("LOG_FILE") or None
@@ -271,6 +338,7 @@ def load_config() -> ServerConfig:
     central = _load_central()
     greenlake = _load_greenlake()
     clearpass = _load_clearpass()
+    apstra = _load_apstra()
 
     config = ServerConfig(
         port=port,
@@ -279,6 +347,7 @@ def load_config() -> ServerConfig:
         enable_mist_write_tools=enable_mist_write,
         enable_central_write_tools=enable_central_write,
         enable_clearpass_write_tools=enable_clearpass_write,
+        enable_apstra_write_tools=enable_apstra_write,
         disable_elicitation=disable_elicit,
         debug=debug,
         log_file=log_file,
@@ -287,6 +356,7 @@ def load_config() -> ServerConfig:
         central=central,
         greenlake=greenlake,
         clearpass=clearpass,
+        apstra=apstra,
     )
 
     if not config.enabled_platforms:

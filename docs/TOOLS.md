@@ -2,7 +2,8 @@
 
 Complete reference for all tools registered by the HPE Networking MCP Server.
 Tools are namespaced by platform: `mist_*` (Juniper Mist), `central_*` (Aruba Central),
-`greenlake_*` (HPE GreenLake), and `clearpass_*` (Aruba ClearPass).
+`greenlake_*` (HPE GreenLake), `clearpass_*` (Aruba ClearPass), and `apstra_*`
+(Juniper Apstra).
 
 ## Overview
 
@@ -11,13 +12,14 @@ Tools are namespaced by platform: `mist_*` (Juniper Mist), `central_*` (Aruba Ce
 | Juniper Mist | 31 | 4 | 2 | 37 |
 | Aruba Central | 60 | 13 | 12 | 85 |
 | Aruba ClearPass | 55 | 72 | -- | 127 |
+| Juniper Apstra | 14 | 7 | -- | 21 |
 | Cross-Platform | 1 | 1 | 3 | 5 |
 | HPE GreenLake (static mode) | 10 | -- | -- | 10 |
 | HPE GreenLake (dynamic mode) | 3 | -- | -- | 3 |
 
 Write tools are disabled by default per platform. Enable them with environment variables:
-`ENABLE_MIST_WRITE_TOOLS=true`, `ENABLE_CENTRAL_WRITE_TOOLS=true`, or
-`ENABLE_CLEARPASS_WRITE_TOOLS=true`.
+`ENABLE_MIST_WRITE_TOOLS=true`, `ENABLE_CENTRAL_WRITE_TOOLS=true`,
+`ENABLE_CLEARPASS_WRITE_TOOLS=true`, or `ENABLE_APSTRA_WRITE_TOOLS=true`.
 
 GreenLake supports two mutually exclusive tool modes controlled by
 `GREENLAKE_TOOL_MODE`:
@@ -1593,3 +1595,74 @@ ClearPass tools use the `pyclearpass` SDK with OAuth2 client credentials. Write 
 |------|-------------|
 | `clearpass_generate_random_password` | Generate random password or MPSK |
 | `clearpass_test_connection` | Test ClearPass connectivity and get server version |
+
+---
+
+## Juniper Apstra (21 tools)
+
+Ported from a standalone Apstra MCP server. Requires Apstra credentials in
+Docker secrets (`apstra_server`, `apstra_username`, `apstra_password`, plus
+optional `apstra_port` (default 443) and `apstra_verify_ssl` (default true)).
+Write tools require `ENABLE_APSTRA_WRITE_TOOLS=true` and go through the
+elicitation confirmation flow.
+
+### Health and Meta (2 tools)
+
+| Tool | Description |
+|------|-------------|
+| `apstra_health` | Server health plus live login probe of the configured Apstra server |
+| `apstra_formatting_guidelines` | Full formatting guidance for Apstra output |
+
+### Blueprints (2 tools)
+
+| Tool | Description |
+|------|-------------|
+| `apstra_get_blueprints` | List all blueprints (id, label, design, status) |
+| `apstra_get_templates` | List design templates available for new blueprints |
+
+### Topology (3 tools)
+
+| Tool | Description |
+|------|-------------|
+| `apstra_get_racks` | All racks in a blueprint (`blueprint_id`) |
+| `apstra_get_routing_zones` | Security zones / VRFs in a blueprint (`blueprint_id`) |
+| `apstra_get_system_info` | Systems (spines, leafs, redundancy groups) in a blueprint (`blueprint_id`) |
+
+### Virtual Networks (2 tools)
+
+| Tool | Description |
+|------|-------------|
+| `apstra_get_virtual_networks` | VNs with bound systems and VLAN IDs (`blueprint_id`) |
+| `apstra_get_remote_gateways` | Remote EVPN gateways in a blueprint (`blueprint_id`) |
+
+### Connectivity Templates (2 tools)
+
+| Tool | Description |
+|------|-------------|
+| `apstra_get_connectivity_templates` | Policy templates visible for assignment (`blueprint_id`) |
+| `apstra_get_application_endpoints` | Interfaces available as CT attachment points (`blueprint_id`) |
+
+### Status (3 tools)
+
+| Tool | Description |
+|------|-------------|
+| `apstra_get_anomalies` | Active anomalies in a blueprint (`blueprint_id`) |
+| `apstra_get_diff_status` | Staging vs active-version diff (`blueprint_id`) |
+| `apstra_get_protocol_sessions` | BGP and other protocol sessions (`blueprint_id`) |
+
+### Management (write, destructive)
+
+| Tool | Description |
+|------|-------------|
+| `apstra_deploy` | Deploy a staged version to the fabric (`blueprint_id`, `description`, `staging_version`, `confirmed`) |
+| `apstra_delete_blueprint` | Permanently delete a blueprint (`blueprint_id`, `confirmed`) |
+
+### Management (write, create)
+
+| Tool | Description |
+|------|-------------|
+| `apstra_create_datacenter_blueprint` | Instantiate a new datacenter blueprint from a template |
+| `apstra_create_freeform_blueprint` | Create a new freeform blueprint |
+| `apstra_create_virtual_network` | Create a VXLAN or VLAN virtual network via `virtual-networks-batch` |
+| `apstra_create_remote_gateway` | Create a remote EVPN gateway |
+| `apstra_apply_ct_policies` | Apply or remove connectivity-template policies on interfaces |

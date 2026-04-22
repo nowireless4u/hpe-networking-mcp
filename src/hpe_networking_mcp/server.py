@@ -124,6 +124,25 @@ async def lifespan(server: FastMCP):
         context["clearpass_config"] = None
         context["clearpass_token_manager"] = None
 
+    # --- Apstra ---
+    if config.apstra:
+        try:
+            from hpe_networking_mcp.platforms.apstra.client import ApstraClient
+
+            apstra_client = ApstraClient(config.apstra)
+            # Probe credentials at startup so bad config fails loudly
+            await apstra_client.health_check()
+            context["apstra_client"] = apstra_client
+            context["apstra_config"] = config.apstra
+            logger.info("Apstra: connection verified")
+        except Exception as e:
+            logger.warning("Apstra: failed to initialize — {}", e)
+            context["apstra_client"] = None
+            context["apstra_config"] = None
+    else:
+        context["apstra_client"] = None
+        context["apstra_config"] = None
+
     try:
         yield context
     finally:
@@ -131,6 +150,9 @@ async def lifespan(server: FastMCP):
         gl_tm = context.get("greenlake_token_manager")
         if gl_tm and hasattr(gl_tm, "close"):
             await gl_tm.close()
+        apstra = context.get("apstra_client")
+        if apstra is not None:
+            await apstra.aclose()
         logger.info("Server shutdown complete")
 
 
@@ -162,6 +184,8 @@ def create_server(config: ServerConfig) -> FastMCP:
         _register_greenlake_tools(mcp, config)
     if config.clearpass:
         _register_clearpass_tools(mcp, config)
+    if config.apstra:
+        _register_apstra_tools(mcp, config)
 
     # --- Cross-platform tools and prompts (require both Mist and Central) ---
     if config.mist and config.central:
@@ -181,6 +205,8 @@ def create_server(config: ServerConfig) -> FastMCP:
         mcp.add_transform(Visibility(False, tags={"central_write_delete"}, components={"tool"}))
     if not config.enable_clearpass_write_tools:
         mcp.add_transform(Visibility(False, tags={"clearpass_write_delete"}, components={"tool"}))
+    if not config.enable_apstra_write_tools:
+        mcp.add_transform(Visibility(False, tags={"apstra_write", "apstra_write_delete"}, components={"tool"}))
 
     return mcp
 
@@ -215,6 +241,14 @@ def _register_clearpass_tools(mcp: FastMCP, config: ServerConfig) -> None:
 
     count = register_tools(mcp, config)
     logger.info("ClearPass: registered {} tools", count)
+
+
+def _register_apstra_tools(mcp: FastMCP, config: ServerConfig) -> None:
+    """Register all Apstra platform tools."""
+    from hpe_networking_mcp.platforms.apstra import register_tools
+
+    count = register_tools(mcp, config)
+    logger.info("Apstra: registered {} tools", count)
 
 
 def _register_sync_tools(mcp: FastMCP) -> None:
