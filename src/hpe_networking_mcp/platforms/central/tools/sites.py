@@ -7,6 +7,7 @@ from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import (
     fetch_site_data_parallel,
     groups_to_map,
+    normalize_site_name_filter,
     retry_central_command,
 )
 
@@ -57,14 +58,14 @@ async def central_get_sites(
 @mcp.tool(annotations=READ_ONLY)
 async def central_get_site_health(
     ctx: Context,
-    site_names: list[str] | None = None,
+    site_name: str | list[str] | None = None,
 ) -> list[SiteData]:
     """
     Returns health metrics and device/client counts for sites.
 
     For site configuration data (address, timezone, etc.), use central_get_sites.
 
-    Prefer calling with a site_names filter targeting only the sites you care about.
+    Prefer calling with a site_name filter targeting only the sites you care about.
     Do NOT call without a filter unless the user explicitly requests data for all
     sites — returning all sites is expensive and consumes significant context.
 
@@ -74,12 +75,14 @@ async def central_get_site_health(
     this tool with those specific site names.
 
     Parameters:
-        site_names: One or more site names to filter by (exact match).
-            If omitted, all sites are returned (use sparingly).
+        site_name: One site name or a list of site names to filter by (exact match).
+            Accepts either a single string (e.g. "Owls Nest") or a list of strings
+            (e.g. ["Owls Nest", "HQ"]). If omitted, all sites are returned (use sparingly).
     """
+    wanted = normalize_site_name_filter(site_name)
     sites_data = fetch_site_data_parallel(ctx.lifespan_context["central_conn"])
-    if site_names:
-        return [sites_data[name] for name in site_names if name in sites_data]
+    if wanted:
+        return [sites_data[name] for name in wanted if name in sites_data]
     return list(sites_data.values())
 
 

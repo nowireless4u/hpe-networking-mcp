@@ -528,7 +528,7 @@ GreenLake supports two mutually exclusive tool modes controlled by
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| site_names | list[str] | No | Site names to filter by (exact match). Omit for all sites. |
+| site_name | str \| list[str] | No | One site name or a list of site names to filter by (exact match). Omit for all sites. |
 
 #### `central_get_site_name_id_mapping`
 

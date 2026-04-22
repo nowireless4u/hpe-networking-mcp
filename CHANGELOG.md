@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.0.0.1] - 2026-04-22
+
+### Fixed — `central_get_site_health` parameter name mismatch (#146)
+- Reported by Zach Jennings. The tool used `site_names: list[str]`
+  (plural) while every other single-site Central tool and prompt uses
+  `site_name` (singular). Local LLMs pattern-matching against the
+  Central surface consistently guessed `site_name=...` and hit
+  "must NOT have additional properties" from the FastMCP JSON-schema
+  validator — a framework-level error that told the model nothing about
+  which parameter name was actually correct, causing reasoning loops
+  and no successful tool call.
+- Signature is now `site_name: str | list[str] | None = None`. Accepts
+  either a single name string (`site_name="Owls Nest"`) or a list
+  (`site_name=["A", "B"]`). Batch callers keep working; single-site
+  callers match peer tools.
+- Normalization extracted into `_normalize_site_name_filter` helper with
+  unit tests covering str, list, tuple, empty-list, and None inputs.
+- Updated docstrings, guided prompt bodies, INSTRUCTIONS.md, and
+  docs/TOOLS.md to reference the new shape.
+
 ## [v1.0.0.0] - 2026-04-22
 
 ### Added — Juniper Apstra platform (21 tools), v1.0 milestone

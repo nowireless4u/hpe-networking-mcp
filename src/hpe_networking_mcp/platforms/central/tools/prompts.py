@@ -25,7 +25,7 @@ Troubleshoot the site "{site_name}" by following these steps:
 
 1. Call `central_get_site_name_id_mapping` to verify the site name and get its \
 site_id and current health score.
-2. Call `central_get_site_health` with site_names=["{site_name}"] to get detailed site \
+2. Call `central_get_site_health` with site_name="{site_name}" to get detailed site \
 metrics.
 3. Call `central_get_alerts` with the site_id and status="Active" to get all \
 active alerts. Prioritize by severity (Critical > High > Medium > Low).
@@ -173,7 +173,7 @@ Compare health across sites: {sites_str}
 
 1. Call `central_get_site_name_id_mapping` to verify all site names and get \
 their site_ids and health scores.
-2. Call `central_get_site_health` with site_names={list(site_names)} to get \
+2. Call `central_get_site_health` with site_name={list(site_names)} to get \
 detailed metrics for each site.
 3. For each site, call `central_get_alerts` with the site_id and \
 status="Active" to get active alert counts by severity.

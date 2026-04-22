@@ -16,6 +16,20 @@ from hpe_networking_mcp.platforms.central.models import (
 )
 
 
+def normalize_site_name_filter(value: str | list[str] | None) -> list[str] | None:
+    """Accept a single site name, a list, or None; return a canonical list or None.
+
+    Exists so tool parameters named ``site_name`` can accept either shape
+    without surprising LLMs that pattern-match against the singular-string
+    convention used by peer Central tools. Introduced for issue #146.
+    """
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return [value]
+    return list(value)
+
+
 @dataclass
 class FilterField:
     api_field: str
