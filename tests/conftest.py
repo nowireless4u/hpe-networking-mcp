@@ -1,6 +1,47 @@
 """Shared fixtures for HPE Networking MCP Server tests."""
 
+import importlib
+from unittest.mock import MagicMock
+
 import pytest
+
+
+def _install_registry_stubs() -> None:
+    """Stub ``_registry.mcp`` for each platform so tool modules import cleanly.
+
+    Every ``@mcp.tool(...)`` at import time reads ``_registry.mcp``. In a test
+    run, nothing has called ``register_tools()``, so the attribute is ``None``
+    and any test that imports from a tool module fails collection with
+    ``AttributeError: 'NoneType' object has no attribute 'tool'``. Installing
+    a pass-through ``MagicMock`` at conftest load lets tool modules import
+    and leaves the decorated functions intact as regular callables.
+
+    Introduced at ``tests/integration/conftest.py`` for #153 and lifted here
+    (for #155) when a new unit test under ``tests/unit/`` needed the same
+    stubbing. Scoped to both unit and integration tests; idempotent.
+    """
+    platform_registries = (
+        "hpe_networking_mcp.platforms.apstra._registry",
+        "hpe_networking_mcp.platforms.central._registry",
+        "hpe_networking_mcp.platforms.clearpass._registry",
+        "hpe_networking_mcp.platforms.greenlake._registry",
+        "hpe_networking_mcp.platforms.mist._registry",
+    )
+
+    mock_mcp = MagicMock()
+    mock_mcp.tool = MagicMock(side_effect=lambda *_a, **_kw: lambda fn: fn)
+    mock_mcp.prompt = MagicMock(side_effect=lambda *_a, **_kw: lambda fn: fn)
+
+    for module_path in platform_registries:
+        try:
+            reg = importlib.import_module(module_path)
+        except ImportError:
+            continue
+        if getattr(reg, "mcp", None) is None:
+            reg.mcp = mock_mcp
+
+
+_install_registry_stubs()
 
 
 @pytest.fixture
