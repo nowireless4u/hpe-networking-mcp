@@ -19,7 +19,7 @@ from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
 
-from hpe_networking_mcp.platforms.mist._registry import mcp
+from hpe_networking_mcp.platforms.mist._registry import tool
 from hpe_networking_mcp.platforms.mist.client import (
     format_response,
     get_apisession,
@@ -37,7 +37,7 @@ class Object_type(Enum):
     SWITCH = "switch"
 
 
-@mcp.tool(
+@tool(
     name="mist_get_insight_metrics",
     description="Get insight metrics for a given object",
     tags={"sites_insights"},

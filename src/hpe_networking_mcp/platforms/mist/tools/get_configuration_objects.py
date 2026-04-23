@@ -21,7 +21,7 @@ from mistapi.__api_response import APIResponse as _APIResponse
 from pydantic import Field
 from requests.structures import CaseInsensitiveDict
 
-from hpe_networking_mcp.platforms.mist._registry import mcp
+from hpe_networking_mcp.platforms.mist._registry import tool
 from hpe_networking_mcp.platforms.mist.client import (
     format_response,
     get_apisession,
@@ -105,7 +105,7 @@ def _name_id_list(data: list) -> list:
     return [{"name": item.get("name"), "id": item.get("id")} for item in data if item.get("name")]
 
 
-@mcp.tool(
+@tool(
     name="mist_get_configuration_objects",
     description=(
         "Use this tool to retrieve configuration objects "

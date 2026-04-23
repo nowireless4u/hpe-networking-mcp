@@ -38,7 +38,7 @@ Dynamic-mode migration status (phased per [#157](https://github.com/nowireless4u
 | Platform | Dynamic mode available |
 |---|---|
 | Juniper Apstra | ✅ yes (Phase 0) |
-| Juniper Mist | pending (Phase 1) |
+| Juniper Mist | ✅ yes (Phase 1) |
 | Aruba Central | pending (Phase 2) |
 | Aruba ClearPass | pending (Phase 3) |
 | HPE GreenLake | yes (already dynamic via the legacy endpoint-dispatch meta-tools; unified in Phase 4) |

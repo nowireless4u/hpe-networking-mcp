@@ -61,19 +61,21 @@ TOOLS = {
 
 
 def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
-    """Dynamically load and register all Mist tool modules. Returns count of loaded tools."""
-    # Inject the FastMCP instance into the registry so tool modules can import it
+    """Load all Mist tool modules and register them with FastMCP.
+
+    Always imports every tool file so ``REGISTRIES["mist"]`` is fully populated;
+    runtime write-gating is handled by the Visibility transform (static mode)
+    and ``is_tool_enabled`` (dynamic mode, via the meta-tools).
+
+    Returns the count of individual underlying tools that registered.
+    """
+    from hpe_networking_mcp.platforms._common.meta_tools import build_meta_tools
     from hpe_networking_mcp.platforms.mist import _registry
 
     _registry.mcp = mcp
 
-    write_enabled = config.enable_mist_write_tools
     loaded: list[str] = []
-
     for _category, tool_names in TOOLS.items():
-        if _category in ("write", "write_delete") and not write_enabled:
-            logger.info("Mist: write tools disabled, skipping {} tools", len(tool_names))
-            continue
         for tool_name in tool_names:
             if tool_name in loaded:
                 continue
@@ -86,7 +88,8 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
             except Exception as e:
                 logger.warning("Mist: failed to load tool {} -- {}", tool_name, e)
 
-    # Register prompts (not in TOOLS dict — prompts don't follow mist_* naming)
+    # Register prompts (not in TOOLS dict — prompts are a different MCP primitive
+    # and aren't part of the dynamic-mode meta-tool surface).
     try:
         from hpe_networking_mcp.platforms.mist.tools import prompts as mist_prompts
 
@@ -94,5 +97,14 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
         logger.debug("Mist: loaded prompts")
     except Exception as e:
         logger.warning("Mist: failed to load prompts -- {}", e)
+
+    if config.tool_mode == "dynamic":
+        build_meta_tools("mist", mcp)
+        logger.info(
+            "Mist: {} underlying tools + 3 meta-tools registered (dynamic mode)",
+            len(loaded),
+        )
+    else:
+        logger.info("Mist: {} tools registered (static mode)", len(loaded))
 
     return len(loaded)

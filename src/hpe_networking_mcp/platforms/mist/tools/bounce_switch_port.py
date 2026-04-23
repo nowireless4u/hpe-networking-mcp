@@ -7,7 +7,7 @@ import mistapi
 from loguru import logger
 from pydantic import Field
 
-from hpe_networking_mcp.platforms.mist._registry import mcp
+from hpe_networking_mcp.platforms.mist._registry import tool
 from hpe_networking_mcp.platforms.mist.client import (
     get_apisession,
     handle_network_error,
@@ -92,7 +92,7 @@ def _check_mist_ports(
     return safe_ports, skipped
 
 
-@mcp.tool(
+@tool(
     name="mist_bounce_switch_port",
     description=(
         "Bounce ports on a Juniper EX switch. Safety checks are "

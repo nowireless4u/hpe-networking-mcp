@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — v2.0 Phases 0-1
+
+### Added — Mist dynamic-mode migration (#159)
+
+Second platform onto the dynamic-mode infrastructure. With
+`MCP_TOOL_MODE=dynamic`, Mist exposes exactly three meta-tools
+(`mist_list_tools`, `mist_get_tool_schema`, `mist_invoke_tool`) and hides
+the 35 underlying Mist tools via the shared `Visibility(dynamic_managed)`
+transform. Static mode is unchanged.
+
+- `platforms/mist/_registry.py` rewritten as a `tool()` decorator shim
+  mirroring Apstra's — delegates to `mcp.tool(...)`, adds the
+  `dynamic_managed` tag, and records into `REGISTRIES["mist"]`.
+- All 35 Mist tool files under `platforms/mist/tools/*.py` swapped from
+  `@mcp.tool(...)` to `@tool(...)` (import path updated to match).
+- `platforms/mist/__init__.py` — always imports every tool file so the
+  registry is complete regardless of `ENABLE_MIST_WRITE_TOOLS`; calls
+  `build_meta_tools("mist", mcp)` when `tool_mode == "dynamic"`.
+- Mist prompts (`@mcp.prompt` in `prompts.py`) are unaffected — prompts
+  are a different MCP primitive than tools and aren't part of the
+  dynamic-mode meta-tool surface.
+
+### Tests
+- 6 new integration-style tests in `test_mist_dynamic_mode.py`. Total
+  suite: 403/403 passing.
+
+### Boot verification
+- `MCP_TOOL_MODE=static` + Mist configured → 35 `mist_*` tools visible.
+- `MCP_TOOL_MODE=dynamic` + Mist + Apstra configured → 3 Mist meta-tools
+  + 3 Apstra meta-tools + cross-platform `health` tool; every underlying
+  tool hidden.
+
 ## [Unreleased] — v2.0 Phase 0
 
 ### Added — Apstra dynamic-mode pilot (#158 part B)

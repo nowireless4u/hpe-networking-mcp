@@ -23,7 +23,7 @@ from pydantic import Field
 from hpe_networking_mcp.middleware.elicitation import (
     elicitation_handler,
 )
-from hpe_networking_mcp.platforms.mist._registry import mcp
+from hpe_networking_mcp.platforms.mist._registry import tool
 from hpe_networking_mcp.platforms.mist.client import (
     format_response,
     get_apisession,
@@ -43,7 +43,7 @@ class Object_type(Enum):
     WXTAGS = "wxtags"
 
 
-@mcp.tool(
+@tool(
     name="mist_update_site_configuration_objects",
     description=(
         "Update or create configuration object for a "

@@ -16,7 +16,7 @@ from typing import Annotated, Any
 from loguru import logger
 from pydantic import Field
 
-from hpe_networking_mcp.platforms.mist._registry import mcp
+from hpe_networking_mcp.platforms.mist._registry import tool
 from hpe_networking_mcp.platforms.mist.client import get_apisession
 from hpe_networking_mcp.platforms.mist.tools import (
     schemas_data as _schemas_data_module,
@@ -77,7 +77,7 @@ def _compact_schema(schema: dict) -> dict:
     return result
 
 
-@mcp.tool(
+@tool(
     name="mist_get_configuration_object_schema",
     description=(
         "Retrieve the JSON schema for a Mist configuration object "

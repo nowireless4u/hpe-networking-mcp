@@ -19,7 +19,7 @@ from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
 
-from hpe_networking_mcp.platforms.mist._registry import mcp
+from hpe_networking_mcp.platforms.mist._registry import tool
 from hpe_networking_mcp.platforms.mist.client import (
     format_response,
     get_apisession,
@@ -41,7 +41,7 @@ class Scope(Enum):
     SWITCH = "switch"
 
 
-@mcp.tool(
+@tool(
     name="mist_list_site_sle_info",
     description=(
         "List SLE metadata for a site scope. Use metrics to "

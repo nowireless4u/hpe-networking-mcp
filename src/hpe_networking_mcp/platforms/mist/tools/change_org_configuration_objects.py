@@ -21,7 +21,7 @@ from loguru import logger
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import elicitation_handler
-from hpe_networking_mcp.platforms.mist._registry import mcp
+from hpe_networking_mcp.platforms.mist._registry import tool
 from hpe_networking_mcp.platforms.mist.client import (
     format_response,
     get_apisession,
@@ -63,7 +63,7 @@ class Action_type(Enum):
     DELETE = "delete"
 
 
-@mcp.tool(
+@tool(
     name="mist_change_org_configuration_objects",
     description=(
         "Update, create or delete configuration object for a specified org.\n"

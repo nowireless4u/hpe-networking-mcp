@@ -7,7 +7,7 @@ import mistapi
 from loguru import logger
 from pydantic import Field
 
-from hpe_networking_mcp.platforms.mist._registry import mcp
+from hpe_networking_mcp.platforms.mist._registry import tool
 from hpe_networking_mcp.platforms.mist.client import (
     format_response,
     get_apisession,
@@ -16,7 +16,7 @@ from hpe_networking_mcp.platforms.mist.client import (
 )
 
 
-@mcp.tool(
+@tool(
     name="mist_get_ap_details",
     description=(
         "Get detailed information for a specific AP including model, firmware, radio configuration, IP, and status."
