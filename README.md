@@ -47,11 +47,12 @@ Managing HPE networking infrastructure with AI assistants today means juggling m
 | **Fabric Deploy / Diff Status** | — | — | — | — | ✅ |
 | **BGP / Protocol Session Monitoring** | — | — | — | — | ✅ |
 | **Guided Prompts** | ✅ | ✅ | — | — | — |
-| **Dynamic API Discovery** | — | — | ✅ | — | — |
-| **Tools** | **35 + 2 prompts** | **73 + 12 prompts** | **3 or 10** | **127** | **21** |
+| **Dynamic Tool Discovery** | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Underlying tools (static mode)** | **35 + 2 prompts** | **73 + 12 prompts** | **10** | **127** | **21** |
+| **Exposed meta-tools (dynamic mode, default)** | **3** | **3** | **3** | **3** | **3** |
 | **Cross-Platform** | **2 tools + 3 prompts** | **2 tools + 3 prompts** | — | **1 tool** | — |
 
-> **GreenLake tool count**: 3 tools in **dynamic mode** (default) — a meta-tool system that can discover and invoke any GreenLake API endpoint. 10 tools in **static mode** — dedicated tools for each endpoint. Set via `MCP_TOOL_MODE` environment variable.
+> **Default tool surface**: v2.0+ ships with `MCP_TOOL_MODE=dynamic` by default. Each platform exposes three meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`), plus three cross-platform static tools (`health`, `site_health_check`, `manage_wlan_profile`). **18 tools total, ~2,900 tokens** — down from 261 tools / ~64,000 tokens in v1.x. Set `MCP_TOOL_MODE=static` to restore the full per-tool surface (every underlying tool is still here; it just defaults to hidden behind the meta-tools). See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md).
 
 ### Aruba Central Guided Prompts
 
@@ -151,7 +152,7 @@ docker compose up -d
 docker compose logs
 ```
 
-Look for lines like `Mist: registered 35 tools`, `ClearPass: registered 127 tools`, and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. Mist also registers 2 guided prompts for site provisioning workflows.
+Look for lines like `Mist: 35 tools registered`, `ClearPass: 127 tools registered`, `Tool mode: dynamic`, and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. In the default dynamic mode, only 18 tools are exposed to the AI — the underlying platform tools are discoverable via each platform's `list_tools` / `get_tool_schema` / `invoke_tool` meta-tools. Mist also registers 2 guided prompts for site provisioning workflows.
 
 ### Docker Image
 
@@ -340,12 +341,21 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
                                      │ Streamable HTTP
                                      ▼
 ┌───────────────────────────────────────────────────────────────────────────────────┐
-│                         HPE Networking MCP Server (:8000)                         │
+│                HPE Networking MCP Server (:8000)  —  MCP_TOOL_MODE=dynamic        │
+│                                                                                   │
+│   Exposed to the AI  (18 tools total):                                            │
+│     • 3 cross-platform static tools: health, site_health_check,                   │
+│       manage_wlan_profile                                                         │
+│     • 5 × 3 per-platform meta-tools: <platform>_list_tools,                       │
+│       <platform>_get_tool_schema, <platform>_invoke_tool                          │
 │                                                                                   │
 │ ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐        │
 │ │    Mist    │ │  Central   │ │ GreenLake  │ │ ClearPass  │ │   Apstra   │        │
 │ │   mist_*   │ │ central_*  │ │greenlake_* │ │clearpass_* │ │  apstra_*  │        │
-│ │ 35+2 prmt  │ │ 73+12 prmt │ │ 3/10 tools │ │ 127 tools  │ │  21 tools  │        │
+│ │ 35 tools   │ │ 73 tools   │ │ 10 tools   │ │ 127 tools  │ │  21 tools  │        │
+│ │ + 2 prmt   │ │ + 12 prmt  │ │            │ │            │ │            │        │
+│ │            │ │            │ │            │ │            │ │            │        │
+│ │  Hidden behind meta-tools in dynamic mode;  fully exposed in static mode.       │
 │ └──────┬─────┘ └──────┬─────┘ └──────┬─────┘ └──────┬─────┘ └──────┬─────┘        │
 │        │              │              │              │              │              │
 └────────┼──────────────┼──────────────┼──────────────┼──────────────┼──────────────┘
@@ -358,6 +368,7 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 
 - **FastMCP** framework with Python 3.12+
 - **Streamable HTTP** transport (modern MCP standard)
+- **Dynamic tool mode by default** — each platform exposes 3 meta-tools; the AI discovers the 266 underlying tools on demand. Keeps the tool-schema payload small enough to fit in a 32K-context local LLM.
 - **Tool namespacing** — `mist_*`, `central_*`, `greenlake_*`, `clearpass_*`, `apstra_*` prefixes prevent collisions
 - **Platform isolation** — each module manages its own API client and auth; a failing platform doesn't affect the others
 - **Non-root container** — runs as `mcpuser` (uid 1000)
@@ -394,7 +405,7 @@ Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) ar
 | `ENABLE_CLEARPASS_WRITE_TOOLS` | `false` | Enable ClearPass write/mutation tools |
 | `ENABLE_APSTRA_WRITE_TOOLS` | `false` | Enable Apstra write/mutation tools |
 | `DISABLE_ELICITATION` | `false` | Disable write confirmation prompts |
-| `MCP_TOOL_MODE` | `dynamic` | GreenLake tool mode: `dynamic` (3 meta-tools) or `static` (10 dedicated tools) |
+| `MCP_TOOL_MODE` | `dynamic` | Tool exposure: `dynamic` (18 exposed, rest discoverable via meta-tools) or `static` (every tool registers individually — 266+ visible) |
 
 ---
 
@@ -452,15 +463,17 @@ hpe-networking-mcp/
 │   ├── INSTRUCTIONS.md          # LLM instructions for all platforms
 │   ├── middleware/              # Elicitation and null-strip middleware
 │   └── platforms/
+│       ├── _common/             # Shared tool registry + meta-tool factory (dynamic mode)
+│       ├── health.py            # Cross-platform health probe tool
 │       ├── mist/                # 35 Mist tools + 2 prompts + API client
 │       ├── central/             # 73 Central tools + 12 prompts + API client
-│       ├── greenlake/           # 3 dynamic or 10 static tools + OAuth2 client
+│       ├── greenlake/           # 10 GreenLake tools + OAuth2 client
 │       ├── clearpass/           # 127 ClearPass tools + pyclearpass SDK client
 │       ├── apstra/              # 21 Apstra tools + async httpx client
 │       ├── manage_wlan.py       # Cross-platform WLAN management tool
 │       ├── sync_prompts.py      # Cross-platform WLAN sync prompts
 │       └── site_health_check.py # Cross-platform site health aggregator
-├── tests/                       # Unit and integration tests (315 unit tests)
+├── tests/                       # Unit and integration tests (421+ unit tests)
 ├── docs/                        # PRD, PRP, tool reference
 ├── secrets/                     # Secret files (only .example committed)
 ├── .github/workflows/           # CI, security, Docker publish
@@ -562,21 +575,25 @@ If tools time out after ~4 minutes, check that:
 - Node.js is installed: `npx --version`
 - The container didn't lose connectivity after sleep: `docker compose restart`
 
-### GreenLake Tools Missing
+### Tool Surface Looks Wrong (18 tools vs. 260+)
 
-If you expect 10 GreenLake tools but only see 3 (or vice versa), check the `MCP_TOOL_MODE` setting:
+Since v2.0.0.0, every platform runs in dynamic mode by default: each platform exposes 3 meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`) and the underlying tools are discoverable through them. A correctly configured server with all 5 platforms enabled will advertise **18 tools** to the AI client — 15 meta-tools + 3 cross-platform static tools (`health`, `site_health_check`, `manage_wlan_profile`).
+
+Check the mode in the logs:
 
 ```bash
-docker compose logs | grep "GreenLake"
-# "GreenLake: registered 3 tools (mode=dynamic)"  → dynamic mode
-# "GreenLake: registered 10 tools (mode=static)"  → static mode
+docker compose logs | grep "Tool mode"
+# "Tool mode: dynamic"   → default (18 exposed tools)
+# "Tool mode: static"    → every underlying tool visible (260+)
 ```
 
-Change the mode in `docker-compose.yml` under `environment`:
+To restore v1.x-style surface (every tool registered individually), set `MCP_TOOL_MODE=static` in `docker-compose.yml` under `environment`:
 ```yaml
-- MCP_TOOL_MODE=static    # 10 dedicated tools
-- MCP_TOOL_MODE=dynamic   # 3 meta-tools (default)
+- MCP_TOOL_MODE=static    # every tool individually exposed
+- MCP_TOOL_MODE=dynamic   # meta-tool discovery pattern (default)
 ```
+
+See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md) for why this changed.
 
 ### Write Tools Not Visible
 

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hpe-networking-mcp"
-version = "1.1.0.0"
+version = "2.0.0.0"
 description = "Unofficial, community-driven MCP server for Juniper Mist, Aruba Central, HPE GreenLake, and ClearPass. Not affiliated with HPE, Aruba, or Juniper."
 readme = "README.md"
 license = "MIT"
@@ -59,7 +59,6 @@ dev = [
     "pytest-cov>=7.0.0",
     "pytest-asyncio>=1.2.0",
     "responses>=0.25.7",
-    "factory-boy>=3.3.3",
     "ruff>=0.15.6",
     "mypy>=1.18.0",
     "bandit>=1.8.0",

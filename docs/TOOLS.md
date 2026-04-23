@@ -5,6 +5,23 @@ Tools are namespaced by platform: `mist_*` (Juniper Mist), `central_*` (Aruba Ce
 `greenlake_*` (HPE GreenLake), `clearpass_*` (Aruba ClearPass), and `apstra_*`
 (Juniper Apstra).
 
+## Dynamic mode (default since v2.0.0.0)
+
+The server ships with `MCP_TOOL_MODE=dynamic` by default. At session start the AI sees **18 tools**:
+
+- **3 cross-platform static tools**
+  - `health(platform=...)`
+  - `site_health_check(site_name=...)`
+  - `manage_wlan_profile(...)`
+- **3 meta-tools per platform** (× 5 platforms = 15)
+  - `<platform>_list_tools(filter=...)` — list candidates
+  - `<platform>_get_tool_schema(name=...)` — fetch parameter schema
+  - `<platform>_invoke_tool(name=..., arguments={...})` — invoke by name
+
+All the per-platform tools documented below still exist and are discoverable through the meta-tools. Their names, parameters, and return shapes are unchanged from v1.x. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the meta-tools.
+
+Set `MCP_TOOL_MODE=static` to restore the v1.x surface where every per-platform tool registers individually (260+ visible).
+
 ## Overview
 
 | Platform | Read-Only Tools | Write Tools | Prompts | Total |
@@ -13,39 +30,12 @@ Tools are namespaced by platform: `mist_*` (Juniper Mist), `central_*` (Aruba Ce
 | Aruba Central | 60 | 13 | 12 | 85 |
 | Aruba ClearPass | 55 | 72 | -- | 127 |
 | Juniper Apstra | 12 | 7 | -- | 19 |
+| HPE GreenLake | 10 | -- | -- | 10 |
 | Cross-Platform | 2 | 1 | 3 | 6 |
-| HPE GreenLake (static mode) | 10 | -- | -- | 10 |
-| HPE GreenLake (dynamic mode) | 3 | -- | -- | 3 |
 
 Write tools are disabled by default per platform. Enable them with environment variables:
 `ENABLE_MIST_WRITE_TOOLS=true`, `ENABLE_CENTRAL_WRITE_TOOLS=true`,
-`ENABLE_CLEARPASS_WRITE_TOOLS=true`, or `ENABLE_APSTRA_WRITE_TOOLS=true`.
-
-## Tool modes (`MCP_TOOL_MODE`)
-
-Two tool-exposure modes, selectable via the `MCP_TOOL_MODE` env var:
-
-- **`static`** (current default) — every platform tool is registered as its own
-  FastMCP tool. Easiest to browse and pin; largest tool-list footprint.
-- **`dynamic`** — platforms that have migrated to the shared meta-tool pattern
-  expose exactly three tools per platform: `<platform>_list_tools`,
-  `<platform>_get_tool_schema`, `<platform>_invoke_tool`. The model discovers
-  tools at call time rather than having every schema dumped into the system
-  prompt. Saves context tokens, especially on local LLMs.
-
-Dynamic-mode migration status (phased per [#157](https://github.com/nowireless4u/hpe-networking-mcp/issues/157)):
-
-| Platform | Dynamic mode available |
-|---|---|
-| Juniper Apstra | ✅ yes (Phase 0) |
-| Juniper Mist | ✅ yes (Phase 1) |
-| Aruba Central | ✅ yes (Phase 2) |
-| Aruba ClearPass | ✅ yes (Phase 3) |
-| HPE GreenLake | ✅ yes (Phase 4 — unified with the shared tool-name-dispatch pattern) |
-
-When a platform that has **not** migrated yet runs under `MCP_TOOL_MODE=dynamic`,
-its individual tools stay visible (no Visibility transform hides them) so the
-server stays usable until every migration lands in Phase 6.
+`ENABLE_CLEARPASS_WRITE_TOOLS=true`, or `ENABLE_APSTRA_WRITE_TOOLS=true`. Elicitation applies in both tool modes — the AI still gets a confirmation prompt before a destructive call, whether it invoked the tool directly (static mode) or through `<platform>_invoke_tool` (dynamic mode).
 
 ## Cross-platform static tools
 
@@ -1263,57 +1253,9 @@ Tools that span multiple platforms. Each replaces several individual tool calls 
 
 ## HPE GreenLake
 
-### Dynamic Mode (3 tools)
+GreenLake uses the same dynamic-mode meta-tool pattern as every other platform since v2.0.0.0. In the default `MCP_TOOL_MODE=dynamic`, the AI sees `greenlake_list_tools`, `greenlake_get_tool_schema`, and `greenlake_invoke_tool` and discovers the 10 underlying tools below through them. The v1.x endpoint-dispatch tools (`greenlake_list_endpoints`, `greenlake_get_endpoint_schema`, `greenlake_invoke_endpoint`) are **removed** in v2.0.
 
-When `GREENLAKE_TOOL_MODE=dynamic`, these three meta-tools replace the 10 static tools.
-They allow the LLM to discover and invoke any GreenLake endpoint at runtime.
-
-#### `greenlake_list_endpoints`
-
-> List all available GreenLake API endpoints across all 5 services.
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| filter | str | No | Case-insensitive keyword filter (e.g. `devices`). |
-
-Returns endpoint identifiers in `METHOD:PATH` format.
-
-#### `greenlake_get_endpoint_schema`
-
-> Get detailed parameter schema for a specific GreenLake API endpoint.
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| endpoint | str | Yes | Endpoint identifier (e.g. `GET:/audit-log/v1/logs`). |
-| include_examples | bool | No | Default: false. Include example parameter values. |
-
-#### `greenlake_invoke_endpoint`
-
-> Execute any GreenLake GET API endpoint dynamically with parameter validation.
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| endpoint | str | Yes | Endpoint identifier (e.g. `GET:/devices/v1/devices`). |
-| params | dict | No | Request parameters. Path params substituted into URL; query params appended. |
-
-Available endpoints (10 total):
-
-| Endpoint | Description |
-|----------|-------------|
-| `GET:/audit-log/v1/logs` | List audit logs |
-| `GET:/audit-log/v1/logs/{id}/detail` | Get audit log detail |
-| `GET:/devices/v1/devices` | List devices |
-| `GET:/devices/v1/devices/{id}` | Get device by ID |
-| `GET:/identity/v1/users` | List users |
-| `GET:/identity/v1/users/{id}` | Get user by ID |
-| `GET:/subscriptions/v1/subscriptions` | List subscriptions |
-| `GET:/subscriptions/v1/subscriptions/{id}` | Get subscription by ID |
-| `GET:/workspaces/v1/workspaces/{workspaceId}` | Get workspace |
-| `GET:/workspaces/v1/workspaces/{workspaceId}/contact` | Get workspace contact |
-
-### Static Mode (10 tools)
-
-When `GREENLAKE_TOOL_MODE=static` (default), the following dedicated tools are registered.
+All 10 GreenLake tools are read-only today. Write tools would follow the same gating pattern as the other platforms (tag + `ENABLE_GREENLAKE_WRITE_TOOLS`) when/if they're added.
 
 #### `greenlake_get_audit_logs`
 

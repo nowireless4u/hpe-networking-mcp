@@ -10,11 +10,42 @@ Tools are namespaced by platform:
 - `clearpass_*` — Aruba ClearPass (Policy management, NAC, guest access, session control)
 - `apstra_*` — Juniper Apstra (Datacenter fabric, blueprints, virtual networks, EVPN)
 
+# TOOL DISCOVERY (dynamic mode — default since v2.0)
+
+Only 18 tools are directly visible at session start:
+- **3 cross-platform static tools**: `health`, `site_health_check`, `manage_wlan_profile`
+- **3 meta-tools per platform × 5 platforms** = 15: `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`
+
+Every per-platform tool listed below this section is reachable through the meta-tools. Use this discovery pattern:
+
+1. **Pick the platform.** Each category heading below names the platform (`mist_*`, `central_*`, etc.).
+2. **Find the tool.** Call `<platform>_list_tools(filter="<keyword>")` (e.g. `central_list_tools(filter="site")`). The result is a list of candidate tool names with one-line descriptions.
+3. **Read its schema.** Call `<platform>_get_tool_schema(name="<tool_name>")` to retrieve the exact parameter names, types, and descriptions. Do this once per novel tool — don't guess the schema from the name.
+4. **Invoke it.** Call `<platform>_invoke_tool(name="<tool_name>", arguments={...})`. `arguments` is a dict matching the schema from step 3.
+
+Examples:
+```
+central_list_tools(filter="wlan")
+→ [{"name":"central_get_wlans",...}, {"name":"central_manage_wlan_profile",...}, ...]
+central_get_tool_schema(name="central_get_wlans")
+→ {"name":"central_get_wlans","description":"...","parameters":{...}}
+central_invoke_tool(name="central_get_wlans", arguments={"site_id":"..."})
+→ <tool result>
+```
+
+Use the cross-platform tools directly when they apply — they replace several per-platform calls:
+- `health(platform=...)` — platform reachability / status
+- `site_health_check(site_name=...)` — unified site health across Mist + Central + ClearPass
+- `manage_wlan_profile(...)` — the mandatory entry point for any WLAN create/copy/sync request
+
+If `MCP_TOOL_MODE=static` is set, every per-platform tool is visible up front without needing the meta-tool round-trip. The names and behaviors are identical either way — only the discovery mechanism differs.
+
 # CRITICAL RULES
 1. **Never assume IDs or MAC addresses.** Always retrieve them with the appropriate tools before using them. This especially applies to org_id — ALWAYS call `mist_get_self(action_type=account_info)` first to get the correct org_id. Do NOT use an org_id from memory, a previous conversation, or any other source.
 2. **Only send parameters that are needed.** Do not pass empty, null, or irrelevant parameters.
 3. **Only answer based on data returned by tools.** Never infer, estimate, or fabricate network state.
 4. If a tool returns no data or an error, say so explicitly. Do not guess.
+5. **Read the schema before invoking an unfamiliar tool.** Calling `<platform>_invoke_tool` with guessed parameter names wastes round-trips. Always resolve via `<platform>_get_tool_schema` first when in doubt.
 
 ---
 
@@ -222,7 +253,8 @@ After reading the report, drill down into specific issues using the exact tool c
 - **Subscriptions**: greenlake_get_subscriptions, greenlake_get_subscription_details
 - **Users**: greenlake_get_users, greenlake_get_user_details
 - **Workspaces**: greenlake_get_workspace, greenlake_get_workspace_details
-- **Dynamic Tools**: greenlake_list_endpoints, greenlake_get_endpoint_schema, greenlake_invoke_endpoint
+
+All GreenLake tools are read-only in v2.0. Use the standard dynamic-mode discovery pattern (`greenlake_list_tools`, `greenlake_get_tool_schema`, `greenlake_invoke_tool`) — these replaced the v1.x endpoint-dispatch tools (`greenlake_list_endpoints`, `greenlake_get_endpoint_schema`, `greenlake_invoke_endpoint`), which are gone.
 
 ---
 

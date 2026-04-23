@@ -5,7 +5,72 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] — v2.0 Phases 0-4 (migration complete)
+## [2.0.0.0] - 2026-04-23
+
+**Major release.** Default tool-exposure mode flipped from `static` to `dynamic`. The exposed tool surface drops from 261 tools to 18 without removing any underlying functionality — every platform tool is still here and still invokable, but now discovered on demand via three meta-tools per platform. Resolves the context-budget problem on 32K-context local LLMs (Zach Jennings' original report, [#163](https://github.com/nowireless4u/hpe-networking-mcp/issues/163)).
+
+### Breaking changes
+
+- **Default mode flip.** `MCP_TOOL_MODE=dynamic` is now the server default (was `static`). Set `MCP_TOOL_MODE=static` in `docker-compose.yml` under `environment:` to restore v1.x behavior. See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md).
+- **GreenLake endpoint-dispatch meta-tools renamed.** v1.x exposed `greenlake_list_endpoints`, `greenlake_get_endpoint_schema`, `greenlake_invoke_endpoint` (REST-path-based). v2.0 replaces them with `greenlake_list_tools`, `greenlake_get_tool_schema`, `greenlake_invoke_tool` (tool-name-based, matching every other platform). AI agents that hard-coded the old names get `tool not found`.
+- **`apstra_health` removed.** Use `health(platform="apstra")`.
+- **`apstra_formatting_guidelines` removed.** Content migrated into `INSTRUCTIONS.md` under the Juniper Apstra section; the AI sees it at session init without a dedicated tool call. Per-response helpers (`get_base_guidelines`, `get_device_guidelines`, etc.) still fire inside Apstra tool bodies.
+- **`ServerConfig.greenlake_tool_mode` property removed.** Phase 0 added the `tool_mode` field and kept `greenlake_tool_mode` as a deprecated read-only alias. v2.0 removes the alias. External code (if any) that referenced `config.greenlake_tool_mode` must switch to `config.tool_mode` — same semantics, shorter name. The `MCP_TOOL_MODE` env var is unchanged.
+
+### Measured impact
+
+Token count of the `tools` array passed to the LLM (cl100k_base tokenizer, all 5 platforms configured):
+
+| Mode | Tools exposed | Tool-schema tokens | Fits 32K context? |
+|---|---|---|---|
+| `MCP_TOOL_MODE=static` | 267 | **64,036** | ❌ impossible |
+| `MCP_TOOL_MODE=dynamic` (default) | 18 | **2,910** | ✅ 29K free for conversation + tool results |
+
+**95.5% reduction.**
+
+### Added — v2.0 infrastructure
+
+Shared infrastructure now powers dynamic mode across every platform:
+
+- `platforms/_common/tool_registry.py` — `ToolSpec` dataclass and `REGISTRIES` dict populated by each platform's `@tool(...)` shim; `is_tool_enabled()` gating honors `ENABLE_*_WRITE_TOOLS` flags.
+- `platforms/_common/meta_tools.py` — `build_meta_tools(platform, mcp)` factory registers the three per-platform meta-tools.
+- `platforms/health.py` — cross-platform `health` tool replacing `apstra_health` / `clearpass_test_connection`. Accepts `platform: str | list[str] | None` following the filter rule from v1.0.0.1. Per-platform probe helpers (`_probe_mist`, `_probe_central`, `_probe_greenlake`, `_probe_clearpass`, `_probe_apstra`) report `ok` / `degraded` / `unavailable` with platform-specific detail. `server.py:lifespan` runs these same probes at startup so startup logs and runtime `health` output come from a single source of truth.
+- `middleware/elicitation.py` — `confirm_write(ctx, message)` helper consolidating 17 duplicated `_confirm_*` helpers from Apstra and ClearPass write tools ([#148](https://github.com/nowireless4u/hpe-networking-mcp/issues/148)).
+
+### Changed — per-platform migrations
+
+Each platform's `_registry.py` rewrote from a module-level `mcp` holder into a `tool()` decorator shim: delegates to `mcp.tool(...)`, adds the `dynamic_managed` tag so `Visibility` can hide individual tools in dynamic mode, and populates `REGISTRIES[platform]` so the meta-tools can dispatch by name.
+
+- **Apstra** ([#158](https://github.com/nowireless4u/hpe-networking-mcp/issues/158)) — 19 tools swapped from `@mcp.tool(...)` to `@tool(...)`. Pilot platform.
+- **Mist** ([#159](https://github.com/nowireless4u/hpe-networking-mcp/issues/159)) — 35 tools across 30 files. Prompts (`@mcp.prompt`) unaffected — prompts are a different MCP primitive than tools.
+- **Central** ([#160](https://github.com/nowireless4u/hpe-networking-mcp/issues/160)) — 73 tools across 24 files. `prompts.py` unchanged (12 guided prompts). Dropped the "skip configuration when write disabled" branch in `central/__init__.py` — Visibility + `is_tool_enabled` handle gating uniformly now.
+- **ClearPass** ([#161](https://github.com/nowireless4u/hpe-networking-mcp/issues/161)) — 127 tools across 31 files. 15 write-tool files replaced inline `_confirm_write` helpers with the shared `confirm_write()` middleware call (finishing [#148](https://github.com/nowireless4u/hpe-networking-mcp/issues/148)).
+- **GreenLake** ([#162](https://github.com/nowireless4u/hpe-networking-mcp/issues/162)) — 10 tools across 5 service modules. Replaced the bespoke endpoint-dispatch dynamic surface from v0.9.x (the old `platforms/greenlake/tools/dynamic.py` with its 1100-line REST-URL router) with the standard tool-name-dispatch pattern.
+
+### Removed
+
+- `platforms/greenlake/tools/dynamic.py` (1100-line REST-endpoint-dispatch module).
+- `apstra_health`, `apstra_formatting_guidelines` tools.
+- `ServerConfig.greenlake_tool_mode` property alias.
+- `HANDOFF.md`, `TASKS.md` (stale internal docs, [#150](https://github.com/nowireless4u/hpe-networking-mcp/issues/150)).
+- `factory-boy` dev dependency (unused, [#149](https://github.com/nowireless4u/hpe-networking-mcp/issues/149)).
+
+### Tests
+
+46 new infrastructure tests in `test_tool_registry.py`, `test_meta_tools.py`, `test_health.py`; five per-platform integration-style test modules (`test_apstra_dynamic_mode.py`, `test_mist_dynamic_mode.py`, `test_central_dynamic_mode.py`, `test_clearpass_dynamic_mode.py`, `test_greenlake_dynamic_mode.py`) each with 6 tests asserting registry population, category derivation, write-tool tagging, and absence of removed tools. Total suite: 421 tests passing.
+
+### Boot verification
+
+- `MCP_TOOL_MODE=dynamic` + all 5 platforms → **18 exposed tools** (15 meta-tools + 3 cross-platform static).
+- `MCP_TOOL_MODE=static` + all 5 platforms → 267 tools visible (every individual per-platform tool).
+
+Closes [#149](https://github.com/nowireless4u/hpe-networking-mcp/issues/149), [#150](https://github.com/nowireless4u/hpe-networking-mcp/issues/150), [#151](https://github.com/nowireless4u/hpe-networking-mcp/issues/151), [#152](https://github.com/nowireless4u/hpe-networking-mcp/issues/152), [#157](https://github.com/nowireless4u/hpe-networking-mcp/issues/157), [#158](https://github.com/nowireless4u/hpe-networking-mcp/issues/158), [#159](https://github.com/nowireless4u/hpe-networking-mcp/issues/159), [#160](https://github.com/nowireless4u/hpe-networking-mcp/issues/160), [#161](https://github.com/nowireless4u/hpe-networking-mcp/issues/161), [#162](https://github.com/nowireless4u/hpe-networking-mcp/issues/162), [#163](https://github.com/nowireless4u/hpe-networking-mcp/issues/163), [#164](https://github.com/nowireless4u/hpe-networking-mcp/issues/164).
+
+---
+
+### Historical phase entries (superseded by the 2.0.0.0 summary above)
+
+The sections below were written incrementally as each phase merged — they're kept for history but the single 2.0.0.0 entry above is the authoritative release note.
 
 ### Added — GreenLake unification on the shared dynamic-mode pattern (#162)
 
@@ -71,7 +136,7 @@ Remaining before the v2.0.0.0 cut:
 - Phase 6 (#164) — flip the default to `MCP_TOOL_MODE=dynamic`, bump
   to v2.0.0.0, tag, release
 
-## [Unreleased] — v2.0 Phases 0-3
+### Phase 3 snapshot — ClearPass migration (#161) + confirm_write consolidation complete (#148)
 
 ### Added — ClearPass dynamic-mode migration (#161) + `confirm_write` consolidation complete (#148)
 
@@ -112,7 +177,7 @@ lives in the middleware. Same treatment Apstra got in Phase 0 PR B —
   12 meta-tools total (3 per platform × 4 platforms) + cross-platform
   `health` tool. Every underlying tool hidden.
 
-## [Unreleased] — v2.0 Phases 0-2
+### Phase 2 snapshot — Central dynamic-mode migration (#160)
 
 ### Added — Central dynamic-mode migration (#160)
 
@@ -146,7 +211,7 @@ and hides the 73 underlying Central tools via the shared
   meta-tools per migrated platform + cross-platform `health` tool;
   every underlying tool hidden by Visibility.
 
-## [Unreleased] — v2.0 Phases 0-1
+### Phase 1 snapshot — Mist dynamic-mode migration (#159)
 
 ### Added — Mist dynamic-mode migration (#159)
 
@@ -178,7 +243,7 @@ transform. Static mode is unchanged.
   + 3 Apstra meta-tools + cross-platform `health` tool; every underlying
   tool hidden.
 
-## [Unreleased] — v2.0 Phase 0
+### Phase 0 snapshot — shared infrastructure + Apstra pilot (#158)
 
 ### Added — Apstra dynamic-mode pilot (#158 part B)
 

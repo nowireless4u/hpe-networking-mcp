@@ -1,8 +1,10 @@
 """Cross-platform ``health`` tool and per-platform probe helpers.
 
-The ``health`` tool replaces the per-platform ``apstra_health`` /
-``clearpass_test_connection`` surface with a single entry point that
-reports every configured platform's reachability in one call. Accepts a
+The ``health`` tool is the single entry point for platform reachability
+reporting across every configured platform. It superseded the per-platform
+``apstra_health`` (removed in v2.0) and is the recommended AI-facing path
+in place of ``clearpass_test_connection`` (which still exists for static
+mode but is not visible by default in dynamic mode). Accepts a
 ``platform`` filter (``str | list[str] | None``) matching the rule
 established in v1.0.0.1 (#146): omit for all, pass one name for one,
 pass a list for several.
@@ -207,8 +209,9 @@ def register(mcp: FastMCP) -> None:
             "Report health of enabled HPE networking platforms in a single call. "
             "Accepts an optional platform filter: omit for every enabled platform, "
             "pass one name as a string (e.g. 'apstra'), or pass a list "
-            "(['apstra', 'clearpass']). Replaces the per-platform health tools "
-            "that existed in v1.x (apstra_health, clearpass_test_connection)."
+            "(['apstra', 'clearpass']). This is the recommended entry point for "
+            "platform-reachability checks; the v1.x-era apstra_health tool was "
+            "removed in v2.0 in favor of this cross-platform tool."
         ),
         annotations=_PROBE_ANNOTATIONS,
     )

@@ -98,9 +98,9 @@ class ServerConfig:
     # "static"  — every tool registers with FastMCP individually; all visible.
     # "dynamic" — the per-platform 3 meta-tools (list / schema / invoke) are
     #             exposed; the underlying tools are hidden via a Visibility
-    #             transform. Added in v1.1.0.0+ as opt-in; becomes default in
-    #             v2.0.0.0.
-    tool_mode: str = "static"
+    #             transform. Default since v2.0.0.0; set MCP_TOOL_MODE=static
+    #             to opt out.
+    tool_mode: str = "dynamic"
 
     # Platform secrets — None means platform is disabled
     mist: MistSecrets | None = None
@@ -108,11 +108,6 @@ class ServerConfig:
     greenlake: GreenLakeSecrets | None = None
     clearpass: ClearPassSecrets | None = None
     apstra: ApstraSecrets | None = None
-
-    @property
-    def greenlake_tool_mode(self) -> str:
-        """Deprecated alias for :attr:`tool_mode`. Removed in v2.0 (#151)."""
-        return self.tool_mode
 
     @property
     def enabled_platforms(self) -> list[str]:
@@ -342,11 +337,12 @@ def load_config() -> ServerConfig:
 
     # Tool exposure mode — MCP_TOOL_MODE env var. Same env-var name as the
     # old GreenLake-specific setting; the internal config field is now just
-    # ``tool_mode`` because every platform honors it in v2.0.
-    tool_mode = os.getenv("MCP_TOOL_MODE", "static").lower().strip()
+    # ``tool_mode`` because every platform honors it in v2.0. Default flipped
+    # from "static" → "dynamic" in v2.0.0.0.
+    tool_mode = os.getenv("MCP_TOOL_MODE", "dynamic").lower().strip()
     if tool_mode not in ("static", "dynamic"):
-        logger.warning("Ignoring unknown MCP_TOOL_MODE={!r}, defaulting to 'static'", tool_mode)
-        tool_mode = "static"
+        logger.warning("Ignoring unknown MCP_TOOL_MODE={!r}, defaulting to 'dynamic'", tool_mode)
+        tool_mode = "dynamic"
 
     # Load platform credentials from Docker secrets
     mist = _load_mist()
@@ -382,6 +378,5 @@ def load_config() -> ServerConfig:
         raise SystemExit(1)
 
     logger.info("Enabled platforms: {}", ", ".join(config.enabled_platforms))
-    if tool_mode != "static":
-        logger.info("Tool mode: {}", tool_mode)
+    logger.info("Tool mode: {}", tool_mode)
     return config

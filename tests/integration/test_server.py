@@ -161,8 +161,20 @@ class TestCreateServer:
         )
 
     def test_no_visibility_transform_when_write_tools_enabled(self, mist_secrets):
-        """create_server() does NOT add Mist Visibility transform when Mist write is enabled."""
-        config = ServerConfig(mist=mist_secrets, enable_mist_write_tools=True, enable_central_write_tools=True)
+        """create_server() does NOT add per-platform write-tool Visibility transforms when every write flag is enabled.
+
+        Scoped to static mode so the `dynamic_managed` Visibility transform — always present
+        in dynamic mode (the v2.0 default) — doesn't pollute the assertion. The intent of
+        this test is the write-tool gating logic, not the tool-mode visibility logic.
+        """
+        config = ServerConfig(
+            mist=mist_secrets,
+            enable_mist_write_tools=True,
+            enable_central_write_tools=True,
+            enable_clearpass_write_tools=True,
+            enable_apstra_write_tools=True,
+            tool_mode="static",
+        )
 
         with patch("hpe_networking_mcp.server._register_mist_tools"):
             from hpe_networking_mcp.server import create_server
@@ -174,5 +186,6 @@ class TestCreateServer:
 
         visibility_found = any(isinstance(t, Visibility) for t in transforms)
         assert not visibility_found, (
-            f"Visibility transform should NOT be present when write tools are enabled. Found transforms: {transforms}"
+            f"Visibility transform should NOT be present when all write tools are enabled in static mode. "
+            f"Found transforms: {transforms}"
         )
