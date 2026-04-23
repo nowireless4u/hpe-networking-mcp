@@ -349,7 +349,7 @@ When asked to bounce a port or cycle PoE on any switch or gateway:
 2. For any follow-up, pass that blueprint_id to the relevant `apstra_get_*` tool
 
 ## Tool Categories
-- **Health & Meta**: apstra_health, apstra_formatting_guidelines
+- **Health**: use the cross-platform `health(platform="apstra")` tool (no Apstra-specific health tool; `apstra_health` was removed in v2.0).
 - **Blueprints**: apstra_get_blueprints, apstra_get_templates
 - **Topology**: apstra_get_racks, apstra_get_routing_zones, apstra_get_system_info
 - **Networks**: apstra_get_virtual_networks, apstra_get_remote_gateways
@@ -365,6 +365,50 @@ When asked to bounce a port or cycle PoE on any switch or gateway:
 - After any write: call `apstra_get_diff_status` to confirm staging is clean, `apstra_get_anomalies` to look for new issues, and `apstra_get_protocol_sessions` to verify BGP stability.
 - Write tools reply `{"status": "confirmation_required", ...}` when the MCP client cannot present an elicitation prompt. When you see that, ask the user in chat and re-invoke with `confirmed=True`.
 - Virtual-network bindings: `system_ids` accepts leaf-pair (redundancy-group) IDs for `bound_to`; SVI IPs are automatically expanded to individual physical leaf IDs via topology lookup.
+
+## Output Formatting for Apstra Data
+
+When displaying Apstra fabric data, follow these conventions — adapted from the Juniper reference style.
+
+### Tables
+- **Device overview**: `Status | Device Name | IP Address | Loopback IP | ASN | Role | Model | OS Version`
+- **Protocol sessions**: `Status | Local Device | Remote Device | Session Type | State | Uptime | Routes Rx/Tx`
+- **Anomalies**: `Severity | Device | Issue Type | Description | Duration | Actions`
+
+### Status labels
+Use consistent labels across Apstra output:
+- **Good** — Healthy / Up / Active / Connected
+- **Failed** — Critical / Down / Disconnected
+- **Warn** — Warning / Degraded / Flapping / Pending
+- **Syncing** — In Progress / Syncing / Updating
+- **Unknown** — Unmonitored
+
+### Severity levels
+- **Critical** — immediate attention required
+- **Warning** — attention needed
+- **Info** — informational
+
+### Response structure
+1. Quick Summary with key metrics
+2. Detailed Tables
+3. Notable Issues
+4. Recommendations for next steps
+
+### Change management (critical)
+Before executing any Apstra change operation (deploy, delete, create, apply), you MUST:
+1. Describe the exact change you plan to make.
+2. Show the specific tool call that will be executed.
+3. Ask for explicit user confirmation.
+4. Wait for approval before proceeding.
+
+After any successful change, verify:
+- After `apstra_deploy` → `apstra_get_diff_status`, `apstra_get_anomalies`, `apstra_get_protocol_sessions`
+- After `apstra_create_virtual_network` → `apstra_get_virtual_networks`
+- After `apstra_create_remote_gateway` → `apstra_get_remote_gateways`, `apstra_get_protocol_sessions`
+- After `apstra_delete_blueprint` → `apstra_get_blueprints` (confirm removal)
+- After blueprint creation → `apstra_get_blueprints` (confirm creation)
+
+If pending changes exist after a create/update, ask the user whether to deploy before leaving staging.
 
 ---
 

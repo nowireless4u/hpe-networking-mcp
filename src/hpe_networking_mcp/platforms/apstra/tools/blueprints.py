@@ -7,12 +7,12 @@ from typing import Any
 from fastmcp import Context
 
 from hpe_networking_mcp.platforms.apstra import guidelines
-from hpe_networking_mcp.platforms.apstra._registry import mcp
+from hpe_networking_mcp.platforms.apstra._registry import tool
 from hpe_networking_mcp.platforms.apstra.client import format_http_error, get_apstra_client
 from hpe_networking_mcp.platforms.apstra.tools import READ_ONLY
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def apstra_get_blueprints(ctx: Context) -> dict[str, Any] | str:
     """Get list of all Apstra blueprints.
 
@@ -31,7 +31,7 @@ async def apstra_get_blueprints(ctx: Context) -> dict[str, Any] | str:
         return f"Error fetching blueprints: {format_http_error(e) if hasattr(e, 'response') else e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def apstra_get_templates(ctx: Context) -> dict[str, Any] | str:
     """Get list of available design templates for blueprint creation."""
     try:

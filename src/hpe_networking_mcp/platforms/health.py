@@ -160,11 +160,15 @@ _PROBES = {
 }
 
 
-async def run_probes(ctx: Context, platforms: list[str]) -> dict[str, dict[str, Any]]:
+async def run_probes(ctx: Any, platforms: list[str]) -> dict[str, dict[str, Any]]:
     """Run each requested platform's probe and collect results.
 
     Exposed separately from the ``health`` tool so ``server.py:lifespan``
-    can reuse the same probe logic at startup.
+    can reuse the same probe logic at startup (via a shim wrapper that
+    exposes the in-progress lifespan dict as ``lifespan_context``). The
+    wider ``Any`` type accommodates both a live ``fastmcp.Context`` and
+    the startup shim without pulling runtime dependencies into the
+    lifespan's type surface.
     """
     results: dict[str, dict[str, Any]] = {}
     for name in platforms:

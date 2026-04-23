@@ -6,9 +6,9 @@ from typing import Any
 
 from fastmcp import Context
 
-from hpe_networking_mcp.middleware.elicitation import elicitation_handler
+from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms.apstra import guidelines
-from hpe_networking_mcp.platforms.apstra._registry import mcp
+from hpe_networking_mcp.platforms.apstra._registry import tool
 from hpe_networking_mcp.platforms.apstra.client import format_http_error, get_apstra_client
 from hpe_networking_mcp.platforms.apstra.models import (
     normalize_to_int_list,
@@ -20,24 +20,7 @@ from hpe_networking_mcp.platforms.apstra.tools import WRITE
 from hpe_networking_mcp.platforms.apstra.topology import get_individual_leafs_from_system_ids
 
 
-async def _confirm(ctx: Context, message: str) -> dict[str, Any] | None:
-    elicit = await elicitation_handler(message=message, ctx=ctx)
-    if elicit.action == "decline":
-        mode = await ctx.get_state("elicitation_mode")
-        if mode == "chat_confirm":
-            return {
-                "status": "confirmation_required",
-                "message": (
-                    f"Please confirm: {message}. Call this tool again with confirmed=true after the user confirms."
-                ),
-            }
-        return {"status": "declined", "message": "Action declined by user."}
-    if elicit.action == "cancel":
-        return {"status": "cancelled", "message": "Action cancelled by user."}
-    return None
-
-
-@mcp.tool(annotations=WRITE, tags={"apstra_write"})
+@tool(annotations=WRITE, tags={"apstra_write"})
 async def apstra_create_virtual_network(
     ctx: Context,
     blueprint_id: str,
@@ -88,7 +71,7 @@ async def apstra_create_virtual_network(
         return f"Invalid vn_type '{vn_type}'. Must be 'vxlan' or 'vlan'."
 
     if not confirmed:
-        decline = await _confirm(
+        decline = await confirm_write(
             ctx,
             f"Apstra: create virtual network '{vn_name}' ({vn_type}) in blueprint {blueprint_id}. Confirm?",
         )
@@ -197,7 +180,7 @@ async def apstra_create_virtual_network(
         return f"Error creating virtual network: {format_http_error(e) if hasattr(e, 'response') else e}"
 
 
-@mcp.tool(annotations=WRITE, tags={"apstra_write"})
+@tool(annotations=WRITE, tags={"apstra_write"})
 async def apstra_create_remote_gateway(
     ctx: Context,
     blueprint_id: str,
@@ -230,7 +213,7 @@ async def apstra_create_remote_gateway(
         confirmed: Set true after user confirms.
     """
     if not confirmed:
-        decline = await _confirm(
+        decline = await confirm_write(
             ctx,
             f"Apstra: create remote EVPN gateway '{gw_name}' ({gw_ip}) in blueprint {blueprint_id}. Confirm?",
         )

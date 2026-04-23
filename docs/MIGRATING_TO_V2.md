@@ -34,7 +34,7 @@ AI agents that hard-coded these names will get "tool not found" on v2.0.
 ## Progress tracker
 
 - [x] Phase 0 PR A — shared `_common/` infrastructure, cross-platform `health` tool, `tool_mode` config
-- [ ] Phase 0 PR B — Apstra migrates to dynamic mode (pilot); removed tools from above actually removed
+- [x] Phase 0 PR B — Apstra migrates to dynamic mode (pilot); `apstra_health` and `apstra_formatting_guidelines` removed
 - [ ] Phase 1 — Mist migrates
 - [ ] Phase 2 — Central migrates
 - [ ] Phase 3 — ClearPass migrates

@@ -11,6 +11,20 @@ from hpe_networking_mcp.config import ServerConfig
 _INSTRUCTIONS = (Path(__file__).parent / "INSTRUCTIONS.md").read_text()
 
 
+class _LifespanProbeCtx:
+    """Minimal Context stand-in for the startup probe loop.
+
+    ``platforms/health.py`` probe helpers read from ``ctx.lifespan_context``,
+    which doesn't exist yet at lifespan construction time (the dict is
+    being *built* into what becomes ``ctx.lifespan_context`` downstream).
+    This shim exposes the in-progress dict as ``lifespan_context`` so the
+    probes can run against it without duplicating their logic in lifespan.
+    """
+
+    def __init__(self, context: dict) -> None:
+        self.lifespan_context = context
+
+
 @asynccontextmanager
 async def lifespan(server: FastMCP):
     """Initialize platform clients at startup, clean up on shutdown."""
@@ -19,6 +33,8 @@ async def lifespan(server: FastMCP):
     context: dict = {"config": config}
 
     # --- Mist ---
+    # Construct the session and resolve org_id; the shared probe in
+    # platforms/health.py re-verifies via the same getSelf() call at tool time.
     if config.mist:
         try:
             import mistapi
@@ -27,11 +43,9 @@ async def lifespan(server: FastMCP):
                 host=config.mist.host,
                 apitoken=config.mist.api_token,
             )
-            # Disable mistapi's own console output (method varies by version)
             if hasattr(mist_session, "set_verbose"):
                 mist_session.set_verbose(False)
             context["mist_session"] = mist_session
-            # Resolve org_id from API token at startup
             try:
                 self_resp = mistapi.api.v1.self.self.getSelf(mist_session)
                 if self_resp.status_code == 200 and self_resp.data:
@@ -42,7 +56,6 @@ async def lifespan(server: FastMCP):
                         logger.info("Mist: resolved org_id={}", context["mist_org_id"])
             except Exception as e:
                 logger.warning("Mist: failed to resolve org_id at startup — {}", e)
-            logger.info("Mist: API session initialized")
         except Exception as e:
             logger.warning("Mist: failed to initialize — {}", e)
             context["mist_session"] = None
@@ -54,7 +67,7 @@ async def lifespan(server: FastMCP):
         try:
             from pycentral import NewCentralBase
 
-            central_conn = NewCentralBase(
+            context["central_conn"] = NewCentralBase(
                 token_info={
                     "new_central": {
                         "base_url": config.central.base_url,
@@ -63,20 +76,6 @@ async def lifespan(server: FastMCP):
                     }
                 }
             )
-            # Verify with lightweight call
-            resp = central_conn.command(
-                "GET",
-                "network-monitoring/v1/sites-health",
-                api_params={"limit": 1},
-            )
-            if resp.get("code") and 200 <= resp["code"] < 300:
-                logger.info("Central: connection verified")
-            else:
-                logger.warning(
-                    "Central: verification returned code {}",
-                    resp.get("code"),
-                )
-            context["central_conn"] = central_conn
         except Exception as e:
             logger.warning("Central: failed to initialize — {}", e)
             context["central_conn"] = None
@@ -86,18 +85,14 @@ async def lifespan(server: FastMCP):
     # --- GreenLake ---
     if config.greenlake:
         try:
-            from hpe_networking_mcp.platforms.greenlake.auth import (
-                TokenManager,
-            )
+            from hpe_networking_mcp.platforms.greenlake.auth import TokenManager
 
-            gl_token_mgr = TokenManager(
+            context["greenlake_token_manager"] = TokenManager(
                 api_base_url=config.greenlake.api_base_url,
                 client_id=config.greenlake.client_id,
                 client_secret=config.greenlake.client_secret,
                 workspace_id=config.greenlake.workspace_id,
             )
-            context["greenlake_token_manager"] = gl_token_mgr
-            logger.info("GreenLake: token manager initialized")
         except Exception as e:
             logger.warning("GreenLake: failed to initialize — {}", e)
             context["greenlake_token_manager"] = None
@@ -109,13 +104,8 @@ async def lifespan(server: FastMCP):
         try:
             from hpe_networking_mcp.platforms.clearpass.client import ClearPassTokenManager
 
-            token_manager = ClearPassTokenManager(config.clearpass)
-            # Acquire an initial token so bad credentials fail loudly at startup
-            # instead of on the first tool call.
-            token_manager.get_token()
-            context["clearpass_token_manager"] = token_manager
+            context["clearpass_token_manager"] = ClearPassTokenManager(config.clearpass)
             context["clearpass_config"] = config.clearpass
-            logger.info("ClearPass: connection verified")
         except Exception as e:
             logger.warning("ClearPass: failed to initialize — {}", e)
             context["clearpass_config"] = None
@@ -129,12 +119,8 @@ async def lifespan(server: FastMCP):
         try:
             from hpe_networking_mcp.platforms.apstra.client import ApstraClient
 
-            apstra_client = ApstraClient(config.apstra)
-            # Probe credentials at startup so bad config fails loudly
-            await apstra_client.health_check()
-            context["apstra_client"] = apstra_client
+            context["apstra_client"] = ApstraClient(config.apstra)
             context["apstra_config"] = config.apstra
-            logger.info("Apstra: connection verified")
         except Exception as e:
             logger.warning("Apstra: failed to initialize — {}", e)
             context["apstra_client"] = None
@@ -142,6 +128,32 @@ async def lifespan(server: FastMCP):
     else:
         context["apstra_client"] = None
         context["apstra_config"] = None
+
+    # --- Verify every enabled platform via the shared probe helpers from
+    # platforms/health.py. One source of truth: startup log output and the
+    # runtime ``health`` tool report the same status. Probes that fail do
+    # not abort startup — the platform stays in the context with degraded
+    # status and the health tool surfaces the error. ---
+    if config.enabled_platforms:
+        try:
+            from hpe_networking_mcp.platforms.health import run_probes
+
+            probe_ctx = _LifespanProbeCtx(context)
+            results = await run_probes(probe_ctx, list(config.enabled_platforms))
+            for platform, result in results.items():
+                status = result.get("status")
+                detail = result.get("message", "")
+                if status == "ok":
+                    logger.info("{}: startup probe ok — {}", platform, detail)
+                else:
+                    logger.warning(
+                        "{}: startup probe reported {} — {}",
+                        platform,
+                        status,
+                        detail,
+                    )
+        except Exception as e:
+            logger.warning("Startup probe loop raised unexpectedly — {}", e)
 
     try:
         yield context
@@ -212,6 +224,15 @@ def create_server(config: ServerConfig) -> FastMCP:
         mcp.add_transform(Visibility(False, tags={"clearpass_write_delete"}, components={"tool"}))
     if not config.enable_apstra_write_tools:
         mcp.add_transform(Visibility(False, tags={"apstra_write", "apstra_write_delete"}, components={"tool"}))
+
+    # --- Dynamic mode: hide the individual registry-managed tools so the
+    # exposed surface is just the per-platform meta-tools plus the 3
+    # cross-platform statics (health, site_health_check, manage_wlan_profile).
+    # Tools opt in by being tagged "dynamic_managed" via their platform's
+    # tool() shim; any platform that hasn't migrated yet keeps all its tools
+    # visible regardless of tool_mode. ---
+    if config.tool_mode == "dynamic":
+        mcp.add_transform(Visibility(False, tags={"dynamic_managed"}, components={"tool"}))
 
     return mcp
 

@@ -12,8 +12,8 @@ Tools are namespaced by platform: `mist_*` (Juniper Mist), `central_*` (Aruba Ce
 | Juniper Mist | 31 | 4 | 2 | 37 |
 | Aruba Central | 60 | 13 | 12 | 85 |
 | Aruba ClearPass | 55 | 72 | -- | 127 |
-| Juniper Apstra | 14 | 7 | -- | 21 |
-| Cross-Platform | 1 | 1 | 3 | 5 |
+| Juniper Apstra | 12 | 7 | -- | 19 |
+| Cross-Platform | 2 | 1 | 3 | 6 |
 | HPE GreenLake (static mode) | 10 | -- | -- | 10 |
 | HPE GreenLake (dynamic mode) | 3 | -- | -- | 3 |
 
@@ -21,12 +21,41 @@ Write tools are disabled by default per platform. Enable them with environment v
 `ENABLE_MIST_WRITE_TOOLS=true`, `ENABLE_CENTRAL_WRITE_TOOLS=true`,
 `ENABLE_CLEARPASS_WRITE_TOOLS=true`, or `ENABLE_APSTRA_WRITE_TOOLS=true`.
 
-GreenLake supports two mutually exclusive tool modes controlled by
-`GREENLAKE_TOOL_MODE`:
+## Tool modes (`MCP_TOOL_MODE`)
 
-- **static** (default) -- 10 dedicated tools, one per API endpoint.
-- **dynamic** -- 3 meta-tools that discover, inspect, and invoke any of the
-  10 endpoints at runtime.
+Two tool-exposure modes, selectable via the `MCP_TOOL_MODE` env var:
+
+- **`static`** (current default) — every platform tool is registered as its own
+  FastMCP tool. Easiest to browse and pin; largest tool-list footprint.
+- **`dynamic`** — platforms that have migrated to the shared meta-tool pattern
+  expose exactly three tools per platform: `<platform>_list_tools`,
+  `<platform>_get_tool_schema`, `<platform>_invoke_tool`. The model discovers
+  tools at call time rather than having every schema dumped into the system
+  prompt. Saves context tokens, especially on local LLMs.
+
+Dynamic-mode migration status (phased per [#157](https://github.com/nowireless4u/hpe-networking-mcp/issues/157)):
+
+| Platform | Dynamic mode available |
+|---|---|
+| Juniper Apstra | ✅ yes (Phase 0) |
+| Juniper Mist | pending (Phase 1) |
+| Aruba Central | pending (Phase 2) |
+| Aruba ClearPass | pending (Phase 3) |
+| HPE GreenLake | yes (already dynamic via the legacy endpoint-dispatch meta-tools; unified in Phase 4) |
+
+When a platform that has **not** migrated yet runs under `MCP_TOOL_MODE=dynamic`,
+its individual tools stay visible (no Visibility transform hides them) so the
+server stays usable until every migration lands in Phase 6.
+
+## Cross-platform static tools
+
+Always registered regardless of `MCP_TOOL_MODE`:
+
+- **`health`** — reports per-platform status in one call. Accepts
+  `platform: str | list[str] | None`. Replaces `apstra_health` (removed
+  in Phase 0) and `clearpass_test_connection` (to be removed in Phase 3).
+- **`site_health_check`** — cross-platform site aggregator.
+- **`manage_wlan_profile`** — cross-platform WLAN orchestrator.
 
 ---
 
