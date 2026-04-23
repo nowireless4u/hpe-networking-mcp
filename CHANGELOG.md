@@ -5,6 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.0.0.3] - 2026-04-22
+
+### Fixed — silent PUT-clobber on Central configuration updates (#155)
+
+Audited every `central_manage_*` write tool for the silent-clobber
+pattern that v0.9.2.2 fixed in `central_manage_wlan_profile`. Three
+tools shared the same bug via a common helper:
+
+- `central_manage_site`
+- `central_manage_site_collection`
+- `central_manage_device_group`
+
+All three called `_execute_config_action` in
+`platforms/central/tools/configuration.py`, which hard-coded `PUT`
+for updates. Central treats `PUT` as full-resource replacement, so
+partial-update payloads silently dropped every field not included.
+Exact same class of bug Zach reported in #141, same fix shape as PR
+#142.
+
+Updates now issue `PATCH` by default (Central merges the payload
+server-side, preserving untouched fields). All three tools gain a
+`replace_existing: bool = False` parameter that opts back into the
+old `PUT` behavior for callers deliberately sending a full-resource
+replacement. The elicitation prompt now warns when
+`replace_existing=True` is in play.
+
+Ten other `central_manage_*` tools already used `PATCH` via shared
+helpers and were not affected.
+
+New unit test file `tests/unit/test_central_configuration.py` covers
+method selection for create / update-default / update-replace-existing /
+delete and the resource-id validation paths.
+
+### Changed — test fixture scope (internal)
+
+The `_install_registry_stubs()` helper introduced in v1.0.0.2
+(`tests/integration/conftest.py`) was lifted up to `tests/conftest.py`
+so both unit and integration tests can import from tool modules
+without tripping the `_registry.mcp is None` decorator error.
+`tests/integration/conftest.py` keeps its integration-specific
+fixtures. No behavior change at runtime.
+
 ## [v1.0.0.2] - 2026-04-22
 
 ### Fixed — test/dev infrastructure (pre-gate for v2.0 work)

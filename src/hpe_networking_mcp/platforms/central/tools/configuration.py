@@ -81,6 +81,17 @@ async def central_manage_site(
             default=False,
         ),
     ],
+    replace_existing: Annotated[
+        bool,
+        Field(
+            description=(
+                "Only used on update. When false (default) the update is a PATCH — Central merges the payload "
+                "with the existing site, preserving fields you don't specify. Set true to issue a PUT that "
+                "replaces the entire site; any field absent from the payload is dropped. Use with care."
+            ),
+            default=False,
+        ),
+    ],
 ) -> dict | str:
     """Create, update, or delete a site in Aruba Central."""
     return await _execute_config_action(
@@ -91,6 +102,7 @@ async def central_manage_site(
         resource_id=site_id,
         payload=payload,
         confirmed=confirmed,
+        replace_existing=replace_existing,
     )
 
 
@@ -138,6 +150,18 @@ async def central_manage_site_collection(
             default=False,
         ),
     ],
+    replace_existing: Annotated[
+        bool,
+        Field(
+            description=(
+                "Only used on update. When false (default) the update is a PATCH — Central merges the payload "
+                "with the existing collection, preserving fields you don't specify. Set true to issue a PUT that "
+                "replaces the entire collection; any field absent from the payload is dropped. "
+                "This flag does not apply to add_sites / remove_sites."
+            ),
+            default=False,
+        ),
+    ],
 ) -> dict | str:
     """Create, update, delete, or manage sites within a site collection."""
     if action_type == CollectionActionType.ADD_SITES:
@@ -156,6 +180,7 @@ async def central_manage_site_collection(
         resource_id=collection_id,
         payload=payload,
         confirmed=confirmed,
+        replace_existing=replace_existing,
     )
 
 
@@ -196,6 +221,17 @@ async def central_manage_device_group(
             default=False,
         ),
     ],
+    replace_existing: Annotated[
+        bool,
+        Field(
+            description=(
+                "Only used on update. When false (default) the update is a PATCH — Central merges the payload "
+                "with the existing device group, preserving fields you don't specify. Set true to issue a PUT "
+                "that replaces the entire device group; any field absent from the payload is dropped. Use with care."
+            ),
+            default=False,
+        ),
+    ],
 ) -> dict | str:
     """Create, update, or delete a device group in Aruba Central."""
     return await _execute_config_action(
@@ -206,6 +242,7 @@ async def central_manage_device_group(
         resource_id=group_id,
         payload=payload,
         confirmed=confirmed,
+        replace_existing=replace_existing,
     )
 
 
@@ -222,12 +259,20 @@ async def _execute_config_action(
     resource_id: str | None,
     payload: dict,
     confirmed: bool = False,
+    replace_existing: bool = False,
 ) -> dict | str:
     """Execute a configuration CRUD action with confirmation and error handling.
 
     Central API patterns:
     - CREATE: POST to base path, payload as JSON body
-    - UPDATE: PUT to base path, payload includes scopeId to identify resource
+    - UPDATE (default): PATCH — Central merges the payload with the existing
+      resource server-side. Callers pass only the fields they want to change;
+      untouched fields are preserved.
+    - UPDATE (replace_existing=True): PUT — full-resource replacement. Every
+      field missing from the payload is dropped. Use only when the caller
+      has fetched the current resource and is deliberately sending a
+      complete replacement. This path reproduces the pre-v0.9.2.2 behavior
+      that silently clobbered fields in partial updates (#141, #155).
     - DELETE: DELETE to {path}/bulk, body is {"items": [{"id": "..."}]}
     """
     if action_type in (ActionType.UPDATE, ActionType.DELETE) and not resource_id:
@@ -241,8 +286,17 @@ async def _execute_config_action(
 
     # Confirm with user for update and delete only (skip if already confirmed)
     if action_type != ActionType.CREATE and not confirmed:
+        if action_type == ActionType.UPDATE and replace_existing:
+            warning = (
+                " NOTE: replace_existing=True — this is a full-resource PUT. Any "
+                "field not in the payload will be dropped from the stored resource."
+            )
+        else:
+            warning = ""
         elicitation_response = await elicitation_handler(
-            message=(f"The LLM wants to {action_wording} {resource_name}. Do you accept to trigger the API call?"),
+            message=(
+                f"The LLM wants to {action_wording} {resource_name}.{warning} Do you accept to trigger the API call?"
+            ),
             ctx=ctx,
         )
         if elicitation_response.action == "decline":
@@ -266,7 +320,7 @@ async def _execute_config_action(
         full_path = api_path
         api_data = payload
     elif action_type == ActionType.UPDATE:
-        api_method = "PUT"
+        api_method = "PUT" if replace_existing else "PATCH"
         full_path = api_path
         api_data = {**payload, "scopeId": resource_id}
     else:

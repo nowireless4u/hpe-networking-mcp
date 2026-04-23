@@ -15,54 +15,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-
-def _install_registry_stubs() -> None:
-    """Stub ``_registry.mcp`` for each platform so tool modules can be imported.
-
-    Live integration tests (e.g. ``test_ap_monitoring_live.py``) import tool
-    functions directly from ``hpe_networking_mcp.platforms.*.tools.*``. Each
-    tool module calls ``@mcp.tool(...)`` at import time against
-    ``_registry.mcp`` — which is ``None`` until ``register_tools()`` runs.
-    Since integration tests don't spin up a FastMCP server (they exercise the
-    tool functions against live vendor APIs), ``register_tools()`` never runs
-    and the imports fail at collection with ``AttributeError: 'NoneType'
-    object has no attribute 'tool'``.
-
-    This fixture installs a ``MagicMock`` whose ``.tool(...)`` and
-    ``.prompt(...)`` return pass-through decorators, so decorated functions
-    remain intact as regular callables. Idempotent — skips platforms whose
-    registry is already populated (e.g. when running unit + integration in
-    the same session and a prior fixture set one up).
-
-    Only runs for the ``tests/integration`` tree; ``tests/unit`` does not need
-    the stubbing because unit tests import from utils/models/client modules
-    rather than from the tool modules.
-    """
-    platform_registries = (
-        "hpe_networking_mcp.platforms.apstra._registry",
-        "hpe_networking_mcp.platforms.central._registry",
-        "hpe_networking_mcp.platforms.clearpass._registry",
-        "hpe_networking_mcp.platforms.greenlake._registry",
-        "hpe_networking_mcp.platforms.mist._registry",
-    )
-
-    mock_mcp = MagicMock()
-    mock_mcp.tool = MagicMock(side_effect=lambda *_a, **_kw: lambda fn: fn)
-    mock_mcp.prompt = MagicMock(side_effect=lambda *_a, **_kw: lambda fn: fn)
-
-    for module_path in platform_registries:
-        try:
-            import importlib
-
-            reg = importlib.import_module(module_path)
-        except ImportError:
-            # Platform module not yet available (e.g. during scaffolding).
-            continue
-        if getattr(reg, "mcp", None) is None:
-            reg.mcp = mock_mcp
-
-
-_install_registry_stubs()
+# Note: the `_install_registry_stubs` call that allowed integration tests to
+# import tool modules at collection time used to live here. It was lifted to
+# tests/conftest.py for #155 so unit tests can also exercise tool-module-level
+# imports. pytest auto-loads the parent conftest before this one, so the
+# stubs are already in place by the time anything here runs.
 
 
 def _read_secret(name: str) -> str | None:
