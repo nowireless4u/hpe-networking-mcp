@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — v2.0 Phase 0 infrastructure
+
+### Added — shared tool-registry and meta-tool infrastructure (#158 part A)
+
+Groundwork for the v2.0.0.0 dynamic-tool-mode default flip. No user-visible
+changes in this release: individual platform tool surfaces are unchanged and
+`MCP_TOOL_MODE=static` remains the default. The infrastructure lands first so
+each per-platform migration PR (Apstra, Mist, Central, ClearPass, GreenLake)
+is a small, mechanical swap.
+
+- `src/hpe_networking_mcp/platforms/_common/` package:
+  - `tool_registry.py` — `ToolSpec` dataclass and `REGISTRIES` dict populated
+    by each platform's `@tool(...)` shim (PR B onward). Includes
+    `is_tool_enabled()` gating honoring `ENABLE_*_WRITE_TOOLS` flags.
+  - `meta_tools.py` — `build_meta_tools(platform, mcp)` factory that
+    registers three meta-tools per platform: `<platform>_list_tools`,
+    `<platform>_get_tool_schema`, `<platform>_invoke_tool`.
+- `src/hpe_networking_mcp/platforms/health.py` — new cross-platform `health`
+  tool replacing the per-platform `apstra_health` and
+  `clearpass_test_connection`. Accepts `platform: str | list[str] | None`
+  following the filter-parameter rule from v1.0.0.1. Per-platform probe
+  helpers (`_probe_mist`, `_probe_central`, `_probe_greenlake`,
+  `_probe_clearpass`, `_probe_apstra`) report `ok` / `degraded` /
+  `unavailable` with platform-specific detail. The existing
+  `apstra_health` and `clearpass_test_connection` tools remain in place in
+  this release; they are removed in Phase 0 PR B and Phase 3 respectively.
+- `src/hpe_networking_mcp/middleware/elicitation.py` — `confirm_write(ctx, message)`
+  helper consolidating the 17 duplicated `_confirm` helpers from individual
+  write tool files (#148). Write tools convert to it in subsequent phases.
+
+### Changed
+
+- `ServerConfig.greenlake_tool_mode` is now a read-only property aliasing
+  `ServerConfig.tool_mode` (#151). Internal field renamed; `MCP_TOOL_MODE`
+  env-var name unchanged. Alias slated for removal in v2.1.
+
+### Tests
+- 46 new unit tests (`test_tool_registry.py`, `test_meta_tools.py`,
+  `test_health.py`). Total suite: 391/391 passing.
+
 ## [v1.1.0.0] - 2026-04-22
 
 ### Added — Mist/Central filter-parameter consistency (#156)

@@ -196,6 +196,11 @@ def create_server(config: ServerConfig) -> FastMCP:
     if config.mist or config.central:
         _register_site_health_check(mcp, config)
 
+    # --- Cross-platform `health` tool (always registered; unaffected by tool_mode) ---
+    from hpe_networking_mcp.platforms.health import register as _register_health
+
+    _register_health(mcp)
+
     # --- Write tool visibility (per-platform) ---
     from fastmcp.server.transforms import Visibility
 

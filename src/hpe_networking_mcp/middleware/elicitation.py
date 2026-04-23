@@ -93,6 +93,50 @@ class ElicitationMiddleware(Middleware):
         return result  # type: ignore[return-value]
 
 
+async def confirm_write(
+    ctx: Context,
+    message: str,
+    *,
+    chat_confirm_hint: str | None = None,
+) -> dict | None:
+    """High-level write-tool confirmation helper.
+
+    Most write tools were carrying nearly-identical ``_confirm`` helpers that
+    wrapped :func:`elicitation_handler` and turned the returned action into the
+    canonical ``{"status": ..., "message": ...}`` dict shape. This helper
+    consolidates that boilerplate (#148).
+
+    Args:
+        ctx: FastMCP context.
+        message: Human-readable description of what the tool is about to do.
+            Passed verbatim to the elicitation prompt.
+        chat_confirm_hint: Optional replacement for the default "call again
+            with confirmed=true" message returned when the client cannot
+            present an elicitation prompt. Useful for tools whose parameter
+            name isn't ``confirmed``.
+
+    Returns:
+        ``None`` if the user accepted (or elicitation is disabled) — caller
+        proceeds. A dict with ``status`` of ``confirmation_required``,
+        ``declined``, or ``cancelled`` if not — caller should return the dict
+        as the tool result.
+    """
+    result = await elicitation_handler(message=message, ctx=ctx)
+    if result.action == "accept":
+        return None
+    if result.action == "cancel":
+        return {"status": "cancelled", "message": "Action cancelled by user."}
+    # decline
+    mode = await ctx.get_state("elicitation_mode")
+    if mode == "chat_confirm":
+        hint = chat_confirm_hint or (
+            f"{message} — please confirm with the user before proceeding, then "
+            "call this tool again with confirmed=true."
+        )
+        return {"status": "confirmation_required", "message": hint}
+    return {"status": "declined", "message": "Action declined by user."}
+
+
 async def elicitation_handler(message: str, ctx: Context) -> ElicitResult:
     """Get user confirmation before a write operation.
 

@@ -94,8 +94,13 @@ class ServerConfig:
     debug: bool = False
     log_file: str | None = None
 
-    # GreenLake tool mode: "static" (10 dedicated tools) or "dynamic" (3 meta-tools)
-    greenlake_tool_mode: str = "static"
+    # Tool exposure mode (generalized from GreenLake's original setting, #151).
+    # "static"  — every tool registers with FastMCP individually; all visible.
+    # "dynamic" — the per-platform 3 meta-tools (list / schema / invoke) are
+    #             exposed; the underlying tools are hidden via a Visibility
+    #             transform. Added in v1.1.0.0+ as opt-in; becomes default in
+    #             v2.0.0.0.
+    tool_mode: str = "static"
 
     # Platform secrets — None means platform is disabled
     mist: MistSecrets | None = None
@@ -103,6 +108,11 @@ class ServerConfig:
     greenlake: GreenLakeSecrets | None = None
     clearpass: ClearPassSecrets | None = None
     apstra: ApstraSecrets | None = None
+
+    @property
+    def greenlake_tool_mode(self) -> str:
+        """Deprecated alias for :attr:`tool_mode`. Removed in v2.0 (#151)."""
+        return self.tool_mode
 
     @property
     def enabled_platforms(self) -> list[str]:
@@ -330,8 +340,13 @@ def load_config() -> ServerConfig:
     debug = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
     log_file = os.getenv("LOG_FILE") or None
 
-    # GreenLake tool mode: "static" or "dynamic"
-    greenlake_tool_mode = os.getenv("MCP_TOOL_MODE", "static").lower().strip()
+    # Tool exposure mode — MCP_TOOL_MODE env var. Same env-var name as the
+    # old GreenLake-specific setting; the internal config field is now just
+    # ``tool_mode`` because every platform honors it in v2.0.
+    tool_mode = os.getenv("MCP_TOOL_MODE", "static").lower().strip()
+    if tool_mode not in ("static", "dynamic"):
+        logger.warning("Ignoring unknown MCP_TOOL_MODE={!r}, defaulting to 'static'", tool_mode)
+        tool_mode = "static"
 
     # Load platform credentials from Docker secrets
     mist = _load_mist()
@@ -351,7 +366,7 @@ def load_config() -> ServerConfig:
         disable_elicitation=disable_elicit,
         debug=debug,
         log_file=log_file,
-        greenlake_tool_mode=greenlake_tool_mode,
+        tool_mode=tool_mode,
         mist=mist,
         central=central,
         greenlake=greenlake,
@@ -367,6 +382,6 @@ def load_config() -> ServerConfig:
         raise SystemExit(1)
 
     logger.info("Enabled platforms: {}", ", ".join(config.enabled_platforms))
-    if greenlake_tool_mode != "static":
-        logger.info("GreenLake tool mode: {}", greenlake_tool_mode)
+    if tool_mode != "static":
+        logger.info("Tool mode: {}", tool_mode)
     return config
