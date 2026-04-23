@@ -5,7 +5,66 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] — v2.0 Phase 0 infrastructure
+## [Unreleased] — v2.0 Phase 0
+
+### Added — Apstra dynamic-mode pilot (#158 part B)
+
+First platform migrated onto the dynamic-mode infrastructure. With
+`MCP_TOOL_MODE=dynamic`, Apstra exposes exactly three meta-tools
+(`apstra_list_tools`, `apstra_get_tool_schema`, `apstra_invoke_tool`) and
+hides the 19 underlying Apstra tools via a `Visibility` transform on the
+`dynamic_managed` tag. Static mode is unchanged.
+
+- `platforms/apstra/_registry.py` replaces the module-level `mcp` holder
+  with a `tool()` decorator shim that (1) delegates to
+  `mcp.tool(...)` exactly as before, (2) adds the `dynamic_managed` tag
+  so `Visibility` can hide individual tools in dynamic mode, and
+  (3) populates `REGISTRIES["apstra"]` so the meta-tools can dispatch by
+  name.
+- All 8 Apstra tool files under `platforms/apstra/tools/*.py` now
+  decorate with `@tool(...)` (mechanical swap from `@mcp.tool(...)`).
+- `platforms/apstra/__init__.py` wires the meta-tools onto FastMCP when
+  `config.tool_mode == "dynamic"`.
+- `server.py` installs `Visibility(False, tags={"dynamic_managed"})`
+  when `tool_mode == "dynamic"`, so every migrated platform's individual
+  tools become invisible in favor of its meta-tools.
+
+### Removed
+
+- `apstra_health` — use `health(platform="apstra")` (cross-platform, added
+  in Phase 0 PR A).
+- `apstra_formatting_guidelines` — content migrated into
+  `src/hpe_networking_mcp/INSTRUCTIONS.md` under the Juniper Apstra section;
+  the AI still sees the full guidance at session init without a dedicated
+  tool call. Per-response `get_base_guidelines`, `get_device_guidelines`,
+  etc. helpers still fire inside Apstra tool bodies.
+
+### Changed
+
+- Apstra write tools (`manage_blueprints.py`, `manage_networks.py`,
+  `manage_connectivity.py`) now call the shared `confirm_write(ctx, message)`
+  helper from `middleware/elicitation.py` rather than three identical local
+  `_confirm()` copies (#148 — Apstra's share of the consolidation; ClearPass
+  gets the same treatment in Phase 3).
+- `server.py:lifespan` now runs the `platforms/health.py` probe helpers at
+  startup via a minimal shim (`_LifespanProbeCtx`) that exposes the
+  in-progress context dict as `lifespan_context`. One source of truth for
+  "is this platform reachable" — the startup log line and the runtime
+  `health` tool output are now generated from the same code path.
+
+### Tests
+- 6 new integration-style tests in `test_apstra_dynamic_mode.py` assert that
+  every Apstra tool registers into `REGISTRIES["apstra"]` with the right
+  category and tags, and that `apstra_health` / `apstra_formatting_guidelines`
+  are gone. Total suite: 397/397 passing.
+
+### Boot verification
+- `MCP_TOOL_MODE=static` + Apstra configured → 19 `apstra_*` tools visible;
+  `apstra_health` and `apstra_formatting_guidelines` absent.
+- `MCP_TOOL_MODE=dynamic` + Apstra configured → 3 meta-tools
+  (`apstra_list_tools`, `apstra_get_tool_schema`, `apstra_invoke_tool`)
+  plus the cross-platform `health` tool; every underlying Apstra tool
+  hidden.
 
 ### Added — shared tool-registry and meta-tool infrastructure (#158 part A)
 

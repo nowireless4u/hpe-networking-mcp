@@ -6,32 +6,15 @@ from typing import Any
 
 from fastmcp import Context
 
-from hpe_networking_mcp.middleware.elicitation import elicitation_handler
+from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms.apstra import guidelines
-from hpe_networking_mcp.platforms.apstra._registry import mcp
+from hpe_networking_mcp.platforms.apstra._registry import tool
 from hpe_networking_mcp.platforms.apstra.client import format_http_error, get_apstra_client
 from hpe_networking_mcp.platforms.apstra.models import normalize_application_points
 from hpe_networking_mcp.platforms.apstra.tools import WRITE
 
 
-async def _confirm(ctx: Context, message: str) -> dict[str, Any] | None:
-    elicit = await elicitation_handler(message=message, ctx=ctx)
-    if elicit.action == "decline":
-        mode = await ctx.get_state("elicitation_mode")
-        if mode == "chat_confirm":
-            return {
-                "status": "confirmation_required",
-                "message": (
-                    f"Please confirm: {message}. Call this tool again with confirmed=true after the user confirms."
-                ),
-            }
-        return {"status": "declined", "message": "Action declined by user."}
-    if elicit.action == "cancel":
-        return {"status": "cancelled", "message": "Action cancelled by user."}
-    return None
-
-
-@mcp.tool(annotations=WRITE, tags={"apstra_write"})
+@tool(annotations=WRITE, tags={"apstra_write"})
 async def apstra_apply_ct_policies(
     ctx: Context,
     blueprint_id: str,
@@ -54,7 +37,7 @@ async def apstra_apply_ct_policies(
         return f"Invalid application_points: {e}"
 
     if not confirmed:
-        decline = await _confirm(
+        decline = await confirm_write(
             ctx,
             f"Apstra: apply/update {len(normalized)} connectivity-template policy binding(s) "
             f"in blueprint {blueprint_id}. Confirm?",

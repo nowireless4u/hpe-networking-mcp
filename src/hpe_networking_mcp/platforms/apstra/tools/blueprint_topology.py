@@ -7,12 +7,12 @@ from typing import Any
 from fastmcp import Context
 
 from hpe_networking_mcp.platforms.apstra import guidelines
-from hpe_networking_mcp.platforms.apstra._registry import mcp
+from hpe_networking_mcp.platforms.apstra._registry import tool
 from hpe_networking_mcp.platforms.apstra.client import format_http_error, get_apstra_client
 from hpe_networking_mcp.platforms.apstra.tools import READ_ONLY
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def apstra_get_racks(ctx: Context, blueprint_id: str) -> dict[str, Any] | str:
     """Get all racks in a blueprint.
 
@@ -31,7 +31,7 @@ async def apstra_get_racks(ctx: Context, blueprint_id: str) -> dict[str, Any] | 
         return f"Error fetching racks: {format_http_error(e) if hasattr(e, 'response') else e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def apstra_get_routing_zones(ctx: Context, blueprint_id: str) -> dict[str, Any] | str:
     """Get all routing zones (security zones) in a blueprint.
 
@@ -49,7 +49,7 @@ async def apstra_get_routing_zones(ctx: Context, blueprint_id: str) -> dict[str,
         return f"Error fetching routing zones: {format_http_error(e) if hasattr(e, 'response') else e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def apstra_get_system_info(ctx: Context, blueprint_id: str) -> dict[str, Any] | str:
     """Get systems (devices) inside a blueprint.
 

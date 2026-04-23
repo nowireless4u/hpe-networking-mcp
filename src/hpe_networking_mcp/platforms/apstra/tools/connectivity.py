@@ -7,12 +7,12 @@ from typing import Any
 from fastmcp import Context
 
 from hpe_networking_mcp.platforms.apstra import guidelines
-from hpe_networking_mcp.platforms.apstra._registry import mcp
+from hpe_networking_mcp.platforms.apstra._registry import tool
 from hpe_networking_mcp.platforms.apstra.client import format_http_error, get_apstra_client
 from hpe_networking_mcp.platforms.apstra.tools import READ_ONLY
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def apstra_get_connectivity_templates(ctx: Context, blueprint_id: str) -> dict[str, Any] | str:
     """Get connectivity templates (endpoint policies) in a blueprint.
 
@@ -32,7 +32,7 @@ async def apstra_get_connectivity_templates(ctx: Context, blueprint_id: str) -> 
         return f"Error fetching connectivity templates: {format_http_error(e) if hasattr(e, 'response') else e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def apstra_get_application_endpoints(ctx: Context, blueprint_id: str) -> dict[str, Any] | str:
     """Get all possible application endpoints for connectivity templates.
 
