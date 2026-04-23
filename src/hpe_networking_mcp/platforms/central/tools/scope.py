@@ -9,7 +9,7 @@ from typing import Literal
 
 from fastmcp import Context
 
-from hpe_networking_mcp.platforms.central._registry import mcp
+from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.scope_builder import (
     build_scope_tree,
     tree_to_dict,
@@ -23,7 +23,7 @@ from hpe_networking_mcp.platforms.central.scope_queries import (
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_get_scope_tree(
     ctx: Context,
     view: Literal["committed", "effective"] = "committed",
@@ -51,7 +51,7 @@ async def central_get_scope_tree(
         return f"Error building scope tree: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_get_scope_resources(
     ctx: Context,
     scope_id: str,
@@ -111,7 +111,7 @@ async def central_get_scope_resources(
     }
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_get_effective_config(
     ctx: Context,
     scope_id: str,
@@ -160,7 +160,7 @@ async def central_get_effective_config(
     }
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_get_devices_in_scope(
     ctx: Context,
     scope_id: str,
@@ -200,7 +200,7 @@ async def central_get_devices_in_scope(
     }
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_get_scope_diagram(
     ctx: Context,
     scope_id: str | None = None,

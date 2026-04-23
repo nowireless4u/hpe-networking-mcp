@@ -15,7 +15,7 @@ from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import elicitation_handler
-from hpe_networking_mcp.platforms.central._registry import mcp
+from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.utils import retry_central_command
 
 WRITE_DELETE = ToolAnnotations(
@@ -45,7 +45,7 @@ class CollectionActionType(Enum):
 # ------------------------------------------------------------------
 
 
-@mcp.tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
 async def central_manage_site(
     ctx: Context,
     action_type: Annotated[
@@ -111,7 +111,7 @@ async def central_manage_site(
 # ------------------------------------------------------------------
 
 
-@mcp.tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
 async def central_manage_site_collection(
     ctx: Context,
     action_type: Annotated[
@@ -189,7 +189,7 @@ async def central_manage_site_collection(
 # ------------------------------------------------------------------
 
 
-@mcp.tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
 async def central_manage_device_group(
     ctx: Context,
     action_type: Annotated[

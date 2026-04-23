@@ -3,7 +3,7 @@ from typing import Literal
 from fastmcp import Context
 from pycentral.new_monitoring.clients import Clients
 
-from hpe_networking_mcp.platforms.central._registry import mcp
+from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.models import Client
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import (
@@ -25,7 +25,7 @@ CLIENT_FILTER_FIELDS: dict[str, FilterField] = {
 }
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_get_clients(
     ctx: Context,
     site_id: str | None = None,
@@ -90,7 +90,7 @@ async def central_get_clients(
     return clean_client_data(clients)
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_find_client(
     ctx: Context,
     mac_address: str,

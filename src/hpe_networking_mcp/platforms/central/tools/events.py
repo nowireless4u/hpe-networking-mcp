@@ -2,7 +2,7 @@ from typing import Literal
 
 from fastmcp import Context
 
-from hpe_networking_mcp.platforms.central._registry import mcp
+from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.models import (
     Event,
     EventFilters,
@@ -51,7 +51,7 @@ def _resolve_time_window(
     return fmt(start_dt), fmt(end_dt)
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_get_events(
     ctx: Context,
     context_type: CONTEXT_TYPE,
@@ -129,7 +129,7 @@ async def central_get_events(
     )
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_get_events_count(
     ctx: Context,
     context_type: CONTEXT_TYPE,

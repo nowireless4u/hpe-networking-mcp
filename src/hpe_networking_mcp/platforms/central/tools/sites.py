@@ -1,7 +1,7 @@
 from fastmcp import Context
 from pycentral.new_monitoring import MonitoringSites
 
-from hpe_networking_mcp.platforms.central._registry import mcp
+from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.models import SiteData
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import (
@@ -12,7 +12,7 @@ from hpe_networking_mcp.platforms.central.utils import (
 )
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_get_sites(
     ctx: Context,
     filter: str | None = None,
@@ -55,7 +55,7 @@ async def central_get_sites(
     return response.get("msg", {})
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_get_site_health(
     ctx: Context,
     site_name: str | list[str] | None = None,
@@ -86,7 +86,7 @@ async def central_get_site_health(
     return list(sites_data.values())
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_get_site_name_id_mapping(ctx: Context) -> dict:
     """
     Returns a lightweight mapping of all site names to their IDs and health
