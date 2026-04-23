@@ -2,6 +2,9 @@ services:
   hpe-networking-mcp:
     build: .
     volumes:
-      - ./src:/app/src:ro
+      # Read-write so in-container formatters (ruff format) can rewrite source.
+      # Production docker-compose.yml does not mount src at all — this does not
+      # affect end users.
+      - ./src:/app/src
       - ./tests:/app/tests
       - ./pyproject.toml:/app/pyproject.toml:ro
