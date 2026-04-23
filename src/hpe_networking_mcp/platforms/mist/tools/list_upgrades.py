@@ -26,6 +26,7 @@ from hpe_networking_mcp.platforms.mist.client import (
     handle_network_error,
     process_response,
 )
+from hpe_networking_mcp.platforms.mist.utils import as_comma_separated
 
 
 class Device_type(Enum):
@@ -109,12 +110,13 @@ async def list_upgrades(
         ),
     ],
     model: Annotated[
-        str,
+        str | list[str],
         Field(
             description=(
                 "Device model to filter available firmware "
-                "versions by. Only applicable when "
-                "device_type is available_device_versions"
+                "versions by. Accepts a single string or a list "
+                "of strings. Only applicable when device_type is "
+                "available_device_versions."
             ),
             default=None,
         ),
@@ -264,11 +266,12 @@ async def list_upgrades(
                     response = mistapi.api.v1.orgs.ssr.listOrgSsrUpgrades(apisession, org_id=org)
                     await process_response(response)
             case "available_device_versions":
+                model_arg = as_comma_separated(model)
                 response = mistapi.api.v1.orgs.devices.listOrgAvailableDeviceVersions(
                     apisession,
                     org_id=org,
                     type=(firmware_type.value if firmware_type else None),
-                    model=model if model else None,
+                    model=model_arg if model_arg else None,
                 )
                 await process_response(response)
             case "available_ssr_versions":

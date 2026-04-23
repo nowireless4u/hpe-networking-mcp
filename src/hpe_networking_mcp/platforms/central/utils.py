@@ -30,6 +30,27 @@ def normalize_site_name_filter(value: str | list[str] | None) -> list[str] | Non
     return list(value)
 
 
+def as_comma_separated(value: str | list[str] | None) -> str | None:
+    """Normalize a filter value into the comma-separated string form Central expects.
+
+    Central's OData filter helpers (and ``build_odata_filter``) accept a
+    comma-separated string and split on commas to build ``in (...)`` clauses.
+    This helper lets tool parameters accept either shape::
+
+        "AP43"                 -> "AP43"              (unchanged)
+        "AP43,AP44"            -> "AP43,AP44"         (unchanged)
+        ["AP43", "AP44"]       -> "AP43,AP44"         (joined)
+        None                   -> None
+
+    Introduced for the Mist/Central filter-parameter consistency sweep (#156).
+    """
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value
+    return ",".join(str(v) for v in value)
+
+
 @dataclass
 class FilterField:
     api_field: str

@@ -26,6 +26,7 @@ from hpe_networking_mcp.platforms.mist.client import (
     handle_network_error,
     process_response,
 )
+from hpe_networking_mcp.platforms.mist.utils import as_comma_separated
 
 
 class Device_type(Enum):
@@ -75,10 +76,11 @@ async def search_device(
         ),
     ],
     model: Annotated[
-        str,
+        str | list[str],
         Field(
             description=(
-                "Device model. Partial match allowed with wildcard * (e.g. `AP*` will match `AP43` and `AP41`)"
+                "Device model to filter inventory by. Accepts a single string or a list of strings. "
+                "Partial match allowed with wildcard * (e.g. `AP*` will match `AP43` and `AP41`)."
             ),
             default=None,
         ),
@@ -95,9 +97,11 @@ async def search_device(
         ),
     ],
     version: Annotated[
-        str,
+        str | list[str],
         Field(
-            description=("Firmware version of the device to filter inventory by"),
+            description=(
+                "Firmware version of the device to filter inventory by. Accepts a single string or a list of strings."
+            ),
             default=None,
         ),
     ],
@@ -164,16 +168,18 @@ async def search_device(
         }
         if serial:
             kwargs["serial"] = serial
-        if model:
-            kwargs["model"] = model
+        model_arg = as_comma_separated(model)
+        if model_arg:
+            kwargs["model"] = model_arg
         if device_type:
             kwargs["type"] = device_type.value
         if mac:
             kwargs["mac"] = mac
         if site_id:
             kwargs["site_id"] = str(site_id)
-        if version:
-            kwargs["version"] = version
+        version_arg = as_comma_separated(version)
+        if version_arg:
+            kwargs["version"] = version_arg
         if text:
             kwargs["text"] = text
         if status:

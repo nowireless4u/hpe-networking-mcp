@@ -8,6 +8,7 @@ from hpe_networking_mcp.platforms.central.models import Device
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import (
     FilterField,
+    as_comma_separated,
     build_odata_filter,
     clean_device_data,
 )
@@ -29,9 +30,9 @@ async def central_get_devices(
     ctx: Context,
     site_id: str | None = None,
     device_type: Literal["ACCESS_POINT", "SWITCH", "GATEWAY"] | None = None,
-    device_name: str | None = None,
-    serial_number: str | None = None,
-    model: str | None = None,
+    device_name: str | list[str] | None = None,
+    serial_number: str | list[str] | None = None,
+    model: str | list[str] | None = None,
     device_function: str | None = None,
     is_provisioned: bool | None = None,
     site_assigned: bool | None = None,
@@ -47,9 +48,10 @@ async def central_get_devices(
     Parameters:
     - site_id: Exact site ID or comma-separated list of IDs.
     - device_type: ACCESS_POINT, SWITCH, or GATEWAY. Comma-separated for multiple.
-    - device_name: Device display name. Comma-separated for multiple.
-    - serial_number: Device serial number. Comma-separated for multiple.
-    - model: Device model (e.g., AP-735-RWF1). Comma-separated for multiple.
+    - device_name: Device display name. Accepts a single string or a list of strings
+      (e.g. "AP-001" or ["AP-001", "AP-002"]).
+    - serial_number: Device serial number. Accepts a single string or a list of strings.
+    - model: Device model (e.g., AP-735-RWF1). Accepts a single string or a list of strings.
     - device_function: Device function classification. Comma-separated for multiple.
     - is_provisioned: True returns only provisioned devices (sending Monitoring
       data to New Central). False returns only unprovisioned devices.
@@ -62,9 +64,9 @@ async def central_get_devices(
     raw_pairs = [
         ("site_id", site_id),
         ("device_type", device_type),
-        ("device_name", device_name),
-        ("serial_number", serial_number),
-        ("model", model),
+        ("device_name", as_comma_separated(device_name)),
+        ("serial_number", as_comma_separated(serial_number)),
+        ("model", as_comma_separated(model)),
         ("device_function", device_function),
     ]
     pairs = [(DEVICE_FILTER_FIELDS[k], v) for k, v in raw_pairs if v is not None]

@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.1.0.0] - 2026-04-22
+
+### Added — Mist/Central filter-parameter consistency (#156)
+
+Eight filter parameters across five tools now accept either a single
+string or a list of strings. The rule established in v1.0.0.1 — filter
+parameters accept `str | list[str] | None`, named in the singular —
+applied across Mist and Central. Identity parameters (`blueprint_id`,
+`device_id`, etc.) and required-single-item parameters (`vn_name`,
+`ssid`) stay scalar.
+
+**Central** (`platforms/central/tools/`):
+- `central_get_devices` — `device_name`, `serial_number`, `model`
+- `central_get_aps` — `serial_number`, `device_name`, `model`, `firmware_version`
+
+**Mist** (`platforms/mist/tools/`):
+- `mist_search_device` — `model`, `version`
+- `mist_list_upgrades` — `model`
+
+Per-platform `as_comma_separated()` helper in `central/utils.py` and
+new `mist/utils.py` normalizes both shapes to the comma-separated form
+Central's OData helpers and mistapi expect. When Phase 0 of v2.0
+introduces `platforms/_common/`, the two helpers collapse into one.
+
+The `central_get_aps` tool was also refactored internally to use the
+shared `build_odata_filter` + `FilterField` pattern already used by
+`central_get_devices`. Multi-value filters now correctly emit OData
+`in (...)` clauses instead of broken `eq '...comma...'` equality.
+
+New test file `tests/unit/test_filter_value_helpers.py` parametrizes
+eight cases against both the Central and Mist helpers so they stay
+behaviour-identical.
+
+**Minor version bump** (1.0.0.3 → 1.1.0.0) because the signatures of
+eight public tool parameters changed — backward-compatible (old `str`
+form still works) but not a pure patch fix.
+
 ## [v1.0.0.3] - 2026-04-22
 
 ### Fixed — silent PUT-clobber on Central configuration updates (#155)

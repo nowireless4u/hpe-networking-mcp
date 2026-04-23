@@ -6,7 +6,27 @@ from pycentral.new_monitoring.gateways import MonitoringGateways
 
 from hpe_networking_mcp.platforms.central._registry import mcp
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import (
+    FilterField,
+    as_comma_separated,
+    build_odata_filter,
+    retry_central_command,
+)
+
+# Shared FilterField definitions for the AP filter surface. build_odata_filter
+# consumes these and emits `eq '...'` for single values, `in (...)` for
+# comma-separated ones — so accepting a list of models via as_comma_separated
+# flows through naturally.
+_AP_FILTER_FIELDS: dict[str, FilterField] = {
+    "site_id": FilterField("siteId"),
+    "site_name": FilterField("siteName"),
+    "serial_number": FilterField("serialNumber"),
+    "device_name": FilterField("deviceName"),
+    "status": FilterField("status", ["ONLINE", "OFFLINE"]),
+    "model": FilterField("model"),
+    "firmware_version": FilterField("firmwareVersion"),
+    "deployment": FilterField("deployment", ["Standalone", "Cluster", "Unspecified"]),
+}
 
 
 @mcp.tool(annotations=READ_ONLY)
@@ -14,11 +34,11 @@ async def central_get_aps(
     ctx: Context,
     site_id: str | None = None,
     site_name: str | None = None,
-    serial_number: str | None = None,
-    device_name: str | None = None,
+    serial_number: str | list[str] | None = None,
+    device_name: str | list[str] | None = None,
     status: Literal["ONLINE", "OFFLINE"] | None = None,
-    model: str | None = None,
-    firmware_version: str | None = None,
+    model: str | list[str] | None = None,
+    firmware_version: str | list[str] | None = None,
     deployment: Literal["Standalone", "Cluster", "Unspecified"] | None = None,
     sort: str | None = None,
 ) -> list[dict] | str:
@@ -32,32 +52,29 @@ async def central_get_aps(
     Parameters:
         site_id: Filter by site ID.
         site_name: Filter by site name.
-        serial_number: AP serial number (comma-separated for multiple).
-        device_name: AP name (comma-separated for multiple).
+        serial_number: AP serial number. Accepts a single string or a list of strings.
+        device_name: AP name. Accepts a single string or a list of strings.
         status: ONLINE or OFFLINE.
-        model: AP model (comma-separated for multiple).
-        firmware_version: Firmware version (comma-separated for multiple).
+        model: AP model. Accepts a single string or a list of strings.
+        firmware_version: Firmware version. Accepts a single string or a list of strings.
         deployment: Standalone, Cluster, or Unspecified.
         sort: Sort expression (e.g. 'deviceName asc'). Supported fields:
             siteId, serialNumber, deviceName, model, status, deployment.
     """
     conn = ctx.lifespan_context["central_conn"]
 
-    filter_parts = []
-    filter_map = {
-        "siteId": site_id,
-        "siteName": site_name,
-        "serialNumber": serial_number,
-        "deviceName": device_name,
-        "status": status,
-        "model": model,
-        "firmwareVersion": firmware_version,
-        "deployment": deployment,
-    }
-    for field, value in filter_map.items():
-        if value is not None:
-            filter_parts.append(f"{field} eq '{value}'")
-    filter_str = " and ".join(filter_parts) if filter_parts else None
+    raw_pairs = [
+        ("site_id", site_id),
+        ("site_name", site_name),
+        ("serial_number", as_comma_separated(serial_number)),
+        ("device_name", as_comma_separated(device_name)),
+        ("status", status),
+        ("model", as_comma_separated(model)),
+        ("firmware_version", as_comma_separated(firmware_version)),
+        ("deployment", deployment),
+    ]
+    pairs = [(_AP_FILTER_FIELDS[k], v) for k, v in raw_pairs if v is not None]
+    filter_str = build_odata_filter(pairs)
 
     try:
         kwargs: dict = {"central_conn": conn}
