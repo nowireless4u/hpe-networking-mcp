@@ -4,7 +4,7 @@ from fastmcp import Context
 from mcp.types import ToolAnnotations
 from pycentral.troubleshooting.troubleshooting import Troubleshooting
 
-from hpe_networking_mcp.platforms.central._registry import mcp
+from hpe_networking_mcp.platforms.central._registry import tool
 
 OPERATIONAL = ToolAnnotations(
     readOnlyHint=False,
@@ -44,7 +44,7 @@ def _resolve_switch_id(conn, serial_number: str) -> str:
 # ── Disconnect Tools ─────────────────────────────────────────────
 
 
-@mcp.tool(annotations=OPERATIONAL)
+@tool(annotations=OPERATIONAL)
 async def central_disconnect_users_ssid(
     ctx: Context,
     serial_number: str,
@@ -80,7 +80,7 @@ async def central_disconnect_users_ssid(
     return resp
 
 
-@mcp.tool(annotations=OPERATIONAL)
+@tool(annotations=OPERATIONAL)
 async def central_disconnect_users_ap(
     ctx: Context,
     serial_number: str,
@@ -112,7 +112,7 @@ async def central_disconnect_users_ap(
     return resp
 
 
-@mcp.tool(annotations=OPERATIONAL)
+@tool(annotations=OPERATIONAL)
 async def central_disconnect_client_ap(
     ctx: Context,
     serial_number: str,
@@ -148,7 +148,7 @@ async def central_disconnect_client_ap(
     return resp
 
 
-@mcp.tool(annotations=OPERATIONAL)
+@tool(annotations=OPERATIONAL)
 async def central_disconnect_client_gateway(
     ctx: Context,
     serial_number: str,
@@ -181,7 +181,7 @@ async def central_disconnect_client_gateway(
     return resp
 
 
-@mcp.tool(annotations=OPERATIONAL)
+@tool(annotations=OPERATIONAL)
 async def central_disconnect_clients_gateway(
     ctx: Context,
     serial_number: str,
@@ -262,7 +262,7 @@ def _get_switch_ports(conn, serial_number: str) -> dict:
 # ── Port / PoE Bounce Tools ──────────────────────────────────────
 
 
-@mcp.tool(annotations=OPERATIONAL)
+@tool(annotations=OPERATIONAL)
 async def central_port_bounce_switch(
     ctx: Context,
     serial_number: str,
@@ -327,7 +327,7 @@ async def central_port_bounce_switch(
     }
 
 
-@mcp.tool(annotations=OPERATIONAL)
+@tool(annotations=OPERATIONAL)
 async def central_poe_bounce_switch(
     ctx: Context,
     serial_number: str,
@@ -407,7 +407,7 @@ async def central_poe_bounce_switch(
     }
 
 
-@mcp.tool(annotations=OPERATIONAL)
+@tool(annotations=OPERATIONAL)
 async def central_port_bounce_gateway(
     ctx: Context,
     serial_number: str,
@@ -443,7 +443,7 @@ async def central_port_bounce_gateway(
     return resp
 
 
-@mcp.tool(annotations=OPERATIONAL)
+@tool(annotations=OPERATIONAL)
 async def central_poe_bounce_gateway(
     ctx: Context,
     serial_number: str,

@@ -100,18 +100,21 @@ TOOLS = {
 
 
 def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
-    """Dynamically load and register all Central tool modules. Returns count of loaded tools."""
+    """Load all Central tool modules and register them with FastMCP.
+
+    Always imports every category so ``REGISTRIES["central"]`` is fully
+    populated; runtime write-gating is handled by the Visibility transform
+    (static mode) and ``is_tool_enabled`` (dynamic mode, via the meta-tools).
+
+    Returns the count of individual underlying tools that registered.
+    """
+    from hpe_networking_mcp.platforms._common.meta_tools import build_meta_tools
     from hpe_networking_mcp.platforms.central import _registry
 
     _registry.mcp = mcp
 
-    write_enabled = config.enable_central_write_tools
     loaded: list[str] = []
-
     for category, tool_names in TOOLS.items():
-        if category == "configuration" and not write_enabled:
-            logger.info("Central: write tools disabled, skipping {} tools", len(tool_names))
-            continue
         try:
             importlib.import_module(f"hpe_networking_mcp.platforms.central.tools.{category}")
             loaded.extend(tool_names)
@@ -119,7 +122,8 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
         except Exception as e:
             logger.warning("Central: failed to load module {} -- {}", category, e)
 
-    # Register prompts (these use register(mcp) pattern, not _registry)
+    # Register prompts (register(mcp) pattern; prompts are a different MCP
+    # primitive and aren't part of the dynamic-mode meta-tool surface).
     try:
         from hpe_networking_mcp.platforms.central.tools import prompts
 
@@ -127,5 +131,14 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
         logger.debug("Central: loaded prompts")
     except Exception as e:
         logger.warning("Central: failed to load prompts -- {}", e)
+
+    if config.tool_mode == "dynamic":
+        build_meta_tools("central", mcp)
+        logger.info(
+            "Central: {} underlying tools + 3 meta-tools registered (dynamic mode)",
+            len(loaded),
+        )
+    else:
+        logger.info("Central: {} tools registered (static mode)", len(loaded))
 
     return len(loaded)

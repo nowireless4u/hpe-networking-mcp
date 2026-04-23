@@ -17,7 +17,7 @@ from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import elicitation_handler
-from hpe_networking_mcp.platforms.central._registry import mcp
+from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import retry_central_command
 
@@ -139,7 +139,7 @@ _CONFIRMED_FIELD = Field(
 # ---------------------------------------------------------------------------
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_get_net_groups(
     ctx: Context,
     name: str | None = None,
@@ -159,7 +159,7 @@ async def central_get_net_groups(
     return await _get_resource(ctx, "net-groups", name)
 
 
-@mcp.tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
 async def central_manage_net_group(
     ctx: Context,
     name: Annotated[str, Field(description="Net-group (netdestination) name.")],
@@ -198,7 +198,7 @@ async def central_manage_net_group(
 # ---------------------------------------------------------------------------
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_get_net_services(
     ctx: Context,
     name: str | None = None,
@@ -217,7 +217,7 @@ async def central_get_net_services(
     return await _get_resource(ctx, "net-services", name)
 
 
-@mcp.tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
 async def central_manage_net_service(
     ctx: Context,
     name: Annotated[str, Field(description="Net-service name.")],
@@ -255,7 +255,7 @@ async def central_manage_net_service(
 # ---------------------------------------------------------------------------
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_get_object_groups(
     ctx: Context,
     name: str | None = None,
@@ -273,7 +273,7 @@ async def central_get_object_groups(
     return await _get_resource(ctx, "object-groups", name)
 
 
-@mcp.tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
 async def central_manage_object_group(
     ctx: Context,
     name: Annotated[str, Field(description="Object-group name.")],
@@ -311,7 +311,7 @@ async def central_manage_object_group(
 # ---------------------------------------------------------------------------
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_get_role_acls(
     ctx: Context,
     name: str | None = None,
@@ -329,7 +329,7 @@ async def central_get_role_acls(
     return await _get_resource(ctx, "role-acls", name)
 
 
-@mcp.tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
 async def central_manage_role_acl(
     ctx: Context,
     name: Annotated[str, Field(description="Role-ACL name.")],
@@ -367,7 +367,7 @@ async def central_manage_role_acl(
 # ---------------------------------------------------------------------------
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_get_policies(
     ctx: Context,
     name: str | None = None,
@@ -386,7 +386,7 @@ async def central_get_policies(
     return await _get_resource(ctx, "policies", name)
 
 
-@mcp.tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
 async def central_manage_policy(
     ctx: Context,
     name: Annotated[str, Field(description="Policy name.")],

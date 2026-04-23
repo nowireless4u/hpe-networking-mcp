@@ -17,7 +17,7 @@ from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import elicitation_handler
-from hpe_networking_mcp.platforms.central._registry import mcp
+from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import retry_central_command
 
@@ -29,7 +29,7 @@ WRITE_DELETE = ToolAnnotations(
 )
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_get_roles(
     ctx: Context,
     name: str | None = None,
@@ -59,7 +59,7 @@ async def central_get_roles(
     return response.get("msg", {})
 
 
-@mcp.tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
 async def central_manage_role(
     ctx: Context,
     name: Annotated[

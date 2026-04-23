@@ -3,12 +3,12 @@ from typing import Literal
 from fastmcp import Context
 from pycentral.new_monitoring.aps import MonitoringAPs
 
-from hpe_networking_mcp.platforms.central._registry import mcp
+from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import resolve_time_window, retry_central_command
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_get_wlans(
     ctx: Context,
     site_id: str | None = None,
@@ -64,7 +64,7 @@ async def central_get_wlans(
 TIME_RANGE = Literal["last_1h", "last_6h", "last_24h", "last_7d", "last_30d", "today", "yesterday"]
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_get_wlan_stats(
     ctx: Context,
     wlan_name: str,

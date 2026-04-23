@@ -12,7 +12,7 @@ from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import elicitation_handler
-from hpe_networking_mcp.platforms.central._registry import mcp
+from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
@@ -36,7 +36,7 @@ WRITE_DELETE = ToolAnnotations(
 # ---------------------------------------------------------------------------
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_get_policy_groups(
     ctx: Context,
 ) -> dict | list | str:
@@ -51,7 +51,7 @@ async def central_get_policy_groups(
     return await _get_resource(ctx, "policy-groups", None)
 
 
-@mcp.tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
 async def central_manage_policy_group(
     ctx: Context,
     action_type: Annotated[
@@ -141,7 +141,7 @@ async def central_manage_policy_group(
 # ---------------------------------------------------------------------------
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_get_role_gpids(
     ctx: Context,
     name: str | None = None,
@@ -159,7 +159,7 @@ async def central_get_role_gpids(
     return await _get_resource(ctx, "role-gpids", name)
 
 
-@mcp.tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
 async def central_manage_role_gpid(
     ctx: Context,
     name: Annotated[str, Field(description="Role name for the GPID mapping.")],

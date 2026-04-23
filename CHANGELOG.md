@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — v2.0 Phases 0-2
+
+### Added — Central dynamic-mode migration (#160)
+
+Third platform onto the dynamic-mode infrastructure. With
+`MCP_TOOL_MODE=dynamic`, Central exposes exactly three meta-tools
+(`central_list_tools`, `central_get_tool_schema`, `central_invoke_tool`)
+and hides the 73 underlying Central tools via the shared
+`Visibility(dynamic_managed)` transform. Static mode is unchanged.
+
+- `platforms/central/_registry.py` rewritten as a `tool()` decorator
+  shim mirroring Apstra's and Mist's.
+- All 24 Central tool files under `platforms/central/tools/*.py`
+  swapped from `@mcp.tool(...)` to `@tool(...)`. The `prompts.py`
+  module (12 guided prompts) is unchanged — prompts are a different
+  MCP primitive and aren't part of the dynamic-mode meta-tool surface.
+- `platforms/central/__init__.py` — always imports every category so
+  the registry is complete regardless of `ENABLE_CENTRAL_WRITE_TOOLS`;
+  calls `build_meta_tools("central", mcp)` when
+  `tool_mode == "dynamic"`. Dropped the "skip configuration when write
+  disabled" branch — Visibility + `is_tool_enabled` handle gating
+  uniformly now.
+
+### Tests
+- 6 new integration-style tests in `test_central_dynamic_mode.py`.
+  Total suite: 409/409 passing.
+
+### Boot verification
+- `MCP_TOOL_MODE=static` + Central configured → 73 `central_*` tools
+  visible.
+- `MCP_TOOL_MODE=dynamic` + Central + Mist + Apstra configured → 3
+  meta-tools per migrated platform + cross-platform `health` tool;
+  every underlying tool hidden by Visibility.
+
 ## [Unreleased] — v2.0 Phases 0-1
 
 ### Added — Mist dynamic-mode migration (#159)

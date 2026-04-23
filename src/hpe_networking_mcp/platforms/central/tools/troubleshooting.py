@@ -3,7 +3,7 @@ from typing import Literal
 from fastmcp import Context
 from pycentral.troubleshooting.troubleshooting import Troubleshooting
 
-from hpe_networking_mcp.platforms.central._registry import mcp
+from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 
 
@@ -18,7 +18,7 @@ def _resolve_if_switch(conn, serial_number: str, device_type: str) -> str:
     return _resolve_switch_id(conn, serial_number)
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_ping(
     ctx: Context,
     serial_number: str,
@@ -70,7 +70,7 @@ async def central_ping(
     return resp
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_traceroute(
     ctx: Context,
     serial_number: str,
@@ -111,7 +111,7 @@ async def central_traceroute(
     return resp
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_cable_test(
     ctx: Context,
     serial_number: str,
@@ -148,7 +148,7 @@ async def central_cable_test(
     return resp
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def central_show_commands(
     ctx: Context,
     serial_number: str,
