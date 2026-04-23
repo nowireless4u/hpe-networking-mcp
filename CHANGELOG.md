@@ -5,6 +5,72 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — v2.0 Phases 0-4 (migration complete)
+
+### Added — GreenLake unification on the shared dynamic-mode pattern (#162)
+
+All five platforms now run on the same shared tool-registry +
+meta-tool infrastructure. GreenLake previously had its own
+dynamic-mode implementation with three REST-endpoint-dispatch
+meta-tools (`greenlake_list_endpoints`, `greenlake_get_endpoint_schema`,
+`greenlake_invoke_endpoint`). Phase 4 replaces that bespoke mechanism
+with the standard tool-name-dispatch pattern used by every other
+platform.
+
+- `platforms/greenlake/_registry.py` rewritten as a `tool()` decorator
+  shim matching the other four platforms.
+- All 5 GreenLake tool modules swapped from `@mcp.tool(...)` to
+  `@tool(...)`.
+- `platforms/greenlake/tools/__init__.py` — now exposes a `TOOLS` dict
+  mapping category -> tool names (same shape as every other platform).
+  Mode-branching `register_all` function removed.
+- `platforms/greenlake/__init__.py` — uses the shared pattern: always
+  imports every tool file, calls `build_meta_tools("greenlake", mcp)`
+  when `tool_mode == "dynamic"`, logs consistently with the other
+  platforms. Old `config.greenlake_tool_mode` read-site removed — the
+  deprecated property alias still works but is no longer referenced
+  anywhere in the codebase.
+
+### Removed (v2.0 clean break)
+
+- `platforms/greenlake/tools/dynamic.py` — 1100-line endpoint-dispatch
+  meta-tools module replaced by the 4-line call to `build_meta_tools`.
+- Old meta-tool names (`greenlake_list_endpoints`,
+  `greenlake_get_endpoint_schema`, `greenlake_invoke_endpoint`) are
+  **gone entirely**. Under `MCP_TOOL_MODE=dynamic` GreenLake now
+  exposes `greenlake_list_tools`, `greenlake_get_tool_schema`,
+  `greenlake_invoke_tool` — matching every other platform's naming
+  convention. AI agents that hardcoded the old endpoint names against
+  v1.x will need to update to the new names.
+
+### Tests
+- 6 new integration-style tests in `test_greenlake_dynamic_mode.py`
+  (includes a regression check that the legacy endpoint-dispatch tool
+  names are absent from the registry). Total suite: 421/421 passing.
+
+### Boot verification
+- `MCP_TOOL_MODE=static` + GreenLake configured → 10 `greenlake_*`
+  tools visible.
+- `MCP_TOOL_MODE=dynamic` + all five platforms configured → **15
+  meta-tools total** (3 per platform × 5 platforms) + cross-platform
+  `health` tool. Every underlying tool hidden.
+
+### Summary — Phase 0-4 results
+
+Every per-platform migration is complete. In dynamic mode the server
+now exposes exactly:
+- 15 per-platform meta-tools (3 each for Apstra, Mist, Central,
+  ClearPass, GreenLake)
+- 3 cross-platform static tools (`health`, `site_health_check`,
+  `manage_wlan_profile`)
+- **18 exposed tools total** (down from 261 in v1.x)
+
+Remaining before the v2.0.0.0 cut:
+- Phase 5 (#163) — dev/test validation against a 32K-context local
+  model
+- Phase 6 (#164) — flip the default to `MCP_TOOL_MODE=dynamic`, bump
+  to v2.0.0.0, tag, release
+
 ## [Unreleased] — v2.0 Phases 0-3
 
 ### Added — ClearPass dynamic-mode migration (#161) + `confirm_write` consolidation complete (#148)

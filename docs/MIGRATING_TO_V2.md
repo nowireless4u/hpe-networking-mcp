@@ -38,7 +38,7 @@ AI agents that hard-coded these names will get "tool not found" on v2.0.
 - [x] Phase 1 — Mist migrates
 - [x] Phase 2 — Central migrates
 - [x] Phase 3 — ClearPass migrates
-- [ ] Phase 4 — GreenLake dynamic mode generalizes to the new meta-tool pattern
+- [x] Phase 4 — GreenLake dynamic mode generalizes to the new meta-tool pattern
 - [ ] Phase 5 — local-LLM validation
 - [ ] Phase 6 — `MCP_TOOL_MODE=dynamic` becomes the default; tag `v2.0.0.0`
 

@@ -16,7 +16,7 @@ from fastmcp import Context
 from loguru import logger
 from pydantic import Field
 
-from hpe_networking_mcp.platforms.greenlake._registry import mcp
+from hpe_networking_mcp.platforms.greenlake._registry import tool
 from hpe_networking_mcp.platforms.greenlake.client import GreenLakeHttpClient
 
 
@@ -37,7 +37,7 @@ def _coerce_int(value: Any, name: str) -> int:
 # ---------------------------------------------------------------------------
 
 
-@mcp.tool(
+@tool(
     name="greenlake_get_users",
     description=(
         "Retrieve a list of users in an HPE GreenLake workspace.\n\n"
@@ -114,7 +114,7 @@ async def greenlake_get_users(
 # ---------------------------------------------------------------------------
 
 
-@mcp.tool(
+@tool(
     name="greenlake_get_user_details",
     description=("Retrieve a single HPE GreenLake user by user ID."),
     tags={"greenlake", "users"},

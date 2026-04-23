@@ -41,7 +41,7 @@ Dynamic-mode migration status (phased per [#157](https://github.com/nowireless4u
 | Juniper Mist | ✅ yes (Phase 1) |
 | Aruba Central | ✅ yes (Phase 2) |
 | Aruba ClearPass | ✅ yes (Phase 3) |
-| HPE GreenLake | yes (already dynamic via the legacy endpoint-dispatch meta-tools; unified in Phase 4) |
+| HPE GreenLake | ✅ yes (Phase 4 — unified with the shared tool-name-dispatch pattern) |
 
 When a platform that has **not** migrated yet runs under `MCP_TOOL_MODE=dynamic`,
 its individual tools stay visible (no Visibility transform hides them) so the

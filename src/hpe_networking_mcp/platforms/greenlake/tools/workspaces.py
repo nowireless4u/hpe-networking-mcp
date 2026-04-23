@@ -16,7 +16,7 @@ from fastmcp import Context
 from loguru import logger
 from pydantic import Field
 
-from hpe_networking_mcp.platforms.greenlake._registry import mcp
+from hpe_networking_mcp.platforms.greenlake._registry import tool
 from hpe_networking_mcp.platforms.greenlake.client import GreenLakeHttpClient
 
 # ---------------------------------------------------------------------------
@@ -24,7 +24,7 @@ from hpe_networking_mcp.platforms.greenlake.client import GreenLakeHttpClient
 # ---------------------------------------------------------------------------
 
 
-@mcp.tool(
+@tool(
     name="greenlake_get_workspace",
     description=("Retrieve basic workspace information for a given HPE GreenLake workspace ID."),
     tags={"greenlake", "workspaces"},
@@ -67,7 +67,7 @@ async def greenlake_get_workspace(
 # ---------------------------------------------------------------------------
 
 
-@mcp.tool(
+@tool(
     name="greenlake_get_workspace_details",
     description=("Retrieve detailed contact information for an HPE GreenLake workspace."),
     tags={"greenlake", "workspaces"},
