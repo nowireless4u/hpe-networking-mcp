@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastmcp import Context
 
-from hpe_networking_mcp.platforms.clearpass._registry import mcp
+from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
 
@@ -35,7 +35,7 @@ def _build_query_string(
     return "?" + "&".join(p for p in params if p)
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_services(
     ctx: Context,
     config_service_id: str | None = None,
@@ -72,7 +72,7 @@ async def clearpass_get_services(
         return f"Error fetching services: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_posture_policies(
     ctx: Context,
     posture_policy_id: str | None = None,
@@ -109,7 +109,7 @@ async def clearpass_get_posture_policies(
         return f"Error fetching posture policies: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_device_groups(
     ctx: Context,
     network_device_group_id: str | None = None,
@@ -148,7 +148,7 @@ async def clearpass_get_device_groups(
         return f"Error fetching device groups: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_proxy_targets(
     ctx: Context,
     proxy_target_id: str | None = None,
@@ -185,7 +185,7 @@ async def clearpass_get_proxy_targets(
         return f"Error fetching proxy targets: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_radius_dictionaries(
     ctx: Context,
     radius_dictionary_id: str | None = None,
@@ -224,7 +224,7 @@ async def clearpass_get_radius_dictionaries(
         return f"Error fetching RADIUS dictionaries: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_tacacs_dictionaries(
     ctx: Context,
     tacacs_service_dictionary_id: str | None = None,
@@ -263,7 +263,7 @@ async def clearpass_get_tacacs_dictionaries(
         return f"Error fetching TACACS+ dictionaries: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_application_dictionaries(
     ctx: Context,
     application_dictionary_id: str | None = None,

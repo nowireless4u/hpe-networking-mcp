@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — v2.0 Phases 0-3
+
+### Added — ClearPass dynamic-mode migration (#161) + `confirm_write` consolidation complete (#148)
+
+Fourth platform onto the dynamic-mode infrastructure. ClearPass is the
+largest single platform by tool count (127 across 31 files). With
+`MCP_TOOL_MODE=dynamic`, ClearPass exposes exactly three meta-tools
+(`clearpass_list_tools`, `clearpass_get_tool_schema`,
+`clearpass_invoke_tool`) and hides the 127 underlying tools via the
+shared `Visibility(dynamic_managed)` transform. Static mode unchanged.
+
+- `platforms/clearpass/_registry.py` rewritten as a `tool()` decorator
+  shim mirroring Apstra / Mist / Central.
+- All 31 ClearPass tool files under `platforms/clearpass/tools/*.py`
+  swapped from `@mcp.tool(...)` to `@tool(...)`.
+- `platforms/clearpass/__init__.py` — always imports every category;
+  calls `build_meta_tools("clearpass", mcp)` when
+  `tool_mode == "dynamic"`. Dropped the `WRITE_CATEGORIES` skip logic
+  since Visibility + `is_tool_enabled` now handle gating uniformly.
+
+### Changed — finishes `#148` confirm_write consolidation
+
+All 15 ClearPass write-tool files (the 14 `_confirm_write` helpers plus
+one inline copy in `manage_endpoints.py`) replaced with calls to the
+shared `middleware.elicitation.confirm_write()` helper. The local
+helper names are preserved as thin wrappers so existing call sites
+don't change; the actual elicitation/decline/cancel decision logic
+lives in the middleware. Same treatment Apstra got in Phase 0 PR B —
+**#148 is now fully closed** (Apstra + ClearPass both consolidated).
+
+### Tests
+- 6 new integration-style tests in `test_clearpass_dynamic_mode.py`.
+  Total suite: 415/415 passing.
+
+### Boot verification
+- `MCP_TOOL_MODE=static` + ClearPass configured → 127 `clearpass_*`
+  tools visible.
+- `MCP_TOOL_MODE=dynamic` + all four migrated platforms configured →
+  12 meta-tools total (3 per platform × 4 platforms) + cross-platform
+  `health` tool. Every underlying tool hidden.
+
 ## [Unreleased] — v2.0 Phases 0-2
 
 ### Added — Central dynamic-mode migration (#160)

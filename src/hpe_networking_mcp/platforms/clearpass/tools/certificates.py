@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastmcp import Context
 
-from hpe_networking_mcp.platforms.clearpass._registry import mcp
+from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
 
@@ -35,7 +35,7 @@ def _build_query_string(
     return "?" + "&".join(p for p in params if p)
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_trust_list(
     ctx: Context,
     cert_trust_list_id: str | None = None,
@@ -77,7 +77,7 @@ async def clearpass_get_trust_list(
         return f"Error fetching trust list: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_client_certificates(
     ctx: Context,
     client_cert_id: str | None = None,
@@ -110,7 +110,7 @@ async def clearpass_get_client_certificates(
         return f"Error fetching client certificates: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_server_certificates(
     ctx: Context,
     service_id: str | None = None,
@@ -144,7 +144,7 @@ async def clearpass_get_server_certificates(
         return f"Error fetching server certificates: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_service_certificates(
     ctx: Context,
     service_cert_id: str | None = None,

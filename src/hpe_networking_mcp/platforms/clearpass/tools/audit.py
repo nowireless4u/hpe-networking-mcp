@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastmcp import Context
 
-from hpe_networking_mcp.platforms.clearpass._registry import mcp
+from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
 
@@ -35,7 +35,7 @@ def _build_query_string(
     return "?" + "&".join(p for p in params if p)
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_audit_logs(
     ctx: Context,
     username: str,
@@ -56,7 +56,7 @@ async def clearpass_get_audit_logs(
         return f"Error fetching audit logs: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_system_events(
     ctx: Context,
     filter: str | None = None,
@@ -84,7 +84,7 @@ async def clearpass_get_system_events(
         return f"Error fetching system events: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_insight_alerts(
     ctx: Context,
     alert_id: str | None = None,
@@ -121,7 +121,7 @@ async def clearpass_get_insight_alerts(
         return f"Error fetching insight alerts: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_insight_reports(
     ctx: Context,
     report_id: str | None = None,
@@ -158,7 +158,7 @@ async def clearpass_get_insight_reports(
         return f"Error fetching insight reports: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_endpoint_insights(
     ctx: Context,
     mac: str | None = None,

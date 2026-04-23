@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastmcp import Context
 
-from hpe_networking_mcp.platforms.clearpass._registry import mcp
+from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
 
@@ -35,7 +35,7 @@ def _build_query_string(
     return "?" + "&".join(p for p in params if p)
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_extensions(
     ctx: Context,
     extension_id: str | None = None,
@@ -73,7 +73,7 @@ async def clearpass_get_extensions(
         return f"Error fetching extensions: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_syslog_targets(
     ctx: Context,
     syslog_target_id: str | None = None,
@@ -106,7 +106,7 @@ async def clearpass_get_syslog_targets(
         return f"Error fetching syslog targets: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_syslog_export_filters(
     ctx: Context,
     syslog_export_filter_id: str | None = None,
@@ -141,7 +141,7 @@ async def clearpass_get_syslog_export_filters(
         return f"Error fetching syslog export filters: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_event_sources(
     ctx: Context,
     event_sources_id: str | None = None,
@@ -174,7 +174,7 @@ async def clearpass_get_event_sources(
         return f"Error fetching event sources: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_context_servers(
     ctx: Context,
     context_server_action_id: str | None = None,
@@ -209,7 +209,7 @@ async def clearpass_get_context_servers(
         return f"Error fetching context server actions: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_endpoint_context_servers(
     ctx: Context,
     endpoint_context_server_id: str | None = None,

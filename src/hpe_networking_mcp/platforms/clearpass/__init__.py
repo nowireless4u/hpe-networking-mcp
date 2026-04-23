@@ -197,28 +197,37 @@ TOOLS: dict[str, list[str]] = {
     ],
 }
 
-# Write categories are skipped when write tools are disabled
-WRITE_CATEGORIES = {k for k in TOOLS if k.startswith("manage_")}
-
 
 def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
-    """Dynamically load and register all ClearPass tool modules. Returns count of loaded tools."""
+    """Load all ClearPass tool modules and register them with FastMCP.
+
+    Always imports every category so ``REGISTRIES["clearpass"]`` is fully
+    populated; runtime write-gating is handled by the Visibility transform
+    (static mode) and ``is_tool_enabled`` (dynamic mode, via the meta-tools).
+
+    Returns the count of individual underlying tools that registered.
+    """
+    from hpe_networking_mcp.platforms._common.meta_tools import build_meta_tools
     from hpe_networking_mcp.platforms.clearpass import _registry
 
     _registry.mcp = mcp
 
-    write_enabled = config.enable_clearpass_write_tools
     loaded: list[str] = []
-
     for category, tool_names in TOOLS.items():
-        if category in WRITE_CATEGORIES and not write_enabled:
-            logger.info("ClearPass: write tools disabled, skipping {} ({} tools)", category, len(tool_names))
-            continue
         try:
             importlib.import_module(f"hpe_networking_mcp.platforms.clearpass.tools.{category}")
             loaded.extend(tool_names)
             logger.debug("ClearPass: loaded module {}", category)
         except Exception as e:
             logger.warning("ClearPass: failed to load module {} -- {}", category, e)
+
+    if config.tool_mode == "dynamic":
+        build_meta_tools("clearpass", mcp)
+        logger.info(
+            "ClearPass: {} underlying tools + 3 meta-tools registered (dynamic mode)",
+            len(loaded),
+        )
+    else:
+        logger.info("ClearPass: {} tools registered (static mode)", len(loaded))
 
     return len(loaded)

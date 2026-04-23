@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastmcp import Context
 
-from hpe_networking_mcp.platforms.clearpass._registry import mcp
+from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
 
@@ -35,7 +35,7 @@ def _build_query_string(
     return "?" + "&".join(p for p in params if p)
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_admin_users(
     ctx: Context,
     admin_user_id: str | None = None,
@@ -68,7 +68,7 @@ async def clearpass_get_admin_users(
         return f"Error fetching admin users: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_admin_privileges(
     ctx: Context,
     admin_privilege_id: str | None = None,
@@ -103,7 +103,7 @@ async def clearpass_get_admin_privileges(
         return f"Error fetching admin privileges: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_operator_profiles(
     ctx: Context,
     filter: str | None = None,
@@ -131,7 +131,7 @@ async def clearpass_get_operator_profiles(
         return f"Error fetching operator profiles: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_licenses(
     ctx: Context,
     license_id: str | None = None,
@@ -155,7 +155,7 @@ async def clearpass_get_licenses(
         return f"Error fetching licenses: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_cluster_params(
     ctx: Context,
 ) -> dict | str:
@@ -173,7 +173,7 @@ async def clearpass_get_cluster_params(
         return f"Error fetching cluster parameters: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_password_policies(
     ctx: Context,
 ) -> dict | str:
@@ -195,7 +195,7 @@ async def clearpass_get_password_policies(
         return f"Error fetching password policies: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_attributes(
     ctx: Context,
     attribute_id: str | None = None,
@@ -228,7 +228,7 @@ async def clearpass_get_attributes(
         return f"Error fetching attributes: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_data_filters(
     ctx: Context,
     data_filter_id: str | None = None,
@@ -261,7 +261,7 @@ async def clearpass_get_data_filters(
         return f"Error fetching data filters: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_file_backup_servers(
     ctx: Context,
     file_backup_server_id: str | None = None,
@@ -296,7 +296,7 @@ async def clearpass_get_file_backup_servers(
         return f"Error fetching file backup servers: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_messaging_setup(
     ctx: Context,
 ) -> dict | str:
@@ -314,7 +314,7 @@ async def clearpass_get_messaging_setup(
         return f"Error fetching messaging setup: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_snmp_trap_receivers(
     ctx: Context,
     snmp_trap_receiver_id: str | None = None,
@@ -349,7 +349,7 @@ async def clearpass_get_snmp_trap_receivers(
         return f"Error fetching SNMP trap receivers: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_policy_manager_zones(
     ctx: Context,
     policy_manager_zones_id: str | None = None,
@@ -384,7 +384,7 @@ async def clearpass_get_policy_manager_zones(
         return f"Error fetching Policy Manager zones: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_oauth_privileges(
     ctx: Context,
 ) -> dict | str:

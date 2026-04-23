@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastmcp import Context
 
-from hpe_networking_mcp.platforms.clearpass._registry import mcp
+from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
 
@@ -35,7 +35,7 @@ def _build_query_string(
     return "?" + "&".join(p for p in params if p)
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_network_devices(
     ctx: Context,
     device_id: str | None = None,
@@ -72,7 +72,7 @@ async def clearpass_get_network_devices(
         return f"Error fetching network devices: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_network_device_stats(
     ctx: Context,
     device_id: str,
@@ -94,7 +94,7 @@ async def clearpass_get_network_device_stats(
         return f"Error fetching network device stats: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_test_device_connectivity(
     ctx: Context,
     device_id: str,
@@ -121,7 +121,7 @@ async def clearpass_test_device_connectivity(
         return f"Error fetching device for connectivity review: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_validate_device_config(
     ctx: Context,
     device_id: str,

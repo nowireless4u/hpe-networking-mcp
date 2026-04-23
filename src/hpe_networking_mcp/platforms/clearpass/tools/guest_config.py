@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastmcp import Context
 
-from hpe_networking_mcp.platforms.clearpass._registry import mcp
+from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
 
@@ -25,7 +25,7 @@ def _build_query_string(
     return "?" + "&".join(p for p in params if p)
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_pass_templates(
     ctx: Context,
     template_id: str | None = None,
@@ -58,7 +58,7 @@ async def clearpass_get_pass_templates(
         return f"Error fetching pass templates: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_print_templates(
     ctx: Context,
     template_id: str | None = None,
@@ -91,7 +91,7 @@ async def clearpass_get_print_templates(
         return f"Error fetching print templates: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_weblogin_pages(
     ctx: Context,
     page_id: str | None = None,
@@ -128,7 +128,7 @@ async def clearpass_get_weblogin_pages(
         return f"Error fetching web login pages: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_guest_auth_settings(
     ctx: Context,
 ) -> dict | str:
@@ -146,7 +146,7 @@ async def clearpass_get_guest_auth_settings(
         return f"Error fetching guest authentication settings: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_guest_manager_settings(
     ctx: Context,
 ) -> dict | str:

@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from fastmcp import Context
 
-from hpe_networking_mcp.platforms.clearpass._registry import mcp
+from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_auth_sources(
     ctx: Context,
     auth_source_id: str | None = None,
@@ -52,7 +52,7 @@ async def clearpass_get_auth_sources(
         return f"Error fetching auth sources: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_auth_source_status(
     ctx: Context,
     auth_source_id: str,
@@ -74,7 +74,7 @@ async def clearpass_get_auth_source_status(
         return f"Error fetching auth source status: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_test_auth_source(
     ctx: Context,
     auth_source_id: str,
@@ -102,7 +102,7 @@ async def clearpass_test_auth_source(
         return f"Error fetching auth source for testing: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_auth_methods(
     ctx: Context,
     auth_method_id: str | None = None,

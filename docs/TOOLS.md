@@ -40,7 +40,7 @@ Dynamic-mode migration status (phased per [#157](https://github.com/nowireless4u
 | Juniper Apstra | ✅ yes (Phase 0) |
 | Juniper Mist | ✅ yes (Phase 1) |
 | Aruba Central | ✅ yes (Phase 2) |
-| Aruba ClearPass | pending (Phase 3) |
+| Aruba ClearPass | ✅ yes (Phase 3) |
 | HPE GreenLake | yes (already dynamic via the legacy endpoint-dispatch meta-tools; unified in Phase 4) |
 
 When a platform that has **not** migrated yet runs under `MCP_TOOL_MODE=dynamic`,

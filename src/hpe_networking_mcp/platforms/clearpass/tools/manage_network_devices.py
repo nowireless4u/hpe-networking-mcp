@@ -7,8 +7,8 @@ from typing import Annotated
 from fastmcp import Context
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import elicitation_handler
-from hpe_networking_mcp.platforms.clearpass._registry import mcp
+from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import WRITE_DELETE
 
@@ -45,37 +45,17 @@ async def _resolve_device_id(client, device_id: str | None, name: str | None) ->
 
 
 async def _confirm_action(ctx: Context, action_type: str, device_id: str | None, name: str | None) -> dict | None:
-    """Request user confirmation for destructive actions.
+    """Thin wrapper over :func:`middleware.elicitation.confirm_write`.
 
-    Args:
-        ctx: FastMCP context.
-        action_type: The operation being performed.
-        device_id: Device ID for display.
-        name: Device name for display.
-
-    Returns:
-        Error dict if declined/canceled, None if accepted.
+    Kept as a local helper so existing call sites don't change; the
+    shared elicitation/decline/cancel logic now lives in the middleware
+    (#148).
     """
     identifier = device_id or name or "unknown"
-    elicit = await elicitation_handler(
-        message=f"ClearPass: {action_type} network device '{identifier}'. Confirm?",
-        ctx=ctx,
-    )
-    if elicit.action == "decline":
-        mode = await ctx.get_state("elicitation_mode")
-        if mode == "chat_confirm":
-            return {
-                "status": "confirmation_required",
-                "message": f"Please confirm {action_type} of network device '{identifier}'. "
-                "Call this tool again with confirmed=true after the user confirms.",
-            }
-        return {"message": "Action declined by user."}
-    elif elicit.action == "cancel":
-        return {"message": "Action canceled by user."}
-    return None
+    return await confirm_write(ctx, f"ClearPass: {action_type} network device '{identifier}'. Confirm?")
 
 
-@mcp.tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
 async def clearpass_manage_network_device(
     ctx: Context,
     action_type: Annotated[

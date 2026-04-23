@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from fastmcp import Context
 
-from hpe_networking_mcp.platforms.clearpass._registry import mcp
+from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_enforcement_policies(
     ctx: Context,
     policy_id: str | None = None,
@@ -55,7 +55,7 @@ async def clearpass_get_enforcement_policies(
         return f"Error fetching enforcement policies: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_enforcement_profiles(
     ctx: Context,
     profile_id: str | None = None,
@@ -101,7 +101,7 @@ async def clearpass_get_enforcement_profiles(
         return f"Error fetching enforcement profiles: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_profile_templates(
     ctx: Context,
 ) -> dict | str:

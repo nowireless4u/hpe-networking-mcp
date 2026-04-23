@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from fastmcp import Context
 
-from hpe_networking_mcp.platforms.clearpass._registry import mcp
+from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_sessions(
     ctx: Context,
     session_id: str | None = None,
@@ -48,7 +48,7 @@ async def clearpass_get_sessions(
         return f"Error fetching sessions: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_session_action_status(
     ctx: Context,
     action_id: str,
@@ -70,7 +70,7 @@ async def clearpass_get_session_action_status(
         return f"Error fetching session action status: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_reauth_profiles(
     ctx: Context,
     session_id: str,

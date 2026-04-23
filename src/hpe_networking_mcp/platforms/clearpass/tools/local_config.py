@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from fastmcp import Context
 
-from hpe_networking_mcp.platforms.clearpass._registry import mcp
+from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_access_controls(
     ctx: Context,
     server_uuid: str,
@@ -38,7 +38,7 @@ async def clearpass_get_access_controls(
         return f"Error fetching access controls: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_ad_domains(
     ctx: Context,
     server_uuid: str,
@@ -67,7 +67,7 @@ async def clearpass_get_ad_domains(
         return f"Error fetching AD domains: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_server_version(
     ctx: Context,
     uuid: str | None = None,
@@ -94,7 +94,7 @@ async def clearpass_get_server_version(
         return f"Error fetching server version: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_fips_status(
     ctx: Context,
 ) -> dict | str:
@@ -111,7 +111,7 @@ async def clearpass_get_fips_status(
         return f"Error fetching FIPS status: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_server_services(
     ctx: Context,
     server_uuid: str,
@@ -140,7 +140,7 @@ async def clearpass_get_server_services(
         return f"Error fetching server services: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_server_snmp(
     ctx: Context,
     server_uuid: str,

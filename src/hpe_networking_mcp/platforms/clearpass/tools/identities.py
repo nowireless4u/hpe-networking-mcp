@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastmcp import Context
 
-from hpe_networking_mcp.platforms.clearpass._registry import mcp
+from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
 
@@ -35,7 +35,7 @@ def _build_query_string(
     return "?" + "&".join(p for p in params if p)
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_api_clients(
     ctx: Context,
     client_id: str | None = None,
@@ -68,7 +68,7 @@ async def clearpass_get_api_clients(
         return f"Error fetching API clients: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_local_users(
     ctx: Context,
     local_user_id: str | None = None,
@@ -106,7 +106,7 @@ async def clearpass_get_local_users(
         return f"Error fetching local users: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_static_host_lists(
     ctx: Context,
     static_host_list_id: str | None = None,
@@ -145,7 +145,7 @@ async def clearpass_get_static_host_lists(
         return f"Error fetching static host lists: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_devices(
     ctx: Context,
     device_id: str | None = None,
@@ -182,7 +182,7 @@ async def clearpass_get_devices(
         return f"Error fetching devices: {e}"
 
 
-@mcp.tool(annotations=READ_ONLY)
+@tool(annotations=READ_ONLY)
 async def clearpass_get_deny_listed_users(
     ctx: Context,
     deny_listed_users_id: str | None = None,

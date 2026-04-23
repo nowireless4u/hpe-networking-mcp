@@ -7,8 +7,8 @@ from typing import Annotated
 from fastmcp import Context
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import elicitation_handler
-from hpe_networking_mcp.platforms.clearpass._registry import mcp
+from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import WRITE_DELETE
 
@@ -16,40 +16,17 @@ from hpe_networking_mcp.platforms.clearpass.tools import WRITE_DELETE
 async def _confirm_write(
     ctx: Context, action_type: str, resource: str, identifier: str | None, confirmed: bool
 ) -> dict | None:
-    """Handle confirmation for destructive actions.
+    """Thin wrapper over :func:`middleware.elicitation.confirm_write`.
 
-    Args:
-        ctx: FastMCP context.
-        action_type: The operation being performed.
-        resource: Resource type name for display.
-        identifier: Resource ID or name for display.
-        confirmed: Whether the user already confirmed.
-
-    Returns:
-        Error dict if declined/canceled, None if confirmed.
+    Kept as a local helper so existing call sites don't change; the
+    shared elicitation/decline/cancel logic now lives in the middleware
+    (#148).
     """
-    if confirmed:
-        return None
     label = identifier or "unknown"
-    elicit = await elicitation_handler(
-        message=f"ClearPass: {action_type} {resource} '{label}'. Confirm?",
-        ctx=ctx,
-    )
-    if elicit.action == "decline":
-        mode = await ctx.get_state("elicitation_mode")
-        if mode == "chat_confirm":
-            return {
-                "status": "confirmation_required",
-                "message": f"Please confirm {action_type} of {resource} '{label}'. "
-                "Call this tool again with confirmed=true after the user confirms.",
-            }
-        return {"message": "Action declined by user."}
-    elif elicit.action == "cancel":
-        return {"message": "Action canceled by user."}
-    return None
+    return await confirm_write(ctx, f"ClearPass: {action_type} {resource} '{label}'. Confirm?")
 
 
-@mcp.tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
 async def clearpass_manage_extension(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'start', 'stop', 'restart', or 'delete'.")],
@@ -84,7 +61,7 @@ async def clearpass_manage_extension(
         return f"Error managing extension: {e}"
 
 
-@mcp.tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
 async def clearpass_manage_syslog_target(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
@@ -125,7 +102,7 @@ async def clearpass_manage_syslog_target(
         return f"Error managing syslog target: {e}"
 
 
-@mcp.tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
 async def clearpass_manage_syslog_export_filter(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
@@ -174,7 +151,7 @@ async def clearpass_manage_syslog_export_filter(
         return f"Error managing syslog export filter: {e}"
 
 
-@mcp.tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
 async def clearpass_manage_endpoint_context_server(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', 'delete', or 'trigger_poll'.")],
