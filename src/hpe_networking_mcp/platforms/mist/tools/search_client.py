@@ -15,6 +15,7 @@ from typing import Annotated
 from uuid import UUID
 
 import mistapi
+from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
@@ -63,6 +64,7 @@ class Band(Enum):
     },
 )
 async def search_client(
+    ctx: Context,
     client_type: Annotated[
         Client_type,
         Field(description=("Type of client: WAN, wired, wireless, or NAC")),
@@ -193,7 +195,7 @@ async def search_client(
         limit,
     )
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         object_type = client_type

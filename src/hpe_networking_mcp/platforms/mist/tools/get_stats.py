@@ -15,6 +15,7 @@ from typing import Annotated
 from uuid import UUID
 
 import mistapi
+from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
@@ -71,6 +72,7 @@ class Device_type(Enum):
     },
 )
 async def get_stats(
+    ctx: Context,
     stats_type: Annotated[
         Stats_type,
         Field(
@@ -150,7 +152,7 @@ async def get_stats(
         limit,
     )
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         object_type = stats_type

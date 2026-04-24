@@ -4,6 +4,7 @@ from typing import Annotated
 from uuid import UUID
 
 import mistapi
+from fastmcp import Context
 from loguru import logger
 from pydantic import Field
 
@@ -110,6 +111,7 @@ def _check_mist_ports(
     },
 )
 async def bounce_switch_port(
+    ctx: Context,
     site_id: Annotated[UUID, Field(description="Site ID")],
     device_id: Annotated[
         UUID,
@@ -141,7 +143,7 @@ async def bounce_switch_port(
         port_list,
     )
 
-    apisession, _response_format = await get_apisession()
+    apisession, _response_format = await get_apisession(ctx)
 
     # Safety check: verify port status before bouncing
     safe_ports, skipped = _check_mist_ports(apisession, str(site_id), str(device_id), port_list)

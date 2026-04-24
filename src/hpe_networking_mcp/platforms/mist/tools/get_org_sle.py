@@ -14,6 +14,7 @@ from typing import Annotated
 from uuid import UUID
 
 import mistapi
+from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
@@ -44,6 +45,7 @@ from hpe_networking_mcp.platforms.mist.client import (
     },
 )
 async def get_org_sle(
+    ctx: Context,
     org_id: Annotated[UUID, Field(description="Organization ID")],
     metric: Annotated[
         str,
@@ -100,7 +102,7 @@ async def get_org_sle(
         limit,
     )
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         response = mistapi.api.v1.orgs.insights.getOrgSle(

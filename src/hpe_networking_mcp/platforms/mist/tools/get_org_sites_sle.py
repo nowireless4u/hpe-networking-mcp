@@ -15,6 +15,7 @@ from typing import Annotated
 from uuid import UUID
 
 import mistapi
+from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
@@ -47,6 +48,7 @@ class Sle(Enum):
     },
 )
 async def get_org_sites_sle(
+    ctx: Context,
     org_id: Annotated[UUID, Field(description="Organization ID")],
     sle: Annotated[
         Sle,
@@ -88,7 +90,7 @@ async def get_org_sites_sle(
         limit,
     )
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         response = mistapi.api.v1.orgs.insights.getOrgSitesSle(

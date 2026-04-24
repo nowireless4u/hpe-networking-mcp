@@ -15,6 +15,7 @@ from typing import Annotated
 from uuid import UUID
 
 import mistapi
+from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
@@ -66,6 +67,7 @@ class Status(Enum):
     },
 )
 async def search_device(
+    ctx: Context,
     org_id: Annotated[UUID, Field(description="Organization ID")],
     site_id: Annotated[UUID, Field(description="Site ID", default=None)],
     serial: Annotated[
@@ -159,7 +161,7 @@ async def search_device(
         limit,
     )
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         kwargs: dict = {

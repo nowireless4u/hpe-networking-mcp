@@ -15,6 +15,7 @@ from typing import Annotated
 from uuid import UUID
 
 import mistapi
+from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
@@ -54,6 +55,7 @@ class Troubleshoot_type(Enum):
     },
 )
 async def troubleshoot(
+    ctx: Context,
     org_id: Annotated[UUID, Field(description="Organization ID")],
     troubleshoot_type: Annotated[
         Troubleshoot_type,
@@ -112,7 +114,7 @@ async def troubleshoot(
         end,
     )
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         response = mistapi.api.v1.orgs.troubleshoot.troubleshootOrg(

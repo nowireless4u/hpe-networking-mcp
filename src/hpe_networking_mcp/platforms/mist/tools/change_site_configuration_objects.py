@@ -76,6 +76,7 @@ class Action_type(Enum):
     },
 )
 async def change_site_configuration_objects(
+    ctx: Context,
     action_type: Annotated[
         Action_type,
         Field(
@@ -119,7 +120,6 @@ async def change_site_configuration_objects(
             default=None,
         ),
     ],
-    ctx: Context,
     confirmed: Annotated[
         bool,
         Field(
@@ -139,7 +139,7 @@ async def change_site_configuration_objects(
         object_id,
     )
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     action_wording = "create a new"
     if action_type == Action_type.UPDATE:

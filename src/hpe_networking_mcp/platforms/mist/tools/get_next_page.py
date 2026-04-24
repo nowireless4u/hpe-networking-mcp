@@ -12,6 +12,7 @@
 
 from typing import Annotated
 
+from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
@@ -38,6 +39,7 @@ from hpe_networking_mcp.platforms.mist.client import (
     },
 )
 async def get_next_page(
+    ctx: Context,
     url: Annotated[
         str,
         Field(description="The '_next' URL from a previous response"),
@@ -47,7 +49,7 @@ async def get_next_page(
 
     logger.debug("Tool get_next_page called")
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         response = apisession.mist_get(url)

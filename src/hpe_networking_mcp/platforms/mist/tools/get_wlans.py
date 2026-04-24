@@ -4,6 +4,7 @@ from typing import Annotated
 from uuid import UUID
 
 import mistapi
+from fastmcp import Context
 from loguru import logger
 from pydantic import Field
 
@@ -33,6 +34,7 @@ from hpe_networking_mcp.platforms.mist.client import (
     },
 )
 async def get_wlans(
+    ctx: Context,
     org_id: Annotated[UUID, Field(description="Organization ID")],
     site_id: Annotated[
         UUID | None,
@@ -50,8 +52,8 @@ async def get_wlans(
         site_id,
     )
 
-    validate_org_id(str(org_id))
-    apisession, response_format = await get_apisession()
+    validate_org_id(ctx, str(org_id))
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         if site_id:

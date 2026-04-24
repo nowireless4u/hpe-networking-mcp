@@ -15,6 +15,7 @@ from typing import Annotated
 from uuid import UUID
 
 import mistapi
+from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
@@ -59,6 +60,7 @@ class Scope(Enum):
     },
 )
 async def list_site_sle_info(
+    ctx: Context,
     site_id: Annotated[UUID, Field(description="Site ID")],
     query_type: Annotated[
         Query_type,
@@ -112,7 +114,7 @@ async def list_site_sle_info(
         metric,
     )
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         object_type = query_type
