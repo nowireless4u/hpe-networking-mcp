@@ -339,8 +339,8 @@ Always registered regardless of `MCP_TOOL_MODE`:
 | site_id | UUID | Yes | Site ID. |
 | object_type | str | Yes | `site`, `client`, `ap`, `gateway`, `mxedge`, or `switch`. |
 | metric | str | Yes | Metric name. Use `mist_get_constants` with `insight_metrics` to discover. |
-| mac | str | No | MAC address. Required for client, ap, mxedge, switch. |
-| device_id | UUID | No | Device ID. Required for gateway. |
+| mac | str | No | MAC address (with or without colons). Required for client, mxedge, switch. Optional for ap, gateway — converted to device_id UUID automatically. |
+| device_id | UUID | No | Device UUID. Optional alternative to `mac` for ap and gateway (either is accepted). |
 | start | int | No | Start of time range (epoch seconds). |
 | end | int | No | End of time range (epoch seconds). |
 | duration | str | No | Duration shorthand (e.g. `1d`, `1h`, `10m`). |
@@ -378,8 +378,8 @@ Always registered regardless of `MCP_TOOL_MODE`:
 | start | int | No | Start of time range (epoch seconds). Events only. |
 | end | int | No | End of time range (epoch seconds). Events only. |
 | duration | str | No | Duration shorthand. Events only. |
-| limit | int | No | Default: 200. Events only. |
-| page | int | No | Default: 1. Events only. |
+| limit | int | No | Events only; defaults to 200 when `rrm_info_type=events`. Rejected for other modes. |
+| page | int | No | Events only; defaults to 1 when `rrm_info_type=events`. Rejected for other modes. |
 
 ### Service Level Expectations (SLE)
 

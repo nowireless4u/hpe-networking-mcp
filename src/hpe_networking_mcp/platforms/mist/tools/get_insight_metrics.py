@@ -38,6 +38,18 @@ class Object_type(Enum):
     SWITCH = "switch"
 
 
+def _mac_to_device_id(mac: str) -> str:
+    """Construct a Mist device_id UUID from a MAC address.
+
+    Mist device UUIDs follow the deterministic pattern
+    ``00000000-0000-0000-1000-<mac_lowercase_no_separators>``.
+    """
+    clean = mac.lower().replace(":", "").replace("-", "")
+    if len(clean) != 12 or not all(c in "0123456789abcdef" for c in clean):
+        raise ValueError(f"Invalid MAC address format: {mac!r}")
+    return f"00000000-0000-0000-1000-{clean}"
+
+
 @tool(
     name="mist_get_insight_metrics",
     description="Get insight metrics for a given object",
@@ -72,9 +84,12 @@ async def get_insight_metrics(
         str,
         Field(
             description=(
-                "MAC address of the client or device to "
-                "retrieve metrics for. Required if object_type "
-                "is 'client', 'ap', 'mxedge' or 'switch'"
+                "MAC address of the client or device to retrieve metrics for. "
+                "Required if object_type is 'client', 'ap', 'mxedge' or 'switch'. "
+                "Accepts 12 hex chars with or without colons. "
+                "For object_type='ap' or 'gateway', this is converted to the "
+                "Mist device_id UUID automatically — pass device_id directly "
+                "instead if you already have it."
             ),
             default=None,
         ),
@@ -82,7 +97,12 @@ async def get_insight_metrics(
     device_id: Annotated[
         UUID,
         Field(
-            description=("ID of the gateway device to retrieve metrics for. Required if object_type is 'gateway'"),
+            description=(
+                "UUID of the AP or gateway device to retrieve metrics for. "
+                "Optional alternative to `mac` for object_type='ap' or 'gateway' — "
+                "if not provided, it is derived from `mac` via the Mist "
+                "convention 00000000-0000-0000-1000-<mac>."
+            ),
             default=None,
         ),
     ],
@@ -153,86 +173,135 @@ async def get_insight_metrics(
     apisession, response_format = await get_apisession(ctx)
 
     try:
+        start_str = str(start) if start else None
+        end_str = str(end) if end else None
+        duration_str = duration if duration else None
+        interval_str = interval if interval else None
+
         match object_type.value:
             case "site":
-                response = mistapi.api.v1.sites.insights.getSiteInsightMetrics(
-                    apisession,
-                    site_id=str(site_id),
-                    metric=str(metric),
-                    start=str(start),
-                    end=str(end),
-                    duration=str(duration),
-                    interval=str(interval),
-                    limit=limit,
-                    page=page,
-                )
+                # Bypass mistapi.api.v1.sites.insights.getSiteInsightMetrics — that
+                # SDK function builds `/insights?metrics=X`, but the real Mist
+                # endpoint is `/insights/{metric}` (matching every `For*` variant).
+                uri = f"/api/v1/sites/{site_id}/insights/{metric}"
+                query_params: dict[str, str] = {}
+                if start_str:
+                    query_params["start"] = start_str
+                if end_str:
+                    query_params["end"] = end_str
+                if duration_str:
+                    query_params["duration"] = duration_str
+                if interval_str:
+                    query_params["interval"] = interval_str
+                if limit:
+                    query_params["limit"] = str(limit)
+                if page:
+                    query_params["page"] = str(page)
+                response = apisession.mist_get(uri=uri, query=query_params)
                 await process_response(response)
             case "client":
+                if not mac:
+                    raise ToolError(
+                        {
+                            "status_code": 400,
+                            "message": "`mac` is required when object_type='client'.",
+                        }
+                    )
                 response = mistapi.api.v1.sites.insights.getSiteInsightMetricsForClient(
                     apisession,
                     site_id=str(site_id),
                     client_mac=str(mac),
-                    metric=str(metric),
-                    start=str(start),
-                    end=str(end),
-                    duration=str(duration),
-                    interval=str(interval),
+                    metrics=str(metric),
+                    start=start_str,
+                    end=end_str,
+                    duration=duration_str,
+                    interval=interval_str,
                     limit=limit,
                     page=page,
                 )
                 await process_response(response)
             case "ap":
-                response = mistapi.api.v1.sites.insights.getSiteInsightMetricsForDevice(
+                if not device_id and not mac:
+                    raise ToolError(
+                        {
+                            "status_code": 400,
+                            "message": "`mac` or `device_id` is required when object_type='ap'.",
+                        }
+                    )
+                ap_device_id = str(device_id) if device_id else _mac_to_device_id(str(mac))
+                response = mistapi.api.v1.sites.insights.getSiteInsightMetricsForAP(
                     apisession,
                     site_id=str(site_id),
-                    device_mac=str(mac),
-                    metric=str(metric),
-                    start=str(start),
-                    end=str(end),
-                    duration=str(duration),
-                    interval=str(interval),
+                    device_id=ap_device_id,
+                    metrics=str(metric),
+                    start=start_str,
+                    end=end_str,
+                    duration=duration_str,
+                    interval=interval_str,
                     limit=limit,
                     page=page,
                 )
                 await process_response(response)
             case "gateway":
+                if not device_id and not mac:
+                    raise ToolError(
+                        {
+                            "status_code": 400,
+                            "message": "`mac` or `device_id` is required when object_type='gateway'.",
+                        }
+                    )
+                gw_device_id = str(device_id) if device_id else _mac_to_device_id(str(mac))
                 response = mistapi.api.v1.sites.insights.getSiteInsightMetricsForGateway(
                     apisession,
                     site_id=str(site_id),
-                    device_id=str(device_id),
-                    metric=str(metric),
-                    start=str(start),
-                    end=str(end),
-                    duration=str(duration),
-                    interval=str(interval),
+                    device_id=gw_device_id,
+                    metrics=str(metric),
+                    start=start_str,
+                    end=end_str,
+                    duration=duration_str,
+                    interval=interval_str,
                     limit=limit,
                     page=page,
                 )
                 await process_response(response)
             case "mxedge":
+                if not mac:
+                    raise ToolError(
+                        {
+                            "status_code": 400,
+                            "message": "`mac` is required when object_type='mxedge'.",
+                        }
+                    )
                 response = mistapi.api.v1.sites.insights.getSiteInsightMetricsForMxEdge(
                     apisession,
                     site_id=str(site_id),
                     device_mac=str(mac),
                     metric=str(metric),
-                    start=str(start),
-                    end=str(end),
-                    duration=str(duration),
-                    interval=str(interval),
+                    start=start_str,
+                    end=end_str,
+                    duration=duration_str,
+                    interval=interval_str,
                     limit=limit,
                     page=page,
                 )
                 await process_response(response)
             case "switch":
+                if not mac:
+                    raise ToolError(
+                        {
+                            "status_code": 400,
+                            "message": "`mac` is required when object_type='switch'.",
+                        }
+                    )
                 response = mistapi.api.v1.sites.insights.getSiteInsightMetricsForSwitch(
                     apisession,
                     site_id=str(site_id),
                     device_mac=str(mac),
                     metric=str(metric),
-                    start=str(start),
-                    end=str(end),
-                    duration=str(duration),
-                    interval=str(interval),
+                    start=start_str,
+                    end=end_str,
+                    duration=duration_str,
+                    interval=interval_str,
                     limit=limit,
                     page=page,
                 )

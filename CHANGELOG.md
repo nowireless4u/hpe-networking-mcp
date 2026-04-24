@@ -5,6 +5,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0.4] - 2026-04-24
+
+**Bug-fix triple for two Mist tools surfaced during live RF-planning use.** Fixes [#190](https://github.com/nowireless4u/hpe-networking-mcp/issues/190), [#191](https://github.com/nowireless4u/hpe-networking-mcp/issues/191), and [#192](https://github.com/nowireless4u/hpe-networking-mcp/issues/192).
+
+### Bugs fixed
+
+#### A. `mist_get_site_rrm_info` rejects its own defaults for non-events modes (#190)
+
+`limit=200, page=1` were set as Pydantic field defaults, then validated against `if limit and rrm_info_type != "events": raise`. Result: `current_channel_planning`, `current_rrm_considerations`, and `current_rrm_neighbors` always returned `400 limit parameter can only be used when rrm_info_type is "events"` — three of four modes unreachable.
+
+**Fix:** `limit`/`page` now default to `None` at the signature level; the 200/1 defaults are applied only inside the `events` case. Validation gate unchanged (still rejects explicit values for non-events modes).
+
+#### B. `mist_get_insight_metrics` leaks literal `"None"` into Mist API (#191)
+
+Every case branch unconditionally wrapped optional time-range params with `str(start)`, `str(end)`, `str(duration)`, `str(interval)`. When the client omitted any of these, Pydantic filled in `None`, `str(None)` became the 4-char string `"None"`, and that landed in Mist query params → 400/404s.
+
+**Fix:** Pre-compute `start_str = str(start) if start else None` (etc.) once, reuse across all 6 case branches. Matches the guard pattern already used in `get_site_rrm_info`'s events branch.
+
+#### C. `mist_get_insight_metrics` dispatch broken across 5 of 6 branches (#192)
+
+Every branch had at least one issue against the real `mistapi` SDK signatures:
+
+| object_type | Was | Problem |
+|---|---|---|
+| `site` | `getSiteInsightMetrics(metric=...)` | Wrong kwarg (SDK wants `metrics=`); SDK function itself builds wrong URL (`/insights?metrics=X` vs real `/insights/{metric}`) |
+| `client` | `metric=` | Wrong kwarg (SDK wants `metrics=`) — TypeError |
+| `ap` | `getSiteInsightMetricsForDevice(device_mac=mac, metric=...)` → `/insights/device/{mac}/ap-rf-metrics` | Wrong SDK function; `ap-rf-metrics` only works via `getSiteInsightMetricsForAP` → `/insights/ap/{device_id}/stats` — 404 |
+| `gateway` | `metric=` | Wrong kwarg — TypeError |
+| `mxedge` | OK | (only `str(None)` leak) |
+| `switch` | OK | (only `str(None)` leak) |
+
+**Fix:**
+
+- `site` branch: bypass the broken `getSiteInsightMetrics` and call `apisession.mist_get` directly with the correct `/api/v1/sites/{id}/insights/{metric}` URL. (Filed upstream — the SDK function's URL construction is wrong.)
+- `client`, `ap`, `gateway`: rename `metric=` → `metrics=` kwarg; switch `ap` from `ForDevice` to `ForAP`; use `device_id` UUID (not MAC) for `ap` and `gateway` endpoints.
+- New helper `_mac_to_device_id(mac)` derives the Mist device UUID from a MAC using the documented `00000000-0000-0000-1000-<mac>` convention — so callers can pass either `mac` or `device_id` for `ap`/`gateway`.
+- All 6 branches now enforce the required device-identifier explicitly (`mac` for client/mxedge/switch; `mac` or `device_id` for ap/gateway).
+
+### Verified against live Mist tenant
+
+- `rrm_info(current_channel_planning)` → RF template data ✅
+- `rrm_info(current_rrm_neighbors, band=5)` → neighbor list ✅
+- `rrm_info(events, band=6, duration=1d)` → event list ✅
+- `insight_metrics(object_type=site, metric=num_clients, duration=1d)` → 24h timeseries ✅
+- `insight_metrics(object_type=site, metric=bytes, duration=1h)` → 1h timeseries ✅
+- `insight_metrics(object_type=ap, metric=ap-rf-metrics, mac=04:cd:c0:d1:e5:5a, duration=1d)` → AP RF metrics (MAC-with-colons handling verified) ✅
+
+### Scope: Mist-wide audit
+
+Audit of all 30 Mist tool files for these two bug classes:
+
+- **Default-trips-own-validation-gate (A):** 1/30 files affected (`get_site_rrm_info.py` only).
+- **`str(None)` leak (B):** 1/30 files affected (`get_insight_metrics.py` only).
+
+No other Mist tools exhibited either pattern. All other tools already use the correct `default=None` + guarded `str()` idioms.
+
 ## [2.0.0.3] - 2026-04-24
 
 **UX win: cut one round-trip per simple tool invocation.** `<platform>_list_tools` responses now include a compact `params` map per tool entry, so AI clients can skip `<platform>_get_tool_schema` when the parameter names + types alone are enough to compose an `invoke` call. Fixes [#185](https://github.com/nowireless4u/hpe-networking-mcp/issues/185).
