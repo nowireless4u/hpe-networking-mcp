@@ -295,7 +295,7 @@ No special ID resolution needed. ClearPass tools connect directly to the configu
 - **Server Configuration**: clearpass_get_admin_users, clearpass_get_admin_privileges, clearpass_get_licenses, clearpass_get_cluster_params + 9 more read tools + 12 manage tools
 - **Local Configuration**: clearpass_get_access_controls, clearpass_get_ad_domains, clearpass_get_server_version, clearpass_manage_ad_domain, clearpass_manage_server_service
 - **Integrations**: clearpass_get_extensions, clearpass_get_syslog_targets, clearpass_manage_extension — Extensions, syslog, event sources
-- **Utilities**: clearpass_generate_random_password, clearpass_test_connection
+- **Utilities**: clearpass_generate_random_password. For ClearPass reachability, call `health(platform="clearpass")` — the per-platform `clearpass_test_connection` was removed in v2.0.
 
 ## Session Control Operations
 The `clearpass_disconnect_session` and `clearpass_perform_coa` tools support multiple target types:

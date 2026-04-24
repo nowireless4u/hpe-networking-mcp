@@ -59,7 +59,15 @@ class TestClearPassRegistryPopulation:
         assert clearpass_registry_populated["clearpass_get_sessions"].category == "sessions"
         assert clearpass_registry_populated["clearpass_manage_role"].category == "manage_roles"
         assert clearpass_registry_populated["clearpass_get_endpoints"].category == "endpoints"
-        assert clearpass_registry_populated["clearpass_test_connection"].category == "utilities"
+        assert clearpass_registry_populated["clearpass_generate_random_password"].category == "utilities"
+
+    def test_clearpass_test_connection_removed_in_v2(self, clearpass_registry_populated):
+        """The v1.x clearpass_test_connection tool was removed in v2.0.
+
+        Platform reachability now goes through the cross-platform
+        ``health(platform="clearpass")`` tool — see MIGRATING_TO_V2.md.
+        """
+        assert "clearpass_test_connection" not in clearpass_registry_populated
 
     def test_descriptions_are_populated(self, clearpass_registry_populated):
         for name, spec in clearpass_registry_populated.items():

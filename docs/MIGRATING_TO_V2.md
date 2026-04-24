@@ -63,15 +63,12 @@ The following v1.x tools are **gone** in v2.0. AI agents that hard-coded these n
 |---|---|
 | `apstra_health` | `health(platform="apstra")` |
 | `apstra_formatting_guidelines` | Content migrated into `src/hpe_networking_mcp/INSTRUCTIONS.md` (Juniper Apstra section). Per-response helpers (`get_base_guidelines`, `get_device_guidelines`, etc.) still fire inside Apstra tool bodies. |
+| `clearpass_test_connection` | `health(platform="clearpass")` |
 | `greenlake_list_endpoints` | `greenlake_list_tools` |
 | `greenlake_get_endpoint_schema` | `greenlake_get_tool_schema` |
 | `greenlake_invoke_endpoint` | `greenlake_invoke_tool` |
 
 The GreenLake renaming is the biggest practical break — v1.x had endpoint-dispatch meta-tools that took a REST path; v2.0's tool-dispatch meta-tools take a tool name instead. The naming now matches every other platform's meta-tools.
-
-### Still present, but hidden in default dynamic mode
-
-- `clearpass_test_connection` — still registered (category `utilities`); reachable via `clearpass_invoke_tool(name="clearpass_test_connection")`. `health(platform="clearpass")` is the preferred path and what the AI sees up front.
 
 ## Phase progress (complete)
 

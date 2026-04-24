@@ -1,0 +1,83 @@
+# ============================================================================
+# docker-compose.override.yml.example
+# ----------------------------------------------------------------------------
+# Copy this file to docker-compose.override.yml (the committed name is
+# gitignored) and edit it for your deployment. Docker Compose auto-merges
+# docker-compose.override.yml into docker-compose.yml at startup, so you
+# never have to touch the committed docker-compose.yml to tailor the server
+# for your own environment.
+#
+# What this example shows:
+#   • How to disable platforms you don't use by dropping their secret
+#     references so docker compose stops trying to bind-mount missing files.
+#   • How to flip per-platform write-tool flags without editing the main
+#     compose file.
+#   • How to change the exposed port.
+#
+# The !reset tag tells Compose "remove this item from the merged config"
+# and requires Compose v2.24+. If you're on an older Compose, upgrade or
+# remove the whole override file and instead edit docker-compose.yml
+# directly.
+# ============================================================================
+
+services:
+  hpe-networking-mcp:
+    # Uncomment to change the host port. Keep container port 8000.
+    # ports:
+    #   - "8080:8000"
+
+    # Override environment variables. Only list the ones you want to change;
+    # the rest are inherited from docker-compose.yml.
+    environment:
+      # Example: enable Mist writes, leave other platforms read-only.
+      # - ENABLE_MIST_WRITE_TOOLS=true
+      # - ENABLE_CENTRAL_WRITE_TOOLS=false
+      # - ENABLE_CLEARPASS_WRITE_TOOLS=false
+      # - ENABLE_APSTRA_WRITE_TOOLS=false
+
+      # Example: bump log verbosity temporarily for debugging.
+      # - LOG_LEVEL=debug
+
+      # Example: pin static-mode surface (v1.x behavior). Default is dynamic.
+      # - MCP_TOOL_MODE=static
+
+    # Drop the secret references for platforms you aren't using. After !reset,
+    # list only the ones you keep. Without this, docker compose will try to
+    # bind-mount every secret file declared in the base compose file and fail
+    # if one is missing.
+    #
+    # The example below is a Mist-only deployment. Adjust for your mix of
+    # platforms — keep the service-level secret names you use, and !reset the
+    # top-level secrets dict entries you don't. Do both halves: the service's
+    # `secrets:` list AND the top-level `secrets:` block.
+    secrets: !reset
+      - mist_api_token
+      - mist_host
+
+# Top-level !reset of each unused secret definition. Compose will not try to
+# resolve the file: path for any entry reset here, so its secret file on disk
+# can be absent.
+secrets:
+  # Aruba Central
+  central_base_url: !reset
+  central_client_id: !reset
+  central_client_secret: !reset
+
+  # HPE GreenLake
+  greenlake_api_base_url: !reset
+  greenlake_client_id: !reset
+  greenlake_client_secret: !reset
+  greenlake_workspace_id: !reset
+
+  # Aruba ClearPass
+  clearpass_server: !reset
+  clearpass_client_id: !reset
+  clearpass_client_secret: !reset
+  clearpass_verify_ssl: !reset
+
+  # Juniper Apstra
+  apstra_server: !reset
+  apstra_port: !reset
+  apstra_username: !reset
+  apstra_password: !reset
+  apstra_verify_ssl: !reset

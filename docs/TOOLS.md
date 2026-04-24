@@ -28,7 +28,7 @@ Set `MCP_TOOL_MODE=static` to restore the v1.x surface where every per-platform 
 |----------|----------------|-------------|---------|-------|
 | Juniper Mist | 31 | 4 | 2 | 37 |
 | Aruba Central | 60 | 13 | 12 | 85 |
-| Aruba ClearPass | 55 | 72 | -- | 127 |
+| Aruba ClearPass | 54 | 72 | -- | 126 |
 | Juniper Apstra | 12 | 7 | -- | 19 |
 | HPE GreenLake | 10 | -- | -- | 10 |
 | Cross-Platform | 2 | 1 | 3 | 6 |
@@ -42,8 +42,8 @@ Write tools are disabled by default per platform. Enable them with environment v
 Always registered regardless of `MCP_TOOL_MODE`:
 
 - **`health`** — reports per-platform status in one call. Accepts
-  `platform: str | list[str] | None`. Replaces `apstra_health` (removed
-  in Phase 0) and `clearpass_test_connection` (to be removed in Phase 3).
+  `platform: str | list[str] | None`. Replaces the v1.x `apstra_health`
+  and `clearpass_test_connection` tools (both removed in v2.0).
 - **`site_health_check`** — cross-platform site aggregator.
 - **`manage_wlan_profile`** — cross-platform WLAN orchestrator.
 
@@ -1355,7 +1355,7 @@ All 10 GreenLake tools are read-only today. Write tools would follow the same ga
 
 ---
 
-## Aruba ClearPass (127 tools)
+## Aruba ClearPass (126 tools)
 
 ClearPass tools use the `pyclearpass` SDK with OAuth2 client credentials. Write tools require
 `ENABLE_CLEARPASS_WRITE_TOOLS=true`. Update/delete operations require user confirmation.
@@ -1560,12 +1560,13 @@ ClearPass tools use the `pyclearpass` SDK with OAuth2 client credentials. Write 
 | `clearpass_manage_syslog_export_filter` | Create, update, delete syslog export filters |
 | `clearpass_manage_endpoint_context_server` | Create, update, delete, trigger_poll context servers |
 
-### Utilities (2 tools)
+### Utilities (1 tool)
 
 | Tool | Description |
 |------|-------------|
 | `clearpass_generate_random_password` | Generate random password or MPSK |
-| `clearpass_test_connection` | Test ClearPass connectivity and get server version |
+
+For ClearPass API reachability, use the cross-platform `health(platform="clearpass")` tool (the v1.x `clearpass_test_connection` tool was removed in v2.0).
 
 ---
 

@@ -111,7 +111,6 @@ TOOLS: dict[str, list[str]] = {
     ],
     "utilities": [
         "clearpass_generate_random_password",
-        "clearpass_test_connection",
     ],
     # ── Write tool files (gated) ──────────────────────────────────
     "manage_network_devices": ["clearpass_manage_network_device"],

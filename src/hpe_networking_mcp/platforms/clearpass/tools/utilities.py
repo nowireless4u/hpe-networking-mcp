@@ -31,25 +31,3 @@ async def clearpass_generate_random_password(
         return client.get_random_password()
     except Exception as e:
         return f"Error generating random password: {e}"
-
-
-@tool(annotations=READ_ONLY)
-async def clearpass_test_connection(
-    ctx: Context,
-) -> dict | str:
-    """Test the ClearPass API connection.
-
-    Verifies connectivity by retrieving the server version. Returns version
-    information and connection status.
-    """
-    try:
-        from pyclearpass.api_localserverconfiguration import ApiLocalServerConfiguration
-
-        client = await get_clearpass_session(ApiLocalServerConfiguration)
-        version = client.get_server_version()
-        return {
-            "status": "connected",
-            "server_version": version,
-        }
-    except Exception as e:
-        return f"Error testing ClearPass connection: {e}"

@@ -48,7 +48,7 @@ Managing HPE networking infrastructure with AI assistants today means juggling m
 | **BGP / Protocol Session Monitoring** | — | — | — | — | ✅ |
 | **Guided Prompts** | ✅ | ✅ | — | — | — |
 | **Dynamic Tool Discovery** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Underlying tools (static mode)** | **35 + 2 prompts** | **73 + 12 prompts** | **10** | **127** | **21** |
+| **Underlying tools (static mode)** | **35 + 2 prompts** | **73 + 12 prompts** | **10** | **126** | **19** |
 | **Exposed meta-tools (dynamic mode, default)** | **3** | **3** | **3** | **3** | **3** |
 | **Cross-Platform** | **2 tools + 3 prompts** | **2 tools + 3 prompts** | — | **1 tool** | — |
 
@@ -147,36 +147,18 @@ Each file contains a single value (e.g., your API token). **Do not leave placeho
 
 ### 3. Disable platforms you don't use (recommended)
 
-Create a `docker-compose.override.yml` alongside `docker-compose.yml`. Compose auto-merges it and you don't have to touch the committed file. Example for a Mist-only deployment:
+Create a `docker-compose.override.yml` alongside `docker-compose.yml`. Compose auto-merges it at startup, and the committed `docker-compose.yml` stays untouched. A ready-to-copy template is shipped in the repo:
 
-```yaml
-# docker-compose.override.yml
-services:
-  hpe-networking-mcp:
-    secrets: !reset
-      - mist_api_token
-      - mist_host
-
-secrets:
-  central_base_url: !reset
-  central_client_id: !reset
-  central_client_secret: !reset
-  greenlake_api_base_url: !reset
-  greenlake_client_id: !reset
-  greenlake_client_secret: !reset
-  greenlake_workspace_id: !reset
-  clearpass_server: !reset
-  clearpass_client_id: !reset
-  clearpass_client_secret: !reset
-  clearpass_verify_ssl: !reset
-  apstra_server: !reset
-  apstra_port: !reset
-  apstra_username: !reset
-  apstra_password: !reset
-  apstra_verify_ssl: !reset
+```bash
+cp docker-compose.override.yml.example docker-compose.override.yml
+# edit to match the platforms you actually use
 ```
 
-This file is already in `.gitignore` (as `docker-compose.override.yml`), so your per-deployment tailoring never ends up in git. With this override in place, you only need `secrets/mist_api_token` and `secrets/mist_host` on disk — every other secret file can be absent.
+The template shows a Mist-only deployment with `!reset` directives dropping every other platform's secret references — both the service-level `secrets:` list **and** the top-level `secrets:` block, which you need to do both halves of for Compose to stop trying to bind-mount the unused files. Adjust the `secrets: !reset - <names>` under `services:` to keep whichever platforms you need, and `!reset` only the top-level entries you're actually dropping. The template also has examples for per-platform write-tool flags, log level, and tool mode overrides.
+
+`docker-compose.override.yml` is already in `.gitignore`, so your per-deployment tailoring never ends up in git. With the Mist-only override in place, you only need `secrets/mist_api_token` and `secrets/mist_host` on disk — every other secret file can be absent.
+
+> **Compose version required:** `!reset` needs Docker Compose v2.24 or newer. If you're on an older Compose, either upgrade (recommended) or skip the override file and edit `docker-compose.yml` directly, commenting out the unused platform's service-level and top-level secret entries.
 
 ### 4. Start
 
@@ -190,7 +172,7 @@ docker compose up -d
 docker compose logs
 ```
 
-Look for lines like `Mist: 35 tools registered`, `ClearPass: 127 tools registered`, `Tool mode: dynamic`, and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. In the default dynamic mode, only 18 tools are exposed to the AI — the underlying platform tools are discoverable via each platform's `list_tools` / `get_tool_schema` / `invoke_tool` meta-tools. Mist also registers 2 guided prompts for site provisioning workflows.
+Look for lines like `Mist: 35 tools registered`, `ClearPass: 126 tools registered`, `Tool mode: dynamic`, and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. In the default dynamic mode, only 18 tools are exposed to the AI — the underlying platform tools are discoverable via each platform's `list_tools` / `get_tool_schema` / `invoke_tool` meta-tools. Mist also registers 2 guided prompts for site provisioning workflows.
 
 ### Docker Image
 
@@ -393,7 +375,7 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 │ ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐        │
 │ │    Mist    │ │  Central   │ │ GreenLake  │ │ ClearPass  │ │   Apstra   │        │
 │ │   mist_*   │ │ central_*  │ │greenlake_* │ │clearpass_* │ │  apstra_*  │        │
-│ │ 35 tools   │ │ 73 tools   │ │ 10 tools   │ │ 127 tools  │ │  21 tools  │        │
+│ │ 35 tools   │ │ 73 tools   │ │ 10 tools   │ │ 126 tools  │ │  19 tools  │        │
 │ │ + 2 prmt   │ │ + 12 prmt  │ │            │ │            │ │            │        │
 │ │            │ │            │ │            │ │            │ │            │        │
 │ │  Hidden behind meta-tools in dynamic mode;  fully exposed in static mode.       │
@@ -509,7 +491,7 @@ hpe-networking-mcp/
 │       ├── mist/                # 35 Mist tools + 2 prompts + API client
 │       ├── central/             # 73 Central tools + 12 prompts + API client
 │       ├── greenlake/           # 10 GreenLake tools + OAuth2 client
-│       ├── clearpass/           # 127 ClearPass tools + pyclearpass SDK client
+│       ├── clearpass/           # 126 ClearPass tools + pyclearpass SDK client
 │       ├── apstra/              # 21 Apstra tools + async httpx client
 │       ├── manage_wlan.py       # Cross-platform WLAN management tool
 │       ├── sync_prompts.py      # Cross-platform WLAN sync prompts

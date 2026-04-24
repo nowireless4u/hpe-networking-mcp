@@ -1,13 +1,11 @@
 """Cross-platform ``health`` tool and per-platform probe helpers.
 
 The ``health`` tool is the single entry point for platform reachability
-reporting across every configured platform. It superseded the per-platform
-``apstra_health`` (removed in v2.0) and is the recommended AI-facing path
-in place of ``clearpass_test_connection`` (which still exists for static
-mode but is not visible by default in dynamic mode). Accepts a
-``platform`` filter (``str | list[str] | None``) matching the rule
-established in v1.0.0.1 (#146): omit for all, pass one name for one,
-pass a list for several.
+reporting across every configured platform. It replaces the per-platform
+``apstra_health`` and ``clearpass_test_connection`` tools that existed
+in v1.x — both removed in v2.0. Accepts a ``platform`` filter
+(``str | list[str] | None``) matching the rule established in v1.0.0.1
+(#146): omit for all, pass one name for one, pass a list for several.
 
 The same ``_probe_<platform>()`` helpers are called by
 ``server.py:lifespan()`` at startup so there's a single source of truth
@@ -210,8 +208,9 @@ def register(mcp: FastMCP) -> None:
             "Accepts an optional platform filter: omit for every enabled platform, "
             "pass one name as a string (e.g. 'apstra'), or pass a list "
             "(['apstra', 'clearpass']). This is the recommended entry point for "
-            "platform-reachability checks; the v1.x-era apstra_health tool was "
-            "removed in v2.0 in favor of this cross-platform tool."
+            "platform-reachability checks; the v1.x-era apstra_health and "
+            "clearpass_test_connection tools were removed in v2.0 in favor of "
+            "this cross-platform tool."
         ),
         annotations=_PROBE_ANNOTATIONS,
     )
