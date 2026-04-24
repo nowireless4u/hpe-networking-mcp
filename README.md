@@ -103,32 +103,39 @@ cd hpe-networking-mcp
 
 ### 2. Configure Secrets
 
-Create secret files from the provided templates — only for the platforms you use:
+The repo ships with `.example` template files only — **no real secret files**. You create the real files yourself by copying the examples and editing them with your values.
+
+**Important:** `docker-compose.yml` declares every platform's secrets and bind-mounts each of them into the container at startup. If a listed secret file doesn't exist on disk, the container fails immediately with an `invalid mount config` error — **before the app ever runs.** That means you need to pick one of two paths:
+
+- **Path A (most users):** populate every `.example` → real-name pair for every platform listed in the compose file, even the platforms you don't currently use (put dummy content in the unused ones — the app will disable the platform at runtime, see below).
+- **Path B (recommended if you only use some platforms):** create a `docker-compose.override.yml` that removes the unused platforms' secret references so compose stops trying to bind them. See **Disabling platforms you don't use** below.
+
+For the platforms you actually want enabled, copy the templates and edit them with real values:
 
 ```bash
-# Mist
+# Mist (required for this example; do the same for every platform you're using)
 cp secrets/mist_api_token.example secrets/mist_api_token
 cp secrets/mist_host.example secrets/mist_host
 # Edit each file with your real credentials
 
-# Aruba Central (optional)
+# Aruba Central
 cp secrets/central_base_url.example secrets/central_base_url
 cp secrets/central_client_id.example secrets/central_client_id
 cp secrets/central_client_secret.example secrets/central_client_secret
 
-# HPE GreenLake (optional)
+# HPE GreenLake
 cp secrets/greenlake_api_base_url.example secrets/greenlake_api_base_url
 cp secrets/greenlake_client_id.example secrets/greenlake_client_id
 cp secrets/greenlake_client_secret.example secrets/greenlake_client_secret
 cp secrets/greenlake_workspace_id.example secrets/greenlake_workspace_id
 
-# ClearPass (optional)
+# ClearPass
 cp secrets/clearpass_server.example secrets/clearpass_server
 cp secrets/clearpass_client_id.example secrets/clearpass_client_id
 cp secrets/clearpass_client_secret.example secrets/clearpass_client_secret
 cp secrets/clearpass_verify_ssl.example secrets/clearpass_verify_ssl
 
-# Juniper Apstra (optional)
+# Juniper Apstra
 cp secrets/apstra_server.example secrets/apstra_server
 cp secrets/apstra_port.example secrets/apstra_port
 cp secrets/apstra_username.example secrets/apstra_username
@@ -136,17 +143,48 @@ cp secrets/apstra_password.example secrets/apstra_password
 cp secrets/apstra_verify_ssl.example secrets/apstra_verify_ssl
 ```
 
-Each file contains a single value (e.g., your API token). The server auto-disables platforms with missing secret files.
+Each file contains a single value (e.g., your API token). **Do not leave placeholder contents** (like `apstra.example.com` or `replace-with-real-password`) in a file for a platform you're not using — the server will try to authenticate with those fake values at startup and fill your logs with failed-login errors. If you're not using a platform, use Path B below (override file) or leave the secret file empty — the app treats an empty file as "not configured" and disables the platform.
 
-> **Only create files for the platforms you use.** If you only manage Mist networks, you only need `mist_api_token` and `mist_host`. Comment out unused platforms in `docker-compose.yml`.
+### 3. Disable platforms you don't use (recommended)
 
-### 3. Start
+Create a `docker-compose.override.yml` alongside `docker-compose.yml`. Compose auto-merges it and you don't have to touch the committed file. Example for a Mist-only deployment:
+
+```yaml
+# docker-compose.override.yml
+services:
+  hpe-networking-mcp:
+    secrets: !reset
+      - mist_api_token
+      - mist_host
+
+secrets:
+  central_base_url: !reset
+  central_client_id: !reset
+  central_client_secret: !reset
+  greenlake_api_base_url: !reset
+  greenlake_client_id: !reset
+  greenlake_client_secret: !reset
+  greenlake_workspace_id: !reset
+  clearpass_server: !reset
+  clearpass_client_id: !reset
+  clearpass_client_secret: !reset
+  clearpass_verify_ssl: !reset
+  apstra_server: !reset
+  apstra_port: !reset
+  apstra_username: !reset
+  apstra_password: !reset
+  apstra_verify_ssl: !reset
+```
+
+This file is already in `.gitignore` (as `docker-compose.override.yml`), so your per-deployment tailoring never ends up in git. With this override in place, you only need `secrets/mist_api_token` and `secrets/mist_host` on disk — every other secret file can be absent.
+
+### 4. Start
 
 ```bash
 docker compose up -d
 ```
 
-### 4. Verify
+### 5. Verify
 
 ```bash
 docker compose logs
@@ -173,21 +211,24 @@ docker pull ghcr.io/nowireless4u/hpe-networking-mcp:latest
 
 ## Platform Auto-Disable
 
-You don't need credentials for all four platforms. The server automatically detects which platforms have valid secrets and only enables those:
+You don't need credentials for all five platforms. The server detects which platforms have valid secret content at startup and only enables those. A platform is disabled if any of its required secret files is **empty or absent** from `SECRETS_DIR` (inside the container) — which, under Docker Compose, means the file on disk was empty or you used a `docker-compose.override.yml` to drop that platform's secrets entirely (see [Disable platforms you don't use](#3-disable-platforms-you-dont-use-recommended)).
 
 - **All five platforms configured** → All tools available (Mist + Central + GreenLake + ClearPass + Apstra)
 - **Only Mist configured** → Only `mist_*` tools available; other platforms disabled
 - **Only ClearPass configured** → Only `clearpass_*` tools available; other platforms disabled
 - **No valid credentials** → Server refuses to start with a clear error message
 
-This means you can start with just one platform and add others later by creating their secret files and restarting the container. The server logs which platforms are enabled at startup:
+Add a platform later by populating its secret files (or removing the override's `!reset` lines) and restarting the container. The server logs which platforms are enabled at startup:
 
 ```
 Mist: credentials loaded (token: abcd...wxyz, host: api.mist.com)
 Central: disabled (missing secrets: central_client_id, central_client_secret)
 GreenLake: disabled (missing secrets: greenlake_client_id)
 Enabled platforms: mist
+Tool mode: dynamic
 ```
+
+> **Heads up:** auto-disable triggers on **empty or absent secret content**, not on placeholder/example values. If you copy `apstra_server.example` → `apstra_server` and leave the contents as `apstra.example.com`, the server thinks Apstra is configured and tries to authenticate against the fake host — your logs fill with login errors. Either empty those files, drop the platform via `docker-compose.override.yml`, or fill in real values.
 
 ---
 
@@ -498,14 +539,28 @@ docker compose logs -f                     # Follow live
 
 ### Platform Disabled at Startup
 
-If a platform shows as disabled, its secret files are missing or empty:
+If a platform shows as disabled, the relevant secret file is either absent or empty from the container's perspective:
 
 ```
 Mist: disabled (mist_api_token secret not found)
 Central: disabled (missing secrets: central_client_id, central_client_secret)
 ```
 
-**Fix:** Verify the secret files exist in `secrets/` and contain valid values (no extra whitespace or newlines). Each file should contain exactly one value.
+**Fix:** Populate the missing secret files in `secrets/` with real values (no extra whitespace or newlines — each file should contain exactly one value). If you *intended* to disable that platform, ignore the message — the server continues running with the platforms that do have credentials.
+
+### Container exits immediately with `invalid mount config for type "bind"`
+
+```
+Error response from daemon: invalid mount config for type "bind":
+bind source path does not exist: .../secrets/apstra_verify_ssl
+```
+
+This means `docker-compose.yml` references a secret file that doesn't exist on disk, and Docker failed the bind mount *before* the app started. Two fixes:
+
+- **If you want that platform enabled:** run `cp secrets/<name>.example secrets/<name>` and populate the file with your real values.
+- **If you don't want that platform:** drop the platform's secret references via a `docker-compose.override.yml` (see [Disable platforms you don't use](#3-disable-platforms-you-dont-use-recommended)).
+
+Do **not** create an empty file with placeholder contents left over from the `.example` template — the app will boot but fail authentication against the fake values, as explained in [Platform Auto-Disable](#platform-auto-disable).
 
 ### Authentication Failures
 
