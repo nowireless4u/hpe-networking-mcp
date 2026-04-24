@@ -45,13 +45,22 @@ def main() -> None:
         os.environ["LOG_LEVEL"] = "DEBUG"
         os.environ["DEBUG"] = "true"
 
-    # Load config (reads Docker secrets + env vars)
-    config = load_config()
-
-    # Setup logging with resolved level
-    setup_logging(level=config.log_level)
+    # Initialize logging BEFORE load_config() so its "Loading secrets from ...",
+    # per-platform "credentials loaded", "Enabled platforms: ...", and
+    # "Tool mode: ..." info lines reach stderr. The module-level
+    # ``logger.remove()`` in utils/logging.py fires at import time and leaves
+    # loguru with zero handlers; without this early setup_logging call,
+    # anything load_config emits is silently dropped. Env-var fallbacks match
+    # load_config()'s own reads so the level/file stays consistent.
+    setup_logging(
+        level=os.environ.get("LOG_LEVEL", "INFO").upper(),
+        log_file=os.environ.get("LOG_FILE") or None,
+    )
 
     from loguru import logger
+
+    # Load config (reads Docker secrets + env vars). Logs from here now reach stderr.
+    config = load_config()
 
     logger.info(
         "Starting HPE Networking MCP Server — platforms: {} — port: {}",

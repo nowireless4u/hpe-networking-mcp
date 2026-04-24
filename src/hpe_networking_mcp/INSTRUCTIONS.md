@@ -233,9 +233,23 @@ The same cross-platform behavior applies to **sites** — when asked generically
 
 ## Cross-Platform Site Health Check
 
-**PREFER**: When the user asks how a site is doing, whether a site is healthy, or for an at-a-glance status of a specific site, call `site_health_check(site_name=<name>)` first. It aggregates Mist site stats and alarms, Central site health and active alerts, and (when ClearPass is configured) session and auth-failure counts for the site's NADs — returning a single compact report with overall status and concrete next-step recommendations. This replaces ~8–12 individual tool calls.
+**Always use `site_health_check` for site-status questions** ("how is site X doing", "is site X healthy", "site X status"). It's a single tool call that returns site data for one or more platforms in a unified report.
 
-After reading the report, drill down into specific issues using the exact tool calls the report recommends. Only fall back to calling the per-platform health tools directly if `site_health_check` is unavailable or the user explicitly asks for platform-specific detail beyond what the summary returns.
+**Scope with the `platform` parameter:**
+
+| User says | Call |
+|---|---|
+| "how is site HOME doing" (no platform named) | `site_health_check(site_name="HOME")` — queries every enabled platform (default) |
+| "how is site HOME doing **in Central**" | `site_health_check(site_name="HOME", platform="central")` |
+| "how is site HOME doing **on Mist**" | `site_health_check(site_name="HOME", platform="mist")` |
+| "how is site HOME doing **in ClearPass**" | `site_health_check(site_name="HOME", platform="clearpass")` |
+| "how is HOME doing in Central and Mist" | `site_health_check(site_name="HOME", platform=["central", "mist"])` |
+
+Valid `platform` values are `"mist"`, `"central"`, `"clearpass"` (or a list). Apstra and GreenLake don't have site-scoped telemetry and aren't accepted. Omit `platform` entirely (null/None) for the full cross-platform view — that's the right default when the user asks generically.
+
+The return shape is the same regardless of the filter: only platforms in `platforms_queried` will have populated summary blocks; the others are omitted. When the filter is set, the report is scoped cleanly — no incidental data from platforms the user didn't ask about.
+
+After reading the report, drill down into specific issues using the exact tool calls the report recommends. Only fall back to per-platform tools from `site_health_check` output if the summary doesn't answer the question.
 
 ## Guidelines
 - ALWAYS start with `central_get_site_name_id_mapping` for a lightweight overview.

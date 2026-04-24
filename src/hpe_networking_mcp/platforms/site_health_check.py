@@ -71,6 +71,44 @@ class SiteHealthReport(BaseModel):
     recommendations: list[str] = Field(default_factory=list)
 
 
+# Platforms that participate in cross-platform site health. Apstra and
+# GreenLake are absent by design — Apstra is datacenter fabric (no site
+# concept), GreenLake is platform admin (no site-scoped telemetry).
+_SITE_PLATFORMS: tuple[str, ...] = ("mist", "central", "clearpass")
+
+
+def _normalize_site_platform_filter(
+    value: str | list[str] | None,
+    enabled: list[str],
+) -> list[str]:
+    """Resolve the ``platform`` argument to the subset of platforms to query.
+
+    - ``None`` -> every enabled site platform (mist/central/clearpass)
+    - ``"central"`` -> ``["central"]``
+    - ``["mist", "central"]`` -> those two (in canonical order)
+
+    Unknown names (e.g. ``"apstra"``, ``"greenlake"``) are dropped with a
+    warning. Names that are valid but not enabled on this server are kept
+    in the wanted list so the caller can report them as ``queried`` but
+    unmatched — matching the existing per-platform semantics.
+    """
+    if value is None:
+        return [p for p in _SITE_PLATFORMS if p in enabled]
+    candidates = [value] if isinstance(value, str) else [str(v) for v in value]
+
+    wanted: list[str] = []
+    for name in candidates:
+        name = name.strip().lower()
+        if name in _SITE_PLATFORMS and name not in wanted:
+            wanted.append(name)
+        elif name not in _SITE_PLATFORMS:
+            logger.warning(
+                "site_health_check(platform={!r}) — not a site platform, skipping (valid: mist, central, clearpass)",
+                name,
+            )
+    return wanted
+
+
 # --- Mist collection -----------------------------------------------------
 
 
@@ -594,8 +632,23 @@ def register(mcp: Any, config: Any) -> None:
                 le=168,
             ),
         ] = 24,
+        platform: Annotated[
+            str | list[str] | None,
+            Field(
+                description=(
+                    "Optional platform filter. Omit (null) to query every enabled site "
+                    "platform — the normal cross-platform aggregation. Pass one name "
+                    "('central', 'mist', or 'clearpass') or a list (['mist','central']) "
+                    "to restrict the report to those platforms only. Use this when the "
+                    "user's question explicitly names a platform (e.g. 'how is site X "
+                    "doing in Central'). Apstra and GreenLake are not valid here — they "
+                    "don't have site-scoped telemetry."
+                ),
+                default=None,
+            ),
+        ] = None,
     ) -> SiteHealthReport:
-        """Aggregate a site's health across every enabled HPE networking platform.
+        """Aggregate a site's health across enabled HPE networking platforms.
 
         Pulls Mist site stats and alarms, Central site health and active alerts,
         and (when ClearPass is configured) matches site device IPs to ClearPass
@@ -604,18 +657,35 @@ def register(mcp: Any, config: Any) -> None:
         recommendations — replaces ~8–12 individual tool calls.
 
         Use when the user asks how a site is doing, whether a site is healthy,
-        or wants an at-a-glance status for a specific location. For deep-dive
-        investigation of specific issues surfaced in the report, follow the
-        recommendations, which reference the appropriate drill-down tools.
+        or wants an at-a-glance status for a specific location. When the user
+        explicitly names a platform ('how is site X doing in Central'), pass
+        platform='central' (or the relevant name) so the report is scoped to
+        that platform only. For deep-dive investigation of specific issues
+        surfaced in the report, follow the recommendations, which reference
+        the appropriate drill-down tools.
         """
         config = ctx.lifespan_context["config"]
 
+        enabled_site_platforms: list[str] = []
+        if config.mist:
+            enabled_site_platforms.append("mist")
+        if config.central:
+            enabled_site_platforms.append("central")
+        if config.clearpass:
+            enabled_site_platforms.append("clearpass")
+
+        wanted = _normalize_site_platform_filter(platform, enabled_site_platforms)
+
+        query_mist = config.mist is not None and "mist" in wanted
+        query_central = config.central is not None and "central" in wanted
+        query_clearpass = config.clearpass is not None and "clearpass" in wanted
+
         platforms_queried: list[str] = []
         tasks: list[Any] = []
-        if config.mist:
+        if query_mist:
             platforms_queried.append("mist")
             tasks.append(_collect_mist(ctx, site_name, time_window_hours))
-        if config.central:
+        if query_central:
             platforms_queried.append("central")
             tasks.append(_collect_central(ctx, site_name, time_window_hours))
 
@@ -624,11 +694,11 @@ def register(mcp: Any, config: Any) -> None:
         mist_summary: MistSummary | None = None
         central_summary: CentralSummary | None = None
         idx = 0
-        if config.mist:
+        if query_mist:
             r = results[idx]
             mist_summary = r if isinstance(r, MistSummary) else MistSummary(error=str(r))
             idx += 1
-        if config.central:
+        if query_central:
             r = results[idx]
             central_summary = r if isinstance(r, CentralSummary) else CentralSummary(error=str(r))
             idx += 1
@@ -641,7 +711,7 @@ def register(mcp: Any, config: Any) -> None:
         device_ips = list(dict.fromkeys(device_ips))  # de-dupe preserving order
 
         clearpass_summary: ClearPassSummary | None = None
-        if config.clearpass:
+        if query_clearpass:
             platforms_queried.append("clearpass")
             clearpass_summary = await _collect_clearpass(ctx, device_ips, time_window_hours)
 
