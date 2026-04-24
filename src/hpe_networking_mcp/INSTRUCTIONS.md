@@ -55,6 +55,7 @@ The server's Pydantic validator rejects `invalid_params` responses with actionab
 Use the cross-platform tools directly when they apply — they replace several per-platform calls:
 - `health(platform=...)` — platform reachability / status
 - `site_health_check(site_name=...)` — unified site health across Mist + Central + ClearPass
+- `site_rf_check(site_name=...)` — unified per-AP, per-band RF state (channels, power, utilization, noise floor) across Mist + Central; includes a pre-rendered ASCII RF dashboard. **Use for any channel-planning / spectrum / RF-health / "how are my 5/6 GHz channels" question** — do NOT fall back to Mist-only or Central-only RF tools without a reason.
 - `manage_wlan_profile(...)` — the mandatory entry point for any WLAN create/copy/sync request
 
 If `MCP_TOOL_MODE=static` is set, every per-platform tool is visible up front without needing the meta-tool round-trip. The names and behaviors are identical either way — only the discovery mechanism differs.

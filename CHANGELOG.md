@@ -5,6 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0.5] - 2026-04-24
+
+**New cross-platform tool: `site_rf_check`.** Closes the AI-discovery gap where channel-planning / RF / spectrum questions produced Mist-only answers even when the user had Aruba APs in Central at the same site.
+
+### Why a new tool, not a docs rule
+
+Tested approach: a docs rule in `INSTRUCTIONS.md` saying "for platform-agnostic questions, query every enabled platform first." Track record on this codebase ([#184](https://github.com/nowireless4u/hpe-networking-mcp/issues/184), [#185](https://github.com/nowireless4u/hpe-networking-mcp/issues/185)) shows soft "consider X before deciding" rules in long instruction blocks tend to lose to whatever shortcut pattern the AI matched on first ("Wi-Fi channels → Mist" is sticky). What changes behavior reliably is removing the judgment call: a purpose-built tool whose name + description put cross-platform aggregation directly in the tool list.
+
+### What the tool does
+
+Mirrors the `site_health_check` pattern. Single call returns:
+
+- **Per-band aggregation (2.4 / 5 / 6 GHz):** AP count, channel distribution, avg/max channel utilization, avg noise floor, allowed channels (from the Mist RF template).
+- **Per-AP radio snapshot:** name, model, platform, connected status, and one row per band with channel, bandwidth, TX power, utilization, noise floor.
+- **Recommendations:** co-channel clusters (3+ APs on the same primary channel in 5/6 GHz), peak utilization ≥70%, noise floor >-70 dBm.
+- **Pre-rendered ASCII RF dashboard** in `rendered_report` — channel-occupancy bars, utilization meters, per-AP table, recommendations list. Always-on by default so even clients that don't draw charts get a visual report. Opt out with `include_rendered_report=False`.
+
+### Site-picker fallback
+
+When `site_name` is omitted, the tool returns a list of selectable sites in `site_options` (with per-platform AP counts and online counts) instead of erroring. The `platform` filter still applies — `site_rf_check(platform="central")` lists only Central sites. Two cheap cross-platform calls (orgs/inventory + sites/aps) cover the listing — no per-site fan-out.
+
+### Data sources
+
+| Side | Calls | What we extract |
+|---|---|---|
+| Mist | `/sites/{id}/stats/devices?type=ap` + `getSiteCurrentChannelPlanning` | Per-AP `radio_stat` (per-band channel, power, usage, noise_floor, num_clients), template allowed channels |
+| Central | `MonitoringAPs.get_all_aps(filter=siteId)` + per-AP `MonitoringAPs.get_ap_details` (parallel via asyncio.gather, capped by `max_aps_per_platform`) | Per-AP `radios` array (band, channel, bandwidth, power, channelUtilization, noiseFloor) |
+
+Channel notation differs across platforms: Central uses bonded-channel suffixes (`165S`, `49T+`); the new `_parse_primary_channel` helper extracts the primary channel integer for aggregation while preserving the raw value.
+
+### Verified live
+
+3 Aruba AP-755s at site HOME (Central) — full report rendered with 2.4G/5G/6G channel bars, noise floors, utilization meters, per-AP table. Picker mode tested across 19 sites with accurate online counts. Mist-side picker uses `connected: bool` from `/orgs/{id}/inventory` (not the `status` field — that endpoint doesn't carry it).
+
+### Test additions
+
+49 new unit tests in `tests/unit/test_site_rf_check.py` covering parsers (channel/numeric/bandwidth/band normalization), platform-filter normalization, band aggregation (channel distribution, util/noise math, disconnected-AP exclusion), synthesis (co-channel detection per band, utilization/noise thresholds), the rendered report, and the site picker (sort order, truncation, empty case).
+
+Total suite: **512 tests** passing (463 → 512).
+
+### Code
+
+- New module: `src/hpe_networking_mcp/platforms/site_rf_check.py` (~700 LoC; mirrors `site_health_check.py` shape).
+- New registration: `_register_site_rf_check` in `server.py`, gated by `config.mist or config.central`.
+
+### Docs in this PR
+
+- `INSTRUCTIONS.md` — adds `site_rf_check` to the cross-platform-tools list with explicit "use for any channel-planning / spectrum / RF-health question" guidance.
+- `README.md` — tool counts updated (18 → 19 default), new "Site RF Check" bullet under Cross-Platform Tools.
+- `docs/TOOLS.md` — updated counts, full param doc + return-shape doc for `site_rf_check`.
+
 ## [2.0.0.4] - 2026-04-24
 
 **Bug-fix triple for two Mist tools surfaced during live RF-planning use.** Fixes [#190](https://github.com/nowireless4u/hpe-networking-mcp/issues/190), [#191](https://github.com/nowireless4u/hpe-networking-mcp/issues/191), and [#192](https://github.com/nowireless4u/hpe-networking-mcp/issues/192).

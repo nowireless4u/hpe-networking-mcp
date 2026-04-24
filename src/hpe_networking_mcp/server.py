@@ -208,6 +208,10 @@ def create_server(config: ServerConfig) -> FastMCP:
     if config.mist or config.central:
         _register_site_health_check(mcp, config)
 
+    # --- Cross-platform site RF check (requires at least Mist or Central) ---
+    if config.mist or config.central:
+        _register_site_rf_check(mcp, config)
+
     # --- Cross-platform `health` tool (always registered; unaffected by tool_mode) ---
     from hpe_networking_mcp.platforms.health import register as _register_health
 
@@ -307,3 +311,13 @@ def _register_site_health_check(mcp: FastMCP, config: ServerConfig) -> None:
         register(mcp, config)
     except Exception as e:
         logger.warning("Cross-platform: failed to load site_health_check — {}", e)
+
+
+def _register_site_rf_check(mcp: FastMCP, config: ServerConfig) -> None:
+    """Register the cross-platform site_rf_check aggregation tool."""
+    try:
+        from hpe_networking_mcp.platforms.site_rf_check import register
+
+        register(mcp, config)
+    except Exception as e:
+        logger.warning("Cross-platform: failed to load site_rf_check — {}", e)

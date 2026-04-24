@@ -7,11 +7,12 @@ Tools are namespaced by platform: `mist_*` (Juniper Mist), `central_*` (Aruba Ce
 
 ## Dynamic mode (default since v2.0.0.0)
 
-The server ships with `MCP_TOOL_MODE=dynamic` by default. At session start the AI sees **18 tools**:
+The server ships with `MCP_TOOL_MODE=dynamic` by default. At session start the AI sees **19 tools**:
 
-- **3 cross-platform static tools**
+- **4 cross-platform static tools**
   - `health(platform=...)`
   - `site_health_check(site_name=...)`
+  - `site_rf_check(site_name=...)`
   - `manage_wlan_profile(...)`
 - **3 meta-tools per platform** (× 5 platforms = 15)
   - `<platform>_list_tools(filter=...)` — list candidates
@@ -31,7 +32,7 @@ Set `MCP_TOOL_MODE=static` to restore the v1.x surface where every per-platform 
 | Aruba ClearPass | 54 | 72 | -- | 126 |
 | Juniper Apstra | 12 | 7 | -- | 19 |
 | HPE GreenLake | 10 | -- | -- | 10 |
-| Cross-Platform | 2 | 1 | 3 | 6 |
+| Cross-Platform | 3 | 1 | 3 | 7 |
 
 Write tools are disabled by default per platform. Enable them with environment variables:
 `ENABLE_MIST_WRITE_TOOLS=true`, `ENABLE_CENTRAL_WRITE_TOOLS=true`,
@@ -45,6 +46,7 @@ Always registered regardless of `MCP_TOOL_MODE`:
   `platform: str | list[str] | None`. Replaces the v1.x `apstra_health`
   and `clearpass_test_connection` tools (both removed in v2.0).
 - **`site_health_check`** — cross-platform site aggregator.
+- **`site_rf_check`** — cross-platform RF / channel-planning aggregator.
 - **`manage_wlan_profile`** — cross-platform WLAN orchestrator.
 
 ---
@@ -1196,7 +1198,7 @@ LLM through a recommended sequence of tool calls for common network operations.
 
 ---
 
-## Cross-Platform (2 tools + 3 prompts)
+## Cross-Platform (3 tools + 3 prompts)
 
 Tools that span multiple platforms. Each replaces several individual tool calls with a single aggregated response.
 
@@ -1219,6 +1221,30 @@ Tools that span multiple platforms. Each replaces several individual tool calls 
 - `recommendations` — Concrete follow-up tool calls with the right site_id already filled in, targeting only the platforms and categories that showed issues.
 
 **Typical use:** "How is site X doing?", "Is site X healthy?", "Give me a status on site X." After reviewing the summary, follow the recommendations for deeper investigation — do not re-query the per-platform health tools unless needed.
+
+### `site_rf_check`
+
+> **One-call RF / channel-planning snapshot across every enabled platform.** Aggregates per-AP, per-band radio state from Mist AND Central in parallel — current channel, bandwidth, TX power, channel utilization, and noise floor — into a single report with an embedded ASCII RF dashboard. Replaces 10+ separate per-platform calls. Registered when at least Mist or Central is enabled.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| site_name | str | No | Exact site name as shown in Mist and/or Central. When omitted, the tool returns a list of selectable sites (with AP counts per platform) in `site_options` instead of a full RF report — call back with one of those names. |
+| platform | str \| list \| null | No | Optional filter (`mist`, `central`, or both as a list). Omit (null) for the default cross-platform aggregation. ClearPass / Apstra / GreenLake are not valid — they don't expose per-AP RF telemetry. |
+| max_aps_per_platform | int | No | Cap on per-AP detail fetches per platform (Central fans out serial-by-serial). Default 50; range 1–500. |
+| include_rendered_report | bool | No | When true (default), embed a pre-rendered markdown/ASCII RF dashboard in `rendered_report`. Set false for scripted callers that only want structured data. |
+
+**What it returns:**
+
+- `headline` — One-line summary (`Site 'X': N/M APs online | 2.4GHz: ch1×2... | 5GHz: ...`).
+- `bands` — Per-band (2.4 / 5 / 6) summary: AP count, channel distribution, avg/max utilization, avg noise floor, allowed channels (from the Mist RF template).
+- `aps` — Per-AP radio snapshot: name, model, platform, connected status, and a list of radios (one per band) with channel / bandwidth / power / utilization / noise.
+- `mist` — Mist-side metadata: site_id, AP count, RF template name, allowed channels per band.
+- `central` — Central-side metadata: site_id, AP count, online count.
+- `recommendations` — Co-channel cluster warnings (3+ APs on the same primary channel in 5/6 GHz), high-utilization warnings (peak ≥70%), elevated-noise-floor warnings (>-70 dBm).
+- `site_options` — Populated only when `site_name` is omitted. Each entry: name, platform, site_id, ap_count, online_ap_count.
+- `rendered_report` — Pre-formatted markdown/ASCII dashboard. Includes per-band channel-occupancy bars, utilization meters, a per-AP table, and the recommendations list. Designed to render directly even in clients that don't draw charts.
+
+**Typical use:** "Show me 5 GHz / 6 GHz channels at site X", "How is RF doing at site X?", "Channel planning report for site X", "Are any APs on the same channel?" Use this *instead of* picking one vendor's RF tools — even when only one platform's APs are at the site, the cross-platform call is cheap and surfaces both sides cleanly.
 
 ### `manage_wlan_profile`
 
