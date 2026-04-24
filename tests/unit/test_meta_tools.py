@@ -230,3 +230,184 @@ class TestInvokeTool:
         )
         assert result["status"] == "invalid_params"
         assert "bogus" in result["message"]
+
+
+# ---- Fixtures for coercion tests -----------------------------------------
+# Tool functions and their types are defined at module level so
+# ``get_type_hints`` can resolve annotations using this module's globals.
+# Defining them inside test methods puts the types in a nested scope that
+# Pydantic's string-annotation resolver can't see.
+
+from enum import Enum  # noqa: E402
+from typing import Annotated as _Annotated  # noqa: E402
+from uuid import UUID as _UUID  # noqa: E402
+
+from pydantic import Field as _Field  # noqa: E402
+
+
+class _FakeEnumObjectType(Enum):
+    ORG_SITES = "org_sites"
+    SITE_DEVICES = "site_devices"
+
+
+_coerce_received: dict = {}
+
+
+async def _fake_enum_tool(
+    ctx,
+    object_type: _Annotated[_FakeEnumObjectType, _Field(description="what to fetch")],
+) -> dict:
+    # If coercion is missing, ``object_type`` is the raw string
+    # ``'org_sites'`` and ``.value`` access raises AttributeError.
+    _coerce_received["value"] = object_type.value
+    _coerce_received["type"] = type(object_type).__name__
+    return {"ok": True}
+
+
+_fake_enum_tool.__name__ = "apstra_fake_enum_tool"  # type: ignore[attr-defined]
+
+
+async def _fake_uuid_tool(
+    ctx,
+    blueprint_id: _Annotated[_UUID, _Field(description="bp id")],
+) -> dict:
+    _coerce_received["type"] = type(blueprint_id).__name__
+    _coerce_received["value"] = blueprint_id
+    return {"ok": True}
+
+
+_fake_uuid_tool.__name__ = "apstra_fake_uuid_tool"  # type: ignore[attr-defined]
+
+
+async def _fake_required_tool(
+    ctx,
+    required_field: _Annotated[str, _Field(description="required")],
+) -> dict:
+    return {"ok": True}
+
+
+_fake_required_tool.__name__ = "apstra_fake_required_tool"  # type: ignore[attr-defined]
+
+
+async def _fake_optional_tool(
+    ctx,
+    required: _Annotated[str, _Field(description="required")],
+    optional_uuid: _Annotated[_UUID, _Field(default=None, description="optional")],
+) -> dict:
+    return {"optional_is_none": optional_uuid is None}
+
+
+_fake_optional_tool.__name__ = "apstra_fake_optional_tool"  # type: ignore[attr-defined]
+
+
+@pytest.fixture
+def mcp_with_fake_tools():
+    """Install the fake coercion-test tools in the apstra registry."""
+    clear_registry("apstra")
+    _coerce_received.clear()
+
+    REGISTRIES["apstra"]["apstra_fake_enum_tool"] = ToolSpec(
+        name="apstra_fake_enum_tool",
+        func=_fake_enum_tool,
+        platform="apstra",
+        category="testing",
+        description="Test tool with enum param.",
+        tags=set(),
+    )
+    REGISTRIES["apstra"]["apstra_fake_uuid_tool"] = ToolSpec(
+        name="apstra_fake_uuid_tool",
+        func=_fake_uuid_tool,
+        platform="apstra",
+        category="testing",
+        description="Test tool with UUID param.",
+        tags=set(),
+    )
+    REGISTRIES["apstra"]["apstra_fake_required_tool"] = ToolSpec(
+        name="apstra_fake_required_tool",
+        func=_fake_required_tool,
+        platform="apstra",
+        category="testing",
+        description="Test tool with required param.",
+        tags=set(),
+    )
+
+    mcp = FastMCP(name="test-coercion")
+    build_meta_tools("apstra", mcp)
+    return mcp
+
+
+@pytest.mark.unit
+class TestInvokeToolCoercion:
+    """Regression tests for Pydantic-based parameter coercion.
+
+    v2.0.0.1 shipped with the meta-tool dispatching raw string params
+    directly to tool functions — Enum-typed params failed with
+    ``AttributeError: 'str' object has no attribute 'value'`` because
+    FastMCP's normal Pydantic coercion was bypassed. v2.0.0.2 restores
+    coercion inside ``_invoke_tool``.
+    """
+
+    async def test_enum_string_coerces_to_enum_instance(self, mcp_with_fake_tools):
+        tool = await mcp_with_fake_tools.get_tool("apstra_invoke_tool")
+        config = ServerConfig()
+
+        result = await tool.fn(
+            _fake_ctx(config),
+            name="apstra_fake_enum_tool",
+            params={"object_type": "org_sites"},
+        )
+
+        assert result == {"ok": True}
+        assert _coerce_received["type"] == "_FakeEnumObjectType"
+        assert _coerce_received["value"] == "org_sites"
+
+    async def test_uuid_string_coerces_to_uuid_instance(self, mcp_with_fake_tools):
+        tool = await mcp_with_fake_tools.get_tool("apstra_invoke_tool")
+        config = ServerConfig()
+
+        result = await tool.fn(
+            _fake_ctx(config),
+            name="apstra_fake_uuid_tool",
+            params={"blueprint_id": "5f79daeb-8ae8-4b1b-a560-f8cfcbc51e76"},
+        )
+
+        assert result == {"ok": True}
+        assert _coerce_received["type"] == "UUID"
+        assert str(_coerce_received["value"]) == "5f79daeb-8ae8-4b1b-a560-f8cfcbc51e76"
+
+    async def test_missing_required_param_returns_invalid_params(self, mcp_with_fake_tools):
+        tool = await mcp_with_fake_tools.get_tool("apstra_invoke_tool")
+        config = ServerConfig()
+
+        result = await tool.fn(_fake_ctx(config), name="apstra_fake_required_tool", params={})
+
+        assert result["status"] == "invalid_params"
+        assert "required_field" in result["message"]
+
+    async def test_explicit_null_for_optional_param_uses_default(self):
+        """AI clients often pass ``null`` for optional params; should use the default.
+
+        Mist tool signatures commonly use ``Annotated[UUID, Field(default=None)]``
+        without the ``| None`` in the type. Passing ``{"site_id": null}`` should
+        strip the None and let Pydantic apply the default.
+        """
+        clear_registry("apstra")
+        REGISTRIES["apstra"]["apstra_fake_optional_tool"] = ToolSpec(
+            name="apstra_fake_optional_tool",
+            func=_fake_optional_tool,
+            platform="apstra",
+            category="testing",
+            description="Test tool with optional UUID param.",
+            tags=set(),
+        )
+        mcp = FastMCP(name="test-optional")
+        build_meta_tools("apstra", mcp)
+        tool = await mcp.get_tool("apstra_invoke_tool")
+        config = ServerConfig()
+
+        result = await tool.fn(
+            _fake_ctx(config),
+            name="apstra_fake_optional_tool",
+            params={"required": "value", "optional_uuid": None},
+        )
+        assert result == {"optional_is_none": True}

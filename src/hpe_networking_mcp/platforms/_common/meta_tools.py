@@ -14,17 +14,130 @@ exactly; only the invocation surface changes.
 
 from __future__ import annotations
 
-from typing import Any
+import inspect
+from typing import Any, get_args, get_origin, get_type_hints
 
 from fastmcp import Context, FastMCP
 from loguru import logger
 from mcp.types import ToolAnnotations
+from pydantic import ConfigDict, ValidationError, create_model
+from pydantic.fields import FieldInfo
 
 from hpe_networking_mcp.platforms._common.tool_registry import (
     REGISTRIES,
     ToolSpec,
     is_tool_enabled,
 )
+
+# Parameter names we strip from the Pydantic validation model because
+# ``_invoke_tool`` injects them itself.
+_CTX_PARAM_NAMES = frozenset({"ctx", "context"})
+
+
+def _extract_annotated_default(annotation: Any) -> Any:
+    """Return a Pydantic-usable default from ``Annotated[T, Field(default=X)]``.
+
+    Many Mist tool signatures use ``Annotated[UUID, Field(default=None)]``
+    where the function signature itself has no default — the default lives
+    inside the ``Field(...)`` metadata. When ``inspect.Parameter.default``
+    is empty, we look into the ``Annotated`` metadata for a ``FieldInfo``
+    that carries a default and surface it. Returns ``Ellipsis`` (Pydantic's
+    "required" marker) if no default is found.
+    """
+    if get_origin(annotation) is not None and hasattr(annotation, "__metadata__"):
+        for meta in getattr(annotation, "__metadata__", ()):
+            if isinstance(meta, FieldInfo):
+                default = meta.default
+                # ``FieldInfo.default`` uses ``PydanticUndefined`` for
+                # required fields; only surface concrete defaults.
+                if default is not None and str(type(default).__name__) == "PydanticUndefinedType":
+                    continue
+                return default
+    # Also handle the raw generic form ``Annotated[T, ...]`` where
+    # ``__metadata__`` isn't attached directly.
+    args = get_args(annotation)
+    for meta in args[1:] if len(args) > 1 else ():
+        if isinstance(meta, FieldInfo):
+            default = meta.default
+            if default is not None and str(type(default).__name__) == "PydanticUndefinedType":
+                continue
+            return default
+    return ...
+
+
+def _coerce_params(spec: ToolSpec, raw_params: dict[str, Any]) -> dict[str, Any]:
+    """Build a Pydantic model from the tool signature and validate/coerce.
+
+    FastMCP's normal dispatch path (``tools/call`` → ``@mcp.tool`` wrapper)
+    applies Pydantic validation to incoming arguments, converting strings
+    into ``Enum`` instances, ``UUID`` objects, etc. The meta-tool
+    dispatch in ``_invoke_tool`` calls ``spec.func`` directly, bypassing
+    that wrapper — so we have to replicate the coercion step here. Without
+    it, tools doing ``my_enum_param.value`` hit
+    ``AttributeError: 'str' object has no attribute 'value'``.
+
+    Returns a new dict of coerced parameter values. Raises
+    ``ValidationError`` if the params don't match the signature (missing
+    required params, unknown keys, or type-coercion failures).
+    """
+    sig = inspect.signature(spec.func)
+    # ``from __future__ import annotations`` in tool modules leaves
+    # ``inspect.signature()`` annotations as strings. Pydantic can't
+    # evaluate those strings without a matching namespace. Resolve
+    # eagerly with ``get_type_hints`` using the function's own globals
+    # + localns so ``Annotated``, ``UUID``, enums defined beside the
+    # tool, etc. all resolve correctly.
+    try:
+        resolved_hints = get_type_hints(spec.func, include_extras=True)
+    except Exception:
+        resolved_hints = {}
+
+    fields: dict[str, Any] = {}
+    for pname, param in sig.parameters.items():
+        if pname in _CTX_PARAM_NAMES:
+            continue
+        # Skip variadic parameters (``*args`` / ``**kwargs``). Pydantic
+        # can't build a field from them; real tools almost never use this
+        # shape, but ``AsyncMock()`` stubs in tests do — and a runtime
+        # crash there is worse than no coercion.
+        if param.kind in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD):
+            continue
+        annotation = resolved_hints.get(pname, param.annotation)
+        if annotation is inspect.Parameter.empty:
+            annotation = Any
+        if param.default is not inspect.Parameter.empty:
+            fields[pname] = (annotation, param.default)
+        else:
+            # Signature has no default; fall back to any default baked
+            # into the ``Annotated`` FieldInfo. Returns ``...`` (required)
+            # if none is found.
+            fields[pname] = (annotation, _extract_annotated_default(annotation))
+
+    if not fields:
+        # Signature has no validatable params — nothing to coerce. Hand
+        # the raw dict back so ``spec.func(**raw_params)`` still works.
+        return dict(raw_params)
+
+    # AI clients often pass explicit ``null`` for optional params that
+    # should just fall through to the default. Mist tool signatures
+    # commonly use ``Annotated[UUID, Field(default=None)]`` (default=None
+    # without typing the field as Optional), so Pydantic rejects
+    # ``{"site_id": None}``. Strip explicit-None entries so Pydantic
+    # uses the declared default instead. Required params will still be
+    # flagged as missing by the validator below.
+    cleaned = {k: v for k, v in raw_params.items() if v is not None}
+
+    model_cls = create_model(
+        f"{spec.name}__Params",
+        __config__=ConfigDict(arbitrary_types_allowed=True, extra="forbid"),
+        **fields,
+    )
+    validated = model_cls.model_validate(cleaned)
+    # Use attribute access so we get the Pydantic-coerced Python objects
+    # (``Enum`` instances, ``UUID``, etc.) rather than the serialized form
+    # that ``model_dump()`` produces.
+    return {pname: getattr(validated, pname) for pname in fields}
+
 
 _META_ANNOTATIONS_READONLY = ToolAnnotations(
     readOnlyHint=True,
@@ -157,8 +270,13 @@ def build_meta_tools(platform: str, mcp: FastMCP) -> None:
                 ),
             }
 
+        # Use ``_get_tool`` (underscore prefix) instead of ``get_tool``:
+        # the public ``get_tool`` applies the Visibility filter and returns
+        # ``None`` for tools hidden by the dynamic-mode transform, which
+        # includes every tool in the registry. ``_get_tool`` bypasses the
+        # filter so we can actually fetch the schema.
         try:
-            fm_tool = await mcp.get_tool(name)
+            fm_tool = await mcp._get_tool(name)
         except Exception as exc:
             logger.warning(
                 "{}_get_tool_schema: failed to resolve tool {!r} from FastMCP — {}",
@@ -226,13 +344,28 @@ def build_meta_tools(platform: str, mcp: FastMCP) -> None:
             name,
             len(safe_params),
         )
+
+        # Replicate the Pydantic coercion FastMCP would do on a direct
+        # tool call: turn string enum values into ``Enum`` instances,
+        # strings into ``UUID`` objects, etc. Without this, any tool that
+        # does ``enum_param.value`` blows up with ``'str' object has no
+        # attribute 'value'`` because the meta-tool bypasses FastMCP's
+        # normal dispatch wrapper.
         try:
-            return await spec.func(ctx, **safe_params)
+            coerced = _coerce_params(spec, safe_params)
+        except ValidationError as exc:
+            return {
+                "status": "invalid_params",
+                "message": str(exc),
+                "hint": f"Call {platform}_get_tool_schema(name={name!r}) for the exact parameter shape.",
+            }
+
+        try:
+            return await spec.func(ctx, **coerced)
         except TypeError as exc:
-            # Usually "unexpected keyword argument" — the caller sent a
-            # param that the tool doesn't accept. Mirror the shape
-            # Pydantic-validation errors use so clients can handle them
-            # uniformly.
+            # Residual TypeError after validation — typically a signature
+            # issue (missing ctx param on the tool, or a mismatch between
+            # the signature and the registered call shape).
             return {
                 "status": "invalid_params",
                 "message": str(exc),
