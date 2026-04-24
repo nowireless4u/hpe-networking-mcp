@@ -168,6 +168,80 @@ def _tool_summary(spec: ToolSpec, max_len: int = 200) -> str:
     return first_para
 
 
+def _resolve_type_name(pdef: dict[str, Any]) -> str:
+    """Extract a concise type name from a JSON schema property definition.
+
+    Used by ``_param_summary`` to produce a one-word type hint per
+    parameter for the ``list_tools`` output. Output is designed for
+    AI-consumption, not strict correctness — e.g. ``UUID | None`` is
+    shown as ``UUID`` since the null branch is already communicated
+    via the ``?`` suffix in the caller.
+    """
+    # Enum types and nested models are referenced via $ref.
+    if "$ref" in pdef:
+        return pdef["$ref"].rsplit("/", 1)[-1]
+    # Common format hints get short names.
+    fmt = pdef.get("format")
+    if fmt == "uuid":
+        return "UUID"
+    if fmt == "date-time":
+        return "datetime"
+    if fmt:
+        return fmt
+    # Union types: pick the first non-null branch.
+    for key in ("anyOf", "oneOf"):
+        options = pdef.get(key)
+        if isinstance(options, list):
+            for option in options:
+                if isinstance(option, dict) and option.get("type") != "null":
+                    return _resolve_type_name(option)
+            return "any"
+    # Array types: include the item type when it's obvious.
+    if pdef.get("type") == "array":
+        items = pdef.get("items") or {}
+        if isinstance(items, dict) and items:
+            return f"list[{_resolve_type_name(items)}]"
+        return "list"
+    # Fall back to the raw JSON schema type name.
+    return pdef.get("type", "any")
+
+
+def _param_summary(fm_tool: Any) -> dict[str, str]:
+    """Return a compact ``{name: "Type[?]"}`` map for a tool's params.
+
+    Extracted from FastMCP's parsed JSON schema. Included in the
+    ``<platform>_list_tools`` response so AI clients can skip a
+    ``<platform>_get_tool_schema`` round-trip for simple tools where
+    knowing the parameter names and their rough types is enough to
+    compose a valid invoke call. For anything more detailed (full
+    descriptions, enum value lists, nested object shapes), the AI
+    should still call ``get_tool_schema``.
+
+    Convention: ``"?"`` suffix means optional (has a default or is
+    excluded from the schema's ``required`` list). No suffix means
+    required.
+    """
+    if fm_tool is None:
+        return {}
+    schema = getattr(fm_tool, "parameters", None) or getattr(fm_tool, "input_schema", None)
+    if not isinstance(schema, dict):
+        return {}
+    props = schema.get("properties") or {}
+    if not isinstance(props, dict):
+        return {}
+    required_set = set(schema.get("required") or [])
+
+    result: dict[str, str] = {}
+    for pname, pdef in props.items():
+        if not isinstance(pdef, dict):
+            continue
+        type_name = _resolve_type_name(pdef)
+        if pname not in required_set:
+            type_name = f"{type_name}?"
+        result[pname] = type_name
+    return result
+
+
 def build_meta_tools(platform: str, mcp: FastMCP) -> None:
     """Register the three meta-tools for a platform on the FastMCP server.
 
@@ -191,9 +265,13 @@ def build_meta_tools(platform: str, mcp: FastMCP) -> None:
             f"description, and an optional `category` to restrict to one "
             f"module (use this tool with no arguments first to discover "
             f"available categories). Returns an array of "
-            f"{{name, category, summary}} records — call "
-            f"`{platform}_get_tool_schema(name=...)` next to fetch the "
-            f"full parameter schema for any tool you want to invoke."
+            f"`{{name, category, summary, params}}` records. The `params` "
+            f"field is a compact `{{name: 'Type[?]'}}` map — `?` suffix "
+            f"means optional, no suffix means required. For simple tools "
+            f"where the parameter names + types are enough to compose an "
+            f"invoke, you can skip straight to `{platform}_invoke_tool`. "
+            f"For full parameter descriptions, enum value lists, or nested "
+            f"object shapes, call `{platform}_get_tool_schema(name=...)`."
         ),
         annotations=_META_ANNOTATIONS_READONLY,
         tags={f"{platform}_meta"},
@@ -207,7 +285,7 @@ def build_meta_tools(platform: str, mcp: FastMCP) -> None:
         substring = (filter or "").lower().strip()
         category_filter = (category or "").strip() or None
 
-        matches: list[dict[str, str]] = []
+        matches: list[dict[str, Any]] = []
         for name, spec in registry_ref.items():
             if not is_tool_enabled(spec, config):
                 continue
@@ -217,11 +295,15 @@ def build_meta_tools(platform: str, mcp: FastMCP) -> None:
                 haystack = f"{name} {spec.description}".lower()
                 if substring not in haystack:
                     continue
+            # Use the private ``_get_tool`` to bypass the Visibility
+            # filter — hidden tools need their schema inspected here.
+            fm_tool = await mcp._get_tool(name)
             matches.append(
                 {
                     "name": name,
                     "category": spec.category,
                     "summary": _tool_summary(spec),
+                    "params": _param_summary(fm_tool),
                 }
             )
 

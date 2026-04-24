@@ -16,32 +16,41 @@ Only 18 tools are directly visible at session start:
 - **3 cross-platform static tools**: `health`, `site_health_check`, `manage_wlan_profile`
 - **3 meta-tools per platform × 5 platforms** = 15: `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`
 
-Every per-platform tool listed below this section is reachable through the meta-tools. **Use this discovery pattern — all four steps, in this exact order:**
+Every per-platform tool listed below this section is reachable through the meta-tools. **Use this discovery pattern:**
 
 1. **Pick the platform.** Each category heading below names the platform (`mist_*`, `central_*`, etc.).
-2. **Find the tool.** Call `<platform>_list_tools(filter="<keyword>")` (e.g. `central_list_tools(filter="site")`). The result is candidate tool names + one-line descriptions. **It does NOT include parameter schemas** — you still need step 3.
-3. **Read its schema (MANDATORY — do not skip).** Call `<platform>_get_tool_schema(name="<tool_name>")` to retrieve the exact parameter names, types, required/optional markers, and enums. Do this the first time you touch any tool in a session. You can reuse what you learned for subsequent calls to the same tool in the same conversation — no need to re-fetch.
-4. **Invoke it.** Call `<platform>_invoke_tool(name="<tool_name>", params={...})`. `params` is a dict matching the schema from step 3.
+2. **Find the tool.** Call `<platform>_list_tools(filter="<keyword>")` (e.g. `central_list_tools(filter="site")`). The result gives you candidate tool names, one-line summaries, AND a compact `params` map showing each parameter's name + type — e.g. `{"org_id": "UUID", "site_id": "UUID?", "limit": "integer?"}`. A `?` suffix means optional (has a default); no suffix means required. Enum-typed params show the enum class name (e.g. `"Info_type"`).
+3. **Decide whether you need step 3a.** If the tool's `params` map from step 2 is enough to invoke — e.g. you recognize the parameter names, the types are obvious (`UUID`, `string`, `integer`), and none are enum-typed requiring specific values — skip ahead to step 4.
+   - **Step 3a (when needed):** call `<platform>_get_tool_schema(name="<tool_name>")` to retrieve parameter descriptions, valid enum values, nested object shapes. Required when you see an enum type (e.g. `"Action_type"`) and don't yet know its valid values, when you need field descriptions to understand semantics, or when a payload/body param needs a nested schema.
+4. **Invoke it.** Call `<platform>_invoke_tool(name="<tool_name>", params={...})`. Match the schema from step 2 (or 3a).
 
-**✅ Correct sequence:**
+**✅ Simple-tool path (2 round-trips):**
 ```
-central_list_tools(filter="wlan")
-→ [{"name":"central_get_wlans",...}, {"name":"central_manage_wlan_profile",...}, ...]
-central_get_tool_schema(name="central_get_wlans")
-→ {"name":"central_get_wlans","input_schema":{"properties":{"site_id":{"type":"string","format":"uuid"}},"required":["site_id"],...}}
-central_invoke_tool(name="central_get_wlans", params={"site_id":"..."})
+central_list_tools(filter="sites")
+→ [{"name":"central_get_site_health","params":{"site_name":"string","platform":"string?",...}}, ...]
+central_invoke_tool(name="central_get_site_health", params={"site_name":"HOME"})
 → <tool result>
 ```
 
-**❌ Anti-pattern — skipping step 3 costs TWO round-trips instead of one:**
+**✅ Full-schema path (3 round-trips, required when enum values matter):**
 ```
-central_invoke_tool(name="central_get_wlans", params={})      # ❌ guessed — missing required 'site_id'
-→ {"status":"invalid_params", ...}                            # ❌ failed
-central_get_tool_schema(name="central_get_wlans")             # now forced to read schema anyway
-central_invoke_tool(name="central_get_wlans", params={...})   # retry
+mist_list_tools(filter="self")
+→ [{"name":"mist_get_self","params":{"action_type":"Action_type"}}, ...]
+mist_get_tool_schema(name="mist_get_self")
+→ {..., "input_schema":{"$defs":{"Action_type":{"enum":["account_info","api_usage","login_failures"],...}},...}}
+mist_invoke_tool(name="mist_get_self", params={"action_type":"account_info"})
+→ <tool result>
 ```
 
-When the AI skips step 3, the server's Pydantic validator rejects the call with a clear error, but the AI still has to re-read the schema and retry. **Always run step 3 first.**
+**❌ Anti-pattern — guessing without seeing `list_tools` params costs TWO round-trips minimum:**
+```
+mist_invoke_tool(name="mist_get_self", params={})                 # ❌ guessed — missing required 'action_type'
+→ {"status":"invalid_params", ...}                                # ❌ failed
+mist_get_tool_schema(name="mist_get_self")                        # forced to read schema
+mist_invoke_tool(name="mist_get_self", params={"action_type":"account_info"})  # retry
+```
+
+The server's Pydantic validator rejects `invalid_params` responses with actionable detail, but the AI still has to re-read the schema and retry. **Always check `list_tools` params first, use `get_tool_schema` only when that isn't enough.**
 
 Use the cross-platform tools directly when they apply — they replace several per-platform calls:
 - `health(platform=...)` — platform reachability / status
@@ -55,8 +64,8 @@ If `MCP_TOOL_MODE=static` is set, every per-platform tool is visible up front wi
 2. **Only send parameters that are needed.** Do not pass empty, null, or irrelevant parameters.
 3. **Only answer based on data returned by tools.** Never infer, estimate, or fabricate network state.
 4. If a tool returns no data or an error, say so explicitly. Do not guess.
-5. **MANDATORY: always call `<platform>_get_tool_schema(name=...)` before the first `<platform>_invoke_tool` call for any tool in this session.** Never invoke a tool with guessed params or with `params={}` — the `invalid_params` response forces a schema fetch + retry anyway (two wasted round-trips instead of one). You do NOT need to re-read a schema you've already fetched in the same conversation; cache it mentally. But never skip the first read.
-6. **`<platform>_list_tools` returns names + summaries, not parameter schemas.** Do not attempt to invoke based on the tool name alone — always go through `<platform>_get_tool_schema` in between.
+5. **MANDATORY: use the information you already have from `<platform>_list_tools` before invoking.** Every tool entry from `list_tools` includes a `params` map showing parameter names + types (and `?` suffix for optional) — always check it before calling `invoke_tool`. Never invoke with `params={}` or guessed names when the `list_tools` output already told you what's required.
+6. **Call `<platform>_get_tool_schema(name=...)` when the `list_tools` params map isn't sufficient.** Specifically: when a param's type is an enum class name (e.g. `"Action_type"`) and you don't yet know its valid values, when you need field descriptions to understand parameter semantics, or when a `dict`/`payload` param needs a nested schema. You do NOT need to re-read a schema you've already fetched in the same conversation; cache it mentally.
 
 ---
 

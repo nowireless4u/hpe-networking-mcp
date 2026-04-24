@@ -10,6 +10,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from fastmcp import Context as FastMCPContext
 from fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 
@@ -143,6 +144,33 @@ class TestListTools:
         result = await tool.fn(_fake_ctx(config))
         assert sorted(result["categories"]) == ["blueprints", "manage_networks"]
 
+    async def test_entries_include_params_summary(self, mcp_with_fake_tools):
+        """Regression for #185: list_tools entries should include a compact
+        ``params`` map so AI clients can skip get_tool_schema for simple tools.
+
+        Uses the fake coercion fixture because ``stub_apstra_registry`` uses
+        ``AsyncMock`` functions whose signatures are just ``*args, **kwargs``
+        — FastMCP can't derive a parameter schema from those.
+        """
+        tool = await mcp_with_fake_tools.get_tool("apstra_list_tools")
+        config = ServerConfig()
+
+        result = await tool.fn(_fake_ctx(config))
+        by_name = {entry["name"]: entry for entry in result["tools"]}
+
+        # Enum-typed tool: "?" suffix absent on the required enum param.
+        enum_entry = by_name["apstra_fake_enum_tool"]
+        assert "params" in enum_entry
+        assert enum_entry["params"] == {"object_type": "_FakeEnumObjectType"}
+
+        # UUID-typed tool: format=uuid should surface as "UUID".
+        uuid_entry = by_name["apstra_fake_uuid_tool"]
+        assert uuid_entry["params"] == {"blueprint_id": "UUID"}
+
+        # Required-only string param: no "?" suffix.
+        required_entry = by_name["apstra_fake_required_tool"]
+        assert required_entry["params"] == {"required_field": "string"}
+
 
 @pytest.mark.unit
 class TestGetToolSchema:
@@ -254,7 +282,7 @@ _coerce_received: dict = {}
 
 
 async def _fake_enum_tool(
-    ctx,
+    ctx: FastMCPContext,
     object_type: _Annotated[_FakeEnumObjectType, _Field(description="what to fetch")],
 ) -> dict:
     # If coercion is missing, ``object_type`` is the raw string
@@ -268,7 +296,7 @@ _fake_enum_tool.__name__ = "apstra_fake_enum_tool"  # type: ignore[attr-defined]
 
 
 async def _fake_uuid_tool(
-    ctx,
+    ctx: FastMCPContext,
     blueprint_id: _Annotated[_UUID, _Field(description="bp id")],
 ) -> dict:
     _coerce_received["type"] = type(blueprint_id).__name__
@@ -280,7 +308,7 @@ _fake_uuid_tool.__name__ = "apstra_fake_uuid_tool"  # type: ignore[attr-defined]
 
 
 async def _fake_required_tool(
-    ctx,
+    ctx: FastMCPContext,
     required_field: _Annotated[str, _Field(description="required")],
 ) -> dict:
     return {"ok": True}
@@ -290,7 +318,7 @@ _fake_required_tool.__name__ = "apstra_fake_required_tool"  # type: ignore[attr-
 
 
 async def _fake_optional_tool(
-    ctx,
+    ctx: FastMCPContext,
     required: _Annotated[str, _Field(description="required")],
     optional_uuid: _Annotated[_UUID, _Field(default=None, description="optional")],
 ) -> dict:
@@ -302,36 +330,36 @@ _fake_optional_tool.__name__ = "apstra_fake_optional_tool"  # type: ignore[attr-
 
 @pytest.fixture
 def mcp_with_fake_tools():
-    """Install the fake coercion-test tools in the apstra registry."""
+    """Install the fake coercion-test tools in the apstra registry.
+
+    Also registers them with FastMCP directly so ``mcp._get_tool(name)``
+    returns a real Tool object with a parsed schema — required by the
+    list_tools param-summary extraction path.
+    """
     clear_registry("apstra")
     _coerce_received.clear()
 
-    REGISTRIES["apstra"]["apstra_fake_enum_tool"] = ToolSpec(
-        name="apstra_fake_enum_tool",
-        func=_fake_enum_tool,
-        platform="apstra",
-        category="testing",
-        description="Test tool with enum param.",
-        tags=set(),
-    )
-    REGISTRIES["apstra"]["apstra_fake_uuid_tool"] = ToolSpec(
-        name="apstra_fake_uuid_tool",
-        func=_fake_uuid_tool,
-        platform="apstra",
-        category="testing",
-        description="Test tool with UUID param.",
-        tags=set(),
-    )
-    REGISTRIES["apstra"]["apstra_fake_required_tool"] = ToolSpec(
-        name="apstra_fake_required_tool",
-        func=_fake_required_tool,
-        platform="apstra",
-        category="testing",
-        description="Test tool with required param.",
-        tags=set(),
-    )
+    fake_tools = [
+        ("apstra_fake_enum_tool", _fake_enum_tool, "Test tool with enum param."),
+        ("apstra_fake_uuid_tool", _fake_uuid_tool, "Test tool with UUID param."),
+        ("apstra_fake_required_tool", _fake_required_tool, "Test tool with required param."),
+    ]
 
     mcp = FastMCP(name="test-coercion")
+
+    for name, func, description in fake_tools:
+        REGISTRIES["apstra"][name] = ToolSpec(
+            name=name,
+            func=func,
+            platform="apstra",
+            category="testing",
+            description=description,
+            tags=set(),
+        )
+        # Register with FastMCP so the meta-tool's _get_tool lookup
+        # returns a real Tool object with parsed parameters.
+        mcp.tool(name=name, description=description)(func)
+
     build_meta_tools("apstra", mcp)
     return mcp
 
