@@ -50,9 +50,9 @@ Managing HPE networking infrastructure with AI assistants today means juggling m
 | **Dynamic Tool Discovery** | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Underlying tools (static mode)** | **35 + 2 prompts** | **73 + 12 prompts** | **10** | **126** | **19** |
 | **Exposed meta-tools (dynamic mode, default)** | **3** | **3** | **3** | **3** | **3** |
-| **Cross-Platform** | **2 tools + 3 prompts** | **2 tools + 3 prompts** | — | **1 tool** | — |
+| **Cross-Platform** | **3 tools + 3 prompts** | **3 tools + 3 prompts** | — | **1 tool** | — |
 
-> **Default tool surface**: v2.0+ ships with `MCP_TOOL_MODE=dynamic` by default. Each platform exposes three meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`), plus three cross-platform static tools (`health`, `site_health_check`, `manage_wlan_profile`). **18 tools total, ~2,900 tokens** — down from 261 tools / ~64,000 tokens in v1.x. Set `MCP_TOOL_MODE=static` to restore the full per-tool surface (every underlying tool is still here; it just defaults to hidden behind the meta-tools). See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md).
+> **Default tool surface**: v2.0+ ships with `MCP_TOOL_MODE=dynamic` by default. Each platform exposes three meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`), plus four cross-platform static tools (`health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`). **19 tools total, ~3,100 tokens** — down from 261 tools / ~64,000 tokens in v1.x. Set `MCP_TOOL_MODE=static` to restore the full per-tool surface (every underlying tool is still here; it just defaults to hidden behind the meta-tools). See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md).
 
 ### Aruba Central Guided Prompts
 
@@ -76,6 +76,7 @@ The Central module includes 12 guided prompts — multi-step workflow templates 
 Tools that span multiple platforms and return pre-aggregated results — each one replaces several individual tool calls, so the AI gets a compact answer instead of paging through raw responses.
 
 - **Site Health Check** (`site_health_check`) — One call returns a unified health report for a site across every enabled platform: Mist site stats and alarms, Central site health and active alerts, and (when ClearPass is configured) session and auth-failure counts for the site's network access devices. Replaces ~8–12 separate tool calls with a compact report including overall status, top alerts, and concrete next-step recommendations. Registered when at least Mist or Central is enabled; ClearPass is additive.
+- **Site RF Check** (`site_rf_check`) — One call returns per-AP, per-band radio state from Mist AND Central in parallel: current channel, bandwidth, TX power, channel utilization, and noise floor for every AP at a site. Aggregates the channel distribution per band (2.4 / 5 / 6 GHz), flags co-channel clusters and high utilization, and ships a pre-rendered ASCII RF dashboard so even clients that don't draw charts get a visual report. When `site_name` is omitted the tool returns a list of selectable sites with AP counts per platform — pick one and call back. Registered when at least Mist or Central is enabled.
 - **Manage WLAN Profile** (`manage_wlan_profile`) — The primary entry point for all WLAN operations. Automatically checks both Mist and Central for the SSID and returns the correct sync workflow. Detects cross-platform scenarios without relying on the AI to follow instructions. Requires both Mist and Central.
 
 #### Cross-Platform WLAN Sync Prompts
@@ -172,7 +173,7 @@ docker compose up -d
 docker compose logs
 ```
 
-Look for lines like `Mist: 35 tools registered`, `ClearPass: 126 tools registered`, `Tool mode: dynamic`, and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. In the default dynamic mode, only 18 tools are exposed to the AI — the underlying platform tools are discoverable via each platform's `list_tools` / `get_tool_schema` / `invoke_tool` meta-tools. Mist also registers 2 guided prompts for site provisioning workflows.
+Look for lines like `Mist: 35 tools registered`, `ClearPass: 126 tools registered`, `Tool mode: dynamic`, and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. In the default dynamic mode, only 19 tools are exposed to the AI — the underlying platform tools are discoverable via each platform's `list_tools` / `get_tool_schema` / `invoke_tool` meta-tools. Mist also registers 2 guided prompts for site provisioning workflows.
 
 ### Docker Image
 
