@@ -95,9 +95,7 @@ async def get_site_rrm_info(
     band: Annotated[
         Band,
         Field(
-            description=(
-                "802.11 band. Required when rrm_info_type is current_rrm_considerations or current_rrm_neighbors"
-            ),
+            description=("802.11 band. Required for current_rrm_considerations, current_rrm_neighbors, and events"),
             default=None,
         ),
     ],
@@ -183,6 +181,14 @@ async def get_site_rrm_info(
                 {
                     "status_code": 400,
                     "message": ('`band` parameter is required when `rrm_info_type` is "current_rrm_neighbors".'),
+                }
+            )
+
+        if object_type.value == "events" and not band:
+            raise ToolError(
+                {
+                    "status_code": 400,
+                    "message": ('`band` parameter is required when `rrm_info_type` is "events".'),
                 }
             )
 

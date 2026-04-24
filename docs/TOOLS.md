@@ -374,7 +374,7 @@ Always registered regardless of `MCP_TOOL_MODE`:
 | site_id | UUID | Yes | Site ID. |
 | rrm_info_type | str | Yes | `current_channel_planning`, `current_rrm_considerations`, `current_rrm_neighbors`, or `events`. |
 | device_id | UUID | No | AP device ID. Required for `current_rrm_considerations`. |
-| band | str | No | `24`, `5`, or `6`. Required for considerations and neighbors. |
+| band | str | No | `24`, `5`, or `6`. Required for considerations, neighbors, and events. |
 | start | int | No | Start of time range (epoch seconds). Events only. |
 | end | int | No | End of time range (epoch seconds). Events only. |
 | duration | str | No | Duration shorthand. Events only. |
