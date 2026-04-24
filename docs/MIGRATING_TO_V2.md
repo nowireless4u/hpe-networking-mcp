@@ -10,7 +10,9 @@ Set `MCP_TOOL_MODE=static` in `docker-compose.yml` to restore v1.x behavior.
 
 ## Why this changed
 
-The v1.x static surface was ~64,000 tokens of tool schema. A 32K-context local model couldn't even load the tools array, let alone have room for conversation and results. In dynamic mode the exposed surface is **~2,900 tokens** — a 95.5% reduction. See `hpe-networking-mcp-scratch/V2_VALIDATION_REPORT.md` (private) for the measurement methodology.
+The v1.x static surface was ~64,000 tokens of tool schema. A 32K-context local model couldn't even load the tools array, let alone have room for conversation and results. In dynamic mode the exposed surface is **~2,900 tokens** — a 95.5% reduction.
+
+**How it was measured.** Counted against `cl100k_base` (OpenAI's tokenizer; closest approximation to what a chat model sees when the tools array is passed in the system prompt), summing the JSON-serialized `{name, description, input_schema}` for every tool returned by `list_tools()`. Both modes measured with all 5 platforms registered using dummy secret values — enough to populate the tool registry without needing live vendor creds. Reproduce by setting `MCP_TOOL_MODE=static` or `MCP_TOOL_MODE=dynamic` in `docker-compose.yml` and running `list_tools()` against a tokenizer of your choice.
 
 ## What you see in v2.0 dynamic mode (the default)
 
