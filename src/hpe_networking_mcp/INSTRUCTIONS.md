@@ -16,22 +16,32 @@ Only 18 tools are directly visible at session start:
 - **3 cross-platform static tools**: `health`, `site_health_check`, `manage_wlan_profile`
 - **3 meta-tools per platform × 5 platforms** = 15: `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`
 
-Every per-platform tool listed below this section is reachable through the meta-tools. Use this discovery pattern:
+Every per-platform tool listed below this section is reachable through the meta-tools. **Use this discovery pattern — all four steps, in this exact order:**
 
 1. **Pick the platform.** Each category heading below names the platform (`mist_*`, `central_*`, etc.).
-2. **Find the tool.** Call `<platform>_list_tools(filter="<keyword>")` (e.g. `central_list_tools(filter="site")`). The result is a list of candidate tool names with one-line descriptions.
-3. **Read its schema.** Call `<platform>_get_tool_schema(name="<tool_name>")` to retrieve the exact parameter names, types, and descriptions. Do this once per novel tool — don't guess the schema from the name.
-4. **Invoke it.** Call `<platform>_invoke_tool(name="<tool_name>", arguments={...})`. `arguments` is a dict matching the schema from step 3.
+2. **Find the tool.** Call `<platform>_list_tools(filter="<keyword>")` (e.g. `central_list_tools(filter="site")`). The result is candidate tool names + one-line descriptions. **It does NOT include parameter schemas** — you still need step 3.
+3. **Read its schema (MANDATORY — do not skip).** Call `<platform>_get_tool_schema(name="<tool_name>")` to retrieve the exact parameter names, types, required/optional markers, and enums. Do this the first time you touch any tool in a session. You can reuse what you learned for subsequent calls to the same tool in the same conversation — no need to re-fetch.
+4. **Invoke it.** Call `<platform>_invoke_tool(name="<tool_name>", params={...})`. `params` is a dict matching the schema from step 3.
 
-Examples:
+**✅ Correct sequence:**
 ```
 central_list_tools(filter="wlan")
 → [{"name":"central_get_wlans",...}, {"name":"central_manage_wlan_profile",...}, ...]
 central_get_tool_schema(name="central_get_wlans")
-→ {"name":"central_get_wlans","description":"...","parameters":{...}}
-central_invoke_tool(name="central_get_wlans", arguments={"site_id":"..."})
+→ {"name":"central_get_wlans","input_schema":{"properties":{"site_id":{"type":"string","format":"uuid"}},"required":["site_id"],...}}
+central_invoke_tool(name="central_get_wlans", params={"site_id":"..."})
 → <tool result>
 ```
+
+**❌ Anti-pattern — skipping step 3 costs TWO round-trips instead of one:**
+```
+central_invoke_tool(name="central_get_wlans", params={})      # ❌ guessed — missing required 'site_id'
+→ {"status":"invalid_params", ...}                            # ❌ failed
+central_get_tool_schema(name="central_get_wlans")             # now forced to read schema anyway
+central_invoke_tool(name="central_get_wlans", params={...})   # retry
+```
+
+When the AI skips step 3, the server's Pydantic validator rejects the call with a clear error, but the AI still has to re-read the schema and retry. **Always run step 3 first.**
 
 Use the cross-platform tools directly when they apply — they replace several per-platform calls:
 - `health(platform=...)` — platform reachability / status
@@ -45,7 +55,8 @@ If `MCP_TOOL_MODE=static` is set, every per-platform tool is visible up front wi
 2. **Only send parameters that are needed.** Do not pass empty, null, or irrelevant parameters.
 3. **Only answer based on data returned by tools.** Never infer, estimate, or fabricate network state.
 4. If a tool returns no data or an error, say so explicitly. Do not guess.
-5. **Read the schema before invoking an unfamiliar tool.** Calling `<platform>_invoke_tool` with guessed parameter names wastes round-trips. Always resolve via `<platform>_get_tool_schema` first when in doubt.
+5. **MANDATORY: always call `<platform>_get_tool_schema(name=...)` before the first `<platform>_invoke_tool` call for any tool in this session.** Never invoke a tool with guessed params or with `params={}` — the `invalid_params` response forces a schema fetch + retry anyway (two wasted round-trips instead of one). You do NOT need to re-read a schema you've already fetched in the same conversation; cache it mentally. But never skip the first read.
+6. **`<platform>_list_tools` returns names + summaries, not parameter schemas.** Do not attempt to invoke based on the tool name alone — always go through `<platform>_get_tool_schema` in between.
 
 ---
 
