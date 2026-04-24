@@ -15,6 +15,7 @@ from typing import Annotated
 from uuid import UUID
 
 import mistapi
+from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
@@ -70,6 +71,7 @@ class Event_source(Enum):
     },
 )
 async def search_events(
+    ctx: Context,
     event_source: Annotated[
         Event_source,
         Field(
@@ -164,7 +166,7 @@ async def search_events(
         limit,
     )
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         object_type = event_source

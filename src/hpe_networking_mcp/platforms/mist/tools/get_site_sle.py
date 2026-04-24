@@ -15,6 +15,7 @@ from typing import Annotated
 from uuid import UUID
 
 import mistapi
+from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
@@ -73,6 +74,7 @@ class Object_type(Enum):
     },
 )
 async def get_site_sle(
+    ctx: Context,
     site_id: Annotated[UUID, Field(description="Site ID")],
     scope: Annotated[
         Scope,
@@ -145,7 +147,7 @@ async def get_site_sle(
         duration,
     )
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         if object_type.value == "classifier_summary_trend" and not classifier:

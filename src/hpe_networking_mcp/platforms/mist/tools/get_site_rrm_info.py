@@ -15,6 +15,7 @@ from typing import Annotated
 from uuid import UUID
 
 import mistapi
+from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
@@ -62,6 +63,7 @@ class Band(Enum):
     },
 )
 async def get_site_rrm_info(
+    ctx: Context,
     site_id: Annotated[UUID, Field(description="Site ID")],
     rrm_info_type: Annotated[
         Rrm_info_type,
@@ -153,7 +155,7 @@ async def get_site_rrm_info(
         page,
     )
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         object_type = rrm_info_type

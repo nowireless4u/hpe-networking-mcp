@@ -15,6 +15,7 @@ from typing import Annotated
 from uuid import UUID
 
 import mistapi
+from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
@@ -47,6 +48,7 @@ class Response_type(Enum):
     },
 )
 async def get_org_licenses(
+    ctx: Context,
     org_id: Annotated[UUID, Field(description="Organization ID")],
     response_type: Annotated[
         Response_type,
@@ -73,7 +75,7 @@ async def get_org_licenses(
         response_type,
     )
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         object_type = response_type

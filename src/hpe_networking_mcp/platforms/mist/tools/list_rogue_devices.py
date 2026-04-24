@@ -15,6 +15,7 @@ from typing import Annotated
 from uuid import UUID
 
 import mistapi
+from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
@@ -57,6 +58,7 @@ class Rogue_ap_type(Enum):
     },
 )
 async def list_rogue_devices(
+    ctx: Context,
     site_id: Annotated[UUID, Field(description="Site ID")],
     rogue_type: Annotated[
         Rogue_type,
@@ -104,7 +106,7 @@ async def list_rogue_devices(
         limit,
     )
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         object_type = rogue_type

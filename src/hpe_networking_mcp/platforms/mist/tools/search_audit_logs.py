@@ -15,6 +15,7 @@ from typing import Annotated
 from uuid import UUID
 
 import mistapi
+from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
@@ -46,6 +47,7 @@ class Scope(Enum):
     },
 )
 async def search_audit_logs(
+    ctx: Context,
     scope: Annotated[
         Scope,
         Field(
@@ -103,7 +105,7 @@ async def search_audit_logs(
         limit,
     )
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         object_type = scope

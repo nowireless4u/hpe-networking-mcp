@@ -4,6 +4,7 @@ from typing import Annotated
 from uuid import UUID
 
 import mistapi
+from fastmcp import Context
 from loguru import logger
 from pydantic import Field
 
@@ -32,6 +33,7 @@ from hpe_networking_mcp.platforms.mist.client import (
     },
 )
 async def get_gateway_details(
+    ctx: Context,
     site_id: Annotated[UUID, Field(description="Site ID")],
     device_id: Annotated[
         UUID,
@@ -49,7 +51,7 @@ async def get_gateway_details(
         device_id,
     )
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         response = mistapi.api.v1.sites.devices.getSiteDevice(

@@ -15,6 +15,7 @@ from typing import Annotated
 from uuid import UUID
 
 import mistapi
+from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
@@ -72,6 +73,7 @@ class Channel(Enum):
     },
 )
 async def list_upgrades(
+    ctx: Context,
     org_id: Annotated[UUID, Field(description="Organization ID")],
     device_type: Annotated[
         Device_type,
@@ -161,7 +163,7 @@ async def list_upgrades(
         mac,
     )
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         object_type = device_type

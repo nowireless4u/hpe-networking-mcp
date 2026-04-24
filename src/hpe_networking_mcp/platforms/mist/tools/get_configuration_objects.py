@@ -15,6 +15,7 @@ from typing import Annotated, Any
 from uuid import UUID
 
 import mistapi
+from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
 from mistapi.__api_response import APIResponse as _APIResponse
@@ -144,6 +145,7 @@ def _name_id_list(data: list) -> list:
     },
 )
 async def get_configuration_objects(
+    ctx: Context,
     org_id: Annotated[UUID, Field(description="Organization ID")],
     object_type: Annotated[
         Object_type,
@@ -230,8 +232,8 @@ async def get_configuration_objects(
         limit,
     )
 
-    validate_org_id(str(org_id))
-    apisession, response_format = await get_apisession()
+    validate_org_id(ctx, str(org_id))
+    apisession, response_format = await get_apisession(ctx)
 
     response = None
     try:

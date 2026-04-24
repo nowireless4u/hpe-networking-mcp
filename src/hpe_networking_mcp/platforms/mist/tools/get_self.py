@@ -14,6 +14,7 @@ from enum import Enum
 from typing import Annotated
 
 import mistapi
+from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
@@ -64,6 +65,7 @@ class Action_type(Enum):
     },
 )
 async def get_self(
+    ctx: Context,
     action_type: Annotated[
         Action_type,
         Field(
@@ -81,7 +83,7 @@ async def get_self(
     logger.debug("Tool get_self called")
     logger.debug("Input Parameters: action_type: %s", action_type)
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         object_type = action_type

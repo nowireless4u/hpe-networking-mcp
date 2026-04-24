@@ -1,11 +1,20 @@
-"""Mist API client — session management, response processing, and formatting."""
+"""Mist API client — session management, response processing, and formatting.
+
+Every public helper takes ``ctx: Context`` explicitly. This matches the
+pattern used by every other platform (Central, ClearPass, GreenLake,
+Apstra) and is a hard prerequisite for dynamic-mode ``mist_invoke_tool``
+dispatch, which passes ``ctx`` positionally to the tool function.
+v2.0.0.0 shipped with Mist tools inheriting the upstream mistmcp style
+that relied on ``get_context()`` internally, which broke meta-tool
+invocation in v2.0 dynamic mode (see CHANGELOG 2.0.0.1).
+"""
 
 import contextlib
 import json
 
 import mistapi
+from fastmcp import Context
 from fastmcp.exceptions import ToolError
-from fastmcp.server.dependencies import get_context
 from loguru import logger
 from mistapi.__api_response import APIResponse
 
@@ -20,13 +29,15 @@ STATUS_MESSAGES = {
 }
 
 
-async def get_apisession() -> tuple[mistapi.APISession, str]:
+async def get_apisession(ctx: Context) -> tuple[mistapi.APISession, str]:
     """Get the Mist API session from the lifespan context.
+
+    Args:
+        ctx: FastMCP tool-invocation context.
 
     Returns:
         Tuple of (APISession, response_format)
     """
-    ctx = get_context()
     session = ctx.lifespan_context.get("mist_session")
     if session is None:
         raise ToolError(
@@ -43,7 +54,7 @@ async def get_apisession() -> tuple[mistapi.APISession, str]:
     return session, "json"
 
 
-def validate_org_id(org_id: str) -> str:
+def validate_org_id(ctx: Context, org_id: str) -> str:
     """Validate an org_id against the token's actual org_id.
 
     If the org_id doesn't match the token's org, raises a ToolError
@@ -51,12 +62,12 @@ def validate_org_id(org_id: str) -> str:
     extra API call.
 
     Args:
+        ctx: FastMCP tool-invocation context.
         org_id: The org_id provided by the AI.
 
     Returns:
         The validated org_id (may be corrected).
     """
-    ctx = get_context()
     correct_org_id = ctx.lifespan_context.get("mist_org_id")
     if correct_org_id and str(org_id) != str(correct_org_id):
         raise ToolError(
@@ -68,7 +79,13 @@ def validate_org_id(org_id: str) -> str:
 
 
 async def process_response(response: APIResponse) -> None:
-    """Validate an API response and raise ToolError on failure."""
+    """Validate an API response and raise ToolError on failure.
+
+    Does not take ``ctx`` — the helper doesn't need lifespan-context
+    state. Errors are surfaced to the AI via the raised ``ToolError``'s
+    message; a loguru ``logger.error`` call writes the same detail to
+    the server's stderr log for operator visibility.
+    """
     if response.status_code is None:
         raise ToolError(
             {
@@ -78,9 +95,8 @@ async def process_response(response: APIResponse) -> None:
         )
     if response.status_code == 200:
         return
-    ctx = get_context()
     if response.status_code == 403:
-        await ctx.error(f"Got HTTP{response.status_code} with details {response.data}")
+        logger.error("Mist API HTTP {} — {}", response.status_code, response.data)
         raise ToolError(
             {
                 "status_code": 403,
@@ -94,17 +110,21 @@ async def process_response(response: APIResponse) -> None:
         )
     api_error: dict = {"status_code": response.status_code, "message": ""}
     if response.data:
-        await ctx.error(f"Got HTTP{response.status_code} with details {response.data}")
+        logger.error("Mist API HTTP {} — {}", response.status_code, response.data)
         api_error["message"] = json.dumps(response.data)
     else:
         message = STATUS_MESSAGES.get(response.status_code or 0, "Unknown error")
-        await ctx.error(f"Got HTTP{response.status_code}")
+        logger.error("Mist API HTTP {}", response.status_code)
         api_error["message"] = json.dumps(message)
     raise ToolError(api_error)
 
 
 async def handle_network_error(exc: Exception) -> None:
-    """Convert network-level exceptions to clean ToolError messages."""
+    """Convert network-level exceptions to clean ToolError messages.
+
+    Does not take ``ctx`` — no lifespan-context state needed. The
+    exception type and message are embedded in the raised ``ToolError``.
+    """
     raise ToolError(
         {
             "status_code": 503,

@@ -15,6 +15,7 @@ from typing import Annotated
 from uuid import UUID
 
 import mistapi
+from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
@@ -50,6 +51,7 @@ class Object_type(Enum):
     },
 )
 async def get_insight_metrics(
+    ctx: Context,
     site_id: Annotated[UUID, Field(description="Site ID")],
     object_type: Annotated[
         Object_type,
@@ -148,7 +150,7 @@ async def get_insight_metrics(
         limit,
     )
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         match object_type.value:

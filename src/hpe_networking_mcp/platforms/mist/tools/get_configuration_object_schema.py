@@ -13,6 +13,7 @@
 from enum import Enum
 from typing import Annotated, Any
 
+from fastmcp import Context
 from loguru import logger
 from pydantic import Field
 
@@ -99,6 +100,7 @@ def _compact_schema(schema: dict) -> dict:
     },
 )
 async def get_configuration_object_schema(
+    ctx: Context,
     schema_name: Annotated[
         SchemaName,
         Field(description=("Name of the configuration object schema to retrieve.")),
@@ -125,7 +127,7 @@ async def get_configuration_object_schema(
         verbose,
     )
 
-    _, response_format = await get_apisession()
+    _, response_format = await get_apisession(ctx)
 
     entry = _SCHEMAS_DATA.get(schema_name.value)
     if entry is None:

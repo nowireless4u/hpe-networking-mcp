@@ -14,6 +14,7 @@ from enum import Enum
 from typing import Annotated
 
 import mistapi
+from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
@@ -60,6 +61,7 @@ class Object_type(Enum):
     },
 )
 async def get_constants(
+    ctx: Context,
     object_type: Annotated[
         Object_type,
         Field(
@@ -79,7 +81,7 @@ async def get_constants(
     logger.debug("Tool get_constants called")
     logger.debug("Input Parameters: object_type: %s", object_type)
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         match object_type.value:

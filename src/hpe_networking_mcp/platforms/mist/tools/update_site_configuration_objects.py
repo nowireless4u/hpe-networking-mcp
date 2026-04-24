@@ -74,6 +74,7 @@ class Object_type(Enum):
     },
 )
 async def update_site_configuration_objects(
+    ctx: Context,
     site_id: Annotated[UUID, Field(description="Site ID")],
     object_type: Annotated[
         Object_type,
@@ -108,7 +109,6 @@ async def update_site_configuration_objects(
             default=None,
         ),
     ],
-    ctx: Context,
     confirmed: Annotated[
         bool,
         Field(
@@ -128,7 +128,7 @@ async def update_site_configuration_objects(
         object_id,
     )
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     action_wording = "create a new"
     if object_id:

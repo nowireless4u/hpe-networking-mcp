@@ -4,6 +4,7 @@ from typing import Annotated
 from uuid import UUID
 
 import mistapi
+from fastmcp import Context
 from loguru import logger
 from pydantic import Field
 
@@ -33,6 +34,7 @@ from hpe_networking_mcp.platforms.mist.client import (
     },
 )
 async def get_site_health(
+    ctx: Context,
     org_id: Annotated[UUID, Field(description="Organization ID")],
 ) -> dict | list | str:
     """Get health overview across all sites in the organization."""
@@ -40,7 +42,7 @@ async def get_site_health(
     logger.debug("Tool get_site_health called")
     logger.debug("Input Parameters: org_id: %s", org_id)
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         response = mistapi.api.v1.orgs.stats.getOrgStats(apisession, org_id=str(org_id))

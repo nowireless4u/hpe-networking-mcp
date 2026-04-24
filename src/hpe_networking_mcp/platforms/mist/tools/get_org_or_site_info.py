@@ -15,6 +15,7 @@ from typing import Annotated
 from uuid import UUID
 
 import mistapi
+from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
@@ -46,6 +47,7 @@ class Info_type(Enum):
     },
 )
 async def get_org_or_site_info(
+    ctx: Context,
     info_type: Annotated[
         Info_type,
         Field(description=("Type of information to search for. Possible values are `org` and `site`")),
@@ -63,7 +65,7 @@ async def get_org_or_site_info(
         site_id,
     )
 
-    apisession, response_format = await get_apisession()
+    apisession, response_format = await get_apisession(ctx)
 
     try:
         object_type = info_type
