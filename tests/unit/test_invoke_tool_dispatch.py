@@ -49,9 +49,7 @@ def _populate_all_registries() -> None:
 
         if pkg == "mist":
             # Mist: derive module names from tool names (strip ``mist_``).
-            module_names = {
-                name.removeprefix("mist_") for tool_names in tools_dict.values() for name in tool_names
-            }
+            module_names = {name.removeprefix("mist_") for tool_names in tools_dict.values() for name in tool_names}
         else:
             # Other platforms: category key == module name.
             module_names = set(tools_dict.keys())
