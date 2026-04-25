@@ -80,6 +80,19 @@ class ApstraSecrets:
 
 
 @dataclass
+class AxisSecrets:
+    """Axis Atmos Cloud credentials.
+
+    Single static API token, generated in the Axis admin portal at
+    Settings → Admin API → New API Token. There is no refresh mechanism
+    — when the token expires, regenerate in the portal and update
+    ``axis_api_token``.
+    """
+
+    api_token: str
+
+
+@dataclass
 class ServerConfig:
     """Global server configuration."""
 
@@ -90,6 +103,7 @@ class ServerConfig:
     enable_central_write_tools: bool = False
     enable_clearpass_write_tools: bool = False
     enable_apstra_write_tools: bool = False
+    enable_axis_write_tools: bool = False
     disable_elicitation: bool = False
     debug: bool = False
     log_file: str | None = None
@@ -108,6 +122,7 @@ class ServerConfig:
     greenlake: GreenLakeSecrets | None = None
     clearpass: ClearPassSecrets | None = None
     apstra: ApstraSecrets | None = None
+    axis: AxisSecrets | None = None
 
     @property
     def enabled_platforms(self) -> list[str]:
@@ -122,6 +137,8 @@ class ServerConfig:
             platforms.append("clearpass")
         if self.apstra:
             platforms.append("apstra")
+        if self.axis:
+            platforms.append("axis")
         return platforms
 
 
@@ -306,6 +323,16 @@ def _load_apstra() -> ApstraSecrets | None:
     )
 
 
+def _load_axis() -> AxisSecrets | None:
+    """Load Axis Atmos Cloud credentials from Docker secrets."""
+    api_token = _read_secret("axis_api_token")
+    if not api_token:
+        logger.info("Axis: disabled (axis_api_token secret not found)")
+        return None
+    logger.info("Axis: credentials loaded (token: {})", mask_secret(api_token))
+    return AxisSecrets(api_token=api_token)
+
+
 def load_config() -> ServerConfig:
     """Load server configuration from Docker secrets and environment variables.
 
@@ -331,6 +358,7 @@ def load_config() -> ServerConfig:
     enable_central_write = os.getenv("ENABLE_CENTRAL_WRITE_TOOLS", "false").lower() in _truthy
     enable_clearpass_write = os.getenv("ENABLE_CLEARPASS_WRITE_TOOLS", "false").lower() in _truthy
     enable_apstra_write = os.getenv("ENABLE_APSTRA_WRITE_TOOLS", "false").lower() in _truthy
+    enable_axis_write = os.getenv("ENABLE_AXIS_WRITE_TOOLS", "false").lower() in _truthy
     disable_elicit = os.getenv("DISABLE_ELICITATION", "false").lower() in _truthy
     debug = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
     log_file = os.getenv("LOG_FILE") or None
@@ -350,6 +378,7 @@ def load_config() -> ServerConfig:
     greenlake = _load_greenlake()
     clearpass = _load_clearpass()
     apstra = _load_apstra()
+    axis = _load_axis()
 
     config = ServerConfig(
         port=port,
@@ -359,6 +388,7 @@ def load_config() -> ServerConfig:
         enable_central_write_tools=enable_central_write,
         enable_clearpass_write_tools=enable_clearpass_write,
         enable_apstra_write_tools=enable_apstra_write,
+        enable_axis_write_tools=enable_axis_write,
         disable_elicitation=disable_elicit,
         debug=debug,
         log_file=log_file,
@@ -368,6 +398,7 @@ def load_config() -> ServerConfig:
         greenlake=greenlake,
         clearpass=clearpass,
         apstra=apstra,
+        axis=axis,
     )
 
     if not config.enabled_platforms:

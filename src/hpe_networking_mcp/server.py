@@ -129,6 +129,21 @@ async def lifespan(server: FastMCP):
         context["apstra_client"] = None
         context["apstra_config"] = None
 
+    # --- Axis ---
+    if config.axis:
+        try:
+            from hpe_networking_mcp.platforms.axis.client import AxisClient
+
+            context["axis_client"] = AxisClient(config.axis)
+            context["axis_config"] = config.axis
+        except Exception as e:
+            logger.warning("Axis: failed to initialize — {}", e)
+            context["axis_client"] = None
+            context["axis_config"] = None
+    else:
+        context["axis_client"] = None
+        context["axis_config"] = None
+
     # --- Verify every enabled platform via the shared probe helpers from
     # platforms/health.py. One source of truth: startup log output and the
     # runtime ``health`` tool report the same status. Probes that fail do
@@ -165,6 +180,9 @@ async def lifespan(server: FastMCP):
         apstra = context.get("apstra_client")
         if apstra is not None:
             await apstra.aclose()
+        axis = context.get("axis_client")
+        if axis is not None:
+            await axis.aclose()
         logger.info("Server shutdown complete")
 
 
@@ -198,6 +216,8 @@ def create_server(config: ServerConfig) -> FastMCP:
         _register_clearpass_tools(mcp, config)
     if config.apstra:
         _register_apstra_tools(mcp, config)
+    if config.axis:
+        _register_axis_tools(mcp, config)
 
     # --- Cross-platform tools and prompts (require both Mist and Central) ---
     if config.mist and config.central:
@@ -228,6 +248,8 @@ def create_server(config: ServerConfig) -> FastMCP:
         mcp.add_transform(Visibility(False, tags={"clearpass_write_delete"}, components={"tool"}))
     if not config.enable_apstra_write_tools:
         mcp.add_transform(Visibility(False, tags={"apstra_write", "apstra_write_delete"}, components={"tool"}))
+    if not config.enable_axis_write_tools:
+        mcp.add_transform(Visibility(False, tags={"axis_write", "axis_write_delete"}, components={"tool"}))
 
     # --- Dynamic mode: hide the individual registry-managed tools so the
     # exposed surface is just the per-platform meta-tools plus the 3
@@ -279,6 +301,14 @@ def _register_apstra_tools(mcp: FastMCP, config: ServerConfig) -> None:
 
     count = register_tools(mcp, config)
     logger.info("Apstra: registered {} tools", count)
+
+
+def _register_axis_tools(mcp: FastMCP, config: ServerConfig) -> None:
+    """Register all Axis platform tools."""
+    from hpe_networking_mcp.platforms.axis import register_tools
+
+    count = register_tools(mcp, config)
+    logger.info("Axis: registered {} tools", count)
 
 
 def _register_sync_tools(mcp: FastMCP) -> None:

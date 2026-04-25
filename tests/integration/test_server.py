@@ -173,6 +173,7 @@ class TestCreateServer:
             enable_central_write_tools=True,
             enable_clearpass_write_tools=True,
             enable_apstra_write_tools=True,
+            enable_axis_write_tools=True,
             tool_mode="static",
         )
 
