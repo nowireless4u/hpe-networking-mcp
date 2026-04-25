@@ -219,20 +219,24 @@ def create_server(config: ServerConfig) -> FastMCP:
     if config.axis:
         _register_axis_tools(mcp, config)
 
-    # --- Cross-platform tools and prompts (require both Mist and Central) ---
-    if config.mist and config.central:
-        _register_sync_tools(mcp)
-        _register_sync_prompts(mcp)
+    # --- Cross-platform aggregators ---
+    # These are workarounds for dynamic mode's "AI picks one platform and stops"
+    # problem. Code mode's premise is that the LLM can compose per-platform tools
+    # into cross-platform answers itself via `call_tool` in the sandbox — so we
+    # explicitly do NOT register the aggregators in code mode. If code mode
+    # can't reliably synthesize cross-platform answers, that's the "keep dynamic
+    # as default" signal, not a reason to re-register them here.
+    if config.tool_mode != "code":
+        if config.mist and config.central:
+            _register_sync_tools(mcp)
+            _register_sync_prompts(mcp)
+        if config.mist or config.central:
+            _register_site_health_check(mcp, config)
+            _register_site_rf_check(mcp, config)
 
-    # --- Cross-platform site health check (requires at least Mist or Central) ---
-    if config.mist or config.central:
-        _register_site_health_check(mcp, config)
-
-    # --- Cross-platform site RF check (requires at least Mist or Central) ---
-    if config.mist or config.central:
-        _register_site_rf_check(mcp, config)
-
-    # --- Cross-platform `health` tool (always registered; unaffected by tool_mode) ---
+    # --- Cross-platform `health` tool (always registered in every mode —
+    # reachability info is not aggregation; useful to have callable in the
+    # code-mode sandbox too) ---
     from hpe_networking_mcp.platforms.health import register as _register_health
 
     _register_health(mcp)
@@ -251,16 +255,72 @@ def create_server(config: ServerConfig) -> FastMCP:
     if not config.enable_axis_write_tools:
         mcp.add_transform(Visibility(False, tags={"axis_write", "axis_write_delete"}, components={"tool"}))
 
-    # --- Dynamic mode: hide the individual registry-managed tools so the
-    # exposed surface is just the per-platform meta-tools plus the 3
-    # cross-platform statics (health, site_health_check, manage_wlan_profile).
-    # Tools opt in by being tagged "dynamic_managed" via their platform's
-    # tool() shim; any platform that hasn't migrated yet keeps all its tools
-    # visible regardless of tool_mode. ---
+    # --- Tool-mode-specific catalog transforms ---
     if config.tool_mode == "dynamic":
+        # Dynamic mode: hide the individual registry-managed tools so the
+        # exposed surface is just the per-platform meta-tools plus the 3
+        # cross-platform statics (health, site_health_check, manage_wlan_profile).
+        # Tools opt in by being tagged "dynamic_managed" via their platform's
+        # tool() shim; any platform that hasn't migrated yet keeps all its
+        # tools visible regardless of tool_mode.
         mcp.add_transform(Visibility(False, tags={"dynamic_managed"}, components={"tool"}))
+    elif config.tool_mode == "code":
+        # Code mode: replace the catalog with `CodeMode` — a four-tier
+        # progressive-disclosure surface (get_tags → search → get_schema →
+        # execute). The LLM writes Python inside `execute`; `call_tool(name,
+        # params)` dispatches through the real FastMCP call_tool, so our
+        # NullStripMiddleware + ElicitationMiddleware + Pydantic coercion
+        # all keep working. Write gating (the per-platform Visibility
+        # transforms above) still fires.
+        #
+        # Cross-platform aggregators (site_health_check, site_rf_check,
+        # manage_wlan_profile) were not registered above in code mode, so
+        # they don't leak into Search's catalog.
+        _register_code_mode(mcp)
 
     return mcp
+
+
+def _register_code_mode(mcp: FastMCP) -> None:
+    """Install the FastMCP CodeMode transform for ``MCP_TOOL_MODE=code``.
+
+    Falls back with a warning if ``pydantic-monty`` isn't installed — the
+    dependency ships in the ``fastmcp[code-mode]`` extra and is already
+    pinned in ``pyproject.toml``, but older wheels may have it missing.
+    """
+    try:
+        from fastmcp.experimental.transforms.code_mode import (
+            CodeMode,
+            GetSchemas,
+            GetTags,
+            MontySandboxProvider,
+            Search,
+        )
+        from pydantic_monty import ResourceLimits
+    except ImportError as e:
+        logger.error(
+            "MCP_TOOL_MODE=code requires fastmcp[code-mode] + pydantic-monty ({}); "
+            "falling back to untransformed catalog (every registered tool visible)",
+            e,
+        )
+        return
+
+    limits = ResourceLimits(
+        max_duration_secs=30.0,
+        max_memory=128 * 1024 * 1024,
+        max_recursion_depth=50,
+    )
+    mcp.add_transform(
+        CodeMode(
+            sandbox_provider=MontySandboxProvider(limits=limits),
+            discovery_tools=[
+                GetTags(default_detail="brief"),
+                Search(default_detail="brief"),
+                GetSchemas(default_detail="detailed"),
+            ],
+        )
+    )
+    logger.info("Code mode enabled — exposed surface: get_tags + search + get_schema + execute")
 
 
 def _register_mist_tools(mcp: FastMCP, config: ServerConfig) -> None:

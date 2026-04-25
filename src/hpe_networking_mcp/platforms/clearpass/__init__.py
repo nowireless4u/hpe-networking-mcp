@@ -226,6 +226,8 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
             "ClearPass: {} underlying tools + 3 meta-tools registered (dynamic mode)",
             len(loaded),
         )
+    elif config.tool_mode == "code":
+        logger.info("ClearPass: {} underlying tools registered (code mode)", len(loaded))
     else:
         logger.info("ClearPass: {} tools registered (static mode)", len(loaded))
 

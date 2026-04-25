@@ -47,6 +47,8 @@ def register_tools(mcp_instance: FastMCP, config: ServerConfig) -> int:
             "GreenLake: {} underlying tools + 3 meta-tools registered (dynamic mode)",
             len(loaded),
         )
+    elif config.tool_mode == "code":
+        logger.info("GreenLake: {} underlying tools registered (code mode)", len(loaded))
     else:
         logger.info("GreenLake: {} tools registered (static mode)", len(loaded))
 

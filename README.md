@@ -52,7 +52,7 @@ Managing HPE networking infrastructure with AI assistants today means juggling m
 | **Exposed meta-tools (dynamic mode, default)** | **3** | **3** | **3** | **3** | **3** |
 | **Cross-Platform** | **3 tools + 3 prompts** | **3 tools + 3 prompts** | — | **1 tool** | — |
 
-> **Default tool surface**: v2.0+ ships with `MCP_TOOL_MODE=dynamic` by default. Each platform exposes three meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`), plus four cross-platform static tools (`health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`). **19 tools total, ~3,100 tokens** — down from 261 tools / ~64,000 tokens in v1.x. Set `MCP_TOOL_MODE=static` to restore the full per-tool surface (every underlying tool is still here; it just defaults to hidden behind the meta-tools). See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md).
+> **Default tool surface**: v2.0+ ships with `MCP_TOOL_MODE=dynamic` by default. Each platform exposes three meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`), plus four cross-platform static tools (`health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`). **19 tools total, ~3,100 tokens** — down from 261 tools / ~64,000 tokens in v1.x. Set `MCP_TOOL_MODE=static` to restore the full per-tool surface (every underlying tool is still here; it just defaults to hidden behind the meta-tools). v2.1.0.0 also ships `MCP_TOOL_MODE=code` as an experimental opt-in — FastMCP's `CodeMode` transform with a sandboxed Python `execute` for multi-step workflows; see [docs/TOOLS.md#code-mode](docs/TOOLS.md). See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md).
 
 ### Aruba Central Guided Prompts
 

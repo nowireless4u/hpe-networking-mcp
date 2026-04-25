@@ -65,7 +65,7 @@ def tool(**tool_kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any
             # mcp first (see tests/conftest.py stubs).
             return func
 
-        effective_kwargs = {**tool_kwargs, "tags": supplied_tags | {DYNAMIC_MANAGED_TAG}}
+        effective_kwargs = {**tool_kwargs, "tags": supplied_tags | {DYNAMIC_MANAGED_TAG, _PLATFORM}}
         return mcp.tool(**effective_kwargs)(func)
 
     return decorator

@@ -74,7 +74,7 @@ def tool(**tool_kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any
             # registration set up a real mcp before import.
             return func
 
-        effective_kwargs = {**tool_kwargs, "tags": supplied_tags | {DYNAMIC_MANAGED_TAG}}
+        effective_kwargs = {**tool_kwargs, "tags": supplied_tags | {DYNAMIC_MANAGED_TAG, _PLATFORM}}
         return mcp.tool(**effective_kwargs)(func)
 
     return decorator

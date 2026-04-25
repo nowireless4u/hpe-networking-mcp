@@ -5,6 +5,108 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0.0] - 2026-04-25
+
+**Adds `MCP_TOOL_MODE=code` as an experimental opt-in third tool mode.** Default stays on `dynamic` — no behavior change for existing users. Code mode wires FastMCP's `CodeMode` transform so the LLM writes sandboxed Python to compose multi-step workflows in a single round-trip, rather than walking the per-platform meta-trio N times. Cloudflare's ["Code Mode"](https://blog.cloudflare.com/code-mode/) argument: LLMs are better at writing code than at choosing from tool menus.
+
+### Four-tier progressive disclosure
+
+The exposed catalog in code mode is exactly 4 tools:
+
+| Tier | Tool | Purpose |
+|---|---|---|
+| 1 | `tags(detail)` | Browse the tag space — platform names, read/write buckets, module categories |
+| 2 | `search(query, tags, detail)` | BM25 tool search, optionally scoped by tag |
+| 3 | `get_schema(tools, detail)` | Parameter shapes for named tools |
+| 4 | `execute(code)` | Run async Python in a `pydantic-monty` sandbox with `call_tool(name, params)` in scope |
+
+Inside `execute`, `call_tool` dispatches through the real FastMCP call_tool — so `NullStripMiddleware`, `ElicitationMiddleware`, and Pydantic coercion all continue to fire. Writes still prompt for confirmation. Per-platform write-gating Visibility transforms still apply.
+
+### Cross-platform aggregators gated off in code mode
+
+`site_health_check`, `site_rf_check`, and `manage_wlan_profile` are NOT registered when `MCP_TOOL_MODE=code`. Those tools exist to work around dynamic mode's "AI reaches for one platform and stops" problem — code mode's premise is that the LLM can do the cross-platform join itself via `call_tool`. Keeping them would contradict the premise and make measurement meaningless. `health` stays registered in every mode (reachability info, not aggregation).
+
+### Platform tags on every tool
+
+Every tool registered through a platform's `_registry.py` shim now carries its platform name in `tool.tags`:
+- Mist tools: `{"mist", "dynamic_managed", ...optional write tags}`
+- Central: `{"central", "dynamic_managed", ...}`
+- etc.
+
+This lets `tags(detail=brief)` surface useful platform buckets and `search(query=..., tags=["mist"])` scope filtering to one vendor. Side benefit: static and dynamic modes also gain platform tagging for free — no behavior change, but the data's now there if we want to use it.
+
+### Config + server wiring
+
+- `config.py` — `MCP_TOOL_MODE=code` is now a valid value (was `{"static", "dynamic"}`, now `{"static", "dynamic", "code"}`). Default stays `"dynamic"`; unknown values fall back to `"dynamic"` with a warning.
+- `server.py` — new `_register_code_mode(mcp)` helper installs `CodeMode(sandbox_provider=MontySandboxProvider(limits=ResourceLimits(max_duration_secs=30.0, max_memory=128 MB, max_recursion_depth=50)), discovery_tools=[GetTags(brief), Search(brief), GetSchemas(detailed)])`. Falls back with a warning if `pydantic-monty` is missing.
+- Per-platform `register_tools` — `build_meta_tools()` skipped in code mode (already skipped in static); log message now distinguishes "code mode" from "static mode" for accurate startup output.
+- `docker-compose.yml` — untouched. Users opt in via `-e MCP_TOOL_MODE=code` or a compose override.
+
+### Verified live against a real tenant
+
+- `MCP_TOOL_MODE=code` — exposed catalog is exactly 4 tools (`tags`, `search`, `get_schema`, `execute`). No `site_health_check`, `site_rf_check`, or `manage_wlan_profile`.
+- `tags(brief)` returns platform buckets (`mist (31 tools)`, `central (73)`, `axis (0)`, etc.) plus module categories.
+- `search(query="disconnected", tags=["mist"])` returns 7 of 173 tools, BM25-ranked and platform-scoped.
+- `execute` with `return await call_tool("health", {})` returns the live health report.
+- Cross-platform join (mist_get_self → mist_search_device → central_get_aps) runs in ONE execute call, returning `{"mist_aps_count": 5, "central_aps_count": 3, "sample_mist_ap": "KNAPP-BASEMENT", "sample_central_ap": "HOME-GARAGE-AP", "cross_platform_match": True}`.
+- `call_tool("site_health_check", ...)` correctly raises `Unknown tool: site_health_check` — gating verified.
+- `MCP_TOOL_MODE=dynamic` (default) — unchanged. Still 18 tools advertised (15 meta + health + site_health_check + site_rf_check).
+
+### Sandbox constraints the AI has to work around
+
+`pydantic-monty` is a restricted Python subset. Some things NOT available in the sandbox:
+- `hasattr`, `type`, and most introspection builtins
+- stdlib imports beyond what monty whitelists
+
+The AI learns these the same way it learns any API — via error messages from its first attempt. Early Phase 2 measurement will tell us how much friction this adds.
+
+Tool return values inside `execute` are wrapped as `{"result": <value>}` (FastMCP's `structured_content` for non-schema-typed returns). The AI accesses via `me["result"]["..."]`.
+
+### Tests
+
+11 new tests in `tests/unit/test_code_mode.py`:
+- Config parsing (`code` accepted, unknown falls back, `static`/`dynamic` unchanged, default is `dynamic`)
+- Cross-platform aggregator gating (dynamic + static register all; code registers none; code invokes `_register_code_mode` hook)
+- Registry platform tagging (Mist + Axis shims add platform name to effective tags)
+- `_register_code_mode` falls back gracefully if `pydantic-monty` import fails
+
+Total suite: **552 tests** passing (541 → 552).
+
+### Not in this release
+
+- No default flip. Code mode is opt-in experimental. A decision on whether to change the default will come after Phase 2 head-to-head measurement work — see `CODE_MODE_PLAN.md` (scratch).
+- No `INSTRUCTIONS.md` changes. Dynamic mode remains the documented default pattern.
+- `fastmcp.experimental.transforms.code_mode` is still in `experimental/` upstream. Using it means accepting that the API may change — `MCP_TOOL_MODE=dynamic` remains the production-stable choice.
+
+### ClearPass query-param audit
+
+Bundled into this release: a systematic audit of every `clearpass_get_*` tool against the public ClearPass API reference at https://developer.arubanetworks.com/cppm/reference. Surfaced two real gaps and fixed both.
+
+#### `calculate_count` added to all 45 list-style read tools
+
+Every `/api/<resource>` list endpoint accepts a `calculate_count: bool` query param (per Apigility convention) that adds a `count` field to the response. Useful for the AI to know whether a paginated query has more pages without doing another request — and surprisingly informative on its own (e.g. "your tenant has 85,515 active sessions" landed in measurement testing).
+
+Only `clearpass_get_endpoints` had this param before. Added it to:
+- `clearpass_get_system_events`, `clearpass_get_auth_sources`, `clearpass_get_auth_methods`, `clearpass_get_trust_list`, `clearpass_get_client_certificates`, `clearpass_get_service_certificates`
+- `clearpass_get_enforcement_policies`, `clearpass_get_enforcement_profiles`
+- `clearpass_get_pass_templates`, `clearpass_get_print_templates`, `clearpass_get_weblogin_pages`
+- `clearpass_get_guest_users`, `clearpass_get_api_clients`, `clearpass_get_local_users`, `clearpass_get_static_host_lists`, `clearpass_get_devices`, `clearpass_get_deny_listed_users`
+- `clearpass_get_extensions`, `clearpass_get_syslog_targets`, `clearpass_get_syslog_export_filters`, `clearpass_get_event_sources`, `clearpass_get_context_servers`, `clearpass_get_endpoint_context_servers`
+- `clearpass_get_network_devices`, `clearpass_get_services`, `clearpass_get_posture_policies`, `clearpass_get_device_groups`, `clearpass_get_proxy_targets`, `clearpass_get_radius_dictionaries`, `clearpass_get_tacacs_dictionaries`, `clearpass_get_application_dictionaries`
+- `clearpass_get_roles`, `clearpass_get_role_mappings`
+- `clearpass_get_admin_users`, `clearpass_get_admin_privileges`, `clearpass_get_operator_profiles`, `clearpass_get_attributes`, `clearpass_get_data_filters`, `clearpass_get_file_backup_servers`, `clearpass_get_snmp_trap_receivers`, `clearpass_get_policy_manager_zones`
+- `clearpass_get_sessions`
+
+Implementation: 5 files share a `_build_query_string` helper (audit, certificates, guest_config, identities, integrations, network_devices, policy_elements, server_config); helper signature gained `calculate_count: bool = False`. Inline-pattern files (auth, endpoints, enforcement, guests, roles, sessions) had the param block updated directly.
+
+#### `/alert` and `/report` no longer accept unsupported `filter` / `sort`
+
+Per the dev portal, ClearPass `/alert` and `/report` endpoints document **only** `offset`, `limit`, and `calculate_count` — they do not support `filter` or `sort`. Our `clearpass_get_insight_alerts` and `clearpass_get_insight_reports` tools were exposing `filter` and `sort` and forwarding them in the query string. Either Mist would 400 or silently ignore them. Removed both params from those two tool signatures and switched to a simpler inlined query string. Other tools that DO support filter+sort are unchanged.
+
+#### What this didn't touch
+
+- 11 ClearPass API endpoints documented in the dev portal still don't have wrapping tools — high-value gaps include `/api/onguard-activity`, `/api/external-account`, `/api/cert/revocation-list`, `/api/fingerprint-dictionary`, `/api/extension-instance/{id}/log`, `/api/network-scan`, `/api/onguard/settings`, `/api/radius-dynamic-authorization-template`, plus a handful of write/POST endpoints. Tracked as a follow-up; the audit's coverage report lives in `~/Documents/Coding Projects/hpe-networking-mcp-scratch/` for reference.
+
 ## [2.0.0.5] - 2026-04-24
 
 **New cross-platform tool: `site_rf_check`.** Closes the AI-discovery gap where channel-planning / RF / spectrum questions produced Mist-only answers even when the user had Aruba APs in Central at the same site.

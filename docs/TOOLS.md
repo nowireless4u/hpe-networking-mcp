@@ -21,7 +21,53 @@ The server ships with `MCP_TOOL_MODE=dynamic` by default. At session start the A
 
 All the per-platform tools documented below still exist and are discoverable through the meta-tools. Their names, parameters, and return shapes are unchanged from v1.x. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the meta-tools.
 
-Set `MCP_TOOL_MODE=static` to restore the v1.x surface where every per-platform tool registers individually (260+ visible).
+Set `MCP_TOOL_MODE=static` to restore the v1.x surface where every per-platform tool registers individually (260+ visible). Set `MCP_TOOL_MODE=code` for an experimental four-tier discovery + sandboxed Python execution surface — see the next section.
+
+## Code mode (experimental, opt-in since v2.1.0.0)
+
+With `MCP_TOOL_MODE=code` the server replaces the exposed catalog with a 4-tool surface: `tags`, `search`, `get_schema`, and `execute`. The LLM writes async Python inside `execute`; `call_tool(tool_name, params)` dispatches through the real FastMCP call_tool so every middleware (NullStrip, Elicitation, Pydantic coercion) keeps working. Multi-step workflows collapse from N MCP round-trips to one.
+
+### Four-tier progressive disclosure
+
+| Tier | Tool | What the LLM calls |
+|---|---|---|
+| 1 | `tags(detail="brief")` | Browse the tag space — returns platform buckets (`mist (31 tools)`, `central (73)`, `axis (0)`, etc.) plus module categories |
+| 2 | `search(query, tags=[...], detail)` | BM25 search the catalog, optionally scoped by tag |
+| 3 | `get_schema(tools=[...], detail)` | Fetch parameter shape for named tools |
+| 4 | `execute(code)` | Run async Python; `call_tool(name, params)` available in scope |
+
+### Example — cross-platform join in one call
+
+```python
+me = await call_tool("mist_get_self", {"action_type": "account_info"})
+org_id = me["result"]["privileges"][0]["org_id"]
+
+mist_aps = await call_tool("mist_search_device", {"org_id": org_id, "device_type": "ap", "limit": 5})
+central_aps = await call_tool("central_get_aps", {"site_name": "HOME", "status": "ONLINE"})
+
+return {
+    "mist_count": len(mist_aps["result"]["results"]),
+    "central_count": len(central_aps["result"]),
+}
+```
+
+Three tool calls inside one `execute`. In dynamic mode this same workflow would be 5+ MCP round-trips.
+
+### Cross-platform aggregators are NOT registered in code mode
+
+`site_health_check`, `site_rf_check`, and `manage_wlan_profile` exist to work around dynamic mode's "AI reaches for one platform and stops" problem. Code mode's premise is that the LLM can compose per-platform tools itself — keeping aggregators would contradict it and make head-to-head measurement with dynamic mode meaningless. `health` stays registered in every mode.
+
+### Sandbox limits
+
+The `pydantic-monty` sandbox restricts duration (30s), memory (128 MB), and recursion depth (50). Some Python builtins (`hasattr`, `type`, most introspection) aren't available — the LLM learns these via error messages.
+
+### When to use which mode
+
+- **`dynamic` (default)** — stable, production-tested, best for lookup-style questions
+- **`static`** — v1.x behavior, every tool visible, only useful for agents that hardcode tool names
+- **`code`** — experimental; best for multi-step aggregations, cross-platform joins, filter/map/reduce workflows
+
+If you're not sure, stay on `dynamic`. Code mode is meant for measurement + evaluation right now.
 
 ## Overview
 

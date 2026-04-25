@@ -368,7 +368,7 @@ def load_config() -> ServerConfig:
     # ``tool_mode`` because every platform honors it in v2.0. Default flipped
     # from "static" → "dynamic" in v2.0.0.0.
     tool_mode = os.getenv("MCP_TOOL_MODE", "dynamic").lower().strip()
-    if tool_mode not in ("static", "dynamic"):
+    if tool_mode not in ("static", "dynamic", "code"):
         logger.warning("Ignoring unknown MCP_TOOL_MODE={!r}, defaulting to 'dynamic'", tool_mode)
         tool_mode = "dynamic"
 
