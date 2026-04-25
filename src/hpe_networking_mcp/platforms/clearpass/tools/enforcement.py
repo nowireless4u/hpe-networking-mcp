@@ -18,6 +18,7 @@ async def clearpass_get_enforcement_policies(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass enforcement policies.
 
@@ -48,6 +49,7 @@ async def clearpass_get_enforcement_policies(
             f"sort={sort}" if sort else "",
             f"offset={offset}",
             f"limit={limit}",
+            f"calculate_count={'true' if calculate_count else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
         return client._send_request("/enforcement-policy" + query, "get")
@@ -64,6 +66,7 @@ async def clearpass_get_enforcement_profiles(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass enforcement profiles.
 
@@ -94,6 +97,7 @@ async def clearpass_get_enforcement_profiles(
             f"sort={sort}" if sort else "",
             f"offset={offset}",
             f"limit={limit}",
+            f"calculate_count={'true' if calculate_count else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
         return client._send_request("/enforcement-profile" + query, "get")

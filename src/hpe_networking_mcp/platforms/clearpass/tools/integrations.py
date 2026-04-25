@@ -14,6 +14,7 @@ def _build_query_string(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> str:
     """Build ClearPass REST API query string for list endpoints.
 
@@ -31,6 +32,7 @@ def _build_query_string(
         f"sort={sort}" if sort else "",
         f"offset={offset}",
         f"limit={limit}",
+        f"calculate_count={'true' if calculate_count else 'false'}",
     ]
     return "?" + "&".join(p for p in params if p)
 
@@ -44,6 +46,7 @@ async def clearpass_get_extensions(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass extension instances (third-party integrations).
 
@@ -67,7 +70,7 @@ async def clearpass_get_extensions(
             return client.get_extension_instance_by_id_config(id=extension_id)
         if extension_id:
             return client.get_extension_instance_by_id(id=extension_id)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/extension/instance" + query, "get")
     except Exception as e:
         return f"Error fetching extensions: {e}"
@@ -81,6 +84,7 @@ async def clearpass_get_syslog_targets(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass syslog export targets.
 
@@ -100,7 +104,7 @@ async def clearpass_get_syslog_targets(
         client = await get_clearpass_session(ApiIntegrations)
         if syslog_target_id:
             return client.get_syslog_target_by_syslog_target_id(syslog_target_id=syslog_target_id)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/syslog-target" + query, "get")
     except Exception as e:
         return f"Error fetching syslog targets: {e}"
@@ -114,6 +118,7 @@ async def clearpass_get_syslog_export_filters(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass syslog export filter configurations.
 
@@ -135,7 +140,7 @@ async def clearpass_get_syslog_export_filters(
             return client.get_syslog_export_filter_by_syslog_export_filter_id(
                 syslog_export_filter_id=syslog_export_filter_id,
             )
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/syslog-export-filter" + query, "get")
     except Exception as e:
         return f"Error fetching syslog export filters: {e}"
@@ -149,6 +154,7 @@ async def clearpass_get_event_sources(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass event sources (external event ingestion sources).
 
@@ -168,7 +174,7 @@ async def clearpass_get_event_sources(
         client = await get_clearpass_session(ApiIntegrations)
         if event_sources_id:
             return client.get_event_sources_by_event_sources_id(event_sources_id=event_sources_id)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/event-sources" + query, "get")
     except Exception as e:
         return f"Error fetching event sources: {e}"
@@ -182,6 +188,7 @@ async def clearpass_get_context_servers(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass context server actions (HTTP-based integrations).
 
@@ -203,7 +210,7 @@ async def clearpass_get_context_servers(
             return client.get_context_server_action_by_context_server_action_id(
                 context_server_action_id=context_server_action_id,
             )
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/context-server-action" + query, "get")
     except Exception as e:
         return f"Error fetching context server actions: {e}"
@@ -217,6 +224,7 @@ async def clearpass_get_endpoint_context_servers(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass endpoint context servers (MDM/EMM integrations).
 
@@ -238,7 +246,7 @@ async def clearpass_get_endpoint_context_servers(
             return client.get_endpoint_context_server_by_endpoint_context_server_id(
                 endpoint_context_server_id=endpoint_context_server_id,
             )
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/endpoint-context-server" + query, "get")
     except Exception as e:
         return f"Error fetching endpoint context servers: {e}"

@@ -14,6 +14,7 @@ def _build_query_string(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> str:
     """Build ClearPass REST API query string for list endpoints.
 
@@ -31,6 +32,7 @@ def _build_query_string(
         f"sort={sort}" if sort else "",
         f"offset={offset}",
         f"limit={limit}",
+        f"calculate_count={'true' if calculate_count else 'false'}",
     ]
     return "?" + "&".join(p for p in params if p)
 
@@ -44,6 +46,7 @@ async def clearpass_get_services(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass policy services (authentication/authorization service rules).
 
@@ -66,7 +69,7 @@ async def clearpass_get_services(
             return client.get_config_service_by_config_service_id(config_service_id=config_service_id)
         if name:
             return client.get_config_service_name_by_name(name=name)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/config/service" + query, "get")
     except Exception as e:
         return f"Error fetching services: {e}"
@@ -81,6 +84,7 @@ async def clearpass_get_posture_policies(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass posture (health check) policies.
 
@@ -103,7 +107,7 @@ async def clearpass_get_posture_policies(
             return client.get_posture_policy_by_posture_policy_id(posture_policy_id=posture_policy_id)
         if name:
             return client.get_posture_policy_name_by_name(name=name)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/posture-policy" + query, "get")
     except Exception as e:
         return f"Error fetching posture policies: {e}"
@@ -118,6 +122,7 @@ async def clearpass_get_device_groups(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass network device groups.
 
@@ -142,7 +147,7 @@ async def clearpass_get_device_groups(
             )
         if name:
             return client.get_network_device_group_name_by_name(name=name)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/network-device-group" + query, "get")
     except Exception as e:
         return f"Error fetching device groups: {e}"
@@ -157,6 +162,7 @@ async def clearpass_get_proxy_targets(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass RADIUS proxy targets.
 
@@ -179,7 +185,7 @@ async def clearpass_get_proxy_targets(
             return client.get_proxy_target_by_proxy_target_id(proxy_target_id=proxy_target_id)
         if name:
             return client.get_proxy_target_name_by_name(name=name)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/proxy-target" + query, "get")
     except Exception as e:
         return f"Error fetching proxy targets: {e}"
@@ -194,6 +200,7 @@ async def clearpass_get_radius_dictionaries(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass RADIUS dictionary definitions.
 
@@ -218,7 +225,7 @@ async def clearpass_get_radius_dictionaries(
             )
         if name:
             return client.get_radius_dictionary_name_by_name(name=name)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/radius-dictionary" + query, "get")
     except Exception as e:
         return f"Error fetching RADIUS dictionaries: {e}"
@@ -233,6 +240,7 @@ async def clearpass_get_tacacs_dictionaries(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass TACACS+ service dictionary definitions.
 
@@ -257,7 +265,7 @@ async def clearpass_get_tacacs_dictionaries(
             )
         if name:
             return client.get_tacacs_service_dictionary_name_by_name(name=name)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/tacacs-service-dictionary" + query, "get")
     except Exception as e:
         return f"Error fetching TACACS+ dictionaries: {e}"
@@ -272,6 +280,7 @@ async def clearpass_get_application_dictionaries(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass application dictionary definitions.
 
@@ -296,7 +305,7 @@ async def clearpass_get_application_dictionaries(
             )
         if name:
             return client.get_application_dictionary_name_by_name(name=name)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/application-dictionary" + query, "get")
     except Exception as e:
         return f"Error fetching application dictionaries: {e}"

@@ -18,6 +18,8 @@ async def clearpass_get_endpoints(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
+    profile_details: bool = False,
 ) -> dict | str:
     """Get ClearPass endpoints (known MAC addresses in the endpoint database).
 
@@ -27,10 +29,14 @@ async def clearpass_get_endpoints(
     Args:
         endpoint_id: Numeric ID for single-item lookup.
         mac_address: MAC address for lookup (e.g. "001122334455" or "00:11:22:33:44:55").
-        filter: JSON filter expression (ClearPass REST API syntax).
-        sort: Sort order (e.g. "+mac_address" or "-id").
+        filter: JSON filter expression (ClearPass REST API syntax, e.g. ``{"mac_address":"00:11:22:33:44:55"}``).
+        sort: Sort order (e.g. "+mac_address" or "-id"). Default "+id" server-side.
         offset: Pagination offset (default 0).
-        limit: Max results per page (default 25).
+        limit: Max results per page, 1–1000 (default 25).
+        calculate_count: When true, ClearPass returns the total item count alongside the page.
+            Off by default to avoid the extra count query on large datasets.
+        profile_details: When true, each endpoint includes its profiler fingerprint
+            details (DHCP, HTTP user-agent, device category). Off by default.
     """
     try:
         from pyclearpass.api_identities import ApiIdentities
@@ -45,6 +51,10 @@ async def clearpass_get_endpoints(
             f"sort={sort}" if sort else "",
             f"offset={offset}",
             f"limit={limit}",
+            # ClearPass expects lowercase JSON booleans in query strings.
+            f"calculate_count={'true' if calculate_count else 'false'}",
+            # profile_details is required by the API; always include it.
+            f"profile_details={'true' if profile_details else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
         return client._send_request("/endpoint" + query, "get")

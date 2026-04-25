@@ -18,6 +18,7 @@ async def clearpass_get_roles(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass roles used in enforcement and authorization policies.
 
@@ -45,6 +46,7 @@ async def clearpass_get_roles(
             f"sort={sort}" if sort else "",
             f"offset={offset}",
             f"limit={limit}",
+            f"calculate_count={'true' if calculate_count else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
         return client._send_request("/role" + query, "get")
@@ -61,6 +63,7 @@ async def clearpass_get_role_mappings(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass role mapping policies.
 
@@ -91,6 +94,7 @@ async def clearpass_get_role_mappings(
             f"sort={sort}" if sort else "",
             f"offset={offset}",
             f"limit={limit}",
+            f"calculate_count={'true' if calculate_count else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
         return client._send_request("/role-mapping" + query, "get")

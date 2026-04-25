@@ -14,6 +14,7 @@ def _build_query_string(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> str:
     """Build ClearPass REST API query string for list endpoints.
 
@@ -22,6 +23,7 @@ def _build_query_string(
         sort: Sort order (e.g. "+name" or "-id").
         offset: Pagination offset.
         limit: Max results per page.
+        calculate_count: When true, response includes total item count.
 
     Returns:
         Query string starting with '?' for appending to a path.
@@ -31,6 +33,7 @@ def _build_query_string(
         f"sort={sort}" if sort else "",
         f"offset={offset}",
         f"limit={limit}",
+        f"calculate_count={'true' if calculate_count else 'false'}",
     ]
     return "?" + "&".join(p for p in params if p)
 
@@ -44,6 +47,7 @@ async def clearpass_get_trust_list(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass certificate trust list entries.
 
@@ -71,7 +75,7 @@ async def clearpass_get_trust_list(
             return client.get_cert_trust_list_by_cert_trust_list_id(
                 cert_trust_list_id=cert_trust_list_id,
             )
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/cert-trust-list" + query, "get")
     except Exception as e:
         return f"Error fetching trust list: {e}"
@@ -85,6 +89,7 @@ async def clearpass_get_client_certificates(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass client certificates.
 
@@ -104,7 +109,7 @@ async def clearpass_get_client_certificates(
         client = await get_clearpass_session(ApiPlatformCertificates)
         if client_cert_id:
             return client.get_client_cert_by_client_cert_id(client_cert_id=client_cert_id)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/client-cert" + query, "get")
     except Exception as e:
         return f"Error fetching client certificates: {e}"
@@ -152,6 +157,7 @@ async def clearpass_get_service_certificates(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass service certificates.
 
@@ -171,7 +177,7 @@ async def clearpass_get_service_certificates(
         client = await get_clearpass_session(ApiPlatformCertificates)
         if service_cert_id:
             return client.get_service_cert_by_service_cert_id(service_cert_id=service_cert_id)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/service-cert" + query, "get")
     except Exception as e:
         return f"Error fetching service certificates: {e}"

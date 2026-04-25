@@ -14,6 +14,7 @@ def _build_query_string(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> str:
     """Build ClearPass REST API query string for list endpoints.
 
@@ -31,6 +32,7 @@ def _build_query_string(
         f"sort={sort}" if sort else "",
         f"offset={offset}",
         f"limit={limit}",
+        f"calculate_count={'true' if calculate_count else 'false'}",
     ]
     return "?" + "&".join(p for p in params if p)
 
@@ -43,6 +45,7 @@ async def clearpass_get_api_clients(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass API clients (OAuth2 client registrations).
 
@@ -62,7 +65,7 @@ async def clearpass_get_api_clients(
         client = await get_clearpass_session(ApiIdentities)
         if client_id:
             return client.get_api_client_by_client_id(client_id=client_id)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/api-client" + query, "get")
     except Exception as e:
         return f"Error fetching API clients: {e}"
@@ -77,6 +80,7 @@ async def clearpass_get_local_users(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass local user accounts.
 
@@ -100,7 +104,7 @@ async def clearpass_get_local_users(
             return client.get_local_user_by_local_user_id(local_user_id=local_user_id)
         if user_id:
             return client.get_local_user_user_id_by_user_id(user_id=user_id)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/local-user" + query, "get")
     except Exception as e:
         return f"Error fetching local users: {e}"
@@ -115,6 +119,7 @@ async def clearpass_get_static_host_lists(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass static host lists.
 
@@ -139,7 +144,7 @@ async def clearpass_get_static_host_lists(
             )
         if name:
             return client.get_static_host_list_name_by_name(name=name)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/static-host-list" + query, "get")
     except Exception as e:
         return f"Error fetching static host lists: {e}"
@@ -154,6 +159,7 @@ async def clearpass_get_devices(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass device accounts (onboarded devices).
 
@@ -176,7 +182,7 @@ async def clearpass_get_devices(
             return client.get_device_by_device_id(device_id=device_id)
         if macaddr:
             return client.get_device_mac_by_macaddr(macaddr=macaddr)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/device" + query, "get")
     except Exception as e:
         return f"Error fetching devices: {e}"
@@ -190,6 +196,7 @@ async def clearpass_get_deny_listed_users(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass deny-listed (blacklisted) users.
 
@@ -211,7 +218,7 @@ async def clearpass_get_deny_listed_users(
             return client.get_deny_listed_users_by_deny_listed_users_id(
                 deny_listed_users_id=deny_listed_users_id,
             )
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/deny-listed-users" + query, "get")
     except Exception as e:
         return f"Error fetching deny-listed users: {e}"

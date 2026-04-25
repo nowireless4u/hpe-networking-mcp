@@ -18,6 +18,7 @@ async def clearpass_get_auth_sources(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass authentication sources (AD, LDAP, SQL, local DB, etc.).
 
@@ -45,6 +46,7 @@ async def clearpass_get_auth_sources(
             f"sort={sort}" if sort else "",
             f"offset={offset}",
             f"limit={limit}",
+            f"calculate_count={'true' if calculate_count else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
         return client._send_request("/auth-source" + query, "get")
@@ -111,6 +113,7 @@ async def clearpass_get_auth_methods(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass authentication methods (EAP, MAC Auth, RADIUS proxy, etc.).
 
@@ -138,6 +141,7 @@ async def clearpass_get_auth_methods(
             f"sort={sort}" if sort else "",
             f"offset={offset}",
             f"limit={limit}",
+            f"calculate_count={'true' if calculate_count else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
         return client._send_request("/auth-method" + query, "get")

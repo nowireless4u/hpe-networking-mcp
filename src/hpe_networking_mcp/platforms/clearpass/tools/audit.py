@@ -14,6 +14,7 @@ def _build_query_string(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> str:
     """Build ClearPass REST API query string for list endpoints.
 
@@ -22,6 +23,7 @@ def _build_query_string(
         sort: Sort order (e.g. "+name" or "-id").
         offset: Pagination offset.
         limit: Max results per page.
+        calculate_count: When true, response includes total item count.
 
     Returns:
         Query string starting with '?' for appending to a path.
@@ -31,6 +33,7 @@ def _build_query_string(
         f"sort={sort}" if sort else "",
         f"offset={offset}",
         f"limit={limit}",
+        f"calculate_count={'true' if calculate_count else 'false'}",
     ]
     return "?" + "&".join(p for p in params if p)
 
@@ -63,6 +66,7 @@ async def clearpass_get_system_events(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass system events.
 
@@ -70,15 +74,18 @@ async def clearpass_get_system_events(
 
     Args:
         filter: JSON filter expression (ClearPass REST API syntax).
-        sort: Sort order (e.g. "+timestamp" or "-id").
+        sort: Sort order (e.g. "+timestamp" or "-id"). Default server-side: "+source".
         offset: Pagination offset (default 0).
-        limit: Max results per page (default 25).
+        limit: Max results per page (default 25, max 1000).
+        calculate_count: When true, include total count in response (default false).
+
+    See: https://developer.arubanetworks.com/cppm/reference (Logs → /system-events)
     """
     try:
         from pyclearpass.api_logs import ApiLogs
 
         client = await get_clearpass_session(ApiLogs)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/system-event" + query, "get")
     except Exception as e:
         return f"Error fetching system events: {e}"
@@ -89,10 +96,9 @@ async def clearpass_get_insight_alerts(
     ctx: Context,
     alert_id: str | None = None,
     name: str | None = None,
-    filter: str | None = None,
-    sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass Insight alerts.
 
@@ -102,10 +108,13 @@ async def clearpass_get_insight_alerts(
     Args:
         alert_id: Numeric ID for single-item lookup.
         name: Alert name for lookup by name.
-        filter: JSON filter expression (ClearPass REST API syntax).
-        sort: Sort order (e.g. "+name" or "-id").
         offset: Pagination offset (default 0).
-        limit: Max results per page (default 25).
+        limit: Max results per page (default 25, max 1000).
+        calculate_count: When true, include total count in response (default false).
+
+    Note: /alert does not accept ``filter`` or ``sort`` (per ClearPass API
+    spec — only pagination + count). See:
+    https://developer.arubanetworks.com/cppm/reference (Insight → /alert)
     """
     try:
         from pyclearpass.api_insight import ApiInsight
@@ -115,7 +124,7 @@ async def clearpass_get_insight_alerts(
             return client.get_alert_by_id(id=alert_id)
         if name:
             return client.get_alert_by_name(name=name)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = f"?offset={offset}&limit={limit}&calculate_count={'true' if calculate_count else 'false'}"
         return client._send_request("/alert" + query, "get")
     except Exception as e:
         return f"Error fetching insight alerts: {e}"
@@ -126,10 +135,9 @@ async def clearpass_get_insight_reports(
     ctx: Context,
     report_id: str | None = None,
     name: str | None = None,
-    filter: str | None = None,
-    sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass Insight reports.
 
@@ -139,10 +147,13 @@ async def clearpass_get_insight_reports(
     Args:
         report_id: Numeric ID for single-item lookup.
         name: Report name for lookup by name.
-        filter: JSON filter expression (ClearPass REST API syntax).
-        sort: Sort order (e.g. "+name" or "-id").
         offset: Pagination offset (default 0).
-        limit: Max results per page (default 25).
+        limit: Max results per page (default 25, max 1000).
+        calculate_count: When true, include total count in response (default false).
+
+    Note: /report does not accept ``filter`` or ``sort`` (per ClearPass API
+    spec — only pagination + count). See:
+    https://developer.arubanetworks.com/cppm/reference (Insight → /report)
     """
     try:
         from pyclearpass.api_insight import ApiInsight
@@ -152,7 +163,7 @@ async def clearpass_get_insight_reports(
             return client.get_report_by_id(id=report_id)
         if name:
             return client.get_report_by_name(name=name)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = f"?offset={offset}&limit={limit}&calculate_count={'true' if calculate_count else 'false'}"
         return client._send_request("/report" + query, "get")
     except Exception as e:
         return f"Error fetching insight reports: {e}"

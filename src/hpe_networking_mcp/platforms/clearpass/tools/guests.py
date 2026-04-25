@@ -18,6 +18,7 @@ async def clearpass_get_guest_users(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass guest user accounts.
 
@@ -45,6 +46,7 @@ async def clearpass_get_guest_users(
             f"sort={sort}" if sort else "",
             f"offset={offset}",
             f"limit={limit}",
+            f"calculate_count={'true' if calculate_count else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
         return client._send_request("/guest" + query, "get")

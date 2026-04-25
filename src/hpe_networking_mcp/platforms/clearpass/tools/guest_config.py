@@ -14,6 +14,7 @@ def _build_query_string(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> str:
     """Build ClearPass REST API query string for list endpoints."""
     params = [
@@ -21,6 +22,7 @@ def _build_query_string(
         f"sort={sort}" if sort else "",
         f"offset={offset}",
         f"limit={limit}",
+        f"calculate_count={'true' if calculate_count else 'false'}",
     ]
     return "?" + "&".join(p for p in params if p)
 
@@ -33,6 +35,7 @@ async def clearpass_get_pass_templates(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass guest pass templates (receipt/credential templates).
 
@@ -52,7 +55,7 @@ async def clearpass_get_pass_templates(
         client = await get_clearpass_session(ApiGuestConfiguration)
         if template_id:
             return client.get_template_pass_by_id(id=template_id)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/template/pass" + query, "get")
     except Exception as e:
         return f"Error fetching pass templates: {e}"
@@ -66,6 +69,7 @@ async def clearpass_get_print_templates(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass guest print templates (printable credential layouts).
 
@@ -85,7 +89,7 @@ async def clearpass_get_print_templates(
         client = await get_clearpass_session(ApiGuestConfiguration)
         if template_id:
             return client.get_template_print_by_id(id=template_id)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/template/print" + query, "get")
     except Exception as e:
         return f"Error fetching print templates: {e}"
@@ -100,6 +104,7 @@ async def clearpass_get_weblogin_pages(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass web login (captive portal) page configurations.
 
@@ -122,7 +127,7 @@ async def clearpass_get_weblogin_pages(
             return client.get_weblogin_by_id(id=page_id)
         if page_name:
             return client.get_weblogin_page_name_by_page_name(page_name=page_name)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/weblogin" + query, "get")
     except Exception as e:
         return f"Error fetching web login pages: {e}"

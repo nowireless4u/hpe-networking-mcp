@@ -14,6 +14,7 @@ def _build_query_string(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> str:
     """Build ClearPass REST API query string for list endpoints.
 
@@ -22,6 +23,7 @@ def _build_query_string(
         sort: Sort order (e.g. "+name" or "-id").
         offset: Pagination offset.
         limit: Max results per page.
+        calculate_count: When true, response includes total item count.
 
     Returns:
         Query string starting with '?' for appending to a path.
@@ -31,6 +33,7 @@ def _build_query_string(
         f"sort={sort}" if sort else "",
         f"offset={offset}",
         f"limit={limit}",
+        f"calculate_count={'true' if calculate_count else 'false'}",
     ]
     return "?" + "&".join(p for p in params if p)
 
@@ -44,6 +47,7 @@ async def clearpass_get_network_devices(
     sort: str | None = None,
     offset: int = 0,
     limit: int = 25,
+    calculate_count: bool = False,
 ) -> dict | str:
     """Get ClearPass network devices (RADIUS/TACACS+ clients).
 
@@ -66,7 +70,7 @@ async def clearpass_get_network_devices(
             return client.get_network_device_by_network_device_id(network_device_id=device_id)
         if name:
             return client.get_network_device_name_by_name(name=name)
-        query = _build_query_string(filter, sort, offset, limit)
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/network-device" + query, "get")
     except Exception as e:
         return f"Error fetching network devices: {e}"
