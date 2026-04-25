@@ -38,10 +38,15 @@ class ToolSpec:
 # ``tool()`` shim when tool modules import.
 REGISTRIES: dict[str, dict[str, ToolSpec]] = {
     "apstra": {},
+    "axis": {},
     "central": {},
     "clearpass": {},
     "greenlake": {},
     "mist": {},
+    # Template platform — never registered at runtime, but the registry
+    # entry has to exist so test_platform_template can import without
+    # ValueError when the example tools are loaded.
+    "_template": {},
 }
 
 
@@ -57,18 +62,22 @@ DYNAMIC_MANAGED_TAG = "dynamic_managed"
 # the tool is invisible to ``list_tools`` and refused by ``invoke_tool``.
 _WRITE_TAG_BY_PLATFORM: dict[str, set[str]] = {
     "apstra": {"apstra_write", "apstra_write_delete"},
+    "axis": {"axis_write", "axis_write_delete"},
     "central": {"central_write_delete"},
     "clearpass": {"clearpass_write_delete"},
     "greenlake": set(),  # GreenLake is read-only today.
     "mist": {"mist_write", "mist_write_delete"},
+    "_template": {"_template_write", "_template_write_delete"},
 }
 
 _GATE_CONFIG_ATTR: dict[str, str | None] = {
     "apstra": "enable_apstra_write_tools",
+    "axis": "enable_axis_write_tools",
     "central": "enable_central_write_tools",
     "clearpass": "enable_clearpass_write_tools",
     "greenlake": None,
     "mist": "enable_mist_write_tools",
+    "_template": None,  # Never instantiated at runtime; gating attr unused.
 }
 
 

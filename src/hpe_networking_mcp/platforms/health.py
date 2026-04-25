@@ -29,7 +29,7 @@ _PROBE_ANNOTATIONS = ToolAnnotations(
     openWorldHint=True,
 )
 
-_ALL_PLATFORMS: tuple[str, ...] = ("mist", "central", "greenlake", "clearpass", "apstra")
+_ALL_PLATFORMS: tuple[str, ...] = ("mist", "central", "greenlake", "clearpass", "apstra", "axis")
 
 
 def _normalize_platform_filter(
@@ -151,12 +151,24 @@ async def _probe_apstra(ctx: Context) -> dict[str, Any]:
         return {"status": "degraded", "message": f"Apstra probe failed: {e}"}
 
 
+async def _probe_axis(ctx: Context) -> dict[str, Any]:
+    client = ctx.lifespan_context.get("axis_client")
+    if client is None:
+        return {"status": "unavailable", "message": "Axis is not configured or failed to initialize"}
+    try:
+        await client.health_check()
+        return {"status": "ok", "message": "Axis API reachable", "base_url": client.base_url}
+    except Exception as e:
+        return {"status": "degraded", "message": f"Axis probe failed: {e}"}
+
+
 _PROBES = {
     "mist": _probe_mist,
     "central": _probe_central,
     "greenlake": _probe_greenlake,
     "clearpass": _probe_clearpass,
     "apstra": _probe_apstra,
+    "axis": _probe_axis,
 }
 
 
