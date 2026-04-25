@@ -309,3 +309,48 @@ async def clearpass_get_application_dictionaries(
         return client._send_request("/application-dictionary" + query, "get")
     except Exception as e:
         return f"Error fetching application dictionaries: {e}"
+
+
+@tool(annotations=READ_ONLY)
+async def clearpass_get_radius_dynamic_authorization_template(
+    ctx: Context,
+    template_id: str | None = None,
+    name: str | None = None,
+    filter: str | None = None,
+    sort: str | None = None,
+    offset: int = 0,
+    limit: int = 25,
+    calculate_count: bool = False,
+) -> dict | str:
+    """Get ClearPass RADIUS dynamic-authorization (CoA) templates.
+
+    These are pre-defined CoA payload templates that enforcement profiles
+    reference to issue ``Disconnect-Request`` and ``CoA-Request`` packets
+    to network devices — e.g. role-change, VLAN-change, bandwidth limits.
+
+    If template_id or name is provided, returns a single template.
+    Otherwise returns a paginated list of all CoA templates.
+
+    Args:
+        template_id: Numeric ID for single-item lookup.
+        name: Template name for lookup by name.
+        filter: JSON filter expression (ClearPass REST API syntax).
+        sort: Sort order. Default server-side: "+id".
+        offset: Pagination offset (default 0).
+        limit: Max results per page (default 25, max 1000).
+        calculate_count: When true, include total count in response.
+
+    See: https://developer.arubanetworks.com/cppm/reference (Policy Elements → /radius-dynamic-authorization-template)
+    """
+    try:
+        from pyclearpass.api_policyelements import ApiPolicyElements
+
+        client = await get_clearpass_session(ApiPolicyElements)
+        if template_id:
+            return client._send_request(f"/radius-dynamic-authorization-template/{template_id}", "get")
+        if name:
+            return client._send_request(f"/radius-dynamic-authorization-template/name/{name}", "get")
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        return client._send_request("/radius-dynamic-authorization-template" + query, "get")
+    except Exception as e:
+        return f"Error fetching RADIUS dynamic authorization templates: {e}"

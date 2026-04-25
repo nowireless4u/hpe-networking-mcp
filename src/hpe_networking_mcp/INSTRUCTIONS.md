@@ -305,17 +305,19 @@ No special ID resolution needed. ClearPass tools connect directly to the configu
 - **Guest Management**: clearpass_get_guest_users, clearpass_manage_guest_user, clearpass_send_guest_credentials, clearpass_generate_guest_pass, clearpass_process_sponsor_action — Guest user lifecycle, credential delivery, sponsor workflows
 - **Guest Configuration**: clearpass_get_pass_templates, clearpass_get_print_templates, clearpass_get_weblogin_pages, clearpass_manage_* — Digital pass templates, print templates, captive portal pages
 - **Endpoints**: clearpass_get_endpoints, clearpass_get_endpoint_profiler, clearpass_manage_endpoint — Endpoint visibility, device fingerprinting
+- **Endpoint Visibility**: clearpass_get_onguard_activity, clearpass_get_fingerprint_dictionary, clearpass_get_network_scan, clearpass_get_onguard_settings — OnGuard posture sessions, profiler fingerprint dictionary, network discovery scans
+- **Certificate Authority (CA)**: clearpass_get_certificates (with `chain` for cert chain), clearpass_get_onboard_devices, clearpass_manage_certificate_authority (lifecycle: import/new/request/sign/revoke/reject/export/delete), clearpass_manage_onboard_device — internal CA cert lifecycle and onboarded-device records (distinct from `/api/device` identity records)
 - **Session Control**: clearpass_get_sessions, clearpass_disconnect_session, clearpass_perform_coa — Active session monitoring, disconnect, Change of Authorization (CoA)
 - **Roles & Role Mappings**: clearpass_get_roles, clearpass_get_role_mappings, clearpass_manage_role, clearpass_manage_role_mapping
 - **Enforcement**: clearpass_get_enforcement_policies, clearpass_get_enforcement_profiles, clearpass_manage_enforcement_policy, clearpass_manage_enforcement_profile
 - **Authentication**: clearpass_get_auth_sources, clearpass_get_auth_methods, clearpass_manage_auth_source, clearpass_manage_auth_method — LDAP/AD/RADIUS authentication sources and methods
-- **Certificates**: clearpass_get_trust_list, clearpass_get_client_certificates, clearpass_get_server_certificates, clearpass_manage_certificate, clearpass_create_csr
+- **Certificates**: clearpass_get_trust_list, clearpass_get_client_certificates, clearpass_get_server_certificates, clearpass_get_service_certificates, clearpass_get_revocation_list, clearpass_manage_certificate, clearpass_create_csr
 - **Audit & Insight**: clearpass_get_audit_logs, clearpass_get_system_events, clearpass_get_insight_alerts, clearpass_get_insight_reports, clearpass_get_endpoint_insights
-- **Identities**: clearpass_get_api_clients, clearpass_get_local_users, clearpass_get_static_host_lists, clearpass_get_devices, clearpass_get_deny_listed_users
-- **Policy Elements**: clearpass_get_services, clearpass_get_posture_policies, clearpass_get_device_groups, clearpass_get_proxy_targets, clearpass_get_radius_dictionaries, clearpass_get_tacacs_dictionaries, clearpass_get_application_dictionaries
+- **Identities**: clearpass_get_api_clients, clearpass_get_local_users, clearpass_get_static_host_lists, clearpass_get_devices, clearpass_get_deny_listed_users, clearpass_get_external_accounts
+- **Policy Elements**: clearpass_get_services, clearpass_get_posture_policies, clearpass_get_device_groups, clearpass_get_proxy_targets, clearpass_get_radius_dictionaries, clearpass_get_tacacs_dictionaries, clearpass_get_application_dictionaries, clearpass_get_radius_dynamic_authorization_template
 - **Server Configuration**: clearpass_get_admin_users, clearpass_get_admin_privileges, clearpass_get_licenses, clearpass_get_cluster_params + 9 more read tools + 12 manage tools
-- **Local Configuration**: clearpass_get_access_controls, clearpass_get_ad_domains, clearpass_get_server_version, clearpass_manage_ad_domain, clearpass_manage_server_service
-- **Integrations**: clearpass_get_extensions, clearpass_get_syslog_targets, clearpass_manage_extension — Extensions, syslog, event sources
+- **Local Configuration**: clearpass_get_access_controls, clearpass_get_ad_domains, clearpass_get_server_version, clearpass_get_cluster_servers, clearpass_manage_ad_domain, clearpass_manage_server_service, clearpass_manage_service_params — local server config + cluster-consistency audits (compare service params across nodes via clearpass_get_cluster_servers + clearpass_get_server_services per UUID)
+- **Integrations**: clearpass_get_extensions, clearpass_get_syslog_targets, clearpass_get_extension_log, clearpass_manage_extension — Extensions, syslog, event sources, extension logs
 - **Utilities**: clearpass_generate_random_password. For ClearPass reachability, call `health(platform="clearpass")` — the per-platform `clearpass_test_connection` was removed in v2.0.
 
 ## Session Control Operations

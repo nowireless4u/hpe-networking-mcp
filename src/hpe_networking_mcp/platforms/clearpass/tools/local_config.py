@@ -160,3 +160,32 @@ async def clearpass_get_server_snmp(
         return client.get_server_snmp_by_server_uuid(server_uuid=server_uuid)
     except Exception as e:
         return f"Error fetching server SNMP config: {e}"
+
+
+@tool(annotations=READ_ONLY)
+async def clearpass_get_cluster_servers(
+    ctx: Context,
+) -> dict | str:
+    """List all ClearPass servers in the cluster.
+
+    Returns one record per cluster node with its UUID, name, IP address,
+    role (publisher/subscriber), and cluster-membership state. Use this
+    to find the ``server_uuid`` other server-scoped tools require
+    (``clearpass_get_server_services``, ``clearpass_manage_service_params``,
+    etc.).
+
+    Common use case — answer "are all servers in the cluster configured
+    consistently?":
+    1. Call this tool to get the list of server UUIDs.
+    2. Call ``clearpass_get_server_services`` for each.
+    3. Compare param values across servers in code mode.
+
+    See: https://developer.arubanetworks.com/cppm/reference (Local Server Configuration → /server)
+    """
+    try:
+        from pyclearpass.api_localserverconfiguration import ApiLocalServerConfiguration
+
+        client = await get_clearpass_session(ApiLocalServerConfiguration)
+        return client.get_cluster_server()
+    except Exception as e:
+        return f"Error fetching cluster servers: {e}"

@@ -75,7 +75,7 @@ If you're not sure, stay on `dynamic`. Code mode is meant for measurement + eval
 |----------|----------------|-------------|---------|-------|
 | Juniper Mist | 31 | 4 | 2 | 37 |
 | Aruba Central | 60 | 13 | 12 | 85 |
-| Aruba ClearPass | 54 | 72 | -- | 126 |
+| Aruba ClearPass | 65 | 75 | -- | 140 |
 | Juniper Apstra | 12 | 7 | -- | 19 |
 | HPE GreenLake | 10 | -- | -- | 10 |
 | Cross-Platform | 3 | 1 | 3 | 7 |
@@ -1427,7 +1427,7 @@ All 10 GreenLake tools are read-only today. Write tools would follow the same ga
 
 ---
 
-## Aruba ClearPass (126 tools)
+## Aruba ClearPass (140 tools)
 
 ClearPass tools use the `pyclearpass` SDK with OAuth2 client credentials. Write tools require
 `ENABLE_CLEARPASS_WRITE_TOOLS=true`. Update/delete operations require user confirmation.
@@ -1474,6 +1474,24 @@ ClearPass tools use the `pyclearpass` SDK with OAuth2 client credentials. Write 
 | `clearpass_get_endpoint_profiler` | Get device profiler fingerprint data |
 | `clearpass_manage_endpoint` | Create, update, delete endpoints |
 
+### Endpoint Visibility (4 read)
+
+| Tool | Description |
+|------|-------------|
+| `clearpass_get_onguard_activity` | List active OnGuard posture sessions; lookup by `activity_id` or `mac` |
+| `clearpass_get_fingerprint_dictionary` | List or get profiler fingerprint dictionary entries (DHCP/HTTP/etc.) |
+| `clearpass_get_network_scan` | List or get network discovery scan jobs |
+| `clearpass_get_onguard_settings` | Get OnGuard posture engine settings (`global_settings: bool` for cluster-wide) |
+
+### Certificate Authority (2 read + 2 write)
+
+| Tool | Description |
+|------|-------------|
+| `clearpass_get_certificates` | List or get internal-CA certificates; `chain=true` returns the issuer chain |
+| `clearpass_get_onboard_devices` | List or get onboarded-device CA records (distinct from `/api/device` identity records) |
+| `clearpass_manage_certificate_authority` | CA cert lifecycle: import, new, request, sign, revoke, reject, export, delete |
+| `clearpass_manage_onboard_device` | Update or delete onboard device records |
+
 ### Session Control (3 read + 2 write)
 
 | Tool | Description |
@@ -1514,7 +1532,7 @@ ClearPass tools use the `pyclearpass` SDK with OAuth2 client credentials. Write 
 | `clearpass_manage_auth_source` | Create, update, delete, configure_backup, configure_filters, configure_radius_attrs |
 | `clearpass_manage_auth_method` | Create, update, delete authentication methods |
 
-### Certificates (4 read + 2 write)
+### Certificates (5 read + 2 write)
 
 | Tool | Description |
 |------|-------------|
@@ -1522,6 +1540,7 @@ ClearPass tools use the `pyclearpass` SDK with OAuth2 client credentials. Write 
 | `clearpass_get_client_certificates` | List or get client certificates |
 | `clearpass_get_server_certificates` | List or get server certificates |
 | `clearpass_get_service_certificates` | List service certificates |
+| `clearpass_get_revocation_list` | List or get certificate revocation lists (CRLs) |
 | `clearpass_manage_certificate` | Import/delete trust list, delete client cert, enable/disable server cert |
 | `clearpass_create_csr` | Generate Certificate Signing Request |
 
@@ -1538,7 +1557,7 @@ ClearPass tools use the `pyclearpass` SDK with OAuth2 client credentials. Write 
 | `clearpass_manage_insight_report` | Create, delete, enable, disable, run reports |
 | `clearpass_create_system_event` | Create a custom system event |
 
-### Identities (5 read + 5 write)
+### Identities (6 read + 5 write)
 
 | Tool | Description |
 |------|-------------|
@@ -1547,13 +1566,14 @@ ClearPass tools use the `pyclearpass` SDK with OAuth2 client credentials. Write 
 | `clearpass_get_static_host_lists` | List or get static host lists |
 | `clearpass_get_devices` | List or get devices by ID or MAC |
 | `clearpass_get_deny_listed_users` | List or get deny-listed users |
+| `clearpass_get_external_accounts` | List or get external account records by ID or name |
 | `clearpass_manage_api_client` | Create, update, delete API clients |
 | `clearpass_manage_local_user` | Create, update, delete local users |
 | `clearpass_manage_static_host_list` | Create, update, delete static host lists |
 | `clearpass_manage_device` | Create, update, delete devices |
 | `clearpass_manage_deny_listed_user` | Create, delete deny-listed users |
 
-### Policy Elements (7 read + 7 write)
+### Policy Elements (8 read + 7 write)
 
 | Tool | Description |
 |------|-------------|
@@ -1564,6 +1584,7 @@ ClearPass tools use the `pyclearpass` SDK with OAuth2 client credentials. Write 
 | `clearpass_get_radius_dictionaries` | List or get RADIUS dictionaries |
 | `clearpass_get_tacacs_dictionaries` | List or get TACACS+ service dictionaries |
 | `clearpass_get_application_dictionaries` | List or get application dictionaries |
+| `clearpass_get_radius_dynamic_authorization_template` | List or get RADIUS Dynamic Authorization (DUR) templates |
 | `clearpass_manage_service` | Create, update, delete, enable, disable config services |
 | `clearpass_manage_device_group` | Create, update, delete device groups |
 | `clearpass_manage_posture_policy` | Create, update, delete posture policies |
@@ -1602,7 +1623,7 @@ ClearPass tools use the `pyclearpass` SDK with OAuth2 client credentials. Write 
 | `clearpass_manage_snmp_trap_receiver` | Create, update, delete SNMP trap receivers |
 | `clearpass_manage_policy_manager_zone` | Create, update, delete policy manager zones |
 
-### Local Configuration (6 read + 4 write)
+### Local Configuration (7 read + 5 write)
 
 | Tool | Description |
 |------|-------------|
@@ -1612,12 +1633,14 @@ ClearPass tools use the `pyclearpass` SDK with OAuth2 client credentials. Write 
 | `clearpass_get_fips_status` | Get server FIPS status |
 | `clearpass_get_server_services` | List or get server services |
 | `clearpass_get_server_snmp` | Get server SNMP configuration |
+| `clearpass_get_cluster_servers` | List all cluster nodes (UUID, name, IP, role) — discovery for `server_uuid` |
 | `clearpass_manage_access_control` | Update, delete server access controls |
 | `clearpass_manage_ad_domain` | Join, leave, configure_password_servers for AD domains |
 | `clearpass_manage_cluster_server` | Update cluster server configuration |
 | `clearpass_manage_server_service` | Start, stop server services |
+| `clearpass_manage_service_params` | PATCH per-server service parameters — used for cluster-consistency audits |
 
-### Integrations (6 read + 4 write)
+### Integrations (7 read + 4 write)
 
 | Tool | Description |
 |------|-------------|
@@ -1627,6 +1650,7 @@ ClearPass tools use the `pyclearpass` SDK with OAuth2 client credentials. Write 
 | `clearpass_get_event_sources` | List or get event sources |
 | `clearpass_get_context_servers` | List or get context server actions |
 | `clearpass_get_endpoint_context_servers` | List or get endpoint context servers |
+| `clearpass_get_extension_log` | Fetch logs for a specific extension instance (`tail` for last N lines) |
 | `clearpass_manage_extension` | Start, stop, restart, delete extensions |
 | `clearpass_manage_syslog_target` | Create, update, delete syslog targets |
 | `clearpass_manage_syslog_export_filter` | Create, update, delete syslog export filters |

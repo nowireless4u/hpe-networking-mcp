@@ -181,3 +181,43 @@ async def clearpass_get_service_certificates(
         return client._send_request("/service-cert" + query, "get")
     except Exception as e:
         return f"Error fetching service certificates: {e}"
+
+
+@tool(annotations=READ_ONLY)
+async def clearpass_get_revocation_list(
+    ctx: Context,
+    revocation_list_id: str | None = None,
+    filter: str | None = None,
+    sort: str | None = None,
+    offset: int = 0,
+    limit: int = 25,
+    calculate_count: bool = False,
+) -> dict | str:
+    """Get ClearPass certificate revocation lists (CRLs).
+
+    CRLs enumerate revoked client/server certificates ClearPass should
+    reject when validating peer certs (e.g. EAP-TLS sessions).
+
+    If revocation_list_id is provided, returns a single CRL.
+    Otherwise returns a paginated list of all CRLs.
+
+    Args:
+        revocation_list_id: Numeric ID for single-item lookup.
+        filter: JSON filter expression (ClearPass REST API syntax).
+        sort: Sort order. Default server-side: "+id".
+        offset: Pagination offset (default 0).
+        limit: Max results per page (default 25, max 1000).
+        calculate_count: When true, include total count in response.
+
+    See: https://developer.arubanetworks.com/cppm/reference (Platform Certificates → /revocation-list)
+    """
+    try:
+        from pyclearpass.api_platformcertificates import ApiPlatformCertificates
+
+        client = await get_clearpass_session(ApiPlatformCertificates)
+        if revocation_list_id:
+            return client._send_request(f"/revocation-list/{revocation_list_id}", "get")
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        return client._send_request("/revocation-list" + query, "get")
+    except Exception as e:
+        return f"Error fetching revocation lists: {e}"

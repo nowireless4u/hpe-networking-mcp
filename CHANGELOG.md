@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0.1] - 2026-04-25
+
+**ClearPass coverage follow-up — adds 14 read/write tools to close the dev-portal gap surfaced during the v2.1.0.0 audit.**
+
+### New read tools (12)
+
+- **Endpoint visibility** (new module category) — `clearpass_get_onguard_activity`, `clearpass_get_fingerprint_dictionary`, `clearpass_get_network_scan`, `clearpass_get_onguard_settings` (with `global_settings: bool` flag).
+- **Certificate authority** (new module category) — `clearpass_get_certificates` (with `chain: bool` for chain retrieval), `clearpass_get_onboard_devices`. Path note: `/api/onboard/device` is CA-scope, distinct from `/api/device` (identity device records, already wrapped by `clearpass_get_devices`).
+- **Identities** — `clearpass_get_external_accounts` for external-account records (lookup by ID or name + paginated list).
+- **Certificates** — `clearpass_get_revocation_list` for the platform-cert CRL store.
+- **Integrations** — `clearpass_get_extension_log` (path: `/extension-instance/{id}/log`, optional `tail`).
+- **Policy elements** — `clearpass_get_radius_dynamic_authorization_template` for DUR template lookups.
+- **Local config** — `clearpass_get_cluster_servers` (no params; lists every cluster node so the AI can find `server_uuid`s).
+
+### New write tools (3, all `WRITE_DELETE`-tagged)
+
+- **`clearpass_manage_certificate_authority`** — full internal-CA cert lifecycle dispatch (`import`, `new`, `request`, `sign`, `revoke`, `reject`, `export`, `delete`).
+- **`clearpass_manage_onboard_device`** — `update` (PATCH) or `delete` for `/api/onboard/device/{id}` records.
+- **`clearpass_manage_service_params`** — PATCH `/api/server/{uuid}/service/{id}` to align per-node service parameter values. Documented use case: cluster-consistency audits — list cluster servers → fetch services per node → diff → align drifted nodes.
+
+### Path corrections caught in live testing
+
+The first round of new tools shipped with several wrong paths (the dev-portal docs and SDK names diverge in places). Fixed before commit:
+
+- `/fingerprint-dictionary` → `/fingerprint`
+- `/network-scan` → `/config/network-scan`
+- `/server` → `/cluster/server` (now uses the SDK's `get_cluster_server()` directly)
+- `/cert/revocation-list` → `/revocation-list`
+
+Dropped one tool that turned out to be a false positive: `clearpass_get_onboard_users` — `/api/onboard/user` returned 404 in our tenant and the `pyclearpass` SDK has no equivalent method, so the endpoint likely doesn't exist on this CPPM version. The matching `user` target_type was also dropped from `clearpass_manage_onboard*` (renamed to `clearpass_manage_onboard_device`).
+
+### Audit false positives caught before shipping
+
+Three tools the agent's coverage audit flagged as missing turned out to already be wrapped:
+
+- `random/mpsk` → already covered by `clearpass_generate_random_password(type="mpsk")`.
+- `run_insight_report` → already covered by `clearpass_manage_insight_report(action_type="run")`.
+- `trigger_endpoint_context_server_poll` → already covered by `clearpass_manage_endpoint_context_server(action_type="trigger_poll")`.
+
+ClearPass tool count: 126 → 140 (+14).
+
 ## [2.1.0.0] - 2026-04-25
 
 **Adds `MCP_TOOL_MODE=code` as an experimental opt-in third tool mode.** Default stays on `dynamic` — no behavior change for existing users. Code mode wires FastMCP's `CodeMode` transform so the LLM writes sandboxed Python to compose multi-step workflows in a single round-trip, rather than walking the per-platform meta-trio N times. Cloudflare's ["Code Mode"](https://blog.cloudflare.com/code-mode/) argument: LLMs are better at writing code than at choosing from tool menus.

@@ -29,6 +29,16 @@ TOOLS: dict[str, list[str]] = {
         "clearpass_get_endpoints",
         "clearpass_get_endpoint_profiler",
     ],
+    "endpoint_visibility": [
+        "clearpass_get_onguard_activity",
+        "clearpass_get_fingerprint_dictionary",
+        "clearpass_get_network_scan",
+        "clearpass_get_onguard_settings",
+    ],
+    "certificate_authority": [
+        "clearpass_get_certificates",
+        "clearpass_get_onboard_devices",
+    ],
     "sessions": [
         "clearpass_get_sessions",
         "clearpass_get_session_action_status",
@@ -54,6 +64,7 @@ TOOLS: dict[str, list[str]] = {
         "clearpass_get_client_certificates",
         "clearpass_get_server_certificates",
         "clearpass_get_service_certificates",
+        "clearpass_get_revocation_list",
     ],
     "audit": [
         "clearpass_get_audit_logs",
@@ -84,6 +95,7 @@ TOOLS: dict[str, list[str]] = {
         "clearpass_get_fips_status",
         "clearpass_get_server_services",
         "clearpass_get_server_snmp",
+        "clearpass_get_cluster_servers",
     ],
     "identities": [
         "clearpass_get_api_clients",
@@ -91,6 +103,7 @@ TOOLS: dict[str, list[str]] = {
         "clearpass_get_static_host_lists",
         "clearpass_get_devices",
         "clearpass_get_deny_listed_users",
+        "clearpass_get_external_accounts",
     ],
     "policy_elements": [
         "clearpass_get_services",
@@ -100,6 +113,7 @@ TOOLS: dict[str, list[str]] = {
         "clearpass_get_radius_dictionaries",
         "clearpass_get_tacacs_dictionaries",
         "clearpass_get_application_dictionaries",
+        "clearpass_get_radius_dynamic_authorization_template",
     ],
     "integrations": [
         "clearpass_get_extensions",
@@ -108,6 +122,7 @@ TOOLS: dict[str, list[str]] = {
         "clearpass_get_event_sources",
         "clearpass_get_context_servers",
         "clearpass_get_endpoint_context_servers",
+        "clearpass_get_extension_log",
     ],
     "utilities": [
         "clearpass_generate_random_password",
@@ -171,6 +186,11 @@ TOOLS: dict[str, list[str]] = {
         "clearpass_manage_ad_domain",
         "clearpass_manage_cluster_server",
         "clearpass_manage_server_service",
+        "clearpass_manage_service_params",
+    ],
+    "manage_certificate_authority": [
+        "clearpass_manage_certificate_authority",
+        "clearpass_manage_onboard_device",
     ],
     "manage_identities": [
         "clearpass_manage_api_client",

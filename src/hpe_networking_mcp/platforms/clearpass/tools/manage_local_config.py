@@ -165,3 +165,62 @@ async def clearpass_manage_server_service(
         )
     except Exception as e:
         return f"Error managing server service: {e}"
+
+
+@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+async def clearpass_manage_service_params(
+    ctx: Context,
+    server_uuid: Annotated[str, Field(description="UUID of the ClearPass server node.")],
+    service_id: Annotated[
+        str,
+        Field(description="Numeric service ID (NOT service name). Get via clearpass_get_server_services."),
+    ],
+    param_values: Annotated[
+        dict,
+        Field(
+            description=(
+                "PATCH body containing the service parameters to update. "
+                "Shape mirrors the structure returned by clearpass_get_server_services."
+            ),
+        ),
+    ],
+    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+) -> dict | str:
+    """Edit per-server service parameters (PATCH /api/server/{uuid}/service/{id}).
+
+    Use this to change a service's runtime parameter values on a single
+    cluster node. Common audit pattern — answer "are all servers in the
+    cluster configured the same?" by:
+
+    1. ``clearpass_get_cluster_servers`` for the list of UUIDs.
+    2. ``clearpass_get_server_services(server_uuid=...)`` per node.
+    3. Compare param values across nodes (in code mode this is one
+       ``execute`` call).
+    4. If a node drifts, call this tool to align it.
+
+    See: https://developer.arubanetworks.com/cppm/reference
+    (Local Server Configuration → /server/{server_uuid}/service/{service_id})
+
+    Args:
+        server_uuid: UUID of the ClearPass server node.
+        service_id: Numeric service ID (the integer one, not the name).
+        param_values: PATCH body with the param structure to apply.
+        confirmed: Set true after user confirms. Skips re-prompting.
+    """
+    decline = await _confirm_write(
+        ctx,
+        "edit_params",
+        "server service",
+        f"service_id={service_id}@{server_uuid}",
+        confirmed,
+    )
+    if decline:
+        return decline
+    try:
+        from pyclearpass.api_localserverconfiguration import ApiLocalServerConfiguration
+
+        client = await get_clearpass_session(ApiLocalServerConfiguration)
+        path = f"/server/{server_uuid}/service/{service_id}"
+        return client._send_request(path, "patch", query=param_values)
+    except Exception as e:
+        return f"Error editing service params: {e}"

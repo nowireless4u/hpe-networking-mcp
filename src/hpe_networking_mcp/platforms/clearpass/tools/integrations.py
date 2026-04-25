@@ -250,3 +250,32 @@ async def clearpass_get_endpoint_context_servers(
         return client._send_request("/endpoint-context-server" + query, "get")
     except Exception as e:
         return f"Error fetching endpoint context servers: {e}"
+
+
+@tool(annotations=READ_ONLY)
+async def clearpass_get_extension_log(
+    ctx: Context,
+    extension_id: str,
+    tail: int | None = None,
+) -> dict | str:
+    """Get the runtime log from a ClearPass extension instance.
+
+    Useful for debugging extension behavior without shelling into the
+    ClearPass server. Returns recent log lines for the named extension.
+
+    Args:
+        extension_id: Extension instance ID (UUID-like).
+        tail: Optional max number of recent log lines to return.
+
+    See: https://developer.arubanetworks.com/cppm/reference (Integrations → /extension-instance/{id}/log)
+    """
+    try:
+        from pyclearpass.api_integrations import ApiIntegrations
+
+        client = await get_clearpass_session(ApiIntegrations)
+        path = f"/extension-instance/{extension_id}/log"
+        if tail is not None:
+            path += f"?tail={tail}"
+        return client._send_request(path, "get")
+    except Exception as e:
+        return f"Error fetching extension log: {e}"

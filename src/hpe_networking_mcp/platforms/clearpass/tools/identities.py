@@ -222,3 +222,49 @@ async def clearpass_get_deny_listed_users(
         return client._send_request("/deny-listed-users" + query, "get")
     except Exception as e:
         return f"Error fetching deny-listed users: {e}"
+
+
+@tool(annotations=READ_ONLY)
+async def clearpass_get_external_accounts(
+    ctx: Context,
+    external_account_id: str | None = None,
+    name: str | None = None,
+    filter: str | None = None,
+    sort: str | None = None,
+    offset: int = 0,
+    limit: int = 25,
+    calculate_count: bool = False,
+) -> dict | str:
+    """Get ClearPass external account configurations.
+
+    External accounts are credentials ClearPass uses to talk to outside
+    services — e.g. Azure AD or Okta for federated authentication, MDM
+    APIs for device-context lookups. Returns the configuration record,
+    NOT the live session state.
+
+    If external_account_id or name is provided, returns a single record.
+    Otherwise returns a paginated list of all external accounts.
+
+    Args:
+        external_account_id: Numeric ID for single-item lookup.
+        name: External account name for lookup by name.
+        filter: JSON filter expression (ClearPass REST API syntax).
+        sort: Sort order. Default server-side: "+id".
+        offset: Pagination offset (default 0).
+        limit: Max results per page (default 25, max 1000).
+        calculate_count: When true, include total count in response.
+
+    See: https://developer.arubanetworks.com/cppm/reference (Identities → /external-account)
+    """
+    try:
+        from pyclearpass.api_identities import ApiIdentities
+
+        client = await get_clearpass_session(ApiIdentities)
+        if external_account_id:
+            return client._send_request(f"/external-account/{external_account_id}", "get")
+        if name:
+            return client._send_request(f"/external-account/name/{name}", "get")
+        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        return client._send_request("/external-account" + query, "get")
+    except Exception as e:
+        return f"Error fetching external accounts: {e}"
