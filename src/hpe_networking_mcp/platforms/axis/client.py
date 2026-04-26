@@ -8,13 +8,17 @@ operator handle it.
 
 Base URL: ``https://admin-api.axissecurity.com/api/v1.0``.
 
-JWT-exp decoding is intentionally NOT in this PR — it lands in Wave 2.
+The token is a JWT (per the Axis swagger security definition). At client
+construction we decode the ``exp`` claim and surface days-until-expiry both
+at startup (log warning if <30 days) and at health-probe time.
 """
 
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
+import time
 from typing import Any
 
 import httpx
@@ -27,6 +31,24 @@ from hpe_networking_mcp.utils.logging import mask_secret
 
 _AXIS_BASE_URL = "https://admin-api.axissecurity.com/api/v1.0"
 _REQUEST_TIMEOUT = 30.0
+_TOKEN_EXPIRY_WARNING_DAYS = 30
+
+
+def _decode_jwt_exp(token: str) -> int | None:
+    """Decode the ``exp`` claim from a JWT without verifying the signature.
+
+    Returns the Unix timestamp at which the token expires, or ``None`` if
+    the input doesn't look like a JWT we can read.
+    """
+    try:
+        _header, payload_b64, _sig = token.split(".", 2)
+        padding = "=" * (-len(payload_b64) % 4)
+        decoded = base64.urlsafe_b64decode(payload_b64 + padding)
+        claims = json.loads(decoded)
+        exp = claims.get("exp")
+        return int(exp) if isinstance(exp, (int, float)) else None
+    except (ValueError, json.JSONDecodeError):
+        return None
 
 
 class AxisAuthError(RuntimeError):
@@ -48,12 +70,37 @@ class AxisClient:
             base_url=_AXIS_BASE_URL,
             timeout=_REQUEST_TIMEOUT,
         )
+        self._token_expires_at: int | None = _decode_jwt_exp(self._token)
         logger.info("Axis: client initialized (token: {})", mask_secret(self._token))
+        days = self.token_expires_in_days
+        if days is None:
+            logger.info("Axis: token format unrecognized — expiry tracking disabled")
+        elif days <= 0:
+            logger.warning("Axis: token has already expired — regenerate at Settings → Admin API")
+        elif days <= _TOKEN_EXPIRY_WARNING_DAYS:
+            logger.warning(
+                "Axis: token expires in {} day(s) — regenerate at Settings → Admin API before it lapses",
+                days,
+            )
+        else:
+            logger.info("Axis: token expires in {} day(s)", days)
 
     @property
     def base_url(self) -> str:
         """Return the configured base URL."""
         return _AXIS_BASE_URL
+
+    @property
+    def token_expires_at(self) -> int | None:
+        """Unix timestamp at which the JWT expires, or ``None`` if undecodable."""
+        return self._token_expires_at
+
+    @property
+    def token_expires_in_days(self) -> int | None:
+        """Days until token expiry, or ``None`` if undecodable. Negative if already expired."""
+        if self._token_expires_at is None:
+            return None
+        return (self._token_expires_at - int(time.time())) // 86400
 
     async def aclose(self) -> None:
         """Close the underlying httpx client. Called from server.py:lifespan."""
@@ -115,6 +162,22 @@ class AxisClient:
         """Shortcut for a GET that returns parsed JSON."""
         response = await self.request("GET", path, **kwargs)
         return response.json()
+
+    async def get_paged(
+        self,
+        path: str,
+        *,
+        page_number: int = 1,
+        page_size: int = 50,
+    ) -> dict[str, Any]:
+        """GET a list endpoint using Axis's standard ``pageNumber``/``pageSize`` params.
+
+        All Axis ``Query`` operations return a ``PagedApiResponse<IEnumerable<X>>``
+        envelope. We pass it through unchanged so callers see ``totalRecords``
+        / ``totalPages`` without further wrapping.
+        """
+        params = {"pageNumber": page_number, "pageSize": page_size}
+        return await self.get_json(path, params=params)
 
     async def health_check(self) -> bool:
         """Probe the Axis ``/Health`` endpoint. Returns True if reachable.
