@@ -55,11 +55,36 @@ class TestAxisRegistryPopulation:
             assert spec.category == module_short, f"{name} category={spec.category} module={module_short}"
 
     def test_read_tools_carry_no_write_tag(self, axis_registry_populated):
-        """Phase 1 has only reads — none should carry ``axis_write`` or ``axis_write_delete``."""
+        """``axis_get_*`` tools must not carry a write tag."""
         for name, spec in axis_registry_populated.items():
-            assert not (spec.tags & {"axis_write", "axis_write_delete"}), (
-                f"{name} unexpectedly carries a write tag: {spec.tags}"
+            if name.startswith("axis_get_"):
+                assert not (spec.tags & {"axis_write", "axis_write_delete"}), (
+                    f"{name} unexpectedly carries a write tag: {spec.tags}"
+                )
+
+    def test_write_tools_carry_write_delete_tag(self, axis_registry_populated):
+        """Every ``axis_manage_*`` tool plus ``axis_commit_changes`` and
+        ``axis_regenerate_connector`` must carry ``axis_write_delete`` so the
+        Visibility transform + ElicitationMiddleware gate them.
+        """
+        write_names = {n for n in axis_registry_populated if n.startswith("axis_manage_")}
+        write_names |= {"axis_commit_changes", "axis_regenerate_connector"}
+        for name in write_names:
+            spec = axis_registry_populated[name]
+            assert "axis_write_delete" in spec.tags, (
+                f"{name} missing axis_write_delete tag — write gating won't fire (tags={spec.tags})"
             )
+
+    def test_every_write_tool_references_commit_changes(self, axis_registry_populated):
+        """Axis writes stage; the commit tool applies them. Every ``axis_manage_*``
+        description must name ``axis_commit_changes`` so the AI knows the follow-up.
+        ``axis_regenerate_connector`` is exempt — regenerate is immediate, not staged.
+        """
+        for name, spec in axis_registry_populated.items():
+            if name.startswith("axis_manage_"):
+                assert "axis_commit_changes" in spec.description, (
+                    f"{name} description must reference axis_commit_changes — got: {spec.description[:200]}"
+                )
 
     def test_descriptions_are_populated(self, axis_registry_populated):
         for name, spec in axis_registry_populated.items():
@@ -204,6 +229,28 @@ class TestAxisWriteTagWiring:
         from hpe_networking_mcp.platforms._common.tool_registry import _GATE_CONFIG_ATTR
 
         assert _GATE_CONFIG_ATTR.get("axis") == "enable_axis_write_tools"
+
+    def test_elicitation_middleware_recognizes_axis_write(self):
+        """``ElicitationMiddleware.on_initialize`` must read
+        ``config.enable_axis_write_tools`` and call ``ctx.enable_components`` for
+        the ``axis_write_delete`` tag — otherwise writes never get the
+        elicitation mode set and ``confirm_write`` returns ``declined`` for
+        every call. Caught in Phase 2 live-testing.
+
+        Asserts on the middleware source — full async-init flow is too tightly
+        coupled to FastMCP internals to mock cleanly.
+        """
+        import inspect
+
+        from hpe_networking_mcp.middleware import elicitation
+
+        src = inspect.getsource(elicitation.ElicitationMiddleware.on_initialize)
+        assert "enable_axis_write_tools" in src, (
+            "ElicitationMiddleware.on_initialize doesn't read enable_axis_write_tools"
+        )
+        assert "axis_write_delete" in src, (
+            "ElicitationMiddleware.on_initialize doesn't enable the axis_write_delete tag"
+        )
 
 
 @pytest.mark.unit

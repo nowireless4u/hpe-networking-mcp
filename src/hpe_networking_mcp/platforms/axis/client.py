@@ -179,6 +179,27 @@ class AxisClient:
         params = {"pageNumber": page_number, "pageSize": page_size}
         return await self.get_json(path, params=params)
 
+    async def post_json(self, path: str, json_body: Any, **kwargs: Any) -> Any:
+        """POST a JSON body and return the parsed response."""
+        response = await self.request("POST", path, json_body=json_body, **kwargs)
+        if response.status_code == 204 or not response.content:
+            return {"status_code": response.status_code}
+        return response.json()
+
+    async def put_json(self, path: str, json_body: Any, **kwargs: Any) -> Any:
+        """PUT a JSON body and return the parsed response."""
+        response = await self.request("PUT", path, json_body=json_body, **kwargs)
+        if response.status_code == 204 or not response.content:
+            return {"status_code": response.status_code}
+        return response.json()
+
+    async def delete_resource(self, path: str, **kwargs: Any) -> dict[str, Any]:
+        """DELETE a resource. Most Axis DELETEs return 204 with no body."""
+        response = await self.request("DELETE", path, **kwargs)
+        if response.status_code == 204 or not response.content:
+            return {"status_code": response.status_code}
+        return response.json()
+
     async def health_check(self) -> bool:
         """Probe the Axis ``/Health`` endpoint. Returns True if reachable.
 

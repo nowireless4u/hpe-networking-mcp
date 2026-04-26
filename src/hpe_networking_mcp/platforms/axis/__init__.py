@@ -6,8 +6,11 @@ public-facing documentation until the user chooses to announce it. See
 the scratch directory's ``AXIS_ATMOS_INTEGRATION_PLAN.md`` for the full
 plan.
 
-Phase 1: scaffold + secret loader + health probe + 15 read tools.
-Phase 2 (later) will add the manage/commit/regenerate write surface.
+Phase 1: scaffold + secret loader + health probe + 12 read tools.
+Phase 2: 13 ``axis_manage_*`` write tools, ``axis_commit_changes``, and
+``axis_regenerate_connector``. Reads carry no write tag; writes carry
+``axis_write_delete`` so the visibility transform gates them on
+``ENABLE_AXIS_WRITE_TOOLS=true``.
 """
 
 import importlib
@@ -18,30 +21,41 @@ from loguru import logger
 from hpe_networking_mcp.config import ServerConfig
 
 # Map of category (tools/<name>.py) -> tool names registered by that module.
-# Read-only tool files only in Phase 1. Phase 2 will add manage_* categories.
 TOOLS: dict[str, list[str]] = {
-    "application_groups": ["axis_get_application_groups"],
-    "applications": ["axis_get_applications"],
-    "connector_zones": ["axis_get_connector_zones"],
-    "connectors": ["axis_get_connectors"],
-    "groups": ["axis_get_groups"],
-    "locations": ["axis_get_locations", "axis_get_sub_locations"],
-    "ssl_exclusions": ["axis_get_ssl_exclusions"],
+    # ── Read-only categories ──────────────────────────────────────
+    "application_groups": ["axis_get_application_groups", "axis_manage_application_group"],
+    "applications": ["axis_get_applications", "axis_manage_application"],
+    "connector_zones": ["axis_get_connector_zones", "axis_manage_connector_zone"],
+    "connectors": [
+        "axis_get_connectors",
+        "axis_manage_connector",
+        "axis_regenerate_connector",
+    ],
+    "groups": ["axis_get_groups", "axis_manage_group"],
+    "locations": [
+        "axis_get_locations",
+        "axis_get_sub_locations",
+        "axis_manage_location",
+        "axis_manage_sub_location",
+    ],
+    "ssl_exclusions": ["axis_get_ssl_exclusions", "axis_manage_ssl_exclusion"],
     "status": ["axis_get_status"],
-    "tunnels": ["axis_get_tunnels"],
-    "users": ["axis_get_users"],
-    "web_categories": ["axis_get_web_categories"],
+    "tunnels": ["axis_get_tunnels", "axis_manage_tunnel"],
+    "users": ["axis_get_users", "axis_manage_user"],
+    "web_categories": ["axis_get_web_categories", "axis_manage_web_category"],
+    # ── Commit (Axis writes stage; this applies them) ─────────────
+    "commit": ["axis_commit_changes"],
 }
 
 # Tools whose endpoints exist in the Axis swagger but currently return 403
-# even when the token has read access — Axis appears to gate these
+# even when the token has read/write access — Axis appears to gate these
 # server-side without a corresponding scope toggle in the admin portal
 # (likely an unreleased / hidden API). Implementations stay on disk so
 # re-enabling is a one-line move from this dict back into ``TOOLS`` when
 # Axis flips them on.
 _DISABLED_TOOLS: dict[str, list[str]] = {
-    "custom_ip_categories": ["axis_get_custom_ip_categories"],
-    "ip_feed_categories": ["axis_get_ip_feed_categories"],
+    "custom_ip_categories": ["axis_get_custom_ip_categories", "axis_manage_custom_ip_category"],
+    "ip_feed_categories": ["axis_get_ip_feed_categories", "axis_manage_ip_feed_category"],
 }
 
 
