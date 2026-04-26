@@ -9,6 +9,8 @@ from hpe_networking_mcp.platforms.central.utils import (
     _safe_float,
     build_odata_filter,
     compute_time_window,
+    process_site_health_data,
+    transform_to_site_data,
 )
 
 # ---------------------------------------------------------------------------
@@ -143,3 +145,175 @@ class TestSafeFloat:
 
     def test_returns_none_for_empty_string(self):
         assert _safe_float("") is None
+
+
+# ---------------------------------------------------------------------------
+# process_site_health_data + transform_to_site_data — pinned to the actual
+# Aruba Central /sites-health response shape (siteName, clients.count,
+# devices.count, alerts.totalCount, *.health.groups[]). Captured live from
+# a real tenant 2026-04-26. If the API ever renames these fields again,
+# these tests fail loudly instead of silently returning empty/zero data
+# (root cause of Zach's "0 clients" bug — fix landed in this PR).
+# ---------------------------------------------------------------------------
+
+
+def _sample_sites_health_response() -> list[dict]:
+    """Single-site fragment matching the live ``/sites-health`` response shape."""
+    return [
+        {
+            "siteName": "HOME",
+            "id": "18413656377",
+            "address": {"city": "Anytown", "country": "US"},
+            "location": {"latitude": "39.0", "longitude": "-77.0"},
+            "health": {
+                "groups": [
+                    {"name": "Poor", "value": 0},
+                    {"name": "Fair", "value": 0},
+                    {"name": "Good", "value": 1},
+                ]
+            },
+            "devices": {
+                "count": 17,
+                "health": {
+                    "groups": [
+                        {"name": "Poor", "value": 6},
+                        {"name": "Fair", "value": 1},
+                        {"name": "Good", "value": 10},
+                    ]
+                },
+            },
+            "clients": {
+                "count": 38,
+                "health": {
+                    "groups": [
+                        {"name": "Poor", "value": 0},
+                        {"name": "Fair", "value": 0},
+                        {"name": "Good", "value": 38},
+                    ]
+                },
+            },
+            "alerts": {
+                "totalCount": 3,
+                "groups": [{"name": "Critical", "count": 2}],
+            },
+        }
+    ]
+
+
+def _sample_sites_device_health_response() -> list[dict]:
+    """Single-site fragment matching the live ``/sites-device-health`` response shape."""
+    return [
+        {
+            "siteName": "HOME",
+            "id": "18413656377",
+            "type": "v1",
+            "deviceTypes": [
+                {
+                    "name": "Access Points",
+                    "health": {
+                        "groups": [
+                            {"name": "Poor", "value": 1},
+                            {"name": "Fair", "value": 0},
+                            {"name": "Good", "value": 3},
+                        ]
+                    },
+                },
+            ],
+        }
+    ]
+
+
+def _sample_sites_client_health_response() -> list[dict]:
+    """Single-site fragment matching the live ``/sites-client-health`` response shape."""
+    return [
+        {
+            "siteName": "HOME",
+            "id": "18413656377",
+            "type": "v1",
+            "clientTypes": [
+                {
+                    "name": "Wired",
+                    "health": {
+                        "groups": [
+                            {"name": "Poor", "value": 0},
+                            {"name": "Fair", "value": 0},
+                            {"name": "Good", "value": 4},
+                        ]
+                    },
+                },
+                {
+                    "name": "Wireless",
+                    "health": {
+                        "groups": [
+                            {"name": "Poor", "value": 0},
+                            {"name": "Fair", "value": 0},
+                            {"name": "Good", "value": 34},
+                        ]
+                    },
+                },
+            ],
+        }
+    ]
+
+
+@pytest.mark.unit
+class TestProcessSiteHealthData:
+    """Regression coverage for the ``name`` -> ``siteName`` field-rename bug."""
+
+    def test_processes_sites_keyed_by_site_name(self):
+        """Filtering on ``"name"`` (the old code) drops every site silently.
+        With ``"siteName"`` we keep them all.
+        """
+        result = process_site_health_data(
+            _sample_sites_health_response(),
+            _sample_sites_device_health_response(),
+            _sample_sites_client_health_response(),
+        )
+        assert "HOME" in result, (
+            "process_site_health_data must key on the 'siteName' field — "
+            "if this fails, the API response shape changed or the field-rename regressed"
+        )
+        assert len(result) == 1
+
+    def test_device_details_merge_on_site_name(self):
+        """Device-health enrichment must merge on ``siteName``, not ``name``."""
+        result = process_site_health_data(
+            _sample_sites_health_response(),
+            _sample_sites_device_health_response(),
+            _sample_sites_client_health_response(),
+        )
+        details = result["HOME"].metrics.devices.get("Details")
+        assert details is not None, "deviceTypes details missing — siteName merge regression"
+        assert "Access Points" in details
+
+    def test_client_details_merge_on_site_name(self):
+        """Client-health enrichment must merge on ``siteName``, not ``name``."""
+        result = process_site_health_data(
+            _sample_sites_health_response(),
+            _sample_sites_device_health_response(),
+            _sample_sites_client_health_response(),
+        )
+        details = result["HOME"].metrics.clients.get("Details")
+        assert details is not None, "clientTypes details missing — siteName merge regression"
+        assert "Wired" in details and "Wireless" in details
+
+
+@pytest.mark.unit
+class TestTransformToSiteData:
+    """Regression coverage for the SiteData.name field — must read from siteName."""
+
+    def test_name_is_read_from_site_name_field(self):
+        """The previous implementation read ``site_raw["name"]`` which doesn't
+        exist in the real response — yielding empty-string names everywhere.
+        """
+        site = transform_to_site_data(_sample_sites_health_response()[0])
+        assert site.name == "HOME", f"Expected 'HOME', got '{site.name}' — siteName mapping regressed"
+
+    def test_summary_total_derived_from_groups_when_count_present(self):
+        """Per-site totals come from summing the health.groups[] values via
+        the existing ``groups_to_map`` helper. Asserts the derivation works
+        end-to-end against the real shape.
+        """
+        site = transform_to_site_data(_sample_sites_health_response()[0])
+        assert site.metrics.devices["Summary"].get("Total") == 17
+        assert site.metrics.clients["Summary"].get("Total") == 38

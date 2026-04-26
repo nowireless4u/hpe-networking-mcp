@@ -220,8 +220,8 @@ async def _collect_central(ctx: Context, site_name: str, _window_hours: int) -> 
         health_obj = groups_to_map(match.get("health", {}))
         if all(k in health_obj for k in ["Poor", "Fair", "Good"]):
             summary.health_score = round(health_obj["Fair"] * 0.5 + health_obj["Good"] * 1)
-        summary.total_devices = match.get("devices", {}).get("total", 0)
-        summary.total_clients = match.get("clients", {}).get("total", 0)
+        summary.total_devices = match.get("devices", {}).get("count", 0)
+        summary.total_clients = match.get("clients", {}).get("count", 0)
     except Exception as e:
         logger.warning("site_health_check: Central site resolve failed — {}", e)
         summary.error = f"site resolve failed: {e}"

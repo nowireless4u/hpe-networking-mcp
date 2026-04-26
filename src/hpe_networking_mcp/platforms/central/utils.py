@@ -109,8 +109,14 @@ def fetch_site_data_parallel(
         "network-monitoring/v1/sites-client-health",
     ]
 
+    # These endpoints are offset-paginated per the Aruba dev portal — they
+    # accept ``limit`` + ``offset`` only. Default cursor pagination here
+    # silently breaks for tenants with > SITE_LIMIT sites.
     with ThreadPoolExecutor(max_workers=3) as executor:
-        futures = [executor.submit(paginated_fetch, central_conn, endpoint, SITE_LIMIT) for endpoint in endpoints]
+        futures = [
+            executor.submit(paginated_fetch, central_conn, endpoint, SITE_LIMIT, use_cursor=False)
+            for endpoint in endpoints
+        ]
         results = [future.result() for future in futures]
 
     return process_site_health_data(*results)
@@ -134,16 +140,16 @@ def process_site_health_data(
         dict: Dictionary of site names to SiteData objects
     """
     processed_sites: dict[str, SiteData] = {
-        site["name"]: transform_to_site_data(site) for site in site_health if "name" in site
+        site["siteName"]: transform_to_site_data(site) for site in site_health if "siteName" in site
     }
 
     for site in device_health:
-        site_name = site.get("name", "")
+        site_name = site.get("siteName", "")
         if site_name in processed_sites:
             processed_sites[site_name].metrics.devices["Details"] = groups_to_map(site["deviceTypes"])
 
     for site in client_health:
-        site_name = site.get("name", "")
+        site_name = site.get("siteName", "")
         if site_name in processed_sites:
             processed_sites[site_name].metrics.clients["Details"] = groups_to_map(site["clientTypes"])
 
@@ -319,7 +325,7 @@ def transform_to_site_data(site_raw: dict) -> SiteData:
 
     return SiteData(
         site_id=str(site_raw.get("id", "")),
-        name=str(site_raw.get("name", "")),
+        name=str(site_raw.get("siteName", "")),
         address=site_raw.get("address", {}),
         location={"lat": lat, "lng": lng},
         metrics=metrics,

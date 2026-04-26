@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0.2] - 2026-04-26
+
+**Fixes site-health field-name mismatches that caused `central_get_site_health`, `central_get_site_name_id_mapping`, and `site_health_check` to silently report empty/zero data.**
+
+Reported by a user whose AI client noticed `site_health_check` returning 0 clients for a site that had real client traffic. Investigation traced it to three code paths reading the wrong field name from Aruba Central's `/network-monitoring/v1/sites-health` response, plus a fourth pagination bug that would silently truncate results for tenants with >100 sites.
+
+### Bugs
+
+- **`central_get_site_health` returned an empty list.** [`process_site_health_data`](src/hpe_networking_mcp/platforms/central/utils.py) keyed the result dict on `site["name"]` but the API returns `siteName`. Every site got filtered out at the dict-comprehension step. Fixed in three places (the main key, plus the device-merge and client-merge loops).
+- **`central_get_site_name_id_mapping` returned `total_devices: 0` and `total_clients: 0` for every site.** Read `clients.total` and `devices.total` but the simplified shape (after `pycentral.simplified_site_resp`) uses `count`. Changed to `clients.count` / `devices.count`. `alerts.total` was already correct (it's the one field `simplified_site_resp` does map from `totalCount` → `total`).
+- **`site_health_check` (cross-platform) reported the same `total_clients: 0` / `total_devices: 0` symptom.** Same root cause as above, same fix.
+- **`fetch_site_data_parallel` used cursor pagination against offset-paginated endpoints.** All three site-health endpoints (`/sites-health`, `/sites-device-health`, `/sites-client-health`) accept `limit` + `offset` only — Aruba's dev portal does not document a cursor param. The default `paginated_fetch(use_cursor=True)` sent `next=1` and worked accidentally for tenants with ≤100 sites (the server tolerates the unknown param and returns page 1) but would silently stop after the first page for larger tenants. Switched these three calls to `use_cursor=False`.
+
+### Mode coverage
+
+The empty-list and zero-counts symptoms reproduced in both `dynamic` and `code` modes — the underlying tools share the same code path regardless of how they're surfaced. `site_health_check` is gated off in code mode (cross-platform aggregator), so its specific symptom doesn't surface there, but the per-platform tools that do appear (`central_get_site_health`, `central_get_site_name_id_mapping`) show the same data through both modes.
+
+### Verified live against a real tenant
+
+| Tool | Before | After |
+|---|---|---|
+| `central_get_site_health` | `[]` | 13 sites; HOME = 38 clients / 17 devices, with full per-type breakdown |
+| `central_get_site_name_id_mapping` (HOME) | `health: 0, total_devices: 0, total_clients: 0, total_alerts: 0` | `health: 81, total_devices: 17, total_clients: 38, total_alerts: 3` |
+
+### Tests
+
+6 new tests in `tests/unit/test_central_utils.py` pinning `process_site_health_data` and `transform_to_site_data` against captured-from-live response shapes. If Aruba ever renames `siteName` → `name` (or back), these tests fail loudly instead of letting another silent regression ship.
+
+Total: 562 → 568 tests passing.
+
 ## [2.1.0.1] - 2026-04-25
 
 **ClearPass coverage follow-up — adds 14 read/write tools to close the dev-portal gap surfaced during the v2.1.0.0 audit.**
