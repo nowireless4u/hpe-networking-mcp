@@ -157,9 +157,29 @@ async def _probe_axis(ctx: Context) -> dict[str, Any]:
         return {"status": "unavailable", "message": "Axis is not configured or failed to initialize"}
     try:
         await client.health_check()
-        return {"status": "ok", "message": "Axis API reachable", "base_url": client.base_url}
     except Exception as e:
         return {"status": "degraded", "message": f"Axis probe failed: {e}"}
+
+    days = client.token_expires_in_days
+    result: dict[str, Any] = {"status": "ok", "message": "Axis API reachable", "base_url": client.base_url}
+    if days is None:
+        return result
+    if days <= 0:
+        return {
+            "status": "degraded",
+            "message": "Axis API token has expired — regenerate at Settings → Admin API",
+            "base_url": client.base_url,
+            "token_expires_in_days": days,
+        }
+    if days <= 30:
+        return {
+            "status": "degraded",
+            "message": f"Axis token expires in {days} day(s) — regenerate at Settings → Admin API before it lapses",
+            "base_url": client.base_url,
+            "token_expires_in_days": days,
+        }
+    result["token_expires_in_days"] = days
+    return result
 
 
 _PROBES = {

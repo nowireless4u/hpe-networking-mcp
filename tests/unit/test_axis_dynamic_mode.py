@@ -1,47 +1,78 @@
-"""Unit tests for the Axis Atmos Cloud platform scaffold (Phase 1).
+"""Unit tests for the Axis Atmos Cloud platform (Phase 1: 12 read tools).
 
-Phase 1 ships the platform skeleton — config loader, lifespan client init,
-health probe, registry plumbing — but no underlying tools yet (``TOOLS``
-is intentionally empty until subsequent waves). The tests below validate
-the scaffold itself: the registry is wired in cleanly, the empty TOOLS
-dict round-trips, and the pieces a tool would need (decorator, client
-accessor, annotation constants) are importable.
-
-When read tools land in Wave 3, expand ``TestAxisRegistryPopulation`` to
-mirror ``test_apstra_dynamic_mode.py``.
+Validates the registry wiring, the read-tool surface, the JWT-exp decoder,
+the health probe enrichment, and the disabled-tools list. Phase 2 will
+add ``manage_*`` write tools and a corresponding test class.
 """
 
 from __future__ import annotations
 
+import importlib
+
 import pytest
 
-from hpe_networking_mcp.platforms._common.tool_registry import REGISTRIES
+from hpe_networking_mcp.platforms._common.tool_registry import REGISTRIES, clear_registry
+
+
+@pytest.fixture
+def axis_registry_populated():
+    """Import every Axis tool module so ``REGISTRIES['axis']`` is full."""
+    clear_registry("axis")
+    from hpe_networking_mcp.platforms.axis import TOOLS
+
+    for category in TOOLS:
+        module = importlib.import_module(f"hpe_networking_mcp.platforms.axis.tools.{category}")
+        importlib.reload(module)
+    yield REGISTRIES["axis"]
+    clear_registry("axis")
 
 
 @pytest.mark.unit
-class TestAxisRegistryWiring:
+class TestAxisRegistryPopulation:
     def test_axis_in_registries_dict(self):
-        """The cross-platform registry must contain the axis key.
-
-        ``record_tool`` raises ``ValueError("Unknown platform: axis")`` if
-        the platform name isn't a known key — caught this exact bug live
-        during scaffold development.
-        """
         assert "axis" in REGISTRIES
 
-    def test_axis_starts_empty(self):
-        """Phase 1 ships zero tools. Read tools land in a later wave."""
+    def test_registry_contains_all_tools(self, axis_registry_populated):
+        """Every name in ``TOOLS`` registers cleanly."""
         from hpe_networking_mcp.platforms.axis import TOOLS
 
-        assert TOOLS == {}
+        expected = {name for names in TOOLS.values() for name in names}
+        actual = set(axis_registry_populated.keys())
+        assert actual == expected, f"missing: {expected - actual}, extra: {actual - expected}"
 
-    def test_axis_register_tools_returns_zero(self):
-        """register_tools should report 0 underlying tools at this stage."""
-        from hpe_networking_mcp.platforms.axis import TOOLS
+    def test_disabled_tools_not_registered(self, axis_registry_populated):
+        """``_DISABLED_TOOLS`` entries (403 in our tenant) must not appear in the registry."""
+        from hpe_networking_mcp.platforms.axis import _DISABLED_TOOLS
 
-        # Tool count is just len(flatten(TOOLS.values())).
-        flat = [n for names in TOOLS.values() for n in names]
-        assert len(flat) == 0
+        disabled_names = {n for names in _DISABLED_TOOLS.values() for n in names}
+        actual = set(axis_registry_populated.keys())
+        assert not (disabled_names & actual), f"disabled tools leaked into registry: {disabled_names & actual}"
+
+    def test_categories_match_module_names(self, axis_registry_populated):
+        """Registry category == source module's short name (powers list_tools(category=...))."""
+        for name, spec in axis_registry_populated.items():
+            module_short = spec.func.__module__.rsplit(".", 1)[-1]
+            assert spec.category == module_short, f"{name} category={spec.category} module={module_short}"
+
+    def test_read_tools_carry_no_write_tag(self, axis_registry_populated):
+        """Phase 1 has only reads — none should carry ``axis_write`` or ``axis_write_delete``."""
+        for name, spec in axis_registry_populated.items():
+            assert not (spec.tags & {"axis_write", "axis_write_delete"}), (
+                f"{name} unexpectedly carries a write tag: {spec.tags}"
+            )
+
+    def test_descriptions_are_populated(self, axis_registry_populated):
+        for name, spec in axis_registry_populated.items():
+            assert spec.description, f"{name} has empty description"
+
+    def test_every_tool_anchored_to_axis_platform(self, axis_registry_populated):
+        """Code mode's ``search(tags=["axis"])`` and ``tags()`` discovery
+        surfaces depend on each tool's ``ToolSpec.platform`` being ``axis``
+        (the ``_registry.tool`` shim adds the platform tag at the FastMCP
+        layer using this same anchor).
+        """
+        for name, spec in axis_registry_populated.items():
+            assert spec.platform == "axis", f"{name} platform={spec.platform} — code-mode discovery would mis-bucket it"
 
 
 @pytest.mark.unit
@@ -173,3 +204,117 @@ class TestAxisWriteTagWiring:
         from hpe_networking_mcp.platforms._common.tool_registry import _GATE_CONFIG_ATTR
 
         assert _GATE_CONFIG_ATTR.get("axis") == "enable_axis_write_tools"
+
+
+@pytest.mark.unit
+class TestAxisJwtExpDecoder:
+    """The JWT-exp decoder powers the startup warning + health-probe countdown."""
+
+    def test_decode_real_shaped_jwt(self):
+        """A well-formed JWT with an ``exp`` claim returns the integer timestamp."""
+        import base64
+        import json
+
+        from hpe_networking_mcp.platforms.axis.client import _decode_jwt_exp
+
+        header = base64.urlsafe_b64encode(json.dumps({"alg": "RS256"}).encode()).rstrip(b"=").decode()
+        payload = base64.urlsafe_b64encode(json.dumps({"exp": 1900000000}).encode()).rstrip(b"=").decode()
+        token = f"{header}.{payload}.fake-sig"
+
+        assert _decode_jwt_exp(token) == 1900000000
+
+    def test_decode_returns_none_for_opaque_string(self):
+        from hpe_networking_mcp.platforms.axis.client import _decode_jwt_exp
+
+        assert _decode_jwt_exp("not-a-jwt-just-an-opaque-string") is None
+
+    def test_decode_returns_none_when_exp_missing(self):
+        import base64
+        import json
+
+        from hpe_networking_mcp.platforms.axis.client import _decode_jwt_exp
+
+        header = base64.urlsafe_b64encode(json.dumps({"alg": "RS256"}).encode()).rstrip(b"=").decode()
+        payload = base64.urlsafe_b64encode(json.dumps({"sub": "x"}).encode()).rstrip(b"=").decode()
+        token = f"{header}.{payload}.fake-sig"
+
+        assert _decode_jwt_exp(token) is None
+
+
+@pytest.mark.unit
+class TestAxisHealthProbeEnrichment:
+    """Health probe must surface token-expiry countdown + downgrade to degraded near expiry."""
+
+    @pytest.mark.asyncio
+    async def test_probe_reports_days_when_outside_warning_window(self):
+        from hpe_networking_mcp.platforms.health import _probe_axis
+
+        class _FakeClient:
+            base_url = "https://x"
+            token_expires_in_days = 100
+
+            async def health_check(self):
+                return True
+
+        class _FakeCtx:
+            lifespan_context = {"axis_client": _FakeClient()}
+
+        result = await _probe_axis(_FakeCtx())
+        assert result["status"] == "ok"
+        assert result["token_expires_in_days"] == 100
+
+    @pytest.mark.asyncio
+    async def test_probe_degrades_inside_30_day_window(self):
+        from hpe_networking_mcp.platforms.health import _probe_axis
+
+        class _FakeClient:
+            base_url = "https://x"
+            token_expires_in_days = 7
+
+            async def health_check(self):
+                return True
+
+        class _FakeCtx:
+            lifespan_context = {"axis_client": _FakeClient()}
+
+        result = await _probe_axis(_FakeCtx())
+        assert result["status"] == "degraded"
+        assert result["token_expires_in_days"] == 7
+        assert "regenerate" in result["message"].lower()
+
+    @pytest.mark.asyncio
+    async def test_probe_degrades_when_already_expired(self):
+        from hpe_networking_mcp.platforms.health import _probe_axis
+
+        class _FakeClient:
+            base_url = "https://x"
+            token_expires_in_days = -1
+
+            async def health_check(self):
+                return True
+
+        class _FakeCtx:
+            lifespan_context = {"axis_client": _FakeClient()}
+
+        result = await _probe_axis(_FakeCtx())
+        assert result["status"] == "degraded"
+        assert "expired" in result["message"].lower()
+
+    @pytest.mark.asyncio
+    async def test_probe_omits_days_when_undecodable(self):
+        """Opaque-token case: probe still ok, just no countdown field."""
+        from hpe_networking_mcp.platforms.health import _probe_axis
+
+        class _FakeClient:
+            base_url = "https://x"
+            token_expires_in_days = None
+
+            async def health_check(self):
+                return True
+
+        class _FakeCtx:
+            lifespan_context = {"axis_client": _FakeClient()}
+
+        result = await _probe_axis(_FakeCtx())
+        assert result["status"] == "ok"
+        assert "token_expires_in_days" not in result
