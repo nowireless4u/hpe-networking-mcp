@@ -192,15 +192,28 @@ def create_server(config: ServerConfig) -> FastMCP:
         ElicitationMiddleware,
     )
     from hpe_networking_mcp.middleware.null_strip import NullStripMiddleware
+    from hpe_networking_mcp.middleware.sandbox_error_catch import (
+        SandboxErrorCatchMiddleware,
+    )
     from hpe_networking_mcp.middleware.validation_catch import ValidationCatchMiddleware
 
+    # Middleware order (outermost → innermost):
+    #   NullStrip          — drop nulls before validation
+    #   ValidationCatch    — Pydantic ValidationError → readable string return
+    #   SandboxErrorCatch  — code-mode MontyRuntimeError on execute → string return
+    #   Elicitation        — write-tool confirmation gate
     mcp = FastMCP(
         name="HPE Networking MCP",
         instructions=_INSTRUCTIONS,
         lifespan=lifespan,
         on_duplicate="replace",
         mask_error_details=True,
-        middleware=[NullStripMiddleware(), ValidationCatchMiddleware(), ElicitationMiddleware()],
+        middleware=[
+            NullStripMiddleware(),
+            ValidationCatchMiddleware(),
+            SandboxErrorCatchMiddleware(),
+            ElicitationMiddleware(),
+        ],
     )
 
     # Attach config for lifespan to access
@@ -311,6 +324,25 @@ def _register_code_mode(mcp: FastMCP) -> None:
         max_memory=128 * 1024 * 1024,
         max_recursion_depth=50,
     )
+    # Override the default `execute` description with one that lists the
+    # callable platform-tool prefixes AND explicitly notes that the
+    # discovery tools (tags/search/get_schema) are NOT callable from
+    # inside the sandbox. The default fastmcp string only says
+    # "call_tool(name, params) is in scope" without telling the LLM what
+    # `call_tool` can dispatch to — both gemma-4eb and Claude have hit
+    # the same `Unknown tool: search` failure as a result. See #208.
+    execute_description = (
+        "Run Python in a sandbox to compose multiple platform tool calls. "
+        "Use `return` to produce output.\n\n"
+        "In scope: `await call_tool(name: str, params: dict) -> Any`.\n\n"
+        "`call_tool` ONLY dispatches to platform tools — names start with one "
+        "of: `mist_`, `central_`, `greenlake_`, `clearpass_`, `apstra_`, "
+        "`axis_` — plus the cross-platform `health` tool.\n\n"
+        "The discovery tools `tags`, `search`, and `get_schema` are NOT "
+        "callable from inside execute(). They live at the outer MCP surface "
+        "for planning. Call them BEFORE writing your code block to find "
+        "tool names + schemas, then chain those tools inside execute()."
+    )
     mcp.add_transform(
         CodeMode(
             sandbox_provider=MontySandboxProvider(limits=limits),
@@ -319,6 +351,7 @@ def _register_code_mode(mcp: FastMCP) -> None:
                 Search(default_detail="brief"),
                 GetSchemas(default_detail="detailed"),
             ],
+            execute_description=execute_description,
         )
     )
     logger.info("Code mode enabled — exposed surface: get_tags + search + get_schema + execute")

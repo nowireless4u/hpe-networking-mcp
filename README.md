@@ -496,7 +496,7 @@ hpe-networking-mcp/
 │   ├── server.py                # FastMCP server setup and lifespan
 │   ├── config.py                # Docker secrets loading and validation
 │   ├── INSTRUCTIONS.md          # LLM instructions for all platforms
-│   ├── middleware/              # Elicitation and null-strip middleware
+│   ├── middleware/              # Elicitation, null-strip, validation-catch, sandbox-error-catch
 │   └── platforms/
 │       ├── _common/             # Shared tool registry + meta-tool factory (dynamic mode)
 │       ├── health.py            # Cross-platform health probe tool
@@ -510,7 +510,7 @@ hpe-networking-mcp/
 │       ├── sync_prompts.py      # Cross-platform WLAN sync prompts
 │       ├── site_health_check.py # Cross-platform site health aggregator
 │       └── site_rf_check.py     # Cross-platform Wi-Fi RF dashboard
-├── tests/                       # Unit and integration tests (568+ unit tests)
+├── tests/                       # Unit and integration tests (598+ unit tests)
 ├── docs/                        # PRD, PRP, tool reference
 ├── secrets/                     # Secret files (only .example committed)
 ├── .github/workflows/           # CI, security, Docker publish

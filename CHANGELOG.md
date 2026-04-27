@@ -5,6 +5,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0.4] - 2026-04-27
+
+**Unmasks code-mode sandbox errors and tells the LLM upfront which tools `call_tool` can dispatch to.** Closes #208.
+
+### Background
+
+When the LLM in code mode wrote `await call_tool("search", ...)` (or `get_schema` / `tags`) inside `execute()`, the sandbox raised `MontyRuntimeError: Unknown tool: search` because those discovery tools live at the outer MCP surface — they're not in the backend catalog `call_tool` resolves against. FastMCP's masking layer (`mask_error_details=True`, set for security) caught the runtime error and re-raised it as a generic `ToolError("Error calling tool 'execute'")`, leaving the LLM with nothing to self-correct from. Both gemma-4eb (LM Studio) and Claude were observed making this exact mistake in the wild.
+
+### What's fixed
+
+Two complementary changes:
+
+1. **Custom `execute_description`** in [`server.py:_register_code_mode`](src/hpe_networking_mcp/server.py) — the default fastmcp string only said "`call_tool` is in scope" without telling the LLM what's *callable*. The new description names the platform-tool prefixes (`mist_*`, `central_*`, `greenlake_*`, `clearpass_*`, `apstra_*`, `axis_*`, plus `health`) and explicitly notes that `tags` / `search` / `get_schema` are NOT callable from inside `execute()` — they're for planning, before the code block.
+
+2. **`SandboxErrorCatchMiddleware`** at [`src/hpe_networking_mcp/middleware/sandbox_error_catch.py`](src/hpe_networking_mcp/middleware/sandbox_error_catch.py) — sits next to `ValidationCatchMiddleware` in the chain. Catches the masked `ToolError` for the `execute` tool, inspects `__cause__`, and if it's a `MontyError` (any subclass: runtime / syntax / typing) returns a string `ToolResult` like:
+
+```
+Sandbox error: Exception: Unknown tool: search
+```
+
+The LLM can branch on this the same way it does on tool-level error strings from Axis / ClearPass.
+
+### Why catch `ToolError` instead of `MontyError` directly
+
+FastMCP's `server.call_tool` (line 1240) already special-cases `ValidationError` to re-raise unchanged — that's why `ValidationCatchMiddleware` (#206) catches the original type. Other exceptions fall through to `mask_error_details` and become `ToolError(...) from cause`. The `MontyError` is preserved as `__cause__`, so we unwrap there.
+
+### Live-tested
+
+Three scenarios verified against the running container in code mode:
+
+| Test | Before | After |
+|---|---|---|
+| `await call_tool("search", ...)` from inside `execute()` | `Error calling tool 'execute'` | `Sandbox error: Exception: Unknown tool: search` |
+| `return "hello"` from `execute()` | (no regression) | (no regression) |
+| `await call_tool("health", {})` from inside `execute()` | (no regression) | (no regression) |
+
+### Tests (592 → 598)
+
+Six new tests in `tests/unit/test_middleware.py::TestSandboxErrorCatchMiddleware`:
+
+- Catches the wrapped sandbox runtime error → returns ToolResult with the readable string
+- Does NOT intercept `ToolError` on tools other than `execute`
+- Does NOT intercept `ToolError` whose `__cause__` is something other than `MontyError`
+- Does NOT intercept bare exceptions on `execute` (only the FastMCP-wrapped shape)
+- Successful execute calls pass through unchanged
+- The wrapped error's `str()` form is preserved verbatim in the returned text
+
+Helper `_make_monty_error` runs real failing pydantic-monty code to capture a genuine `MontyError` instance, since the three concrete subclasses (`MontyRuntimeError` / `MontySyntaxError` / `MontyTypingError`) are Rust-backed and `@final` and cannot be constructed from Python.
+
 ## [2.2.0.3] - 2026-04-27
 
 **Adds `ValidationCatchMiddleware` to convert Pydantic `ValidationError` into a structured tool-result string instead of letting it propagate as `MontyRuntimeError` and crash `execute()` in code mode.** Closes #206 (the FastMCP-layer follow-up to #202).

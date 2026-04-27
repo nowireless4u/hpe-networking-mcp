@@ -61,6 +61,12 @@ Three tool calls inside one `execute`. In dynamic mode this same workflow would 
 
 The `pydantic-monty` sandbox restricts duration (30s), memory (128 MB), and recursion depth (50). Some Python builtins (`hasattr`, `type`, most introspection) aren't available — the LLM learns these via error messages.
 
+### What `call_tool` can dispatch to
+
+Inside `execute()`, `call_tool(name, params)` only resolves names from the backend platform catalog — every tool whose name starts with `mist_` / `central_` / `greenlake_` / `clearpass_` / `apstra_` / `axis_`, plus the cross-platform `health`. The discovery tools (`tags` / `search` / `get_schema`) are NOT callable from inside `execute()` — they live at the outer MCP surface for planning. Use them BEFORE writing your code block, then chain platform tools inside.
+
+If you do try to dispatch to a discovery tool by mistake, `SandboxErrorCatchMiddleware` returns a string like `Sandbox error: Exception: Unknown tool: search` so you can fix the call on the next turn (rather than seeing a generic masked error). See v2.2.0.4 release notes / #208.
+
 ### When to use which mode
 
 - **`dynamic` (default)** — stable, production-tested, best for lookup-style questions
