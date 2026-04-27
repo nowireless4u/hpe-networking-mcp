@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0.2] - 2026-04-27
+
+**Mist tool schema tightening — alarm severity/group enum corrections + SLE metric description fixes that point at the right discovery tools.** Closes #186.
+
+### Bug context
+
+Issue #186 cited a live failure where the AI called `mist_get_site_sle(metric="wireless")` and got a 404. Root cause turned out to be deeper than "this param should be an Enum":
+
+1. The `metric` description directed the AI at `mist_get_constants(object_type='insight_metrics')` — but **insight_metrics is a different vocabulary** from SLE metrics (insight_metrics returns time-series like `num_clients`, `bytes`; SLE metrics are `wifi-coverage`, `wired-throughput`, etc.). The AI followed the description, didn't see SLE metrics in the response, and guessed "wireless" instead.
+2. There was already a discovery tool — `mist_list_site_sle_info(query_type='metrics', scope, scope_id)` — wrapping `GET /api/v1/sites/{site_id}/sle/{scope}/{scope_id}/metrics`. The SLE tool descriptions just weren't pointing at it.
+
+This turned what looked like an Enum-tightening exercise into mostly description-tightening work that fixes the actual misdirection.
+
+### Changes
+
+**Enum corrections (`mist/tools/search_alarms.py`):**
+- `AlarmSeverity` Enum: dropped `major` and `minor`. Mist's [search-org-alarms reference](https://www.juniper.net/documentation/us/en/software/mist/api/http/api/orgs/alarms/search-org-alarms) documents only three severity values — `critical`, `info`, `warn`. The previous Enum's two extras would have surfaced as 422s if the AI ever picked them.
+- `AlarmGroup` Enum (added in this PR): wraps `severity` and `group` params (previously typed `str` with description-only enum hints).
+- `severity` and `group` params on `mist_search_alarms` now `Annotated[AlarmSeverity, ...]` / `Annotated[AlarmGroup, ...]` for schema-time validation.
+
+**SLE description fixes (the actual bug fix for the cited failure):**
+- `mist_get_site_sle.metric` description now points at `mist_list_site_sle_info(query_type='metrics', scope, scope_id)` (the right discovery for site-scoped SLE metrics) and explicitly warns that `mist_get_constants(object_type='insight_metrics')` is a DIFFERENT set, not for SLE.
+- `mist_get_org_sle.metric` description now points at `mist_get_constants(object_type='insight_metrics')` per [Mist's get-org-sle reference](https://www.juniper.net/documentation/us/en/software/mist/api/http/api/orgs/sles/get-org-sle) — that's the correct discovery path for org-level SLE.
+
+### Why some params stayed `str`
+
+Several `str`-typed Mist params are user-supplied content with tenant-specific or source-dependent valid sets — `mist_search_alarms.alarm_type` (per-tenant alarm definitions), `mist_search_events.event_type` (varies by `event_source`), `mist_get_insight_metrics.metric`. Their descriptions already correctly reference the right `mist_get_constants` discovery; tightening to `Enum` would freeze what's currently dynamic API content. Verified against Mist's docs as part of this PR.
+
+### Tests (577 → 582)
+
+Five new tests in `tests/unit/test_mist_dynamic_mode.py`:
+
+- `TestMistAlarmEnums`:
+  - `AlarmSeverity` values match Mist docs exactly (catches accidental re-add of `major`/`minor`)
+  - `AlarmGroup` values match Mist docs exactly
+  - Pydantic rejects invalid severity values pre-API
+- `TestMistSleDescriptionDiscovery`:
+  - AST-style guard pinning `mist_get_site_sle.metric` description references `mist_list_site_sle_info`
+  - AST-style guard pinning `mist_get_org_sle.metric` description references `object_type=insight_metrics` constants
+- Plus regression test: invalid severity (`"major"`) and invalid catch-all (`"emergency"`) both raise ValidationError.
+
+### Audit summary
+
+The Explore agent's full audit revealed **20 of the Mist tools already use proper Enum types correctly** (most prior sessions did this work). The remaining gap was much smaller than the issue framing suggested — and the actual high-value fix was correcting the misdirected SLE descriptions rather than enum-ing every loose `str` param.
+
 ## [2.2.0.1] - 2026-04-27
 
 **Fixes tool-level `raise` patterns that crashed the entire `execute()` block in `MCP_TOOL_MODE=code`.** When a tool raised `ValueError` / `TypeError` / `RuntimeError`, the exception propagated through FastMCP's `call_tool` machinery as `MontyRuntimeError` and the AI's `try/except` inside the sandbox could not catch it. Closes #202.

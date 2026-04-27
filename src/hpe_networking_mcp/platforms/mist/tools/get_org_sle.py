@@ -32,8 +32,9 @@ from hpe_networking_mcp.platforms.mist.client import (
     name="mist_get_org_sle",
     description=(
         "Get Org SLEs (all/worst sites, Mx Edges, ...). "
-        "Use the `mist_get_insight_metrics` tool to get the "
-        "list of available SLE metrics"
+        "Discover the available metric names via "
+        "`mist_get_constants` with "
+        "`object_type=insight_metrics`."
     ),
     tags={"sles"},
     annotations={
@@ -51,7 +52,10 @@ async def get_org_sle(
         str,
         Field(
             description=(
-                "Metric to look at. Use the `mist_get_insight_metrics` tool to get the list of available SLE metrics"
+                "Metric name to look at. Discover the valid "
+                "set via `mist_get_constants` with "
+                "`object_type=insight_metrics` (per the Mist "
+                "GET org-sle reference)."
             )
         ),
     ],
@@ -60,9 +64,9 @@ async def get_org_sle(
         Field(
             description=(
                 "Type of SLE data to retrieve for the "
-                "organization sites. Use the "
-                "`mist_get_insight_metrics` tool to get the "
-                "list of available SLE metrics"
+                "organization sites. Discover via "
+                "`mist_get_constants` with "
+                "`object_type=insight_metrics`."
             ),
             default=None,
         ),
