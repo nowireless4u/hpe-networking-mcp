@@ -169,6 +169,15 @@ their change ticket (see *Output formatting* below).
 
 Save this snapshot before proceeding with the change.
 
+## After the change — run the post-check
+
+End the response by reminding the operator:
+
+> "Save this snapshot. After the change lands, run the `change-post-check`
+> skill to diff against this baseline and get a CLEAN / IMPACT-OBSERVED /
+> REGRESSION verdict. If you stay in this same chat, the AI will read
+> this snapshot directly from context — you won't need to paste it back."
+
 ## Example queries that should trigger this skill
 
 > "I'm about to push a config change to the HOME WLAN — give me a baseline"

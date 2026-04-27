@@ -350,7 +350,13 @@ def _register_code_mode(mcp: FastMCP) -> None:
         "The discovery tools `tags`, `search`, and `get_schema` are NOT "
         "callable from inside execute(). They live at the outer MCP surface "
         "for planning. Call them BEFORE writing your code block to find "
-        "tool names + schemas, then chain those tools inside execute()."
+        "tool names + schemas, then chain those tools inside execute().\n\n"
+        "Known sandbox limits: `asyncio.gather()` is unavailable — use "
+        "sequential `await` calls. OS-access functions are blocked, "
+        "including `datetime.now()`, `time.time()`, file I/O, `os.environ`, "
+        "and `subprocess`. For timestamps, accept ISO strings as parameters "
+        "or hardcode literal ISO-8601 strings rather than computing them "
+        "inside the sandbox."
     )
     mcp.add_transform(
         CodeMode(
