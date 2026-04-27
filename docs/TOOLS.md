@@ -59,7 +59,13 @@ Three tool calls inside one `execute`. In dynamic mode this same workflow would 
 
 ### Sandbox limits
 
-The `pydantic-monty` sandbox restricts duration (30s), memory (128 MB), and recursion depth (50). Some Python builtins (`hasattr`, `type`, most introspection) aren't available — the LLM learns these via error messages.
+The `pydantic-monty` sandbox restricts duration (30s), memory (128 MB), and recursion depth (50). Several Python features the LLM may reach for are also unavailable:
+
+- **`asyncio.gather()`** — fails with `TypeError: 'list' object is not an iterator`. Use sequential `await` calls instead.
+- **OS-access functions** — `datetime.now()`, `time.time()`, file I/O (`open`, `Path.read_text`), `os.environ`, and `subprocess` all raise `NotImplementedError`. For timestamps, accept ISO strings as parameters or hardcode literal ISO-8601 strings.
+- **Some introspection** — `hasattr`, `type`, and parts of the introspection surface aren't available; the LLM discovers these via error messages.
+
+The `execute` tool description tells the LLM these limits up front so it shouldn't waste turns rediscovering them.
 
 ### What `call_tool` can dispatch to
 

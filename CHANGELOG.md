@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0.1] - 2026-04-27
+
+**Adds the `change-post-check` skill (partner to `change-pre-check`) and documents two pydantic-monty sandbox limits the LLM was discovering at runtime.**
+
+### `change-post-check` skill
+
+The `change-pre-check` skill captures a baseline before a planned change; this new skill re-pulls the same data afterward and diffs against the baseline to produce a verdict:
+
+| Verdict | Trigger |
+|---|---|
+| `CLEAN` | Reachability unchanged + 0 new alarms + config diff matches plan + metric deltas <5% |
+| `IMPACT-OBSERVED` | At least one IMPACT signal but no REGRESSION (new minor alarm, 5-15% client delta, etc.) |
+| `REGRESSION` | Platform unreachable / planned change didn't land / unplanned config drift / >15% delta |
+
+**Baseline-discovery design:** the skill checks conversation context first for the `## Pre-change baseline — ...` block and only asks the user to paste it back if it's not in scope. Operators working in the same chat as the pre-check don't need to copy-paste anything.
+
+`change-pre-check.md` gains a "After the change — run the post-check" section so the AI tells the operator about the partner skill on its way out, with the in-context-vs-paste-back distinction called out explicitly.
+
+### Documented sandbox limits
+
+In-the-wild observation: the AI ran `change-pre-check` in code mode and tripped on two pydantic-monty sandbox limits, recovering each time via the `SandboxErrorCatchMiddleware` (v2.2.0.4) error string but burning a turn each:
+
+1. **`asyncio.gather()`** fails with `TypeError: 'list' object is not an iterator` — the sandbox treats the awaitable list as a non-iterator.
+2. **`datetime.now()`** is blocked as an OS-access call (`NotImplementedError`).
+
+The `SandboxErrorCatchMiddleware` did its job (the LLM saw the actual error and self-corrected), but the LLM shouldn't have to *discover* these limits per-session. So:
+
+- The custom `execute_description` (`server.py:_register_code_mode`) gains a "Known sandbox limits" line listing both — `asyncio.gather()` unavailable, OS-access functions blocked, and the practical workaround (sequential awaits, ISO strings as parameters or hardcoded literals).
+- `docs/TOOLS.md`'s "Sandbox limits" section gains the same content.
+
+### Tests
+
+No new tests — the skill is content; the bundled-skills sanity test added in v2.3.0.0 auto-picks up the new file. 639 tests still pass.
+
+### Bumped to a patch version
+
+Adding a skill is purely additive content (no schema change, no new tool surface). Same versioning logic as adding a new middleware. Patch.
+
 ## [2.3.0.0] - 2026-04-27
 
 **Adds a Skills system: markdown-defined multi-step procedures discoverable via two MCP tools.** Closes #189.
