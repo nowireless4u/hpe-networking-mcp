@@ -154,3 +154,90 @@ class TestMistSleDescriptionDiscovery:
             "mist_get_constants(object_type='insight_metrics') — that's the correct discovery "
             "for org-level SLE per Mist's published API reference."
         )
+
+
+@pytest.mark.unit
+class TestMistDescriptionDisambiguation:
+    """Regression coverage for issue #183 — tool descriptions that
+    previously misled the AI now contain explicit scope/shape language.
+
+    These tests assert specific strings appear in each tool's source so
+    a future rewrite cannot silently drop the disambiguation.
+    """
+
+    def test_get_site_health_warns_about_org_wide_aggregate(self):
+        """The cited offender — name reads as per-site list, actually returns
+        org-wide aggregate. Description must call this out and point at the
+        right tool for the per-site-list case.
+        """
+        import inspect
+
+        from hpe_networking_mcp.platforms.mist.tools import get_site_health
+
+        src = inspect.getsource(get_site_health)
+        # Must explicitly say it's org-wide (not per-site) and point at the
+        # alternative tool for per-site queries.
+        assert "AGGREGATE" in src, "get_site_health description must explicitly say AGGREGATE"
+        assert "NOT a per-site" in src, "get_site_health must explicitly negate the per-site reading"
+        assert "mist_get_org_or_site_info" in src, (
+            "get_site_health must point at mist_get_org_or_site_info for the per-site-list case"
+        )
+
+    def test_get_org_or_site_info_describes_returned_fields(self):
+        import inspect
+
+        from hpe_networking_mcp.platforms.mist.tools import get_org_or_site_info
+
+        src = inspect.getsource(get_org_or_site_info)
+        # Description should name fields the AI can rely on.
+        assert "id" in src and "name" in src, (
+            "get_org_or_site_info description should list at least the id/name fields it returns"
+        )
+
+    def test_get_org_sle_clarifies_org_vs_per_site_scope(self):
+        """The previous description said 'all/worst sites' which read as confusingly
+        ambiguous. The new description should explicitly distinguish org-wide vs.
+        per-site SLE, and point at `mist_get_org_sites_sle` for the per-site case.
+        """
+        import inspect
+
+        from hpe_networking_mcp.platforms.mist.tools import get_org_sle
+
+        src = inspect.getsource(get_org_sle)
+        assert "mist_get_org_sites_sle" in src, (
+            "get_org_sle description must point at mist_get_org_sites_sle for the per-site case"
+        )
+
+    def test_get_constants_warns_insight_metrics_is_not_sle(self):
+        """The `insight_metrics` constants set is a different vocabulary from
+        SLE metrics. Description must call this out so the AI doesn't reuse
+        the wrong set when looking for SLE metric names.
+        """
+        import inspect
+
+        from hpe_networking_mcp.platforms.mist.tools import get_constants
+
+        src = inspect.getsource(get_constants)
+        assert "mist_list_site_sle_info" in src, (
+            "get_constants description should redirect to mist_list_site_sle_info for SLE metrics"
+        )
+
+
+@pytest.mark.unit
+class TestClearPassGuestUsersDualMode:
+    """Regression for issue #183 — clearpass_get_guest_users is dual-mode
+    (single record by ID/username vs. paginated list). Description must
+    lead with this, not bury it.
+    """
+
+    def test_dual_mode_in_first_line(self):
+        from hpe_networking_mcp.platforms.clearpass.tools.guests import clearpass_get_guest_users
+
+        doc = clearpass_get_guest_users.__doc__ or ""
+        first_line = doc.strip().split("\n")[0]
+        # Must include both modes in the headline so the AI sees both
+        # in summary views (search / list_tools).
+        assert "single" in first_line.lower() or "OR" in first_line, (
+            f"clearpass_get_guest_users docstring's first line must surface "
+            f"the dual-mode behavior — got: {first_line!r}"
+        )

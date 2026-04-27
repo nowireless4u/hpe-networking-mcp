@@ -45,11 +45,21 @@ class Object_type(Enum):
 @tool(
     name="mist_get_constants",
     description=(
-        "Retrieve Mist platform constants including insight "
-        "metrics, webhook topics, alarm definitions, device "
-        "models, events definitions, and license types. Use this "
-        "to understand available options and configurations for "
-        "the Mist API."
+        "Discovery tool for Mist API enumerations. Returns the "
+        "valid value set for a given `object_type` — e.g. "
+        "`insight_metrics` (metric names usable with "
+        "`mist_get_insight_metrics` and `mist_get_org_sle`), "
+        "`alarm_definitions` (alarm types for "
+        "`mist_search_alarms.alarm_type`), `device_events` / "
+        "`client_events` / `mxedge_events` / `nac_events` (event "
+        "types for `mist_search_events.event_type`), "
+        "`device_models`, `webhook_topics`, `license_types`, "
+        "`fingerprint_types`. Many other tools' descriptions "
+        "point here for parameter discovery. Returns a dict "
+        "keyed by the constants for that object_type. NOTE: "
+        "`insight_metrics` is NOT the same set as SLE metrics — "
+        "for site-level SLE metrics use "
+        "`mist_list_site_sle_info(query_type='metrics', ...)`."
     ),
     tags={"constants"},
     annotations={

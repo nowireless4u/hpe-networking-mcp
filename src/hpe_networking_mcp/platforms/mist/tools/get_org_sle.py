@@ -31,9 +31,13 @@ from hpe_networking_mcp.platforms.mist.client import (
 @tool(
     name="mist_get_org_sle",
     description=(
-        "Get Org SLEs (all/worst sites, Mx Edges, ...). "
-        "Discover the available metric names via "
-        "`mist_get_constants` with "
+        "Get organization-wide SLE data for a single metric (e.g. "
+        "`wifi-coverage`, `wired-throughput`). Returns the SLE "
+        "value rolled up across the whole org — including the "
+        "worst-performing sites and impacted entities for that "
+        "metric. This is org-scope; for per-site SLE summaries "
+        "use `mist_get_org_sites_sle`. Discover valid metric "
+        "names via `mist_get_constants` with "
         "`object_type=insight_metrics`."
     ),
     tags={"sles"},
