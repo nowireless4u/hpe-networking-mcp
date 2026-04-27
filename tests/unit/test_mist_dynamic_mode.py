@@ -79,3 +79,78 @@ class TestMistRegistryPopulation:
     def test_descriptions_are_populated(self, mist_registry_populated):
         for name, spec in mist_registry_populated.items():
             assert spec.description, f"{name} has empty description"
+
+
+@pytest.mark.unit
+class TestMistAlarmEnums:
+    """Regression coverage for issue #186 — enum-tightening on alarm params.
+
+    Mist's search-org-alarms reference documents only three severity values
+    and three group values. Earlier our `AlarmSeverity` enum included
+    ``major`` and ``minor`` which Mist does not actually accept — those
+    would have surfaced as 422s if the AI ever picked them. This pins
+    the documented set so a future drift is caught at test time.
+    """
+
+    def test_alarm_severity_values_match_mist_docs(self):
+        from hpe_networking_mcp.platforms.mist.tools.search_alarms import AlarmSeverity
+
+        # Per https://www.juniper.net/.../search-org-alarms — only these three.
+        assert {e.value for e in AlarmSeverity} == {"critical", "info", "warn"}
+
+    def test_alarm_group_values_match_mist_docs(self):
+        from hpe_networking_mcp.platforms.mist.tools.search_alarms import AlarmGroup
+
+        assert {e.value for e in AlarmGroup} == {"infrastructure", "marvis", "security"}
+
+    def test_alarm_severity_rejects_invalid_via_pydantic(self):
+        """Confirm Pydantic enforces the enum — invalid value rejects pre-API."""
+        from pydantic import TypeAdapter, ValidationError
+
+        from hpe_networking_mcp.platforms.mist.tools.search_alarms import AlarmSeverity
+
+        adapter = TypeAdapter(AlarmSeverity)
+        with pytest.raises(ValidationError):
+            adapter.validate_python("major")  # was incorrectly in our enum, isn't in Mist's
+        with pytest.raises(ValidationError):
+            adapter.validate_python("emergency")
+        # Sanity: documented values still parse.
+        assert adapter.validate_python("critical") is AlarmSeverity.CRITICAL
+
+
+@pytest.mark.unit
+class TestMistSleDescriptionDiscovery:
+    """The original #186 failure was the AI calling
+    ``mist_get_site_sle(metric="wireless")`` and getting a 404. Root cause:
+    the `metric` param description pointed at the wrong constants set
+    (``insight_metrics``) which is a different metric vocabulary from
+    SLE metrics. The fix points at the actual discovery tool —
+    ``mist_list_site_sle_info(query_type='metrics', ...)`` for site-level,
+    or ``mist_get_constants(object_type='insight_metrics')`` for org-level
+    per Mist's published API reference. These tests pin both descriptions
+    so a rewrite can't silently re-introduce the misdirection.
+    """
+
+    def test_site_sle_metric_points_at_list_site_sle_info(self):
+        import inspect
+
+        from hpe_networking_mcp.platforms.mist.tools import get_site_sle
+
+        src = inspect.getsource(get_site_sle)
+        assert "mist_list_site_sle_info" in src, (
+            "mist_get_site_sle.metric description must point at mist_list_site_sle_info — "
+            "do NOT misdirect to mist_get_constants(object_type='insight_metrics'); that's "
+            "a different metric set."
+        )
+
+    def test_org_sle_metric_points_at_insight_metrics_constants(self):
+        import inspect
+
+        from hpe_networking_mcp.platforms.mist.tools import get_org_sle
+
+        src = inspect.getsource(get_org_sle)
+        assert "object_type=insight_metrics" in src or "object_type='insight_metrics'" in src, (
+            "mist_get_org_sle.metric description must point at "
+            "mist_get_constants(object_type='insight_metrics') — that's the correct discovery "
+            "for org-level SLE per Mist's published API reference."
+        )

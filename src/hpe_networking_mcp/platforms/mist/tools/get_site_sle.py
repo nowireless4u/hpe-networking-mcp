@@ -89,10 +89,16 @@ async def get_site_sle(
         str,
         Field(
             description=(
-                "Name of the metric to retrieve SLEs for. "
-                "Use the tool `mist_get_constants` with "
-                "`object_type=insight_metrics` to see "
-                "available metrics"
+                "Name of the SLE metric to retrieve "
+                "(e.g. `wifi-coverage`, `wired-throughput`, "
+                "`wan-link-health`). The valid set is "
+                "tenant-specific and per-scope. Discover the "
+                "available metrics for the chosen scope via "
+                "`mist_list_site_sle_info` with "
+                "`query_type=metrics`. Note: the broader "
+                "`mist_get_constants(object_type='insight_metrics')` "
+                "is a DIFFERENT set (insight time-series) — do NOT "
+                "use it for SLE metrics."
             )
         ),
     ],

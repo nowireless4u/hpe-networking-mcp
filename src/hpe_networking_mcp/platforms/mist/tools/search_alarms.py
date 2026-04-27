@@ -35,6 +35,25 @@ class Scope(Enum):
     SUPPRESSED = "suppressed"
 
 
+class AlarmGroup(Enum):
+    INFRASTRUCTURE = "infrastructure"
+    MARVIS = "marvis"
+    SECURITY = "security"
+
+
+class AlarmSeverity(Enum):
+    """Alarm severity levels per Mist API docs (search-org-alarms).
+
+    Mist documents only three severity values for alarms — `major` and
+    `minor` are not part of the alarm severity vocabulary even though
+    they appear elsewhere in network management UIs.
+    """
+
+    CRITICAL = "critical"
+    INFO = "info"
+    WARN = "warn"
+
+
 @tool(
     name="mist_search_alarms",
     description=(
@@ -81,24 +100,20 @@ async def search_alarms(
     ],
     site_id: Annotated[UUID, Field(description="Site ID", default=None)],
     group: Annotated[
-        str,
+        AlarmGroup,
         Field(
             description=(
                 "Only for org/site scope. Alarm group. "
-                "enum: `infrastructure`, `marvis`, "
-                "`security`. The `marvis` group is used "
-                "to retrieve AI-driven network issue "
-                "detections."
+                "The `marvis` group is used to retrieve "
+                "AI-driven network issue detections."
             ),
             default=None,
         ),
     ],
     severity: Annotated[
-        str,
+        AlarmSeverity,
         Field(
-            description=(
-                "Only for org/site scope. Severity of the alarm. enum: `critical`, `major`, `minor`, `warn`, `info`"
-            ),
+            description="Only for org/site scope. Severity of the alarm.",
             default=None,
         ),
     ],
@@ -107,11 +122,13 @@ async def search_alarms(
         Field(
             description=(
                 "Only for org/site scope. Comma separated "
-                "list of types of the alarm (e.g., "
-                "'bad_cable,auth_failure'). IMPORTANT: use "
-                "the `mist_get_constants` tool with "
-                "`object_type=alarm_definitions` to get the "
-                "list of possible alarm types"
+                "list of alarm types (e.g., "
+                "'bad_cable,auth_failure'). IMPORTANT: the "
+                "set of valid alarm types is tenant-specific "
+                "and discovered via the `mist_get_constants` "
+                "tool with `object_type=alarm_definitions` — "
+                "always call that first to get the live list "
+                "for the current tenant."
             ),
             default=None,
         ),
@@ -219,8 +236,8 @@ async def search_alarms(
                 response = mistapi.api.v1.orgs.alarms.searchOrgAlarms(
                     apisession,
                     org_id=str(org_id),
-                    group=group if group else None,
-                    severity=(severity if severity else None),
+                    group=group.value if group else None,
+                    severity=(severity.value if severity else None),
                     type=(alarm_type if alarm_type else None),
                     acked=acked if acked else None,
                     start=str(start) if start else None,
@@ -232,8 +249,8 @@ async def search_alarms(
                 response = mistapi.api.v1.sites.alarms.searchSiteAlarms(
                     apisession,
                     site_id=str(site_id),
-                    group=group if group else None,
-                    severity=(severity if severity else None),
+                    group=group.value if group else None,
+                    severity=(severity.value if severity else None),
                     type=(alarm_type if alarm_type else None),
                     acked=acked if acked else None,
                     start=str(start) if start else None,
