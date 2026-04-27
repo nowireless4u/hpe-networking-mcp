@@ -75,7 +75,10 @@ async def central_get_alerts(
     pairs = [(ALERT_FILTER_FIELDS[k], v) for k, v in raw_pairs if v is not None]
 
     query_params: dict = {"sort": sort}
-    odata = build_odata_filter(pairs)
+    try:
+        odata = build_odata_filter(pairs)
+    except ValueError as e:
+        return f"Error: {e}"
     if odata:
         query_params["filter"] = odata
 

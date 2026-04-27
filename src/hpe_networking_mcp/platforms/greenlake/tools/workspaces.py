@@ -44,7 +44,7 @@ async def greenlake_get_workspace(
             description=("The unique identifier of the workspace. Example: 7600415a-8876-5722-9f3c-b0fd11112283"),
         ),
     ],
-) -> dict[str, Any]:
+) -> dict[str, Any] | str:
     """Retrieve basic information for a single workspace."""
     logger.debug(
         "greenlake_get_workspace called, workspaceId={}",
@@ -52,7 +52,7 @@ async def greenlake_get_workspace(
     )
 
     if not workspaceId or not workspaceId.strip():
-        raise ValueError("workspaceId is required and cannot be empty")
+        return "Error: workspaceId is required and cannot be empty"
 
     token_manager = ctx.lifespan_context["greenlake_token_manager"]
     config = ctx.lifespan_context["config"]
@@ -87,7 +87,7 @@ async def greenlake_get_workspace_details(
             description=("The unique identifier of the workspace. Example: 7600415a-8876-5722-9f3c-b0fd11112283"),
         ),
     ],
-) -> dict[str, Any]:
+) -> dict[str, Any] | str:
     """Retrieve detailed workspace information (contact info)."""
     logger.debug(
         "greenlake_get_workspace_details called, workspaceId={}",
@@ -95,7 +95,7 @@ async def greenlake_get_workspace_details(
     )
 
     if not workspaceId or not workspaceId.strip():
-        raise ValueError("workspaceId is required and cannot be empty")
+        return "Error: workspaceId is required and cannot be empty"
 
     token_manager = ctx.lifespan_context["greenlake_token_manager"]
     config = ctx.lifespan_context["config"]

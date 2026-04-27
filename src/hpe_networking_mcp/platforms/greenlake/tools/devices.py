@@ -112,15 +112,11 @@ async def greenlake_get_devices(
             description="Zero-based offset for pagination.",
         ),
     ] = None,
-) -> dict[str, Any]:
+) -> dict[str, Any] | str:
     """List devices in the GreenLake workspace."""
     logger.debug("greenlake_get_devices called")
 
-    token_manager = ctx.lifespan_context["greenlake_token_manager"]
-    config = ctx.lifespan_context["config"]
-    base_url = config.greenlake.api_base_url
-
-    async with GreenLakeHttpClient(token_manager=token_manager, base_url=base_url) as client:
+    try:
         params: dict[str, Any] = {}
         if filter is not None:
             params["filter"] = filter
@@ -134,7 +130,14 @@ async def greenlake_get_devices(
             params["limit"] = _coerce_int(limit, "limit")
         if offset is not None:
             params["offset"] = _coerce_int(offset, "offset")
+    except ValueError as e:
+        return f"Error: {e}"
 
+    token_manager = ctx.lifespan_context["greenlake_token_manager"]
+    config = ctx.lifespan_context["config"]
+    base_url = config.greenlake.api_base_url
+
+    async with GreenLakeHttpClient(token_manager=token_manager, base_url=base_url) as client:
         return await client.get("/devices/v1/devices", params=params)
 
 
@@ -165,12 +168,12 @@ async def greenlake_get_device_by_id(
         str,
         Field(description="The resource ID of the device."),
     ],
-) -> dict[str, Any]:
+) -> dict[str, Any] | str:
     """Retrieve details for a single device."""
     logger.debug("greenlake_get_device_by_id called, id={}", id)
 
     if not id or not id.strip():
-        raise ValueError("id is required and cannot be empty")
+        return "Error: id is required and cannot be empty"
 
     token_manager = ctx.lifespan_context["greenlake_token_manager"]
     config = ctx.lifespan_context["config"]

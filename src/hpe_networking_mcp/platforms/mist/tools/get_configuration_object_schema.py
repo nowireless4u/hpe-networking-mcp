@@ -131,12 +131,12 @@ async def get_configuration_object_schema(
 
     entry = _SCHEMAS_DATA.get(schema_name.value)
     if entry is None:
-        raise ValueError(f"Schema '{schema_name.value}' not found. Re-run the generator to rebuild schemas_data.py.")
+        return f"Error: Schema '{schema_name.value}' not found. Re-run the generator to rebuild schemas_data.py."
 
     resolved: dict = dict(entry["schema"])  # shallow copy
 
     if not resolved:
-        raise ValueError(f"No schema found for '{schema_name.value}'. Re-run the generator to rebuild schemas_data.py.")
+        return f"Error: No schema found for '{schema_name.value}'. Re-run the generator to rebuild schemas_data.py."
 
     resolved["x-schema-name"] = entry["_schema_name"]
 

@@ -38,15 +38,19 @@ class Object_type(Enum):
     SWITCH = "switch"
 
 
-def _mac_to_device_id(mac: str) -> str:
+def _mac_to_device_id(mac: str) -> str | None:
     """Construct a Mist device_id UUID from a MAC address.
 
     Mist device UUIDs follow the deterministic pattern
     ``00000000-0000-0000-1000-<mac_lowercase_no_separators>``.
+
+    Returns ``None`` if the MAC isn't 12 hex chars (with or without
+    separators) — caller surfaces a tool-level error instead of letting
+    a raise propagate, which would crash the code-mode sandbox.
     """
     clean = mac.lower().replace(":", "").replace("-", "")
     if len(clean) != 12 or not all(c in "0123456789abcdef" for c in clean):
-        raise ValueError(f"Invalid MAC address format: {mac!r}")
+        return None
     return f"00000000-0000-0000-1000-{clean}"
 
 
@@ -229,6 +233,8 @@ async def get_insight_metrics(
                         }
                     )
                 ap_device_id = str(device_id) if device_id else _mac_to_device_id(str(mac))
+                if ap_device_id is None:
+                    return f"Error: invalid MAC address format: {mac!r}"
                 response = mistapi.api.v1.sites.insights.getSiteInsightMetricsForAP(
                     apisession,
                     site_id=str(site_id),
@@ -251,6 +257,8 @@ async def get_insight_metrics(
                         }
                     )
                 gw_device_id = str(device_id) if device_id else _mac_to_device_id(str(mac))
+                if gw_device_id is None:
+                    return f"Error: invalid MAC address format: {mac!r}"
                 response = mistapi.api.v1.sites.insights.getSiteInsightMetricsForGateway(
                     apisession,
                     site_id=str(site_id),

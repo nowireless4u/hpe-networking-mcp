@@ -243,3 +243,136 @@ class TestCodeModeRegistrationHook:
 # attribute, leaking state across tests in ways that are disproportionate to
 # what the check is worth. The ``TestCodeModeCrossPlatformGating`` class above
 # already proves the code-mode branch is reached in create_server.
+
+
+@pytest.mark.unit
+class TestCodeModeErrorReturns:
+    """Regression coverage for the issue #202 fix.
+
+    In code mode, a tool function that raises propagates as ``MontyRuntimeError``
+    and crashes the AI's whole ``execute()`` call — even a ``try/except`` inside
+    the sandbox can't catch it. Tools must therefore RETURN errors as a string
+    or dict, not raise. These tests assert the contract for the affected
+    surface so a future edit can't silently regress.
+
+    See ``CHANGELOG.md`` and issue #202 for the full root-cause writeup.
+    """
+
+    @pytest.mark.asyncio
+    async def test_greenlake_get_user_details_empty_id_returns_string(self):
+        """Empty-string id returns an error string instead of raising.
+        The registry shim (with ``_registry.mcp = None`` at import time in
+        tests) returns the raw function, so ``ctx`` can be ``None`` for the
+        early-return path that never touches it.
+        """
+        from hpe_networking_mcp.platforms.greenlake.tools.users import (
+            greenlake_get_user_details,
+        )
+
+        result = await greenlake_get_user_details(None, id="")  # type: ignore[arg-type]
+        assert isinstance(result, str)
+        assert result.startswith("Error:")
+
+    @pytest.mark.asyncio
+    async def test_greenlake_get_workspace_empty_returns_string(self):
+        from hpe_networking_mcp.platforms.greenlake.tools.workspaces import (
+            greenlake_get_workspace,
+        )
+
+        result = await greenlake_get_workspace(None, workspaceId="")  # type: ignore[arg-type]
+        assert isinstance(result, str)
+        assert result.startswith("Error:")
+
+    def test_greenlake_users_coerce_int_still_raises_for_helper_callers(self):
+        """``_coerce_int`` itself remains a raising helper — only the public
+        tool entry that calls it is required to be code-mode-safe (via try/
+        except wrapping the param-build block). Pinning this so we don't
+        accidentally rewrite the helper to return error sentinels and
+        silently break unrelated callers.
+        """
+        from hpe_networking_mcp.platforms.greenlake.tools.users import _coerce_int
+
+        with pytest.raises(ValueError):
+            _coerce_int("abc", "limit")
+
+    def test_mist_mac_to_device_id_returns_none_on_invalid(self):
+        """``_mac_to_device_id`` was changed from raising to returning ``None``
+        so the calling tool can surface a string error instead of letting a
+        ValueError propagate through ``handle_network_error`` → ``ToolError``
+        → ``MontyRuntimeError``.
+        """
+        from hpe_networking_mcp.platforms.mist.tools.get_insight_metrics import (
+            _mac_to_device_id,
+        )
+
+        assert _mac_to_device_id("not-a-mac") is None
+        assert _mac_to_device_id("") is None
+        assert _mac_to_device_id("zz:zz:zz:zz:zz:zz") is None
+        # Sanity: a real MAC still works and returns the Mist UUID convention.
+        assert _mac_to_device_id("aa:bb:cc:dd:ee:ff") == "00000000-0000-0000-1000-aabbccddeeff"
+
+    def test_mist_get_configuration_object_schema_uses_return_not_raise(self):
+        """Static check: the schema-not-found and empty-resolved paths
+        ``return f"Error: ..."`` instead of ``raise ValueError(...)``.
+
+        Going for an AST-based check rather than triggering the path live
+        because ``SchemaName`` is built dynamically from ``_SCHEMAS_DATA``
+        contents at import time, making it awkward to monkey-patch in a
+        unit test.
+        """
+        import ast
+        from pathlib import Path
+
+        src = (
+            Path(__file__).parent.parent.parent
+            / "src"
+            / "hpe_networking_mcp"
+            / "platforms"
+            / "mist"
+            / "tools"
+            / "get_configuration_object_schema.py"
+        ).read_text()
+        tree = ast.parse(src)
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+                and node.name == "get_configuration_object_schema"
+            ):
+                raises = [n for n in ast.walk(node) if isinstance(n, ast.Raise)]
+                assert not raises, (
+                    f"get_configuration_object_schema must not raise — "
+                    f"found raise at lines {[r.lineno for r in raises]}"
+                )
+                return
+        raise AssertionError("get_configuration_object_schema function not found in source")
+
+    def test_no_raise_in_greenlake_tool_files(self):
+        """Static guard: every public tool function in ``greenlake/tools/*.py``
+        must return errors as strings (or dicts), not raise. This catches a
+        future edit that re-introduces the bug.
+
+        Helper functions (names starting with ``_``) are exempt — they may
+        raise as long as their callers wrap the call.
+        """
+        import ast
+        from pathlib import Path
+
+        tools_dir = (
+            Path(__file__).parent.parent.parent / "src" / "hpe_networking_mcp" / "platforms" / "greenlake" / "tools"
+        )
+        offenders: list[str] = []
+        for py_file in tools_dir.glob("*.py"):
+            if py_file.name == "__init__.py":
+                continue
+            tree = ast.parse(py_file.read_text())
+            for node in ast.walk(tree):
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    # Skip helpers — names starting with ``_``.
+                    if node.name.startswith("_"):
+                        continue
+                    for inner in ast.walk(node):
+                        if isinstance(inner, ast.Raise):
+                            offenders.append(f"{py_file.name}::{node.name}:{inner.lineno}")
+        assert not offenders, (
+            f"Public GreenLake tool functions must not raise — code mode crashes the sandbox. Offenders: {offenders}"
+        )

@@ -94,7 +94,10 @@ async def central_get_events(
     WARNING: last_30d can match thousands of events. Use central_get_events_count first to
     assess volume, then page incrementally using cursor.
     """
-    start_at, end_at = _resolve_time_window(time_range, start_time, end_time)
+    try:
+        start_at, end_at = _resolve_time_window(time_range, start_time, end_time)
+    except ValueError as e:
+        return f"Error: {e}"
 
     query_params: dict = {
         "context-type": context_type,
@@ -138,7 +141,7 @@ async def central_get_events_count(
     time_range: TIME_RANGE = "last_1h",
     start_time: str | None = None,
     end_time: str | None = None,
-) -> EventFilters:
+) -> EventFilters | str:
     """
     Return a breakdown of event counts for a context without fetching full event details.
 
@@ -162,7 +165,10 @@ async def central_get_events_count(
     Returns an EventFilters object: total event count plus breakdowns by event name, source
     type, and category.
     """
-    start_at, end_at = _resolve_time_window(time_range, start_time, end_time)
+    try:
+        start_at, end_at = _resolve_time_window(time_range, start_time, end_time)
+    except ValueError as e:
+        return f"Error: {e}"
 
     response = retry_central_command(
         ctx.lifespan_context["central_conn"],

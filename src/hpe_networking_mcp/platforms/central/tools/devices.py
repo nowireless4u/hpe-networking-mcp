@@ -79,7 +79,10 @@ async def central_get_devices(
             )
         )
 
-    filter_str = build_odata_filter(pairs)
+    try:
+        filter_str = build_odata_filter(pairs)
+    except ValueError as e:
+        return f"Error: {e}"
 
     # normalize site_assigned: True -> "ASSIGNED", False -> "UNASSIGNED"
     site_assigned_str: str | None = None if site_assigned is None else ("ASSIGNED" if site_assigned else "UNASSIGNED")
@@ -128,7 +131,10 @@ async def central_find_device(
         ]
         if v is not None
     ]
-    filter_str = build_odata_filter(pairs)
+    try:
+        filter_str = build_odata_filter(pairs)
+    except ValueError as e:
+        return f"Error: {e}"
     try:
         device_resp = MonitoringDevices.get_device_inventory(
             central_conn=ctx.lifespan_context["central_conn"],
