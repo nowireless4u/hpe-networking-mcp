@@ -1,9 +1,11 @@
-"""Unit tests for NullStripMiddleware, ValidationCatchMiddleware, SandboxErrorCatchMiddleware."""
+"""Unit tests for NullStripMiddleware, ValidationCatchMiddleware,
+SandboxErrorCatchMiddleware, and RetryMiddleware."""
 
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastmcp.exceptions import ToolError
+from fastmcp.tools.tool import ToolResult
 from pydantic import BaseModel, Field, ValidationError
 
 from hpe_networking_mcp.middleware.null_strip import NullStripMiddleware
@@ -402,3 +404,335 @@ class TestSandboxErrorCatchMiddleware:
 
         assert "division by zero" in text
         assert "line 4" in text
+
+
+# ---------------------------------------------------------------------------
+# RetryMiddleware
+# ---------------------------------------------------------------------------
+
+
+def _toolresult_with_status(status_code: int, **extra) -> ToolResult:
+    """Build a ToolResult whose structured_content carries a status code,
+    matching the shape Mist/GreenLake return on error.
+    """
+    body = {"status_code": status_code, "message": "test", **extra}
+    return ToolResult(structured_content=body)
+
+
+def _toolresult_ok() -> ToolResult:
+    """Build a successful ToolResult with no status_code field."""
+    return ToolResult(structured_content={"results": [], "ok": True})
+
+
+def _make_retry_context(tool_name: str, fastmcp_tool=None):
+    """Mock MiddlewareContext for RetryMiddleware tests.
+
+    fastmcp_tool: optional Tool-like object whose .tags drive read/write
+    classification. None means the tool isn't found → treated as read.
+    """
+    message = MagicMock()
+    message.name = tool_name
+
+    class _FakeFastMCP:
+        async def get_tool(self, _name):
+            return fastmcp_tool
+
+    class _FakeFastMCPContext:
+        @property
+        def fastmcp(self):
+            return _FakeFastMCP()
+
+    context = MagicMock()
+    context.message = message
+    context.fastmcp_context = _FakeFastMCPContext()
+    return context
+
+
+def _fake_tool(*tags: str):
+    """Build a fake Tool-like object with the given tags set."""
+    t = MagicMock()
+    t.tags = set(tags)
+    return t
+
+
+@pytest.mark.unit
+class TestRetryMiddleware:
+    """Closes #133 + #134. RetryMiddleware retries 5xx on reads, 429 on
+    reads+writes, honors Retry-After, respects max-attempts cap, leaves
+    valid responses + non-transient errors untouched.
+    """
+
+    @pytest.mark.asyncio
+    async def test_retries_5xx_on_read_and_succeeds(self):
+        """A read tool that 503s once then 200s should be retried and succeed."""
+        from hpe_networking_mcp.middleware.retry import RetryMiddleware
+
+        middleware = RetryMiddleware(max_attempts=3, initial_delay=0.0, max_delay=0.0)
+        ctx = _make_retry_context("mist_get_devices", fastmcp_tool=_fake_tool("mist"))
+
+        responses = [_toolresult_with_status(503), _toolresult_ok()]
+        call_next = AsyncMock(side_effect=responses)
+
+        result = await middleware.on_call_tool(ctx, call_next)
+
+        assert call_next.call_count == 2  # one retry
+        # The second response (the OK one) is what we should see
+        assert result.structured_content["ok"] is True
+
+    @pytest.mark.asyncio
+    async def test_does_not_retry_5xx_on_write_tool(self):
+        """5xx on a write tool returns immediately (idempotency unsafe)."""
+        from hpe_networking_mcp.middleware.retry import RetryMiddleware
+
+        middleware = RetryMiddleware(max_attempts=3, initial_delay=0.0, max_delay=0.0)
+        ctx = _make_retry_context(
+            "mist_change_site_configuration_objects",
+            fastmcp_tool=_fake_tool("mist", "mist_write_delete"),
+        )
+
+        result_503 = _toolresult_with_status(503)
+        call_next = AsyncMock(return_value=result_503)
+
+        result = await middleware.on_call_tool(ctx, call_next)
+
+        assert call_next.call_count == 1  # no retry on write
+        assert result.structured_content["status_code"] == 503
+
+    @pytest.mark.asyncio
+    async def test_retries_429_on_write_tool(self):
+        """429 retries even on write tools — server is asking us to slow down."""
+        from hpe_networking_mcp.middleware.retry import RetryMiddleware
+
+        middleware = RetryMiddleware(max_attempts=3, initial_delay=0.0, max_delay=0.0)
+        ctx = _make_retry_context("axis_manage_user", fastmcp_tool=_fake_tool("axis", "axis_write_delete"))
+
+        responses = [_toolresult_with_status(429), _toolresult_ok()]
+        call_next = AsyncMock(side_effect=responses)
+
+        result = await middleware.on_call_tool(ctx, call_next)
+
+        assert call_next.call_count == 2
+        assert result.structured_content["ok"] is True
+
+    @pytest.mark.asyncio
+    async def test_does_not_retry_2xx_or_4xx(self):
+        """Non-transient responses pass through unchanged on the first call."""
+        from hpe_networking_mcp.middleware.retry import RetryMiddleware
+
+        middleware = RetryMiddleware(max_attempts=3, initial_delay=0.0, max_delay=0.0)
+        ctx = _make_retry_context("mist_get_devices", fastmcp_tool=_fake_tool("mist"))
+
+        # 200-shaped (no status_code in dict) — middleware sees it as a clean success
+        call_next = AsyncMock(return_value=_toolresult_ok())
+        await middleware.on_call_tool(ctx, call_next)
+        assert call_next.call_count == 1
+
+        # 400-shaped — non-transient, pass through
+        call_next = AsyncMock(return_value=_toolresult_with_status(400))
+        await middleware.on_call_tool(ctx, call_next)
+        assert call_next.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_max_attempts_cap_enforced(self):
+        """If every attempt fails, return after max_attempts and don't retry forever."""
+        from hpe_networking_mcp.middleware.retry import RetryMiddleware
+
+        middleware = RetryMiddleware(max_attempts=3, initial_delay=0.0, max_delay=0.0)
+        ctx = _make_retry_context("mist_get_devices", fastmcp_tool=_fake_tool("mist"))
+
+        result_503 = _toolresult_with_status(503)
+        call_next = AsyncMock(return_value=result_503)
+
+        result = await middleware.on_call_tool(ctx, call_next)
+
+        assert call_next.call_count == 3  # exactly max_attempts
+        # Last result is what surfaces back
+        assert result.structured_content["status_code"] == 503
+
+    @pytest.mark.asyncio
+    async def test_retry_after_header_respected(self):
+        """When 429 carries Retry-After, sleep that many seconds (capped at max_delay)."""
+        from hpe_networking_mcp.middleware.retry import RetryMiddleware
+
+        middleware = RetryMiddleware(max_attempts=2, initial_delay=10.0, max_delay=60.0)
+        ctx = _make_retry_context("mist_get_devices", fastmcp_tool=_fake_tool("mist"))
+
+        # Server says wait 5 seconds — middleware should honor that, not the 10s default
+        responses = [
+            _toolresult_with_status(429, **{"Retry-After": "5"}),
+            _toolresult_ok(),
+        ]
+        call_next = AsyncMock(side_effect=responses)
+
+        # Patch asyncio.sleep so the test doesn't actually wait
+        async def _spy_sleep(seconds):
+            _spy_sleep.last_seconds = seconds  # type: ignore[attr-defined]
+
+        from unittest.mock import patch
+
+        with patch("hpe_networking_mcp.middleware.retry.asyncio.sleep", side_effect=_spy_sleep):
+            await middleware.on_call_tool(ctx, call_next)
+
+        assert _spy_sleep.last_seconds == 5.0  # type: ignore[attr-defined]
+
+    @pytest.mark.asyncio
+    async def test_retry_after_capped_at_max_delay(self):
+        """Server-supplied Retry-After is capped — don't sleep forever even if asked."""
+        from hpe_networking_mcp.middleware.retry import RetryMiddleware
+
+        middleware = RetryMiddleware(max_attempts=2, initial_delay=1.0, max_delay=60.0)
+        ctx = _make_retry_context("mist_get_devices", fastmcp_tool=_fake_tool("mist"))
+
+        # Server says wait 999 seconds — we cap at max_delay (60)
+        responses = [
+            _toolresult_with_status(429, **{"Retry-After": "999"}),
+            _toolresult_ok(),
+        ]
+        call_next = AsyncMock(side_effect=responses)
+
+        async def _spy_sleep(seconds):
+            _spy_sleep.last_seconds = seconds  # type: ignore[attr-defined]
+
+        from unittest.mock import patch
+
+        with patch("hpe_networking_mcp.middleware.retry.asyncio.sleep", side_effect=_spy_sleep):
+            await middleware.on_call_tool(ctx, call_next)
+
+        assert _spy_sleep.last_seconds == 60.0  # type: ignore[attr-defined]
+
+    @pytest.mark.asyncio
+    async def test_max_attempts_one_disables_retry(self):
+        """RETRY_MAX_ATTEMPTS=1 should pass through with no retry behavior."""
+        from hpe_networking_mcp.middleware.retry import RetryMiddleware
+
+        middleware = RetryMiddleware(max_attempts=1, initial_delay=0.0, max_delay=0.0)
+        ctx = _make_retry_context("mist_get_devices", fastmcp_tool=_fake_tool("mist"))
+
+        result_503 = _toolresult_with_status(503)
+        call_next = AsyncMock(return_value=result_503)
+
+        await middleware.on_call_tool(ctx, call_next)
+
+        assert call_next.call_count == 1  # no retry
+
+    @pytest.mark.asyncio
+    async def test_status_in_response_central_pattern(self):
+        """Central uses ``code`` instead of ``status_code`` — middleware should still detect."""
+        from fastmcp.tools.tool import ToolResult
+
+        from hpe_networking_mcp.middleware.retry import RetryMiddleware
+
+        middleware = RetryMiddleware(max_attempts=2, initial_delay=0.0, max_delay=0.0)
+        ctx = _make_retry_context("central_get_devices", fastmcp_tool=_fake_tool("central"))
+
+        # pycentral's error shape uses ``code``, not ``status_code``
+        first = ToolResult(structured_content={"code": 503, "msg": "transient"})
+        second = _toolresult_ok()
+        call_next = AsyncMock(side_effect=[first, second])
+
+        result = await middleware.on_call_tool(ctx, call_next)
+
+        assert call_next.call_count == 2
+        assert result.structured_content["ok"] is True
+
+    @pytest.mark.asyncio
+    async def test_status_in_response_clearpass_pattern(self):
+        """ClearPass uses ``status`` instead of ``status_code``."""
+        from fastmcp.tools.tool import ToolResult
+
+        from hpe_networking_mcp.middleware.retry import RetryMiddleware
+
+        middleware = RetryMiddleware(max_attempts=2, initial_delay=0.0, max_delay=0.0)
+        ctx = _make_retry_context("clearpass_get_network_devices", fastmcp_tool=_fake_tool("clearpass"))
+
+        first = ToolResult(structured_content={"status": 503, "title": "transient"})
+        second = _toolresult_ok()
+        call_next = AsyncMock(side_effect=[first, second])
+
+        result = await middleware.on_call_tool(ctx, call_next)
+
+        assert call_next.call_count == 2
+        assert result.structured_content["ok"] is True
+
+    @pytest.mark.asyncio
+    async def test_httpx_exception_path_retries(self):
+        """httpx.HTTPStatusError on a read tool retries via the exception path."""
+        import httpx
+
+        from hpe_networking_mcp.middleware.retry import RetryMiddleware
+
+        middleware = RetryMiddleware(max_attempts=3, initial_delay=0.0, max_delay=0.0)
+        ctx = _make_retry_context("axis_get_connectors", fastmcp_tool=_fake_tool("axis"))
+
+        # Build a real HTTPStatusError with a 503 response
+        request = httpx.Request("GET", "https://x")
+        response = httpx.Response(503, request=request)
+        exc = httpx.HTTPStatusError("server error", request=request, response=response)
+
+        call_next = AsyncMock(side_effect=[exc, _toolresult_ok()])
+
+        result = await middleware.on_call_tool(ctx, call_next)
+
+        assert call_next.call_count == 2
+        assert result.structured_content["ok"] is True
+
+    @pytest.mark.asyncio
+    async def test_httpx_exception_does_not_retry_on_write(self):
+        """5xx exception on a write tool re-raises — idempotency unsafe."""
+        import httpx
+
+        from hpe_networking_mcp.middleware.retry import RetryMiddleware
+
+        middleware = RetryMiddleware(max_attempts=3, initial_delay=0.0, max_delay=0.0)
+        ctx = _make_retry_context("axis_manage_connector", fastmcp_tool=_fake_tool("axis", "axis_write_delete"))
+
+        request = httpx.Request("POST", "https://x")
+        response = httpx.Response(503, request=request)
+        exc = httpx.HTTPStatusError("server error", request=request, response=response)
+
+        call_next = AsyncMock(side_effect=exc)
+
+        with pytest.raises(httpx.HTTPStatusError):
+            await middleware.on_call_tool(ctx, call_next)
+        assert call_next.call_count == 1  # no retry
+
+    @pytest.mark.asyncio
+    async def test_httpx_429_retry_after_from_header(self):
+        """httpx exception path also honors Retry-After."""
+        import httpx
+
+        from hpe_networking_mcp.middleware.retry import RetryMiddleware
+
+        middleware = RetryMiddleware(max_attempts=2, initial_delay=10.0, max_delay=60.0)
+        ctx = _make_retry_context("axis_get_connectors", fastmcp_tool=_fake_tool("axis"))
+
+        request = httpx.Request("GET", "https://x")
+        response = httpx.Response(429, headers={"Retry-After": "7"}, request=request)
+        exc = httpx.HTTPStatusError("rate limit", request=request, response=response)
+
+        call_next = AsyncMock(side_effect=[exc, _toolresult_ok()])
+
+        async def _spy_sleep(seconds):
+            _spy_sleep.last_seconds = seconds  # type: ignore[attr-defined]
+
+        from unittest.mock import patch
+
+        with patch("hpe_networking_mcp.middleware.retry.asyncio.sleep", side_effect=_spy_sleep):
+            await middleware.on_call_tool(ctx, call_next)
+
+        assert _spy_sleep.last_seconds == 7.0  # type: ignore[attr-defined]
+
+    @pytest.mark.asyncio
+    async def test_unknown_exceptions_are_not_caught(self):
+        """Only httpx.HTTPStatusError is intercepted on the exception path —
+        other exceptions propagate to upstream handlers."""
+        from hpe_networking_mcp.middleware.retry import RetryMiddleware
+
+        middleware = RetryMiddleware(max_attempts=3, initial_delay=0.0, max_delay=0.0)
+        ctx = _make_retry_context("mist_get_devices", fastmcp_tool=_fake_tool("mist"))
+
+        call_next = AsyncMock(side_effect=RuntimeError("boom"))
+
+        with pytest.raises(RuntimeError, match="boom"):
+            await middleware.on_call_tool(ctx, call_next)
+        assert call_next.call_count == 1  # no retry on unknown exception

@@ -67,6 +67,7 @@ If `MCP_TOOL_MODE=static` is set, every per-platform tool is visible up front wi
 4. If a tool returns no data or an error, say so explicitly. Do not guess.
 5. **MANDATORY: use the information you already have from `<platform>_list_tools` before invoking.** Every tool entry from `list_tools` includes a `params` map showing parameter names + types (and `?` suffix for optional) — always check it before calling `invoke_tool`. Never invoke with `params={}` or guessed names when the `list_tools` output already told you what's required.
 6. **Call `<platform>_get_tool_schema(name=...)` when the `list_tools` params map isn't sufficient.** Specifically: when a param's type is an enum class name (e.g. `"Action_type"`) and you don't yet know its valid values, when you need field descriptions to understand parameter semantics, or when a `dict`/`payload` param needs a nested schema. You do NOT need to re-read a schema you've already fetched in the same conversation; cache it mentally.
+7. **Don't manually retry transient API failures.** The server auto-retries 5xx errors on read tools (3 attempts, exponential backoff) and 429 rate-limit responses on both reads and writes (honors `Retry-After` header). If a tool returns a 5xx or 429 to you, it has *already* exhausted retries — don't loop calling the same tool. 4xx errors (other than 429) and 5xx errors on write tools are NOT auto-retried; surface those to the user with the actual error message.
 
 ---
 

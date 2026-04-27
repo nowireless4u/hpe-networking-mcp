@@ -192,6 +192,7 @@ def create_server(config: ServerConfig) -> FastMCP:
         ElicitationMiddleware,
     )
     from hpe_networking_mcp.middleware.null_strip import NullStripMiddleware
+    from hpe_networking_mcp.middleware.retry import RetryMiddleware
     from hpe_networking_mcp.middleware.sandbox_error_catch import (
         SandboxErrorCatchMiddleware,
     )
@@ -202,6 +203,8 @@ def create_server(config: ServerConfig) -> FastMCP:
     #   ValidationCatch    — Pydantic ValidationError → readable string return
     #   SandboxErrorCatch  — code-mode MontyRuntimeError on execute → string return
     #   Elicitation        — write-tool confirmation gate
+    #   Retry              — transient failures retry transparently after elicitation
+    #                        has approved (re-tries don't re-prompt)
     mcp = FastMCP(
         name="HPE Networking MCP",
         instructions=_INSTRUCTIONS,
@@ -213,6 +216,7 @@ def create_server(config: ServerConfig) -> FastMCP:
             ValidationCatchMiddleware(),
             SandboxErrorCatchMiddleware(),
             ElicitationMiddleware(),
+            RetryMiddleware(),
         ],
     )
 
