@@ -20,18 +20,18 @@ async def clearpass_get_guest_users(
     limit: int = 25,
     calculate_count: bool = False,
 ) -> dict | str:
-    """Get ClearPass guest user accounts.
+    """Get a single ClearPass guest account by ID or username, OR list all guest accounts.
 
-    If guest_id or username is provided, returns a single guest account.
-    Otherwise returns a paginated list of all guest accounts.
+    Dual-mode: if `guest_id` or `username` is provided, returns ONE guest record.
+    Otherwise returns a paginated LIST of all guests (use `filter`/`sort`/`offset`/`limit`).
 
     Args:
-        guest_id: Numeric ID for single-item lookup.
-        username: Guest username for lookup by username.
-        filter: JSON filter expression (ClearPass REST API syntax).
-        sort: Sort order (e.g. "+name" or "-id").
-        offset: Pagination offset (default 0).
-        limit: Max results per page (default 25).
+        guest_id: Numeric ID for single-record lookup.
+        username: Guest username for single-record lookup.
+        filter: JSON filter expression (ClearPass REST API syntax). List mode only.
+        sort: Sort order (e.g. "+name" or "-id"). List mode only.
+        offset: Pagination offset (default 0). List mode only.
+        limit: Max results per page (default 25). List mode only.
     """
     try:
         from pyclearpass.api_identities import ApiIdentities

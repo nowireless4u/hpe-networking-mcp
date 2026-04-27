@@ -20,9 +20,13 @@ from hpe_networking_mcp.platforms.mist.client import (
 @tool(
     name="mist_get_site_health",
     description=(
-        "Get a health overview across all sites in the organization. "
-        "Returns site names, device counts, client counts, and "
-        "overall status for quick assessment."
+        "Organization-wide health AGGREGATE — total device counts, "
+        "client counts, SLE summaries, and `num_sites` rolled up "
+        "across every site in the org. NOT a per-site breakdown. "
+        "If you want a per-site list (one record per site with that "
+        "site's health), use `mist_get_org_or_site_info("
+        "info_type='site')` instead. Calls "
+        "`/api/v1/orgs/{org_id}/stats` under the hood."
     ),
     tags={"info"},
     annotations={

@@ -36,7 +36,17 @@ class Info_type(Enum):
 
 @tool(
     name="mist_get_org_or_site_info",
-    description=("Search information about the organizations or sites"),
+    description=(
+        "Get org or site METADATA records. With `info_type='org'`, "
+        "returns the org record (name, settings, SLE thresholds, "
+        "subscriptions). With `info_type='site'`, returns a LIST "
+        "of every site under the org — one record per site with "
+        "id, name, address, lat/lng, timezone, country_code. "
+        "This is the right tool for 'list every site I have' "
+        "queries. NOT for site health or device counts — see "
+        "`mist_get_site_health` for org-wide aggregates or "
+        "`mist_get_stats` for per-site stats."
+    ),
     tags={"info"},
     annotations={
         "title": "Get org or site info",

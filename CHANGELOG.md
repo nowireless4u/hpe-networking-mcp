@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased — docs only (no version bump)
+
+### Tool description cleanup (closes #183)
+
+Targeted fixes to tool descriptions that the AI was demonstrably misreading. Pure metadata change — no functional code changes — so no version bump per the issue's guidance and the existing convention (`feedback_versioning.md` memory).
+
+**HIGH-severity fixes (the AI actively picked these wrong in live tests):**
+
+- **`mist_get_site_health`** — name reads as "per-site list" but the tool actually returns an org-wide AGGREGATE (`num_sites`, `num_devices`, SLE summaries rolled up across the whole org). Description now leads with "Organization-wide health AGGREGATE — NOT a per-site breakdown" and explicitly redirects to `mist_get_org_or_site_info(info_type='site')` for the per-site-list case. Verified live: the tool returns a dict with `num_sites: N`, not a list.
+- **`clearpass_get_guest_users`** — dual-mode (single record by `guest_id`/`username` vs. paginated list) but the conditional was buried as the second sentence. Docstring's first line now leads with "Get a single ClearPass guest account by ID or username, OR list all guest accounts" so summary views (search / list_tools) surface both modes immediately.
+
+**MEDIUM-severity fixes (vague descriptions that didn't say what came back):**
+
+- **`mist_get_org_or_site_info`** — was just "Search information about the organizations or sites." Description now lists the actual fields returned (id, name, address, lat/lng, timezone, country_code) and explicitly says it returns a list of every site for `info_type='site'`. Cross-references the right tools for site health and per-site stats.
+- **`mist_get_org_sle`** — confusing "all/worst sites, Mx Edges, ..." phrasing replaced with explicit org-wide-vs-per-site scope language. Cross-references `mist_get_org_sites_sle` for the per-site case.
+- **`mist_get_constants`** — reframed as a discovery tool, not just a generic "platform constants" lookup. Lists the specific use cases (insight_metrics → `mist_get_insight_metrics` discovery; alarm_definitions → `mist_search_alarms.alarm_type`; per-source events). Includes the SLE metrics warning ("`insight_metrics` is NOT the same set as SLE metrics — use `mist_list_site_sle_info(query_type='metrics', ...)` for those").
+
+### Why no rename of `mist_get_site_health`?
+
+The issue offered two options for the named offender — rename (breaking, tag for major version) or fix description. We took the description path because it's docs-only and ships immediately; renames can come in a future major bump if appetite warrants.
+
+### Tests (582 → 587)
+
+Five new tests in `tests/unit/test_mist_dynamic_mode.py`:
+
+- `TestMistDescriptionDisambiguation` — pins the exact disambiguation phrases (`AGGREGATE`, `NOT a per-site`, `mist_get_org_or_site_info` cross-reference) so a future rewrite can't silently revert them
+- `TestClearPassGuestUsersDualMode` — pins the dual-mode language in the docstring's first line
+
+### Audit findings worth noting (deferred, not in this PR)
+
+The Explore agent flagged ~13 additional MEDIUM cases in Mist where the return type is `dict | list | str` without docs on which-when. These are minor improvements compared to the HIGH offenders above; addressing them is a follow-up if the description-cleanup PR pattern proves valuable.
+
 ## [2.2.0.2] - 2026-04-27
 
 **Mist tool schema tightening — alarm severity/group enum corrections + SLE metric description fixes that point at the right discovery tools.** Closes #186.
