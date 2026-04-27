@@ -1,16 +1,17 @@
 """Axis Atmos Cloud platform module.
 
-Axis is shipped as a hidden platform: it auto-disables when its single
-``axis_api_token`` secret is missing and stays unreferenced in any
-public-facing documentation until the user chooses to announce it. See
-the scratch directory's ``AXIS_ATMOS_INTEGRATION_PLAN.md`` for the full
-plan.
+Wraps the Axis Atmos Admin API at
+``https://admin-api.axissecurity.com/api/v1.0`` for SASE / cloud-edge
+management — connectors, tunnels, locations, identity, applications,
+web-category and SSL-exclusion policy. Auto-disables when the
+``axis_api_token`` secret is missing or empty.
 
-Phase 1: scaffold + secret loader + health probe + 12 read tools.
-Phase 2: 13 ``axis_manage_*`` write tools, ``axis_commit_changes``, and
-``axis_regenerate_connector``. Reads carry no write tag; writes carry
-``axis_write_delete`` so the visibility transform gates them on
-``ENABLE_AXIS_WRITE_TOOLS=true``.
+Reads carry no write tag; writes carry ``axis_write_delete`` so the
+visibility transform + elicitation middleware gate them on
+``ENABLE_AXIS_WRITE_TOOLS=true``. Every ``axis_manage_*`` write stages —
+the caller invokes ``axis_commit_changes`` to apply pending edits,
+matching the workflow Axis enforces for changes made through the admin
+UI.
 """
 
 import importlib

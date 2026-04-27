@@ -5,7 +5,7 @@
 
 > **Unofficial / community project.** This repository is an independent, community-driven project. It is not affiliated with, endorsed by, sponsored by, or supported by Hewlett Packard Enterprise, Aruba Networks, or Juniper Networks. "HPE", "Aruba", "Aruba Central", "Aruba ClearPass", "HPE GreenLake", "Juniper", and "Juniper Mist" are trademarks of their respective owners and are used here only to describe what this software interoperates with. Please direct support and licensing questions about those products to the respective vendors.
 
-A unified [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that brings **Juniper Mist**, **Aruba Central**, **HPE GreenLake**, **Aruba ClearPass**, and **Juniper Apstra** together into a single, deployable service. One container. One endpoint. All your HPE networking tools.
+A unified [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that brings **Juniper Mist**, **Aruba Central**, **HPE GreenLake**, **Aruba ClearPass**, **Juniper Apstra**, and **Axis Atmos Cloud** together into a single, deployable service. One container. One endpoint. All your HPE networking tools.
 
 ---
 
@@ -13,46 +13,50 @@ A unified [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server
 
 Managing HPE networking infrastructure with AI assistants today means juggling multiple separate MCP servers — each with its own setup, credentials, and quirks. This project consolidates them into one:
 
-| Category | Mist | Central | GreenLake | ClearPass | Apstra |
-|----------|:----:|:-------:|:---------:|:---------:|:------:|
-| **Sites / Health Overview** | ✅ | ✅ | — | — | — |
-| **WLANs / SSIDs** | ✅ | ✅ | — | — | — |
-| **Device Inventory** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Device Details (AP/Switch/GW)** | ✅ | ✅ | — | — | — |
-| **Device Stats & Utilization** | ✅ | ✅ | — | — | — |
-| **Client Connectivity** | ✅ | ✅ | — | — | — |
-| **Events** | ✅ | ✅ | — | ✅ | — |
-| **Alerts / Alarms** | ✅ | ✅ | — | ✅ | ✅ |
-| **Audit Logs** | ✅ | ✅ | ✅ | ✅ | — |
-| **Application Visibility** | — | ✅ | — | — | — |
-| **SLE / Performance Metrics** | ✅ | — | — | — | — |
-| **Troubleshooting (Ping/Traceroute/Bounce)** | ✅ | ✅ | — | — | — |
-| **Session Control / Client Disconnect** | — | ✅ | — | ✅ | — |
-| **Configuration Management** | ✅ | — | — | ✅ | ✅ |
-| **Configuration Write (CRUD)** | ✅ | — | — | ✅ | ✅ |
-| **Radio Resource Management** | ✅ | — | — | — | — |
-| **Rogue AP Detection** | ✅ | — | — | — | — |
-| **Firmware Management** | ✅ | — | — | — | — |
-| **Subscriptions / Licensing** | — | — | ✅ | ✅ | — |
-| **User Management** | — | — | ✅ | ✅ | — |
-| **Workspaces** | — | — | ✅ | — | — |
-| **Scope & Configuration Hierarchy** | — | ✅ | — | — | — |
-| **Guest Management** | — | — | — | ✅ | — |
-| **NAC / Policy Management** | — | — | — | ✅ | — |
-| **Endpoint Profiling** | — | — | — | ✅ | — |
-| **Certificates** | — | — | — | ✅ | — |
-| **Datacenter Blueprints / Templates** | — | — | — | — | ✅ |
-| **Virtual Networks / EVPN / Routing Zones** | — | — | — | — | ✅ |
-| **Connectivity Templates / Policy Apply** | — | — | — | — | ✅ |
-| **Fabric Deploy / Diff Status** | — | — | — | — | ✅ |
-| **BGP / Protocol Session Monitoring** | — | — | — | — | ✅ |
-| **Guided Prompts** | ✅ | ✅ | — | — | — |
-| **Dynamic Tool Discovery** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Underlying tools (static mode)** | **35 + 2 prompts** | **73 + 12 prompts** | **10** | **140** | **19** |
-| **Exposed meta-tools (dynamic mode, default)** | **3** | **3** | **3** | **3** | **3** |
-| **Cross-Platform** | **3 tools + 3 prompts** | **3 tools + 3 prompts** | — | **1 tool** | — |
+| Category | Mist | Central | GreenLake | ClearPass | Apstra | Axis |
+|----------|:----:|:-------:|:---------:|:---------:|:------:|:----:|
+| **Sites / Health Overview** | ✅ | ✅ | — | — | — | — |
+| **WLANs / SSIDs** | ✅ | ✅ | — | — | — | — |
+| **Device Inventory** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Device Details (AP/Switch/GW)** | ✅ | ✅ | — | — | — | — |
+| **Device Stats & Utilization** | ✅ | ✅ | — | — | — | ✅ |
+| **Client Connectivity** | ✅ | ✅ | — | — | — | — |
+| **Events** | ✅ | ✅ | — | ✅ | — | — |
+| **Alerts / Alarms** | ✅ | ✅ | — | ✅ | ✅ | — |
+| **Audit Logs** | ✅ | ✅ | ✅ | ✅ | — | — |
+| **Application Visibility** | — | ✅ | — | — | — | ✅ |
+| **SLE / Performance Metrics** | ✅ | — | — | — | — | — |
+| **Troubleshooting (Ping/Traceroute/Bounce)** | ✅ | ✅ | — | — | — | — |
+| **Session Control / Client Disconnect** | — | ✅ | — | ✅ | — | — |
+| **Configuration Management** | ✅ | — | — | ✅ | ✅ | ✅ |
+| **Configuration Write (CRUD)** | ✅ | — | — | ✅ | ✅ | ✅ |
+| **Radio Resource Management** | ✅ | — | — | — | — | — |
+| **Rogue AP Detection** | ✅ | — | — | — | — | — |
+| **Firmware Management** | ✅ | — | — | — | — | — |
+| **Subscriptions / Licensing** | — | — | ✅ | ✅ | — | — |
+| **User Management** | — | — | ✅ | ✅ | — | ✅ |
+| **Workspaces** | — | — | ✅ | — | — | — |
+| **Scope & Configuration Hierarchy** | — | ✅ | — | — | — | ✅ |
+| **Guest Management** | — | — | — | ✅ | — | — |
+| **NAC / Policy Management** | — | — | — | ✅ | — | — |
+| **Endpoint Profiling** | — | — | — | ✅ | — | — |
+| **Certificates** | — | — | — | ✅ | — | — |
+| **Datacenter Blueprints / Templates** | — | — | — | — | ✅ | — |
+| **Virtual Networks / EVPN / Routing Zones** | — | — | — | — | ✅ | — |
+| **Connectivity Templates / Policy Apply** | — | — | — | — | ✅ | — |
+| **Fabric Deploy / Diff Status** | — | — | — | — | ✅ | — |
+| **BGP / Protocol Session Monitoring** | — | — | — | — | ✅ | — |
+| **SASE Cloud Connectors / Tunnels** | — | — | — | — | — | ✅ |
+| **URL / Web Category Filtering** | — | — | — | — | — | ✅ |
+| **SSL Inspection Exclusions** | — | — | — | — | — | ✅ |
+| **Staged Writes + Commit Workflow** | — | — | — | — | ✅ | ✅ |
+| **Guided Prompts** | ✅ | ✅ | — | — | — | — |
+| **Dynamic Tool Discovery** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Underlying tools (static mode)** | **35 + 2 prompts** | **73 + 12 prompts** | **10** | **140** | **19** | **25** |
+| **Exposed meta-tools (dynamic mode, default)** | **3** | **3** | **3** | **3** | **3** | **3** |
+| **Cross-Platform** | **3 tools + 3 prompts** | **3 tools + 3 prompts** | — | **1 tool** | — | — |
 
-> **Default tool surface**: v2.0+ ships with `MCP_TOOL_MODE=dynamic` by default. Each platform exposes three meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`), plus four cross-platform static tools (`health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`). **19 tools total, ~3,100 tokens** — down from 275 tools / ~64,000 tokens in v1.x. Set `MCP_TOOL_MODE=static` to restore the full per-tool surface (every underlying tool is still here; it just defaults to hidden behind the meta-tools). v2.1.0.0 also ships `MCP_TOOL_MODE=code` as an experimental opt-in — FastMCP's `CodeMode` transform with a sandboxed Python `execute` for multi-step workflows; see [docs/TOOLS.md#code-mode](docs/TOOLS.md). See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md).
+> **Default tool surface**: v2.0+ ships with `MCP_TOOL_MODE=dynamic` by default. Each platform exposes three meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`), plus four cross-platform static tools (`health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`). **22 tools total, ~3,700 tokens** for the six-platform configuration — down from 275+ tools / ~64,000 tokens in v1.x. Set `MCP_TOOL_MODE=static` to restore the full per-tool surface (every underlying tool is still here; it just defaults to hidden behind the meta-tools). v2.1.0.0 also ships `MCP_TOOL_MODE=code` as an experimental opt-in — FastMCP's `CodeMode` transform with a sandboxed Python `execute` for multi-step workflows; see [docs/TOOLS.md#code-mode](docs/TOOLS.md). See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md).
 
 ### Aruba Central Guided Prompts
 
@@ -142,7 +146,12 @@ cp secrets/apstra_port.example secrets/apstra_port
 cp secrets/apstra_username.example secrets/apstra_username
 cp secrets/apstra_password.example secrets/apstra_password
 cp secrets/apstra_verify_ssl.example secrets/apstra_verify_ssl
+
+# Axis Atmos Cloud
+cp secrets/axis_api_token.example secrets/axis_api_token
 ```
+
+> **Axis token note**: Generate the token in the Axis admin portal at *Settings → Admin API → New API Token*. Pick read or read+write scope and an expiration. The MCP server decodes the JWT's `exp` claim at startup and logs a warning when the token has fewer than 30 days remaining; the `health` tool also surfaces a `token_expires_in_days` countdown when inside that window. There is no refresh — regenerate the token in the portal before it lapses.
 
 Each file contains a single value (e.g., your API token). **Do not leave placeholder contents** (like `apstra.example.com` or `replace-with-real-password`) in a file for a platform you're not using — the server will try to authenticate with those fake values at startup and fill your logs with failed-login errors. If you're not using a platform, use Path B below (override file) or leave the secret file empty — the app treats an empty file as "not configured" and disables the platform.
 
@@ -173,7 +182,7 @@ docker compose up -d
 docker compose logs
 ```
 
-Look for lines like `Mist: 35 tools registered`, `ClearPass: 140 tools registered`, `Tool mode: dynamic`, and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. In the default dynamic mode, only 19 tools are exposed to the AI — the underlying platform tools are discoverable via each platform's `list_tools` / `get_tool_schema` / `invoke_tool` meta-tools. Mist also registers 2 guided prompts for site provisioning workflows.
+Look for lines like `Mist: 35 tools registered`, `ClearPass: 140 tools registered`, `Axis: 25 underlying tools registered`, `Tool mode: dynamic`, and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. In the default dynamic mode, only 22 tools are exposed to the AI when all six platforms are enabled — the underlying platform tools are discoverable via each platform's `list_tools` / `get_tool_schema` / `invoke_tool` meta-tools. Mist also registers 2 guided prompts for site provisioning workflows.
 
 ### Docker Image
 
@@ -194,9 +203,9 @@ docker pull ghcr.io/nowireless4u/hpe-networking-mcp:latest
 
 ## Platform Auto-Disable
 
-You don't need credentials for all five platforms. The server detects which platforms have valid secret content at startup and only enables those. A platform is disabled if any of its required secret files is **empty or absent** from `SECRETS_DIR` (inside the container) — which, under Docker Compose, means the file on disk was empty or you used a `docker-compose.override.yml` to drop that platform's secrets entirely (see [Disable platforms you don't use](#3-disable-platforms-you-dont-use-recommended)).
+You don't need credentials for all six platforms. The server detects which platforms have valid secret content at startup and only enables those. A platform is disabled if any of its required secret files is **empty or absent** from `SECRETS_DIR` (inside the container) — which, under Docker Compose, means the file on disk was empty or you used a `docker-compose.override.yml` to drop that platform's secrets entirely (see [Disable platforms you don't use](#3-disable-platforms-you-dont-use-recommended)).
 
-- **All five platforms configured** → All tools available (Mist + Central + GreenLake + ClearPass + Apstra)
+- **All six platforms configured** → All tools available (Mist + Central + GreenLake + ClearPass + Apstra + Axis)
 - **Only Mist configured** → Only `mist_*` tools available; other platforms disabled
 - **Only ClearPass configured** → Only `clearpass_*` tools available; other platforms disabled
 - **No valid credentials** → Server refuses to start with a clear error message
@@ -367,33 +376,33 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 ┌───────────────────────────────────────────────────────────────────────────────────┐
 │                HPE Networking MCP Server (:8000)  —  MCP_TOOL_MODE=dynamic        │
 │                                                                                   │
-│   Exposed to the AI  (18 tools total):                                            │
-│     • 3 cross-platform static tools: health, site_health_check,                   │
-│       manage_wlan_profile                                                         │
-│     • 5 × 3 per-platform meta-tools: <platform>_list_tools,                       │
+│   Exposed to the AI  (22 tools total when all 6 platforms enabled):               │
+│     • 4 cross-platform static tools: health, site_health_check,                   │
+│       site_rf_check, manage_wlan_profile                                          │
+│     • 6 × 3 per-platform meta-tools: <platform>_list_tools,                       │
 │       <platform>_get_tool_schema, <platform>_invoke_tool                          │
 │                                                                                   │
-│ ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐        │
-│ │    Mist    │ │  Central   │ │ GreenLake  │ │ ClearPass  │ │   Apstra   │        │
-│ │   mist_*   │ │ central_*  │ │greenlake_* │ │clearpass_* │ │  apstra_*  │        │
-│ │ 35 tools   │ │ 73 tools   │ │ 10 tools   │ │ 140 tools  │ │  19 tools  │        │
-│ │ + 2 prmt   │ │ + 12 prmt  │ │            │ │            │ │            │        │
-│ │            │ │            │ │            │ │            │ │            │        │
+│ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐    │
+│ │   Mist   │ │ Central  │ │GreenLake │ │ClearPass │ │  Apstra  │ │   Axis   │    │
+│ │  mist_*  │ │central_* │ │greenlake │ │clearpass │ │ apstra_* │ │ axis_*   │    │
+│ │ 35 tools │ │ 73 tools │ │ 10 tools │ │140 tools │ │ 19 tools │ │ 25 tools │    │
+│ │ + 2 prmt │ │+ 12 prmt │ │          │ │          │ │          │ │          │    │
+│ │          │ │          │ │          │ │          │ │          │ │          │    │
 │ │  Hidden behind meta-tools in dynamic mode;  fully exposed in static mode.       │
-│ └──────┬─────┘ └──────┬─────┘ └──────┬─────┘ └──────┬─────┘ └──────┬─────┘        │
-│        │              │              │              │              │              │
-└────────┼──────────────┼──────────────┼──────────────┼──────────────┼──────────────┘
-         ▼              ▼              ▼              ▼              ▼
-    Mist Cloud     Aruba Central   GreenLake API  ClearPass CPPM    Apstra
-       API             API                             API        Fabric API
+│ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘    │
+│      │            │            │            │            │            │           │
+└──────┼────────────┼────────────┼────────────┼────────────┼────────────┼───────────┘
+       ▼            ▼            ▼            ▼            ▼            ▼
+   Mist Cloud  Aruba Central GreenLake API ClearPass CPPM   Apstra   Axis Atmos
+      API           API                          API     Fabric API   Cloud API
 ```
 
 **Key design decisions:**
 
 - **FastMCP** framework with Python 3.12+
 - **Streamable HTTP** transport (modern MCP standard)
-- **Dynamic tool mode by default** — each platform exposes 3 meta-tools; the AI discovers the 280 underlying tools on demand. Keeps the tool-schema payload small enough to fit in a 32K-context local LLM.
-- **Tool namespacing** — `mist_*`, `central_*`, `greenlake_*`, `clearpass_*`, `apstra_*` prefixes prevent collisions
+- **Dynamic tool mode by default** — each platform exposes 3 meta-tools; the AI discovers the 300+ underlying tools on demand. Keeps the tool-schema payload small enough to fit in a 32K-context local LLM.
+- **Tool namespacing** — `mist_*`, `central_*`, `greenlake_*`, `clearpass_*`, `apstra_*`, `axis_*` prefixes prevent collisions
 - **Platform isolation** — each module manages its own API client and auth; a failing platform doesn't affect the others
 - **Non-root container** — runs as `mcpuser` (uid 1000)
 
@@ -403,7 +412,7 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 
 Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) are supported with safety controls:
 
-- **Disabled by default** — enable per-platform with `ENABLE_MIST_WRITE_TOOLS=true`, `ENABLE_CENTRAL_WRITE_TOOLS=true`, `ENABLE_CLEARPASS_WRITE_TOOLS=true`, or `ENABLE_APSTRA_WRITE_TOOLS=true`
+- **Disabled by default** — enable per-platform with `ENABLE_MIST_WRITE_TOOLS=true`, `ENABLE_CENTRAL_WRITE_TOOLS=true`, `ENABLE_CLEARPASS_WRITE_TOOLS=true`, `ENABLE_APSTRA_WRITE_TOOLS=true`, or `ENABLE_AXIS_WRITE_TOOLS=true`
 - **Elicitation required** — write tools prompt for user confirmation before executing
 - **Annotation-based** — all tools carry MCP annotations (`readOnlyHint`, `destructiveHint`, etc.)
 
@@ -413,6 +422,7 @@ Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) ar
 | `ENABLE_CENTRAL_WRITE_TOOLS` | `false` | Enable Central write/mutation tools |
 | `ENABLE_CLEARPASS_WRITE_TOOLS` | `false` | Enable ClearPass write/mutation tools |
 | `ENABLE_APSTRA_WRITE_TOOLS` | `false` | Enable Apstra write/mutation tools |
+| `ENABLE_AXIS_WRITE_TOOLS` | `false` | Enable Axis Atmos Cloud write/mutation tools (every write stages — call `axis_commit_changes` to apply) |
 | `DISABLE_ELICITATION` | `false` | Skip user confirmation for write tools (**use with caution**) |
 
 ---
@@ -428,8 +438,9 @@ Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) ar
 | `ENABLE_CENTRAL_WRITE_TOOLS` | `false` | Enable Central write/mutation tools |
 | `ENABLE_CLEARPASS_WRITE_TOOLS` | `false` | Enable ClearPass write/mutation tools |
 | `ENABLE_APSTRA_WRITE_TOOLS` | `false` | Enable Apstra write/mutation tools |
+| `ENABLE_AXIS_WRITE_TOOLS` | `false` | Enable Axis write/mutation tools (staged; commit with `axis_commit_changes`) |
 | `DISABLE_ELICITATION` | `false` | Disable write confirmation prompts |
-| `MCP_TOOL_MODE` | `dynamic` | Tool exposure: `dynamic` (18 exposed, rest discoverable via meta-tools) or `static` (every tool registers individually — 280+ visible) |
+| `MCP_TOOL_MODE` | `dynamic` | Tool exposure: `dynamic` (22 exposed, rest discoverable via meta-tools) or `static` (every tool registers individually — 300+ visible) |
 
 ---
 
@@ -493,11 +504,13 @@ hpe-networking-mcp/
 │       ├── central/             # 73 Central tools + 12 prompts + API client
 │       ├── greenlake/           # 10 GreenLake tools + OAuth2 client
 │       ├── clearpass/           # 140 ClearPass tools + pyclearpass SDK client
-│       ├── apstra/              # 21 Apstra tools + async httpx client
+│       ├── apstra/              # 19 Apstra tools + async httpx client
+│       ├── axis/                # 25 Axis Atmos Cloud tools + httpx client (JWT bearer)
 │       ├── manage_wlan.py       # Cross-platform WLAN management tool
 │       ├── sync_prompts.py      # Cross-platform WLAN sync prompts
-│       └── site_health_check.py # Cross-platform site health aggregator
-├── tests/                       # Unit and integration tests (421+ unit tests)
+│       ├── site_health_check.py # Cross-platform site health aggregator
+│       └── site_rf_check.py     # Cross-platform Wi-Fi RF dashboard
+├── tests/                       # Unit and integration tests (568+ unit tests)
 ├── docs/                        # PRD, PRP, tool reference
 ├── secrets/                     # Secret files (only .example committed)
 ├── .github/workflows/           # CI, security, Docker publish
@@ -613,9 +626,9 @@ If tools time out after ~4 minutes, check that:
 - Node.js is installed: `npx --version`
 - The container didn't lose connectivity after sleep: `docker compose restart`
 
-### Tool Surface Looks Wrong (18 tools vs. 260+)
+### Tool Surface Looks Wrong (22 tools vs. 300+)
 
-Since v2.0.0.0, every platform runs in dynamic mode by default: each platform exposes 3 meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`) and the underlying tools are discoverable through them. A correctly configured server with all 5 platforms enabled will advertise **18 tools** to the AI client — 15 meta-tools + 3 cross-platform static tools (`health`, `site_health_check`, `manage_wlan_profile`).
+Since v2.0.0.0, every platform runs in dynamic mode by default: each platform exposes 3 meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`) and the underlying tools are discoverable through them. A correctly configured server with all 6 platforms enabled will advertise **22 tools** to the AI client — 18 meta-tools + 4 cross-platform static tools (`health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`).
 
 Check the mode in the logs:
 

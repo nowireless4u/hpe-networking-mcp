@@ -31,7 +31,7 @@ With `MCP_TOOL_MODE=code` the server replaces the exposed catalog with a 4-tool 
 
 | Tier | Tool | What the LLM calls |
 |---|---|---|
-| 1 | `tags(detail="brief")` | Browse the tag space — returns platform buckets (`mist (31 tools)`, `central (73)`, `axis (0)`, etc.) plus module categories |
+| 1 | `tags(detail="brief")` | Browse the tag space — returns platform buckets (`mist (31 tools)`, `central (73)`, `axis (25)`, etc.) plus module categories |
 | 2 | `search(query, tags=[...], detail)` | BM25 search the catalog, optionally scoped by tag |
 | 3 | `get_schema(tools=[...], detail)` | Fetch parameter shape for named tools |
 | 4 | `execute(code)` | Run async Python; `call_tool(name, params)` available in scope |
@@ -78,11 +78,12 @@ If you're not sure, stay on `dynamic`. Code mode is meant for measurement + eval
 | Aruba ClearPass | 65 | 75 | -- | 140 |
 | Juniper Apstra | 12 | 7 | -- | 19 |
 | HPE GreenLake | 10 | -- | -- | 10 |
+| Axis Atmos Cloud | 12 | 13 | -- | 25 |
 | Cross-Platform | 3 | 1 | 3 | 7 |
 
 Write tools are disabled by default per platform. Enable them with environment variables:
 `ENABLE_MIST_WRITE_TOOLS=true`, `ENABLE_CENTRAL_WRITE_TOOLS=true`,
-`ENABLE_CLEARPASS_WRITE_TOOLS=true`, or `ENABLE_APSTRA_WRITE_TOOLS=true`. Elicitation applies in both tool modes — the AI still gets a confirmation prompt before a destructive call, whether it invoked the tool directly (static mode) or through `<platform>_invoke_tool` (dynamic mode).
+`ENABLE_CLEARPASS_WRITE_TOOLS=true`, `ENABLE_APSTRA_WRITE_TOOLS=true`, or `ENABLE_AXIS_WRITE_TOOLS=true`. Elicitation applies in both tool modes — the AI still gets a confirmation prompt before a destructive call, whether it invoked the tool directly (static mode) or through `<platform>_invoke_tool` (dynamic mode).
 
 ## Cross-platform static tools
 
@@ -1734,3 +1735,114 @@ elicitation confirmation flow.
 | `apstra_create_virtual_network` | Create a VXLAN or VLAN virtual network via `virtual-networks-batch` |
 | `apstra_create_remote_gateway` | Create a remote EVPN gateway |
 | `apstra_apply_ct_policies` | Apply or remove connectivity-template policies on interfaces |
+
+---
+
+## Axis Atmos Cloud (25 tools)
+
+Axis tools wrap the Axis Atmos Cloud Admin API
+(`https://admin-api.axissecurity.com/api/v1.0`). Auth is a static JWT
+bearer token generated in the Axis admin portal at *Settings → Admin API
+→ New API Token* — there is no refresh endpoint, so the server decodes
+the token's `exp` claim at startup and surfaces a `token_expires_in_days`
+countdown when inside the 30-day warning window. Write tools require
+`ENABLE_AXIS_WRITE_TOOLS=true`; every write **stages** in Axis and the
+caller must invoke `axis_commit_changes` to apply pending edits — the
+same workflow Axis enforces for changes made through the admin UI.
+
+All read tools accept optional `page_number` (1-indexed) and
+`page_size` (max 100) parameters. The Axis API uses offset-based
+pagination with a `PagedApiResponse<IEnumerable<T>>` envelope; the
+response is passed through unchanged so callers see `totalRecords`,
+`totalPages`, and `nextPage`/`firstPage`/`lastPage` cursors.
+
+### Connectors (1 read + 1 write + 1 action)
+
+| Tool | Description |
+|------|-------------|
+| `axis_get_connectors` | List or get connectors (tunnel-endpoint devices) by GUID |
+| `axis_manage_connector` | Create, update, or delete a connector. Stages — call `axis_commit_changes` |
+| `axis_regenerate_connector` | Issue a fresh installation command for an existing connector. **Invalidates the prior install command.** Immediate (not staged) |
+
+### Tunnels (1 read + 1 write)
+
+| Tool | Description |
+|------|-------------|
+| `axis_get_tunnels` | List or get tunnels by GUID |
+| `axis_manage_tunnel` | Create, update, or delete a tunnel. Stages — call `axis_commit_changes` |
+
+### Connector Zones (1 read + 1 write)
+
+| Tool | Description |
+|------|-------------|
+| `axis_get_connector_zones` | List or get connector zones (groupings of connectors) |
+| `axis_manage_connector_zone` | Create, update, or delete a connector zone. Stages — call `axis_commit_changes` |
+
+### Locations and Sub-Locations (2 read + 2 write)
+
+| Tool | Description |
+|------|-------------|
+| `axis_get_locations` | List or get locations (physical sites) |
+| `axis_get_sub_locations` | List or get sub-locations under a parent location (location-scoped) |
+| `axis_manage_location` | Create, update, or delete a location. Stages — call `axis_commit_changes` |
+| `axis_manage_sub_location` | Create, update, or delete a sub-location under a parent location. Stages |
+
+### Status (cross-entity helper)
+
+| Tool | Description |
+|------|-------------|
+| `axis_get_status` | Runtime status for a connector or tunnel (`entity_type='connector' \| 'tunnel'`, `entity_id=GUID`). Connector status returns rich telemetry — CPU/memory/disk/network, hostname, OS version. Tunnel status returns connection state |
+
+### Identity — Users and Groups (2 read + 2 write)
+
+| Tool | Description |
+|------|-------------|
+| `axis_get_users` | List or get Axis IdP users |
+| `axis_get_groups` | List or get IdP user groups |
+| `axis_manage_user` | Create, update, or delete a user. Stages — call `axis_commit_changes` |
+| `axis_manage_group` | Create, update, or delete a group. Stages — call `axis_commit_changes` |
+
+### Applications and Application Groups (2 read + 2 write)
+
+| Tool | Description |
+|------|-------------|
+| `axis_get_applications` | List or get published applications |
+| `axis_get_application_groups` | List or get application groups (referred to as "tags" in the API) |
+| `axis_manage_application` | Create, update, or delete an application. Stages — call `axis_commit_changes` |
+| `axis_manage_application_group` | Create, update, or delete an application group / tag. Stages |
+
+### Web Categories (1 read + 1 write)
+
+| Tool | Description |
+|------|-------------|
+| `axis_get_web_categories` | List or get URL-classification categories used in policy |
+| `axis_manage_web_category` | Create, update, or delete a web category. Stages — call `axis_commit_changes` |
+
+### SSL Exclusions (1 read + 1 write)
+
+| Tool | Description |
+|------|-------------|
+| `axis_get_ssl_exclusions` | List or get hosts excluded from SSL inspection |
+| `axis_manage_ssl_exclusion` | Create, update, or delete an SSL exclusion. Stages — call `axis_commit_changes` |
+
+### Commit (1 tool)
+
+| Tool | Description |
+|------|-------------|
+| `axis_commit_changes` | `POST /Commit` — apply ALL pending staged writes for the tenant. Tenant-wide; no per-change selection. Uses a 60s timeout because commit can take a while when there's a lot staged |
+
+### Currently disabled (kept on disk, off the registry)
+
+These endpoints exist in the Axis swagger but return 403 even with
+fully-scoped tokens — Axis appears to gate them server-side without a
+corresponding scope toggle in the admin portal (likely
+unreleased / hidden APIs). The implementations stay on disk so
+re-enabling is a one-line move from `_DISABLED_TOOLS` back into `TOOLS`
+in `platforms/axis/__init__.py` if Axis ever flips them on.
+
+| Tool | Endpoint |
+|------|----------|
+| `axis_get_custom_ip_categories` | `GET /api/v1.0/IpCategories` |
+| `axis_manage_custom_ip_category` | `POST/PUT/DELETE /api/v1.0/IpCategories` |
+| `axis_get_ip_feed_categories` | `GET /api/v1.0/IpCategoriesFeed` |
+| `axis_manage_ip_feed_category` | `POST/PUT/DELETE /api/v1.0/IpCategoriesFeed` |

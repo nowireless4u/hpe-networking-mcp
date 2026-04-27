@@ -14,7 +14,7 @@ services:
       - ENABLE_CENTRAL_WRITE_TOOLS=${ENABLE_CENTRAL_WRITE_TOOLS:-false}
       - ENABLE_CLEARPASS_WRITE_TOOLS=${ENABLE_CLEARPASS_WRITE_TOOLS:-false}
       - ENABLE_APSTRA_WRITE_TOOLS=${ENABLE_APSTRA_WRITE_TOOLS:-false}
-      # - ENABLE_AXIS_WRITE_TOOLS=${ENABLE_AXIS_WRITE_TOOLS:-false}
+      - ENABLE_AXIS_WRITE_TOOLS=${ENABLE_AXIS_WRITE_TOOLS:-false}
       - DISABLE_ELICITATION=${DISABLE_ELICITATION:-false}
       - MCP_TOOL_MODE=${MCP_TOOL_MODE:-dynamic}
     secrets:
@@ -42,7 +42,7 @@ services:
       - apstra_password
       - apstra_verify_ssl
       # Axis Atmos Cloud (remove lines for platforms you don't use)
-      # - axis_api_token
+      - axis_api_token
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "uv", "run", "--no-sync", "python", "-c", "import httpx; r = httpx.get('http://localhost:8000/mcp', timeout=5)"]
@@ -96,5 +96,5 @@ secrets:
   apstra_verify_ssl:
     file: ./secrets/apstra_verify_ssl
   # Axis Atmos Cloud
-  # axis_api_token:
-  #   file: ./secrets/axis_api_token
+  axis_api_token:
+    file: ./secrets/axis_api_token

@@ -481,6 +481,52 @@ If pending changes exist after a create/update, ask the user whether to deploy b
 
 ---
 
+# AXIS ATMOS CLOUD (axis_* tools)
+
+Axis Atmos Cloud is a SASE / cloud-edge platform — secure access to corporate apps via cloud-managed connectors and tunnels. Tools wrap the Atmos Admin API at `admin-api.axissecurity.com/api/v1.0` with JWT bearer auth.
+
+## Starting an Axis Session
+No special ID resolution needed. Tools connect directly using the configured `axis_api_token`. The token is decoded at startup and the server logs `Axis: token expires in N day(s)` so operators see how long they have before regenerating.
+
+## Tool Categories
+- **Connectors**: axis_get_connectors, axis_manage_connector, axis_regenerate_connector — Tunnel-endpoint devices linking customer networks into Atmos. `axis_regenerate_connector` issues a fresh installation command and **invalidates the prior install command** (use carefully).
+- **Tunnels**: axis_get_tunnels, axis_manage_tunnel — IPsec tunnels between customer locations and the Atmos cloud.
+- **Connector Zones**: axis_get_connector_zones, axis_manage_connector_zone — Logical groupings of connectors.
+- **Locations**: axis_get_locations, axis_get_sub_locations, axis_manage_location, axis_manage_sub_location — Physical sites and their subdivisions. Sub-locations are nested under a parent location.
+- **Status**: axis_get_status (entity_type='connector'|'tunnel') — Runtime status. Connector status returns rich telemetry (CPU/memory/disk/network, hostname, OS version); tunnel status returns connection state.
+- **Identity**: axis_get_users, axis_get_groups, axis_manage_user, axis_manage_group — Atmos IdP user and group records.
+- **Applications**: axis_get_applications, axis_get_application_groups, axis_manage_application, axis_manage_application_group — Published apps and tag-style groupings (the API path is `/Tags`).
+- **Web Categories**: axis_get_web_categories, axis_manage_web_category — URL-classification categories used in policy.
+- **SSL Exclusions**: axis_get_ssl_exclusions, axis_manage_ssl_exclusion — Hosts excluded from SSL inspection.
+- **Commit**: axis_commit_changes — Apply ALL pending staged writes for the tenant.
+
+For Axis reachability call `health(platform="axis")` — when the JWT has fewer than 30 days remaining, the probe returns `degraded` with a `token_expires_in_days` countdown so the AI can warn the operator before the token lapses.
+
+## Staged Writes — the Commit Workflow
+
+This is the single most important Axis-specific behavior. Every `axis_manage_*` write **stages**: it returns success but the change does not affect production until `axis_commit_changes` runs. This mirrors how the Axis admin UI works — edits live in a draft state until the operator commits.
+
+- After every successful `axis_manage_*` call, the response carries `next_step: "Call axis_commit_changes to apply these staged changes."`
+- Multiple writes can stage before a single commit — preferred for related changes (e.g., creating a location and then a sub-location under it).
+- `axis_commit_changes` is **tenant-wide**: it applies every queued change for this tenant. There is no per-change selection.
+- `axis_regenerate_connector` is the only mutation that does NOT stage — it is immediate.
+- The commit endpoint can take a while when there's a lot staged; the tool uses a 60-second timeout for that single call.
+
+When the user asks for a sequence of changes, prefer staging them all first and committing once at the end. After commit, verify with the relevant `axis_get_*` to confirm the change landed.
+
+## Pagination
+List endpoints use offset-based pagination: `page_number` (1-indexed) and `page_size` (max 100). Response envelope includes `totalRecords`, `totalPages`, and `nextPage` cursor URI for chaining.
+
+## Token Expiry
+The Axis token has no refresh mechanism. When `health(platform="axis")` returns `token_expires_in_days <= 30`, surface that to the user immediately and link them to *Settings → Admin API → New API Token* in the Axis admin portal. Once expired, every Axis tool returns a 401 with a clear regenerate-the-token error message.
+
+## Safety Notes
+- Write tools require `ENABLE_AXIS_WRITE_TOOLS=true` and prompt for elicitation confirmation.
+- `axis_regenerate_connector` invalidates the prior install command — anyone holding the old command can no longer use it. Always confirm with the user before calling it.
+- Write tools reply `{"status": "confirmation_required", ...}` when the MCP client cannot present an elicitation prompt. When you see that, ask the user in chat and re-invoke with `confirmed=True`.
+
+---
+
 # STYLING
 
 ## Tables

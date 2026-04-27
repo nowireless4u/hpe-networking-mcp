@@ -5,6 +5,81 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0.0] - 2026-04-26
+
+**Adds Axis Atmos Cloud as the 6th supported platform** — SASE / cloud-edge management via the Axis Atmos Admin API. Adds 25 underlying tools (12 read + 13 write) plus full documentation. The platform shipped behind the scenes in v2.1.0.x untagged commits and is publicly revealed here.
+
+### What Axis adds
+
+Axis Atmos Cloud is structurally different from the other five platforms — it manages a SASE/cloud-edge fabric rather than wired/wireless campus or datacenter infrastructure. The full tool surface:
+
+- **Connectors** (1 read + 1 write + 1 action) — tunnel-endpoint devices linking customer networks into Atmos. `axis_regenerate_connector` issues a fresh install command (immediate, not staged) and invalidates the prior one.
+- **Tunnels** (1 read + 1 write) — IPsec tunnels between customer sites and the Atmos cloud.
+- **Connector zones** (1 read + 1 write) — logical groupings of connectors.
+- **Locations + Sub-locations** (2 read + 2 write) — physical sites and nested subdivisions.
+- **Status helper** (1 cross-entity read) — `axis_get_status(entity_type, entity_id)` returns rich runtime telemetry for connectors (CPU/memory/disk/network/hostname/OS) and tunnels (connection state).
+- **Identity** (2 read + 2 write) — Atmos IdP users and groups.
+- **Applications + Application Groups** (2 read + 2 write) — published apps and tag-style groupings.
+- **Web Categories** (1 read + 1 write) — URL-classification categories for policy.
+- **SSL Exclusions** (1 read + 1 write) — hosts excluded from SSL inspection.
+- **Commit** (1 tool) — `axis_commit_changes` applies ALL pending staged writes for the tenant.
+
+### Staged-write workflow (Axis-specific)
+
+Every `axis_manage_*` write **stages** in Axis and only takes effect after `axis_commit_changes` runs — same pattern Axis enforces for changes made through the admin UI. Each write tool's response includes a `next_step` hint naming the commit tool. Commit is tenant-wide (no per-change selection) and uses a 60-second timeout. `axis_regenerate_connector` is the only mutation that does NOT stage.
+
+### JWT bearer auth + expiry surfacing
+
+Axis tokens are static JWTs generated in the admin portal at *Settings → Admin API → New API Token*. There is no refresh endpoint. The server decodes the `exp` claim at startup and:
+
+- Logs `Axis: token expires in N day(s)` at startup
+- Logs a warning when fewer than 30 days remain
+- The cross-platform `health(platform="axis")` tool returns `degraded` with a `token_expires_in_days` countdown when inside the warning window
+- A 401 surfaces a clear "regenerate at Settings → Admin API → New API Token" error
+
+### Disabled-but-on-disk
+
+Two endpoints documented in the Axis swagger return 403 even with read+write-scoped tokens — apparently hidden / unreleased upstream. Their tool implementations live on disk but are excluded from the registry via a `_DISABLED_TOOLS` dict in `platforms/axis/__init__.py`. Re-enabling either pair (`custom_ip_categories`, `ip_feed_categories`) is a one-line move when Axis flips them on.
+
+### Tool surface impact
+
+| Mode | Before | After |
+|---|---|---|
+| Dynamic (default, exposed to AI) | 19 tools (5 platforms × 3 meta + 4 cross-platform) | 22 tools (6 platforms × 3 meta + 4 cross-platform) |
+| Static (every tool registers individually) | 280+ visible | 305+ visible |
+
+Token cost in dynamic mode goes from ~3,100 to ~3,700 — the 600-token bump is the cost of three additional meta-tool entries. The four cross-platform aggregators (`health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`) are unchanged.
+
+### Configuration
+
+| | |
+|---|---|
+| Secret | `secrets/axis_api_token` |
+| Write toggle | `ENABLE_AXIS_WRITE_TOOLS=true` (default `false`) |
+| Health probe | `health(platform="axis")` |
+| Auto-disables when | the secret file is missing or empty |
+
+### Tests
+
+571 tests passing (no new tests in this docs/reveal PR — Axis registry, write-tag, JWT-exp, and health-probe coverage all landed with the prior phases). Axis test coverage already includes:
+
+- Registry population (12 active reads + 13 active writes; the 4 disabled tools must NOT appear)
+- Every write carries `axis_write_delete` so the visibility transform + elicitation gate fires
+- Every `axis_manage_*` description references `axis_commit_changes` (regression on the staged-write contract)
+- ElicitationMiddleware reads `enable_axis_write_tools` and enables the `axis_write_delete` tag
+- JWT exp decoder: well-formed JWT, opaque token, missing `exp`
+- Health probe: outside warning, inside 30-day window, expired, undecodable
+
+### Bundles in this release
+
+- PR #198 — Phase 1 read-only surface (12 tools + JWT-exp surfacing + health-probe enrichment)
+- PR #199 — Phase 2 write surface (13 manage tools + commit + regenerate + ElicitationMiddleware fix)
+- This release — public reveal: docs (README capability matrix, INSTRUCTIONS.md tool categories, TOOLS.md overview + per-entity tables), uncomments compose entries, version bump 2.1.0.2 → 2.2.0.0
+
+### Not in this release
+
+- The Axis tools are not in scope for the cross-platform aggregators (`site_health_check`, `site_rf_check`, `manage_wlan_profile`) — Axis has no Wi-Fi / RF surface, and its "locations" concept doesn't map to the site-health aggregator's site model. Axis remains discoverable via the per-platform meta-trio in dynamic mode and via `tags(query=["axis"])` in code mode.
+
 ## [2.1.0.2] - 2026-04-26
 
 **Fixes site-health field-name mismatches that caused `central_get_site_health`, `central_get_site_name_id_mapping`, and `site_health_check` to silently report empty/zero data.**
