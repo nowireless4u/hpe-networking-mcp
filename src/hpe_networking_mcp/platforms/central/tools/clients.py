@@ -70,7 +70,10 @@ async def central_get_clients(
         ("tunnel_type", tunnel_type),
     ]
     pairs = [(CLIENT_FILTER_FIELDS[k], v) for k, v in raw_pairs if v is not None]
-    filter_str = build_odata_filter(pairs)
+    try:
+        filter_str = build_odata_filter(pairs)
+    except ValueError as e:
+        return f"Error: {e}"
 
     try:
         clients = Clients.get_all_clients(

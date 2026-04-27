@@ -5,6 +5,67 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0.1] - 2026-04-27
+
+**Fixes tool-level `raise` patterns that crashed the entire `execute()` block in `MCP_TOOL_MODE=code`.** When a tool raised `ValueError` / `TypeError` / `RuntimeError`, the exception propagated through FastMCP's `call_tool` machinery as `MontyRuntimeError` and the AI's `try/except` inside the sandbox could not catch it. Closes #202.
+
+### Background
+
+Code mode replaces the exposed catalog with a 4-tool surface (`tags` / `search` / `get_schema` / `execute`); the LLM writes Python in `execute(code)` and dispatches via `call_tool(name, params)`. When a tool raises, the exception bubbles up at the runtime layer above the AI's Python — the `execute()` call returns "Error calling tool 'execute'" and the AI never sees the validation message. Same code path is fine in dynamic and static modes because the meta-tool wrapper (`<platform>_invoke_tool`) catches the exception and surfaces it as a structured tool result.
+
+### Affected tools (now return error strings)
+
+| Platform | Tool | What used to raise |
+|---|---|---|
+| GreenLake | `greenlake_get_users` | `_coerce_int` invalid `limit` / `offset` |
+| GreenLake | `greenlake_get_user_details` | empty `id` |
+| GreenLake | `greenlake_get_devices` | `_coerce_int` invalid `limit` / `offset` |
+| GreenLake | `greenlake_get_device_by_id` | empty `id` |
+| GreenLake | `greenlake_get_subscriptions` | `_coerce_int` invalid `limit` / `offset` |
+| GreenLake | `greenlake_get_subscription_details` | empty `id` |
+| GreenLake | `greenlake_get_audit_logs` | `_coerce_int` invalid `limit` / `offset` |
+| GreenLake | `greenlake_get_audit_log_details` | empty `id` |
+| GreenLake | `greenlake_get_workspace` | empty `workspaceId` |
+| GreenLake | `greenlake_get_workspace_details` | empty `workspaceId` |
+| Mist | `mist_get_insight_metrics` | `_mac_to_device_id` invalid MAC |
+| Mist | `mist_get_configuration_object_schema` | schema-not-found |
+| Central | `central_get_alerts` | `build_odata_filter` invalid value |
+| Central | `central_get_clients` | `build_odata_filter` invalid value |
+| Central | `central_get_devices` | `build_odata_filter` invalid value |
+| Central | `central_find_device` | `build_odata_filter` invalid value |
+| Central | `central_get_aps` (monitoring) | `build_odata_filter` invalid value |
+| Central | `central_get_events` | `compute_time_window` invalid `time_range` |
+| Central | `central_get_events_count` | `compute_time_window` invalid `time_range` |
+
+Pattern: each tool now wraps the validation/helper call in a top-level `try/except ValueError` and `return f"Error: {e}"` (or returns an error string directly). Helpers (`_coerce_int`, `compute_time_window`, `build_odata_filter`) keep their existing raising contract — only public tool entries that face the LLM had to be made code-mode-safe.
+
+`_mac_to_device_id` was changed from raising to returning `None` because its existing call sites flow through `handle_network_error` → `ToolError`, which also crashed the sandbox. Now the calling tool checks for `None` and returns an error string explicitly.
+
+### Verified live against the running container
+
+```
+greenlake_get_user_details(id="")        → "Error: id is required and cannot be empty"
+greenlake_get_users(limit="abc")         → "Error: Parameter 'limit' must be an integer, got 'abc'"
+mist_get_insight_metrics(mac="not-a-mac", object_type="ap")
+                                          → "Error: invalid MAC address format: 'not-a-mac'"
+```
+
+All previously crashed `execute()` with `MontyRuntimeError`. All now return strings the AI can branch on.
+
+### Tests
+
+6 new tests in `tests/unit/test_code_mode.py::TestCodeModeErrorReturns`:
+- 3 dynamic tests calling the fixed tools directly with bad input
+- 1 contract test pinning `_mac_to_device_id` returns `None` instead of raising
+- 1 contract test pinning `_coerce_int` still raises (helpers stay raising; only entry points are wrapped)
+- 1 static AST guard scanning every public function in `greenlake/tools/*.py` and failing if a `raise` re-appears (catches future regressions for free)
+
+Total suite: 571 → 577 passing.
+
+### Out of scope
+
+The 19 raises in `apstra/models.py` are Pydantic field validators. Their `ValueError` becomes a `ValidationError` that fires during FastMCP parameter coercion *before* the tool function runs. Same crash symptom, but the fix lives at the FastMCP middleware layer, not in tool code. Tracking that separately if it becomes a real-world friction point.
+
 ## [2.2.0.0] - 2026-04-26
 
 **Adds Axis Atmos Cloud as the 6th supported platform** — SASE / cloud-edge management via the Axis Atmos Admin API. Adds 25 underlying tools (12 read + 13 write) plus full documentation. The platform shipped behind the scenes in v2.1.0.x untagged commits and is publicly revealed here.
