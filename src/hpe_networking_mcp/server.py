@@ -192,6 +192,7 @@ def create_server(config: ServerConfig) -> FastMCP:
         ElicitationMiddleware,
     )
     from hpe_networking_mcp.middleware.null_strip import NullStripMiddleware
+    from hpe_networking_mcp.middleware.validation_catch import ValidationCatchMiddleware
 
     mcp = FastMCP(
         name="HPE Networking MCP",
@@ -199,7 +200,7 @@ def create_server(config: ServerConfig) -> FastMCP:
         lifespan=lifespan,
         on_duplicate="replace",
         mask_error_details=True,
-        middleware=[NullStripMiddleware(), ElicitationMiddleware()],
+        middleware=[NullStripMiddleware(), ValidationCatchMiddleware(), ElicitationMiddleware()],
     )
 
     # Attach config for lifespan to access
