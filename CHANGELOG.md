@@ -5,6 +5,67 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0.5] - 2026-04-27
+
+**Adds `RetryMiddleware` for transparent retry of transient API failures (5xx server errors and 429 rate-limit responses).** Closes #133 (5xx retry) and #134 (429 + Retry-After).
+
+### Background
+
+Network APIs occasionally return transient failures — server overload (5xx), rate limiting (429), brief network blips. Without retry handling, every transient failure surfaces to the AI as a tool-level error, forcing the user to either re-ask or watch the model decide whether to retry. Both make the experience worse than necessary.
+
+This middleware catches the two failure shapes our platforms produce:
+
+1. **Response-dict pattern** (Mist / Central / ClearPass) — older clients return a dict shaped like `{"status_code": 503, ...}` (or `"code"` / `"status"` depending on platform).
+2. **Exception pattern** (GreenLake / Apstra / Axis) — newer httpx-based clients raise `httpx.HTTPStatusError` whose `.response.status_code` indicates the failure.
+
+### Behavior
+
+| Status | Reads | Writes | Notes |
+|---|---|---|---|
+| 5xx (500/502/503/504) | retried | NOT retried | Writes may not be idempotent — better to surface and let the user decide |
+| 429 | retried | retried | Always safe — server is asking us to slow down, not telling us the request was processed |
+| 4xx (other) | not retried | not retried | Client error — retrying won't help |
+| 2xx success | returned | returned | No retry path |
+
+Read/write classification reads the FastMCP tool's `tags` at call time — any tag matching `*_write` or `*_write_delete` marks the tool as a write. Cross-platform convention; works for all six platforms.
+
+### Configuration
+
+| Env var | Default | Purpose |
+|---|---|---|
+| `RETRY_MAX_ATTEMPTS` | `3` | Max attempts including the first; set to `1` to disable |
+| `RETRY_INITIAL_DELAY` | `1.0` | Initial backoff (seconds); doubles on each retry |
+| `RETRY_MAX_DELAY` | `60.0` | Cap on a single retry sleep + on Retry-After header values |
+
+### Retry-After header support
+
+For 429 responses, the middleware honors a `Retry-After` header when present — both via the response-dict shape (looks for `Retry-After` / `retry_after` / `retry-after` keys) and via `httpx.HTTPStatusError.response.headers["Retry-After"]`. Only the integer-seconds form is honored; HTTP-date form falls back to exponential backoff. The Retry-After value is capped at `RETRY_MAX_DELAY` to prevent a runaway "retry in 24 hours" lock-up.
+
+### Middleware chain (post-#208, post-#133/#134)
+
+Outermost → innermost as of v2.2.0.5:
+
+1. `NullStripMiddleware` — drop nulls before validation
+2. `ValidationCatchMiddleware` — Pydantic ValidationError → string `ToolResult`
+3. `SandboxErrorCatchMiddleware` — code-mode MontyError → string `ToolResult`
+4. `ElicitationMiddleware` — write-tool confirmation gate
+5. `RetryMiddleware` — innermost, so re-tries don't re-prompt elicitation
+
+### Tests (598 → 612)
+
+Fourteen new tests in `tests/unit/test_middleware.py::TestRetryMiddleware`:
+
+- 5xx retry on reads, no-retry on writes
+- 429 retry on both reads and writes
+- 4xx and 2xx no-retry passthrough
+- max-attempts cap respected
+- Retry-After header honored (response-dict + httpx exception forms)
+- Retry-After capped at `RETRY_MAX_DELAY`
+- `max_attempts=1` disables retry entirely
+- Central `code` field pattern + ClearPass `status` field pattern
+- httpx 429 with Retry-After header
+- Unknown exceptions (non-httpx, non-status) propagate unchanged
+
 ## [2.2.0.4] - 2026-04-27
 
 **Unmasks code-mode sandbox errors and tells the LLM upfront which tools `call_tool` can dispatch to.** Closes #208.

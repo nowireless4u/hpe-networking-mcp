@@ -427,6 +427,25 @@ Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) ar
 
 ---
 
+## Reliability
+
+The server transparently retries transient API failures so the AI doesn't have to reason about flakey upstream services.
+
+- **5xx errors on read tools** — auto-retried with exponential backoff (1s, 2s, 4s — 3 attempts total)
+- **429 rate-limit responses** — retried on both reads and writes (always safe — the server is asking us to slow down). Honors the `Retry-After` response header when present, capped at 60s
+- **Write tools (5xx)** — never auto-retried for idempotency safety. The error surfaces to the AI which can decide whether to re-issue
+- **4xx errors (other than 429)** — never retried; surface immediately
+
+The retry logic detects transient failures in two patterns: response-dict (Mist/Central/ClearPass return `{"status_code": 503, ...}`) and httpx exception (GreenLake/Apstra/Axis raise `httpx.HTTPStatusError`). Read/write classification is via the underlying tool's tags — anything tagged `*_write` or `*_write_delete` is treated as a write.
+
+| Environment Variable | Default | Effect |
+|---------------------|---------|--------|
+| `RETRY_MAX_ATTEMPTS` | `3` | Max attempts including the first call. Set to `1` to disable retry entirely |
+| `RETRY_INITIAL_DELAY` | `1.0` | Initial backoff delay in seconds (doubles per attempt up to `RETRY_MAX_DELAY`) |
+| `RETRY_MAX_DELAY` | `60.0` | Cap on a single sleep — also caps `Retry-After` header values |
+
+---
+
 ## Configuration
 
 | Environment Variable | Default | Description |
@@ -441,6 +460,9 @@ Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) ar
 | `ENABLE_AXIS_WRITE_TOOLS` | `false` | Enable Axis write/mutation tools (staged; commit with `axis_commit_changes`) |
 | `DISABLE_ELICITATION` | `false` | Disable write confirmation prompts |
 | `MCP_TOOL_MODE` | `dynamic` | Tool exposure: `dynamic` (22 exposed, rest discoverable via meta-tools) or `static` (every tool registers individually — 300+ visible) |
+| `RETRY_MAX_ATTEMPTS` | `3` | Max retry attempts on transient failures (5xx reads, 429 reads+writes). Set to `1` to disable retry |
+| `RETRY_INITIAL_DELAY` | `1.0` | Initial retry backoff seconds (exponential: 1s, 2s, 4s) |
+| `RETRY_MAX_DELAY` | `60.0` | Cap on a single retry sleep (also caps `Retry-After` header values) |
 
 ---
 
@@ -496,7 +518,7 @@ hpe-networking-mcp/
 │   ├── server.py                # FastMCP server setup and lifespan
 │   ├── config.py                # Docker secrets loading and validation
 │   ├── INSTRUCTIONS.md          # LLM instructions for all platforms
-│   ├── middleware/              # Elicitation, null-strip, validation-catch, sandbox-error-catch
+│   ├── middleware/              # null-strip, validation-catch, sandbox-error-catch, elicitation, retry
 │   └── platforms/
 │       ├── _common/             # Shared tool registry + meta-tool factory (dynamic mode)
 │       ├── health.py            # Cross-platform health probe tool
@@ -510,7 +532,7 @@ hpe-networking-mcp/
 │       ├── sync_prompts.py      # Cross-platform WLAN sync prompts
 │       ├── site_health_check.py # Cross-platform site health aggregator
 │       └── site_rf_check.py     # Cross-platform Wi-Fi RF dashboard
-├── tests/                       # Unit and integration tests (598+ unit tests)
+├── tests/                       # Unit and integration tests (612+ unit tests)
 ├── docs/                        # PRD, PRP, tool reference
 ├── secrets/                     # Secret files (only .example committed)
 ├── .github/workflows/           # CI, security, Docker publish
