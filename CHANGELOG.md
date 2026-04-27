@@ -5,6 +5,89 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0.0] - 2026-04-27
+
+**Adds a Skills system: markdown-defined multi-step procedures discoverable via two MCP tools.** Closes #189.
+
+### Background
+
+Three places already exist where multi-step network operations procedures could live, each with downsides:
+
+1. **`INSTRUCTIONS.md`** — long, embedded "if user asks X, do Y then Z" guidance. Consumes baseline context every turn; AIs don't reliably follow it as the number of patterns grows.
+2. **`@mcp.prompt` primitives** — work, but require a code edit + image rebuild to add or change a procedure.
+3. **Cross-platform aggregator tools** (`site_health_check`, `manage_wlan_profile`, `site_rf_check`) — Python code that does N calls and returns one merged answer. Great when the procedure is stable; awful when it needs frequent tuning. Not registered in code mode (premise: LLM should compose).
+
+None give us a procedure surface that is (a) discoverable on demand, (b) authored in markdown, (c) updatable without a code release.
+
+### What's new
+
+A **skill** is a markdown file with YAML frontmatter sitting in `src/hpe_networking_mcp/skills/`. The frontmatter carries metadata (name / title / description / platforms / tags / tools); the body is the runbook the AI follows step-by-step. The new engine indexes all `*.md` files in that directory at startup and exposes:
+
+- **`skills_list(platform=..., tag=...)`** — returns metadata only (cheap browse)
+- **`skills_load(name)`** — returns the full markdown body, with case-insensitive substring fallback if no exact match is found
+
+Skills are **always-visible top-level tools** in every `MCP_TOOL_MODE` (dynamic, code, static) — they're an entry point, not an implementation detail.
+
+### Why skills work in code mode (where aggregators don't)
+
+| | Aggregators (`site_health_check`, etc.) | Skills (`change-pre-check`, etc.) |
+|---|---|---|
+| What it is | Python code that does 5 calls and returns one merged answer | Markdown that says "do these 5 calls and merge them this way" |
+| Who composes the answer | The server, in Python | The LLM itself |
+| In code mode? | Not registered (premise: LLM should compose) | Registered (it's a guide for that composition) |
+
+The skill is the *textual* version of an aggregator. In code mode the LLM reads the runbook then writes a single `execute()` block calling `await call_tool("mist_search_alarms", ...)`, `call_tool("central_get_alerts", ...)`, etc. — exactly what code mode is built for.
+
+### Seed skills (3 + TEMPLATE)
+
+- **`infrastructure-health-check`** — cross-platform daily-standup style overview. `health()` → per-platform alarms/alerts → admin activity → formatted summary.
+- **`change-pre-check`** — pre-change baseline snapshot. Confirms scope, runs reachability, captures pre-existing alarms, recent admin activity, current config, active impact metrics, and emits a structured snapshot the operator pastes into their change ticket.
+- **`wlan-sync-validation`** — Mist ↔ Central WLAN drift detection. Pulls both catalogs, classifies each SSID as in-sync / Mist-only / Central-only / drift, lists field-level diffs (with the inverted `hide_ssid`/`broadcast_ssid` quirk called out).
+
+Plus `TEMPLATE.md` for users who want to author their own (placeholder name `my-skill-name` so it's filtered out of the registry by the filename-stem check).
+
+### Engine details
+
+- **Loader** — `Path.glob("*.md")` at startup, sorted, parsed via PyYAML (already a transitive dep — no new dependency added).
+- **Validation** — frontmatter must be a YAML mapping with at minimum `name` (must match filename stem), `title`, `description`. Bad frontmatter is logged and skipped; the server boots with the rest of the catalog rather than crashing on a malformed file.
+- **Lookup** — case-insensitive exact match first, then case-insensitive substring fallback; multi-match returns the candidate list so the AI can disambiguate.
+- **Reserved filenames** — `TEMPLATE.md` is excluded from the registry by name.
+
+### Tool surface impact
+
+| Mode | Before | After | Net |
+|---|---|---|---|
+| Dynamic | 22 always-visible tools | 24 (+`skills_list` + `skills_load`) | +2 |
+| Code | 4 (`tags`/`search`/`get_schema`/`execute`) + `health` | 6 (+`skills_list` + `skills_load`) | +2 |
+| Static | 305+ tools | 307+ | +2 |
+
+Token-budget impact: ~+80 tokens baseline per session for the two new tool definitions. Skills are pulled on demand — the runbook bodies don't load until the AI calls `skills_load`.
+
+### INSTRUCTIONS.md update
+
+New rule #8 added: "Use Skills for multi-step procedures. When the user asks for something that's a known runbook — *infra health check*, *pre-change baseline*, *WLAN sync audit* — call `skills_list()` first to see whether a skill matches, then `skills_load(name=...)` to fetch the markdown runbook."
+
+### Tests (612 → 639)
+
+Twenty-seven new tests in `tests/unit/test_skills.py`:
+
+- Frontmatter parsing — valid + every malformed shape we want to skip (no frontmatter, unterminated, bad YAML, list-not-mapping, missing required fields, name/filename mismatch)
+- String-coerced-to-list field shape (`platforms: mist` works as well as `platforms: [mist]`)
+- Filter behavior — string vs list, AND across fields, OR within a field
+- Lookup — exact match, case-insensitive, substring fallback (unique + multi-match), empty/whitespace input, exact-beats-substring tiebreaker
+- Bundled-skills sanity — the three seed skills load cleanly, bodies are nonempty, `TEMPLATE.md` is excluded
+
+### Bumped to a minor version
+
+This is a new feature surface (two new always-visible tools + an authored content library) and is purely additive — no existing tool changes behavior. Semver MINOR. Reserved MAJOR for things that would actually break existing clients (e.g. dropping dynamic mode, renaming platform prefixes, changing `*_invoke_tool` signatures).
+
+### Out of scope (deferred)
+
+- **User-authored skills via volume mount** — bundled-only for v1. Add later if there's demand.
+- **Trust marker** (`trust: built-in` vs `trust: user`) — only meaningful once user-mounting exists; YAGNI today.
+- **Skill chaining** (one skill referencing another) — keep v1 simple.
+- **Skills with elicitation hooks** ("ask user before step 5") — deferred.
+
 ## [2.2.0.5] - 2026-04-27
 
 **Adds `RetryMiddleware` for transparent retry of transient API failures (5xx server errors and 429 rate-limit responses).** Closes #133 (5xx retry) and #134 (429 + Retry-After).

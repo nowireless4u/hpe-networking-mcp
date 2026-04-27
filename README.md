@@ -56,7 +56,7 @@ Managing HPE networking infrastructure with AI assistants today means juggling m
 | **Exposed meta-tools (dynamic mode, default)** | **3** | **3** | **3** | **3** | **3** | **3** |
 | **Cross-Platform** | **3 tools + 3 prompts** | **3 tools + 3 prompts** | — | **1 tool** | — | — |
 
-> **Default tool surface**: v2.0+ ships with `MCP_TOOL_MODE=dynamic` by default. Each platform exposes three meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`), plus four cross-platform static tools (`health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`). **22 tools total, ~3,700 tokens** for the six-platform configuration — down from 275+ tools / ~64,000 tokens in v1.x. Set `MCP_TOOL_MODE=static` to restore the full per-tool surface (every underlying tool is still here; it just defaults to hidden behind the meta-tools). v2.1.0.0 also ships `MCP_TOOL_MODE=code` as an experimental opt-in — FastMCP's `CodeMode` transform with a sandboxed Python `execute` for multi-step workflows; see [docs/TOOLS.md#code-mode](docs/TOOLS.md). See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md).
+> **Default tool surface**: v2.0+ ships with `MCP_TOOL_MODE=dynamic` by default. Each platform exposes three meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`), plus four cross-platform static tools (`health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`) and two skills tools (`skills_list`, `skills_load`). **24 tools total, ~3,800 tokens** for the six-platform configuration — down from 275+ tools / ~64,000 tokens in v1.x. Set `MCP_TOOL_MODE=static` to restore the full per-tool surface (every underlying tool is still here; it just defaults to hidden behind the meta-tools). v2.1.0.0 also ships `MCP_TOOL_MODE=code` as an experimental opt-in — FastMCP's `CodeMode` transform with a sandboxed Python `execute` for multi-step workflows; see [docs/TOOLS.md#code-mode](docs/TOOLS.md). v2.3.0.0 introduces **Skills** — markdown-defined multi-step procedures discoverable via `skills_list` / `skills_load`; see [docs/TOOLS.md#skills](docs/TOOLS.md). See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md).
 
 ### Aruba Central Guided Prompts
 
@@ -376,11 +376,12 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 ┌───────────────────────────────────────────────────────────────────────────────────┐
 │                HPE Networking MCP Server (:8000)  —  MCP_TOOL_MODE=dynamic        │
 │                                                                                   │
-│   Exposed to the AI  (22 tools total when all 6 platforms enabled):               │
+│   Exposed to the AI  (24 tools total when all 6 platforms enabled):               │
 │     • 4 cross-platform static tools: health, site_health_check,                   │
 │       site_rf_check, manage_wlan_profile                                          │
 │     • 6 × 3 per-platform meta-tools: <platform>_list_tools,                       │
 │       <platform>_get_tool_schema, <platform>_invoke_tool                          │
+│     • 2 skills tools: skills_list, skills_load (multi-step runbooks)              │
 │                                                                                   │
 │ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐    │
 │ │   Mist   │ │ Central  │ │GreenLake │ │ClearPass │ │  Apstra  │ │   Axis   │    │
@@ -519,6 +520,7 @@ hpe-networking-mcp/
 │   ├── config.py                # Docker secrets loading and validation
 │   ├── INSTRUCTIONS.md          # LLM instructions for all platforms
 │   ├── middleware/              # null-strip, validation-catch, sandbox-error-catch, elicitation, retry
+│   ├── skills/                  # Markdown-defined multi-step procedures + skills engine
 │   └── platforms/
 │       ├── _common/             # Shared tool registry + meta-tool factory (dynamic mode)
 │       ├── health.py            # Cross-platform health probe tool
@@ -532,7 +534,7 @@ hpe-networking-mcp/
 │       ├── sync_prompts.py      # Cross-platform WLAN sync prompts
 │       ├── site_health_check.py # Cross-platform site health aggregator
 │       └── site_rf_check.py     # Cross-platform Wi-Fi RF dashboard
-├── tests/                       # Unit and integration tests (612+ unit tests)
+├── tests/                       # Unit and integration tests (639+ unit tests)
 ├── docs/                        # PRD, PRP, tool reference
 ├── secrets/                     # Secret files (only .example committed)
 ├── .github/workflows/           # CI, security, Docker publish

@@ -259,6 +259,11 @@ def create_server(config: ServerConfig) -> FastMCP:
 
     _register_health(mcp)
 
+    # --- Skills (markdown-defined multi-step procedures, always visible) ---
+    from hpe_networking_mcp.skills import register as _register_skills
+
+    _register_skills(mcp)
+
     # --- Write tool visibility (per-platform) ---
     from fastmcp.server.transforms import Visibility
 

@@ -102,6 +102,65 @@ Always registered regardless of `MCP_TOOL_MODE`:
 - **`site_rf_check`** — cross-platform RF / channel-planning aggregator.
 - **`manage_wlan_profile`** — cross-platform WLAN orchestrator.
 
+In **code mode**, the three aggregators (`site_health_check`,
+`site_rf_check`, `manage_wlan_profile`) are NOT registered — code mode's
+premise is that the LLM composes per-platform calls itself. `health` is
+registered in every mode.
+
+## Skills (since v2.3.0.0)
+
+A *skill* is a markdown file with YAML frontmatter sitting in
+`src/hpe_networking_mcp/skills/`. The frontmatter carries metadata; the
+body is a step-by-step runbook. The AI calls one of two tools to discover
+and load skills, then follows the steps.
+
+- **`skills_list(platform=..., tag=...)`** — metadata-only browse. Returns
+  `count` + a list of `{name, title, description, platforms, tags, tools}`.
+  Both filters accept a string or a list of strings.
+- **`skills_load(name)`** — full markdown body. Case-insensitive exact
+  match wins; substring fallback is tried if no exact match exists.
+  Multi-match returns an error listing the candidates.
+
+Skills are **always-visible** in every `MCP_TOOL_MODE` — they're an entry
+point for known runbook-style queries (e.g. "infra health snapshot",
+"pre-change baseline", "are our WLANs in sync?").
+
+### Why skills work in code mode (where aggregators don't)
+
+Aggregator tools do N calls in Python and return one merged answer; that
+contradicts code mode's premise (LLM composes per-platform calls itself).
+Skills are the *textual* equivalent — they tell the LLM which tools to
+call in what order, and the LLM does the join itself in `execute()`. So
+skills register in every mode without violating the code-mode design.
+
+### Bundled seed skills (v2.3.0.0)
+
+| Name | Purpose |
+|---|---|
+| `infrastructure-health-check` | Cross-platform daily-standup style overview — `health()` then per-platform alarms/alerts |
+| `change-pre-check` | Pre-change baseline snapshot — confirms scope, captures pre-existing alarms, recent admin activity, current config, active impact metrics |
+| `wlan-sync-validation` | Mist ↔ Central WLAN drift detection — classifies each SSID as in-sync / Mist-only / Central-only / drift, lists field diffs |
+
+The `TEMPLATE.md` file in the skills directory is a starting point if you
+want to author a new skill — it's filtered out of the registry by name.
+
+### Authoring rules
+
+A skill file must:
+
+- Have YAML frontmatter delimited by `---` lines at the top
+- Set `name`, `title`, `description` as strings (required)
+- Set `name` to match the filename stem exactly (e.g. `change-pre-check.md`
+  must have `name: change-pre-check` — files whose name disagrees with
+  frontmatter are skipped at load with a warning, not crashed on)
+
+Optional frontmatter fields: `platforms` (list), `tags` (list), `tools`
+(list — informational hint about which underlying tools the skill calls).
+
+Bad frontmatter (missing fields, YAML errors, name/filename mismatch) is
+logged and skipped; the rest of the catalog still loads. See
+`skills/TEMPLATE.md` for the full structure.
+
 ---
 
 ## Juniper Mist (35 tools + 2 prompts)
