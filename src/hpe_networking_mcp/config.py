@@ -429,6 +429,7 @@ def load_config() -> ServerConfig:
     enable_clearpass_write = os.getenv("ENABLE_CLEARPASS_WRITE_TOOLS", "false").lower() in _truthy
     enable_apstra_write = os.getenv("ENABLE_APSTRA_WRITE_TOOLS", "false").lower() in _truthy
     enable_axis_write = os.getenv("ENABLE_AXIS_WRITE_TOOLS", "false").lower() in _truthy
+    enable_aos8_write = os.getenv("ENABLE_AOS8_WRITE_TOOLS", "false").lower() in _truthy
     disable_elicit = os.getenv("DISABLE_ELICITATION", "false").lower() in _truthy
     debug = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
     log_file = os.getenv("LOG_FILE") or None
@@ -449,6 +450,7 @@ def load_config() -> ServerConfig:
     clearpass = _load_clearpass()
     apstra = _load_apstra()
     axis = _load_axis()
+    aos8 = _load_aos8()
 
     config = ServerConfig(
         port=port,
@@ -459,6 +461,7 @@ def load_config() -> ServerConfig:
         enable_clearpass_write_tools=enable_clearpass_write,
         enable_apstra_write_tools=enable_apstra_write,
         enable_axis_write_tools=enable_axis_write,
+        enable_aos8_write_tools=enable_aos8_write,
         disable_elicitation=disable_elicit,
         debug=debug,
         log_file=log_file,
@@ -469,6 +472,7 @@ def load_config() -> ServerConfig:
         clearpass=clearpass,
         apstra=apstra,
         axis=axis,
+        aos8=aos8,
     )
 
     if not config.enabled_platforms:
