@@ -139,13 +139,17 @@ Skills are the *textual* equivalent — they tell the LLM which tools to
 call in what order, and the LLM does the join itself in `execute()`. So
 skills register in every mode without violating the code-mode design.
 
-### Bundled seed skills (v2.3.0.0)
+### Bundled skills
 
-| Name | Purpose |
-|---|---|
-| `infrastructure-health-check` | Cross-platform daily-standup style overview — `health()` then per-platform alarms/alerts |
-| `change-pre-check` | Pre-change baseline snapshot — confirms scope, captures pre-existing alarms, recent admin activity, current config, active impact metrics |
-| `wlan-sync-validation` | Mist ↔ Central WLAN drift detection — classifies each SSID as in-sync / Mist-only / Central-only / drift, lists field diffs |
+| Name | Purpose | Added |
+|---|---|---|
+| `infrastructure-health-check` | Cross-platform daily-standup style overview — `health()` then per-platform alarms/alerts | v2.3.0.0 |
+| `change-pre-check` | Pre-change baseline snapshot — confirms scope, captures pre-existing alarms, recent admin activity, current config, active impact metrics | v2.3.0.0 |
+| `wlan-sync-validation` | Mist ↔ Central WLAN drift detection — classifies each SSID as in-sync / Mist-only / Central-only / drift, lists field diffs | v2.3.0.0 |
+| `change-post-check` | Post-change verification + diff against the pre-check baseline (CLEAN / IMPACT-OBSERVED / REGRESSION) | v2.3.0.1 |
+| `central-scope-audit` | Aruba Central VSG-anchored scope audit — walks ~25 profile categories with per-setting checks, judges each finding against VSG-recommended scope | v2.3.0.5 |
+| `mist-scope-audit` | Juniper Mist comprehensive scope audit — WLAN templates, RF templates, switch templates, port profiles, virtual chassis, firmware policy, PSK strategy | v2.3.0.5 |
+| `aos-migration-readiness` | AOS 6 / AOS 8 / Instant AP → AOS 10 migration readiness audit (PoC) — paste-driven config bundle parsing, ~50 VSG-anchored rules per source × target combination, GO / BLOCKED / PARTIAL verdict with cutover sequencing | v2.3.0.6 |
 
 The `TEMPLATE.md` file in the skills directory is a starting point if you
 want to author a new skill — it's filtered out of the registry by name.

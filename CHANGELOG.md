@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0.6] - 2026-04-28
+
+**Adds `aos-migration-readiness` skill — VSG-anchored AOS 6 / AOS 8 / Instant AP → AOS 10 migration readiness audit (PoC). Operator pastes a fixed bundle of CLI command outputs from the source platform into chat; the audit parses the bundle, runs Central-side API checks, applies ~50 granular VSG-anchored rules across source-platform × target-mode combinations, and emits a GO / BLOCKED / PARTIAL verdict with cutover sequencing and rollback validation.**
+
+### What's new
+
+- **`aos-migration-readiness` skill** (~44K chars) — covers all three legacy source platforms (AOS 6 Mobility Conductor, AOS 8 Mobility Conductor + Controller, Instant AP Virtual Controller cluster) and all three AOS 10 SSID-forwarding modes (Tunnel, Bridge, Mixed). Anchored on the **Aruba Campus Migrate VSG** with section-number citations on every finding.
+- **6-stage audit pipeline:**
+  - **Stage 0**: 7-question operator interview (source platform, AirWave state, target mode, scope, cluster type, L3 Mobility, target HA mode)
+  - **Stage 1**: Paste-driven data collection — fixed CLI command tables per source platform (16 commands for AOS 8 per VSG §1671-§1873; adapted command sets for AOS 6 and IAP) collected as one all-at-once bundle
+  - **Stage 2**: Per-artifact parse instructions per source platform
+  - **Stage 3**: ~50 VSG-anchored readiness rules — Universal (U1-U11), AOS 6/8-specific (C1-C10), IAP-specific (I1-I10), per-target-mode rules (T1-T7 Tunnel, B1-B11 Bridge, M1-M5 Mixed)
+  - **Stage 4**: Central API checks (A1-A13) — workspace state, scope-tree readiness, license inventory, firmware-recommendation delta, NAD/server-group/named-VLAN parity
+  - **Stage 5**: Cutover sequencing + rollback per VSG §2352-§2576 (8-phase: AP redistribute → upgrade Controller 1 → AP convert test → upgrade remaining APs → upgrade Controller 2 → rollback validation)
+- **GO / BLOCKED / PARTIAL verdict** with structured report: source-platform inventory, target-side state, AOS 10 hierarchy mapping suggestion, REGRESSION / DRIFT / INFO findings (each citing VSG section), cutover sequence, recommended next actions, PoC caveats
+- **Decision matrix** maps ~30 conditions to verdicts so the AI doesn't have to invent ranking rules at runtime
+- **PoC scope explicitly noted:** PII / customer-data tokenization is *not* implemented — paste-into-chat workflow has known PII exposure since the AI client ingests configs before relaying. Production migrations should use HPE's VALID8 channel-partner-only discovery tool
+
+### Documentation
+
+- **`INSTRUCTIONS.md`** — added a new query→skill row to the rule #8 table covering migration-readiness query shapes (*"AOS 8 → AOS 10 migration readiness"*, *"AOS 6 → AOS 10 readiness"*, *"Instant AP → AOS 10 readiness"*, *"are we ready for AOS 10"*)
+
+### Tests
+
+- 653 passing (was 652) — `test_skill_tool_references.py` picks up the new skill via parametrization and validates every platform-prefixed tool reference in the body resolves to a real tool in the catalog
+
+### Skill count
+
+- **7 bundled skills** (was 6): `infrastructure-health-check`, `change-pre-check`, `change-post-check`, `wlan-sync-validation`, `central-scope-audit`, `mist-scope-audit`, **`aos-migration-readiness`** ← new
+
 ## [2.3.0.5] - 2026-04-28
 
 **Adds two comprehensive scope-aware configuration-audit skills, one per platform — anchored on Aruba's Validated Solution Guides (Central) and Mist's best-practices documentation, covering ~25 / ~20 profile categories respectively with explicit "should be" judgments against vendor-recommended scope.**

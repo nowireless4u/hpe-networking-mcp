@@ -78,6 +78,7 @@ If `MCP_TOOL_MODE=static` is set, every per-platform tool is visible up front wi
 | *"are WLANs in sync?"*, *"WLAN drift audit"*, *"compare WLANs across Mist and Central"* | `wlan-sync-validation` |
 | *"audit Central scope / config"*, *"where are my Central WLAN profiles assigned"*, *"Central scope hierarchy"*, *"is my Central config drifting"* | `central-scope-audit` |
 | *"audit Mist scope / config"*, *"where are my Mist WLAN templates assigned"*, *"find bare site-level WLANs"*, *"is my Mist config drifting"* | `mist-scope-audit` |
+| *"AOS 8 → AOS 10 migration readiness"*, *"AOS 6 → AOS 10 readiness"*, *"Instant AP → AOS 10 readiness"*, *"can we migrate this controller to Central"*, *"campus migrate audit"*, *"are we ready for AOS 10"* | `aos-migration-readiness` |
 
 After `skills_list()`, call `skills_load(name=...)` to get the runbook, then follow its steps — including its output format. Don't reinvent the procedure from scratch when one's bundled. If `skills_list()` returns no relevant match, fall back to manual.
 
