@@ -58,6 +58,7 @@ _GLOBAL_ALLOWLIST: frozenset[str] = frozenset(
         "apstra_get_",
         "axis_get_",
         "axis_manage_",
+        "central_manage_",
         "clearpass_manage_",
         "mist_change_org",
         "mist_update_org",

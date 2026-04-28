@@ -76,6 +76,8 @@ If `MCP_TOOL_MODE=static` is set, every per-platform tool is visible up front wi
 | *"about to push a change"*, *"give me a baseline before X"*, *"pre-flight for change window"*, *"snapshot before maintenance"* | `change-pre-check` |
 | *"the change is done — verify"*, *"post-change check"*, *"is it still healthy after the change?"* | `change-post-check` |
 | *"are WLANs in sync?"*, *"WLAN drift audit"*, *"compare WLANs across Mist and Central"* | `wlan-sync-validation` |
+| *"audit Central scope / config"*, *"where are my Central WLAN profiles assigned"*, *"Central scope hierarchy"*, *"is my Central config drifting"* | `central-scope-audit` |
+| *"audit Mist scope / config"*, *"where are my Mist WLAN templates assigned"*, *"find bare site-level WLANs"*, *"is my Mist config drifting"* | `mist-scope-audit` |
 
 After `skills_list()`, call `skills_load(name=...)` to get the runbook, then follow its steps — including its output format. Don't reinvent the procedure from scratch when one's bundled. If `skills_list()` returns no relevant match, fall back to manual.
 
