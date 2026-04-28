@@ -68,7 +68,16 @@ If `MCP_TOOL_MODE=static` is set, every per-platform tool is visible up front wi
 5. **MANDATORY: use the information you already have from `<platform>_list_tools` before invoking.** Every tool entry from `list_tools` includes a `params` map showing parameter names + types (and `?` suffix for optional) — always check it before calling `invoke_tool`. Never invoke with `params={}` or guessed names when the `list_tools` output already told you what's required.
 6. **Call `<platform>_get_tool_schema(name=...)` when the `list_tools` params map isn't sufficient.** Specifically: when a param's type is an enum class name (e.g. `"Action_type"`) and you don't yet know its valid values, when you need field descriptions to understand parameter semantics, or when a `dict`/`payload` param needs a nested schema. You do NOT need to re-read a schema you've already fetched in the same conversation; cache it mentally.
 7. **Don't manually retry transient API failures.** The server auto-retries 5xx errors on read tools (3 attempts, exponential backoff) and 429 rate-limit responses on both reads and writes (honors `Retry-After` header). If a tool returns a 5xx or 429 to you, it has *already* exhausted retries — don't loop calling the same tool. 4xx errors (other than 429) and 5xx errors on write tools are NOT auto-retried; surface those to the user with the actual error message.
-8. **Use Skills for multi-step procedures.** When the user asks for something that's a known *runbook* — "infra health check", "pre-change baseline", "WLAN sync audit", "are X and Y in sync?", "give me a daily standup" — call `skills_list()` first to see whether a skill matches, then `skills_load(name=...)` to fetch the markdown runbook and follow its steps. Skills are step-by-step procedures authored as markdown — they tell you which platform tools to call in what order and how to format the result. Don't reinvent a multi-step procedure from scratch when one is bundled.
+8. **Always check Skills FIRST for multi-step / cross-platform questions.** Even when the user names a specific platform (e.g. *"how's my infrastructure in Central?"*), call `skills_list()` BEFORE reaching for per-platform tools. A skill might cover the question better than a manual sequence — and the check is cheap (~1 round-trip). Common triggers — call `skills_list()` for ANY query in this shape:
+
+| User query shape | Likely skill |
+|---|---|
+| *"how's my infrastructure?"*, *"is everything healthy?"*, *"infra status / overview / standup"*, *"what's broken?"*, *"how is health in &lt;platform&gt;?"* | `infrastructure-health-check` |
+| *"about to push a change"*, *"give me a baseline before X"*, *"pre-flight for change window"*, *"snapshot before maintenance"* | `change-pre-check` |
+| *"the change is done — verify"*, *"post-change check"*, *"is it still healthy after the change?"* | `change-post-check` |
+| *"are WLANs in sync?"*, *"WLAN drift audit"*, *"compare WLANs across Mist and Central"* | `wlan-sync-validation` |
+
+After `skills_list()`, call `skills_load(name=...)` to get the runbook, then follow its steps — including its output format. Don't reinvent the procedure from scratch when one's bundled. If `skills_list()` returns no relevant match, fall back to manual.
 
 ---
 

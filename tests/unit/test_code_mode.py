@@ -108,6 +108,9 @@ class TestCodeModeCrossPlatformGating:
             "sync_tools": "hpe_networking_mcp.server._register_sync_tools",
             "sync_prompts": "hpe_networking_mcp.server._register_sync_prompts",
             "code_mode": "hpe_networking_mcp.server._register_code_mode",
+            # Skills registration — patched at source because server.py
+            # imports skills.register lazily inside create_server.
+            "skills_register": "hpe_networking_mcp.skills.register",
         }
         patchers = {key: patch(path) for key, path in targets.items()}
         mocks = {key: p.start() for key, p in patchers.items()}
@@ -127,6 +130,9 @@ class TestCodeModeCrossPlatformGating:
         assert mocks["sync_tools"].call_count == 1
         assert mocks["sync_prompts"].call_count == 1
         assert mocks["code_mode"].call_count == 0
+        assert mocks["skills_register"].call_count == 1, (
+            "skills.register must be called in dynamic mode (skills via @mcp.tool)"
+        )
 
     def test_static_mode_registers_all_aggregators(self):
         mocks = self._run_create_server("static")
@@ -135,6 +141,9 @@ class TestCodeModeCrossPlatformGating:
         assert mocks["sync_tools"].call_count == 1
         assert mocks["sync_prompts"].call_count == 1
         assert mocks["code_mode"].call_count == 0
+        assert mocks["skills_register"].call_count == 1, (
+            "skills.register must be called in static mode (skills via @mcp.tool)"
+        )
 
     def test_code_mode_skips_every_aggregator_and_invokes_code_mode_hook(self):
         mocks = self._run_create_server("code")
@@ -143,6 +152,14 @@ class TestCodeModeCrossPlatformGating:
         assert mocks["sync_tools"].call_count == 0, "manage_wlan_profile must NOT register in code mode"
         assert mocks["sync_prompts"].call_count == 0, "sync prompts must NOT register in code mode"
         assert mocks["code_mode"].call_count == 1, "CodeMode transform hook must be invoked"
+        assert mocks["skills_register"].call_count == 0, (
+            "skills.register must NOT be called in code mode — skills are wired "
+            "through CodeMode.discovery_tools via SkillsListDiscoveryTool / "
+            "SkillsLoadDiscoveryTool factories instead. The @mcp.tool path "
+            "would otherwise be hidden by CodeMode.transform_tools and skills "
+            "would never appear at the top level (the v2.3.0.0 → v2.3.0.2 bug "
+            "we shipped before realizing it). See _register_code_mode."
+        )
 
 
 @pytest.mark.unit

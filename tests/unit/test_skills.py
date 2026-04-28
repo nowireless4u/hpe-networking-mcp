@@ -279,3 +279,85 @@ class TestBundledSkills:
         names = {s.name for s in registry.all()}
         assert "TEMPLATE" not in names
         assert "my-skill-name" not in names  # the placeholder name in TEMPLATE.md
+
+
+# ---------------------------------------------------------------------------
+# Discovery-tool factories (code-mode top-level visibility)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestDiscoveryToolFactories:
+    """Verify that the SkillsListDiscoveryTool / SkillsLoadDiscoveryTool
+    factory classes produce Tools with the right name + working body.
+
+    Catches a regression where skills are hidden in code mode (the
+    v2.3.0.0 bug: skills_list and skills_load were registered as
+    ``@mcp.tool`` only, which CodeMode.transform_tools then hides at the
+    top level — they were callable from inside execute() via call_tool
+    but invisible to the AI). The fix in v2.3.0.3 plugs them into
+    ``CodeMode.discovery_tools`` via these factories so they sit at the
+    discovery layer alongside ``tags`` / ``search`` / ``get_schema``.
+    """
+
+    @pytest.mark.asyncio
+    async def test_skills_list_factory_produces_callable_tool(self):
+        from hpe_networking_mcp.skills._engine import SkillsListDiscoveryTool
+
+        reg = SkillRegistry(
+            [
+                _skill("alpha", platforms=("mist",), tags=("health",)),
+                _skill("beta", platforms=("central",), tags=("audit",)),
+            ]
+        )
+        tool = SkillsListDiscoveryTool(reg)(get_catalog=None)
+
+        assert tool.name == "skills_list"
+        # Tool.from_function wraps the body — invoking through the tool's
+        # `.fn` attribute exercises the same path the MCP layer uses.
+        result = await tool.fn()
+        assert result["count"] == 2
+        names = {s["name"] for s in result["skills"]}
+        assert names == {"alpha", "beta"}
+
+    @pytest.mark.asyncio
+    async def test_skills_list_factory_filters_by_platform(self):
+        from hpe_networking_mcp.skills._engine import SkillsListDiscoveryTool
+
+        reg = SkillRegistry(
+            [
+                _skill("a", platforms=("mist",)),
+                _skill("b", platforms=("central",)),
+            ]
+        )
+        tool = SkillsListDiscoveryTool(reg)(get_catalog=None)
+        result = await tool.fn(platform="mist")
+        assert {s["name"] for s in result["skills"]} == {"a"}
+
+    @pytest.mark.asyncio
+    async def test_skills_load_factory_produces_callable_tool(self, tmp_path):
+        from hpe_networking_mcp.skills._engine import SkillsLoadDiscoveryTool
+
+        reg = SkillRegistry([_skill("my-skill")])
+        tool = SkillsLoadDiscoveryTool(reg)(get_catalog=None)
+
+        assert tool.name == "skills_load"
+        result = await tool.fn(name="my-skill")
+        assert result["name"] == "my-skill"
+
+    @pytest.mark.asyncio
+    async def test_skills_load_factory_returns_error_on_no_match(self):
+        from hpe_networking_mcp.skills._engine import SkillsLoadDiscoveryTool
+
+        reg = SkillRegistry([_skill("alpha")])
+        tool = SkillsLoadDiscoveryTool(reg)(get_catalog=None)
+        result = await tool.fn(name="nonexistent")
+        assert "error" in result
+        assert "No skill matches" in result["error"]
+
+    def test_factory_accepts_custom_tool_name(self):
+        from hpe_networking_mcp.skills._engine import SkillsListDiscoveryTool
+
+        reg = SkillRegistry([])
+        tool = SkillsListDiscoveryTool(reg, name="custom_list_name")(get_catalog=None)
+        assert tool.name == "custom_list_name"

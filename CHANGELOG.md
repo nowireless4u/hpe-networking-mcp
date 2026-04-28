@@ -5,6 +5,65 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0.3] - 2026-04-28
+
+**Fixes a top-level visibility bug that hid `skills_list` and `skills_load` in code mode since v2.3.0.0, and strengthens INSTRUCTIONS.md rule #8 to make the AI proactively check skills first.**
+
+### What was broken
+
+In **code mode**, the actual MCP-exposed surface was 4 tools (`tags`, `search`, `get_schema`, `execute`) — `skills_list` and `skills_load` were nowhere to be found in `tools/list`. The AI had no top-level signal that skills existed, so it never reached for them on questions like *"how's my infrastructure in Central?"*.
+
+Confirmed via direct wire-protocol probe (`tools/list` over the streaming-HTTP MCP endpoint) — not just inferred. Verified the regression had been present since v2.3.0.0 by reading git history; nothing in server.py or skills/ ever passed skills as discovery tools.
+
+### Why it happened
+
+`skills_list` / `skills_load` were registered via `@mcp.tool` before `_register_code_mode(mcp)` ran. CodeMode's `transform_tools()` then *replaces* the visible catalog with `[*discovery_tools, execute]` — it doesn't merge with the existing catalog, it substitutes. So skills were callable from inside `execute()` via `await call_tool("skills_list", {})` (their `@mcp.tool` registration kept them in the backend catalog), but invisible to the AI at the top level. I tested skills via `execute()` during v2.3.0.0 development and didn't notice they weren't visible at the top.
+
+### The fix
+
+`skills/_engine.py` now exposes two discovery-tool factories matching `CodeMode.discovery_tools`'s signature (same shape as fastmcp's `GetTags` / `Search` / `GetSchemas`):
+
+- `SkillsListDiscoveryTool(registry)` — produces a `skills_list` Tool
+- `SkillsLoadDiscoveryTool(registry)` — produces a `skills_load` Tool
+
+`server.py:_register_code_mode` builds a `SkillRegistry` once and hands the factories into `discovery_tools` alongside the standard `GetTags`/`Search`/`GetSchemas`. In code mode the exposed surface is now **6 tools**: `tags`, `search`, `get_schema`, `skills_list`, `skills_load`, `execute`.
+
+`server.py:create_server` skips the `@mcp.tool` registration path (`_register_skills(mcp)`) when `tool_mode == "code"` to avoid registering them twice. Dynamic and static modes still use `register(mcp)` — `@mcp.tool` works correctly there because no transform replaces the catalog.
+
+### Trade-off accepted
+
+Skills are now **discovery-only** in code mode — same shape as `tags`/`search`/`get_schema`. They're callable at the top level but NOT from inside `execute()` (the sandbox's `call_tool` only resolves backend platform tools). That matches their semantic role: planning tools, not dispatch tools. The `execute_description` is updated to call this out explicitly, alongside the existing note about `tags`/`search`/`get_schema` not being callable inside `execute()`. If any LLM tries `await call_tool("skills_list", {})` from inside the sandbox, the existing `SandboxErrorCatchMiddleware` (v2.2.0.4) will surface `Sandbox error: Unknown tool: skills_list` as a string so the LLM can self-correct.
+
+### INSTRUCTIONS.md rule #8 strengthened
+
+The previous rule said *"call `skills_list` first when the user asks for a known runbook"* — too passive, required the AI to recognize the runbook shape. New rule:
+
+> *"**Always check Skills FIRST for multi-step / cross-platform questions.** Even when the user names a specific platform (e.g. *"how's my infrastructure in Central?"*), call `skills_list()` BEFORE reaching for per-platform tools..."*
+
+Plus a query→skill table giving concrete pattern → skill mappings:
+
+| User query shape | Likely skill |
+|---|---|
+| *"how's my infrastructure?"*, *"is everything healthy?"*, *"how is health in &lt;platform&gt;?"* | `infrastructure-health-check` |
+| *"about to push a change"*, *"give me a baseline"* | `change-pre-check` |
+| *"the change is done — verify"*, *"post-change check"* | `change-post-check` |
+| *"are WLANs in sync?"*, *"WLAN drift audit"* | `wlan-sync-validation` |
+
+### Tests (644 → 649)
+
+- `TestDiscoveryToolFactories` × 5 cases — factories produce Tools with the right name + working body, support filter args, accept custom names, return clean errors on no-match
+- `TestCodeModeAggregatorGating` extended — asserts `skills.register` is called in dynamic/static and NOT called in code mode (with a comment pointing at this CHANGELOG entry so future contributors don't "fix" the assertion the wrong way)
+
+Plus an end-to-end live verification via the wire-protocol `tools/list`:
+- code mode → 6 top-level tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`, `execute`)
+- dynamic mode → 109 visible (per-platform meta-tools + cross-platform statics + skills_list + skills_load)
+
+### Live-tested
+
+- `tools/call` for `skills_list` at the top level in code mode → returns all 4 bundled skills
+- `tools/call` for `skills_load` at the top level in code mode → returns infrastructure-health-check body
+- Dynamic-mode wire probe confirms skills_list / skills_load still appear there
+
 ## [2.3.0.2] - 2026-04-27
 
 **Fixes 12 wrong tool-name references in the bundled skills, tightens output templates so the AI doesn't improvise inconsistent formatting, and adds a regression test that catches this whole class of bug at CI time.**
