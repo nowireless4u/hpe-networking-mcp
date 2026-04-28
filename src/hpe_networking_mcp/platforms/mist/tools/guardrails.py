@@ -83,11 +83,16 @@ def _check_site_wlan_creation(object_type: str, action_type: str, result: Guardr
             "BEST PRACTICE: SSIDs should be defined in org-level WLAN templates, "
             "not as site-level WLANs. Use mist_change_org_configuration_objects "
             "with object_type=wlans and a template_id to create the WLAN in an "
-            "org-level template, then assign the template to the site's site group."
+            "org-level template, then assign that template at the appropriate "
+            "scope: org-wide (`applies.org_id`), to a site group "
+            "(`applies.sitegroup_ids`), or to specific sites (`applies.site_ids`). "
+            "Never assign at device level."
         )
         result.suggestions.append(
             "Create this WLAN as an org-level WLAN inside a WLAN template instead. "
-            "Site-level WLANs cannot be centrally managed and cause configuration drift."
+            "Site-level WLANs (created without a template) cannot be centrally "
+            "managed and cause configuration drift. The template itself can target "
+            "a single site if that's the desired scope."
         )
 
 

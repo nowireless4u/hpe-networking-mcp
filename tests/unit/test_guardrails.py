@@ -16,6 +16,25 @@ class TestSiteWlanCreation:
         assert "org-level WLAN templates" in result.warnings[0]
         assert len(result.suggestions) == 1
 
+    def test_site_wlan_create_warning_lists_all_valid_scopes(self):
+        """The warning text should list every valid template-assignment scope
+        (org, site group, specific sites) — NOT just site groups. The original
+        wording said 'assign the template to the site's site group' which an
+        AI would interpret as 'site groups are the only valid target'. Closes
+        the WLAN-scope correction in v2.3.0.4."""
+        result = validate_site_write("wlans", "create", {})
+        warning = result.warnings[0]
+        assert "org" in warning.lower(), "must mention org-wide assignment"
+        assert "site group" in warning.lower(), "must mention site-group assignment"
+        assert "specific sites" in warning.lower() or "site_ids" in warning, (
+            "must mention site-level assignment as a valid target — not just site groups"
+        )
+        # The "never at device level" rule belongs here too: it's the only
+        # scope the user said was off-limits.
+        assert "device level" in warning.lower() or "device_ids" in warning, (
+            "must call out 'never at device level' explicitly"
+        )
+
     def test_site_wlan_update_no_warn(self):
         result = validate_site_write("wlans", "update", {})
         assert len(result.warnings) == 0

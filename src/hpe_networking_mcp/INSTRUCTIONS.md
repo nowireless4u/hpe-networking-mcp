@@ -119,9 +119,9 @@ When a Mist tool response includes a `_next` field, use `mist_get_next_page(url=
 Push configuration as high as possible: Org-level templates → Site group assignment → Site-level → Device-level. Device-level overrides are a last resort — they cannot be managed in bulk and cause drift.
 
 ### WLANs
-- **ALWAYS** create SSIDs as org-level WLANs inside WLAN templates. Assign templates to site groups.
-- **NEVER** create site-level WLANs. If asked to create a WLAN at a site, create an org-level WLAN in a WLAN template and assign the template to the site's site group instead.
-- When cloning or copying a site's config, do NOT copy site-level WLANs. Ensure all SSIDs come from org-level WLAN templates.
+- **ALWAYS** create SSIDs as org-level WLANs inside WLAN templates. The template itself is the unit of reuse — assign each template at the appropriate scope: **org-wide**, to a **site group**, or to **specific sites**. Never assign at the device level.
+- **NEVER** create site-level WLANs (i.e. WLANs created at a site without going through a template). If a WLAN should apply only to one site, put it in a template and assign that template to that single site — don't create a bare site-level WLAN.
+- When cloning or copying a site's config, do NOT copy bare site-level WLANs. Ensure all SSIDs come from org-level WLAN templates.
 - Organize WLAN templates by function: Corporate/Dot1X, MPSK/IoT, Guest, Onboarding.
 
 ### RADIUS / Template Variables
@@ -136,7 +136,7 @@ Push configuration as high as possible: Org-level templates → Site group assig
 - Prefer Cloud PSK (per-user unique passphrase with VLAN assignment) over static shared PSKs. Cloud PSK allows individual key rotation and per-device segmentation.
 
 ### Site Groups
-- Assign WLAN templates and RF templates to site groups, not individual sites. New sites added to a group automatically inherit all templates.
+- Site groups exist so a single template assignment can target multiple sites at once — new sites added to a group automatically inherit all templates assigned to that group. Prefer site-group assignment when a template applies to multiple sites; fall back to individual site assignment for site-specific cases. Both are valid; org-level assignment fits when the template applies everywhere.
 
 ### Firmware
 - Auto-upgrade should be enabled at the org level with a maintenance window.
@@ -145,7 +145,7 @@ Push configuration as high as possible: Org-level templates → Site group assig
 When asked to create a new site based on an existing site:
 - Use the `provision_site_from_template` prompt for single sites
 - Use the `bulk_provision_sites` prompt for multiple sites
-- NEVER copy site-level WLANs — always use org-level WLAN templates assigned via site groups
+- NEVER copy bare site-level WLANs — always use org-level WLAN templates assigned at the right scope (org / site group / site)
 
 ---
 
@@ -221,6 +221,35 @@ When asked to create a new site based on an existing site:
   - Filter with `device_type`, `site_id`, `site_name`, or `serial_number`. Default behavior omits devices already on Central's recommended version; pass `include_up_to_date=True` to see them too.
   - The `release_type` field reflects the API's `firmwareClassification` directly — values are `LSR`, `SSR`, or `UNCLASSIFIED` (AOS 8 and other builds the API doesn't classify fall into the last bucket and pass Central's recommendation through).
   - Narrowing `device_type` restricts the pool used to mine the newest LSR target for SSR devices — leave it unset when you want the tool to make SSR→LSR recommendations.
+
+## Aruba Central Best Practices
+
+### Configuration Hierarchy
+Central uses Configuration Manager scopes: **Global → Site Collections → Sites → Device Groups → Devices**. Push configuration as high in the hierarchy as practical. Lower scopes inherit from higher ones and can override.
+
+### WLAN Profiles
+- Define each SSID as a **WLAN profile**, then assign the profile at the right scope: **Global**, **site collection**, **site**, or **device group**. Pick the broadest scope that matches the intent (Global > Site collection > Site > Device group).
+- Central does **not** have "WLAN templates" — that's Mist terminology. Central has profiles. Mapping these one-to-one across platforms is wrong; see the *Mist ↔ Central terminology* table below.
+
+### Local Overrides — use local profiles, not direct configs
+- It *is* possible to create configuration directly at a lower scope (a site-level setting that doesn't come from a profile). **Do not do this.** It leads to configuration drift.
+- When a per-site / per-device-group override is needed, create it as a **local profile** assigned at that scope. If the local profile is later deleted, the parent-scope inherited configuration takes over automatically. Bare local configs have no fallback and orphan.
+
+### Naming convention
+Match Central scope names to Mist scope names where possible (Mist site group "Corporate" ↔ Central site collection "Corporate") so cross-platform sync workflows pair them up.
+
+## Mist ↔ Central terminology
+
+These two platforms have similar concepts with different names. Do NOT generalize a rule from one platform onto the other — the mechanisms differ. When the user asks about a Central-only audit, do not mention WLAN templates, site groups, or org-level WLANs (those are Mist concepts). When the user asks about a Mist-only audit, do not mention WLAN profiles, site collections, Global scope, or device groups (those are Central concepts).
+
+| Concept | Mist | Central |
+|---|---|---|
+| Reusable config bundle for SSIDs | WLAN **template** | WLAN **profile** |
+| Top of the hierarchy | **Org** (org-level) | **Global** (Global scope) |
+| Group of sites | **Site group** | **Site collection** |
+| Individual site | **Site** | **Site** |
+| Group of devices | *(no equivalent)* | **Device group** |
+| Override at lower scope | Bare site-level config (avoid) | Local profile (correct) / bare local config (avoid) |
 
 ## Cross-Platform WLAN Management
 

@@ -5,6 +5,71 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0.4] - 2026-04-28
+
+**Fixes the AI generalizing Mist-only WLAN best practices onto Central, plus broadens the Mist WLAN-template assignment scope guidance.**
+
+### What went wrong
+
+In-the-wild signal: a user asked their AI for a Central config / scope audit and got back:
+
+> *"WLANs should live in templates assigned to site groups (Global or Site-Collection scope), never at site or device level."*
+
+That sentence is wrong on multiple counts:
+- *"templates"* — Central does **not** have WLAN templates. That's Mist terminology. Central uses WLAN profiles.
+- *"never at site or device level"* — too restrictive even for Mist (templates can target a single site) and Central (WLAN profiles can be assigned at site or device-group scope).
+- *"Global or Site-Collection scope"* — Central terminology mashed onto Mist guidance.
+
+Two compounding root causes:
+
+1. **Mist guidance overreach.** INSTRUCTIONS.md `Mist Best Practices > WLANs` said *"assign templates to site groups"* — implying site groups were the *only* valid template-assignment target. The actual rule is **org-wide / site groups / specific sites — never device level**. The same too-narrow language was repeated in `platforms/mist/tools/guardrails.py:_check_site_wlan_creation`'s warning text.
+
+2. **Missing Aruba Central Best Practices section.** When asked for a Central audit, the AI had no Central-specific guidance to anchor on. It generalized Mist's *"push config high, use templates"* rule onto Central, picked up Central terminology along the way (*"Site-Collection scope"*), and produced a hybrid that's wrong on both platforms.
+
+### What's fixed
+
+**Mist guidance broadened** (matches the actual platform model):
+
+- `INSTRUCTIONS.md > Mist Best Practices > WLANs` — *"assign each template at the appropriate scope: org-wide, to a site group, or to specific sites. Never at the device level."* The rule against bare site-level WLANs (i.e. WLANs created without a template) stays — that's still correct shorthand for *"WLANs without a template should never be created"*.
+- `INSTRUCTIONS.md > Site Groups` — site groups are now described as one of three valid assignment targets, not the only valid one. Site-level template assignment is explicitly endorsed for site-specific cases.
+- `INSTRUCTIONS.md > Site Provisioning` — broadened the same way.
+- `platforms/mist/tools/guardrails.py:_check_site_wlan_creation` — warning text now lists all three valid scopes (org / site group / specific sites) and explicitly notes "never at device level" instead of implying site groups are the only target.
+
+**Aruba Central Best Practices section added** (mirrors Mist structure but uses correct Central terminology):
+
+- Configuration Hierarchy: *Global → Site Collections → Sites → Device Groups → Devices*
+- WLAN Profiles: assign at *Global*, *site collection*, *site*, or *device group* (Mist has no device-group equivalent — this scope is Central-only)
+- **Local overrides — use local profiles, not direct configs**: explicitly explains that bare local-scope configs lead to drift and orphan when the parent profile changes. The correct override pattern is a **local profile** assigned at the lower scope, which falls back to inherited config cleanly when deleted.
+- Naming: keep Mist site groups and Central site collections in sync by name so cross-platform sync workflows pair up.
+
+**Mist ↔ Central terminology table** added under the Central section:
+
+| Concept | Mist | Central |
+|---|---|---|
+| Reusable config bundle for SSIDs | WLAN **template** | WLAN **profile** |
+| Top of the hierarchy | **Org** | **Global** |
+| Group of sites | **Site group** | **Site collection** |
+| Individual site | **Site** | **Site** |
+| Group of devices | *(no equivalent)* | **Device group** |
+| Override at lower scope | Bare site-level config (avoid) | Local profile (correct) / bare local config (avoid) |
+
+The table is preceded by an explicit *"do NOT generalize a rule from one platform onto the other"* directive — meant to defang the exact AI behavior that produced the original bad answer.
+
+### Tests (649 → 650)
+
+One new guardrail-message-content test in `tests/unit/test_guardrails.py::TestSiteWlanCreation::test_site_wlan_create_warning_lists_all_valid_scopes`:
+
+- Asserts the warning mentions org-wide assignment
+- Asserts the warning mentions site-group assignment
+- Asserts the warning mentions site-level assignment (not just site groups)
+- Asserts the warning calls out "never at device level" explicitly
+
+Catches a regression where someone narrows the scope guidance back to site-groups-only.
+
+### Live-tested
+
+Verified via direct probe of the running server's `instructions` field over the MCP `initialize` response that the new sections (`Aruba Central Best Practices`, `Local Overrides`, `Mist ↔ Central terminology`, `Device Groups`, `Configuration Manager`) are all loaded and reach the AI client at session start.
+
 ## [2.3.0.3] - 2026-04-28
 
 **Fixes a top-level visibility bug that hid `skills_list` and `skills_load` in code mode since v2.3.0.0, and strengthens INSTRUCTIONS.md rule #8 to make the AI proactively check skills first.**
