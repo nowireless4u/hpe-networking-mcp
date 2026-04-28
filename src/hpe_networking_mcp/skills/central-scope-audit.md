@@ -249,9 +249,25 @@ output (e.g., role-policy linkage) are flagged.
 - Switchport aliases should have a non-empty list of trunks.
 - Aliases referencing other aliases should not be circular.
 
+#### Placeholder default values — MUST walk the hierarchy before flagging
+
+The two-layer model (DEFINITION at Global/Collection/Site, VALUE assigned per-device or per-lower-scope) means an alias **legitimately** carries a placeholder default value at its definition scope when it's intended to be overridden. **An alias whose top-level (Global) value is `1.1.1.1`, `0.0.0.0`, `255.255.255.255`, `192.0.2.x`, `198.51.100.x`, `203.0.113.x` (any RFC-5737 documentation block), an obvious sentinel like `10.0.0.1` paired with the word `placeholder` / `default` / `template` in its name, or just an IP that is clearly not a routable production address — is a default placeholder, not a regression by itself.**
+
+**Mandatory hierarchy lookup before flagging.** When you spot a placeholder default at a higher scope, you MUST trace every place the alias is consumed and verify whether each consumer has an override at scope-or-below before assigning severity:
+
+1. **Identify consumers of the alias.** Search every profile / resource type that can reference an alias by name — primarily Static Routes (the canonical consumer for `Default Gateway -*` / `Next Hop` aliases per §12415–§12416), plus role ACLs, net-services, net-groups, server-host fields in WLAN profiles, AP Uplink profiles, and any `*-Address` / `*-NextHop` field. Use `central_get_scope_resources(scope_id=...)` and `central_get_effective_config(scope_id=..., include_details=true)` walking down from Global → Collections → Sites → Device Groups → Devices.
+2. **For each consuming scope, check the alias's effective value.** An alias with a Global default of `1.1.1.1` may have been overridden at a Site Collection, Site, Device Group, or per-device via *Save as local profile*. The effective value at the consuming scope is what actually gets pushed to the device. If `central_get_effective_config(scope_id=<consuming-scope>)` resolves the alias to a real production address, the placeholder at Global is harmless.
+3. **Severity follows coverage**, not the placeholder itself:
+   - **REGRESSION — placeholder unoverridden at a consuming scope** (the actual bug). Example: `Default Gateway - SW = 1.1.1.1` at Global, referenced by a Global Static Route assigned to a Site that has *no* override → that site's switches will install a static route to 1.1.1.1 and break L3 forwarding. This is what to flag.
+   - **DRIFT — placeholder unoverridden at a consuming scope but the consumer is itself unused / disabled / not pushed**: lower-impact (would break only if activated) but still cleanup-worthy.
+   - **INFO — placeholder at definition scope is overridden at every consuming scope**: this is the *canonical* alias pattern. List each consumer→effective-value pairing so the operator can see the override is in place; do NOT flag as REGRESSION or DRIFT.
+4. **Be explicit in the report.** When you cite a placeholder finding, name the alias, the placeholder value, the consuming profile + scope, AND whether each consumer has an override at scope-or-below. *Do not say "alias defaults to 1.1.1.1" without saying whether each consumer has overridden it* — that's the exact mistake this rule is meant to prevent.
+
 **Drift findings:**
 - **REGRESSION — alias definition at device scope only**: an alias whose top-level definition lives at a device (no Site/Collection/Global definition). Device should hold the VALUE, not the definition.
 - **REGRESSION — alias missing values on referenced devices**: alias defined and referenced by a profile, but a subset of in-scope devices haven't had the value set via `Save as local profile`. Profile pushes will fail.
+- **REGRESSION — placeholder alias unoverridden at a consuming scope**: the alias's higher-scope value is a sentinel (e.g. `1.1.1.1`, RFC-5737 block, etc.) AND a consumer (e.g. a Static Route, a profile) is assigned to a scope that has no override at-or-below. Devices in that scope receive the literal placeholder value. ← *This is the case where you flag REGRESSION.*
+- **DRIFT — placeholder alias unoverridden at an inactive/unused consumer**: same shape as above but the consuming profile is not active / not pushed / disabled. Cleanup-worthy but not breaking.
 - **DRIFT — conflicting alias definitions across scopes**: same alias name defined differently at Global, Site Collection, AND Site.
 - **DRIFT — orphan aliases**: alias defined but no profile / policy references it (waste).
 - **DRIFT — hardcoded values where alias exists**: a profile uses a hardcoded IP/port that matches an existing alias's purpose. Operator should switch the profile to reference the alias.
@@ -259,6 +275,7 @@ output (e.g., role-policy linkage) are flagged.
 
 **INFO findings:**
 - **Per-device alias value table** — for each alias used per-device (e.g. `SC-SW-IP`), list the device→value mapping so operators can review without confusing it with drift.
+- **Placeholder alias with full override coverage** — alias has a sentinel default at the definition scope but every consumer scope has an override at-or-below resolving to a real value. List the alias name, the placeholder, and each consumer→effective-value pair. **NOT drift; this is the canonical pattern.**
 
 ### Step 8 — WLAN Profiles + Named VLANs
 
@@ -386,6 +403,7 @@ When a switch is onboarded, Central auto-imports values for several profile type
 
 **Per-profile checks:**
 - Static routes referencing deleted/nonexistent next-hops.
+- Static routes referencing aliases (e.g. `Default Gateway - SW`, `Default Gateway - GW`, `Next Hop`, `MGMT Default Gateway`) — for each such route you MUST follow Step 7's *placeholder hierarchy lookup*: resolve the alias's effective value at the route's assigned scope (and at every scope below where the route is consumed) before deciding severity. A static route that references an alias whose only definition is `1.1.1.1` at Global, with no override at the consuming scope, is REGRESSION (the device will install the literal placeholder as its next hop). The same route referencing an alias that's overridden per-site or per-device is INFO — that's the canonical pattern.
 - DHCP Snooping DISABLED on a client VLAN (security gap per VSG line 11170).
 - AP Uplink: VLANs match site's expected VLANs.
 
@@ -394,6 +412,7 @@ When a switch is onboarded, Central auto-imports values for several profile type
 - **REGRESSION — MTU mismatch across adjacent devices** (VSG §8031): OSPF won't form neighbor.
 - **REGRESSION — MTU < 9198 on CX/AOS-10** (VSG-recommended): jumbo frames not enabled.
 - **REGRESSION — OSPF on broadcast (not point-to-point) for inter-switch links** (VSG §1684: *"Set the OSPF network to point-to-point"*).
+- **REGRESSION — Static route uses placeholder-valued alias at a consuming scope with no override**: e.g. `Default Gateway - SW = 1.1.1.1` at Global referenced by a Site-assigned route with no Site/Device-Group/Device-level override. Cross-reference Step 7's hierarchy-lookup procedure. *Do not flag this REGRESSION on the placeholder alone — it's REGRESSION specifically because no consumer overrode the placeholder.*
 - **DRIFT — Static Routing at Global**: usually wrong (routes are typically site-specific to local gateways).
 - **DRIFT — same AP Uplink profile re-defined at every site**: candidate for site collection.
 
@@ -537,6 +556,8 @@ Use the EXACT structure below. Every section must be present even if its content
   - Server group `<name>` has 1 server (VSG §5006: 2+ with load balancing required for production).
 - **Alias definition at device scope only**: <N> findings.
   - Alias `<name>` has no Site/Collection/Global definition. Recommendation: define at Site, keep per-device VALUE assignments.
+- **Placeholder alias unoverridden at a consuming scope**: <N> findings.
+  - Alias `<name>` defaults to `<placeholder>` at Global; consumer `<profile-type:profile-name>` is assigned to scope `<scope-name>` which has no override at-or-below. Effective value pushed to devices: `<placeholder>`. Recommendation: either override the alias at scope `<scope-name>` (or a device below it) via *Save as local profile*, or remove the consumer if it shouldn't be active there.
 - **Orphan roles** (not pushed to any device): <N> findings.
 - **Missing canonical roles** (per VSG): <list — e.g., no ARUBA-AP role despite APs deployed>.
 - **Broken references**: <N> findings.
@@ -568,6 +589,9 @@ Use the EXACT structure below. Every section must be present even if its content
   - Alias `SC-SW-IP` resolves to:
     - device `<serial-1>`: `10.6.15.11/24`
     - device `<serial-2>`: `10.6.15.12/24`
+- **Placeholder alias with full override coverage** (canonical pattern — NOT drift): <N>.
+  - Alias `<name>` defaults to `<placeholder>` at Global; every consumer scope has an override at-or-below resolving to a real value. Listed:
+    - consumer `<profile-type:profile-name>` @ scope `<scope-name>` → effective value `<resolved-value>` (override at scope `<override-scope>`)
 - **Role → policy → device-function linkage** (table).
 - **Per-collection inconsistency**: e.g., WLAN `guest` at collection `HQ-East` but missing at peer `HQ-West`. Confirm intent.
 - **Configuration that's likely intentionally site-specific** (no recommendation): <list>.

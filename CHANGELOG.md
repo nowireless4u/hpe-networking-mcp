@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0.8] - 2026-04-28
+
+**Fixes a content gap in `central-scope-audit`: when an alias has a placeholder default value (e.g. `1.1.1.1`, RFC-5737 documentation block) at Global, the audit was flagging it as REGRESSION without first checking whether the alias is *overridden* at consuming scopes (Site Collection / Site / Device Group / per-device via `Save as local profile`). In Aruba Central's two-layer alias model, a placeholder at the definition scope is the canonical pattern — what matters is whether each consumer (Static Routes, profiles, ACLs, etc.) has an override at scope-or-below. Caught in the wild when the audit flagged four `Default Gateway -*` aliases all defaulting to `1.1.1.1` at Global as REGRESSION without confirming whether the consuming static routes had per-site / per-device overrides.**
+
+### What changed
+
+Three updates to `skills/central-scope-audit.md`:
+
+1. **Step 7 (Aliases)** — added a new *"Placeholder default values — MUST walk the hierarchy before flagging"* sub-section spelling out:
+   - Common placeholder sentinels: `1.1.1.1`, `0.0.0.0`, `255.255.255.255`, RFC-5737 documentation blocks (`192.0.2.x`, `198.51.100.x`, `203.0.113.x`), and obvious tokens like names containing `placeholder` / `default` / `template`.
+   - **Mandatory hierarchy lookup before assigning severity**: identify every consumer (Static Routes are the canonical case; also role ACLs, net-services, server-host fields, AP Uplink, any `*-Address` / `*-NextHop` field), then for each consuming scope use `central_get_scope_resources` + `central_get_effective_config(include_details=true)` walking Global → Collections → Sites → Device Groups → Devices to resolve the alias's effective value.
+   - **Severity follows coverage, not the placeholder itself**: REGRESSION only when a consuming scope has *no* override at-or-below (the device installs the literal placeholder); DRIFT when the consumer is itself unused / disabled; INFO when every consumer is overridden (canonical pattern).
+   - Reporting requirement: name the alias, the placeholder, the consuming profile + scope, and the override state for each consumer.
+2. **Step 11 (Routing & Network Services)** — added a per-profile check telling the audit that any static route referencing a `Default Gateway -*` / `Next Hop` / `MGMT Default Gateway` alias MUST follow Step 7's hierarchy-lookup procedure before deciding severity, and added a corresponding REGRESSION entry that explicitly notes *"Do not flag REGRESSION on the placeholder alone — it's REGRESSION specifically because no consumer overrode the placeholder."*
+3. **Output rollup** — added the new REGRESSION entry (placeholder unoverridden at consuming scope) with a structured one-finding template, and a paired INFO entry (placeholder with full override coverage) so the report can list canonical-pattern aliases without operator confusion.
+
+### Why it mattered
+
+The two-layer alias model exists *precisely* so a single alias name like `Default Gateway - SW` can resolve to a different next-hop on every site. A blanket *"alias defaults to 1.1.1.1 = REGRESSION"* finding either generates false positives (canonical pattern flagged as broken) or — if the auditor stops there — masks the actual question: *which consumers, if any, would push the literal placeholder to real devices*. The fix mandates the hierarchy walk before assigning severity, and gives the audit explicit language to use when a placeholder is fully covered (INFO) vs partially covered (DRIFT) vs uncovered at a real consumer (REGRESSION).
+
+### Tests
+
+- 653 passing, 0 failing — `test_skill_tool_references.py` still resolves every platform-prefixed tool reference (8/8 parametrized cases pass).
+
 ## [2.3.0.7] - 2026-04-28
 
 **Fixes a content bug in `mist-scope-audit`: the skill conflated 802.1X reauthentication interval with RADIUS accounting interim-update interval. The Mist Wired guide §2660-§2663 recommendation of 6-12 hours (21600-43200s) applies to *reauthentication* (`reauth_interval` on dot1x-enabled port profiles), not to `acct_interim_interval` (RADIUS accounting interim updates) — but the audit was citing it against the latter. Caught in the wild when a user's audit flagged `acct_interim_interval: 60` with the §2662 reauth recommendation.**
