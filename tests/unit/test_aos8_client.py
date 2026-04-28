@@ -4,6 +4,7 @@ Tests will fail with ImportError until Plan 02 creates client.py — that is the
 correct RED state. Each test maps to one CLIENT-NN requirement from
 .planning/phases/02-api-client/02-RESEARCH.md.
 """
+
 from __future__ import annotations
 
 import asyncio
