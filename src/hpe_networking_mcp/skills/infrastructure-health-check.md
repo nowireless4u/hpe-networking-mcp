@@ -8,7 +8,7 @@ description: |
   starts a session and wants a baseline before drilling in.
 platforms: [mist, central, clearpass, apstra, greenlake, axis]
 tags: [health, monitoring, daily-standup, baseline]
-tools: [health, mist_search_alarms, central_get_alerts, clearpass_get_recent_audit_log]
+tools: [health, mist_search_alarms, central_get_alerts, clearpass_get_system_events, apstra_get_anomalies, axis_get_connectors, axis_get_status]
 ---
 
 # Cross-platform infrastructure health snapshot
@@ -56,32 +56,37 @@ alarm individually — the user wants a triage summary, not a dump.
 **If anomaly:** Surface the top 5 alerts by recency.
 **Skip if:** Central is not enabled or returned `unavailable` in step 1.
 
-### Step 4 — ClearPass recent admin activity
+### Step 4 — ClearPass recent system events
 
-**Tool:** `clearpass_get_recent_audit_log(limit=20)`
-**Why:** Catches "someone just changed something" before the user starts
-their work. Especially valuable in environments where multiple operators
-share an account.
-**Expected result:** A list of recent admin actions with timestamps + actor.
-**If anomaly:** Note any actions in the last 4 hours by actors other than
+**Tool:** `clearpass_get_system_events(limit=20)`
+**Why:** Catches admin actions and system events recorded by CPPM —
+configuration changes, service restarts, etc. — so the user knows the
+recent context before drilling in.
+**Expected result:** A paginated list of recent system events with
+timestamps and event source.
+**If anomaly:** Note any events from the last 4 hours by actors other than
 the current user. Don't surface routine read-only logins.
 **Skip if:** ClearPass is not enabled or returned `unavailable` in step 1.
 
 ### Step 5 — Apstra anomalies (if Apstra is enabled)
 
-**Tool:** `apstra_invoke_tool(name="apstra_get_anomalies", params={...})`
-(or the equivalent in code mode: `await call_tool("apstra_get_anomalies", ...)`)
+**Tool:** `apstra_get_anomalies()` (in code mode call via
+`await call_tool("apstra_get_anomalies", {})`; in dynamic mode call via
+`apstra_invoke_tool(name="apstra_get_anomalies", params={})`).
 **Why:** Apstra surfaces fabric-level health (e.g. BGP session down, MLAG split-brain).
 **Expected result:** Empty list, or anomalies grouped by `type`.
 **Skip if:** Apstra is not enabled.
 
 ### Step 6 — Axis connector status (if Axis is enabled)
 
-**Tool:** `axis_get_connectors()` then look at `cpuStatus`, `memoryStatus`,
-`networkStatus`, `enabled` fields.
-**Why:** Axis tunnels can degrade silently; CPU/memory/network status fields
-flag pre-failure conditions.
-**Expected result:** All connectors `enabled: true` with `*Status: ok`.
+**Tool:** `axis_get_connectors()` to list all connectors. For runtime
+telemetry (CPU/memory/disk/network status) on a specific connector, follow
+up with `axis_get_status(entity_type="connector", connector_id=<id>)`.
+**Why:** Axis tunnels can degrade silently; CPU/memory/network status
+fields flag pre-failure conditions.
+**Expected result:** All connectors `enabled: true`. Connector-status
+records report `cpuStatus`, `memoryStatus`, `networkStatus`,
+`diskSpaceStatus` — surface any non-`ok` value.
 **Skip if:** Axis is not enabled.
 
 ### Step 7 — Format the snapshot
@@ -99,26 +104,36 @@ Combine all findings into one terse summary (see *Output formatting* below).
 
 ## Output formatting
 
+Use the EXACT structure below. Every section heading must be present even
+if its content is "clean" — consistency lets operators eyeball today's
+report against yesterday's. Don't add freeform "notable" sections that
+weren't run; if you have observations, put them under "Action items."
+
 ```
-## Infrastructure health — <timestamp>
+## Infrastructure health — <ISO timestamp>
 
-**Reachability**
-- Mist: ok
-- Central: ok
-- ClearPass: ok
-- Apstra: degraded (token expires in 28 days)
+### Reachability
+- Mist: <ok | degraded — <reason> | unavailable — <reason> | not enabled>
+- Central: <same>
+- ClearPass: <same>
+- Apstra: <same>
+- GreenLake: <same>
+- Axis: <same — append "; token expires in N days" when known>
 
-**Active alarms / alerts**
-- Mist: 3 alarms — `ap_disconnected` (2), `radius_server_unreachable` (1)
-- Central: 1 critical — "Switch CX-1 unreachable" (HOME)
-- ClearPass: 5 admin actions in last 4h by `tech-on-duty`
+### Active alarms / alerts
+- Mist: <"clean" | "<count> alarms — top by count: type1 (n), type2 (n), ...">
+- Central: <"clean" | "<count> active — top by recency: <description> (<site>); ...">
+- ClearPass: <"<count> recent system events; <count> from last 4h by non-current actors">
+- Apstra: <"clean" | "<count> anomalies — types: type1 (n), type2 (n), ...">
+- Axis: <"<count> connectors enabled; all *Status=ok" | per-connector status flags>
 
-**Action items**
-- Investigate Mist `ap_disconnected` cluster at HOME
-- Confirm Apstra token renewal scheduled
+### Action items
+<Bulleted list of follow-ups. One bullet per actionable finding. If
+nothing is actionable, write a single bullet "No action items.">
 ```
 
-Keep it under 25 lines total. The user reads this *before* drilling in.
+Total report should be under 25 lines. The operator reads this BEFORE
+drilling in — terseness is a feature.
 
 ## Example queries that should trigger this skill
 

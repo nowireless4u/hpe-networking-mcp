@@ -9,7 +9,7 @@ description: |
   finishes a maintenance window. Pairs with `change-pre-check`.
 platforms: [mist, central, clearpass, apstra]
 tags: [change-management, maintenance, verification, post-flight]
-tools: [health, mist_search_alarms, mist_search_audit_logs, central_get_alerts, central_get_audit_logs, clearpass_get_recent_audit_log]
+tools: [health, mist_search_alarms, mist_search_audit_logs, central_get_alerts, central_get_audit_logs, clearpass_get_system_events]
 ---
 
 # Post-change verification + diff
@@ -93,7 +93,7 @@ should NOT be re-flagged here — they were already broken.
 
 **Mist:** `mist_search_audit_logs(org_id=..., duration="<delta>", limit=50)`
 **Central:** `central_get_audit_logs` (filter to the change window)
-**ClearPass (if affected):** `clearpass_get_recent_audit_log(limit=50)`
+**ClearPass (if affected):** `clearpass_get_system_events(limit=50)`
 
 **Why:** Two things to verify:
 1. The planned change is recorded — confirms it actually landed (not just
@@ -175,6 +175,11 @@ Format the report as shown below.
 | Audit log shows unplanned admin actions | Surface the actor + timestamp explicitly so the operator can investigate |
 
 ## Output formatting
+
+Use the EXACT structure below. Every section heading must be present —
+the operator pastes this into the change ticket and the consistency
+matters when comparing against the pre-check snapshot. For REGRESSION
+verdicts, lead with the specifics under "Verdict reasoning."
 
 ```
 ## Post-change verification — <change description>

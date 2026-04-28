@@ -10,7 +10,7 @@ description: |
   config push, firmware upgrade, WLAN modification, or NAC policy edit.
 platforms: [mist, central, clearpass, apstra]
 tags: [change-management, maintenance, baseline, pre-flight]
-tools: [health, mist_search_alarms, mist_search_audit_logs, central_get_alerts, central_get_audit_logs, clearpass_get_recent_audit_log]
+tools: [health, mist_search_alarms, mist_search_audit_logs, central_get_alerts, central_get_audit_logs, clearpass_get_system_events, clearpass_get_sessions, clearpass_get_enforcement_policies, mist_get_wlans, central_get_wlans, mist_get_switch_details, central_get_switch_details, mist_search_device, central_get_devices, mist_get_configuration_objects, apstra_get_blueprints]
 ---
 
 # Pre-change baseline snapshot
@@ -82,7 +82,7 @@ alarms.
 
 **Mist:** `mist_search_audit_logs(org_id=..., duration="1d", limit=50)`
 **Central:** `central_get_audit_logs` (filter to last 24h client-side)
-**ClearPass (if affected):** `clearpass_get_recent_audit_log(limit=50)`
+**ClearPass (if affected):** `clearpass_get_system_events(limit=50)`
 
 **Why:** Detects "someone else just changed something here." Two engineers
 unknowingly working on adjacent configs is a classic root-cause for
@@ -99,11 +99,11 @@ include it for post-change diffing.
 
 | Change type | Tool to call |
 |---|---|
-| WLAN | `mist_get_wlan(org_id=..., wlan_id=...)` or `central_get_wlan(...)` |
-| Switch port | `mist_get_device_port_config(...)` or `central_get_switch_port(...)` |
-| AP firmware target | `mist_get_device(device_id=...)` (look at `version` + `target_version`) |
-| NAC enforcement policy | `clearpass_get_enforcement_policy(id=...)` |
-| Apstra blueprint commit point | `apstra_get_blueprint_revisions(blueprint_id=...)` (record current revision id) |
+| WLAN | `mist_get_configuration_objects(object_type="wlans", object_id=...)` (Mist) or `central_get_wlans(site_id=...)` (Central) |
+| Switch port | `mist_get_switch_details(device_id=...)` (Mist — port config is part of switch detail) or `central_get_switch_details(serial=...)` (Central) |
+| AP firmware target | `mist_search_device(text=<name>, device_type="ap")` to find the device, then `mist_get_ap_details(device_id=...)` to read `version` + `target_version` (Mist); `central_get_devices(serial_number=...)` for Central APs |
+| NAC enforcement policy | `clearpass_get_enforcement_policies(policy_id=...)` |
+| Apstra blueprint baseline | `apstra_get_blueprints(blueprint_id=...)` to record the current `version` field; pair with `apstra_get_diff_status(blueprint_id=...)` to confirm there are no pending uncommitted changes before yours |
 
 **Why:** A clean copy of the BEFORE config makes "did the change cause X?"
 straightforward to answer. Without this you're guessing.
@@ -114,7 +114,7 @@ straightforward to answer. Without this you're guessing.
 `num_clients`, `num_aps_up`, `num_devices_disconnected`.
 **Switch changes:** `central_get_site_health(site_name=<target>)` — record
 device counts and active client count.
-**NAC changes:** `clearpass_get_active_sessions(limit=...)` — record total
+**NAC changes:** `clearpass_get_sessions(limit=...)` — record total
 active session count and breakdown by service.
 
 **Why:** Active counts are the leading indicator of customer impact during
@@ -137,6 +137,11 @@ their change ticket (see *Output formatting* below).
 | User says they're upgrading firmware | Add a step to confirm the rollback path (target version is recoverable) |
 
 ## Output formatting
+
+Use the EXACT structure below. Every section heading must be present even
+if its content is "0 active" / "no recent activity" — consistency lets the
+post-check skill diff against this snapshot reliably. Don't add freeform
+sections; if you have observations, put them under "Notes."
 
 ```
 ## Pre-change baseline — <change description>

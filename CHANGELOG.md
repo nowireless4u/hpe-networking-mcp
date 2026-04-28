@@ -5,6 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0.2] - 2026-04-27
+
+**Fixes 12 wrong tool-name references in the bundled skills, tightens output templates so the AI doesn't improvise inconsistent formatting, and adds a regression test that catches this whole class of bug at CI time.**
+
+### What went wrong
+
+In-the-wild signal from running `infrastructure-health-check` and `change-pre-check`: skills were referencing tool names that don't exist (e.g. `clearpass_get_recent_audit_log`, `mist_get_org_wlans`, `apstra_get_blueprint_revisions`). The AI got "tool not found" errors via the discovery tools and worked around them — sometimes by skipping the step entirely (silent gap in output), sometimes by improvising a substitute. Output was incomplete and inconsistent across runs.
+
+Root cause: the v2.3.0.0 skills were authored without verifying every referenced name against the actual tool catalog. The output formatting templates were also loose enough that the AI was filling in freeform sections.
+
+### Skill fixes (12 wrong names corrected)
+
+| Wrong name | Correct name | Files |
+|---|---|---|
+| `clearpass_get_recent_audit_log` | `clearpass_get_system_events` | infrastructure-health-check, change-pre-check, change-post-check |
+| `clearpass_get_active_sessions` | `clearpass_get_sessions` | change-pre-check |
+| `clearpass_get_enforcement_policy` | `clearpass_get_enforcement_policies(policy_id=...)` | change-pre-check |
+| `mist_get_org_wlans` / `mist_get_site_wlans` | `mist_get_wlans()` (accepts `org_id` or `site_id`) | wlan-sync-validation |
+| `mist_get_wlan` (singular) | `mist_get_configuration_objects(object_type="wlans", object_id=...)` | change-pre-check |
+| `mist_get_device` | `mist_search_device` (org inventory) or `mist_get_ap_details` / `mist_get_switch_details` (specific device) | change-pre-check |
+| `mist_get_device_port_config` | `mist_get_switch_details(device_id=...)` (port config is part of switch detail) | change-pre-check |
+| `central_get_site_wlans` | `central_get_wlans(site_id=...)` | wlan-sync-validation |
+| `central_get_wlan` (singular) | `central_get_wlans()` | change-pre-check |
+| `central_get_switch_port` | `central_get_switch_details(serial=...)` | change-pre-check |
+| `apstra_get_blueprint_revisions` | `apstra_get_blueprints(blueprint_id=...)` (record `version`) + `apstra_get_diff_status` (uncommitted changes) | change-pre-check |
+
+### Tightened output templates
+
+Each skill's "Output formatting" section now leads with a directive: *"Use the EXACT structure below. Every section heading must be present even if its content is..."* This stops the AI from skipping sections, adding freeform "Notable" sections that aren't in the template, or rewriting headings between runs. The output structure itself is unchanged — same headings, same fields — just enforced.
+
+`infrastructure-health-check` also gained `apstra_get_anomalies`, `axis_get_connectors`, and `axis_get_status` to the `tools:` frontmatter (they were referenced in the body but missing from the metadata list) and clarified the Axis step to spell out the runtime-status field names (`cpuStatus`, `memoryStatus`, `networkStatus`, `diskSpaceStatus`).
+
+### Regression test (`tests/unit/test_skill_tool_references.py`)
+
+Builds a server in static mode (every tool registered) plus the dynamic-mode meta-tool name patterns. Walks each `skills/*.md` body and `INSTRUCTIONS.md`, extracts every platform-prefixed identifier via regex, asserts each appears in the canonical catalog or in a small `_GLOBAL_ALLOWLIST` for known historical mentions (e.g. *"`apstra_health` was removed in v2.0"*) and regex artifacts (e.g. incomplete patterns like `mist_change_org` inside *"`mist_change_org_*` family"* prose).
+
+5 new test cases:
+- Per-skill parametrized check: 4 skills × 1 test = 4 cases
+- INSTRUCTIONS.md check: 1 case
+
+Future skill authors get a CI failure if they reference a non-existent tool, with a clear remediation message ("either fix the name to match a real tool, or — if the reference is intentional — add it to `_GLOBAL_ALLOWLIST`").
+
+### What we didn't change
+
+- INSTRUCTIONS.md had **0 actual broken references**. The regex caught 12 hits but every single one was either historical prose ("X was removed in v2.0", surfaced for context) or a regex artifact (incomplete pattern like `mist_change_org` inside `mist_change_org_*` family-mention prose). All were added to the allowlist with comments rather than rewritten.
+- `@mcp.prompt(...)` bodies and human-facing docs (README, docs/TOOLS.md) — same regex sweep but no real bugs found, so no changes there. The regression test currently covers skills + INSTRUCTIONS.md; expand if more authoring surfaces emerge.
+
+### Tests (639 → 644)
+
+5 new regression tests; existing 639 still pass.
+
 ## [2.3.0.1] - 2026-04-27
 
 **Adds the `change-post-check` skill (partner to `change-pre-check`) and documents two pydantic-monty sandbox limits the LLM was discovering at runtime.**

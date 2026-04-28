@@ -9,7 +9,7 @@ description: |
   running `manage_wlan_profile` to verify the result.
 platforms: [mist, central]
 tags: [wlan, sync, drift-detection, audit]
-tools: [health, mist_invoke_tool, central_invoke_tool, manage_wlan_profile]
+tools: [health, mist_get_wlans, central_get_wlans, manage_wlan_profile]
 ---
 
 # Mist ↔ Central WLAN consistency check
@@ -45,8 +45,8 @@ the comparison can't run.
 
 ### Step 2 — Pull Mist WLANs
 
-**Tool:** `mist_get_org_wlans(org_id=<from health>)` — or scoped to a site
-via `mist_get_site_wlans(site_id=...)` if the user gave a site.
+**Tool:** `mist_get_wlans()` — accepts `org_id` (org-wide) or `site_id`
+(site-scoped). One tool, both scopes via parameter choice.
 **Why:** Mist's WLAN catalog is the source-of-truth for the comparison.
 **Expected result:** A list of WLANs with `ssid`, `enabled`, `auth.type`,
 `auth.psk` (presence only — never log the actual key), `vlan_ids`,
@@ -56,7 +56,8 @@ specific scope. Surface the count and ask before continuing.
 
 ### Step 3 — Pull Central WLANs
 
-**Tool:** `central_get_wlans()` (or scope to a site via `central_get_site_wlans(site_name=...)`)
+**Tool:** `central_get_wlans()` — accepts `site_id` to scope to a site or
+`serial_number` to scope to a single AP. Omit both for the org-wide list.
 **Why:** Central's view of the same WLAN universe.
 **Expected result:** A list with `ssid`, `enabled`, `security_type`,
 `vlan`, `band`, `broadcast_ssid`.
@@ -105,6 +106,10 @@ See *Output formatting* below.
 | 100+ WLANs returned | Ask the user to narrow scope before generating the full report |
 
 ## Output formatting
+
+Use the EXACT structure below. Every bucket heading must be present even
+if its count is 0 — "everything is fine" should still produce a report
+the operator can scan in 5 seconds.
 
 ```
 ## WLAN sync report — <scope: org or site name>
