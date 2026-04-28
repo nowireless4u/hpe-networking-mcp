@@ -49,6 +49,23 @@ EXPECTED_CATEGORY_COUNTS = {
     "troubleshooting": 7,
 }
 
+# Phase 5 adds 12 write tools; total is 26 read + 12 write = 38
+EXPECTED_WRITE_TOOLS = {
+    "aos8_manage_ssid_profile",
+    "aos8_manage_virtual_ap",
+    "aos8_manage_ap_group",
+    "aos8_manage_user_role",
+    "aos8_manage_vlan",
+    "aos8_manage_aaa_server",
+    "aos8_manage_aaa_server_group",
+    "aos8_manage_acl",
+    "aos8_manage_netdestination",
+    "aos8_disconnect_client",
+    "aos8_reboot_ap",
+    "aos8_write_memory",
+}
+EXPECTED_TOTAL = len(EXPECTED_TOOLS) + len(EXPECTED_WRITE_TOOLS)  # 38
+
 
 def test_tools_dict_complete():
     from hpe_networking_mcp.platforms.aos8 import TOOLS
@@ -57,9 +74,12 @@ def test_tools_dict_complete():
         assert category in TOOLS, f"missing category: {category}"
         assert len(TOOLS[category]) == count, f"category {category} expected {count}, got {len(TOOLS[category])}"
 
-    flat = {name for names in TOOLS.values() for name in names}
-    assert len(flat) == 26
-    assert flat == EXPECTED_TOOLS
+    read_flat = {name for cat in EXPECTED_CATEGORY_COUNTS for name in TOOLS[cat]}
+    assert read_flat == EXPECTED_TOOLS, "Read tool set mismatch"
+
+    # Phase 5: writes category must also be present
+    assert "writes" in TOOLS, "TOOLS dict missing 'writes' category"
+    assert set(TOOLS["writes"]) == EXPECTED_WRITE_TOOLS, "TOOLS['writes'] mismatch"
 
 
 def test_register_tools_dynamic_mode():
@@ -74,8 +94,8 @@ def test_register_tools_dynamic_mode():
 
     count = register_tools(mcp, config)
 
-    assert count == 26
-    assert len(REGISTRIES.get("aos8", {})) == 26
+    assert count == EXPECTED_TOTAL
+    assert len(REGISTRIES.get("aos8", {})) == EXPECTED_TOTAL
 
 
 def test_register_tools_static_mode():
@@ -89,4 +109,4 @@ def test_register_tools_static_mode():
 
     count = register_tools(mcp, config)
 
-    assert count == 26
+    assert count == EXPECTED_TOTAL

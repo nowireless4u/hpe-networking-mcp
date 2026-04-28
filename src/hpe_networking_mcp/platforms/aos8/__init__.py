@@ -47,6 +47,20 @@ TOOLS: dict[str, list[str]] = {
         "aos8_get_arm_history",
         "aos8_get_rf_monitor",
     ],
+    "writes": [
+        "aos8_manage_ssid_profile",
+        "aos8_manage_virtual_ap",
+        "aos8_manage_ap_group",
+        "aos8_manage_user_role",
+        "aos8_manage_vlan",
+        "aos8_manage_aaa_server",
+        "aos8_manage_aaa_server_group",
+        "aos8_manage_acl",
+        "aos8_manage_netdestination",
+        "aos8_disconnect_client",
+        "aos8_reboot_ap",
+        "aos8_write_memory",
+    ],
 }
 
 __all__ = ["TOOLS", "register_tools"]
@@ -60,7 +74,10 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
         config: Server configuration containing tool_mode.
 
     Returns:
-        The number of underlying tools registered (always 26 in Phase 3).
+        The number of underlying tools registered. Equal to the sum of
+            ``len(names)`` for every entry in ``TOOLS`` (read tools plus, when
+            their phases have been wired, the Phase 4 ``differentiators`` set
+            and the Phase 5 ``writes`` set).
     """
     from hpe_networking_mcp.platforms.aos8 import _registry
 
