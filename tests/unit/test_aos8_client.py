@@ -14,13 +14,13 @@ from typing import Any
 
 import httpx
 import pytest
+
+from hpe_networking_mcp.config import AOS8Secrets
 from hpe_networking_mcp.platforms.aos8.client import (
     AOS8APIError,
     AOS8AuthError,
     AOS8Client,
 )
-
-from hpe_networking_mcp.config import AOS8Secrets
 
 pytestmark = pytest.mark.unit
 
