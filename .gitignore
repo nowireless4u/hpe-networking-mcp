@@ -68,3 +68,12 @@ CLAUDE.md
 mist-best-practices.docx
 mist-central-wlan-api
 api-endpoints/
+
+# Aruba VSG (Validated Solution Guides) — vendor-licensed PDFs kept locally
+# in docs/central/vsg/ for skill authoring; do not redistribute via the repo.
+docs/central/vsg/
+
+# Mist best-practices reference material kept locally in docs/mist/vsg/
+# for skill authoring; do not redistribute via the repo.
+docs/mist/vsg/
+docs/mist/

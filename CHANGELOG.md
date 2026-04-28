@@ -5,6 +5,166 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0.5] - 2026-04-28
+
+**Adds two comprehensive scope-aware configuration-audit skills, one per platform — anchored on Aruba's Validated Solution Guides (Central) and Mist's best-practices documentation, covering ~25 / ~20 profile categories respectively with explicit "should be" judgments against vendor-recommended scope.**
+
+### What's new
+
+Two symmetric audit skills, both read-only:
+
+- **`central-scope-audit`** — Walks Central's Configuration Manager hierarchy (Global → Site Collections → Sites → Device Groups → Devices) across **~25 profile categories** (Authentication Servers, Server Groups, AAA Authentication, Roles, Role ACLs, Role GPIDs, Policies, Policy Groups, Network Services, Network Groups, Object Groups, Aliases, WLAN profiles, Named VLANs, User Administration, System Administration, Switch System, Source Interface, Port Profile, Interface Profile, Device Identity, Static Routing, DHCP Snooping, AP Uplink, etc.). Each finding is judged against the **VSG-recommended scope** with explicit *"VSG recommends X, found at Y"* drift markers.
+- **`mist-scope-audit`** — Walks Mist's org → site-group → site → device-profile → device hierarchy across **~20 categories** (WLAN templates, per-WLAN settings, bare site-level WLANs, RF templates, site templates, site groups, site-level overrides, device profiles, firmware auto-upgrade, PSK/MPSK strategy). Anchored on Mist best-practices: *"template everything, override nothing unless you have to."*
+
+### VSG / best-practices anchoring
+
+The Central audit cites VSG section + line numbers for each scope recommendation:
+
+| Profile category | VSG-recommended scope | VSG anchor |
+|---|---|---|
+| Authentication Server | **Global** | Campus Deploy §10703 |
+| Authentication Server Group | **Global** | Campus Deploy §10564 |
+| Device Identity | **Global** | Campus Deploy §11753 |
+| AAA Authentication | **Site** | Campus Deploy §11799 |
+| Switch System / VLAN / Static Routing / DHCP Snooping | **Site** | Campus Deploy §11659, §11420, §12415, §11179 |
+| Port Profile / Interface Profile | **Site** per device-function | Campus Deploy §11948-12061 |
+| Roles / Policies | **Site** typically | Campus Deploy §9337, Policy Design §1184 |
+
+Plus VSG-derived rules:
+- *"A role is not pushed to a device unless referenced by a scoped policy"* (Policy Design)
+- *"Keep the number of roles as small as possible"* (Policy Design)
+
+The Mist audit anchors on the local best-practices doc with citations like *"per §2.4: assign templates to site groups whenever possible"* and *"per §4.5: enable auto-upgrade at the org level with maintenance window"*.
+
+### What each audit checks (structured per skill)
+
+**Central** (12 audit checks, ~25 profile categories):
+0. Reachability + scope-tree snapshot (committed + effective view)
+1. Authentication Servers — should be Global
+2. Authentication Server Groups — should be Global
+3. AAA Authentication profiles — typically Site
+4. Roles + Role ACLs + Role GPIDs — orphan detection, role-count sanity, role→policy linkage
+5. Policies + Policy Groups — orphan detection, broken role references
+6. Network Services / Groups / Object Groups — orphan detection
+7. Aliases — orphan / duplicate / hardcoded-instead detection
+8. WLAN Profiles + Named VLANs — bare-local-scope WLANs (primary drift), VLAN naming consistency
+9. System profiles (User Admin / System Admin / Switch System / Source Interface)
+10. Interface profiles (Port / Interface / Device Identity / AP Uplink)
+11. Routing & Network Services (Static Routing / DHCP Snooping / AP Uplink)
+12. Cross-cutting — bare local configs, peer-collection diff, assignment-density heuristics
+
+**Mist** (11 audit checks, ~20 categories):
+0. Reachability + org_id
+1. WLAN templates + assignment scope (org / site-group / site)
+2. Per-WLAN settings (band steering, 11r, mDNS scope, ARP filter, broadcast limit, VLAN ≠ 1, PSK type, RADIUS via template variables)
+3. Bare site-level WLANs (primary drift source)
+4. Org-level WLAN reconciliation (every WLAN should have a template_id)
+5. RF templates + assignment scope + per-band channel-width / TX-power rules
+6. Site templates (consistent new-site baseline)
+7. Site groups + site membership
+8. Site-level overrides (only timezone / country / local gateway IP / unique VLANs are valid; everything else is drift)
+9. Device profiles + device-level config (device-level = REGRESSION)
+10. Firmware auto-upgrade policy (maintenance window, pilot site group, compliance tracking)
+11. PSK / MPSK strategy (Cloud PSK preferred, expiration on guest PSKs)
+
+### Output format — structured + repeatable
+
+Both skills emit reports with the same `REGRESSION → DRIFT → INFO` severity order. Each section heading must be present even if "0 findings" — operators can eyeball today's audit against last week's. Profile-category summary table at the top gives a one-glance health view.
+
+### INSTRUCTIONS.md rule #8 query→skill table extended
+
+Two new rows mapping audit-shaped queries to the new skills:
+
+| User query shape | Likely skill |
+|---|---|
+| *"audit Central scope / config"*, *"where are my Central WLAN profiles assigned"*, *"is my Central config drifting"* | `central-scope-audit` |
+| *"audit Mist scope / config"*, *"where are my Mist WLAN templates assigned"*, *"find bare site-level WLANs"* | `mist-scope-audit` |
+
+### Skill design — read-only audits, no fixes
+
+Both skills are explicitly **read-only**. They identify issues; they don't correct them. Fixes still go through `mist_change_org_configuration_objects` / `central_manage_*` with elicitation gating. Keeping the audit pure-read means the operator can run it freely (no write-tool flag, no elicitation prompt, no chance of accidentally touching production) and decide which findings to act on.
+
+### Tests (650 → 652)
+
+Two new parametrized cases in `test_skill_tool_references.py::TestSkillToolReferences` (one per new skill) — automatic from the existing pytest parametrization. The regression test caught a regex artifact (`central_manage_*` in prose) which was added to `_GLOBAL_ALLOWLIST` alongside the existing meta-tool / historical mentions. Central audit references **23 distinct Central tools**; Mist audit references **8 Mist tools** (Mist gets fewer because `mist_get_configuration_objects` covers many object types via the `object_type` parameter — `wlantemplates`, `rftemplates`, `sitegroups`, `deviceprofiles`, `psks`, etc.).
+
+### Live-tested
+
+- Container restarts with **6 skills registered** (was 4)
+- `skills_load("central-scope-audit")` returns **16,027-char body** at top level in code mode
+- `skills_load("mist-scope-audit")` returns **16,049-char body** at top level in code mode
+- Both new skills appear with correct platform tags in `skills_list(platform="central")` / `skills_list(platform="mist")` filters
+
+### Reference material (kept locally, gitignored)
+
+The Central audit is anchored on the four Aruba Validated Solution Guides
+(Campus Design, Campus Deploy, Policy Design, Policy Deploy) — vendor-licensed
+PDFs kept in `docs/central/vsg/` for skill authoring; **not redistributed via
+the repo** (added to `.gitignore`). Same pattern for `docs/mist/vsg/` which
+holds the Mist best-practices reference.
+
+### Maximum-granularity rewrite (in-PR iteration)
+
+After the def-vs-value correction, user requested *"the more granular we
+are with Central and Mist config audit the better the results. Add as
+much detail as possible to both."* Both skills were rewritten again
+against all source material:
+
+- **Central audit: 21K → 38K chars** (15 audit steps, 60 REGRESSION
+  signals, 44 DRIFT signals). Now includes per-setting checks within
+  each category (specific VSG-recommended values, not just scope).
+  Examples: VLAN 1 as production = REGRESSION, MTU < 9198 on CX/AOS-10
+  = REGRESSION (per VSG §970), Loop Protect Re-Enable Time = 0 =
+  REGRESSION (per VSG §3298), DHCP snooping/ARP inspection not trust
+  on LAG = REGRESSION (per VSG §3495), default captive-portal cert
+  = REGRESSION (per VSG §364), server group with only 1 RADIUS server
+  = REGRESSION (per VSG §5006), missing canonical roles (ARUBA-AP /
+  BLACKHOLE / REJECT-AUTH / CRITICAL-AUTH) = REGRESSION when 802.1X
+  / APs are deployed.
+- **Mist audit: 18K → 33K chars** (15 audit steps, 44 REGRESSION
+  signals, 63 DRIFT signals). Three NEW source documents incorporated:
+  Mist Wired Assurance Configuration Guide, Mist Wireless Assurance
+  Configuration Guide, Juniper AI-Driven Wired & Wireless Network
+  Deployment Guide. New audit categories: switch configuration
+  templates (org/site/device hierarchy), site variables (Mist's
+  alias-equivalent — same definition-vs-value pattern), port profiles
+  (static + dynamic + DPC rules), AP-port best practices, virtual
+  chassis. New per-setting checks: 11r on non-Enterprise SSID =
+  REGRESSION (won't function), WEP/WPA1 = REGRESSION, port security
+  on AP ports = REGRESSION (Mist Wired §4016), MAC-based dynamic
+  match on 802.1X port = REGRESSION (Mist Wired §3001), CLI-managed
+  switches = REGRESSION (Mist Wired §3597-§3598), 2.4 GHz channel
+  width > 20 MHz = REGRESSION, 2.4 GHz channels other than {1,6,11}
+  = REGRESSION.
+
+### Definition-vs-value pattern (Central) — corrected mid-PR after user catch
+
+Initial draft of the audit conflated two distinct device-level patterns the
+VSG documents in Campus Deploy §11220-§11377 and §10620-§10625:
+
+1. **Auto-imported device-level profiles** (drift): when a switch is
+   onboarded, Central auto-creates device-level profiles for STP / System
+   Administration / etc. with naming convention `profile-<device serial>` and
+   `Inherits From: Self`. These BLOCK inheritance from higher-scope profiles.
+   **VSG explicitly directs operators to delete these.** The audit now
+   detects them as REGRESSION findings.
+2. **"Save as local profile" — intentional device-level overrides** (canonical):
+   the operator's explicit override mechanism. Used for alias VALUES per
+   device (the SC-SW-IP pattern — the alias DEFINITION lives at Site/Collection/Global,
+   each switch's IP VALUE is assigned via `Save as local profile`), per-VLAN
+   switch-param tweaks, etc. These are **VSG-canonical, not drift.** The
+   audit lists them at INFO level for periodic review — never flags.
+
+The audit's cross-cutting rule (Step 12) now uses three buckets at device
+scope: REGRESSION (auto-imported `profile-<serial>` or bare local config) /
+INFO (sanctioned `Save as local profile` overrides + per-device alias VALUE
+assignments) / RESEARCH (effective vs committed inconsistencies).
+
+Same softening applied to Mist Step 9: per-device hostname / IP / name are
+inherent identification (NOT drift); only device-level config that *competes*
+with template / site-group / org config (radio overrides without justification,
+device-level WLAN, firmware pin diverging from auto-upgrade) is REGRESSION.
+
 ## [2.3.0.4] - 2026-04-28
 
 **Fixes the AI generalizing Mist-only WLAN best practices onto Central, plus broadens the Mist WLAN-template assignment scope guidance.**
