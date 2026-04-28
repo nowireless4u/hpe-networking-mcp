@@ -260,9 +260,16 @@ def create_server(config: ServerConfig) -> FastMCP:
     _register_health(mcp)
 
     # --- Skills (markdown-defined multi-step procedures, always visible) ---
-    from hpe_networking_mcp.skills import register as _register_skills
+    # In dynamic / static modes, register via @mcp.tool — they appear at the
+    # top level via the standard catalog. In CODE mode, we deliberately skip
+    # this path and instead pass discovery-tool factories to CodeMode below
+    # (see _register_code_mode); CodeMode's transform_tools replaces the
+    # visible catalog with [discovery_tools, execute] only, which would
+    # otherwise hide @mcp.tool registrations.
+    if config.tool_mode != "code":
+        from hpe_networking_mcp.skills import register as _register_skills
 
-    _register_skills(mcp)
+        _register_skills(mcp)
 
     # --- Write tool visibility (per-platform) ---
     from fastmcp.server.transforms import Visibility
@@ -347,10 +354,10 @@ def _register_code_mode(mcp: FastMCP) -> None:
         "`call_tool` ONLY dispatches to platform tools — names start with one "
         "of: `mist_`, `central_`, `greenlake_`, `clearpass_`, `apstra_`, "
         "`axis_` — plus the cross-platform `health` tool.\n\n"
-        "The discovery tools `tags`, `search`, and `get_schema` are NOT "
-        "callable from inside execute(). They live at the outer MCP surface "
-        "for planning. Call them BEFORE writing your code block to find "
-        "tool names + schemas, then chain those tools inside execute().\n\n"
+        "The discovery tools `tags`, `search`, `get_schema`, `skills_list`, and "
+        "`skills_load` are NOT callable from inside execute(). They live at the "
+        "outer MCP surface for planning. Call them BEFORE writing your code "
+        "block, then chain platform tools inside execute().\n\n"
         "Known sandbox limits: `asyncio.gather()` is unavailable — use "
         "sequential `await` calls. OS-access functions are blocked, "
         "including `datetime.now()`, `time.time()`, file I/O, `os.environ`, "
@@ -358,6 +365,21 @@ def _register_code_mode(mcp: FastMCP) -> None:
         "or hardcode literal ISO-8601 strings rather than computing them "
         "inside the sandbox."
     )
+
+    # Build the skills registry once and hand factories to CodeMode so the
+    # skills surface sits at the discovery layer alongside tags/search/etc.
+    # (See skills/_engine.py — discovery factories are needed because
+    # CodeMode.transform_tools replaces the visible catalog with
+    # [discovery_tools, execute] only.)
+    from hpe_networking_mcp.skills import (
+        SkillRegistry,
+        SkillsListDiscoveryTool,
+        SkillsLoadDiscoveryTool,
+    )
+
+    skill_registry = SkillRegistry.from_directory()
+    logger.info("Skills: registered {} skill(s) (code mode discovery layer)", len(skill_registry.all()))
+
     mcp.add_transform(
         CodeMode(
             sandbox_provider=MontySandboxProvider(limits=limits),
@@ -365,11 +387,13 @@ def _register_code_mode(mcp: FastMCP) -> None:
                 GetTags(default_detail="brief"),
                 Search(default_detail="brief"),
                 GetSchemas(default_detail="detailed"),
+                SkillsListDiscoveryTool(skill_registry),
+                SkillsLoadDiscoveryTool(skill_registry),
             ],
             execute_description=execute_description,
         )
     )
-    logger.info("Code mode enabled — exposed surface: get_tags + search + get_schema + execute")
+    logger.info("Code mode enabled — exposed surface: tags + search + get_schema + skills_list + skills_load + execute")
 
 
 def _register_mist_tools(mcp: FastMCP, config: ServerConfig) -> None:

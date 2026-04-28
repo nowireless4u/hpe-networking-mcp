@@ -9,10 +9,20 @@ all ``*.md`` files at server startup, parses frontmatter, and exposes:
 - ``skills_load(name)`` — full body, with case-insensitive substring fallback
   if no exact match is found
 
-Skills are always visible (in every ``MCP_TOOL_MODE``) — they're an entry
-point, not an implementation detail.
+Skills are always visible at the top level in every ``MCP_TOOL_MODE``:
 
-Closes #189.
+- **dynamic / static** modes: ``register(mcp)`` registers them via
+  ``@mcp.tool``. They appear in the catalog like any other top-level tool.
+- **code** mode: ``SkillsListDiscoveryTool`` and ``SkillsLoadDiscoveryTool``
+  factory classes plug into ``CodeMode.discovery_tools`` so they sit at
+  the top level alongside ``tags`` / ``search`` / ``get_schema`` / ``execute``.
+  The ``@mcp.tool`` registration would otherwise be hidden by ``CodeMode``'s
+  ``transform_tools`` (which replaces the visible catalog with just the
+  discovery tools and ``execute``).
+
+Closes #189. The discovery-tool path was added in v2.3.0.3 after we caught
+the visibility regression in code mode — skills were callable inside
+``execute()`` via ``call_tool`` but invisible at the top level.
 """
 
 from __future__ import annotations
@@ -23,6 +33,7 @@ from typing import Any
 
 import yaml  # type: ignore[import-untyped]
 from fastmcp import Context, FastMCP
+from fastmcp.tools.tool import Tool
 from loguru import logger
 
 # Skills are bundled inside the package so they ship in the Docker image.
@@ -202,27 +213,28 @@ class SkillRegistry:
         return None
 
 
-def register(mcp: FastMCP) -> None:
-    """Register ``skills_list`` and ``skills_load`` on the FastMCP server.
+# Tool descriptions — shared between the @mcp.tool path (dynamic / static)
+# and the discovery-tool factory path (code mode).
+_SKILLS_LIST_DESC = (
+    "List available skills (markdown-defined multi-step procedures). "
+    "Returns metadata only; call `skills_load(name)` for the full runbook. "
+    "Optional `platform` / `tag` filters each accept a string or list of "
+    "strings and narrow the result to skills tagged accordingly."
+)
 
-    Skills are always-visible (no ``dynamic_managed`` tag) so they appear
-    as top-level tools in every ``MCP_TOOL_MODE``.
-    """
-    registry = SkillRegistry.from_directory()
-    skill_count = len(registry.all())
-    logger.info("Skills: registered {} skill(s)", skill_count)
+_SKILLS_LOAD_DESC = (
+    "Load a skill's full markdown body — a step-by-step runbook for a "
+    "multi-step network operations procedure. Pass the skill `name` "
+    "(from `skills_list`); a case-insensitive substring match is tried "
+    "if there's no exact match."
+)
 
-    @mcp.tool(
-        name="skills_list",
-        description=(
-            "List available skills (markdown-defined multi-step procedures). "
-            "Returns metadata only; call `skills_load(name)` for the full runbook. "
-            "Optional `platform` / `tag` filters each accept a string or list of "
-            "strings and narrow the result to skills tagged accordingly."
-        ),
-    )
+
+def _make_skills_list_fn(registry: SkillRegistry):
+    """Build the async ``skills_list`` body that closes over a registry."""
+
     async def skills_list(
-        ctx: Context,
+        ctx: Context = None,  # type: ignore[assignment]
         platform: str | list[str] | None = None,
         tag: str | list[str] | None = None,
     ) -> dict[str, Any]:
@@ -232,16 +244,13 @@ def register(mcp: FastMCP) -> None:
             "skills": [s.to_metadata() for s in results],
         }
 
-    @mcp.tool(
-        name="skills_load",
-        description=(
-            "Load a skill's full markdown body — a step-by-step runbook for a "
-            "multi-step network operations procedure. Pass the skill `name` "
-            "(from `skills_list`); a case-insensitive substring match is tried "
-            "if there's no exact match."
-        ),
-    )
-    async def skills_load(ctx: Context, name: str) -> dict[str, Any]:
+    return skills_list
+
+
+def _make_skills_load_fn(registry: SkillRegistry):
+    """Build the async ``skills_load`` body that closes over a registry."""
+
+    async def skills_load(name: str, ctx: Context = None) -> dict[str, Any]:  # type: ignore[assignment]
         match = registry.lookup(name)
         if match is None:
             return {"error": (f"No skill matches {name!r}. Call `skills_list()` to see available skills.")}
@@ -262,3 +271,60 @@ def register(mcp: FastMCP) -> None:
             "tools": list(match.tools),
             "body": match.body,
         }
+
+    return skills_load
+
+
+class SkillsListDiscoveryTool:
+    """Discovery-tool factory for ``CodeMode.discovery_tools``.
+
+    Same shape as fastmcp's ``GetTags`` / ``Search`` / ``GetSchemas``: takes
+    a ``get_catalog`` callable when invoked (which we ignore — skills have
+    their own registry) and returns a ready-to-expose ``Tool``. Lets the
+    skills surface sit at the top level in code mode.
+    """
+
+    def __init__(self, registry: SkillRegistry, *, name: str = "skills_list") -> None:
+        self._registry = registry
+        self._name = name
+
+    def __call__(self, get_catalog: Any) -> Tool:
+        fn = _make_skills_list_fn(self._registry)
+        return Tool.from_function(fn=fn, name=self._name, description=_SKILLS_LIST_DESC)
+
+
+class SkillsLoadDiscoveryTool:
+    """Discovery-tool factory for ``CodeMode.discovery_tools``."""
+
+    def __init__(self, registry: SkillRegistry, *, name: str = "skills_load") -> None:
+        self._registry = registry
+        self._name = name
+
+    def __call__(self, get_catalog: Any) -> Tool:
+        fn = _make_skills_load_fn(self._registry)
+        return Tool.from_function(fn=fn, name=self._name, description=_SKILLS_LOAD_DESC)
+
+
+def register(mcp: FastMCP) -> SkillRegistry:
+    """Register ``skills_list`` and ``skills_load`` as ``@mcp.tool``s.
+
+    Use this in dynamic / static modes — skills appear at the top level
+    via the standard FastMCP catalog. In code mode, do NOT call this;
+    instead pass ``SkillsListDiscoveryTool`` / ``SkillsLoadDiscoveryTool``
+    factories to ``CodeMode.discovery_tools`` so the same surface sits at
+    the discovery layer (the ``@mcp.tool`` path would otherwise be hidden
+    by ``CodeMode.transform_tools``).
+
+    Returns the underlying ``SkillRegistry`` in case the caller wants to
+    inspect or reuse it.
+    """
+    registry = SkillRegistry.from_directory()
+    logger.info("Skills: registered {} skill(s)", len(registry.all()))
+
+    skills_list_fn = _make_skills_list_fn(registry)
+    skills_load_fn = _make_skills_load_fn(registry)
+
+    mcp.tool(name="skills_list", description=_SKILLS_LIST_DESC)(skills_list_fn)
+    mcp.tool(name="skills_load", description=_SKILLS_LOAD_DESC)(skills_load_fn)
+
+    return registry
