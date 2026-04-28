@@ -20,7 +20,7 @@ from hpe_networking_mcp.platforms.aos8.client import (
     AOS8Client,
 )
 
-__all__ = ["strip_meta", "run_show", "get_object", "format_aos8_error"]
+__all__ = ["strip_meta", "run_show", "get_object", "post_object", "format_aos8_error"]
 
 
 def strip_meta(body: Any) -> Any:
@@ -82,6 +82,44 @@ async def get_object(
         "GET",
         f"/v1/configuration/object/{object_path}",
         params={"config_path": config_path},
+    )
+    return strip_meta(response.json())
+
+
+async def post_object(
+    client: AOS8Client,
+    object_name: str,
+    body: dict[str, Any],
+    *,
+    config_path: str | None = None,
+) -> Any:
+    """POST a configuration or operational object to AOS8.
+
+    AOS8 routes most object writes through ``/v1/configuration/object``;
+    the object type is identified by the top-level body key. Operational
+    endpoints (``apboot``, ``aaa_user_delete``) use the same generic path
+    and rely on the body key. ``write_memory`` uses a dedicated path
+    and is NOT routed through this helper.
+
+    Args:
+        client: ``AOS8Client`` from ``ctx.lifespan_context["aos8_client"]``.
+        object_name: Tool-side identifier; used only for diagnostic context.
+        body: Pre-wrapped POST body (e.g. ``{"ssid_prof": {...}}``).
+        config_path: Hierarchy node. Required for config-object writes;
+            may be omitted for operational endpoints.
+
+    Returns:
+        Parsed JSON body with ``_meta`` and ``_global_result`` removed.
+
+    Raises:
+        AOS8APIError, AOS8AuthError, httpx.HTTPError: per ``AOS8Client.request``.
+    """
+    params: dict[str, Any] | None = {"config_path": config_path} if config_path is not None else None
+    response = await client.request(
+        "POST",
+        "/v1/configuration/object",
+        params=params,
+        json_body=body,
     )
     return strip_meta(response.json())
 
