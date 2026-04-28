@@ -88,6 +88,14 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
         importlib.import_module(f"hpe_networking_mcp.platforms.aos8.tools.{category}")
         total += len(names)
 
+    try:
+        from hpe_networking_mcp.platforms.aos8.tools import prompts
+
+        prompts.register(mcp)
+        logger.debug("AOS8: loaded prompts")
+    except Exception as e:
+        logger.warning("AOS8: failed to load prompts -- {}", e)
+
     mode = config.tool_mode
     if mode == "dynamic":
         build_meta_tools("aos8", mcp)
