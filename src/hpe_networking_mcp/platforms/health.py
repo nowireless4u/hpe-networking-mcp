@@ -29,7 +29,7 @@ _PROBE_ANNOTATIONS = ToolAnnotations(
     openWorldHint=True,
 )
 
-_ALL_PLATFORMS: tuple[str, ...] = ("mist", "central", "greenlake", "clearpass", "apstra", "axis")
+_ALL_PLATFORMS: tuple[str, ...] = ("mist", "central", "greenlake", "clearpass", "apstra", "axis", "aos8")
 
 
 def _normalize_platform_filter(
@@ -182,6 +182,31 @@ async def _probe_axis(ctx: Context) -> dict[str, Any]:
     return result
 
 
+async def _probe_aos8(ctx: Context) -> dict[str, Any]:
+    """Probe the AOS8 / Mobility Conductor platform.
+
+    Returns a status dict with hostname + version on success, degraded on
+    failure, unavailable when the platform is not configured.
+    """
+    client = ctx.lifespan_context.get("aos8_client")
+    if client is None:
+        return {
+            "status": "unavailable",
+            "message": "AOS8 is not configured or failed to initialize",
+        }
+    try:
+        info = await client.health_check()
+        return {
+            "status": "ok",
+            "message": "AOS8 API reachable",
+            "host": client.server,
+            "hostname": info.get("hostname"),
+            "version": info.get("version"),
+        }
+    except Exception as e:  # noqa: BLE001 — health probe must not raise
+        return {"status": "degraded", "message": f"AOS8 probe failed: {e}"}
+
+
 _PROBES = {
     "mist": _probe_mist,
     "central": _probe_central,
@@ -189,6 +214,7 @@ _PROBES = {
     "clearpass": _probe_clearpass,
     "apstra": _probe_apstra,
     "axis": _probe_axis,
+    "aos8": _probe_aos8,
 }
 
 

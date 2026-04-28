@@ -135,3 +135,50 @@ class TestRunProbes:
         ctx.lifespan_context = {}
         results = await run_probes(ctx, ["acme"])
         assert results == {}
+
+
+def _make_ctx(lifespan: dict):
+    class _Ctx:
+        lifespan_context = lifespan
+
+    return _Ctx()
+
+
+@pytest.mark.unit
+class TestProbeAOS8:
+    async def test_probe_aos8_unavailable_when_client_none(self):
+        from hpe_networking_mcp.platforms.health import _probe_aos8
+
+        ctx = _make_ctx({"aos8_client": None})
+        result = await _probe_aos8(ctx)
+        assert result["status"] == "unavailable"
+
+    async def test_probe_aos8_ok_returns_hostname_and_version(self):
+        from hpe_networking_mcp.platforms.health import _probe_aos8
+
+        class _FakeClient:
+            server = "conductor.test:4343"
+
+            async def health_check(self):
+                return {"hostname": "c1", "version": "8.10.0.7", "raw": {}}
+
+        ctx = _make_ctx({"aos8_client": _FakeClient()})
+        result = await _probe_aos8(ctx)
+        assert result["status"] == "ok"
+        assert result["hostname"] == "c1"
+        assert result["version"] == "8.10.0.7"
+        assert result["host"] == "conductor.test:4343"
+
+    async def test_probe_aos8_degraded_on_exception(self):
+        from hpe_networking_mcp.platforms.health import _probe_aos8
+
+        class _BoomClient:
+            server = "x:1"
+
+            async def health_check(self):
+                raise RuntimeError("conductor unreachable")
+
+        ctx = _make_ctx({"aos8_client": _BoomClient()})
+        result = await _probe_aos8(ctx)
+        assert result["status"] == "degraded"
+        assert "conductor unreachable" in result["message"]
