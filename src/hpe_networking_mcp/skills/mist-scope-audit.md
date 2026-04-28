@@ -380,7 +380,7 @@ These are not "config that breaks the template model" — they're below the temp
 | BPDU Guard | Enable on access ports | Disabled (DRIFT) |
 | Native VLAN | Should not be VLAN 1 in production | VLAN 1 (DRIFT) |
 | MAC address limit / port security | Only when all WLANs bridged | Enabled on AP ports (REGRESSION per §4016) |
-| RADIUS interim-update | 21600-43200 seconds (Mist Wired §2662: *"recommended value is 6 to 12 hours"*) | Outside that range (DRIFT) |
+| 802.1X reauthentication interval (`reauth_interval` on dot1x-enabled port profiles) | 21600-43200 seconds, i.e. 6-12 hours (Mist Wired §2660-§2663: *"In a switch port profile that uses dot1x authentication, you can configure a timer that controls how often a client reauthenticates itself with the RADIUS server. The recommended value is 6 to 12 hours (21600 to 43200 seconds). The default value is 65000 seconds."*) | Outside that range (DRIFT). **Do NOT confuse this with `acct_interim_interval`** — that's the RADIUS accounting interim-update timer (how often accounting updates are sent to the accounting server) and the 6-12 hour recommendation does NOT apply to it. |
 
 **Static vs Dynamic — per Mist Wired guidance:**
 - Static port profiles: manually pin a port to a profile. Fine for stable infrastructure (uplinks, AP ports).
@@ -398,7 +398,7 @@ These are not "config that breaks the template model" — they're below the temp
 - **DRIFT — PoE enabled on uplink-to-switch port** (§2738).
 - **DRIFT — Speed/duplex hardcoded** without reason.
 - **DRIFT — VLAN 1 as native** on a production trunk.
-- **DRIFT — RADIUS interim-update outside 6-12 hour window** (§2662).
+- **DRIFT — 802.1X `reauth_interval` outside 6-12 hour window** (§2662). NOT `acct_interim_interval` — those are different fields; §2662's recommendation only applies to reauthentication. If you see `acct_interim_interval` set aggressively (e.g. 60 s) and want to flag it, do so as INFO without citing §2662.
 - **DRIFT — no restricted network profile** for unrecognized devices on DPC-enabled ports.
 - **INFO — DPC rule audit table**: rules + matching criteria + assigned profile.
 
@@ -552,7 +552,7 @@ Use the EXACT structure below. Every section must be present even if its content
 - **Device-level firmware pin**: <N> findings.
 - **PoE on switch-to-switch ports**: <N> findings.
 - **Speed/duplex hardcoded**: <N> findings.
-- **RADIUS interim-update outside 6-12 hour range**: <N> findings.
+- **802.1X `reauth_interval` outside 6-12 hour range**: <N> findings.
 - **Maintenance window during business hours**: 1 finding.
 - **No pilot site group for firmware**: 1 finding.
 

@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0.7] - 2026-04-28
+
+**Fixes a content bug in `mist-scope-audit`: the skill conflated 802.1X reauthentication interval with RADIUS accounting interim-update interval. The Mist Wired guide §2660-§2663 recommendation of 6-12 hours (21600-43200s) applies to *reauthentication* (`reauth_interval` on dot1x-enabled port profiles), not to `acct_interim_interval` (RADIUS accounting interim updates) — but the audit was citing it against the latter. Caught in the wild when a user's audit flagged `acct_interim_interval: 60` with the §2662 reauth recommendation.**
+
+### What changed
+
+- **`mist-scope-audit.md`** — three locations corrected:
+  - Per-port-profile structural-checks table: row renamed from "RADIUS interim-update" to "802.1X reauthentication interval (`reauth_interval` on dot1x-enabled port profiles)" with the full §2660-§2663 quote and an explicit *"Do NOT confuse this with `acct_interim_interval`"* warning.
+  - Drift findings list: same correction with note that `acct_interim_interval` should be flagged as INFO (not DRIFT) without citing §2662 since the Mist Wired guide doesn't give a recommended value for it.
+  - Output-formatting rollup: counter renamed to "802.1X `reauth_interval` outside 6-12 hour range".
+
+### Why it mattered
+
+Reauthentication interval (how often a 802.1X client must re-prove identity to RADIUS) and accounting interim interval (how often accounting status updates are sent to the accounting server) are two different fields with different purposes. The Mist Wired guide §1803 describes accounting interim updates as a frequency setting without prescribing a value; §2660-§2663 describes reauthentication with the 6-12 hour recommendation. Conflating them would either generate false-positive drift findings (flagging perfectly fine accounting intervals) or, worse, push operators to set accounting intervals to multi-hour values they shouldn't.
+
+### Tests
+
+- 653 passing, 0 failing — no test changes (skill body is content; reference test still validates every platform-prefixed tool name resolves).
+
 ## [2.3.0.6] - 2026-04-28
 
 **Adds `aos-migration-readiness` skill — VSG-anchored AOS 6 / AOS 8 / Instant AP → AOS 10 migration readiness audit (PoC). Operator pastes a fixed bundle of CLI command outputs from the source platform into chat; the audit parses the bundle, runs Central-side API checks, applies ~50 granular VSG-anchored rules across source-platform × target-mode combinations, and emits a GO / BLOCKED / PARTIAL verdict with cutover sequencing and rollback validation.**
