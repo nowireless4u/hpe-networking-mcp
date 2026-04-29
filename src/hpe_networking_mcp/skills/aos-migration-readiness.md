@@ -445,6 +445,42 @@ After this sub-path, continue with the A1–A13 table below for any checks not s
 
 The VSG provides a single-site cutover sequence (VSG §2352-§2576). The audit walks through the operator's plan and validates each phase has prerequisites met. Map operator's cutover plan against:
 
+#### AOS8 live-mode sub-path — cutover prerequisites (CUTOVER-01..03, used when Stage -1 announced "AOS8 API mode")
+
+When AOS8 live mode is active, three cutover prerequisites — cluster L2-connected health, controller firmware version floor, and pre-cutover AP-count baseline — are evaluated before the operator walks through the Phase 0–8 cutover sequence below. Two checks reuse Stage 1 batch data already in context (no re-fetch); the firmware floor check makes one **fresh** `aos8_show_command(command='show version')` call because controller firmware version is not reliably surfaced by `show inventory` (Batch 3).
+
+Each finding below uses the format **Severity — Description. (source: `tool_call(args)`, Batch N where applicable) (VSG §anchor when applicable)**.
+
+##### CUTOVER-01 — Live cluster health (REGRESSION on anything other than L2-connected)
+
+From the Batch 3 `aos8_get_cluster_state()` response already in context, inspect the cluster state field. If the state is anything other than `L2-connected`, emit:
+
+- **REGRESSION** — Cluster not L2-connected: `<state>`. Resolve before single-controller upgrade. (source: `aos8_get_cluster_state()`, Batch 3)
+
+If the state is `L2-connected`, emit a single INFO confirmation: `INFO — Cluster L2-connected (CUTOVER-01 PASS). (source: aos8_get_cluster_state(), Batch 3)`.
+
+*If Batch 3 was unavailable:* cluster health (CUTOVER-01) cannot be evaluated from live data. Mark as **inconclusive — paste required** and consult any pasted `show lc-cluster group-membership` output.
+
+##### CUTOVER-02 — Controller firmware floor (REGRESSION below 8.10.0.12 / 8.12.0.1, VSG §1643-§1649)
+
+Make a **fresh** call to `aos8_show_command(command='show version')` here in Stage 5 — do NOT pull firmware from Batch 3 / `show inventory`, which does not reliably include the running OS firmware string. Parse the controller firmware version from the response. Compare against the prerequisite floor: the running version must be at least `8.10.0.12` on the 8.10 train OR at least `8.12.0.1` on the 8.12 train. If the running firmware is below both floors, emit:
+
+- **REGRESSION** — Controller firmware `<running-version>` is below the 8.10.0.12 / 8.12.0.1 prerequisite. Upgrade the controller to a supported floor before AOS 10 migration. (source: `aos8_show_command(command='show version')`) (VSG §1643-§1649)
+
+If the running firmware meets or exceeds the floor, emit a single INFO confirmation: `INFO — Controller firmware <running-version> meets the 8.10.0.12 / 8.12.0.1 prerequisite (CUTOVER-02 PASS). (source: aos8_show_command(command='show version')) (VSG §1643-§1649)`.
+
+*If `aos8_show_command(command='show version')` fails:* firmware floor (CUTOVER-02) cannot be evaluated. Mark as **inconclusive — paste required** and consult any pasted `show version` output.
+
+##### CUTOVER-03 — Pre-cutover AP-count baseline (INFO)
+
+From the Batch 2 `aos8_get_ap_database()` response already in context, count total APs (call this `X`). Emit:
+
+- **INFO** — Pre-cutover AP baseline: `X` APs. (source: `aos8_get_ap_database()`, Batch 2) Use this count for post-cutover diff.
+
+*If Batch 2 was unavailable:* AP-count baseline (CUTOVER-03) cannot be captured from live data. Operator paste of `show ap database long` required for the baseline.
+
+After this sub-path, continue with the Phase 0–8 cutover table below — those steps apply regardless of source path.
+
 | Phase | What VSG specifies | Audit check |
 |---|---|---|
 | Phase 0 — Prerequisites | All upstream items: Central reachable, subscriptions, NAD list updated, switchports configured, firmware on controllers at min version, backup taken | All REGRESSION findings from stages 3-4 must be resolved. |
