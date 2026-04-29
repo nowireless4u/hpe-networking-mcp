@@ -12,7 +12,6 @@ from hpe_networking_mcp.redaction.mac_normalizer import (
     normalize_macs_in_value,
 )
 from hpe_networking_mcp.redaction.rules import (
-    PUBLIC_IP_ALLOWLIST,
     TOKEN_RE,
     FieldClassification,
     TokenKind,
@@ -183,6 +182,8 @@ class TestFieldClassification:
         assert cls == FieldClassification.SKIP
 
     def test_bare_name_in_device_context_becomes_hostname(self) -> None:
+        # Real device shape: 3 device hints (mac, model, serial). The
+        # v2.3.1.2 threshold is 2+, so this still triggers HOSTNAME.
         cls, kind = classify_field(
             "name",
             "AP-Floor-3",
@@ -198,6 +199,50 @@ class TestFieldClassification:
             parent_keys=frozenset({"name", "value", "type"}),
         )
         assert cls == FieldClassification.SKIP
+
+    def test_wxtag_shape_does_not_trigger_hostname(self) -> None:
+        # wxtag has a single ``mac`` field for client-MAC matching but
+        # is not a device. Pre-v2.3.1.2 this incorrectly triggered
+        # HOSTNAME tokenization on the wxtag's display name. The 2+
+        # device-hints threshold (v2.3.1.2) closes the false positive.
+        cls, _ = classify_field(
+            "name",
+            "DHCP/DNS Ports",
+            parent_keys=frozenset(
+                {
+                    "op",
+                    "values",
+                    "id",
+                    "name",
+                    "for_site",
+                    "site_id",
+                    "org_id",
+                    "type",
+                    "match",
+                    "resource_mac",
+                    "mac",
+                }
+            ),
+        )
+        assert cls == FieldClassification.SKIP
+
+    def test_single_device_hint_no_longer_triggers_hostname(self) -> None:
+        # Threshold is 2+ in v2.3.1.2. A single hint isn't enough.
+        cls, _ = classify_field(
+            "name",
+            "Generic-1",
+            parent_keys=frozenset({"name", "mac"}),
+        )
+        assert cls == FieldClassification.SKIP
+
+    def test_two_device_hints_still_triggers_hostname(self) -> None:
+        cls, kind = classify_field(
+            "name",
+            "Generic-2",
+            parent_keys=frozenset({"name", "mac", "model"}),
+        )
+        assert cls == FieldClassification.TOKENIZE_IDENTIFIER
+        assert kind == TokenKind.HOSTNAME
 
 
 class TestCredentialShapeHeuristic:
@@ -379,30 +424,21 @@ class TestTokenizeResponse:
         assert "[[" not in result["mac"]
         assert "[[" not in result["client_mac"]
 
-    def test_public_dns_ip_preserved(self, tokenizer: Tokenizer) -> None:
-        data = {"dns_servers": ["8.8.8.8", "1.1.1.1"]}
-        # IP isn't in a tokenized field name (`dns_servers` isn't in the
-        # ruleset) so it passes through. But also test that even *if* the
-        # field name caused tokenization, the public allowlist would skip:
-        result = tokenize_response({"ip": "8.8.8.8"}, tokenizer)
-        assert result == {"ip": "8.8.8.8"}
-        # And confirm the public allowlist entry is intact
-        assert "8.8.8.8" in PUBLIC_IP_ALLOWLIST
-        assert data["dns_servers"] == ["8.8.8.8", "1.1.1.1"]
-
-    def test_internal_ip_tokenized_in_known_field(self, tokenizer: Tokenizer) -> None:
-        # `ip` in PUBLIC_IP_ALLOWLIST is preserved, but a corporate IP isn't.
-        # We use a field that maps to TokenKind.IP via the rules. Right now
-        # `ip` is not in the identifier ruleset directly — IPs are tokenized
-        # via free-text scan. So test in that path:
-        data = {"description": "Gateway is 10.50.10.1 inside the LAN"}
+    def test_ips_pass_through_in_all_contexts(self, tokenizer: Tokenizer) -> None:
+        # v2.3.1.2: IPs are no longer tokenized anywhere. Internal
+        # subnet topology is generally known to anyone on-network; the
+        # audit-utility loss outweighs the privacy gain.
+        data = {
+            "dns_servers": ["8.8.8.8", "1.1.1.1"],
+            "wxtag_values": ["10.10.10.0/8", "192.168.0.0/16", "172.16.0.0/12"],
+            "description": "Gateway is 10.50.10.1 inside the LAN",
+            "wan_ip": "203.0.113.42",
+        }
         result = tokenize_response(data, tokenizer)
-        assert "10.50.10.1" not in result["description"]
-        # Public IPs in free text are preserved
-        data2 = {"description": "Tested with DNS 8.8.8.8 and 1.1.1.1"}
-        result2 = tokenize_response(data2, tokenizer)
-        assert "8.8.8.8" in result2["description"]
-        assert "1.1.1.1" in result2["description"]
+        assert result["dns_servers"] == ["8.8.8.8", "1.1.1.1"]
+        assert result["wxtag_values"] == ["10.10.10.0/8", "192.168.0.0/16", "172.16.0.0/12"]
+        assert "10.50.10.1" in result["description"]
+        assert result["wan_ip"] == "203.0.113.42"
 
     def test_email_in_free_text_tokenized(self, tokenizer: Tokenizer) -> None:
         result = tokenize_response(
@@ -411,6 +447,52 @@ class TestTokenizeResponse:
         )
         assert "admin@example.com" not in result["description"]
         assert "[[EMAIL:" in result["description"]
+
+    def test_email_in_psk_name_field_tokenized(self, tokenizer: Tokenizer) -> None:
+        # v2.3.1.2 universal email scan: emails in arbitrary field names
+        # (not just `email` and not just free-text fields) get tokenized.
+        # Mist's MPSK pattern uses the user's email as the PSK display
+        # name — which would have leaked pre-v2.3.1.2.
+        result = tokenize_response(
+            {"name": "travis.knapp@burninlab.com", "ssid": "MPSK", "vlan_id": 1},
+            tokenizer,
+        )
+        assert "travis.knapp@burninlab.com" not in str(result)
+        assert "[[EMAIL:" in result["name"]
+        assert result["ssid"] == "MPSK"  # SSID still passes through
+        assert result["vlan_id"] == 1
+
+    def test_email_in_unknown_field_tokenized(self, tokenizer: Tokenizer) -> None:
+        # Field name we've never seen before, value is an email.
+        result = tokenize_response({"some_random_field": "user@example.org"}, tokenizer)
+        assert "user@example.org" not in str(result)
+        assert "[[EMAIL:" in result["some_random_field"]
+
+    def test_aws_signed_url_tokenized(self, tokenizer: Tokenizer) -> None:
+        # v2.3.1.2: any value containing AWS Signature v4 credential
+        # markers is treated as a temporary AWS credential and
+        # tokenized whole as APITOKEN.
+        signed_url = (
+            "https://papi-use1prod2.s3.us-east-1.amazonaws.com/portal_template/"
+            "abc.json?X-Amz-Algorithm=AWS4-HMAC-SHA256"
+            "&X-Amz-Credential=ASIARKDJAUCUS5XT55BI%2F20260429%2Fus-east-1"
+            "&X-Amz-Date=20260429T224027Z&X-Amz-Expires=3600"
+            "&X-Amz-SignedHeaders=host"
+            "&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEDc"
+            "&X-Amz-Signature=73c2b0892dbeb8af88288105d9d784e13"
+        )
+        result = tokenize_response({"portal_template_url": signed_url}, tokenizer)
+        # Whole URL replaced (partial substitution would still leak the access key)
+        assert "X-Amz-Security-Token" not in str(result)
+        assert "X-Amz-Credential" not in str(result)
+        assert "X-Amz-Signature" not in str(result)
+        assert "ASIARKDJAUCUS5XT55BI" not in str(result)
+        assert TOKEN_RE.fullmatch(result["portal_template_url"]).group(1) == "APITOKEN"
+
+    def test_plain_url_passes_through(self, tokenizer: Tokenizer) -> None:
+        # A normal URL without credentials should not match the AWS pattern.
+        result = tokenize_response({"portal_url": "https://example.com/path"}, tokenizer)
+        assert result["portal_url"] == "https://example.com/path"
 
     def test_idempotent_walk(self, tokenizer: Tokenizer) -> None:
         once = tokenize_response({"psk": "TwicePassed!"}, tokenizer)
@@ -491,12 +573,29 @@ class TestRealisticMistFixture:
                     "shared_secret": "RadiusSecret456!",
                 },
             ],
-            "description": "Tested with admin@corp.com on AP aa-bb-cc-dd-ee-ff",
+            "description": "Tested with admin@corp.com on AP aa-bb-cc-dd-ee-ff at 10.50.10.1",
             "schedule": {"enabled": True, "hours": []},
             "device_name": "AP-Floor3-Conf",
             "client_mac": "AABB.CCDD.EEFF",
             "channel": 36,
             "rssi": -55,
+            # MPSK record — Mist uses the user's email as the PSK display name
+            "psks": [
+                {
+                    "id": "abc-123",
+                    "name": "user@corp.com",
+                    "ssid": "MPSK",
+                    "vlan_id": 10,
+                },
+            ],
+            # Mist sometimes returns AWS-signed URLs for portal-template previews
+            "portal_template_url": (
+                "https://papi-use1prod2.s3.us-east-1.amazonaws.com/portal_template/"
+                "abc.json?X-Amz-Algorithm=AWS4-HMAC-SHA256"
+                "&X-Amz-Credential=ASIARKDJAUCUS5XT55BI%2F20260429%2Fus-east-1"
+                "&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEDc"
+                "&X-Amz-Signature=73c2b0892dbeb8af88288105d9d784e13"
+            ),
         }
 
     def test_full_walk(self, tokenizer: Tokenizer, mist_wlan_response: dict) -> None:
@@ -518,6 +617,11 @@ class TestRealisticMistFixture:
         # SSID — passes through (broadcast, refined in v2.3.1.1)
         assert result["ssid"] == "Corp-Wifi"
 
+        # IPs — pass through everywhere (refined in v2.3.1.2)
+        assert result["radius_servers"][0]["host"] == "10.50.10.10"
+        assert result["radius_servers"][1]["host"] == "10.50.10.11"
+        assert "10.50.10.1" in result["description"]  # internal IP in free text
+
         # Hostnames — still tokenized (real customer naming pattern)
         assert result["device_name"] != "AP-Floor3-Conf"
         assert TOKEN_RE.fullmatch(result["device_name"]).group(1) == "HOSTNAME"
@@ -531,6 +635,16 @@ class TestRealisticMistFixture:
         assert "[[EMAIL:" in result["description"]
         assert "aa:bb:cc:dd:ee:ff" in result["description"]  # MAC normalized in place
         assert "aa-bb-cc-dd-ee-ff" not in result["description"]
+
+        # Universal email scan — PSK with email-as-name (v2.3.1.2)
+        assert "user@corp.com" not in str(result)
+        assert "[[EMAIL:" in result["psks"][0]["name"]
+
+        # Universal AWS-signed URL scan — whole URL tokenized as APITOKEN (v2.3.1.2)
+        assert "X-Amz-Security-Token" not in str(result)
+        assert "X-Amz-Credential" not in str(result)
+        assert "ASIARKDJAUCUS5XT55BI" not in str(result)
+        assert TOKEN_RE.fullmatch(result["portal_template_url"]).group(1) == "APITOKEN"
 
         # Pass-through values preserved
         assert result["channel"] == 36

@@ -318,11 +318,15 @@ Tool responses are walked before reaching the AI:
 - **SSIDs / ESSIDs** — broadcast in beacon frames (refined in v2.3.1.1).
 - **Platform UUIDs** like `org_id`, `site_id`, `device_id`, `template_id` — already opaque random identifiers in Mist's API; replacing one UUID with another adds no privacy (refined in v2.3.1.1).
 - **Geographic data** — `address`, `city`, `state`, `zip`, `latitude`, `longitude`, `room`, `building` — typically findable on the company's website (refined in v2.3.1.1).
-- **Public infrastructure IPs** — Google DNS, Cloudflare, Quad9, OpenDNS, loopback, RFC documentation ranges. Preserved verbatim via the public-IP allowlist.
+- **All IP addresses** (v2.3.1.2) — internal RFC1918, public WAN, CIDR ranges. Internal subnet topology is generally known to anyone on-network, and CIDR / route analysis is a core audit task.
+
+**Always tokenized regardless of field name (v2.3.1.2):**
+- **Email addresses** — caught even when the field is named `name`, `username`, or anything else. Mist's MPSK pattern of using the user's email as the PSK display name was a leak before this.
+- **AWS-signed URL credentials** — any string containing `X-Amz-Security-Token`, `X-Amz-Credential`, or `X-Amz-Signature` is treated as a temporary AWS credential and tokenized whole as `APITOKEN`. Catches the `portal_template_url` leak from Mist's S3-backed captive-portal previews.
 
 **Round-trip works for every kind.** Same plaintext → same token within a session. WLAN sync, AOS 8 → AOS 10 migration, and mass PSK rotation all work because tokenization is round-trippable.
 
-**What the AI never sees in its context window:** WPA / SAE / WEP keys; RADIUS / RadSec / SNMP / admin / VPN secrets; API tokens; certificates and private keys; hostnames / FQDNs / device names; email addresses; usernames and personal names; phone numbers; hardware serial numbers / IMEI / IMSI / ICCID; internal IPs; embedded secrets in description/notes fields. **What it does see:** tokens for those values, MACs (normalized), SSIDs, platform UUIDs, geographic data, public infrastructure IPs, and unchanged metric/enum/timestamp fields.
+**What the AI never sees in its context window:** WPA / SAE / WEP keys; RADIUS / RadSec / SNMP / admin / VPN secrets; API tokens (including AWS-signed URLs); certificates and private keys; hostnames / FQDNs / device names; **email addresses (anywhere they appear)**; usernames and personal names; phone numbers; hardware serial numbers / IMEI / IMSI / ICCID; embedded secrets in description/notes fields. **What it does see:** tokens for those values, MACs (normalized), SSIDs, platform UUIDs, geographic data, **all IP addresses (internal + public)**, and unchanged metric/enum/timestamp fields.
 
 Audit logging fires on every tokenize/detokenize event in `docker compose logs` — kind, token ID, value-hash (SHA-256 truncated), but never the plaintext.
 

@@ -14,24 +14,35 @@ name. The walker (``walker.py``) calls ``classify_field()`` on each
   paste secrets/identifiers into; the walker runs the regex sweep over
   the value's contents.
 
-The "don't tokenize" carve-outs (refined in v2.3.1.1):
+The "don't tokenize" carve-outs (refined through v2.3.1.2):
 
 * **MACs** — never tokenized, just normalized to ``aa:bb:cc:dd:ee:ff``.
   Observable to anyone in radio range.
 * **SSIDs / ESSIDs** — never tokenized. Broadcast in beacon frames.
 * **Platform UUIDs** (``org_id``, ``site_id``, ``device_id``,
-  ``template_id``, etc.) — never tokenized for Mist. Mist's API
-  uniformly returns these as UUIDs, which are already opaque; replacing
-  one UUID with another adds no privacy and just adds context-window
-  noise + AI confusion.
-* **Public infrastructure IPs** (Google DNS, Cloudflare, loopback, RFC
-  documentation ranges) — preserved verbatim via the public-IP
-  allowlist below. Internal RFC1918 IPs are still tokenized.
+  ``template_id``, etc.) — never tokenized. Already-opaque random
+  identifiers; replacing one UUID with another adds no privacy and
+  just adds context-window noise + AI confusion.
 * **Geographic fields** (``address``, ``city``, ``state``, ``zip``,
   ``latitude``, ``longitude``, ``room``, ``building``, ...) — never
   tokenized. Business addresses are typically published on the
-  company's website; the privacy gain doesn't justify the audit-utility
-  loss.
+  company's website.
+* **IP addresses** — never tokenized (refined in v2.3.1.2). Internal
+  subnet topology is generally known to anyone on-network; tokenizing
+  hurts audit utility (CIDR analysis, route checks, IP-block sanity)
+  more than it adds privacy.
+
+The "value-shape detections that fire regardless of field name"
+(refined in v2.3.1.2):
+
+* **Emails** — applied to every string value, not just free-text
+  fields. Catches emails embedded in PSK ``name`` fields, ``username``
+  values, etc.
+* **AWS-signed URL credential markers** (``X-Amz-Security-Token``,
+  ``X-Amz-Credential``, ``X-Amz-Signature``) — any value containing
+  one of these strings is a temporary AWS credential and gets
+  tokenized whole as ``APITOKEN``.
+* **PEM blocks** — anywhere they appear in free-text fields.
 """
 
 from __future__ import annotations
@@ -72,7 +83,6 @@ class TokenKind(StrEnum):
     IMEI = "IMEI"
     IMSI = "IMSI"
     ICCID = "ICCID"
-    IP = "IP"
     NAME = "NAME"  # generic operator-assigned name (vlan_name, subnet_name, etc.)
 
 
@@ -249,77 +259,29 @@ FREE_TEXT_FIELD_NAMES: frozenset[str] = frozenset(
 
 
 # ---------------------------------------------------------------------------
-# Public IP allowlist — well-known infrastructure IPs preserved verbatim
-# ---------------------------------------------------------------------------
-
-PUBLIC_IP_ALLOWLIST: frozenset[str] = frozenset(
-    {
-        # Loopback / unspecified
-        "127.0.0.1",
-        "0.0.0.0",
-        "::1",
-        "::",
-        # Google Public DNS
-        "8.8.8.8",
-        "8.8.4.4",
-        "2001:4860:4860::8888",
-        "2001:4860:4860::8844",
-        # Cloudflare DNS
-        "1.1.1.1",
-        "1.0.0.1",
-        "2606:4700:4700::1111",
-        "2606:4700:4700::1001",
-        # Quad9
-        "9.9.9.9",
-        "149.112.112.112",
-        # OpenDNS
-        "208.67.222.222",
-        "208.67.220.220",
-        # RFC 5737 documentation
-        "192.0.2.0",
-        "198.51.100.0",
-        "203.0.113.0",
-    }
-)
-
-# Documentation / reserved address ranges that are also preserved.
-# These are CIDR-checked rather than equality-checked.
-PUBLIC_IP_ALLOWLIST_RANGES: tuple[str, ...] = (
-    "192.0.2.0/24",  # RFC 5737 TEST-NET-1
-    "198.51.100.0/24",  # RFC 5737 TEST-NET-2
-    "203.0.113.0/24",  # RFC 5737 TEST-NET-3
-    "224.0.0.0/4",  # IPv4 multicast (mDNS, link-local)
-    "ff00::/8",  # IPv6 multicast (NDP etc.)
-    "fe80::/10",  # IPv6 link-local
-)
-
-
-# ---------------------------------------------------------------------------
 # Regex patterns (compiled once at import)
 # ---------------------------------------------------------------------------
 
-# IPv4 address (does not validate octet ranges; that's handled by the
-# ipaddress module on match candidates).
-IPV4_RE: re.Pattern[str] = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}(?:/\d{1,2})?\b")
-
-# IPv6 address — conservative; matches typical full + compressed forms.
-# Combined with ipaddress.ip_address() validation in the walker to weed
-# out false positives. Includes optional CIDR.
-IPV6_RE: re.Pattern[str] = re.compile(
-    r"\b("
-    r"(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}"  # full form
-    r"|(?:[0-9a-fA-F]{1,4}:)+:(?:[0-9a-fA-F]{1,4}:?)+"  # compressed
-    r"|::(?:[0-9a-fA-F]{1,4}:?)+"  # leading ::
-    r")(?:/\d{1,3})?\b"
-)
-
-# Email
+# Email — applied to every string value as part of the universal scan
+# (v2.3.1.2), not just free-text fields. Catches emails embedded in
+# PSK ``name`` fields, ``username`` values, etc.
 EMAIL_RE: re.Pattern[str] = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
 
 # PEM block (certificate or key) — match the entire block including markers.
 # Used for content-fingerprint detection so PEM data in unexpected fields
 # still gets tokenized.
 PEM_BLOCK_RE: re.Pattern[str] = re.compile(r"-----BEGIN [A-Z0-9 ]+-----[\s\S]+?-----END [A-Z0-9 ]+-----")
+
+# AWS Signature v4 pre-signed URL credential markers (v2.3.1.2). Any
+# string value containing one of these is a temporary AWS credential —
+# tokenize the whole value as APITOKEN. Mist embeds these in
+# ``portal_template_url`` and similar fields to let operators preview
+# captive-portal pages directly from S3 without proxying through Mist.
+# The AI doesn't need to see them.
+AWS_SIGNED_URL_RE: re.Pattern[str] = re.compile(
+    r"X-Amz-(Security-Token|Credential|Signature)",
+    re.IGNORECASE,
+)
 
 # UUID (canonical 8-4-4-4-12 hex form, lowercase or uppercase).
 UUID_RE: re.Pattern[str] = re.compile(
@@ -456,8 +418,11 @@ def classify_field(
             TOKENIZED_IDENTIFIER_FIELDS[name],
         )
 
-    # Bare ``name`` becomes HOSTNAME only when the parent object looks like a device
-    if name == "name" and parent_keys and (parent_keys & DEVICE_CONTEXT_HINTS):
+    # Bare ``name`` becomes HOSTNAME only when the parent object looks
+    # like a device — at least 2 device-shaped sibling fields (refined
+    # in v2.3.1.2 from "any 1 hint" to fix wxtag false positives, where
+    # the parent has a single ``mac`` field for client-MAC matching).
+    if name == "name" and parent_keys and len(parent_keys & DEVICE_CONTEXT_HINTS) >= 2:
         return FieldClassification.TOKENIZE_IDENTIFIER, TokenKind.HOSTNAME
 
     # Free-text fields

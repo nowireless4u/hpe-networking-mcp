@@ -29,7 +29,6 @@ from hpe_networking_mcp.redaction.mac_normalizer import (
     normalize_macs_in_value,
 )
 from hpe_networking_mcp.redaction.rules import (
-    PUBLIC_IP_ALLOWLIST,
     SECRET_FIELD_NAMES,
     TOKENIZED_IDENTIFIER_FIELDS,
     TokenKind,
@@ -51,7 +50,6 @@ from hpe_networking_mcp.redaction.walker import (
 )
 
 __all__ = [
-    "PUBLIC_IP_ALLOWLIST",
     "SECRET_FIELD_NAMES",
     "TOKENIZED_IDENTIFIER_FIELDS",
     "SessionKeymap",

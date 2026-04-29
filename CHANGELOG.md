@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1.2] - 2026-04-29
+
+**Closes four leaks / false positives surfaced by the first real Mist audit run with v2.3.1.1. Email addresses now tokenize anywhere they appear (not just in `email` fields), AWS-signed URLs are tokenized whole as APITOKEN credentials, the wxtag → HOSTNAME false positive is fixed, and IP addresses pass through as cleartext everywhere. No protocol or API change; existing PSK / RADSEC / cert / hostname tokenization continues unchanged.**
+
+### What changed
+
+1. **Universal email scan.** The email regex is now applied to every string value the walker encounters (in addition to the existing free-text scan), not just to fields named `email` and not just to `description` / `notes` / etc. **Why:** Mist's MPSK pattern uses the user's email as the PSK display name (`name: "user@corp.com"`), which slipped through both the field-name path (the field was `name`, not `email`) and the free-text path (PSK objects don't have a `description` field). Substring substitution preserves surrounding text.
+
+2. **AWS-signed URL credential detection.** Any string value containing `X-Amz-Security-Token`, `X-Amz-Credential`, or `X-Amz-Signature` (case-insensitive) is recognized as a temporary AWS credential and the **whole value** is tokenized as `APITOKEN`. **Why:** Mist embeds AWS Signature v4 pre-signed URLs in fields like `portal_template_url` so operators can preview captive-portal pages directly from S3. These URLs include short-lived credentials that the AI doesn't need; partial-redaction would leave the access key visible, so we tokenize the entire URL.
+
+3. **Tightened bare-`name` HOSTNAME heuristic.** The "treat `name` as a hostname when the parent looks like a device" rule now requires **2+** matches against `DEVICE_CONTEXT_HINTS` (was 1). **Why:** wxtag objects have a single `mac` field for "match by client MAC" rules. The old "any single hint" check incorrectly treated wxtags as devices and tokenized their display names (`"DHCP/DNS Ports"`, `"Internet"`, etc.) as `[[HOSTNAME:...]]`, making the AI unable to read what each rule meant. Real device responses (mac + model + serial + type) still trigger HOSTNAME.
+
+4. **IP addresses pass through everywhere.** Removed `TokenKind.IP`, the `PUBLIC_IP_ALLOWLIST` and `PUBLIC_IP_ALLOWLIST_RANGES` constants, the IPv4 / IPv6 regexes, and all IP-related helpers from the walker. Internal RFC1918 subnets, public WAN IPs, and CIDR ranges all pass through verbatim. **Why:** internal subnet topology is generally known to anyone on-network, and CIDR / route analysis is a core audit task. Tokenizing IPs broke cidr-sanity workflows (the audit AI couldn't check `172.168.0.0/12` vs the correct `172.16.0.0/12`). The privacy gain wasn't worth the audit-utility loss.
+
+### What's still tokenized
+
+Unchanged: PSKs, RADIUS / RadSec / SNMP / admin / VPN secrets, certificates, private keys, API tokens (now also catching AWS-signed URLs), hostnames, FQDNs, device names, AP names, site names, org names, VLAN / subnet names, usernames, **emails (now everywhere)**, real names, phone numbers, hardware serials, IMEI / IMSI / ICCID.
+
+### What now passes through
+
+In addition to v2.3.1.1's carve-outs (MACs, SSIDs, platform UUIDs, geographic data, public DNS), v2.3.1.2 adds:
+
+- **All IPv4 / IPv6 addresses** — internal RFC1918, public WAN, link-local, multicast, anything.
+- **CIDR ranges** — preserved for route / subnet analysis.
+
+### Tests
+
+- 721 passing (was 715) — net +6: removed two IP-tokenization tests, added eight covering email-in-arbitrary-fields, plain-URL passthrough, AWS-signed URL detection, wxtag-shape false-positive prevention, single-hint passthrough, two-hint trigger, all-IPs passthrough, and an updated Mist fixture exercising the email-as-PSK-name and portal_template_url cases together.
+
 ## [2.3.1.1] - 2026-04-29
 
 **Refines the v2.3.1.0 PII tokenization ruleset based on first-audit feedback. Stops tokenizing values that were either (a) already opaque (platform UUIDs), (b) publicly observable (SSIDs, broadcast in beacons), or (c) typically findable on the company's website (street addresses, geographic data). The original v2.3.1.0 ruleset over-tokenized — making audit output noisier without adding meaningful privacy. No protocol or API change; existing PSK/RADSEC/cert/hostname/email tokenization continues unchanged.**

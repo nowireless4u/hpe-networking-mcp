@@ -22,7 +22,6 @@ violate caller expectations.
 
 from __future__ import annotations
 
-import ipaddress
 from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
@@ -32,12 +31,9 @@ from hpe_networking_mcp.redaction.mac_normalizer import (
     normalize_macs_in_value,
 )
 from hpe_networking_mcp.redaction.rules import (
+    AWS_SIGNED_URL_RE,
     EMAIL_RE,
-    IPV4_RE,
-    IPV6_RE,
     PEM_BLOCK_RE,
-    PUBLIC_IP_ALLOWLIST,
-    PUBLIC_IP_ALLOWLIST_RANGES,
     FieldClassification,
     TokenKind,
     classify_field,
@@ -74,46 +70,65 @@ _MAC_FIELD_HINTS: frozenset[str] = frozenset(
 )
 
 
-def _is_public_allowlisted_ip(value: str) -> bool:
-    """Return True when ``value`` is a well-known public IP we preserve."""
-    if value in PUBLIC_IP_ALLOWLIST:
-        return True
-    try:
-        addr = ipaddress.ip_address(value.split("/", 1)[0])
-    except ValueError:
-        return False
-    return any(addr in ipaddress.ip_network(cidr) for cidr in PUBLIC_IP_ALLOWLIST_RANGES)
+def _universal_scan(value: str, tokenizer: Tokenizer) -> str:
+    """Value-pattern detections that fire regardless of field name.
 
+    Applied to every string value the walker sees that wasn't otherwise
+    classified for tokenization or free-text scan. Order matters:
 
-def _is_routable_ip(value: str) -> bool:
-    """Return True when ``value`` parses as a valid IPv4/IPv6 address.
+    1. **AWS-signed URL** — if the value contains any AWS Signature v4
+       credential marker (``X-Amz-Security-Token``, ``X-Amz-Credential``,
+       ``X-Amz-Signature``), the *entire string* is a temporary AWS
+       credential and gets tokenized whole as ``APITOKEN``. We don't try
+       to substring-replace inside the URL because partial-redaction
+       leaves the access key visible.
+    2. **Email substrings** — every email-shaped substring inside the
+       value gets tokenized as ``EMAIL``. Catches PSK ``name`` fields
+       that hold a user's email, ``username`` values shaped as emails,
+       and so on. The substring substitution preserves surrounding text.
 
-    The IP regex catches octet shapes that aren't valid IPs (e.g.
-    ``999.999.999.999``); this guard runs ``ipaddress.ip_address()`` to
-    confirm validity before tokenization.
+    No-ops on values that already contain a token (``[[KIND:uuid]]``)
+    or that are empty / not strings.
+
+    Note: MACs are *not* universally normalized here — that path goes
+    through the field-name-specific MAC handling in ``_walk_pair``,
+    which already covers the structured-field case. Free-text MAC
+    normalization happens via ``_scan_free_text`` for description-style
+    fields.
     """
-    try:
-        ipaddress.ip_address(value.split("/", 1)[0])
-        return True
-    except ValueError:
-        return False
+    if not isinstance(value, str) or not value:
+        return value
+
+    # AWS-signed URL: whole-value tokenization
+    if AWS_SIGNED_URL_RE.search(value):
+        replacement = tokenize_value(tokenizer, TokenKind.API_TOKEN, value)
+        return replacement if isinstance(replacement, str) else value
+
+    # Email: substring tokenization
+    def _email_sub(match: object) -> str:
+        addr = match.group(0)  # type: ignore[attr-defined]
+        replacement = tokenize_value(tokenizer, TokenKind.EMAIL, addr)
+        return replacement if isinstance(replacement, str) else addr
+
+    return EMAIL_RE.sub(_email_sub, value)
 
 
 def _scan_free_text(text: str, tokenizer: Tokenizer) -> str:
     """Apply the secret-pattern + identifier-pattern sweep over ``text``.
 
-    Order matters: PEM blocks first (they contain colons that would
-    otherwise match IPv6 patterns), then emails, then IPs (so we don't
-    re-scan IPs that are inside PEM signatures), then MACs.
+    Order: PEM blocks first (they contain content that could otherwise
+    match other patterns), then emails, then MACs.
+
+    IPs are intentionally not scanned here in v2.3.1.2+ — internal
+    subnet topology is generally known to anyone on-network and the
+    audit-utility loss outweighs the privacy gain.
     """
     if not isinstance(text, str) or not text:
         return text
 
     result = text
 
-    # Tier 1 — PEM blocks. Any PEM-shaped block in free text is treated
-    # as a CERT regardless of the kind; we don't try to distinguish
-    # certificate from private-key in description fields.
+    # PEM blocks
     def _pem_sub(match: object) -> str:
         block = match.group(0)  # type: ignore[attr-defined]
         kind = TokenKind.PRIVATE_KEY if "PRIVATE KEY" in block else TokenKind.CERT
@@ -122,31 +137,13 @@ def _scan_free_text(text: str, tokenizer: Tokenizer) -> str:
 
     result = PEM_BLOCK_RE.sub(_pem_sub, result)
 
-    # Tier 2 identifiers — email, IP, MAC
+    # Emails
     def _email_sub(match: object) -> str:
         addr = match.group(0)  # type: ignore[attr-defined]
         replacement = tokenize_value(tokenizer, TokenKind.EMAIL, addr)
         return replacement if isinstance(replacement, str) else addr
 
     result = EMAIL_RE.sub(_email_sub, result)
-
-    def _ipv4_sub(match: object) -> str:
-        addr = match.group(0)  # type: ignore[attr-defined]
-        if not _is_routable_ip(addr) or _is_public_allowlisted_ip(addr):
-            return addr
-        replacement = tokenize_value(tokenizer, TokenKind.IP, addr)
-        return replacement if isinstance(replacement, str) else addr
-
-    result = IPV4_RE.sub(_ipv4_sub, result)
-
-    def _ipv6_sub(match: object) -> str:
-        addr = match.group(0)  # type: ignore[attr-defined]
-        if not _is_routable_ip(addr) or _is_public_allowlisted_ip(addr):
-            return addr
-        replacement = tokenize_value(tokenizer, TokenKind.IP, addr)
-        return replacement if isinstance(replacement, str) else addr
-
-    result = IPV6_RE.sub(_ipv6_sub, result)
 
     # MACs — normalize in place (no tokenization per the v2.3.0.10 design)
     result = normalize_macs_in_value(result)
@@ -211,17 +208,16 @@ def _walk_pair(
     classification, kind = classify_field(key, value, parent_keys=parent_keys)
 
     if classification == FieldClassification.SKIP:
+        # Universal scan still runs on un-classified string values so
+        # emails embedded in arbitrary fields (e.g. PSK ``name`` =
+        # ``user@example.com``) and AWS-signed URLs in arbitrary fields
+        # (e.g. ``portal_template_url``) still get tokenized.
+        if isinstance(value, str):
+            return _universal_scan(value, tokenizer)
         return value
     if classification == FieldClassification.TOKENIZE_SECRET and kind is not None:
         return tokenize_value(tokenizer, kind, value)
     if classification == FieldClassification.TOKENIZE_IDENTIFIER and kind is not None:
-        # IPs need allowlist + validity check before tokenization
-        if (
-            kind == TokenKind.IP
-            and isinstance(value, str)
-            and (not _is_routable_ip(value) or _is_public_allowlisted_ip(value))
-        ):
-            return value
         return tokenize_value(tokenizer, kind, value)
     if classification == FieldClassification.SCAN_FREE_TEXT and isinstance(value, str):
         return _scan_free_text(value, tokenizer)
