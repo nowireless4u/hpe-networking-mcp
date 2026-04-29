@@ -180,6 +180,10 @@ Plus, if AirWave is in use — same AirWave exports as AOS 6 / 8.
 
 For each pasted artifact, extract the data points listed below. The audit produces an **inventory table** as part of the report; the parsed values feed the rule checks in Stage 3.
 
+##### AOS8 live-mode sub-path — used when Stage -1 announced "AOS8 API mode"
+
+If AOS8 live mode is active (Stage -1 announced API mode), Stage 1 already collected every AOS8 data point in the table below via the four-batch live-mode sub-path. **Skip paste parsing for AOS8 data points and proceed directly to Stage 3.** The AOS8 extraction table below remains authoritative for the paste-fallback path (used when AOS8 is unreachable, or for AOS6 / IAP source platforms which always use paste).
+
 #### AOS 8 — what to extract from each artifact
 
 | Artifact | Extract | VSG anchor |
