@@ -47,9 +47,11 @@ EXPECTED_CATEGORY_COUNTS = {
     "alerts": 3,
     "wlan": 4,
     "troubleshooting": 7,
+    "differentiators": 9,
 }
 
-# Phase 5 adds 12 write tools; total is 26 read + 12 write = 38
+# Phase 5 adds 12 write tools; Phase 7 adds 9 differentiator tools.
+# Total is 26 read + 12 write + 9 diff = 47
 EXPECTED_WRITE_TOOLS = {
     "aos8_manage_ssid_profile",
     "aos8_manage_virtual_ap",
@@ -64,7 +66,20 @@ EXPECTED_WRITE_TOOLS = {
     "aos8_reboot_ap",
     "aos8_write_memory",
 }
-EXPECTED_TOTAL = len(EXPECTED_TOOLS) + len(EXPECTED_WRITE_TOOLS)  # 38
+EXPECTED_DIFF_TOOLS = {
+    "aos8_get_md_hierarchy",
+    "aos8_get_effective_config",
+    "aos8_get_pending_changes",
+    "aos8_get_rf_neighbors",
+    "aos8_get_cluster_state",
+    "aos8_get_air_monitors",
+    "aos8_get_ap_wired_ports",
+    "aos8_get_ipsec_tunnels",
+    "aos8_get_md_health_check",
+}
+EXPECTED_TOTAL = (
+    len(EXPECTED_TOOLS) + len(EXPECTED_WRITE_TOOLS) + len(EXPECTED_DIFF_TOOLS)
+)  # 26 + 12 + 9 = 47
 
 
 def test_tools_dict_complete():
@@ -74,12 +89,18 @@ def test_tools_dict_complete():
         assert category in TOOLS, f"missing category: {category}"
         assert len(TOOLS[category]) == count, f"category {category} expected {count}, got {len(TOOLS[category])}"
 
-    read_flat = {name for cat in EXPECTED_CATEGORY_COUNTS for name in TOOLS[cat]}
+    # Read categories (excluding differentiators which is its own set)
+    read_categories = {"health", "clients", "alerts", "wlan", "troubleshooting"}
+    read_flat = {name for cat in read_categories for name in TOOLS[cat]}
     assert read_flat == EXPECTED_TOOLS, "Read tool set mismatch"
 
     # Phase 5: writes category must also be present
     assert "writes" in TOOLS, "TOOLS dict missing 'writes' category"
     assert set(TOOLS["writes"]) == EXPECTED_WRITE_TOOLS, "TOOLS['writes'] mismatch"
+
+    # Phase 7: differentiators category must be present (9 tools)
+    assert "differentiators" in TOOLS, "TOOLS dict missing 'differentiators' category"
+    assert set(TOOLS["differentiators"]) == EXPECTED_DIFF_TOOLS, "TOOLS['differentiators'] mismatch"
 
 
 def test_register_tools_dynamic_mode():

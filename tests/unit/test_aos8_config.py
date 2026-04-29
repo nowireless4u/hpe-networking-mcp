@@ -69,3 +69,15 @@ class TestLoadAOS8:
         result = _load_aos8()
         assert result is not None
         assert result.verify_ssl is True
+
+
+def test_aos8_auto_disabled_when_secrets_missing(tmp_path, monkeypatch):
+    """TEST-05: AOS8 platform auto-disables when no secrets present.
+
+    Closes the name-presence gap for the Phase 7 hard-fail verification scan
+    (`auto_disabled` / `disabled_when_secrets_missing` token).
+    """
+    from hpe_networking_mcp import config as cfg_mod
+
+    monkeypatch.setattr(cfg_mod, "SECRETS_DIR", tmp_path)
+    assert cfg_mod._load_aos8() is None
