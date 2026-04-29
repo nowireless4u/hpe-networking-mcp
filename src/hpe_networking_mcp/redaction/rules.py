@@ -38,9 +38,9 @@ class TokenKind(StrEnum):
     PSK = "PSK"  # WPA2/WPA3/SAE pre-shared keys, passphrases, PPSKs
     RADSEC = "RADSEC"  # RADIUS / RadSec / TACACS+ shared secrets, EAP passwords
     SNMP_COMMUNITY = "SNMP"  # SNMPv1/v2c communities, SNMPv3 auth/priv passwords
-    ADMIN_PASSWORD = "PASSWORD"  # admin/manager/enable passwords, CLI passwords
+    ADMIN_PASSWORD = "PASSWORD"  # nosec B105 — token-kind label, not a credential
     VPN_PSK = "VPNPSK"  # IPSec PSK, VPN PSK
-    API_TOKEN = "APITOKEN"  # api_token, api_key, client_secret, bearer/access/refresh tokens
+    API_TOKEN = "APITOKEN"  # nosec B105 — token-kind label, not a credential
     CERT = "CERT"  # certificates (PEM blocks)
     PRIVATE_KEY = "KEY"  # private keys (PEM blocks), keytabs
 
@@ -76,7 +76,7 @@ class FieldClassification(StrEnum):
     """The walker's decision for a given (field_name, value)."""
 
     SKIP = "skip"
-    TOKENIZE_SECRET = "tokenize_secret"
+    TOKENIZE_SECRET = "tokenize_secret"  # nosec B105 — enum classification label, not a credential
     TOKENIZE_IDENTIFIER = "tokenize_identifier"
     SCAN_FREE_TEXT = "scan_free_text"
 
