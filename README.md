@@ -306,6 +306,17 @@ Add to your `.vscode/mcp.json` (create the file if it doesn't exist) or VS Code 
 
 ---
 
+## Network Security
+
+The MCP HTTP transport ships with two layers of defense out of the box:
+
+1. **Loopback-only port publish** — `docker-compose.yml` publishes `127.0.0.1:8000:8000`, so only processes on the host can reach the MCP endpoint. No LAN host can connect, even if it knows the IP. (Inside the container the app still binds `0.0.0.0` — that's the container's *own* network namespace and is what Docker's port-forwarder forwards into; do not change it.)
+2. **`Origin` header allowlist** — required by the MCP Streamable HTTP spec to defend against browser-driven DNS rebinding. The server rejects any request whose `Origin` is set to a value outside `ALLOWED_ORIGINS` (default: `localhost` and `127.0.0.1`). Non-browser clients (supergateway, curl, native MCP clients) don't send `Origin` and pass through.
+
+If you put the server behind an authenticating reverse proxy that already validates origins, set `ALLOWED_ORIGINS=*` to bypass the in-process check. See the [Configuration](#configuration) table for details.
+
+> **Multi-host / remote access is not a supported configuration.** The server has no built-in authentication on `/mcp` — anyone who can reach the port has full admin of every connected platform. If you need remote access, terminate at a reverse proxy (nginx + mTLS / OIDC, Cloudflare Access, Tailscale Funnel, etc.) and never expose the published port directly.
+
 ## Secrets
 
 This project uses **Docker Compose secrets** for credential management — the most secure native Docker approach:
@@ -452,6 +463,8 @@ The retry logic detects transient failures in two patterns: response-dict (Mist/
 | Environment Variable | Default | Description |
 |---------------------|---------|-------------|
 | `MCP_PORT` | `8000` | Port the MCP server listens on |
+| `MCP_HOST` | `0.0.0.0` | Bind address **inside the container's namespace** — leave at `0.0.0.0` so Docker's port-forwarder can reach the app. Restrict who can reach the host port via `ports:` in compose, not this. |
+| `ALLOWED_ORIGINS` | `http://localhost:<MCP_PORT>,http://127.0.0.1:<MCP_PORT>` | Comma-separated allowlist for the `Origin` request header (DNS-rebinding defense per MCP spec). Browsers always send `Origin`; non-browser clients (supergateway, curl) don't and pass through. Set to `*` to disable the check (use only behind an auth proxy). |
 | `SECRETS_DIR` | `/run/secrets` | Directory containing Docker secret files |
 | `LOG_LEVEL` | `info` | Logging level (`debug`, `info`, `warning`, `error`) |
 | `ENABLE_MIST_WRITE_TOOLS` | `false` | Enable Mist write/mutation tools |
@@ -618,11 +631,13 @@ docker compose ps                          # Check container is running
 docker compose restart                     # Restart the container
 ```
 
-If port 8000 is already in use by another service, change the port in `docker-compose.yml`:
+If port 8000 is already in use by another service, change the port in `docker-compose.yml` (keep the `127.0.0.1:` prefix):
 ```yaml
 ports:
-  - "8080:8000"    # Map to port 8080 instead
+  - "127.0.0.1:8080:8000"    # Map to port 8080 instead, loopback-only
 ```
+
+If you change the host port, also update `ALLOWED_ORIGINS` so it matches (e.g. `ALLOWED_ORIGINS=http://localhost:8080,http://127.0.0.1:8080`) — the default tracks `MCP_PORT` (which is the *container* port, 8000), not the host port.
 
 ### Tools Not Appearing in AI Client
 

@@ -30,7 +30,7 @@ Secret file mapping:
 """
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from loguru import logger
@@ -107,6 +107,13 @@ class ServerConfig:
     disable_elicitation: bool = False
     debug: bool = False
     log_file: str | None = None
+
+    # Origin allowlist for the streamable-HTTP transport. Defends against
+    # browser-driven DNS rebinding (MCP spec requirement). Matches the
+    # ``Origin`` request header literally; ``*`` disables the check entirely.
+    # Non-browser clients (supergateway, curl, native MCP clients) don't
+    # send Origin and are always allowed.
+    allowed_origins: list[str] = field(default_factory=lambda: ["http://localhost:8000", "http://127.0.0.1:8000"])
 
     # Tool exposure mode (generalized from GreenLake's original setting, #151).
     # "static"  — every tool registers with FastMCP individually; all visible.
@@ -372,6 +379,14 @@ def load_config() -> ServerConfig:
         logger.warning("Ignoring unknown MCP_TOOL_MODE={!r}, defaulting to 'dynamic'", tool_mode)
         tool_mode = "dynamic"
 
+    # ALLOWED_ORIGINS — comma-separated. Empty value falls back to the
+    # localhost defaults (most users). ``*`` disables the check.
+    allowed_origins_env = os.getenv("ALLOWED_ORIGINS")
+    if allowed_origins_env is None:
+        allowed_origins = [f"http://localhost:{port}", f"http://127.0.0.1:{port}"]
+    else:
+        allowed_origins = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
+
     # Load platform credentials from Docker secrets
     mist = _load_mist()
     central = _load_central()
@@ -393,6 +408,7 @@ def load_config() -> ServerConfig:
         debug=debug,
         log_file=log_file,
         tool_mode=tool_mode,
+        allowed_origins=allowed_origins,
         mist=mist,
         central=central,
         greenlake=greenlake,
@@ -410,4 +426,8 @@ def load_config() -> ServerConfig:
 
     logger.info("Enabled platforms: {}", ", ".join(config.enabled_platforms))
     logger.info("Tool mode: {}", tool_mode)
+    if "*" in allowed_origins:
+        logger.warning("Origin validation: DISABLED (ALLOWED_ORIGINS contains '*')")
+    else:
+        logger.info("Origin validation: allowlist = {}", allowed_origins)
     return config

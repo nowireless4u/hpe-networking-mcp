@@ -69,10 +69,26 @@ def main() -> None:
     )
 
     try:
+        from starlette.middleware import Middleware as ASGIMiddleware
+
+        from hpe_networking_mcp.middleware.origin_validation import (
+            OriginValidationMiddleware,
+        )
         from hpe_networking_mcp.server import create_server
 
         mcp = create_server(config)
-        mcp.run(transport="streamable-http", host=config.host, port=config.port)
+        http_middleware = [
+            ASGIMiddleware(
+                OriginValidationMiddleware,
+                allowed_origins=config.allowed_origins,
+            ),
+        ]
+        mcp.run(
+            transport="streamable-http",
+            host=config.host,
+            port=config.port,
+            middleware=http_middleware,
+        )
     except KeyboardInterrupt:
         logger.info("Server stopped by user")
     except Exception as e:

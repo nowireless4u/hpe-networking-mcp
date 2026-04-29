@@ -5,7 +5,7 @@ services:
     # To build from source instead, comment out 'image' and uncomment 'build':
     # build: .
     ports:
-      - "${MCP_PORT:-8000}:8000"
+      - "127.0.0.1:${MCP_PORT:-8000}:8000"
     environment:
       - MCP_PORT=8000
       - MCP_HOST=0.0.0.0

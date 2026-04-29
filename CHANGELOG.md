@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0.9] - 2026-04-29
+
+**Closes the MCP Streamable HTTP spec's Origin-validation requirement (DNS rebinding defense) and tightens the host port publish to loopback by default. Both changes are transport-layer hardening; no tools or APIs are affected.**
+
+### Security
+
+- **`Origin` header validation** — new ASGI middleware (`src/hpe_networking_mcp/middleware/origin_validation.py`) rejects HTTP requests whose `Origin` header is set to anything outside the allowlist with `403 Forbidden`. Browsers always send `Origin` and cannot lie about it (it is a forbidden header in the Fetch spec), so a server-side allowlist is sufficient defense against DNS rebinding attacks. Non-browser clients (supergateway, curl, native MCP clients) typically don't send `Origin` and are passed through unchanged. The MCP spec (2025-06-18 §Streamable HTTP) requires this check.
+- **Host port publish now binds loopback by default** — `docker-compose.yml` changes `ports: "${MCP_PORT:-8000}:8000"` → `"127.0.0.1:${MCP_PORT:-8000}:8000"`. Previously the published port answered on every host interface (`0.0.0.0:8000`, `[::]:8000`), which meant any host on the same LAN could reach the unauthenticated MCP endpoint. Loopback-only publishing eliminates that exposure. The container's internal bind (`MCP_HOST=0.0.0.0`) is unchanged — that controls binding *inside* the container's network namespace, which is correct for Docker's port-forwarder to reach the app.
+
+### What's new
+
+- **New env var: `ALLOWED_ORIGINS`** (comma-separated). Defaults to `http://localhost:<MCP_PORT>,http://127.0.0.1:<MCP_PORT>` — covers Claude Desktop / supergateway / Claude Code / curl from the host. Set `ALLOWED_ORIGINS=*` to disable the check entirely (use only when fronted by an auth proxy that already validates origins).
+- Origin allowlist is logged at startup so misconfiguration is visible. A `*` wildcard is logged as a `WARNING`.
+
+### Why it matters
+
+Before this release: a malicious page in any browser tab on the operator's machine could DNS-rebind its own domain to `127.0.0.1` and POST to `/mcp`, driving the entire fleet (Mist, Central, GreenLake, ClearPass, Apstra, Axis) without ever crossing the supergateway/Claude Desktop trust boundary. With `0.0.0.0:8000` exposure also active, the same attack worked from any host on the LAN.
+
+After this release: the published port answers only on loopback (eliminates LAN exposure), and the Origin allowlist blocks browser-driven cross-origin POSTs (eliminates DNS rebinding from tabs on the same machine). Defense in depth — both controls are applied.
+
+### How to verify after upgrade
+
+```bash
+docker compose up -d --force-recreate
+docker ps --format '{{.Names}}\t{{.Ports}}' | grep hpe-networking
+# Expect: 127.0.0.1:8000->8000/tcp   (no [::]:8000 line)
+
+# Allowed (no Origin) → 200/SSE
+curl -i -X POST http://127.0.0.1:8000/mcp \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'Content-Type: application/json' -d '{}'
+
+# Disallowed Origin → 403
+curl -i -X POST http://127.0.0.1:8000/mcp \
+  -H 'Origin: http://evil.example' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'Content-Type: application/json' -d '{}'
+```
+
+### Tests
+
+- 653 passing — no test changes; behavior unit-testable end-to-end via curl above.
+
 ## [2.3.0.8] - 2026-04-28
 
 **Fixes a content gap in `central-scope-audit`: when an alias has a placeholder default value (e.g. `1.1.1.1`, RFC-5737 documentation block) at Global, the audit was flagging it as REGRESSION without first checking whether the alias is *overridden* at consuming scopes (Site Collection / Site / Device Group / per-device via `Save as local profile`). In Aruba Central's two-layer alias model, a placeholder at the definition scope is the canonical pattern — what matters is whether each consumer (Static Routes, profiles, ACLs, etc.) has an override at scope-or-below. Caught in the wild when the audit flagged four `Default Gateway -*` aliases all defaulting to `1.1.1.1` at Global as REGRESSION without confirming whether the consuming static routes had per-site / per-device overrides.**
