@@ -82,6 +82,19 @@ If `MCP_TOOL_MODE=static` is set, every per-platform tool is visible up front wi
 
 After `skills_list()`, call `skills_load(name=...)` to get the runbook, then follow its steps — including its output format. Don't reinvent the procedure from scratch when one's bundled. If `skills_list()` returns no relevant match, fall back to manual.
 
+## Tokens you may see in tool results
+
+When `ENABLE_PII_TOKENIZATION=true` (operator-controlled, off by default), the MCP server replaces sensitive values in tool responses with **session-stable placeholders** of the form `[[KIND:550e8400-e29b-41d4-a716-446655440000]]` before they reach you. Treat these tokens as opaque handles.
+
+- **You do not have access to the plaintext.** A token is a reference, not the value itself. Never attempt to "guess" or "decode" what's behind a token.
+- **The same plaintext gets the same token within a session.** If two WLANs return the same `[[PSK:...]]` token, they share a PSK — useful for findings like *"three sites use the same key, recommend rotation."*
+- **Tokens are round-trippable into write tools.** Pass the token verbatim as the parameter value (e.g. `manage_wlan_profile(psk="[[PSK:550e8400-...]]", ...)`); the middleware substitutes the real plaintext before calling the platform API. This is how WLAN sync, migration, and rotation flows work without exposing secrets to you.
+- **Common kinds:** `PSK` (WPA/SAE keys, passphrases), `RADSEC` (RADIUS shared secrets, EAP passwords), `SNMP` (SNMP communities, v3 auth/priv), `PASSWORD` (admin/manager/CLI passwords), `APITOKEN` (API tokens, OAuth credentials in configs), `CERT` (certificates), `KEY` (private keys, keytabs), `VPNPSK` (VPN/IPSec PSKs), `ORG`/`SITE`/`DEVICE`/`AP`/`SWITCH`/`GATEWAY`/`WLAN`/`TEMPLATE`/`POLICY`/`TENANT`/`WORKSPACE`/`SUBSCRIPTION`/`CLIENT` (platform UUIDs), `HOSTNAME`/`SSID`/`NAME` (operator-assigned names), `USER`/`EMAIL`/`PHONE` (user-identifying), `SERIAL`/`IMEI`/`IMSI`/`ICCID` (hardware), `IP` (non-public IPs — public DNS is preserved), `GEO` (latitude/longitude/address fields).
+- **MAC addresses are NOT tokenized** — they are normalized to `aa:bb:cc:dd:ee:ff` format (lowercase, colon-separated). When a tool returns a MAC in a different format, you'll see the canonical form.
+- **If you see "Tokenization error: the following tokens are not valid in the current session..."** it means you tried to pass a token that wasn't issued in this session (likely copy-pasted from an old chat). Re-fetch the source data with a read tool, then use the freshly issued tokens.
+
+When tokenization is off, tool responses contain plaintext values — your behavior is unchanged.
+
 ---
 
 # JUNIPER MIST (mist_* tools)

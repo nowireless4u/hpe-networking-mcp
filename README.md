@@ -306,6 +306,23 @@ Add to your `.vscode/mcp.json` (create the file if it doesn't exist) or VS Code 
 
 ---
 
+## PII Tokenization (v2.3.1.0+)
+
+Tool responses are walked before reaching the AI:
+
+- **MAC normalization (always-on, no toggle)** — every MAC address in tool responses is rewritten to canonical `aa:bb:cc:dd:ee:ff` form (lowercase, colon-separated). Mist's API returns MACs in four different formats across endpoints; consistent format means the AI can correlate `aa:bb:cc:dd:ee:ff` to itself across audits.
+- **PII tokenization (opt-in via `ENABLE_PII_TOKENIZATION=true`)** — sensitive fields (PSKs, RADIUS secrets, certificates) and customer-identifying values (platform UUIDs, hostnames, emails, geographic data) are replaced with session-stable `[[KIND:uuid]]` tokens before reaching the AI. The AI can pass tokens back into write tools and the inbound side substitutes plaintext before the API call. Storage is in-memory only; the keymap is keyed by `Mcp-Session-Id` and never touches disk.
+
+**MACs are deliberately NOT tokenized.** They're observable to anyone in radio range (BSSID broadcast, client probe requests), so privacy-tokenizing them adds cost without security gain. The normalization step is still useful for consistency.
+
+**Round-trip works for every kind.** Same plaintext → same token within a session. WLAN sync, AOS 8 → AOS 10 migration, and mass PSK rotation all work because tokenization is round-trippable.
+
+**What the AI never sees in its context window:** WPA / SAE / WEP keys; RADIUS / RadSec / SNMP / admin / VPN secrets; API tokens; certificates and private keys; email addresses; embedded secrets in description/notes fields. **What it does see:** tokens for those values, MACs (normalized), public infrastructure IPs (Google DNS, Cloudflare, etc., preserved verbatim), and unchanged metric/enum/timestamp fields.
+
+Audit logging fires on every tokenize/detokenize event in `docker compose logs` — kind, token ID, value-hash (SHA-256 truncated), but never the plaintext.
+
+> **Limitations:** Mist ruleset only this release; Central / GreenLake / ClearPass / Apstra / Axis follow in the next minor. Anything the user pastes into the AI prompt is outside our threat model — that turn already has the literal in conversation context. The keymap dies on server restart; saved chat references to old tokens become unresolvable.
+
 ## Network Security
 
 The MCP HTTP transport ships with two layers of defense out of the box:
@@ -477,6 +494,8 @@ The retry logic detects transient failures in two patterns: response-dict (Mist/
 | `RETRY_MAX_ATTEMPTS` | `3` | Max retry attempts on transient failures (5xx reads, 429 reads+writes). Set to `1` to disable retry |
 | `RETRY_INITIAL_DELAY` | `1.0` | Initial retry backoff seconds (exponential: 1s, 2s, 4s) |
 | `RETRY_MAX_DELAY` | `60.0` | Cap on a single retry sleep (also caps `Retry-After` header values) |
+| `ENABLE_PII_TOKENIZATION` | `false` | Tokenize sensitive fields (PSKs, RADIUS secrets, hostnames, emails, etc.) in tool responses before they reach the AI. Round-trips: AI passes tokens back into write tools and the middleware substitutes plaintext. MAC normalization is always-on regardless of this toggle. See [PII Tokenization](#pii-tokenization-v2310) above. |
+| `PII_MAX_TOKENS_PER_SESSION` | `10000` | Soft cap on the per-session keymap size. Cap-hit logs a warning and falls through with plaintext rather than erroring out the call. |
 
 ---
 

@@ -192,19 +192,31 @@ def create_server(config: ServerConfig) -> FastMCP:
         ElicitationMiddleware,
     )
     from hpe_networking_mcp.middleware.null_strip import NullStripMiddleware
+    from hpe_networking_mcp.middleware.pii_tokenization import (
+        PIITokenizationMiddleware,
+    )
     from hpe_networking_mcp.middleware.retry import RetryMiddleware
     from hpe_networking_mcp.middleware.sandbox_error_catch import (
         SandboxErrorCatchMiddleware,
     )
     from hpe_networking_mcp.middleware.validation_catch import ValidationCatchMiddleware
+    from hpe_networking_mcp.redaction.token_store import TokenStore
+
+    # The token store is process-scoped (one TokenStore per FastMCP
+    # instance, with per-session keymaps inside). It is passed to the
+    # middleware so it survives across tool calls within a session.
+    token_store = TokenStore(max_entries_per_session=config.pii_max_tokens_per_session)
 
     # Middleware order (outermost → innermost):
-    #   NullStrip          — drop nulls before validation
-    #   ValidationCatch    — Pydantic ValidationError → readable string return
-    #   SandboxErrorCatch  — code-mode MontyRuntimeError on execute → string return
-    #   Elicitation        — write-tool confirmation gate
-    #   Retry              — transient failures retry transparently after elicitation
-    #                        has approved (re-tries don't re-prompt)
+    #   NullStrip           — drop nulls before validation
+    #   ValidationCatch     — Pydantic ValidationError → readable string return
+    #   SandboxErrorCatch   — code-mode MontyRuntimeError on execute → string return
+    #   PIITokenization     — detokenize inbound args / tokenize outbound results
+    #                         (always normalizes MACs even when toggle is off)
+    #   Elicitation         — write-tool confirmation gate; user sees real values
+    #                         post-detokenization, which is correct (the user is
+    #                         the trust boundary holder, not the AI)
+    #   Retry               — transient failures retry transparently after elicit
     mcp = FastMCP(
         name="HPE Networking MCP",
         instructions=_INSTRUCTIONS,
@@ -215,10 +227,16 @@ def create_server(config: ServerConfig) -> FastMCP:
             NullStripMiddleware(),
             ValidationCatchMiddleware(),
             SandboxErrorCatchMiddleware(),
+            PIITokenizationMiddleware(token_store, enabled=config.enable_pii_tokenization),
             ElicitationMiddleware(),
             RetryMiddleware(),
         ],
     )
+
+    # Stash the token store on the FastMCP instance so future tooling
+    # (e.g. an audit/reveal endpoint) can access it without going
+    # through the middleware.
+    mcp._hpe_token_store = token_store  # type: ignore[attr-defined]
 
     # Attach config for lifespan to access
     mcp._hpe_config = config  # type: ignore[attr-defined]

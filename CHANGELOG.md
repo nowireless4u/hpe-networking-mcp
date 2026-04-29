@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1.0] - 2026-04-29
+
+**Adds session-stable PII tokenization for tool responses + always-on MAC normalization. Sensitive fields (PSKs, RADIUS secrets, certificates) and customer-identifying values (platform UUIDs, hostnames, emails, geographic data) get replaced with `[[KIND:uuid]]` tokens before reaching the AI; the AI can pass tokens back into write tools and the inbound side substitutes plaintext before the API call. The mapping is held in process memory keyed by `Mcp-Session-Id` and never persisted to disk. Mist ruleset only this release; Central / GreenLake / ClearPass / Apstra / Axis follow in the next minor.**
+
+### What's new
+
+- **`src/hpe_networking_mcp/redaction/` package** — five modules covering rules, MAC normalization, the per-session token store, the bidirectional tokenizer, and the recursive walker. ~700 LOC of pure logic, no platform dependencies.
+- **`src/hpe_networking_mcp/middleware/pii_tokenization.py`** — bidirectional FastMCP middleware. Inbound: walks `arguments` for `[[KIND:uuid]]` tokens and substitutes plaintext from the session keymap before the call hits the platform. Unknown tokens (model referenced something from a stale session) cause the call to fail with a JSON-RPC error rather than passing literal bracket text downstream. Outbound: walks `ToolResult.structured_content` and JSON-shaped text content blocks, applying MAC normalization (always-on) and PII tokenization (when enabled).
+- **MAC normalization is default-on regardless of the tokenization toggle** — every MAC address in tool responses gets rewritten to canonical `aa:bb:cc:dd:ee:ff` form (lowercase, colon-separated). Mist's API can return MACs in four different formats across different endpoints; normalizing to one consistent shape lets the AI correlate `aa:bb:cc:dd:ee:ff` to itself across an audit. Per the design discussion, MACs are NOT tokenized — they're observable in radio space (BSSID broadcast, client probes), so privacy tokenization adds cost without security gain.
+- **PII tokenization is opt-in via `ENABLE_PII_TOKENIZATION=true`** for this minor; default flips to on in the next minor after the Mist ruleset has been validated against real audits.
+- **Tier 1 secrets (always tokenized when enabled):** `psk`, `passphrase`, `wpa3_psk`, `sae_password`, `ppsk`, `wep_key`; `shared_secret`, `radius_secret`, `radsec_secret`, `eap_password`; `community`, `auth_password`, `priv_password` (SNMP); `admin_password`, `enable_secret`, `cli_password`; `pre_shared_key`, `ipsec_psk`, `vpn_psk`; `api_token`, `client_secret`, `bearer_token`, `access_token`, `refresh_token`, `webhook_secret`; `private_key`, `cert`, `certificate`, `client_cert`, `server_cert`, `ca_cert`, `chain`, `pkcs12`, `pem`, `kerberos_keytab`. Plus content-fingerprint detection on `-----BEGIN ` PEM blocks anywhere.
+- **Tier 2 identifiers:** platform UUIDs (`org_id`, `site_id`, `device_id`, `wlan_id`, `client_id`, etc.); operator-assigned names (`device_name`, `ap_name`, `hostname`, `fqdn`, `ssid`, `vlan_name`); user-identifying fields (`username`, `email`, `first_name`, `last_name`, `phone`); hardware identifiers (`serial`, `imei`, `imsi`, `iccid`); geographic data (`latitude`, `longitude`, `address`, `street`, `city`, `state`, `zip`, `country`). IPs in `description`/`notes`/`comment`/`remarks`/`details` free-text fields are scanned and tokenized in place (substring substitution, surrounding text preserved). Public DNS / loopback / RFC documentation IPs are exempt from tokenization.
+- **Token format: `[[KIND:550e8400-e29b-41d4-a716-446655440000]]`** — UUID4 with dashes, lowercase. 128 bits of entropy means collision probability is effectively zero across any session size. Same plaintext gets the same token within a session ("same value, same token" — enables sync, migration, and rotation workflows that depend on equality).
+- **Storage:** in-memory `TokenStore` on the FastMCP instance. Per-session `SessionKeymap` keyed by `Mcp-Session-Id`; `get_or_create()` allocates lazily. Soft cap of 10K tokens per session (configurable via `PII_MAX_TOKENS_PER_SESSION`); cap-hit logs a warning and falls through with plaintext rather than erroring out the call. **No disk persistence** — keymap dies with the process. Saved chat references to `[[KIND:uuid]]` from a dead session become unresolvable on resurrection; the operator re-runs the workflow that produced them.
+- **Audit logging:** every tokenization and detokenization event logs to stderr (`docker compose logs`) with tool name, parameter name, kind, token ID, truncated value-hash (SHA-256, first 16 hex), session prefix. **Plaintext is never logged.** The value-hash lets an operator confirm "the same value tokenized to the same token" without revealing the value.
+
+### Why it matters
+
+Pre-2.3.1.0: a Mist scope-audit response contains every WLAN's PSK, RADIUS shared secrets, admin passwords, and operator-assigned names in cleartext. The AI ingests all of it as conversation context and the AI provider sees it on every prompt. The `aos-migration-readiness` skill explicitly called this out as a known PoC limitation.
+
+Post-2.3.1.0: with `ENABLE_PII_TOKENIZATION=true`, the AI sees `[[PSK:550e8400-...]]` instead of the literal PSK, can pass that token back into `mist_create_wlan` to clone the WLAN to another site, and the middleware substitutes the real PSK at the inbound boundary. WLAN sync, AOS 8 → AOS 10 migration, and mass PSK rotation all keep working because tokenization is round-trippable. The AI's conversation context window never holds a literal secret.
+
+Compose well with code mode (`MCP_TOOL_MODE=code`): in the sandbox, the AI can call `secrets.token_urlsafe(20)` to generate a fresh PSK, pass it to `mist_create_wlan`, and only see the tokenized form in the `return` value — the literal PSK lives in the sandbox's local scope and never enters the AI's context window.
+
+### Configuration
+
+| Env var | Default | Description |
+|---|---|---|
+| `ENABLE_PII_TOKENIZATION` | `false` | Master toggle. Off this release; flips to `true` in the next minor after ruleset validation. |
+| `PII_MAX_TOKENS_PER_SESSION` | `10000` | Soft cap on keymap size per session. Cap-hit returns plaintext rather than erroring. |
+
+### Tests
+
+- 712 passing (was 653) — 59 new tests covering MAC normalization, field classification, credential-shape heuristics, token-store lifecycle, tokenizer round-trip, walker recursion, free-text scan, public-IP allowlist, and a realistic Mist WLAN fixture.
+
+### Known limitations
+
+- **Mist ruleset only.** Central / GreenLake / ClearPass / Apstra / Axis tools work but their platform-specific field names (e.g. Central's `radius_servers[*].secret` shape, ClearPass's certificate model) aren't fully covered. Next minor.
+- **Paste-into-chat is still exposed.** A user typing `psk=Welcome2024` into the AI prompt has the literal PSK in their context immediately — outside our threat model. We tokenize the API echo back when the response comes through, so subsequent references stop leaking, but the originating turn does. Documented behavior.
+- **No reveal mechanism.** There is no tool to retrieve the plaintext for a token. Operators see the audit log if they need to confirm what a token references; the platform UI is the source of truth for the actual values.
+
 ## [2.3.0.9] - 2026-04-29
 
 **Closes the MCP Streamable HTTP spec's Origin-validation requirement (DNS rebinding defense) and tightens the host port publish to loopback by default. Both changes are transport-layer hardening; no tools or APIs are affected.**

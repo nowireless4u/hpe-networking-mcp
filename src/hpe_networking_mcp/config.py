@@ -123,6 +123,17 @@ class ServerConfig:
     #             to opt out.
     tool_mode: str = "dynamic"
 
+    # PII tokenization (v2.3.1.0). When enabled, sensitive fields (PSKs,
+    # RADIUS secrets, certificates) and identifiers (UUIDs, hostnames,
+    # emails, etc.) in tool responses are replaced with session-stable
+    # ``[[KIND:uuid]]`` tokens before reaching the AI. The AI can pass
+    # the tokens back into write tools; the inbound side substitutes
+    # plaintext before the API call. MAC address normalization is
+    # always-on regardless of this toggle (no security impact, just
+    # consistency). Off by default this release; flip default in PR 2.
+    enable_pii_tokenization: bool = False
+    pii_max_tokens_per_session: int = 10_000
+
     # Platform secrets — None means platform is disabled
     mist: MistSecrets | None = None
     central: CentralSecrets | None = None
@@ -387,6 +398,18 @@ def load_config() -> ServerConfig:
     else:
         allowed_origins = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
 
+    # PII tokenization (v2.3.1.0). MAC normalization runs regardless;
+    # full tokenization is opt-in via ENABLE_PII_TOKENIZATION while the
+    # ruleset matures.
+    enable_pii_tokenization = os.getenv("ENABLE_PII_TOKENIZATION", "false").lower() in _truthy
+    try:
+        pii_max_tokens = int(os.getenv("PII_MAX_TOKENS_PER_SESSION", "10000"))
+    except ValueError:
+        logger.warning(
+            "Invalid PII_MAX_TOKENS_PER_SESSION; defaulting to 10000",
+        )
+        pii_max_tokens = 10_000
+
     # Load platform credentials from Docker secrets
     mist = _load_mist()
     central = _load_central()
@@ -409,6 +432,8 @@ def load_config() -> ServerConfig:
         log_file=log_file,
         tool_mode=tool_mode,
         allowed_origins=allowed_origins,
+        enable_pii_tokenization=enable_pii_tokenization,
+        pii_max_tokens_per_session=pii_max_tokens,
         mist=mist,
         central=central,
         greenlake=greenlake,
@@ -430,4 +455,11 @@ def load_config() -> ServerConfig:
         logger.warning("Origin validation: DISABLED (ALLOWED_ORIGINS contains '*')")
     else:
         logger.info("Origin validation: allowlist = {}", allowed_origins)
+    if enable_pii_tokenization:
+        logger.info(
+            "PII tokenization: ENABLED (max {} tokens/session, MAC normalization always-on)",
+            pii_max_tokens,
+        )
+    else:
+        logger.info("PII tokenization: disabled (MAC normalization still applied)")
     return config
