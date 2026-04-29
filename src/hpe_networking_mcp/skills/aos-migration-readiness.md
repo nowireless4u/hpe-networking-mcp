@@ -361,6 +361,70 @@ If no APs have a non-DHCP `ip_mode`, emit a single INFO confirmation: "AP databa
 
 Run these in parallel with the parse stage. They use only Central / ClearPass / GreenLake tools — no operator data needed. Each maps to specific MCP tools in the catalog.
 
+#### AOS8 live-mode sub-path — Central enrichment (ENRICH-01..04, used when Stage -1 announced "AOS8 API mode")
+
+When AOS8 live mode is active, the four Central enrichment checks (AP count gap, per-model AOS10 firmware recommendations, SSID conflicts, role/VLAN conflicts) are evaluated using AOS8 Stage 1 batch data already in context plus a small set of Central tool calls — no operator paste, no re-fetching of AOS8 batches. After this sub-path, continue with the A1–A13 Central API checks below; A4 / A7 / A8 / A9 are superseded by this sub-path's findings when live mode is active.
+
+Each finding below uses the format **Severity — Description. (source: `tool_call(args)`, Batch N where applicable)**.
+
+##### ENRICH-01 — AP count gap (INFO)
+
+From the Batch 2 `aos8_get_ap_database()` response already in context, count total APs (call this `X`). Then call `central_get_aps()` with no filter and count the response (call this `Y`). Compute `Z = X - Y` (Z may be negative if Central reports more — surface that as-is). Emit one finding:
+
+- **INFO** — Source AP count: `X`. Central onboarded: `Y`. Gap: `Z` not yet onboarded. (source: `aos8_get_ap_database()` Batch 2 + `central_get_aps()`)
+
+*If `central_get_aps()` fails:* AP count gap (ENRICH-01) cannot complete from live data. Fall back to A4 in the table below.
+*If Batch 2 was unavailable:* AOS8 AP count is unknown — operator paste of `show ap database long` required for ENRICH-01.
+
+##### ENRICH-02 — Per-model AOS10 firmware recommendation (INFO)
+
+Make **one call**, fleet-wide, no filter: `central_recommend_firmware()`. Central returns a fleet-wide recommendation list already grouped by device model — do NOT iterate per model. Extract the distinct AP `model` values from the Batch 2 `aos8_get_ap_database()` response, then for each distinct model walk the `central_recommend_firmware()` response and pull the recommended AOS10 firmware version for that model. Emit a compact two-column markdown table inline:
+
+| AP Model | Recommended AOS10 Firmware |
+|----------|----------------------------|
+| `<model>` | `<version-from-central>` |
+| `<model>` | `<version-from-central>` |
+
+(source: distinct models from `aos8_get_ap_database()` Batch 2; recommendations from `central_recommend_firmware()`)
+
+If Central's recommendation list omits a model present in the AOS8 fleet, emit one row per missing model with the value `no recommendation returned — verify with Aruba support`. Restrict the table to AP models only — controller firmware is owned by CUTOVER-02 in Stage 5, not by this rule.
+
+*If `central_recommend_firmware()` fails:* per-model firmware recommendation (ENRICH-02) cannot complete. Fall back to A13 in the table below.
+*If Batch 2 was unavailable:* distinct AP models are unknown — operator paste of `show ap database long` required for ENRICH-02.
+
+##### ENRICH-03 — SSID conflict detection (REGRESSION, one finding per conflict)
+
+From the Batch 4 `aos8_get_bss_table()` response already in context, extract the distinct AOS8 SSID names. Call `central_get_wlan_profiles()` with no `ssid` argument to retrieve the full Central WLAN profile list. For every AOS8 SSID name that already appears as a profile in the Central response, emit ONE finding (do not collapse multiple conflicts into a single bullet):
+
+- **REGRESSION** — SSID `"<ssid_name>"` already exists in Central (profile present in `central_get_wlan_profiles()` response). A conflicting SSID name in Central blocks a clean migration. (source: `aos8_get_bss_table()` Batch 4 + `central_get_wlan_profiles()`)
+
+If no AOS8 SSID names match any Central WLAN profile, emit a single INFO bullet: `INFO — No SSID conflicts detected against existing Central WLAN profiles. (source: aos8_get_bss_table() Batch 4 + central_get_wlan_profiles())`.
+
+*If `central_get_wlan_profiles()` fails:* SSID conflict check (ENRICH-03) cannot complete. Fall back to A7 in the table below.
+*If Batch 4 was unavailable:* AOS8 SSID list is unknown — operator paste of `show ap essid` required for ENRICH-03.
+
+##### ENRICH-04 — Role and VLAN conflict detection (REGRESSION, one finding per conflict)
+
+From the Batch 1 `aos8_get_effective_config()` response already in context, extract:
+- distinct user-role names (from `user_role` / `aaa.user_role` objects)
+- distinct named VLAN IDs (from `vlan` / `interface vlan` objects)
+
+Call `central_get_roles()` with no `name` argument and `central_get_named_vlans()` with no `name` argument to retrieve the full Central role list and VLAN list. For every AOS8 role name that already appears in the Central role response, emit ONE finding:
+
+- **REGRESSION** — Role `"<role_name>"` already exists in Central. A conflicting role name in Central blocks a clean migration. (source: `aos8_get_effective_config()` Batch 1 + `central_get_roles()`)
+
+For every AOS8 VLAN ID that already appears as a named VLAN in the Central response, emit ONE finding:
+
+- **REGRESSION** — Named VLAN ID `<vlan_id>` already mapped in Central (existing name: `"<central-vlan-name>"`). A conflicting VLAN ID in Central blocks a clean migration. (source: `aos8_get_effective_config()` Batch 1 + `central_get_named_vlans()`)
+
+If no role names or VLAN IDs collide, emit a single INFO bullet: `INFO — No role or VLAN conflicts detected against existing Central roles / named VLANs. (source: aos8_get_effective_config() Batch 1 + central_get_roles() + central_get_named_vlans())`.
+
+*If `central_get_roles()` fails:* role conflict check cannot complete. Fall back to A8 in the table below.
+*If `central_get_named_vlans()` fails:* VLAN conflict check cannot complete. Fall back to A9 in the table below.
+*If Batch 1 was unavailable:* AOS8 role names / VLAN IDs are unknown — operator paste of `show configuration effective detail` required for ENRICH-04.
+
+After this sub-path, continue with the A1–A13 table below for any checks not superseded by ENRICH-01..04.
+
 | # | Check | Tool | Severity if failing |
 |---|---|---|---|
 | A1 | Central reachability | `health(platform="central")` | **REGRESSION** |
