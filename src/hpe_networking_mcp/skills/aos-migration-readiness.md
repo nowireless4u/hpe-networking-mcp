@@ -20,7 +20,7 @@ description: |
   channel-partner-only discovery + analysis tool).
 platforms: [central]
 tags: [central, migration, aos8, aos6, iap, aos10, readiness, audit, vsg]
-tools: [health, central_get_scope_tree, central_get_devices, central_get_aps, central_get_sites, central_get_site_name_id_mapping, central_recommend_firmware, central_get_config_assignments, central_get_server_groups, central_get_wlan_profiles, central_get_roles, central_get_named_vlans, clearpass_get_network_devices, clearpass_get_device_groups, clearpass_get_server_certificates, clearpass_get_local_users, greenlake_get_subscriptions, greenlake_get_workspace, greenlake_get_devices]
+tools: [health, central_get_scope_tree, central_get_devices, central_get_aps, central_get_sites, central_get_site_name_id_mapping, central_recommend_firmware, central_get_config_assignments, central_get_server_groups, central_get_wlan_profiles, central_get_roles, central_get_named_vlans, clearpass_get_network_devices, clearpass_get_device_groups, clearpass_get_server_certificates, clearpass_get_local_users, greenlake_get_subscriptions, greenlake_get_workspace, greenlake_get_devices, aos8_get_md_hierarchy, aos8_get_effective_config, aos8_get_ap_database, aos8_get_cluster_state, aos8_show_command, aos8_get_clients, aos8_get_bss_table, aos8_get_active_aps, aos8_get_ap_wired_ports]
 ---
 
 # AOS 6 / AOS 8 / Instant AP → AOS 10 migration readiness audit (PoC)
@@ -50,6 +50,27 @@ This skill expects the operator to **paste CLI output directly into chat**. That
 The skill's job here is to prove the in-chat workflow produces credible readiness findings on a representative dataset; sanitization is a separate problem.
 
 ## Procedure — 6 stages, ~50 granular checks
+
+### Stage -1 — Session-start AOS8 detection (DETECT-01)
+
+Before beginning the Stage 0 operator interview, call `health()` once and
+inspect the per-platform status.
+
+**If `aos8.status == "ok"`** (AOS8 platform is configured and reachable):
+> Announce to the operator, verbatim:
+> **"AOS8 API mode — live data. Stage 1 collection will run via API; no CLI paste required for the AOS8 source path."**
+>
+> Then proceed to Stage 0. The Stage 1 AOS8 section will use the live-mode sub-path (API calls in four grouped batches — COLLECT-01..04). The paste table is not used unless an individual API batch fails.
+
+**Otherwise** (AOS8 not configured, status is `unavailable` / `degraded` /
+not present, OR no AOS8 secrets are mounted):
+> Proceed silently to Stage 0. Make no announcement. The paste-driven flow
+> is unchanged for AOS6 sessions, IAP sessions, and AOS8 sessions where
+> the platform is unreachable. Stage 1 will use the paste-fallback
+> sub-path for the chosen source.
+
+This detection step never blocks the audit — failures and unreachables
+silently fall through to the existing paste flow.
 
 ### Stage 0 — Operator interview (mandatory before data collection)
 
