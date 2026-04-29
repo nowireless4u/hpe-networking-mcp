@@ -105,15 +105,59 @@ class TestFieldClassification:
         assert cls == FieldClassification.TOKENIZE_SECRET
         assert kind == TokenKind.PSK
 
-    def test_ssid_classified_as_identifier(self) -> None:
-        cls, kind = classify_field("ssid", "Corp-Wifi")
-        assert cls == FieldClassification.TOKENIZE_IDENTIFIER
-        assert kind == TokenKind.SSID
+    def test_ssid_passes_through(self) -> None:
+        # SSIDs are broadcast in beacon frames — observable to anyone in
+        # radio range. Tokenizing them adds context-window cost without
+        # security gain. Refined in v2.3.1.1.
+        cls, _ = classify_field("ssid", "Corp-Wifi")
+        assert cls == FieldClassification.SKIP
 
-    def test_org_id_classified_as_org(self) -> None:
-        cls, kind = classify_field("org_id", "abc-123")
+    def test_essid_passes_through(self) -> None:
+        cls, _ = classify_field("essid", "Corp-Wifi")
+        assert cls == FieldClassification.SKIP
+
+    def test_platform_uuid_ids_pass_through(self) -> None:
+        # Platform UUIDs (org_id, site_id, device_id, ...) are already
+        # opaque random UUIDs — replacing them with our own UUIDs adds
+        # no privacy. Refined in v2.3.1.1.
+        for field in (
+            "org_id",
+            "site_id",
+            "device_id",
+            "ap_id",
+            "switch_id",
+            "wlan_id",
+            "client_id",
+            "template_id",
+            "tenant_id",
+            "workspace_id",
+            "subscription_id",
+        ):
+            cls, _ = classify_field(field, "abc-123")
+            assert cls == FieldClassification.SKIP, field
+
+    def test_geographic_fields_pass_through(self) -> None:
+        # Business addresses are typically published on the company's
+        # website. The privacy gain doesn't justify the audit-utility
+        # loss. Refined in v2.3.1.1.
+        for field in (
+            "address",
+            "city",
+            "state",
+            "zip",
+            "country",
+            "latitude",
+            "longitude",
+            "room",
+            "building",
+        ):
+            cls, _ = classify_field(field, "anything")
+            assert cls == FieldClassification.SKIP, field
+
+    def test_hostname_still_tokenized(self) -> None:
+        cls, kind = classify_field("hostname", "production-db-01.corp.example.com")
         assert cls == FieldClassification.TOKENIZE_IDENTIFIER
-        assert kind == TokenKind.ORG
+        assert kind == TokenKind.HOSTNAME
 
     def test_unknown_field_skipped(self) -> None:
         cls, _ = classify_field("status", "online")
@@ -407,10 +451,12 @@ class TestDetokenizeArguments:
         assert "[[PSK:" not in new_args["description"]
 
     def test_nested_args(self, tokenizer: Tokenizer) -> None:
-        token = tokenizer.tokenize(TokenKind.SITE, "abc-123-uuid")
-        args = {"filters": {"site_id": token}}
+        # Use HOSTNAME as the kind — SITE was retired in v2.3.1.1 since
+        # site IDs are already opaque UUIDs. Hostnames stay tokenized.
+        token = tokenizer.tokenize(TokenKind.HOSTNAME, "production-db-01")
+        args = {"filters": {"hostname": token}}
         new_args, unknown = detokenize_arguments(args, tokenizer)
-        assert new_args["filters"]["site_id"] == "abc-123-uuid"
+        assert new_args["filters"]["hostname"] == "production-db-01"
         assert unknown == []
 
 
@@ -465,11 +511,14 @@ class TestRealisticMistFixture:
         # Different secrets -> different tokens
         assert result["radius_servers"][0]["shared_secret"] != result["radius_servers"][1]["shared_secret"]
 
-        # Tier 2 identifiers — tokenized
-        assert result["site_id"] != "11111111-1111-1111-1111-bbbbbbbbbbbb"
-        assert TOKEN_RE.fullmatch(result["site_id"]).group(1) == "SITE"
-        assert result["ssid"] != "Corp-Wifi"
-        assert TOKEN_RE.fullmatch(result["ssid"]).group(1) == "SSID"
+        # Platform UUIDs — pass through (already opaque, refined in v2.3.1.1)
+        assert result["site_id"] == "11111111-1111-1111-1111-bbbbbbbbbbbb"
+        assert result["id"] == "00000000-0000-0000-0000-aaaaaaaaaaaa"
+
+        # SSID — passes through (broadcast, refined in v2.3.1.1)
+        assert result["ssid"] == "Corp-Wifi"
+
+        # Hostnames — still tokenized (real customer naming pattern)
         assert result["device_name"] != "AP-Floor3-Conf"
         assert TOKEN_RE.fullmatch(result["device_name"]).group(1) == "HOSTNAME"
 
@@ -491,7 +540,8 @@ class TestRealisticMistFixture:
     def test_round_trip_secrets(self, tokenizer: Tokenizer, mist_wlan_response: dict) -> None:
         tokenized = tokenize_response(mist_wlan_response, tokenizer)
         psk_token = tokenized["auth"]["psk"]
-        # Now imagine the AI passes that token back to a write tool
+        # Now imagine the AI passes that token back to a write tool.
+        # site_id is now passed through verbatim (no detokenization needed).
         outbound_args = {"site_id": tokenized["site_id"], "psk": psk_token}
         detokenized, unknown = detokenize_arguments(outbound_args, tokenizer)
         assert detokenized["psk"] == "OurOfficeWifi2024!"

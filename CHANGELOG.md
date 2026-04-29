@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1.1] - 2026-04-29
+
+**Refines the v2.3.1.0 PII tokenization ruleset based on first-audit feedback. Stops tokenizing values that were either (a) already opaque (platform UUIDs), (b) publicly observable (SSIDs, broadcast in beacons), or (c) typically findable on the company's website (street addresses, geographic data). The original v2.3.1.0 ruleset over-tokenized — making audit output noisier without adding meaningful privacy. No protocol or API change; existing PSK/RADSEC/cert/hostname/email tokenization continues unchanged.**
+
+### What changed
+
+Removed from `TOKENIZED_IDENTIFIER_FIELDS` in `redaction/rules.py`:
+
+- **SSIDs / ESSIDs.** `ssid`, `essid`. Broadcast in beacon frames — observable to anyone in radio range. Same threat-model logic that already applied to BSSIDs and client MACs.
+- **All platform UUID `*_id` fields.** `org_id`, `msp_id`, `site_id`, `siteid`, `device_id`, `ap_id`, `switch_id`, `gateway_id`, `mxedge_id`, `wlan_id`, `wxlan_id`, `wxtag_id`, `wxtunnel_id`, `wxrule_id`, `wxlan_tunnel_id`, `client_id`, `mobile_id`, `mac_id`, `template_id`, `assignment_id`, `policy_id`, `psk_id`, `tenant_id`, `workspace_id`, `subscription_id`. Mist's API uniformly returns these as random UUIDs which are already opaque; replacing them with our own UUIDs adds no privacy and makes AI audit narration harder to follow.
+- **Geographic fields.** `address`, `street`, `city`, `state`, `zip`, `postal_code`, `country`, `room`, `floor`, `building`, `latitude`, `longitude`. Business addresses are typically public on the company's website. Removing `state` also closes a latent false-positive vector — the field name commonly means device/connection state in network APIs and was at risk of being tokenized in those contexts too.
+
+Removed from `TokenKind` (dead code after the field-mapping changes):
+
+- `SSID`, `ORG`, `SITE`, `DEVICE`, `AP`, `SWITCH`, `GATEWAY`, `WLAN`, `TEMPLATE`, `POLICY`, `TENANT`, `WORKSPACE`, `SUBSCRIPTION`, `CLIENT`, `GEO`
+
+### Still tokenized (unchanged)
+
+- **Tier 1 secrets** — every WPA/SAE/WEP key, RADIUS/RadSec/SNMP/admin/VPN/API token, certificate, private key, keytab.
+- **Hostnames + operator-assigned names** — `device_name`, `ap_name`, `hostname`, `fqdn`, `site_name`, `org_name`, `vlan_name`, `subnet_name`. These reveal customer infrastructure naming patterns even though they may show up in DNS.
+- **User-identifying** — `username`, `user`, `login`, `email`, `first_name`, `last_name`, `full_name`, `display_name`, `phone`, `phone_number`, `mobile`.
+- **Hardware identifiers** — `serial`, `serial_number`, `sn`, `imei`, `imsi`, `iccid`. Tie back to purchase records.
+- **Internal IPs** — RFC1918 and other non-public IPs in the free-text scan. Public DNS / loopback / RFC documentation IPs preserved by the existing allowlist.
+- **MAC normalization** — always-on, all formats canonicalized to `aa:bb:cc:dd:ee:ff`.
+
+### Why
+
+The first real audit run (after v2.3.1.0 shipped) flagged two issues:
+
+1. **AI confusion with opaque-on-opaque substitution.** When the AI ingests `org_id: "[[ORG:550e8400-...]]"` instead of `org_id: "eec497e7-f27a-..."`, it has the same information content (an opaque identifier) but pays the context-window cost twice and has to reason about a token shape it didn't see in training. Net negative.
+2. **SSIDs are publicly broadcast.** The principle we agreed on for MACs ("don't tokenize what's observable in radio space") wasn't applied consistently — SSIDs slipped into the original ruleset. Same logic applies.
+
+### Tests
+
+- 715 passing (was 712) — net +3: removed two tests for retired enum behavior, added five new tests asserting passthrough for SSID, every platform `*_id` field, geographic fields, and confirming hostnames are still tokenized.
+
+### Cross-platform note (deferred to next minor)
+
+Mist's IDs are uniformly UUIDs, so dropping `*_id` mappings is correct for Mist. Central, GreenLake, ClearPass, and Apstra IDs may not all be UUIDs (GreenLake `subscription_id` shapes vary, Apstra has slug-style IDs in places, ClearPass uses integer IDs). When those rulesets are added in the next minor, we'll add either a UUID-shape check or per-platform mappings — to be decided then.
+
 ## [2.3.1.0] - 2026-04-29
 
 **Adds session-stable PII tokenization for tool responses + always-on MAC normalization. Sensitive fields (PSKs, RADIUS secrets, certificates) and customer-identifying values (platform UUIDs, hostnames, emails, geographic data) get replaced with `[[KIND:uuid]]` tokens before reaching the AI; the AI can pass tokens back into write tools and the inbound side substitutes plaintext before the API call. The mapping is held in process memory keyed by `Mcp-Session-Id` and never persisted to disk. Mist ruleset only this release; Central / GreenLake / ClearPass / Apstra / Axis follow in the next minor.**
