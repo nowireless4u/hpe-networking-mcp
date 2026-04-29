@@ -311,13 +311,18 @@ Add to your `.vscode/mcp.json` (create the file if it doesn't exist) or VS Code 
 Tool responses are walked before reaching the AI:
 
 - **MAC normalization (always-on, no toggle)** — every MAC address in tool responses is rewritten to canonical `aa:bb:cc:dd:ee:ff` form (lowercase, colon-separated). Mist's API returns MACs in four different formats across endpoints; consistent format means the AI can correlate `aa:bb:cc:dd:ee:ff` to itself across audits.
-- **PII tokenization (opt-in via `ENABLE_PII_TOKENIZATION=true`)** — sensitive fields (PSKs, RADIUS secrets, certificates) and customer-identifying values (platform UUIDs, hostnames, emails, geographic data) are replaced with session-stable `[[KIND:uuid]]` tokens before reaching the AI. The AI can pass tokens back into write tools and the inbound side substitutes plaintext before the API call. Storage is in-memory only; the keymap is keyed by `Mcp-Session-Id` and never touches disk.
+- **PII tokenization (opt-in via `ENABLE_PII_TOKENIZATION=true`)** — sensitive fields (PSKs, RADIUS secrets, certificates) and customer-identifying values (hostnames, FQDNs, emails, usernames, hardware serials) are replaced with session-stable `[[KIND:uuid]]` tokens before reaching the AI. The AI can pass tokens back into write tools and the inbound side substitutes plaintext before the API call. Storage is in-memory only; the keymap is keyed by `Mcp-Session-Id` and never touches disk.
 
-**MACs are deliberately NOT tokenized.** They're observable to anyone in radio range (BSSID broadcast, client probe requests), so privacy-tokenizing them adds cost without security gain. The normalization step is still useful for consistency.
+**Deliberately NOT tokenized:**
+- **MAC addresses** — observable to anyone in radio range (BSSID broadcast, client probe requests). Normalized only.
+- **SSIDs / ESSIDs** — broadcast in beacon frames (refined in v2.3.1.1).
+- **Platform UUIDs** like `org_id`, `site_id`, `device_id`, `template_id` — already opaque random identifiers in Mist's API; replacing one UUID with another adds no privacy (refined in v2.3.1.1).
+- **Geographic data** — `address`, `city`, `state`, `zip`, `latitude`, `longitude`, `room`, `building` — typically findable on the company's website (refined in v2.3.1.1).
+- **Public infrastructure IPs** — Google DNS, Cloudflare, Quad9, OpenDNS, loopback, RFC documentation ranges. Preserved verbatim via the public-IP allowlist.
 
 **Round-trip works for every kind.** Same plaintext → same token within a session. WLAN sync, AOS 8 → AOS 10 migration, and mass PSK rotation all work because tokenization is round-trippable.
 
-**What the AI never sees in its context window:** WPA / SAE / WEP keys; RADIUS / RadSec / SNMP / admin / VPN secrets; API tokens; certificates and private keys; email addresses; embedded secrets in description/notes fields. **What it does see:** tokens for those values, MACs (normalized), public infrastructure IPs (Google DNS, Cloudflare, etc., preserved verbatim), and unchanged metric/enum/timestamp fields.
+**What the AI never sees in its context window:** WPA / SAE / WEP keys; RADIUS / RadSec / SNMP / admin / VPN secrets; API tokens; certificates and private keys; hostnames / FQDNs / device names; email addresses; usernames and personal names; phone numbers; hardware serial numbers / IMEI / IMSI / ICCID; internal IPs; embedded secrets in description/notes fields. **What it does see:** tokens for those values, MACs (normalized), SSIDs, platform UUIDs, geographic data, public infrastructure IPs, and unchanged metric/enum/timestamp fields.
 
 Audit logging fires on every tokenize/detokenize event in `docker compose logs` — kind, token ID, value-hash (SHA-256 truncated), but never the plaintext.
 

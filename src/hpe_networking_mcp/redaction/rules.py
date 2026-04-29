@@ -7,17 +7,31 @@ name. The walker (``walker.py``) calls ``classify_field()`` on each
 * **SKIP**: leave the value alone (default for unknown fields).
 * **TOKENIZE_SECRET**: this is a credential; tokenize as one of the
   secret kinds (``PSK``, ``RADSEC``, ``SNMP_COMMUNITY``, etc.).
-* **TOKENIZE_IDENTIFIER**: this is a customer-identifying value; tokenize
-  as one of the identifier kinds (``SITE``, ``HOSTNAME``, ``EMAIL``,
-  etc.). MACs are not in this set — they are *normalized* by the MAC
-  module, not tokenized.
+* **TOKENIZE_IDENTIFIER**: this is a customer-identifying value;
+  tokenize as one of the identifier kinds (``HOSTNAME``, ``EMAIL``,
+  ``USER``, ``SERIAL``, ``IP``, etc.).
 * **SCAN_FREE_TEXT**: descriptive text field that operators sometimes
   paste secrets/identifiers into; the walker runs the regex sweep over
   the value's contents.
 
-Per the v2.3.0.10 design, MACs are never tokenized (just normalized) and
-the public-IP allowlist exempts well-known DNS / NTP / loopback /
-documentation IPs from tokenization.
+The "don't tokenize" carve-outs (refined in v2.3.1.1):
+
+* **MACs** — never tokenized, just normalized to ``aa:bb:cc:dd:ee:ff``.
+  Observable to anyone in radio range.
+* **SSIDs / ESSIDs** — never tokenized. Broadcast in beacon frames.
+* **Platform UUIDs** (``org_id``, ``site_id``, ``device_id``,
+  ``template_id``, etc.) — never tokenized for Mist. Mist's API
+  uniformly returns these as UUIDs, which are already opaque; replacing
+  one UUID with another adds no privacy and just adds context-window
+  noise + AI confusion.
+* **Public infrastructure IPs** (Google DNS, Cloudflare, loopback, RFC
+  documentation ranges) — preserved verbatim via the public-IP
+  allowlist below. Internal RFC1918 IPs are still tokenized.
+* **Geographic fields** (``address``, ``city``, ``state``, ``zip``,
+  ``latitude``, ``longitude``, ``room``, ``building``, ...) — never
+  tokenized. Business addresses are typically published on the
+  company's website; the privacy gain doesn't justify the audit-utility
+  loss.
 """
 
 from __future__ import annotations
@@ -45,21 +59,12 @@ class TokenKind(StrEnum):
     PRIVATE_KEY = "KEY"  # private keys (PEM blocks), keytabs
 
     # --- Identifiers (Tier 2) ---
-    ORG = "ORG"
-    SITE = "SITE"
-    DEVICE = "DEVICE"
-    AP = "AP"
-    SWITCH = "SWITCH"
-    GATEWAY = "GATEWAY"
-    WLAN = "WLAN"
-    TEMPLATE = "TEMPLATE"
-    POLICY = "POLICY"
-    TENANT = "TENANT"
-    WORKSPACE = "WORKSPACE"
-    SUBSCRIPTION = "SUBSCRIPTION"
-    CLIENT = "CLIENT"
+    # Platform UUIDs (org_id, site_id, device_id, ...) are NOT tokenized.
+    # Per the v2.3.1.1 design discussion, replacing an already-opaque UUID
+    # with another opaque UUID adds no privacy and just adds noise. Same
+    # for SSIDs (broadcast in beacons) and physical addresses (typically
+    # public on company web pages).
     HOSTNAME = "HOSTNAME"
-    SSID = "SSID"
     USER = "USER"
     EMAIL = "EMAIL"
     PHONE = "PHONE"
@@ -68,8 +73,7 @@ class TokenKind(StrEnum):
     IMSI = "IMSI"
     ICCID = "ICCID"
     IP = "IP"
-    GEO = "GEO"  # latitude/longitude/address fields
-    NAME = "NAME"  # generic operator-assigned name (vlan_name, subnet_name, room, etc.)
+    NAME = "NAME"  # generic operator-assigned name (vlan_name, subnet_name, etc.)
 
 
 class FieldClassification(StrEnum):
@@ -171,39 +175,15 @@ GENERIC_CREDENTIAL_FIELD_NAMES: dict[str, TokenKind] = {
 # ---------------------------------------------------------------------------
 
 TOKENIZED_IDENTIFIER_FIELDS: dict[str, TokenKind] = {
-    # Platform UUIDs
-    "org_id": TokenKind.ORG,
-    "msp_id": TokenKind.ORG,
-    "site_id": TokenKind.SITE,
-    "siteid": TokenKind.SITE,
-    "device_id": TokenKind.DEVICE,
-    "ap_id": TokenKind.AP,
-    "switch_id": TokenKind.SWITCH,
-    "gateway_id": TokenKind.GATEWAY,
-    "mxedge_id": TokenKind.GATEWAY,
-    "wlan_id": TokenKind.WLAN,
-    "wxlan_id": TokenKind.WLAN,
-    "wxtag_id": TokenKind.WLAN,
-    "wxtunnel_id": TokenKind.WLAN,
-    "wxrule_id": TokenKind.WLAN,
-    "wxlan_tunnel_id": TokenKind.WLAN,
-    "client_id": TokenKind.CLIENT,
-    "mobile_id": TokenKind.CLIENT,
-    "mac_id": TokenKind.CLIENT,
-    "template_id": TokenKind.TEMPLATE,
-    "assignment_id": TokenKind.TEMPLATE,
-    "policy_id": TokenKind.POLICY,
-    "psk_id": TokenKind.POLICY,
-    "tenant_id": TokenKind.TENANT,
-    "workspace_id": TokenKind.WORKSPACE,
-    "subscription_id": TokenKind.SUBSCRIPTION,
-    # Operator-assigned names
+    # Operator-assigned names — strings that reveal customer infrastructure
+    # naming patterns. Hostnames / FQDNs / device names go through DNS, but
+    # the threat model is "don't ship customer names to the AI provider."
+    # SSIDs and ESSIDs are NOT tokenized — they are broadcast in beacon
+    # frames, observable to anyone in radio range.
     "device_name": TokenKind.HOSTNAME,
     "ap_name": TokenKind.HOSTNAME,
     "hostname": TokenKind.HOSTNAME,
     "fqdn": TokenKind.HOSTNAME,
-    "ssid": TokenKind.SSID,
-    "essid": TokenKind.SSID,
     "site_name": TokenKind.NAME,
     "org_name": TokenKind.NAME,
     "vlan_name": TokenKind.NAME,
@@ -220,26 +200,19 @@ TOKENIZED_IDENTIFIER_FIELDS: dict[str, TokenKind] = {
     "phone": TokenKind.PHONE,
     "phone_number": TokenKind.PHONE,
     "mobile": TokenKind.PHONE,
-    # Hardware
+    # Hardware identifiers — tie back to purchase records
     "serial": TokenKind.SERIAL,
     "serial_number": TokenKind.SERIAL,
     "sn": TokenKind.SERIAL,
     "imei": TokenKind.IMEI,
     "imsi": TokenKind.IMSI,
     "iccid": TokenKind.ICCID,
-    # Geographic
-    "latitude": TokenKind.GEO,
-    "longitude": TokenKind.GEO,
-    "address": TokenKind.GEO,
-    "street": TokenKind.GEO,
-    "city": TokenKind.GEO,
-    "state": TokenKind.GEO,
-    "zip": TokenKind.GEO,
-    "postal_code": TokenKind.GEO,
-    "country": TokenKind.GEO,
-    "room": TokenKind.GEO,
-    "floor": TokenKind.GEO,
-    "building": TokenKind.GEO,
+    # NOTE: platform UUID *_id fields (org_id, site_id, device_id,
+    # template_id, ...) are intentionally absent — they are already
+    # opaque random UUIDs in Mist's API; replacing one UUID with another
+    # adds no privacy. Geographic fields (address, city, state, zip,
+    # latitude, longitude, etc.) are also absent — addresses for
+    # business sites are typically findable on the company's website.
 }
 
 # Field names where ``name`` should be tokenized as HOSTNAME — only when
