@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0.1] - 2026-04-29
+
+### Fixed
+- **AOS8 differentiator tools (DIFF-01..09) production response-contract bug.** `differentiators.py` `_show()` and `_object()` previously returned a raw `httpx.Response` object instead of parsed JSON, causing all 9 DIFF tools (`aos8_get_md_hierarchy`, `aos8_get_effective_config`, `aos8_get_pending_changes`, `aos8_get_rf_neighbors`, `aos8_get_cluster_state`, `aos8_get_air_monitors`, `aos8_get_ap_wired_ports`, `aos8_get_ipsec_tunnels`, `aos8_get_md_health_check`) to fail in production. Refactored to use canonical `_helpers.run_show()` / `get_object()`. Test mocks updated to match the real `AOS8Client.request()` contract.
+- **Code-mode `execute_description`** now lists `aos8_` as a callable platform prefix. The sandboxed `execute()` LLM was previously told only 6 platform prefixes were dispatchable, causing `Unknown tool: aos8_*` failures despite the tools being registered. Added regression test `test_server_code_mode.py` that asserts every platform prefix appears in the literal.
+
+### Documentation
+- README.md, docs/TOOLS.md tool counts corrected from 38 → **47 AOS8 tools** (26 read + 12 write + 9 differentiators). The 9 differentiator tools were added in Phase 7 but the user-facing strings were not refreshed at the time. Note for [2.4.0.0]: tool count was incorrectly stated as 38; the actual shipped count was 47.
+- docs/TOOLS.md: new `### Differentiators (9)` subsection lists all 9 AOS8-unique read tools with descriptions.
+- `.planning/phases/04-differentiator-tools/04-VERIFICATION.md` added — formally documents that Phase 4 was administratively merged into Phase 7 (plans 07-01/07-02/07-03) and corrected by Phase 8 (plan 08-01).
+- REQUIREMENTS.md DIFF-01..09 traceability now reads "Complete".
+
+### Tests
+- New `tests/unit/test_server_code_mode.py` (2 tests) — guards code-mode `execute_description` literal against future platform-prefix drift.
+- Total unit tests: 766 (was 764).
+
 ## [2.4.0.0] - 2026-04-28
 
 ### Added
