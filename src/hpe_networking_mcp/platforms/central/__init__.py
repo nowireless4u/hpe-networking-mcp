@@ -12,7 +12,15 @@ TOOLS = {
     "sites": ["central_get_sites", "central_get_site_health", "central_get_site_name_id_mapping"],
     "devices": ["central_get_devices", "central_find_device"],
     "clients": ["central_get_clients", "central_find_client"],
-    "alerts": ["central_get_alerts"],
+    "alerts": [
+        "central_get_alerts",
+        "central_get_alert_classification",
+        "central_get_alert_action_status",
+        "central_clear_alerts",
+        "central_defer_alerts",
+        "central_reactivate_alerts",
+        "central_set_alert_priority",
+    ],
     "events": ["central_get_events", "central_get_events_count"],
     "monitoring": [
         "central_get_aps",

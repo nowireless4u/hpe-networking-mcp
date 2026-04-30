@@ -802,6 +802,62 @@ No parameters. Returns a dict sorted by health score (worst first).
 | limit | int | No | Default: 50. Max: 100. |
 | cursor | int | No | Pagination cursor from previous `next_cursor`. |
 
+Each returned `Alert` includes a `key` field — pass to the action tools below.
+
+#### `central_get_alert_classification` (v2.3.1.5+)
+
+> Group alerts by a classification dimension and return per-bucket counts.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| classify_by | str | Yes | One of `severity`, `status`, `priority`, `category`, `device_type`, `impacted_devices`. |
+| filter | str | No | OData filter (same syntax as `central_get_alerts`). |
+| search | str | No | Free-text search over alert name and summary. |
+
+#### `central_get_alert_action_status` (v2.3.1.5+)
+
+> Poll the status of an async alert action (clear / defer / reactivate / set_priority).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| task_id | str | Yes | Task identifier returned from any of the alert-action tools. |
+
+#### `central_clear_alerts` (v2.3.1.5+)
+
+> Clear (resolve) one or more alerts. Active → Cleared. **Operational** — fires elicitation. Async — returns `task_id`.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| keys | list[str] | Yes | Alert keys (from `central_get_alerts(...)`). |
+| reason | str | Yes | One of `Problem was resolved`, `False Positive`, `Insufficient information for troubleshooting`, `Alert is not important`, `Other`. |
+| notes | str | No | Free-text notes. |
+
+#### `central_defer_alerts` (v2.3.1.5+)
+
+> Defer one or more alerts until a future time. Active → Deferred. **Operational** — fires elicitation. Async — returns `task_id`.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| keys | list[str] | Yes | Alert keys. |
+| defer_until | str | Yes | ISO 8601 datetime, e.g. `2026-05-15T10:00:00Z`. |
+
+#### `central_reactivate_alerts` (v2.3.1.5+)
+
+> Reactivate one or more cleared/deferred alerts. **Operational** — fires elicitation. Async — returns `task_id`.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| keys | list[str] | Yes | Alert keys. |
+
+#### `central_set_alert_priority` (v2.3.1.5+)
+
+> Set operator-assigned priority on one or more alerts. **Operational** — fires elicitation. Async — returns `task_id`.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| keys | list[str] | Yes | Alert keys. |
+| priority | str | Yes | One of `Very High`, `High`, `Medium`, `Low`, `Very Low`. |
+
 ### Events
 
 #### `central_get_events`

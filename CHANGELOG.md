@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1.5] - 2026-04-30
+
+**Adds Aruba Central alert state-management tools — clear, defer, reactivate, set-priority — plus alert classification and async-task status. Six new tools, all in the existing `central_*` alerts surface. Requested feature; existing `central_get_alerts` tool gains a `key` field on each returned `Alert` so the AI can pass keys through to the new action tools.**
+
+### What's new
+
+Two read tools (`READ_ONLY` annotation):
+
+- **`central_get_alert_classification(classify_by, filter, search)`** — group alerts by `severity` / `status` / `priority` / `category` / `device_type` / `impacted_devices` and return per-bucket counts. Cheaper than paging through `central_get_alerts` when you only need a summary. Hits `GET /network-notifications/v1/alerts/classification`.
+- **`central_get_alert_action_status(task_id)`** — poll the result of any of the four action tools. The action endpoints are async and return a `task_id`; this tool checks completion. Hits `GET /network-notifications/v1/alerts/async-operations/{task_id}`.
+
+Four operational tools (`OPERATIONAL` annotation — fires elicitation prompt for confirmation but NOT gated behind `ENABLE_CENTRAL_WRITE_TOOLS`; rides alongside reboot/AP-action tools):
+
+- **`central_clear_alerts(keys, reason, notes?)`** — Active → Cleared. `reason` is required, enum: `Problem was resolved` / `False Positive` / `Insufficient information for troubleshooting` / `Alert is not important` / `Other`. Optional free-text `notes`. Hits `POST /alerts/clear`.
+- **`central_defer_alerts(keys, defer_until)`** — Active → Deferred until the specified ISO 8601 datetime. Auto-reactivates if condition still applies after that time. Hits `POST /alerts/defer`.
+- **`central_reactivate_alerts(keys)`** — Cleared/Deferred → Active. Use to undo a clear or pull a defer back early. Hits `POST /alerts/active`.
+- **`central_set_alert_priority(keys, priority)`** — Operator-assigned priority (`Very High` / `High` / `Medium` / `Low` / `Very Low`), distinct from system-assigned `severity`. Hits `POST /alerts/priority`.
+
+All four action tools accept a list of `keys` (batch) and return the async task descriptor — chain a `central_get_alert_action_status(task_id)` call to confirm completion.
+
+### Model change
+
+- `Alert.key: str | None` — new field. The list endpoint's raw alert key field is unconfirmed against production data; `clean_alert_data` defensively maps `key` → `id` → `alertId` (whichever exists). Pin to the actual field once observed in the wild.
+
+### Tests
+
+- 741 passing (was 732). Net +9: model-key handling (5 cases covering each fallback path), tool registration (3 cases), tag-gating (2 cases — operational tools NOT carrying `central_write_delete`).
+
+### Behavior matrix
+
+| State transition | Tool |
+|---|---|
+| Active → Cleared | `central_clear_alerts` |
+| Active → Deferred | `central_defer_alerts` |
+| Cleared → Active | `central_reactivate_alerts` |
+| Deferred → Active | `central_reactivate_alerts` |
+| Any priority change | `central_set_alert_priority` |
+
 ## [2.3.1.4] - 2026-04-30
 
 **Broadens the Skills trigger guidance in `INSTRUCTIONS.md` so the AI more reliably loads `mist-scope-audit` / `central-scope-audit` (and the other bundled runbooks) on natural-language audit queries that don't include the literal word "scope". `INSTRUCTIONS.md`-only change; no Python code, no skill body changes — the skills themselves were already producing rich output when triggered.**

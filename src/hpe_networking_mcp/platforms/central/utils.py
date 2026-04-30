@@ -524,8 +524,13 @@ def clean_client_data(clients: list[dict]) -> list[Client]:
 def clean_alert_data(alerts: list[dict]) -> list[Alert]:
     cleaned_alerts = []
     for alert in alerts:
+        # Raw alert-key field name is unconfirmed against production
+        # data — defensively look up `key` then `id` then `alertId`.
+        # Pin to the actual field once observed in the wild.
+        key = alert.get("key") or alert.get("id") or alert.get("alertId")
         cleaned_alerts.append(
             Alert(
+                key=key,
                 summary=str(alert.get("summary", "")),
                 cleared_reason=alert.get("clearedReason"),
                 created_at=str(alert.get("createdAt", "")),

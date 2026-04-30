@@ -170,6 +170,14 @@ class Client(BaseModel):
 
 
 class Alert(BaseModel):
+    key: str | None = Field(
+        default=None,
+        description=(
+            "Unique alert key — pass to central_clear_alerts / "
+            "central_defer_alerts / central_reactivate_alerts / "
+            "central_set_alert_priority to act on this alert."
+        ),
+    )
     summary: str = Field(description="Short summary of the alert.")
     cleared_reason: str | None = Field(description="Reason the alert was cleared, if applicable.")
     created_at: str = Field(description="Timestamp when the alert was created (RFC 3339).")
