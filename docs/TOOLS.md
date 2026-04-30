@@ -858,6 +858,72 @@ Each returned `Alert` includes a `key` field — pass to the action tools below.
 | keys | list[str] | Yes | Alert keys. |
 | priority | str | Yes | One of `Very High`, `High`, `Medium`, `Low`, `Very Low`. |
 
+### Alert Configurations (v2.3.1.6+)
+
+Manage alert *definitions* — the rules that determine when alerts fire (thresholds, durations, severity buckets). Distinct from the alert action tools above which act on already-fired alert instances.
+
+#### `central_get_alert_configs`
+
+> List alert configurations defined at the given scope. Each item shows `inherited` (using parent's config?) and `ruleSource` (`SYSTEM` vs. `USER`).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| scope_id | str | Yes | Scope identifier. From `central_get_scope_tree` or `central_get_scope_resources`. |
+| scope_type | str | No | Default: `GLOBAL`. Also `SITE` or `DEVICE`. |
+
+#### `central_create_alert_config`
+
+> Create a custom alert configuration. **Write** — fires elicitation, gated behind `ENABLE_CENTRAL_WRITE_TOOLS`.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| type_id | str | Yes | Alert type identifier (e.g. `1250` or `CUSTOM-AP-CPU-HIGH`). |
+| scope_id | str | Yes | Where to apply the config. |
+| enabled | bool | Yes | Whether the alert fires when conditions are met. |
+| clear_timeout | str | No | Duration for auto-clear (`1H`, `30D`, `15m`). Pass None to omit. |
+| rules | list[dict] | No | Threshold rules. See shape below. |
+| scope_type | str | No | Default: `GLOBAL`. Also `SITE` or `DEVICE`. |
+
+Rule shape:
+
+```python
+{
+    "ruleNumber": 0,
+    "duration": 300,
+    "conditions": [
+        {"severity": "CRITICAL", "operator": "GT", "threshold": 90.0},
+        {"severity": "MAJOR",    "operator": "GT", "threshold": 80.0},
+    ],
+    "additionalConditions": [],
+}
+```
+
+- Severity: `CRITICAL`, `MAJOR`, `MINOR`, `INFO`
+- Operator: `EQ`, `NEQ`, `GT`, `GTE`, `LT`, `LTE`, `IN`, `NIN`
+
+#### `central_update_alert_config`
+
+> Update an existing alert configuration. Partial update — fields you omit are left unchanged. **Write** — fires elicitation.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| type_id | str | Yes | Alert type identifier. |
+| scope_id | str | Yes | Scope where the config currently lives. |
+| enabled | bool | No | Toggle on/off. Omit to leave unchanged. |
+| clear_timeout | str | No | New auto-clear duration. Omit to leave unchanged. |
+| rules | list[dict] | No | Replace the rule set. Omit to leave unchanged. |
+| scope_type | str | No | Default: `GLOBAL`. Also `SITE` or `DEVICE`. |
+
+#### `central_reset_alert_config`
+
+> Reset to inherited (parent scope) — removes the scope-level override. The alert type is NOT deleted. **Write** — fires elicitation.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| type_id | str | Yes | Alert type identifier of the override to reset. |
+| scope_id | str | Yes | Scope where the override currently lives. |
+| scope_type | str | No | Default: `GLOBAL`. Also `SITE` or `DEVICE`. |
+
 ### Events
 
 #### `central_get_events`

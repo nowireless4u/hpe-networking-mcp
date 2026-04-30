@@ -43,9 +43,23 @@ class TestCentralRegistryPopulation:
         assert len(central_registry_populated) > 60
 
     def test_write_tools_carry_write_delete_tag(self, central_registry_populated):
-        """The three configuration CRUD tools are the flagship write_delete surface."""
-        for name in ("central_manage_site", "central_manage_site_collection", "central_manage_device_group"):
+        """Sample write tools — config CRUD plus the v2.3.1.6 alert-config writes —
+        all carry the central_write_delete tag so they're gated behind
+        ENABLE_CENTRAL_WRITE_TOOLS."""
+        for name in (
+            "central_manage_site",
+            "central_manage_site_collection",
+            "central_manage_device_group",
+            "central_create_alert_config",
+            "central_update_alert_config",
+            "central_reset_alert_config",
+        ):
             assert "central_write_delete" in central_registry_populated[name].tags
+
+    def test_alert_config_read_has_no_write_tag(self, central_registry_populated):
+        """The v2.3.1.6 alert-config list tool is read-only — must NOT carry the gating tag."""
+        tags = central_registry_populated["central_get_alert_configs"].tags
+        assert "central_write_delete" not in tags
 
     def test_read_tool_has_no_write_tag(self, central_registry_populated):
         read = central_registry_populated["central_get_sites"]

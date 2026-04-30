@@ -5,6 +5,61 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1.6] - 2026-04-30
+
+**Adds Aruba Central alert *configuration* management — the rules that determine when alerts fire — wrapping the four `/network-notifications/v1/alert-config` endpoints. Distinct from v2.3.1.5's alert *action* tools (clear / defer / reactivate / set-priority) which act on already-fired alert instances; these manage the alert system's threshold definitions. New module `tools/alert_configs.py`; the existing `tools/alerts.py` is left at its current size below the 500-line cap.**
+
+### What's new
+
+One read tool (`READ_ONLY` annotation):
+
+- **`central_get_alert_configs(scope_id, scope_type?)`** — list the alert configurations defined at a scope. Each item carries `inherited: true/false` (whether this scope has its own override or is using a parent's config) and `ruleSource: SYSTEM | USER` (Central built-in vs. operator-customized). Hits `GET /alert-config`.
+
+Three write tools (`WRITE_DELETE` annotation, tagged `central_write_delete`, gated behind `ENABLE_CENTRAL_WRITE_TOOLS`, fire elicitation):
+
+- **`central_create_alert_config(type_id, scope_id, enabled, clear_timeout?, rules?, scope_type?)`** — create a custom alert configuration. Hits `POST /alert-config/create`.
+- **`central_update_alert_config(type_id, scope_id, enabled?, clear_timeout?, rules?, scope_type?)`** — update existing. Despite using HTTP PUT, the API behaves like PATCH: fields you omit are preserved. Hits `PUT /alert-config/update`.
+- **`central_reset_alert_config(type_id, scope_id, scope_type?)`** — remove the scope-level override and revert to inherited (parent-scope) configuration. The alert *type* is not deleted; only the override at this scope. Hits `DELETE /alert-config/delete`.
+
+### Annotation choice
+
+These tools are `WRITE_DELETE` (gated behind `ENABLE_CENTRAL_WRITE_TOOLS`) — different from v2.3.1.5's alert-action tools which were `OPERATIONAL`. Reasoning:
+
+- v2.3.1.5 tools act on alert *instances* — operational state transitions, like rebooting a switch.
+- v2.3.1.6 tools act on alert *definitions* — config writes that change what the system tracks. Same threat model as managing roles, policies, WLAN profiles. Belongs in the gated write surface.
+
+### Rule shape
+
+Both `create` and `update` accept a `rules: list[dict] | None` parameter with the API's literal camelCase shape:
+
+```python
+rules=[
+    {
+        "ruleNumber": 0,
+        "duration": 300,                 # seconds metric must stay over threshold
+        "conditions": [
+            {"severity": "CRITICAL", "operator": "GT", "threshold": 90.0},
+            {"severity": "MAJOR",    "operator": "GT", "threshold": 80.0},
+        ],
+        "additionalConditions": [],
+    },
+]
+```
+
+- Severity values: `CRITICAL`, `MAJOR`, `MINOR`, `INFO`.
+- Operator values: `EQ`, `NEQ`, `GT`, `GTE`, `LT`, `LTE`, `IN`, `NIN`.
+- `clearTimeout` format: `<number><unit>` where unit is `H`/`h` (hours), `D`/`d` (days), or `M`/`m` (minutes) — e.g. `1H`, `30D`, `15m`.
+
+The tool docstrings include the full shape + enum reference inline so the AI can construct rules without consulting external docs.
+
+### Scope semantics
+
+The `scope_type` parameter on every tool accepts `GLOBAL` (tenant-wide, default), `SITE` (per-site), or `DEVICE` (per-device). `GLOBAL` is the default if omitted, matching the API.
+
+### Tests
+
+- 741 passing (was 739). Net +2: catalog assertions for the four new tools (no fixture — avoids the v2.3.1.5 `importlib.reload` clash with `configuration.py`'s `ActionType` enum identity); the existing `test_central_dynamic_mode.py` `test_write_tools_carry_write_delete_tag` test was extended to cover the three new write tools, plus a new `test_alert_config_read_has_no_write_tag` for the read tool.
+
 ## [2.3.1.5] - 2026-04-30
 
 **Adds Aruba Central alert state-management tools — clear, defer, reactivate, set-priority — plus alert classification and async-task status. Six new tools, all in the existing `central_*` alerts surface. Requested feature; existing `central_get_alerts` tool gains a `key` field on each returned `Alert` so the AI can pass keys through to the new action tools.**

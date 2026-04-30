@@ -21,6 +21,12 @@ TOOLS = {
         "central_reactivate_alerts",
         "central_set_alert_priority",
     ],
+    "alert_configs": [
+        "central_get_alert_configs",
+        "central_create_alert_config",
+        "central_update_alert_config",
+        "central_reset_alert_config",
+    ],
     "events": ["central_get_events", "central_get_events_count"],
     "monitoring": [
         "central_get_aps",
