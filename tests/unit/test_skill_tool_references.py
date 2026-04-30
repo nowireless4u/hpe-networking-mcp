@@ -143,7 +143,7 @@ def _build_full_catalog() -> set[str]:
 
     # Dynamic-mode meta-tools — only registered when tool_mode="dynamic", but
     # legitimate names skills can reference for runtime dispatch.
-    for platform in ("mist", "central", "greenlake", "clearpass", "apstra", "axis"):
+    for platform in ("mist", "central", "greenlake", "clearpass", "apstra", "axis", "aos8"):
         for suffix in ("_list_tools", "_get_tool_schema", "_invoke_tool"):
             catalog.add(platform + suffix)
 
