@@ -2,26 +2,29 @@
 
 Complete reference for all tools registered by the HPE Networking MCP Server.
 Tools are namespaced by platform: `mist_*` (Juniper Mist), `central_*` (Aruba Central),
-`greenlake_*` (HPE GreenLake), `clearpass_*` (Aruba ClearPass), and `apstra_*`
-(Juniper Apstra).
+`greenlake_*` (HPE GreenLake), `clearpass_*` (Aruba ClearPass), `apstra_*`
+(Juniper Apstra), and `axis_*` (Axis Atmos Cloud).
 
 ## Dynamic mode (default since v2.0.0.0)
 
-The server ships with `MCP_TOOL_MODE=dynamic` by default. At session start the AI sees **19 tools**:
+The server ships with `MCP_TOOL_MODE=dynamic` by default. At session start the AI sees **24 tools**:
 
 - **4 cross-platform static tools**
   - `health(platform=...)`
   - `site_health_check(site_name=...)`
   - `site_rf_check(site_name=...)`
   - `manage_wlan_profile(...)`
-- **3 meta-tools per platform** (× 5 platforms = 15)
+- **3 meta-tools per platform** (× 6 platforms = 18)
   - `<platform>_list_tools(filter=...)` — list candidates
   - `<platform>_get_tool_schema(name=...)` — fetch parameter schema
   - `<platform>_invoke_tool(name=..., arguments={...})` — invoke by name
+- **2 skills tools** (since v2.3.0.0)
+  - `skills_list(filter=...)` — list bundled multi-step runbooks
+  - `skills_load(name=...)` — load a runbook to execute
 
-All the per-platform tools documented below still exist and are discoverable through the meta-tools. Their names, parameters, and return shapes are unchanged from v1.x. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the meta-tools.
+All 312 per-platform tools documented below still exist and are discoverable through the meta-tools. Their names, parameters, and return shapes are unchanged from v1.x. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the meta-tools.
 
-Set `MCP_TOOL_MODE=static` to restore the v1.x surface where every per-platform tool registers individually (260+ visible). Set `MCP_TOOL_MODE=code` for an experimental four-tier discovery + sandboxed Python execution surface — see the next section.
+Set `MCP_TOOL_MODE=static` to restore the v1.x surface where every per-platform tool registers individually (312 visible). Set `MCP_TOOL_MODE=code` for an experimental four-tier discovery + sandboxed Python execution surface — see the next section.
 
 ## Code mode (experimental, opt-in since v2.1.0.0)
 
@@ -31,7 +34,7 @@ With `MCP_TOOL_MODE=code` the server replaces the exposed catalog with a 4-tool 
 
 | Tier | Tool | What the LLM calls |
 |---|---|---|
-| 1 | `tags(detail="brief")` | Browse the tag space — returns platform buckets (`mist (31 tools)`, `central (73)`, `axis (25)`, etc.) plus module categories |
+| 1 | `tags(detail="brief")` | Browse the tag space — returns platform buckets (`mist (35 tools)`, `central (83)`, `axis (25)`, etc.) plus module categories |
 | 2 | `search(query, tags=[...], detail)` | BM25 search the catalog, optionally scoped by tag |
 | 3 | `get_schema(tools=[...], detail)` | Fetch parameter shape for named tools |
 | 4 | `execute(code)` | Run async Python; `call_tool(name, params)` available in scope |
@@ -86,7 +89,7 @@ If you're not sure, stay on `dynamic`. Code mode is meant for measurement + eval
 | Platform | Read-Only Tools | Write Tools | Prompts | Total |
 |----------|----------------|-------------|---------|-------|
 | Juniper Mist | 31 | 4 | 2 | 37 |
-| Aruba Central | 60 | 13 | 12 | 85 |
+| Aruba Central | 63 | 20 | 12 | 95 |
 | Aruba ClearPass | 65 | 75 | -- | 140 |
 | Juniper Apstra | 12 | 7 | -- | 19 |
 | HPE GreenLake | 10 | -- | -- | 10 |
@@ -650,7 +653,7 @@ logged and skipped; the rest of the catalog still loads. See
 
 ---
 
-## Aruba Central (73 tools + 12 prompts)
+## Aruba Central (83 tools + 12 prompts)
 
 ### Sites
 
@@ -1521,7 +1524,7 @@ Tools that span multiple platforms. Each replaces several individual tool calls 
 
 ---
 
-## HPE GreenLake
+## HPE GreenLake (10 tools)
 
 GreenLake uses the same dynamic-mode meta-tool pattern as every other platform since v2.0.0.0. In the default `MCP_TOOL_MODE=dynamic`, the AI sees `greenlake_list_tools`, `greenlake_get_tool_schema`, and `greenlake_invoke_tool` and discovers the 10 underlying tools below through them. The v1.x endpoint-dispatch tools (`greenlake_list_endpoints`, `greenlake_get_endpoint_schema`, `greenlake_invoke_endpoint`) are **removed** in v2.0.
 
@@ -1864,7 +1867,7 @@ For ClearPass API reachability, use the cross-platform `health(platform="clearpa
 
 ---
 
-## Juniper Apstra (21 tools)
+## Juniper Apstra (19 tools)
 
 Ported from a standalone Apstra MCP server. Requires Apstra credentials in
 Docker secrets (`apstra_server`, `apstra_username`, `apstra_password`, plus

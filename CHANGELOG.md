@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1.7] - 2026-04-30
+
+**Documentation refresh — pulls stale tool counts and structural references in `README.md`, `docs/TOOLS.md`, `CLAUDE.md`, `INSTRUCTIONS.md`, and `docs/MIGRATING_TO_V2.md` up to v2.3.1.6 reality. No code changes; one bandit/ruff/mypy/pytest run confirms 742 still passing.**
+
+### What changed
+
+**README.md:**
+- Comparison table: Aruba Central tool count `73 + 12 prompts` → `83 + 12 prompts`.
+- Architecture diagram: Central `73 tools` → `83 tools`.
+- "Verify" troubleshooting section: corrected the per-platform tool counts surfaced in `docker compose logs` output, and the dynamic-mode tool surface (`24` exposed, `312` underlying — was `22` / `300+`).
+- "Tool Surface Looks Wrong" troubleshooting: explicit `24 tools / 312 underlying` framing including the 2 skills tools (was missing from the breakdown).
+- Project structure: test count `639+` → `740+` unit tests.
+
+**docs/TOOLS.md:**
+- Dynamic-mode opener: `19 tools` → `24 tools` (added the 2 skills tools, expanded from 5 platforms to 6 to include Axis).
+- Code-mode tag-list example: Mist `31 tools` → `35`, Central `73` → `83` to match reality.
+- Overview table: Aruba Central row `60 / 13 / 12 / 85` → `63 / 20 / 12 / 95` (covers v2.3.1.5 alert-action + v2.3.1.6 alert-config tools).
+- Section headers: `Aruba Central (73 tools + 12 prompts)` → `83 tools`, `Juniper Apstra (21 tools)` → `19 tools`, added missing `(10 tools)` to the GreenLake section.
+
+**CLAUDE.md (substantial rewrite of three sections):**
+- "Project Overview" now lists all 6 platforms (was 4 — missed Apstra and Axis).
+- "Current State (as of 2026-03-28)" → "Current State (as of 2026-04-30, v2.3.1.6)". Replaced "49 tools registered: 29 Mist + 10 Central + 10 GreenLake" with the real `312 tools across 6 platforms` breakdown plus tool-mode summary, PII tokenization, and skills bullet points.
+- "Project Structure" rewritten to reflect v2.3.1.x reality: middleware now lists all 7 modules (added `origin_validation`, `pii_tokenization`, `retry`, `sandbox_error_catch`, `validation_catch`); new `redaction/` package documented; `skills/` directory listed; platform sections updated to current tool counts; Apstra and Axis sections added.
+- "Conventions" — corrected `ENABLE_WRITE_TOOLS=true` (singular) to the real per-platform env vars (`ENABLE_MIST_WRITE_TOOLS`, `ENABLE_CENTRAL_WRITE_TOOLS`, etc.); noted `OPERATIONAL` annotation tools aren't gated by these; added `ALLOWED_ORIGINS` reference.
+- "Known Issues" replaced with current "Open Items / Known Quirks" — the v0.5-era issues (2 Mist tools failing to load, pycentral API surprises, GreenLake meta-tools deferred) are all resolved.
+- "Testing (not yet implemented)" comment fixed; bandit added to commands.
+- "Secrets File Reference" extended with `apstra_*` and `axis_api_token`.
+
+**INSTRUCTIONS.md (AI-facing):**
+- Tool-discovery opener: `18 tools` → `24 tools` (added skills tools and 6th platform).
+- Central tool category: split single `Alerts: central_get_alerts` line into two well-described entries — `Alerts (instances)` covering the v2.3.1.5 list/classification/state-transition tools, and `Alert configurations (rules)` covering the v2.3.1.6 read/create/update/reset tools, with a clear note about which is which.
+
+**docs/MIGRATING_TO_V2.md:**
+- Added a "this document is a v1→v2.0 snapshot" note at the top so readers don't mistake the v2.0-era counts for current.
+
+**Skipped (per scope agreement):**
+- Skill markdown files — INSTRUCTIONS.md is the authoritative trigger source; per-skill descriptions are descriptive rather than load-bearing.
+- `docs/PRD.md` and `docs/PRP.md` — internal planning artifacts, not user-facing.
+
+### Tests
+
+- 742 passing (unchanged) — no code touched. Pre-push checks confirm clean ruff/format/mypy/bandit/pytest.
+
 ## [2.3.1.6] - 2026-04-30
 
 **Adds Aruba Central alert *configuration* management — the rules that determine when alerts fire — wrapping the four `/network-notifications/v1/alert-config` endpoints. Distinct from v2.3.1.5's alert *action* tools (clear / defer / reactivate / set-priority) which act on already-fired alert instances; these manage the alert system's threshold definitions. New module `tools/alert_configs.py`; the existing `tools/alerts.py` is left at its current size below the 500-line cap.**

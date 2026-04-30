@@ -52,7 +52,7 @@ Managing HPE networking infrastructure with AI assistants today means juggling m
 | **Staged Writes + Commit Workflow** | — | — | — | — | ✅ | ✅ |
 | **Guided Prompts** | ✅ | ✅ | — | — | — | — |
 | **Dynamic Tool Discovery** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Underlying tools (static mode)** | **35 + 2 prompts** | **73 + 12 prompts** | **10** | **140** | **19** | **25** |
+| **Underlying tools (static mode)** | **35 + 2 prompts** | **83 + 12 prompts** | **10** | **140** | **19** | **25** |
 | **Exposed meta-tools (dynamic mode, default)** | **3** | **3** | **3** | **3** | **3** | **3** |
 | **Cross-Platform** | **3 tools + 3 prompts** | **3 tools + 3 prompts** | — | **1 tool** | — | — |
 
@@ -182,7 +182,7 @@ docker compose up -d
 docker compose logs
 ```
 
-Look for lines like `Mist: 35 tools registered`, `ClearPass: 140 tools registered`, `Axis: 25 underlying tools registered`, `Tool mode: dynamic`, and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. In the default dynamic mode, only 22 tools are exposed to the AI when all six platforms are enabled — the underlying platform tools are discoverable via each platform's `list_tools` / `get_tool_schema` / `invoke_tool` meta-tools. Mist also registers 2 guided prompts for site provisioning workflows.
+Look for lines like `Mist: 35 tools registered`, `Central: 83 tools registered`, `ClearPass: 140 tools registered`, `Axis: 25 underlying tools registered`, `Tool mode: dynamic`, and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. In the default dynamic mode, **24 tools** are exposed to the AI when all six platforms are enabled (6 × 3 per-platform meta-tools + 4 cross-platform static tools + 2 skills tools) — the 312 underlying platform tools are discoverable via each platform's `list_tools` / `get_tool_schema` / `invoke_tool` meta-tools. Mist also registers 2 guided prompts for site provisioning workflows.
 
 ### Docker Image
 
@@ -425,7 +425,7 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 │ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐    │
 │ │   Mist   │ │ Central  │ │GreenLake │ │ClearPass │ │  Apstra  │ │   Axis   │    │
 │ │  mist_*  │ │central_* │ │greenlake │ │clearpass │ │ apstra_* │ │ axis_*   │    │
-│ │ 35 tools │ │ 73 tools │ │ 10 tools │ │140 tools │ │ 19 tools │ │ 25 tools │    │
+│ │ 35 tools │ │ 83 tools │ │ 10 tools │ │140 tools │ │ 19 tools │ │ 25 tools │    │
 │ │ + 2 prmt │ │+ 12 prmt │ │          │ │          │ │          │ │          │    │
 │ │          │ │          │ │          │ │          │ │          │ │          │    │
 │ │  Hidden behind meta-tools in dynamic mode;  fully exposed in static mode.       │
@@ -577,7 +577,7 @@ hpe-networking-mcp/
 │       ├── sync_prompts.py      # Cross-platform WLAN sync prompts
 │       ├── site_health_check.py # Cross-platform site health aggregator
 │       └── site_rf_check.py     # Cross-platform Wi-Fi RF dashboard
-├── tests/                       # Unit and integration tests (639+ unit tests)
+├── tests/                       # Unit and integration tests (740+ unit tests)
 ├── docs/                        # PRD, PRP, tool reference
 ├── secrets/                     # Secret files (only .example committed)
 ├── .github/workflows/           # CI, security, Docker publish
@@ -695,16 +695,16 @@ If tools time out after ~4 minutes, check that:
 - Node.js is installed: `npx --version`
 - The container didn't lose connectivity after sleep: `docker compose restart`
 
-### Tool Surface Looks Wrong (22 tools vs. 300+)
+### Tool Surface Looks Wrong (24 tools vs. 312)
 
-Since v2.0.0.0, every platform runs in dynamic mode by default: each platform exposes 3 meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`) and the underlying tools are discoverable through them. A correctly configured server with all 6 platforms enabled will advertise **22 tools** to the AI client — 18 meta-tools + 4 cross-platform static tools (`health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`).
+Since v2.0.0.0, every platform runs in dynamic mode by default: each platform exposes 3 meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`) and the underlying tools are discoverable through them. A correctly configured server with all 6 platforms enabled will advertise **24 tools** to the AI client — 18 meta-tools + 4 cross-platform static tools (`health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`) + 2 skills tools (`skills_list`, `skills_load`).
 
 Check the mode in the logs:
 
 ```bash
 docker compose logs | grep "Tool mode"
-# "Tool mode: dynamic"   → default (18 exposed tools)
-# "Tool mode: static"    → every underlying tool visible (260+)
+# "Tool mode: dynamic"   → default (24 exposed tools)
+# "Tool mode: static"    → every underlying tool visible (312)
 ```
 
 To restore v1.x-style surface (every tool registered individually), set `MCP_TOOL_MODE=static` in `docker-compose.yml` under `environment`:

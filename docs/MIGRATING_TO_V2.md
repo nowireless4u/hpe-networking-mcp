@@ -2,6 +2,8 @@
 
 Released 2026-04-23. Umbrella issue: [#157](https://github.com/nowireless4u/hpe-networking-mcp/issues/157).
 
+> **Note:** This document describes the v1.x → v2.0.0.0 migration. Numbers in this doc reflect the surface at the v2.0.0.0 release (5 platforms, 18 exposed tools in dynamic mode, 261 static tools). The surface has grown since — current counts (6 platforms, 24 exposed in dynamic mode, 312 static) are in [`docs/TOOLS.md`](TOOLS.md) and [`CHANGELOG.md`](../CHANGELOG.md). The migration steps and behavior described here remain accurate for upgrading from v1.x.
+
 ## The short version
 
 The default tool surface drops from 261 static tools to **18 exposed tools**. Every per-platform tool still exists — it's just discovered on demand via three meta-tools per platform instead of advertised up front. Behavior and return shapes are unchanged when invoked. Small local LLMs (gpt-oss:20b / 32K context) now fit the tool schema in their context window with room to spare.

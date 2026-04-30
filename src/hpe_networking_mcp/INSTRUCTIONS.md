@@ -12,9 +12,10 @@ Tools are namespaced by platform:
 
 # TOOL DISCOVERY (dynamic mode — default since v2.0)
 
-Only 18 tools are directly visible at session start:
-- **3 cross-platform static tools**: `health`, `site_health_check`, `manage_wlan_profile`
-- **3 meta-tools per platform × 5 platforms** = 15: `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`
+Only 24 tools are directly visible at session start:
+- **4 cross-platform static tools**: `health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`
+- **3 meta-tools per platform × 6 platforms** = 18: `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`
+- **2 skills tools** (since v2.3.0.0): `skills_list`, `skills_load`
 
 Every per-platform tool listed below this section is reachable through the meta-tools. **Use this discovery pattern:**
 
@@ -206,7 +207,8 @@ When asked to create a new site based on an existing site:
   - Use `central_get_wlan_stats` for throughput trends (tx/rx time-series) for a specific SSID over a time window
   - Use `central_get_ap_wlans` (in AP Monitoring) to see which WLANs a specific AP is broadcasting
 - **Clients**: central_get_clients, central_find_client
-- **Alerts**: central_get_alerts
+- **Alerts (instances)**: central_get_alerts (list), central_get_alert_classification (counts grouped by severity/status/etc.). State transitions on already-fired alerts: central_clear_alerts, central_defer_alerts, central_reactivate_alerts, central_set_alert_priority — all batch (list of `keys`), all async (return a `task_id` to poll via central_get_alert_action_status). Operational annotation; fires elicitation. Each alert returned by central_get_alerts has a `key` field — pass to the action tools.
+- **Alert configurations (rules)**: central_get_alert_configs (list rules at a scope), central_create_alert_config / central_update_alert_config / central_reset_alert_config — write-tool surface (requires `ENABLE_CENTRAL_WRITE_TOOLS=true`). Distinct from alerts/instances above: these manage the *definitions* that determine when alerts fire.
 - **Events**: central_get_events, central_get_events_count
 - **Audit Logs**: central_get_audit_logs, central_get_audit_log_detail
 - **Applications**: central_get_applications
