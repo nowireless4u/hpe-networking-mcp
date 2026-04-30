@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1.4] - 2026-04-30
+
+**Broadens the Skills trigger guidance in `INSTRUCTIONS.md` so the AI more reliably loads `mist-scope-audit` / `central-scope-audit` (and the other bundled runbooks) on natural-language audit queries that don't include the literal word "scope". `INSTRUCTIONS.md`-only change; no Python code, no skill body changes — the skills themselves were already producing rich output when triggered.**
+
+### Why
+
+Two consecutive sessions on the same chat asked *"Do a config audit for this site."* — same query verbatim. Central's AI proactively asked itself *"is there a runbook for this?"* and used `central-scope-audit`, producing a comprehensive VSG-anchored report. Mist's AI freelanced and produced a custom audit instead. Same query, different model habit.
+
+The diagnosis: the per-skill trigger phrases in `INSTRUCTIONS.md` Section 8 required platform-prefixed framings like *"audit Mist scope / config"*. Generic phrasings — *"do a config audit"*, *"check the configuration"*, *"does this site follow best practices"*, *"possible improvements"* — didn't match the table, so the AI fell back to manual tool sequencing.
+
+### What changed
+
+Three additions to Section 8 (*"Always check Skills FIRST..."*):
+
+1. **Universal trigger words at the top of the section** — any of these MUST cause `skills_list()` first, regardless of whether a platform name appears in the query: *audit*, *health check*, *review*, *baseline*, *snapshot*, *drift*, *best practices*, *compliance*, *follow standards*, *check the configuration*, *check the config*, *check this site*, *possible improvements*, *what could be better*, *what should I change*, *is this configured correctly*, *is this OK*, *is this set up right*, *how does this look*. Platform context is taken from the conversation (the site/org being discussed, the platform already touched in-session).
+2. **Per-skill row triggers expanded** for `mist-scope-audit` and `central-scope-audit` — added *"do a config audit"*, *"audit this site"*, *"check the config"*, *"check the Wi-Fi configuration"* (Mist), *"does this site follow best practices"*, *"is this configured correctly"*, *"possible improvements"*, *"review this site"*.
+3. **Explicit "don't reinvent" rule** at the bottom of the section — if a skill matches the request and the platform context, the AI MUST `skills_load()` and follow the runbook rather than synthesizing a custom audit. The runbook output is what the user expects (consistent shape, severity ordering, anchored on vendor docs); a freelanced audit produces inconsistent results across sessions.
+
+### What's NOT changing
+
+- Skill bodies are unchanged. The `central-scope-audit` output the user shared is rich and well-shaped (active-alert correlation, VSG-section citations, scope-tree placement audit, persona-assignment gaps, naming-hygiene smells, severity-ordered next actions). `mist-scope-audit`'s 590-line runbook is comparably designed. The skills are good; the trigger reliability was the bug.
+- No code changes, no test changes (test count unchanged at 732). `tests/unit/test_skill_tool_references.py` validates that every tool reference in `INSTRUCTIONS.md` resolves — the new wording introduces no new tool references, only narrative phrasing.
+
 ## [2.3.1.3] - 2026-04-30
 
 **Extends the PII tokenization ruleset to cover Aruba Central response shapes. Three new identifier fields (`user_name`, `updated_by`, `created_by`), one one-line normalization fix that lets hyphen-cased keys (`wpa-passphrase`, `shared-secret`) match the same ruleset entries as their snake_case equivalents. No protocol or API change; existing Mist tokenization is unaffected.**
