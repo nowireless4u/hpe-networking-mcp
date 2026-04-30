@@ -244,6 +244,49 @@ class TestFieldClassification:
         assert cls == FieldClassification.TOKENIZE_IDENTIFIER
         assert kind == TokenKind.HOSTNAME
 
+    # --- Central additions (v2.3.1.3) ---
+
+    def test_central_user_name_tokenized(self) -> None:
+        # Central uses snake_case `user_name` alongside Mist-style `username`
+        cls, kind = classify_field("user_name", "alice")
+        assert cls == FieldClassification.TOKENIZE_IDENTIFIER
+        assert kind == TokenKind.USER
+
+    def test_central_updated_by_tokenized(self) -> None:
+        cls, kind = classify_field("updated_by", "admin@corp.com")
+        assert cls == FieldClassification.TOKENIZE_IDENTIFIER
+        assert kind == TokenKind.USER
+
+    def test_central_created_by_tokenized(self) -> None:
+        cls, kind = classify_field("created_by", "automation-bot")
+        assert cls == FieldClassification.TOKENIZE_IDENTIFIER
+        assert kind == TokenKind.USER
+
+    def test_central_device_group_name_passes_through(self) -> None:
+        # Per v2.3.1.3 design discussion: organizational structure, not
+        # customer-identifying. Operators benefit from cleartext.
+        cls, _ = classify_field("device_group_name", "Indianapolis Stores")
+        assert cls == FieldClassification.SKIP
+
+    def test_central_scope_name_passes_through(self) -> None:
+        cls, _ = classify_field("scope_name", "Global")
+        assert cls == FieldClassification.SKIP
+
+    def test_hyphenated_wpa_passphrase_tokenized_as_psk(self) -> None:
+        # Central's central_get_wlan_profiles returns raw API payloads
+        # with hyphenated keys (e.g. `wpa-passphrase` inside
+        # `personal-security`). The v2.3.1.3 hyphen normalization in
+        # classify_field maps these to the same ruleset entries as
+        # their snake_case equivalents.
+        cls, kind = classify_field("wpa-passphrase", "Welcome2024!")
+        assert cls == FieldClassification.TOKENIZE_SECRET
+        assert kind == TokenKind.PSK
+
+    def test_hyphenated_shared_secret_tokenized(self) -> None:
+        cls, kind = classify_field("shared-secret", "RadiusSharedSecret123!")
+        assert cls == FieldClassification.TOKENIZE_SECRET
+        assert kind == TokenKind.RADSEC
+
 
 class TestCredentialShapeHeuristic:
     def test_long_mixed_string_looks_credential(self) -> None:
@@ -663,4 +706,146 @@ class TestRealisticMistFixture:
         detokenized, unknown = detokenize_arguments(outbound_args, tokenizer)
         assert detokenized["psk"] == "OurOfficeWifi2024!"
         assert detokenized["site_id"] == "11111111-1111-1111-1111-bbbbbbbbbbbb"
+        assert unknown == []
+
+
+# ---------------------------------------------------------------------------
+# End-to-end fixture: Central-shaped responses (v2.3.1.3)
+# ---------------------------------------------------------------------------
+
+
+class TestRealisticCentralFixture:
+    """Walk Central-shaped tool responses through the pipeline."""
+
+    @pytest.fixture
+    def central_wlan_profile_response(self) -> dict:
+        # Shape mirrors central_get_wlan_profiles — raw API payload with
+        # Central's hyphenated camelCase-derived field names. The
+        # personal-security/wpa-passphrase nesting is the leak the
+        # v2.3.1.3 hyphen-normalization fixes.
+        return {
+            "scope_id": "22222222-2222-2222-2222-cccccccccccc",
+            "scope_name": "Indianapolis Office",
+            "device_group_name": "Indiana Stores",
+            "profile_data": {
+                "wlan_name": "Corp-Wifi",
+                "essid": "Corp-Wifi",
+                "personal-security": {
+                    "wpa-passphrase": "OurCentralWifi2024!",
+                    "wpa-passphrase-mode": "wpa3-personal",
+                },
+                "auth-server-group": "RadiusGroup-1",
+                "vlan_name": "Corporate",
+            },
+        }
+
+    @pytest.fixture
+    def central_audit_log_entry(self) -> dict:
+        # Shape mirrors central_get_audit_log_detail
+        return {
+            "id": "33333333-3333-3333-3333-dddddddddddd",
+            "scope_id": "22222222-2222-2222-2222-cccccccccccc",
+            "scope_name": "Global",
+            "device_group_name": "All Sites",
+            "action": "config_update",
+            "target_resource": "wlan-profile/Corp-Wifi",
+            "user_name": "alice.smith",
+            "updated_by": "alice.smith@corp.com",
+            "created_by": "automation-bot",
+            "created_at": "2026-04-30T10:00:00Z",
+            "updated_at": "2026-04-30T10:05:00Z",
+        }
+
+    @pytest.fixture
+    def central_server_group_response(self) -> dict:
+        # Shape mirrors central_get_server_groups — RADIUS server config
+        return {
+            "name": "RadiusGroup-1",
+            "scope_id": "22222222-2222-2222-2222-cccccccccccc",
+            "radius_servers": [
+                {
+                    "host": "10.50.10.10",
+                    "port": 1812,
+                    "shared-secret": "CentralRadiusSecret123!",
+                },
+                {
+                    "host": "10.50.10.11",
+                    "port": 1812,
+                    "shared-secret": "CentralRadiusSecret456!",
+                },
+            ],
+        }
+
+    def test_wlan_profile_walk(self, tokenizer: Tokenizer, central_wlan_profile_response: dict) -> None:
+        result = tokenize_response(central_wlan_profile_response, tokenizer)
+
+        # Hyphenated PSK field — caught by v2.3.1.3 hyphen normalization
+        assert "OurCentralWifi2024!" not in str(result)
+        psk_token = result["profile_data"]["personal-security"]["wpa-passphrase"]
+        assert TOKEN_RE.fullmatch(psk_token).group(1) == "PSK"
+
+        # Platform UUIDs — pass through (refined v2.3.1.1)
+        assert result["scope_id"] == "22222222-2222-2222-2222-cccccccccccc"
+
+        # Central organizational structure — pass through (per v2.3.1.3 design)
+        assert result["scope_name"] == "Indianapolis Office"
+        assert result["device_group_name"] == "Indiana Stores"
+
+        # SSID family — pass through (broadcast)
+        assert result["profile_data"]["wlan_name"] == "Corp-Wifi"
+        assert result["profile_data"]["essid"] == "Corp-Wifi"
+
+        # vlan_name — still tokenized as NAME
+        assert result["profile_data"]["vlan_name"] != "Corporate"
+        assert TOKEN_RE.fullmatch(result["profile_data"]["vlan_name"]).group(1) == "NAME"
+
+    def test_audit_log_user_fields_tokenized(self, tokenizer: Tokenizer, central_audit_log_entry: dict) -> None:
+        result = tokenize_response(central_audit_log_entry, tokenizer)
+
+        # New v2.3.1.3 user-identifying fields
+        assert result["user_name"] != "alice.smith"
+        assert TOKEN_RE.fullmatch(result["user_name"]).group(1) == "USER"
+        # updated_by has an email — universal email scan substring-tokenizes
+        assert "alice.smith@corp.com" not in str(result)
+        assert "[[USER:" in result["updated_by"] or "[[EMAIL:" in result["updated_by"]
+        assert result["created_by"] != "automation-bot"
+        assert TOKEN_RE.fullmatch(result["created_by"]).group(1) == "USER"
+
+        # Central organizational structure — pass through
+        assert result["scope_name"] == "Global"
+        assert result["device_group_name"] == "All Sites"
+
+        # Action / target resource / timestamps — pass through (operational metadata)
+        assert result["action"] == "config_update"
+        assert result["target_resource"] == "wlan-profile/Corp-Wifi"
+
+    def test_server_group_radius_secrets_tokenized(
+        self, tokenizer: Tokenizer, central_server_group_response: dict
+    ) -> None:
+        result = tokenize_response(central_server_group_response, tokenizer)
+
+        # Hyphenated shared-secret — caught by v2.3.1.3 hyphen normalization
+        assert "CentralRadiusSecret123!" not in str(result)
+        assert "CentralRadiusSecret456!" not in str(result)
+        for server in result["radius_servers"]:
+            secret_token = server["shared-secret"]
+            assert TOKEN_RE.fullmatch(secret_token).group(1) == "RADSEC"
+
+        # IPs — pass through everywhere (v2.3.1.2)
+        assert result["radius_servers"][0]["host"] == "10.50.10.10"
+        assert result["radius_servers"][1]["host"] == "10.50.10.11"
+
+        # Different secrets get different tokens
+        assert result["radius_servers"][0]["shared-secret"] != result["radius_servers"][1]["shared-secret"]
+
+    def test_round_trip_central_psk(self, tokenizer: Tokenizer, central_wlan_profile_response: dict) -> None:
+        # Verify the AI can take a tokenized PSK from a hyphenated-field
+        # response and pass it back into a write tool with the same
+        # field name.
+        tokenized = tokenize_response(central_wlan_profile_response, tokenizer)
+        psk_token = tokenized["profile_data"]["personal-security"]["wpa-passphrase"]
+
+        outbound_args = {"profile_data": {"personal-security": {"wpa-passphrase": psk_token}}}
+        detokenized, unknown = detokenize_arguments(outbound_args, tokenizer)
+        assert detokenized["profile_data"]["personal-security"]["wpa-passphrase"] == "OurCentralWifi2024!"
         assert unknown == []

@@ -324,6 +324,8 @@ Tool responses are walked before reaching the AI:
 - **Email addresses** — caught even when the field is named `name`, `username`, or anything else. Mist's MPSK pattern of using the user's email as the PSK display name was a leak before this.
 - **AWS-signed URL credentials** — any string containing `X-Amz-Security-Token`, `X-Amz-Credential`, or `X-Amz-Signature` is treated as a temporary AWS credential and tokenized whole as `APITOKEN`. Catches the `portal_template_url` leak from Mist's S3-backed captive-portal previews.
 
+**Central coverage (v2.3.1.3):** the ruleset now also covers Central response shapes — `user_name`, `updated_by`, `created_by` (audit-log fields) tokenize as `USER`; hyphenated keys like `wpa-passphrase` and `shared-secret` match the same secret rules as their snake_case equivalents. Central organizational structure (`device_group_name`, `scope_name`) passes through as cleartext.
+
 **Round-trip works for every kind.** Same plaintext → same token within a session. WLAN sync, AOS 8 → AOS 10 migration, and mass PSK rotation all work because tokenization is round-trippable.
 
 **What the AI never sees in its context window:** WPA / SAE / WEP keys; RADIUS / RadSec / SNMP / admin / VPN secrets; API tokens (including AWS-signed URLs); certificates and private keys; hostnames / FQDNs / device names; **email addresses (anywhere they appear)**; usernames and personal names; phone numbers; hardware serial numbers / IMEI / IMSI / ICCID; embedded secrets in description/notes fields. **What it does see:** tokens for those values, MACs (normalized), SSIDs, platform UUIDs, geographic data, **all IP addresses (internal + public)**, and unchanged metric/enum/timestamp fields.

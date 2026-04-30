@@ -201,12 +201,15 @@ TOKENIZED_IDENTIFIER_FIELDS: dict[str, TokenKind] = {
     # User-identifying
     "username": TokenKind.USER,
     "user": TokenKind.USER,
+    "user_name": TokenKind.USER,  # Central uses snake_case alongside camelCase userName
     "login": TokenKind.USER,
     "email": TokenKind.EMAIL,
     "first_name": TokenKind.USER,
     "last_name": TokenKind.USER,
     "full_name": TokenKind.USER,
     "display_name": TokenKind.USER,
+    "updated_by": TokenKind.USER,  # Central audit logs: who modified config
+    "created_by": TokenKind.USER,  # Central audit logs: who created
     "phone": TokenKind.PHONE,
     "phone_number": TokenKind.PHONE,
     "mobile": TokenKind.PHONE,
@@ -218,11 +221,14 @@ TOKENIZED_IDENTIFIER_FIELDS: dict[str, TokenKind] = {
     "imsi": TokenKind.IMSI,
     "iccid": TokenKind.ICCID,
     # NOTE: platform UUID *_id fields (org_id, site_id, device_id,
-    # template_id, ...) are intentionally absent — they are already
-    # opaque random UUIDs in Mist's API; replacing one UUID with another
-    # adds no privacy. Geographic fields (address, city, state, zip,
-    # latitude, longitude, etc.) are also absent — addresses for
-    # business sites are typically findable on the company's website.
+    # template_id, scope_id, ...) are intentionally absent — they are
+    # already opaque random UUIDs in Mist's and Central's APIs; replacing
+    # one UUID with another adds no privacy. Geographic fields (address,
+    # city, state, zip, latitude, longitude, etc.) are also absent —
+    # addresses for business sites are typically findable on the company's
+    # website. Central-specific organizational structures (device_group_name,
+    # scope_name) are also absent — they describe network architecture
+    # rather than people, and audit utility benefits from cleartext.
 }
 
 # Field names where ``name`` should be tokenized as HOSTNAME — only when
@@ -383,7 +389,11 @@ def classify_field(
     """Decide how the walker should handle this (field, value).
 
     Args:
-        field_name: The JSON key. Compared case-insensitively.
+        field_name: The JSON key. Compared case-insensitively, with
+            hyphens normalized to underscores so that hyphenated API
+            keys (e.g. Aruba Central's ``wpa-passphrase`` inside
+            ``personal-security``) match the same ruleset entries as
+            their snake_case equivalents (added in v2.3.1.3).
         value: The value at that key — used for shape heuristics on
             generic credential field names.
         parent_keys: The set of sibling keys in the same dict, used to
@@ -396,7 +406,7 @@ def classify_field(
     """
     if not isinstance(field_name, str):
         return FieldClassification.SKIP, None
-    name = field_name.lower()
+    name = field_name.lower().replace("-", "_")
 
     # Exact-match secret fields
     if name in SECRET_FIELD_NAMES:

@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1.3] - 2026-04-30
+
+**Extends the PII tokenization ruleset to cover Aruba Central response shapes. Three new identifier fields (`user_name`, `updated_by`, `created_by`), one one-line normalization fix that lets hyphen-cased keys (`wpa-passphrase`, `shared-secret`) match the same ruleset entries as their snake_case equivalents. No protocol or API change; existing Mist tokenization is unaffected.**
+
+### What changed
+
+1. **`user_name`, `updated_by`, `created_by` added to `TOKENIZED_IDENTIFIER_FIELDS`** as `USER`. Central exposes these in audit log entries (`updated_by` = the operator who modified config, `created_by` = the operator who created it) and uses `user_name` as the snake_case variant alongside Mist-style `username`.
+
+2. **Hyphen normalization in `classify_field`** — field names are now lowercased AND have hyphens collapsed to underscores at lookup time (`field_name.lower().replace("-", "_")`). This makes the ruleset match Central's hyphenated keys without enumerating every variant. Concretely: `wpa-passphrase` now matches `wpa_passphrase` and tokenizes as `PSK`; `shared-secret` matches `shared_secret` and tokenizes as `RADSEC`.
+
+### Deliberately NOT added
+
+Per the v2.3.1.3 design discussion:
+
+- **`device_group_name`** — Central's group hierarchy. Organizational structure, not customer-identifying.
+- **`scope_name`** — Central's scope tree. Same reasoning.
+
+Both pass through as cleartext. Audit utility benefits from operators being able to read which group / scope was affected.
+
+### Tests
+
+- 732 passing (was 721) — net +11: 7 new field-classification tests covering `user_name`, `updated_by`, `created_by`, `device_group_name` passthrough, `scope_name` passthrough, hyphenated `wpa-passphrase`, hyphenated `shared-secret`; 4 new Central-shaped fixture tests covering WLAN profile walk, audit-log user-field tokenization, server-group RADIUS-secret tokenization, and a round-trip through hyphenated PSK fields.
+
+### What this unlocks
+
+Running an audit on Central with `ENABLE_PII_TOKENIZATION=true` should now produce useful output:
+
+- WLAN profile PSKs (`wpa-passphrase` inside `personal-security`) tokenize as `[[PSK:...]]`
+- Server group RADIUS shared secrets (`shared-secret`) tokenize as `[[RADSEC:...]]`
+- Audit log `updated_by` / `created_by` / `user_name` tokenize as `[[USER:...]]`
+- Device names / AP names (via the device-context heuristic) tokenize as `[[HOSTNAME:...]]`
+- Scope names, device group names, IPs, MACs, SSIDs, platform UUIDs all pass through cleartext
+
+### Cross-platform note
+
+GreenLake, ClearPass, Apstra, Axis still need their own ruleset extensions. Each likely follows the same shape (small set of platform-specific identifier fields + verify the existing secret rules cover their auth fields). One platform per follow-up patch.
+
 ## [2.3.1.2] - 2026-04-29
 
 **Closes four leaks / false positives surfaced by the first real Mist audit run with v2.3.1.1. Email addresses now tokenize anywhere they appear (not just in `email` fields), AWS-signed URLs are tokenized whole as APITOKEN credentials, the wxtag → HOSTNAME false positive is fixed, and IP addresses pass through as cleartext everywhere. No protocol or API change; existing PSK / RADSEC / cert / hostname tokenization continues unchanged.**
