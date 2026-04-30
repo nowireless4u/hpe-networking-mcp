@@ -471,22 +471,23 @@ class TestTokenizeResponse:
     def test_aws_signed_url_tokenized(self, tokenizer: Tokenizer) -> None:
         # v2.3.1.2: any value containing AWS Signature v4 credential
         # markers is treated as a temporary AWS credential and
-        # tokenized whole as APITOKEN.
+        # tokenized whole as APITOKEN. Placeholders below intentionally
+        # don't match the real AWS access-key shape (would trip gitleaks).
         signed_url = (
-            "https://papi-use1prod2.s3.us-east-1.amazonaws.com/portal_template/"
+            "https://example.s3.us-east-1.amazonaws.com/portal_template/"
             "abc.json?X-Amz-Algorithm=AWS4-HMAC-SHA256"
-            "&X-Amz-Credential=ASIARKDJAUCUS5XT55BI%2F20260429%2Fus-east-1"
-            "&X-Amz-Date=20260429T224027Z&X-Amz-Expires=3600"
+            "&X-Amz-Credential=EXAMPLE_ACCESS_KEY%2F20260429%2Fus-east-1"
+            "&X-Amz-Date=20260429T000000Z&X-Amz-Expires=3600"
             "&X-Amz-SignedHeaders=host"
-            "&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEDc"
-            "&X-Amz-Signature=73c2b0892dbeb8af88288105d9d784e13"
+            "&X-Amz-Security-Token=EXAMPLE_SESSION_TOKEN_PLACEHOLDER"
+            "&X-Amz-Signature=EXAMPLE_SIGNATURE_HEX_PLACEHOLDER"
         )
         result = tokenize_response({"portal_template_url": signed_url}, tokenizer)
         # Whole URL replaced (partial substitution would still leak the access key)
         assert "X-Amz-Security-Token" not in str(result)
         assert "X-Amz-Credential" not in str(result)
         assert "X-Amz-Signature" not in str(result)
-        assert "ASIARKDJAUCUS5XT55BI" not in str(result)
+        assert "EXAMPLE_ACCESS_KEY" not in str(result)
         assert TOKEN_RE.fullmatch(result["portal_template_url"]).group(1) == "APITOKEN"
 
     def test_plain_url_passes_through(self, tokenizer: Tokenizer) -> None:
@@ -588,13 +589,15 @@ class TestRealisticMistFixture:
                     "vlan_id": 10,
                 },
             ],
-            # Mist sometimes returns AWS-signed URLs for portal-template previews
+            # Mist sometimes returns AWS-signed URLs for portal-template previews.
+            # Placeholders below intentionally don't match the real AWS access-key
+            # shape (would trip gitleaks).
             "portal_template_url": (
-                "https://papi-use1prod2.s3.us-east-1.amazonaws.com/portal_template/"
+                "https://example.s3.us-east-1.amazonaws.com/portal_template/"
                 "abc.json?X-Amz-Algorithm=AWS4-HMAC-SHA256"
-                "&X-Amz-Credential=ASIARKDJAUCUS5XT55BI%2F20260429%2Fus-east-1"
-                "&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEDc"
-                "&X-Amz-Signature=73c2b0892dbeb8af88288105d9d784e13"
+                "&X-Amz-Credential=EXAMPLE_ACCESS_KEY%2F20260429%2Fus-east-1"
+                "&X-Amz-Security-Token=EXAMPLE_SESSION_TOKEN_PLACEHOLDER"
+                "&X-Amz-Signature=EXAMPLE_SIGNATURE_HEX_PLACEHOLDER"
             ),
         }
 
@@ -643,7 +646,7 @@ class TestRealisticMistFixture:
         # Universal AWS-signed URL scan — whole URL tokenized as APITOKEN (v2.3.1.2)
         assert "X-Amz-Security-Token" not in str(result)
         assert "X-Amz-Credential" not in str(result)
-        assert "ASIARKDJAUCUS5XT55BI" not in str(result)
+        assert "EXAMPLE_ACCESS_KEY" not in str(result)
         assert TOKEN_RE.fullmatch(result["portal_template_url"]).group(1) == "APITOKEN"
 
         # Pass-through values preserved
