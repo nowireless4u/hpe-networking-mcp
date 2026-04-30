@@ -363,7 +363,7 @@ Run these in parallel with the parse stage. They use only Central / ClearPass / 
 
 #### AOS8 live-mode sub-path — Central enrichment (ENRICH-01..04, used when Stage -1 announced "AOS8 API mode")
 
-When AOS8 live mode is active, the four Central enrichment checks (AP count gap, per-model AOS10 firmware recommendations, SSID conflicts, role/VLAN conflicts) are evaluated using AOS8 Stage 1 batch data already in context plus a small set of Central tool calls — no operator paste, no re-fetching of AOS8 batches. After this sub-path, continue with the A1–A13 Central API checks below; A4 / A7 / A8 / A9 are superseded by this sub-path's findings when live mode is active.
+When AOS8 live mode is active, the four Central enrichment checks (AP count gap, per-model AOS10 firmware recommendations, SSID conflicts, role/VLAN conflicts) are evaluated using AOS8 Stage 1 batch data already in context plus a small set of Central tool calls — no operator paste, no re-fetching of AOS8 batches. After this sub-path, continue with the A1–A13 Central API checks below; A4 / A7 / A8 / A9 / A13 are superseded by this sub-path's findings when live mode is active.
 
 Each finding below uses the format **Severity — Description. (source: `tool_call(args)`, Batch N where applicable)**.
 
