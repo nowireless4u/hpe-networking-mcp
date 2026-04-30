@@ -1,0 +1,21 @@
+# gitleaks fingerprint allowlist — one fingerprint per line.
+# Format: {commit}:{file}:{rule}:{line}
+#
+# Each entry suppresses a single, specific historical finding. Future
+# leaks in the same file/line still get detected.
+
+# v2.3.1.2 PR (#223): the test fixture for PII tokenization contained
+# AWS-Signature-v4-shaped placeholder strings to verify that values
+# containing X-Amz-Security-Token / X-Amz-Credential / X-Amz-Signature
+# get tokenized whole as APITOKEN. The placeholders were obviously
+# fake but matched gitleaks' aws-access-token + generic-api-key
+# patterns. Replaced with EXAMPLE_*_PLACEHOLDER strings in commit
+# 3fc41951 (still in this PR), but the original commit is preserved
+# in the PR diff range. Once the PR squash-merges to main, the
+# original commit hash is no longer reachable from main's history.
+ae1d9d741b3c33c1f041de2136f6126a00227a90:tests/unit/test_pii_redaction.py:generic-api-key:481
+ae1d9d741b3c33c1f041de2136f6126a00227a90:tests/unit/test_pii_redaction.py:aws-access-token:478
+ae1d9d741b3c33c1f041de2136f6126a00227a90:tests/unit/test_pii_redaction.py:aws-access-token:489
+ae1d9d741b3c33c1f041de2136f6126a00227a90:tests/unit/test_pii_redaction.py:generic-api-key:596
+ae1d9d741b3c33c1f041de2136f6126a00227a90:tests/unit/test_pii_redaction.py:aws-access-token:595
+ae1d9d741b3c33c1f041de2136f6126a00227a90:tests/unit/test_pii_redaction.py:aws-access-token:646
