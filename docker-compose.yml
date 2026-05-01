@@ -10,13 +10,15 @@ services:
       - MCP_PORT=8000
       - MCP_HOST=0.0.0.0
       - LOG_LEVEL=${LOG_LEVEL:-info}
-      - ENABLE_MIST_WRITE_TOOLS=${ENABLE_MIST_WRITE_TOOLS:-false}
-      - ENABLE_CENTRAL_WRITE_TOOLS=${ENABLE_CENTRAL_WRITE_TOOLS:-false}
-      - ENABLE_CLEARPASS_WRITE_TOOLS=${ENABLE_CLEARPASS_WRITE_TOOLS:-false}
-      - ENABLE_APSTRA_WRITE_TOOLS=${ENABLE_APSTRA_WRITE_TOOLS:-false}
-      - ENABLE_AXIS_WRITE_TOOLS=${ENABLE_AXIS_WRITE_TOOLS:-false}
+      - ENABLE_MIST_WRITE_TOOLS=${ENABLE_MIST_WRITE_TOOLS:-true}
+      - ENABLE_CENTRAL_WRITE_TOOLS=${ENABLE_CENTRAL_WRITE_TOOLS:-true}
+      - ENABLE_CLEARPASS_WRITE_TOOLS=${ENABLE_CLEARPASS_WRITE_TOOLS:-true}
+      - ENABLE_APSTRA_WRITE_TOOLS=${ENABLE_APSTRA_WRITE_TOOLS:-true}
+      - ENABLE_AXIS_WRITE_TOOLS=${ENABLE_AXIS_WRITE_TOOLS:-true}
+      - ENABLE_AOS8_WRITE_TOOLS=${ENABLE_AOS8_WRITE_TOOLS:-true}
       - DISABLE_ELICITATION=${DISABLE_ELICITATION:-false}
-      - MCP_TOOL_MODE=${MCP_TOOL_MODE:-dynamic}
+      - MCP_TOOL_MODE=${MCP_TOOL_MODE:-code}
+      - FASTMCP_STATELESS_HTTP=${FASTMCP_STATELESS_HTTP:-true}
     secrets:
       # Mist (remove lines for platforms you don't use)
       - mist_api_token
@@ -43,9 +45,15 @@ services:
       - apstra_verify_ssl
       # Axis Atmos Cloud (remove lines for platforms you don't use)
       - axis_api_token
+      # Aruba OS 8 / Mobility Conductor (remove lines for platforms you don't use)
+      - aos8_host
+      - aos8_username
+      - aos8_password
+      - aos8_port
+      - aos8_verify_ssl
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "uv", "run", "--no-sync", "python", "-c", "import httpx; r = httpx.get('http://localhost:8000/mcp', timeout=5)"]
+      test: ["CMD", "uv", "run", "--no-sync", "python", "-c", "import httpx, json; r = httpx.post('http://localhost:8000/mcp', json={'jsonrpc':'2.0','id':0,'method':'ping','params':{}}, headers={'Accept':'application/json, text/event-stream'}, timeout=5); r.raise_for_status()"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -98,3 +106,14 @@ secrets:
   # Axis Atmos Cloud
   axis_api_token:
     file: ./secrets/axis_api_token
+  # Aruba OS 8 / Mobility Conductor
+  aos8_host:
+    file: ./secrets/aos8_host
+  aos8_username:
+    file: ./secrets/aos8_username
+  aos8_password:
+    file: ./secrets/aos8_password
+  aos8_port:
+    file: ./secrets/aos8_port
+  aos8_verify_ssl:
+    file: ./secrets/aos8_verify_ssl

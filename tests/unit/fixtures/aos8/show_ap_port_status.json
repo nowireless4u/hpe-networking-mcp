@@ -1,0 +1,6 @@
+{
+  "_global_result": {"status": "0", "status_str": "Success"},
+  "AP Port Status": [
+    {"AP Name": "ap-02", "Port": "enet1", "Admin": "up", "Oper": "up", "VLAN": 10}
+  ]
+}

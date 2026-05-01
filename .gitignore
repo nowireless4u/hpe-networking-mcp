@@ -59,6 +59,9 @@ original-mcp-servers/
 # Functions to import (reference code from other projects, not part of this project)
 functions_to_import/
 
+# GSD planning artifacts (internal, not for public repo)
+.planning/
+
 # Internal project docs (not for public repo)
 HANDOFF.md
 TASKS.md

@@ -1,0 +1,11 @@
+{
+  "_meta": ["timestamp", "severity", "message"],
+  "_global_result": {"status": "0", "status_str": "Success"},
+  "System Log": [
+    {
+      "timestamp": "2026-04-28T09:00:00",
+      "severity": "info",
+      "message": "Startup complete"
+    }
+  ]
+}

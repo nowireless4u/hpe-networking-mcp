@@ -1,0 +1,13 @@
+{
+  "_meta": ["Severity", "Name", "Source", "Time", "Description"],
+  "_global_result": {"status": "0", "status_str": "Success"},
+  "Alarms": [
+    {
+      "Severity": "Major",
+      "Name": "AP-DOWN",
+      "Source": "AP-01",
+      "Time": "2026-04-28 12:34:56",
+      "Description": "AP went down"
+    }
+  ]
+}

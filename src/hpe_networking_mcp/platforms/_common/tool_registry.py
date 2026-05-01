@@ -37,6 +37,7 @@ class ToolSpec:
 # One dict per platform, keyed by tool name. Populated by each platform's
 # ``tool()`` shim when tool modules import.
 REGISTRIES: dict[str, dict[str, ToolSpec]] = {
+    "aos8": {},
     "apstra": {},
     "axis": {},
     "central": {},
@@ -61,6 +62,7 @@ DYNAMIC_MANAGED_TAG = "dynamic_managed"
 # these tags and the corresponding ENABLE_X_WRITE_TOOLS flag is false,
 # the tool is invisible to ``list_tools`` and refused by ``invoke_tool``.
 _WRITE_TAG_BY_PLATFORM: dict[str, set[str]] = {
+    "aos8": {"aos8_write", "aos8_write_delete"},
     "apstra": {"apstra_write", "apstra_write_delete"},
     "axis": {"axis_write", "axis_write_delete"},
     "central": {"central_write_delete"},
@@ -71,6 +73,7 @@ _WRITE_TAG_BY_PLATFORM: dict[str, set[str]] = {
 }
 
 _GATE_CONFIG_ATTR: dict[str, str | None] = {
+    "aos8": "enable_aos8_write_tools",
     "apstra": "enable_apstra_write_tools",
     "axis": "enable_axis_write_tools",
     "central": "enable_central_write_tools",

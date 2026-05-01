@@ -1,0 +1,337 @@
+"""Red tests for AOS8 differentiator read tools (DIFF-01..09).
+
+These tests fail with ModuleNotFoundError until plan 07-02 implements
+``platforms.aos8.tools.differentiators``. Each test pins the exact
+endpoint path, parameter shape, and response contract every implementation
+must satisfy.
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+
+pytestmark = pytest.mark.unit
+_FIXTURES = Path(__file__).parent / "fixtures" / "aos8"
+
+
+def _load(name: str) -> dict:
+    return json.loads((_FIXTURES / name).read_text())
+
+
+def _resp(body: dict) -> MagicMock:
+    """Build a MagicMock that mimics httpx.Response with a .json() method."""
+    r = MagicMock()
+    r.json.return_value = body
+    return r
+
+
+def _make_ctx(body: dict):
+    client = MagicMock()
+    client.request = AsyncMock(return_value=_resp(body))
+    ctx = MagicMock()
+    ctx.lifespan_context = {"aos8_client": client}
+    return ctx, client
+
+
+# ---------------------------------------------------------------------------
+# DIFF-01: aos8_get_md_hierarchy
+# ---------------------------------------------------------------------------
+
+
+async def test_get_md_hierarchy():
+    from hpe_networking_mcp.platforms.aos8.tools.differentiators import aos8_get_md_hierarchy
+
+    body = _load("show_switch_hierarchy.json")
+    ctx, client = _make_ctx(body)
+
+    result = await aos8_get_md_hierarchy(ctx)
+
+    client.request.assert_awaited_once_with(
+        "GET",
+        "/v1/configuration/showcommand",
+        params={"command": "show switch hierarchy"},
+    )
+    assert "_meta" not in result
+    assert "_global_result" not in result
+    assert result["Switch Hierarchy"][0]["Name"] == "MC-01"
+
+
+# ---------------------------------------------------------------------------
+# DIFF-02: aos8_get_effective_config
+# ---------------------------------------------------------------------------
+
+
+async def test_get_effective_config_required_object_name():
+    from hpe_networking_mcp.platforms.aos8.tools.differentiators import aos8_get_effective_config
+
+    body = {"_global_result": {"status": "0"}, "_data": ["wlan ssid-profile"]}
+    ctx, client = _make_ctx(body)
+
+    result = await aos8_get_effective_config(ctx, object_name="ssid_prof", config_path="/md/branch1")
+
+    client.request.assert_awaited_once_with(
+        "GET",
+        "/v1/configuration/object/ssid_prof",
+        params={"config_path": "/md/branch1"},
+    )
+    assert "_global_result" not in result
+
+
+async def test_get_effective_config_defaults_config_path():
+    from hpe_networking_mcp.platforms.aos8.tools.differentiators import aos8_get_effective_config
+
+    body = {"_global_result": {"status": "0"}, "_data": []}
+    ctx, client = _make_ctx(body)
+
+    await aos8_get_effective_config(ctx, object_name="ssid_prof")
+
+    client.request.assert_awaited_once_with(
+        "GET",
+        "/v1/configuration/object/ssid_prof",
+        params={"config_path": "/md"},
+    )
+
+
+# ---------------------------------------------------------------------------
+# DIFF-03: aos8_get_pending_changes
+# ---------------------------------------------------------------------------
+
+
+async def test_get_pending_changes():
+    from hpe_networking_mcp.platforms.aos8.tools.differentiators import aos8_get_pending_changes
+
+    body = _load("show_pending_config.json")
+    ctx, client = _make_ctx(body)
+
+    result = await aos8_get_pending_changes(ctx)
+
+    client.request.assert_awaited_once_with(
+        "GET",
+        "/v1/configuration/showcommand",
+        params={"command": "show configuration pending"},
+    )
+    assert "Pending Configuration" in result
+    assert "_global_result" not in result
+
+
+# ---------------------------------------------------------------------------
+# DIFF-04: aos8_get_rf_neighbors
+# ---------------------------------------------------------------------------
+
+
+async def test_get_rf_neighbors():
+    from hpe_networking_mcp.platforms.aos8.tools.differentiators import aos8_get_rf_neighbors
+
+    body = _load("show_ap_arm_neighbors.json")
+    ctx, client = _make_ctx(body)
+
+    await aos8_get_rf_neighbors(ctx, ap_name="ap-01", config_path="/md/branch1")
+
+    client.request.assert_awaited_once_with(
+        "GET",
+        "/v1/configuration/showcommand",
+        params={"command": "show ap arm-neighbors ap-name ap-01", "config_path": "/md/branch1"},
+    )
+
+
+# ---------------------------------------------------------------------------
+# DIFF-05: aos8_get_cluster_state
+# ---------------------------------------------------------------------------
+
+
+async def test_get_cluster_state():
+    from hpe_networking_mcp.platforms.aos8.tools.differentiators import aos8_get_cluster_state
+
+    body = _load("show_lc_cluster_group.json")
+    ctx, client = _make_ctx(body)
+
+    await aos8_get_cluster_state(ctx)
+
+    client.request.assert_awaited_once_with(
+        "GET",
+        "/v1/configuration/showcommand",
+        params={"command": "show lc-cluster group-membership"},
+    )
+
+
+# ---------------------------------------------------------------------------
+# DIFF-06: aos8_get_air_monitors
+# ---------------------------------------------------------------------------
+
+
+async def test_get_air_monitors():
+    from hpe_networking_mcp.platforms.aos8.tools.differentiators import aos8_get_air_monitors
+
+    body = _load("show_ap_monitor_active.json")
+    ctx, client = _make_ctx(body)
+
+    await aos8_get_air_monitors(ctx)
+
+    client.request.assert_awaited_once_with(
+        "GET",
+        "/v1/configuration/showcommand",
+        params={"command": "show ap monitor active-laser-beams"},
+    )
+
+
+# ---------------------------------------------------------------------------
+# DIFF-07: aos8_get_ap_wired_ports
+# ---------------------------------------------------------------------------
+
+
+async def test_get_ap_wired_ports():
+    from hpe_networking_mcp.platforms.aos8.tools.differentiators import aos8_get_ap_wired_ports
+
+    body = _load("show_ap_port_status.json")
+    ctx, client = _make_ctx(body)
+
+    await aos8_get_ap_wired_ports(ctx, ap_name="ap-02")
+
+    client.request.assert_awaited_once_with(
+        "GET",
+        "/v1/configuration/showcommand",
+        params={"command": "show ap port status ap-name ap-02"},
+    )
+
+
+# ---------------------------------------------------------------------------
+# DIFF-08: aos8_get_ipsec_tunnels
+# ---------------------------------------------------------------------------
+
+
+async def test_get_ipsec_tunnels():
+    from hpe_networking_mcp.platforms.aos8.tools.differentiators import aos8_get_ipsec_tunnels
+
+    body = _load("show_crypto_ipsec_sa.json")
+    ctx, client = _make_ctx(body)
+
+    await aos8_get_ipsec_tunnels(ctx)
+
+    client.request.assert_awaited_once_with(
+        "GET",
+        "/v1/configuration/showcommand",
+        params={"command": "show crypto ipsec sa"},
+    )
+
+
+# ---------------------------------------------------------------------------
+# DIFF-09: aos8_get_md_health_check (composite)
+# ---------------------------------------------------------------------------
+
+
+async def test_get_md_health_check():
+    from hpe_networking_mcp.platforms.aos8.tools.differentiators import aos8_get_md_health_check
+
+    aps_active = {"_global_result": {"status": "0"}, "Active AP Table": []}
+    aps_db = _load("show_ap_database.json")
+    alarms = _load("show_alarms.json")
+    version = {"_global_result": {"status": "0"}, "Version": "8.10.0.0"}
+    users = _load("show_user_summary.json")
+
+    def _route(method, path, params=None, **kwargs):
+        cmd = (params or {}).get("command", "")
+        if cmd == "show ap active":
+            return _resp(aps_active)
+        if cmd == "show ap database":
+            return _resp(aps_db)
+        if cmd == "show alarms all":
+            return _resp(alarms)
+        if cmd == "show version":
+            return _resp(version)
+        if cmd == "show user summary":
+            return _resp(users)
+        return _resp({"_global_result": {"status": "0"}})
+
+    client = MagicMock()
+    client.request = AsyncMock(side_effect=_route)
+    ctx = MagicMock()
+    ctx.lifespan_context = {"aos8_client": client}
+
+    result = await aos8_get_md_health_check(ctx, config_path="/md/branch1")
+
+    # At least 4 sub-calls
+    assert client.request.await_count >= 4
+    commands_called = {call.kwargs.get("params", {}).get("command") for call in client.request.await_args_list}
+    for required in ("show ap active", "show ap database", "show alarms all", "show version"):
+        assert required in commands_called, f"missing sub-call: {required}"
+
+    assert isinstance(result, dict)
+    assert result["config_path"] == "/md/branch1"
+    for key in ("aps", "clients", "alarms", "firmware"):
+        assert key in result, f"result missing key: {key}"
+
+
+async def test_get_md_health_check_requires_config_path():
+    from hpe_networking_mcp.platforms.aos8.tools.differentiators import aos8_get_md_health_check
+
+    ctx, _ = _make_ctx({"_global_result": {"status": "0"}})
+    with pytest.raises(TypeError):
+        await aos8_get_md_health_check(ctx)  # type: ignore[call-arg]
+
+
+async def test_get_md_health_check_handles_partial_failure():
+    from hpe_networking_mcp.platforms.aos8.tools.differentiators import aos8_get_md_health_check
+
+    aps_db = _load("show_ap_database.json")
+    alarms = _load("show_alarms.json")
+    version = {"_global_result": {"status": "0"}, "Version": "8.10.0.0"}
+    users = _load("show_user_summary.json")
+
+    def _route(method, path, params=None, **kwargs):
+        cmd = (params or {}).get("command", "")
+        if cmd == "show ap active":
+            raise RuntimeError("conductor unreachable for active APs")
+        if cmd == "show ap database":
+            return _resp(aps_db)
+        if cmd == "show alarms all":
+            return _resp(alarms)
+        if cmd == "show version":
+            return _resp(version)
+        if cmd == "show user summary":
+            return _resp(users)
+        return _resp({"_global_result": {"status": "0"}})
+
+    client = MagicMock()
+    client.request = AsyncMock(side_effect=_route)
+    ctx = MagicMock()
+    ctx.lifespan_context = {"aos8_client": client}
+
+    result = await aos8_get_md_health_check(ctx, config_path="/md/branch1")
+
+    # The failing sub-call must be reported as an error inside its section
+    # (return_exceptions=True swallow case — Pitfall 3).
+    assert isinstance(result, dict)
+    aps_section = result.get("aps")
+    assert isinstance(aps_section, dict) and "error" in aps_section, (
+        f"expected aps section to have error key, got: {aps_section!r}"
+    )
+    # Other sections still populated
+    assert "alarms" in result
+    assert "firmware" in result
+
+
+# ---------------------------------------------------------------------------
+# Module-level cross-cut: 9 tools exposed
+# ---------------------------------------------------------------------------
+
+
+def test_diff_tools_count_matches_module():
+    from hpe_networking_mcp.platforms.aos8.tools import differentiators
+
+    expected = (
+        "aos8_get_md_hierarchy",
+        "aos8_get_effective_config",
+        "aos8_get_pending_changes",
+        "aos8_get_rf_neighbors",
+        "aos8_get_cluster_state",
+        "aos8_get_air_monitors",
+        "aos8_get_ap_wired_ports",
+        "aos8_get_ipsec_tunnels",
+        "aos8_get_md_health_check",
+    )
+    for name in expected:
+        assert hasattr(differentiators, name), f"differentiators missing {name}"

@@ -1,0 +1,8 @@
+{
+  "_meta": ["IP Address", "Name", "Role", "Status", "Version"],
+  "_global_result": {"status": "0", "status_str": "Success"},
+  "Switch List": [
+    {"IP Address": "10.0.0.1", "Name": "MD-01", "Role": "MD", "Status": "up", "Version": "8.10.0.0"},
+    {"IP Address": "10.0.0.2", "Name": "MM-01", "Role": "master", "Status": "up", "Version": "8.10.0.0"}
+  ]
+}

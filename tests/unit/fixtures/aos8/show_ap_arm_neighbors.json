@@ -1,0 +1,6 @@
+{
+  "_global_result": {"status": "0", "status_str": "Success"},
+  "AP ARM Neighbors": [
+    {"AP Name": "ap-01", "Neighbor BSSID": "aa:bb:cc:00:00:01", "Channel": 36, "RSSI": -65}
+  ]
+}

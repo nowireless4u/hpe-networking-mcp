@@ -8,7 +8,7 @@ from loguru import logger
 
 from hpe_networking_mcp.config import ServerConfig
 
-_INSTRUCTIONS = (Path(__file__).parent / "INSTRUCTIONS.md").read_text()
+_INSTRUCTIONS = (Path(__file__).parent / "INSTRUCTIONS.md").read_text(encoding="utf-8")
 
 
 class _LifespanProbeCtx:
@@ -144,6 +144,21 @@ async def lifespan(server: FastMCP):
         context["axis_client"] = None
         context["axis_config"] = None
 
+    # --- AOS8 ---
+    if config.aos8:
+        try:
+            from hpe_networking_mcp.platforms.aos8.client import AOS8Client
+
+            context["aos8_client"] = AOS8Client(config.aos8)
+            context["aos8_config"] = config.aos8
+        except Exception as e:
+            logger.warning("AOS8: failed to initialize — {}", e)
+            context["aos8_client"] = None
+            context["aos8_config"] = None
+    else:
+        context["aos8_client"] = None
+        context["aos8_config"] = None
+
     # --- Verify every enabled platform via the shared probe helpers from
     # platforms/health.py. One source of truth: startup log output and the
     # runtime ``health`` tool report the same status. Probes that fail do
@@ -183,6 +198,12 @@ async def lifespan(server: FastMCP):
         axis = context.get("axis_client")
         if axis is not None:
             await axis.aclose()
+        aos8 = context.get("aos8_client")
+        if aos8 is not None:
+            try:
+                await aos8.aclose()
+            except Exception as e:  # noqa: BLE001 — shutdown must not raise
+                logger.warning("AOS8: aclose failed during shutdown — {}", e)
         logger.info("Server shutdown complete")
 
 
@@ -254,6 +275,8 @@ def create_server(config: ServerConfig) -> FastMCP:
         _register_apstra_tools(mcp, config)
     if config.axis:
         _register_axis_tools(mcp, config)
+    if config.aos8:
+        _register_aos8_tools(mcp, config)
 
     # --- Cross-platform aggregators ---
     # These are workarounds for dynamic mode's "AI picks one platform and stops"
@@ -302,6 +325,8 @@ def create_server(config: ServerConfig) -> FastMCP:
         mcp.add_transform(Visibility(False, tags={"apstra_write", "apstra_write_delete"}, components={"tool"}))
     if not config.enable_axis_write_tools:
         mcp.add_transform(Visibility(False, tags={"axis_write", "axis_write_delete"}, components={"tool"}))
+    if not config.enable_aos8_write_tools:
+        mcp.add_transform(Visibility(False, tags={"aos8_write", "aos8_write_delete"}, components={"tool"}))
 
     # --- Tool-mode-specific catalog transforms ---
     if config.tool_mode == "dynamic":
@@ -371,7 +396,7 @@ def _register_code_mode(mcp: FastMCP) -> None:
         "In scope: `await call_tool(name: str, params: dict) -> Any`.\n\n"
         "`call_tool` ONLY dispatches to platform tools — names start with one "
         "of: `mist_`, `central_`, `greenlake_`, `clearpass_`, `apstra_`, "
-        "`axis_` — plus the cross-platform `health` tool.\n\n"
+        "`axis_`, `aos8_` — plus the cross-platform `health` tool.\n\n"
         "The discovery tools `tags`, `search`, `get_schema`, `skills_list`, and "
         "`skills_load` are NOT callable from inside execute(). They live at the "
         "outer MCP surface for planning. Call them BEFORE writing your code "
@@ -460,6 +485,14 @@ def _register_axis_tools(mcp: FastMCP, config: ServerConfig) -> None:
 
     count = register_tools(mcp, config)
     logger.info("Axis: registered {} tools", count)
+
+
+def _register_aos8_tools(mcp: FastMCP, config: ServerConfig) -> None:
+    """Register all AOS8 platform tools (Phase 2: wires _registry; Phase 3 adds tools/)."""
+    from hpe_networking_mcp.platforms.aos8 import register_tools
+
+    count = register_tools(mcp, config)
+    logger.info("AOS8: registered {} tools", count)
 
 
 def _register_sync_tools(mcp: FastMCP) -> None:

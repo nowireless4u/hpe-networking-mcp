@@ -13,50 +13,50 @@ A unified [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server
 
 Managing HPE networking infrastructure with AI assistants today means juggling multiple separate MCP servers — each with its own setup, credentials, and quirks. This project consolidates them into one:
 
-| Category | Mist | Central | GreenLake | ClearPass | Apstra | Axis |
-|----------|:----:|:-------:|:---------:|:---------:|:------:|:----:|
-| **Sites / Health Overview** | ✅ | ✅ | — | — | — | — |
-| **WLANs / SSIDs** | ✅ | ✅ | — | — | — | — |
-| **Device Inventory** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Device Details (AP/Switch/GW)** | ✅ | ✅ | — | — | — | — |
-| **Device Stats & Utilization** | ✅ | ✅ | — | — | — | ✅ |
-| **Client Connectivity** | ✅ | ✅ | — | — | — | — |
-| **Events** | ✅ | ✅ | — | ✅ | — | — |
-| **Alerts / Alarms** | ✅ | ✅ | — | ✅ | ✅ | — |
-| **Audit Logs** | ✅ | ✅ | ✅ | ✅ | — | — |
-| **Application Visibility** | — | ✅ | — | — | — | ✅ |
-| **SLE / Performance Metrics** | ✅ | — | — | — | — | — |
-| **Troubleshooting (Ping/Traceroute/Bounce)** | ✅ | ✅ | — | — | — | — |
-| **Session Control / Client Disconnect** | — | ✅ | — | ✅ | — | — |
-| **Configuration Management** | ✅ | — | — | ✅ | ✅ | ✅ |
-| **Configuration Write (CRUD)** | ✅ | — | — | ✅ | ✅ | ✅ |
-| **Radio Resource Management** | ✅ | — | — | — | — | — |
-| **Rogue AP Detection** | ✅ | — | — | — | — | — |
-| **Firmware Management** | ✅ | — | — | — | — | — |
-| **Subscriptions / Licensing** | — | — | ✅ | ✅ | — | — |
-| **User Management** | — | — | ✅ | ✅ | — | ✅ |
-| **Workspaces** | — | — | ✅ | — | — | — |
-| **Scope & Configuration Hierarchy** | — | ✅ | — | — | — | ✅ |
-| **Guest Management** | — | — | — | ✅ | — | — |
-| **NAC / Policy Management** | — | — | — | ✅ | — | — |
-| **Endpoint Profiling** | — | — | — | ✅ | — | — |
-| **Certificates** | — | — | — | ✅ | — | — |
-| **Datacenter Blueprints / Templates** | — | — | — | — | ✅ | — |
-| **Virtual Networks / EVPN / Routing Zones** | — | — | — | — | ✅ | — |
-| **Connectivity Templates / Policy Apply** | — | — | — | — | ✅ | — |
-| **Fabric Deploy / Diff Status** | — | — | — | — | ✅ | — |
-| **BGP / Protocol Session Monitoring** | — | — | — | — | ✅ | — |
-| **SASE Cloud Connectors / Tunnels** | — | — | — | — | — | ✅ |
-| **URL / Web Category Filtering** | — | — | — | — | — | ✅ |
-| **SSL Inspection Exclusions** | — | — | — | — | — | ✅ |
-| **Staged Writes + Commit Workflow** | — | — | — | — | ✅ | ✅ |
-| **Guided Prompts** | ✅ | ✅ | — | — | — | — |
-| **Dynamic Tool Discovery** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Underlying tools (static mode)** | **35 + 2 prompts** | **83 + 12 prompts** | **10** | **140** | **19** | **25** |
-| **Exposed meta-tools (dynamic mode, default)** | **3** | **3** | **3** | **3** | **3** | **3** |
-| **Cross-Platform** | **3 tools + 3 prompts** | **3 tools + 3 prompts** | — | **1 tool** | — | — |
+| Category | Mist | Central | GreenLake | ClearPass | Apstra | Axis | AOS8 |
+|----------|:----:|:-------:|:---------:|:---------:|:------:|:----:|:----:|
+| **Sites / Health Overview** | ✅ | ✅ | — | — | — | — | ✅ |
+| **WLANs / SSIDs** | ✅ | ✅ | — | — | — | — | ✅ |
+| **Device Inventory** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Device Details (AP/Switch/GW)** | ✅ | ✅ | — | — | — | — | ✅ |
+| **Device Stats & Utilization** | ✅ | ✅ | — | — | — | ✅ | ✅ |
+| **Client Connectivity** | ✅ | ✅ | — | — | — | — | ✅ |
+| **Events** | ✅ | ✅ | — | ✅ | — | — | ✅ |
+| **Alerts / Alarms** | ✅ | ✅ | — | ✅ | ✅ | — | ✅ |
+| **Audit Logs** | ✅ | ✅ | ✅ | ✅ | — | — | ✅ |
+| **Application Visibility** | — | ✅ | — | — | — | ✅ | — |
+| **SLE / Performance Metrics** | ✅ | — | — | — | — | — | — |
+| **Troubleshooting (Ping/Traceroute/Bounce)** | ✅ | ✅ | — | — | — | — | ✅ |
+| **Session Control / Client Disconnect** | — | ✅ | — | ✅ | — | — | ✅ |
+| **Configuration Management** | ✅ | — | — | ✅ | ✅ | ✅ | ✅ |
+| **Configuration Write (CRUD)** | ✅ | — | — | ✅ | ✅ | ✅ | ✅ (gated) |
+| **Radio Resource Management** | ✅ | — | — | — | — | — | ✅ |
+| **Rogue AP Detection** | ✅ | — | — | — | — | — | ✅ |
+| **Firmware Management** | ✅ | — | — | — | — | — | ✅ |
+| **Subscriptions / Licensing** | — | — | ✅ | ✅ | — | — | ✅ |
+| **User Management** | — | — | ✅ | ✅ | — | ✅ | — |
+| **Workspaces** | — | — | ✅ | — | — | — | — |
+| **Scope & Configuration Hierarchy** | — | ✅ | — | — | — | ✅ | ✅ |
+| **Guest Management** | — | — | — | ✅ | — | — | — |
+| **NAC / Policy Management** | — | — | — | ✅ | — | — | — |
+| **Endpoint Profiling** | — | — | — | ✅ | — | — | — |
+| **Certificates** | — | — | — | ✅ | — | — | — |
+| **Datacenter Blueprints / Templates** | — | — | — | — | ✅ | — | — |
+| **Virtual Networks / EVPN / Routing Zones** | — | — | — | — | ✅ | — | — |
+| **Connectivity Templates / Policy Apply** | — | — | — | — | ✅ | — | — |
+| **Fabric Deploy / Diff Status** | — | — | — | — | ✅ | — | — |
+| **BGP / Protocol Session Monitoring** | — | — | — | — | ✅ | — | — |
+| **SASE Cloud Connectors / Tunnels** | — | — | — | — | — | ✅ | — |
+| **URL / Web Category Filtering** | — | — | — | — | — | ✅ | — |
+| **SSL Inspection Exclusions** | — | — | — | — | — | ✅ | — |
+| **Staged Writes + Commit Workflow** | — | — | — | — | ✅ | ✅ | — |
+| **Guided Prompts** | ✅ | ✅ | — | — | — | — | ✅ |
+| **Dynamic Tool Discovery** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Underlying tools (static mode)** | **35 + 2 prompts** | **83 + 12 prompts** | **10** | **140** | **19** | **25** | **47 + 9 prompts** |
+| **Exposed meta-tools (dynamic mode, default)** | **3** | **3** | **3** | **3** | **3** | **3** | **3** |
+| **Cross-Platform** | **3 tools + 3 prompts** | **3 tools + 3 prompts** | — | **1 tool** | — | — | — |
 
-> **Default tool surface**: v2.0+ ships with `MCP_TOOL_MODE=dynamic` by default. Each platform exposes three meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`), plus four cross-platform static tools (`health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`) and two skills tools (`skills_list`, `skills_load`). **24 tools total, ~3,800 tokens** for the six-platform configuration — down from 275+ tools / ~64,000 tokens in v1.x. Set `MCP_TOOL_MODE=static` to restore the full per-tool surface (every underlying tool is still here; it just defaults to hidden behind the meta-tools). v2.1.0.0 also ships `MCP_TOOL_MODE=code` as an experimental opt-in — FastMCP's `CodeMode` transform with a sandboxed Python `execute` for multi-step workflows; see [docs/TOOLS.md#code-mode](docs/TOOLS.md). v2.3.0.0 introduces **Skills** — markdown-defined multi-step procedures discoverable via `skills_list` / `skills_load`; see [docs/TOOLS.md#skills](docs/TOOLS.md). See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md).
+> **Default tool surface**: v2.0+ ships with `MCP_TOOL_MODE=dynamic` by default. Each platform exposes three meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`), plus four cross-platform static tools (`health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`) and two skills tools (`skills_list`, `skills_load`). **27 tools total** for the seven-platform configuration (7 × 3 meta-tools + 4 cross-platform + 2 skills) — down from 275+ tools / ~64,000 tokens in v1.x. Set `MCP_TOOL_MODE=static` to restore the full per-tool surface (every underlying tool is still here; it just defaults to hidden behind the meta-tools). v2.1.0.0 also ships `MCP_TOOL_MODE=code` as an experimental opt-in — FastMCP's `CodeMode` transform with a sandboxed Python `execute` for multi-step workflows; see [docs/TOOLS.md#code-mode](docs/TOOLS.md). v2.3.0.0 introduces **Skills** — markdown-defined multi-step procedures discoverable via `skills_list` / `skills_load`; see [docs/TOOLS.md#skills](docs/TOOLS.md). v2.4.0.0 adds **AOS8** (47 tools + 9 prompts) — see [INSTRUCTIONS.md](INSTRUCTIONS.md) for AOS8-specific operator guidance. See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md).
 
 ### Aruba Central Guided Prompts
 
@@ -74,6 +74,20 @@ The Central module includes 12 guided prompts — multi-step workflow templates 
 - **Compare Site Health** — Side-by-side comparison of health scores, device counts, client counts, and alert breakdowns across multiple sites.
 - **Scope Configuration Overview** — View committed configuration resources at a scope level, grouped by persona and category.
 - **Scope Effective Config** — View effective (inherited + committed) configuration at a scope, showing what each level contributes.
+
+### AOS8 Guided Prompts
+
+The AOS8 module includes 9 guided prompts for common Mobility Conductor operator workflows. See [INSTRUCTIONS.md](INSTRUCTIONS.md) for the complete parameter reference and workflow descriptions.
+
+- **Triage Client** (`aos8_triage_client`) — Find a client by MAC, check AP health, review auth/association events, identify likely root cause.
+- **Triage AP** (`aos8_triage_ap`) — Deep-dive an AP: radio state, clients, alarms, ARM history, event timeline.
+- **Health Check** (`aos8_health_check`) — Network-wide health: controllers, AP counts, clients, alarms, firmware drift.
+- **Audit Change** (`aos8_audit_change`) — Recent audit-trail review with high-risk-change flagging.
+- **RF Analysis** (`aos8_rf_analysis`) — Channel distribution, co-channel clusters, ARM oscillation, interferers/rogues.
+- **WLAN Review** (`aos8_wlan_review`) — SSID/VAP/AP-group/role inventory and consistency check.
+- **Client Flood** (`aos8_client_flood`) — High-client-count / failed-connection investigation at a scope.
+- **Compare MD Config** (`aos8_compare_md_config`) — Side-by-side effective-config diff between two MDs or AP groups.
+- **Pre-Change Check** (`aos8_pre_change_check`) — Pre-maintenance checklist: alarms, controller stats, audit trail, pending changes, write_memory reminder.
 
 ### Cross-Platform Tools
 
@@ -182,7 +196,7 @@ docker compose up -d
 docker compose logs
 ```
 
-Look for lines like `Mist: 35 tools registered`, `Central: 83 tools registered`, `ClearPass: 140 tools registered`, `Axis: 25 underlying tools registered`, `Tool mode: dynamic`, and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. In the default dynamic mode, **24 tools** are exposed to the AI when all six platforms are enabled (6 × 3 per-platform meta-tools + 4 cross-platform static tools + 2 skills tools) — the 312 underlying platform tools are discoverable via each platform's `list_tools` / `get_tool_schema` / `invoke_tool` meta-tools. Mist also registers 2 guided prompts for site provisioning workflows.
+Look for lines like `Mist: 35 tools registered`, `ClearPass: 140 tools registered`, `Axis: 25 underlying tools registered`, `AOS8: 47 underlying tools + 3 meta-tools (dynamic mode)`, `Tool mode: dynamic`, and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. In the default dynamic mode, only 27 tools are exposed to the AI when all seven platforms are enabled — the underlying platform tools are discoverable via each platform's `list_tools` / `get_tool_schema` / `invoke_tool` meta-tools. Mist registers 2 guided prompts; Central registers 12; AOS8 registers 9.
 
 ### Docker Image
 
@@ -203,10 +217,11 @@ docker pull ghcr.io/nowireless4u/hpe-networking-mcp:latest
 
 ## Platform Auto-Disable
 
-You don't need credentials for all six platforms. The server detects which platforms have valid secret content at startup and only enables those. A platform is disabled if any of its required secret files is **empty or absent** from `SECRETS_DIR` (inside the container) — which, under Docker Compose, means the file on disk was empty or you used a `docker-compose.override.yml` to drop that platform's secrets entirely (see [Disable platforms you don't use](#3-disable-platforms-you-dont-use-recommended)).
+You don't need credentials for all seven platforms. The server detects which platforms have valid secret content at startup and only enables those. A platform is disabled if any of its required secret files is **empty or absent** from `SECRETS_DIR` (inside the container) — which, under Docker Compose, means the file on disk was empty or you used a `docker-compose.override.yml` to drop that platform's secrets entirely (see [Disable platforms you don't use](#3-disable-platforms-you-dont-use-recommended)).
 
-- **All six platforms configured** → All tools available (Mist + Central + GreenLake + ClearPass + Apstra + Axis)
+- **All seven platforms configured** → All tools available (Mist + Central + GreenLake + ClearPass + Apstra + Axis + AOS8)
 - **Only Mist configured** → Only `mist_*` tools available; other platforms disabled
+- **Only AOS8 configured** → Only `aos8_*` tools available; other platforms disabled
 - **Only ClearPass configured** → Only `clearpass_*` tools available; other platforms disabled
 - **No valid credentials** → Server refuses to start with a clear error message
 
@@ -216,6 +231,7 @@ Add a platform later by populating its secret files (or removing the override's 
 Mist: credentials loaded (token: abcd...wxyz, host: api.mist.com)
 Central: disabled (missing secrets: central_client_id, central_client_secret)
 GreenLake: disabled (missing secrets: greenlake_client_id)
+AOS8: disabled (missing secrets: aos8_host)
 Enabled platforms: mist
 Tool mode: dynamic
 ```
@@ -402,39 +418,52 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 | `clearpass_client_secret` | OAuth2 client secret | ClearPass Admin > API Clients > Client Secret |
 | `clearpass_verify_ssl` | SSL verification (optional) | `true` (default) or `false` for self-signed certificates |
 
+#### Aruba OS 8 / Mobility Conductor
+
+| Secret File | Required | Default | Purpose |
+|---|---|---|---|
+| `aos8_host` | yes | — | Conductor or standalone controller hostname/IP |
+| `aos8_username` | yes | — | API username with sufficient role |
+| `aos8_password` | yes | — | API password |
+| `aos8_port` | no | `4343` | HTTPS port (Mobility Conductor API port) |
+| `aos8_verify_ssl` | no | `true` | Set to `false` for self-signed certs (logged as WARNING) |
+
+Set `ENABLE_AOS8_WRITE_TOOLS=true` to expose the 12 AOS8 write tools (gated by elicitation middleware; default `false`).
+
 ---
 
 ## Architecture
 
 ```
-┌───────────────────────────────────────────────────────────────────────────────────┐
-│                     MCP Client (Claude, VS Code, etc.)                            │
-└────────────────────────────────────┬──────────────────────────────────────────────┘
-                                     │ Streamable HTTP
-                                     ▼
-┌───────────────────────────────────────────────────────────────────────────────────┐
-│                HPE Networking MCP Server (:8000)  —  MCP_TOOL_MODE=dynamic        │
-│                                                                                   │
-│   Exposed to the AI  (24 tools total when all 6 platforms enabled):               │
-│     • 4 cross-platform static tools: health, site_health_check,                   │
-│       site_rf_check, manage_wlan_profile                                          │
-│     • 6 × 3 per-platform meta-tools: <platform>_list_tools,                       │
-│       <platform>_get_tool_schema, <platform>_invoke_tool                          │
-│     • 2 skills tools: skills_list, skills_load (multi-step runbooks)              │
-│                                                                                   │
-│ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐    │
-│ │   Mist   │ │ Central  │ │GreenLake │ │ClearPass │ │  Apstra  │ │   Axis   │    │
-│ │  mist_*  │ │central_* │ │greenlake │ │clearpass │ │ apstra_* │ │ axis_*   │    │
-│ │ 35 tools │ │ 83 tools │ │ 10 tools │ │140 tools │ │ 19 tools │ │ 25 tools │    │
-│ │ + 2 prmt │ │+ 12 prmt │ │          │ │          │ │          │ │          │    │
-│ │          │ │          │ │          │ │          │ │          │ │          │    │
-│ │  Hidden behind meta-tools in dynamic mode;  fully exposed in static mode.       │
-│ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘    │
-│      │            │            │            │            │            │           │
-└──────┼────────────┼────────────┼────────────┼────────────┼────────────┼───────────┘
-       ▼            ▼            ▼            ▼            ▼            ▼
-   Mist Cloud  Aruba Central GreenLake API ClearPass CPPM   Apstra   Axis Atmos
-      API           API                          API     Fabric API   Cloud API
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                       MCP Client (Claude, VS Code, etc.)                                │
+└───────────────────────────────────────┬─────────────────────────────────────────────────┘
+                                        │ Streamable HTTP
+                                        ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                  HPE Networking MCP Server (:8000)  —  MCP_TOOL_MODE=dynamic            │
+│                                                                                         │
+│   Exposed to the AI  (27 tools total when all 7 platforms enabled):                     │
+│     • 4 cross-platform static tools: health, site_health_check,                         │
+│       site_rf_check, manage_wlan_profile                                                │
+│     • 7 × 3 per-platform meta-tools: <platform>_list_tools,                             │
+│       <platform>_get_tool_schema, <platform>_invoke_tool                                │
+│     • 2 skills tools: skills_list, skills_load (multi-step runbooks)                    │
+│                                                                                         │
+│ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐           │
+│ │  Mist  │ │Central │ │GreenLk │ │ClrPass │ │ Apstra │ │  Axis  │ │  AOS8  │           │
+│ │ mist_* │ │centrl_*│ │grnlake │ │clrpass │ │apstra_*│ │ axis_* │ │ aos8_* │           │
+│ │35 tools│ │83 tools│ │10 tools│ │140 tool│ │19 tools│ │25 tools│ │47 tools│           │
+│ │+2 prmt │ │+12prmt │ │        │ │        │ │        │ │        │ │+9 prmt │           │
+│                                                                                         │
+│  Hidden behind meta-tools in dynamic mode;  fully exposed in static mode.               │
+│ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘           │
+│     │          │          │          │          │          │          │                 │
+└─────┼──────────┼──────────┼──────────┼──────────┼──────────┼──────────┼─────────────────┘
+      ▼          ▼          ▼          ▼          ▼          ▼          ▼
+  Mist Cloud  Aruba    GreenLake  ClearPass    Apstra      Axis    Mobility
+     API      Central     API       CPPM API  Fabric API  Atmos   Conductor
+              API                                          Cloud      API
 ```
 
 **Key design decisions:**
@@ -452,7 +481,7 @@ Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside
 
 Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) are supported with safety controls:
 
-- **Disabled by default** — enable per-platform with `ENABLE_MIST_WRITE_TOOLS=true`, `ENABLE_CENTRAL_WRITE_TOOLS=true`, `ENABLE_CLEARPASS_WRITE_TOOLS=true`, `ENABLE_APSTRA_WRITE_TOOLS=true`, or `ENABLE_AXIS_WRITE_TOOLS=true`
+- **Disabled by default** — enable per-platform with `ENABLE_MIST_WRITE_TOOLS=true`, `ENABLE_CENTRAL_WRITE_TOOLS=true`, `ENABLE_CLEARPASS_WRITE_TOOLS=true`, `ENABLE_APSTRA_WRITE_TOOLS=true`, `ENABLE_AXIS_WRITE_TOOLS=true`, or `ENABLE_AOS8_WRITE_TOOLS=true`
 - **Elicitation required** — write tools prompt for user confirmation before executing
 - **Annotation-based** — all tools carry MCP annotations (`readOnlyHint`, `destructiveHint`, etc.)
 
@@ -463,6 +492,7 @@ Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) ar
 | `ENABLE_CLEARPASS_WRITE_TOOLS` | `false` | Enable ClearPass write/mutation tools |
 | `ENABLE_APSTRA_WRITE_TOOLS` | `false` | Enable Apstra write/mutation tools |
 | `ENABLE_AXIS_WRITE_TOOLS` | `false` | Enable Axis Atmos Cloud write/mutation tools (every write stages — call `axis_commit_changes` to apply) |
+| `ENABLE_AOS8_WRITE_TOOLS` | `false` | Enable AOS8 write tools (12 tools; every write returns `requires_write_memory_for` — call `aos8_write_memory` explicitly) |
 | `DISABLE_ELICITATION` | `false` | Skip user confirmation for write tools (**use with caution**) |
 
 ---
@@ -500,6 +530,7 @@ The retry logic detects transient failures in two patterns: response-dict (Mist/
 | `ENABLE_CLEARPASS_WRITE_TOOLS` | `false` | Enable ClearPass write/mutation tools |
 | `ENABLE_APSTRA_WRITE_TOOLS` | `false` | Enable Apstra write/mutation tools |
 | `ENABLE_AXIS_WRITE_TOOLS` | `false` | Enable Axis write/mutation tools (staged; commit with `axis_commit_changes`) |
+| `ENABLE_AOS8_WRITE_TOOLS` | `false` | Enable AOS8 write tools (call `aos8_write_memory` after each change to persist) |
 | `DISABLE_ELICITATION` | `false` | Disable write confirmation prompts |
 | `MCP_TOOL_MODE` | `dynamic` | Tool exposure: `dynamic` (22 exposed, rest discoverable via meta-tools) or `static` (every tool registers individually — 300+ visible) |
 | `RETRY_MAX_ATTEMPTS` | `3` | Max retry attempts on transient failures (5xx reads, 429 reads+writes). Set to `1` to disable retry |
@@ -573,11 +604,12 @@ hpe-networking-mcp/
 │       ├── clearpass/           # 140 ClearPass tools + pyclearpass SDK client
 │       ├── apstra/              # 19 Apstra tools + async httpx client
 │       ├── axis/                # 25 Axis Atmos Cloud tools + httpx client (JWT bearer)
+│       ├── aos8/                # 47 AOS8 tools + 9 prompts + UIDARUBA session client
 │       ├── manage_wlan.py       # Cross-platform WLAN management tool
 │       ├── sync_prompts.py      # Cross-platform WLAN sync prompts
 │       ├── site_health_check.py # Cross-platform site health aggregator
 │       └── site_rf_check.py     # Cross-platform Wi-Fi RF dashboard
-├── tests/                       # Unit and integration tests (740+ unit tests)
+├── tests/                       # Unit and integration tests (767+ unit tests)
 ├── docs/                        # PRD, PRP, tool reference
 ├── secrets/                     # Secret files (only .example committed)
 ├── .github/workflows/           # CI, security, Docker publish
@@ -697,14 +729,14 @@ If tools time out after ~4 minutes, check that:
 
 ### Tool Surface Looks Wrong (24 tools vs. 312)
 
-Since v2.0.0.0, every platform runs in dynamic mode by default: each platform exposes 3 meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`) and the underlying tools are discoverable through them. A correctly configured server with all 6 platforms enabled will advertise **24 tools** to the AI client — 18 meta-tools + 4 cross-platform static tools (`health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`) + 2 skills tools (`skills_list`, `skills_load`).
+Since v2.0.0.0, every platform runs in dynamic mode by default: each platform exposes 3 meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`) and the underlying tools are discoverable through them. A correctly configured server with all 7 platforms enabled will advertise **27 tools** to the AI client — 21 meta-tools + 4 cross-platform static tools (`health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`) + 2 skills tools.
 
 Check the mode in the logs:
 
 ```bash
 docker compose logs | grep "Tool mode"
-# "Tool mode: dynamic"   → default (24 exposed tools)
-# "Tool mode: static"    → every underlying tool visible (312)
+# "Tool mode: dynamic"   → default (27 exposed tools with all 7 platforms)
+# "Tool mode: static"    → every underlying tool visible (300+)
 ```
 
 To restore v1.x-style surface (every tool registered individually), set `MCP_TOOL_MODE=static` in `docker-compose.yml` under `environment`:

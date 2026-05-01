@@ -36,7 +36,7 @@ import pytest
 
 # A platform-prefixed identifier — broad enough to catch every form an
 # author might write (`tool_name(`, `` `tool_name` ``, in tables, in code blocks).
-_TOOL_REF_PATTERN = re.compile(r"\b(mist|central|greenlake|clearpass|apstra|axis)_[a-z_][a-z_0-9]+\b")
+_TOOL_REF_PATTERN = re.compile(r"\b(mist|central|greenlake|clearpass|apstra|axis|aos8)_[a-z_][a-z_0-9]+\b")
 
 # Names that LOOK like tool references to the regex but aren't ones we want
 # the test to enforce — historical mentions ("X was removed in v2.0"),
@@ -101,7 +101,7 @@ def _build_full_catalog() -> set[str]:
     from hpe_networking_mcp.platforms._common.tool_registry import REGISTRIES
 
     # First, ensure every platform's tool modules are imported at all.
-    for platform in ("mist", "central", "clearpass", "apstra", "axis", "greenlake"):
+    for platform in ("mist", "central", "clearpass", "apstra", "axis", "greenlake", "aos8"):
         platform_pkg = importlib.import_module(f"hpe_networking_mcp.platforms.{platform}")
         tools_attr = getattr(platform_pkg, "TOOLS", None)
         if not tools_attr:
@@ -127,7 +127,7 @@ def _build_full_catalog() -> set[str]:
     # would have populated it; this handles the cleared-mid-suite case.)
     tool_module_prefixes = tuple(
         f"hpe_networking_mcp.platforms.{p}.tools."
-        for p in ("mist", "central", "clearpass", "apstra", "axis", "greenlake")
+        for p in ("mist", "central", "clearpass", "apstra", "axis", "greenlake", "aos8")
     )
     for name in list(sys.modules):
         if name.startswith(tool_module_prefixes):
@@ -143,7 +143,7 @@ def _build_full_catalog() -> set[str]:
 
     # Dynamic-mode meta-tools — only registered when tool_mode="dynamic", but
     # legitimate names skills can reference for runtime dispatch.
-    for platform in ("mist", "central", "greenlake", "clearpass", "apstra", "axis"):
+    for platform in ("mist", "central", "greenlake", "clearpass", "apstra", "axis", "aos8"):
         for suffix in ("_list_tools", "_get_tool_schema", "_invoke_tool"):
             catalog.add(platform + suffix)
 

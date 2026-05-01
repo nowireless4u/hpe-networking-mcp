@@ -137,7 +137,7 @@ class TestLoadConfig:
         assert config.central is not None
         assert config.greenlake is not None
         assert config.apstra is not None
-        assert set(config.enabled_platforms) == {"mist", "central", "greenlake", "apstra"}
+        assert set(config.enabled_platforms) == {"mist", "central", "greenlake", "apstra", "aos8"}
 
     def test_raises_system_exit_when_no_platforms_have_credentials(self, tmp_path, monkeypatch):
         """An empty secrets directory means zero platforms -- must exit."""
@@ -155,6 +155,11 @@ class TestLoadConfig:
             "greenlake_client_id",
             "greenlake_client_secret",
             "greenlake_workspace_id",
+            "aos8_host",
+            "aos8_username",
+            "aos8_password",
+            "aos8_port",
+            "aos8_verify_ssl",
             "apstra_server",
             "apstra_port",
             "apstra_username",
@@ -173,6 +178,7 @@ class TestLoadConfig:
         monkeypatch.setenv("LOG_LEVEL", "debug")
         monkeypatch.setenv("ENABLE_MIST_WRITE_TOOLS", "true")
         monkeypatch.setenv("ENABLE_CENTRAL_WRITE_TOOLS", "yes")
+        monkeypatch.setenv("ENABLE_AOS8_WRITE_TOOLS", "true")
         monkeypatch.setenv("DISABLE_ELICITATION", "yes")
         monkeypatch.setenv("DEBUG", "1")
         config = load_config()
@@ -180,6 +186,7 @@ class TestLoadConfig:
         assert config.log_level == "DEBUG"
         assert config.enable_mist_write_tools is True
         assert config.enable_central_write_tools is True
+        assert config.enable_aos8_write_tools is True
         assert config.disable_elicitation is True
         assert config.debug is True
 

@@ -94,6 +94,7 @@ If you're not sure, stay on `dynamic`. Code mode is meant for measurement + eval
 | Juniper Apstra | 12 | 7 | -- | 19 |
 | HPE GreenLake | 10 | -- | -- | 10 |
 | Axis Atmos Cloud | 12 | 13 | -- | 25 |
+| Aruba OS 8 | 26 | 12 | 9 | 47 |
 | Cross-Platform | 3 | 1 | 3 | 7 |
 
 Write tools are disabled by default per platform. Enable them with environment variables:
@@ -2047,3 +2048,116 @@ in `platforms/axis/__init__.py` if Axis ever flips them on.
 | `axis_manage_custom_ip_category` | `POST/PUT/DELETE /api/v1.0/IpCategories` |
 | `axis_get_ip_feed_categories` | `GET /api/v1.0/IpCategoriesFeed` |
 | `axis_manage_ip_feed_category` | `POST/PUT/DELETE /api/v1.0/IpCategoriesFeed` |
+
+## Aruba OS 8 / Mobility Conductor (47 tools + 9 prompts)
+
+Tools are exposed in dynamic mode by default via 3 meta-tools (`aos8_list_tools`,
+`aos8_get_tool_schema`, `aos8_invoke_tool`). Set `MCP_TOOL_MODE=static` to expose
+each underlying tool individually. Write tools require `ENABLE_AOS8_WRITE_TOOLS=true`.
+
+### Health & Inventory (8)
+
+| Tool | Purpose |
+|---|---|
+| `aos8_get_controllers` | List all controllers/MDs under the Conductor with status and role |
+| `aos8_get_ap_database` | Full AP database (name, MAC, IP, model, status, AP group) |
+| `aos8_get_active_aps` | Currently up APs with association counts |
+| `aos8_get_ap_detail` | Detailed stats for a single AP by name or MAC |
+| `aos8_get_bss_table` | BSS table — radio/BSSID associations at a scope |
+| `aos8_get_radio_summary` | Per-AP radio state: channel, power, utilization, noise floor |
+| `aos8_get_version` | AOS8 software version on Conductor and MDs |
+| `aos8_get_licenses` | Installed licenses and feature entitlements |
+
+### Clients (4)
+
+| Tool | Purpose |
+|---|---|
+| `aos8_get_clients` | List connected wireless clients at a config_path scope |
+| `aos8_find_client` | Find client by MAC address, IP address, or username |
+| `aos8_get_client_detail` | Full association/auth/connection info for a single client |
+| `aos8_get_client_history` | Historical connection events for a client |
+
+### Alerts & Audit (3)
+
+| Tool | Purpose |
+|---|---|
+| `aos8_get_alarms` | Active alarms with severity, category, and timestamp |
+| `aos8_get_audit_trail` | Configuration audit log (who changed what, when) |
+| `aos8_get_events` | System event log filterable by type/severity/time |
+
+### WLAN & Config (4)
+
+| Tool | Purpose |
+|---|---|
+| `aos8_get_ssid_profiles` | List all SSID profiles with key settings |
+| `aos8_get_virtual_aps` | Virtual AP profiles mapped to SSIDs and AP groups |
+| `aos8_get_ap_groups` | AP group list with member APs and applied profiles |
+| `aos8_get_user_roles` | Defined user roles and policy assignments |
+
+### Troubleshooting (7)
+
+| Tool | Purpose |
+|---|---|
+| `aos8_ping` | Ping from a controller to a target IP |
+| `aos8_traceroute` | Traceroute from a controller to a target IP |
+| `aos8_show_command` | Passthrough for any AOS8 CLI show command (`_meta` stripped) |
+| `aos8_get_logs` | Recent system log entries filterable by severity |
+| `aos8_get_controller_stats` | CPU, memory, uptime, session counts on a controller |
+| `aos8_get_arm_history` | ARM channel-change and power-adjustment history |
+| `aos8_get_rf_monitor` | RF monitor data: interference and rogue detections |
+
+### Differentiators (9)
+
+AOS8-unique read tools that go beyond Aruba Central parity — Conductor
+hierarchy, effective configuration after inheritance, RF neighbors,
+cluster state, IPsec tunnels, and a unified per-MD health roll-up.
+
+| Tool | Purpose |
+|---|---|
+| `aos8_get_md_hierarchy` | Conductor → Managed Device tree with config_path for each node |
+| `aos8_get_effective_config` | Resolved config a specific MD or AP group sees after inheritance |
+| `aos8_get_pending_changes` | Staged Conductor changes not yet persisted via `aos8_write_memory` |
+| `aos8_get_rf_neighbors` | ARM neighbor graph for an AP — co-channel and adjacent-channel |
+| `aos8_get_cluster_state` | AP cluster membership, master/standby roles, failover state |
+| `aos8_get_air_monitors` | APs in air-monitor mode with scan results |
+| `aos8_get_ap_wired_ports` | Wired downlink port configuration and state for APs |
+| `aos8_get_ipsec_tunnels` | Site-to-site IPsec and Remote AP tunnel state |
+| `aos8_get_md_health_check` | Unified per-MD health: APs + clients + alarms + firmware in one call |
+
+### Writes (12) — gated behind `ENABLE_AOS8_WRITE_TOOLS=true`
+
+All write tools require an explicit `config_path` parameter (no default) and return a
+`requires_write_memory_for` field listing the config_paths needing persistence via
+`aos8_write_memory`.
+
+| Tool | Tag | Purpose |
+|---|---|---|
+| `aos8_manage_ssid_profile` | `aos8_write` / `aos8_write_delete` | Create/update/delete SSID profile |
+| `aos8_manage_virtual_ap` | `aos8_write` / `aos8_write_delete` | Create/update/delete virtual AP profile |
+| `aos8_manage_ap_group` | `aos8_write` / `aos8_write_delete` | Create/update/delete AP group |
+| `aos8_manage_user_role` | `aos8_write` / `aos8_write_delete` | Create/update/delete user role |
+| `aos8_manage_vlan` | `aos8_write` / `aos8_write_delete` | Create/update/delete VLAN |
+| `aos8_manage_aaa_server` | `aos8_write` / `aos8_write_delete` | Create/update/delete AAA server |
+| `aos8_manage_aaa_server_group` | `aos8_write` / `aos8_write_delete` | Create/update/delete AAA server group |
+| `aos8_manage_acl` | `aos8_write` / `aos8_write_delete` | Create/update/delete session ACL |
+| `aos8_manage_netdestination` | `aos8_write` / `aos8_write_delete` | Create/update/delete network destination |
+| `aos8_disconnect_client` | `aos8_write` | Force-disconnect a client by MAC |
+| `aos8_reboot_ap` | `aos8_write` | Reboot a specific AP by name |
+| `aos8_write_memory` | `aos8_write` | Persist staged config to startup config (explicit operator action only) |
+
+### Guided Prompts (9)
+
+| Prompt | Parameters | Workflow |
+|---|---|---|
+| `aos8_triage_client` | `mac_address: str` | Triage a client connectivity problem |
+| `aos8_triage_ap` | `ap_name: str` | Deep-dive an AP's health |
+| `aos8_health_check` | — | Network-wide health assessment |
+| `aos8_audit_change` | — | Recent audit-trail review with risk flagging |
+| `aos8_rf_analysis` | `config_path: str = "/md"` | RF environment report |
+| `aos8_wlan_review` | — | SSID/VAP/AP-group/role consistency check |
+| `aos8_client_flood` | `config_path: str = "/md"` | High client count / failed connection investigation |
+| `aos8_compare_md_config` | `md_path_1: str`, `md_path_2: str` | Side-by-side effective-config diff |
+| `aos8_pre_change_check` | `config_path: str` | Pre-maintenance checklist (ends with write_memory reminder) |
+
+See [INSTRUCTIONS.md](../INSTRUCTIONS.md) for `config_path` semantics and the
+`write_memory` contract.

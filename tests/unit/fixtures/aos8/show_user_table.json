@@ -1,0 +1,22 @@
+{
+  "_meta": [
+    "IP", "MAC", "Name", "Role", "Age(d:h:m)", "Auth", "VPN link", "AP name",
+    "Roaming", "Tunnel id", "Phy", "Profile", "Forward mode", "Type", "Host Name", "User Type"
+  ],
+  "_global_result": {"status": "0", "status_str": "Success"},
+  "Users": [
+    {
+      "IP": "10.1.10.5",
+      "MAC": "aa:bb:cc:dd:ee:01",
+      "Name": "alice",
+      "Role": "employee",
+      "Age(d:h:m)": "00:01:23",
+      "Auth": "802.1x",
+      "AP name": "AP-01",
+      "Phy": "a-VHT-80sgi-2ss",
+      "Profile": "corp_ssid",
+      "Type": "WIRELESS",
+      "Host Name": "alice-laptop"
+    }
+  ]
+}

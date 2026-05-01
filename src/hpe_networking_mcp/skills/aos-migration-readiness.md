@@ -18,9 +18,9 @@ description: |
   a go/no-go readiness report with cutover sequencing and rollback
   validation. PoC — for production migrations, use VALID8 (HPE
   channel-partner-only discovery + analysis tool).
-platforms: [central]
+platforms: [central, aos8]
 tags: [central, migration, aos8, aos6, iap, aos10, readiness, audit, vsg]
-tools: [health, central_get_scope_tree, central_get_devices, central_get_aps, central_get_sites, central_get_site_name_id_mapping, central_recommend_firmware, central_get_config_assignments, central_get_server_groups, central_get_wlan_profiles, central_get_roles, central_get_named_vlans, clearpass_get_network_devices, clearpass_get_device_groups, clearpass_get_server_certificates, clearpass_get_local_users, greenlake_get_subscriptions, greenlake_get_workspace, greenlake_get_devices]
+tools: [health, central_get_scope_tree, central_get_devices, central_get_aps, central_get_sites, central_get_site_name_id_mapping, central_recommend_firmware, central_get_config_assignments, central_get_server_groups, central_get_wlan_profiles, central_get_roles, central_get_named_vlans, clearpass_get_network_devices, clearpass_get_device_groups, clearpass_get_server_certificates, clearpass_get_local_users, greenlake_get_subscriptions, greenlake_get_workspace, greenlake_get_devices, aos8_get_md_hierarchy, aos8_get_effective_config, aos8_get_ap_database, aos8_get_cluster_state, aos8_show_command, aos8_get_clients, aos8_get_bss_table, aos8_get_active_aps, aos8_get_ap_wired_ports]
 ---
 
 # AOS 6 / AOS 8 / Instant AP → AOS 10 migration readiness audit (PoC)
@@ -51,6 +51,20 @@ The skill's job here is to prove the in-chat workflow produces credible readines
 
 ## Procedure — 6 stages, ~50 granular checks
 
+### Stage -1 — Session-start AOS8 detection (DETECT-01)
+
+Before beginning the Stage 0 operator interview, call `health()` once and inspect the per-platform status.
+
+**If `aos8.status == "ok"`** (AOS8 platform is configured and reachable):
+> Announce to the operator, verbatim:
+> **"AOS8 API mode — live data. Stage 1 collection will run via API; no CLI paste required for the AOS8 source path."**
+>
+> Then proceed to Stage 0. The Stage 1 AOS8 section will use the live-mode sub-path (API calls in four grouped batches — COLLECT-01..04). The paste table is not used unless an individual API batch fails.
+
+**Otherwise** (AOS8 not configured, status `unavailable` / `degraded`, or no AOS8 secrets mounted):
+> Proceed silently to Stage 0. Make no announcement. The paste-driven flow is unchanged for AOS6, IAP, and unreachable-AOS8 sessions. Stage 1 will use the paste-fallback sub-path.
+
+This detection step never blocks the audit — failures silently fall through to the existing paste flow.
 ### Stage 0 — Operator interview (mandatory before data collection)
 
 Lock these answers into the audit context:
@@ -76,8 +90,37 @@ The audit must NOT proceed without all seven answers.
 Tell the operator: *"Run all of the commands below in one CLI session, save the entire output, and paste the bundle back here in one message. Pre-flight tips:* `no paging` *to avoid space-bar prompts; enable session logging in PuTTY / SecureCRT first;* `encrypt disable` *if you want passphrases visible in cleartext (note: this exposes RADIUS shared secrets — confirm before pasting)."*
 
 Per VSG §1832-§1872 — *"Checklist for Information Collection"* — the data set differs per source platform.
-
 #### If source = `aos8` (anchor: VSG §1671-§1873)
+
+##### AOS8 live-mode sub-path — used when Stage -1 announced "AOS8 API mode"
+No CLI paste required. Calls AOS8 tools directly in **four grouped batches** (COLLECT-01..04). On any tool error, fall back per-batch to an exact-CLI paste request for that batch only.
+
+**Batch 1 — MD hierarchy + per-node effective config (COLLECT-01)**
+1. Call `aos8_get_md_hierarchy()`. Expected: node tree `/md`, `/md/<region>`, `/md/<region>/<site>`, `/md/<region>/<site>/<ap-group>`.
+2. For each config object type (`ap_sys_prof`, `virtual_ap`, `ssid_prof`, `aaa_prof`, `aaa_server_group`, `wlan_ssid_profile`, `reg_domain_profile`, `arm_profile`, `dot11a_radio_prof`, `dot11g_radio_prof`), call `aos8_get_effective_config(object_name="<type>", config_path="/md")`. Tool is **object-scoped** — iterate; results feed Stage 3 rule checks.
+3. Call `aos8_show_command(command="show configuration effective detail")` for a text capture.
+*On batch 1 error:* ask operator to run `show configuration node-hierarchy` and `show configuration effective detail <node>` and paste. Continue to Batch 2.
+**Batch 2 — Full AP inventory (COLLECT-02)**
+Call `aos8_get_ap_database()`. Expected: per-AP `model`, `mac`, `serial`, `ip_mode` (DHCP / static), `group`, `ap_name`, `ip` — replaces `show ap database long` (VSG §1740, §1851-§1852). Stage 3 RULES-04 reuses `ip_mode` directly.
+*On batch 2 error:* ask operator to run `show ap database long` and paste. Continue to Batch 3.
+**Batch 3 — Cluster state + running-config + local-user db + inventory + ports (COLLECT-03)**
+1. Call `aos8_get_cluster_state()`. Expected: cluster L2 / L3 status — replaces `show lc-cluster group-membership` (VSG §2399).
+2. Call `aos8_show_command(command="show running-config")`.
+3. Call `aos8_show_command(command="show local-user db")`.
+4. Call `aos8_show_command(command="show inventory")`.
+5. Call `aos8_show_command(command="show port status")` and `aos8_show_command(command="show trunk")`.
+*On batch 3 error:* identify which step(s) failed; ask operator for **only the failed CLI commands** by name. Continue to Batch 4.
+**Batch 4 — Client baseline + BSS/SSID table + active APs + AP wired ports (COLLECT-04)**
+1. Call `aos8_get_clients()`. Expected: aggregate counts (clients-by-SSID, total, users-with-roles) — replaces `show ap association` + `show user-table`.
+2. Call `aos8_get_bss_table()`. Expected: SSID name + AP-broadcasting count + radio band — replaces `show ap essid`.
+3. Call `aos8_get_active_aps()`. Expected: active AP list with channel / TX power / client count — replaces `show ap active`.
+4. For each AP from Batch 2 (or a representative sample), call `aos8_get_ap_wired_ports(ap_name="<ap_name>")`. Tool is **per-AP** — iterate. Replaces `show ap lldp neighbors`.
+*On batch 4 error:* identify which call(s) failed; ask operator to run the failed command(s) and paste. Continue to Stage 2.
+
+After all four batches, present a compiled Stage 1 inventory table (AP count, controller list, cluster state, local-user count, SSID count) before Stage 2.
+
+##### AOS8 paste-fallback sub-path — used when Stage -1 was silent (AOS8 unreachable or not configured)
+Use the same 16-command bundle (API path unavailable):
 
 | # | Where | Command | Purpose (VSG anchor) |
 |---|---|---|---|
@@ -137,6 +180,10 @@ Plus, if AirWave is in use — same AirWave exports as AOS 6 / 8.
 
 For each pasted artifact, extract the data points listed below. The audit produces an **inventory table** as part of the report; the parsed values feed the rule checks in Stage 3.
 
+##### AOS8 live-mode sub-path — used when Stage -1 announced "AOS8 API mode"
+
+If AOS8 live mode is active (Stage -1 announced API mode), Stage 1 already collected every AOS8 data point in the table below via the four-batch live-mode sub-path. **Skip paste parsing for AOS8 data points and proceed directly to Stage 3.** The AOS8 extraction table below remains authoritative for the paste-fallback path (used when AOS8 is unreachable, or for AOS6 / IAP source platforms which always use paste).
+
 #### AOS 8 — what to extract from each artifact
 
 | Artifact | Extract | VSG anchor |
@@ -179,6 +226,50 @@ For each pasted artifact, extract the data points listed below. The audit produc
 ### Stage 3 — Apply VSG-anchored readiness rules
 
 Different rule sets apply based on **source platform** AND **target SSID mode**. The audit walks the rules below and classifies each finding as **REGRESSION** (must fix before migration), **DRIFT** (should address; not blocking), or **INFO** (operator reference).
+
+#### AOS8 live-mode sub-path — rules evaluated from Stage 1 data (used when Stage -1 announced "AOS8 API mode")
+
+When AOS8 live mode is active, RULES-01, RULES-02, and RULES-04 are evaluated directly from the Stage 1 batch data already in context — no re-fetching, no operator paste. RULES-03 result is **pending Stage 4 A11** (ClearPass cross-check). After this sub-path, continue with the universal + AOS6/8 + per-target-mode rule tables below — those apply regardless of source path.
+
+Each finding below uses the format **Severity — Description (VSG §anchor) (source: `tool_call(args)`, Batch N)**.
+
+##### RULES-01 — VRRP VIP for AP system profiles (REGRESSION, VSG §1654-§1657)
+
+From the Batch 1 `aos8_get_effective_config(object_name='ap_sys_prof', config_path='/md')` response, inspect the LMS IP field (and Backup-LMS IP, if present) of each `ap_sys_prof` returned. If the LMS IP matches a controller management IP (any individual managed-device address from `aos8_get_md_hierarchy()` Batch 1) rather than the VRRP virtual IP, emit:
+
+- **REGRESSION** — AP system profile `<profile_name>` LMS IP is `<lms_ip_value>`, which matches an individual controller management IP rather than the VRRP virtual IP. APs will strand on first controller upgrade. (VSG §1654-§1657) (source: `aos8_get_effective_config(object_name='ap_sys_prof', config_path='/md')`, Batch 1)
+
+Reference the field by intent ("the LMS IP field in the `ap_sys_prof` response") — do **not** pin a specific JSON key path; introspect the response structure at runtime. If multiple `ap_sys_prof` objects return, emit one finding per profile with the wrong IP.
+
+*If Batch 1 failed:* RULES-01 cannot be evaluated from live data. Mark as **inconclusive — paste required** and consult any per-batch fallback paste of `show running-config` already supplied. Equivalent paste-mode rule is C2 below.
+
+##### RULES-02 — ARM / radio / regulatory-domain profile detection (DRIFT, VSG §1163-§1166)
+
+From the Batch 1 effective-config results for `arm_profile`, `dot11a_radio_prof`, `dot11g_radio_prof`, and `reg_domain_profile` (each fetched via `aos8_get_effective_config(object_name=<profile_type>, config_path='/md')`), detect presence of any configured object across all four profile types. Empty/absent at every queried path means no DRIFT for that profile type — distinguish "envelope present" from "objects present".
+
+If any of the four profile types has at least one configured object at the queried `/md` root scope, emit:
+
+- **DRIFT** — Active legacy RF profiles detected at `/md` root: `<list of profile_type=profile_name pairs>`. These are replaced by Central AirMatch + ClientMatch in AOS 10 (channel, TX power, channel-width, DFS, band-steering all move to Central). (VSG §1163-§1166) (source: `aos8_get_effective_config(object_name='arm_profile|dot11a_radio_prof|dot11g_radio_prof|reg_domain_profile', config_path='/md')`, Batch 1)
+
+Per-AP-group enumeration is out of scope for this phase — Batch 1 collects at the `/md` root and AOS8 effective config inherits down. Report at the granularity Stage 1 collected.
+
+*If Batch 1 failed:* RULES-02 cannot be evaluated from live data. Mark as **inconclusive — paste required** and consult any pasted `show configuration effective detail` output. Equivalent paste-mode rule is C4 below.
+
+##### RULES-03 — Local user count cross-check (DRIFT) — pending Stage 4 A11
+
+Stage 1 Batch 3 already collected the AOS8 local-user count via `aos8_show_command(command='show local-user db')`. The cross-check against ClearPass executes in **Stage 4 A11** (`clearpass_get_local_users()`) — do **not** call ClearPass twice. Stage 3 emits no RULES-03 finding here; the determination is deferred. See Stage 4 A11 for the dual-source-of-truth comparison.
+
+*If Batch 3 failed:* The AOS8 local-user count is unavailable; A11 will note "AOS8 count unknown — paste of `show local-user db` required for full cross-check".
+
+##### RULES-04 — Static AP IP detection (REGRESSION, VSG §1232-§1234)
+
+From the Batch 2 `aos8_get_ap_database()` response, inspect the `ip_mode` field of each AP entry. For every AP whose `ip_mode` is anything other than DHCP (e.g., `static`), emit one finding:
+
+- **REGRESSION** — AP `<ap_name>` (MAC `<wired_mac>`) has `ip_mode='<value>'` (statically addressed). AOS 10 does not support static AP IPs — APs must be DHCP-addressed before AP convert. (VSG §1232-§1234) (source: `aos8_get_ap_database()`, Batch 2)
+
+If no APs have a non-DHCP `ip_mode`, emit a single INFO confirmation: "AP database shows all APs DHCP-addressed (RULES-04 PASS)."
+
+*If Batch 2 failed:* RULES-04 cannot be evaluated from live data. Mark as **inconclusive — paste required** and consult any pasted `show ap database long` output. Equivalent paste-mode rule is U2 (Universal rules table) below.
 
 #### Universal rules (apply to all source → target combinations)
 
@@ -270,6 +361,70 @@ Different rule sets apply based on **source platform** AND **target SSID mode**.
 
 Run these in parallel with the parse stage. They use only Central / ClearPass / GreenLake tools — no operator data needed. Each maps to specific MCP tools in the catalog.
 
+#### AOS8 live-mode sub-path — Central enrichment (ENRICH-01..04, used when Stage -1 announced "AOS8 API mode")
+
+When AOS8 live mode is active, the four Central enrichment checks (AP count gap, per-model AOS10 firmware recommendations, SSID conflicts, role/VLAN conflicts) are evaluated using AOS8 Stage 1 batch data already in context plus a small set of Central tool calls — no operator paste, no re-fetching of AOS8 batches. After this sub-path, continue with the A1–A13 Central API checks below; A4 / A7 / A8 / A9 / A13 are superseded by this sub-path's findings when live mode is active.
+
+Each finding below uses the format **Severity — Description. (source: `tool_call(args)`, Batch N where applicable)**.
+
+##### ENRICH-01 — AP count gap (INFO)
+
+From the Batch 2 `aos8_get_ap_database()` response already in context, count total APs (call this `X`). Then call `central_get_aps()` with no filter and count the response (call this `Y`). Compute `Z = X - Y` (Z may be negative if Central reports more — surface that as-is). Emit one finding:
+
+- **INFO** — Source AP count: `X`. Central onboarded: `Y`. Gap: `Z` not yet onboarded. (source: `aos8_get_ap_database()` Batch 2 + `central_get_aps()`)
+
+*If `central_get_aps()` fails:* AP count gap (ENRICH-01) cannot complete from live data. Fall back to A4 in the table below.
+*If Batch 2 was unavailable:* AOS8 AP count is unknown — operator paste of `show ap database long` required for ENRICH-01.
+
+##### ENRICH-02 — Per-model AOS10 firmware recommendation (INFO)
+
+Make **one call**, fleet-wide, no filter: `central_recommend_firmware()`. Central returns a fleet-wide recommendation list already grouped by device model — do NOT iterate per model. Extract the distinct AP `model` values from the Batch 2 `aos8_get_ap_database()` response, then for each distinct model walk the `central_recommend_firmware()` response and pull the recommended AOS10 firmware version for that model. Emit a compact two-column markdown table inline:
+
+| AP Model | Recommended AOS10 Firmware |
+|----------|----------------------------|
+| `<model>` | `<version-from-central>` |
+| `<model>` | `<version-from-central>` |
+
+(source: distinct models from `aos8_get_ap_database()` Batch 2; recommendations from `central_recommend_firmware()`)
+
+If Central's recommendation list omits a model present in the AOS8 fleet, emit one row per missing model with the value `no recommendation returned — verify with Aruba support`. Restrict the table to AP models only — controller firmware is owned by CUTOVER-02 in Stage 5, not by this rule.
+
+*If `central_recommend_firmware()` fails:* per-model firmware recommendation (ENRICH-02) cannot complete. Fall back to A13 in the table below.
+*If Batch 2 was unavailable:* distinct AP models are unknown — operator paste of `show ap database long` required for ENRICH-02.
+
+##### ENRICH-03 — SSID conflict detection (REGRESSION, one finding per conflict)
+
+From the Batch 4 `aos8_get_bss_table()` response already in context, extract the distinct AOS8 SSID names. Call `central_get_wlan_profiles()` with no `ssid` argument to retrieve the full Central WLAN profile list. For every AOS8 SSID name that already appears as a profile in the Central response, emit ONE finding (do not collapse multiple conflicts into a single bullet):
+
+- **REGRESSION** — SSID `"<ssid_name>"` already exists in Central (profile present in `central_get_wlan_profiles()` response). A conflicting SSID name in Central blocks a clean migration. (source: `aos8_get_bss_table()` Batch 4 + `central_get_wlan_profiles()`)
+
+If no AOS8 SSID names match any Central WLAN profile, emit a single INFO bullet: `INFO — No SSID conflicts detected against existing Central WLAN profiles. (source: aos8_get_bss_table() Batch 4 + central_get_wlan_profiles())`.
+
+*If `central_get_wlan_profiles()` fails:* SSID conflict check (ENRICH-03) cannot complete. Fall back to A7 in the table below.
+*If Batch 4 was unavailable:* AOS8 SSID list is unknown — operator paste of `show ap essid` required for ENRICH-03.
+
+##### ENRICH-04 — Role and VLAN conflict detection (REGRESSION, one finding per conflict)
+
+From the Batch 1 `aos8_get_effective_config()` response already in context, extract:
+- distinct user-role names (from `user_role` / `aaa.user_role` objects)
+- distinct named VLAN IDs (from `vlan` / `interface vlan` objects)
+
+Call `central_get_roles()` with no `name` argument and `central_get_named_vlans()` with no `name` argument to retrieve the full Central role list and VLAN list. For every AOS8 role name that already appears in the Central role response, emit ONE finding:
+
+- **REGRESSION** — Role `"<role_name>"` already exists in Central. A conflicting role name in Central blocks a clean migration. (source: `aos8_get_effective_config()` Batch 1 + `central_get_roles()`)
+
+For every AOS8 VLAN ID that already appears as a named VLAN in the Central response, emit ONE finding:
+
+- **REGRESSION** — Named VLAN ID `<vlan_id>` already mapped in Central (existing name: `"<central-vlan-name>"`). A conflicting VLAN ID in Central blocks a clean migration. (source: `aos8_get_effective_config()` Batch 1 + `central_get_named_vlans()`)
+
+If no role names or VLAN IDs collide, emit a single INFO bullet: `INFO — No role or VLAN conflicts detected against existing Central roles / named VLANs. (source: aos8_get_effective_config() Batch 1 + central_get_roles() + central_get_named_vlans())`.
+
+*If `central_get_roles()` fails:* role conflict check cannot complete. Fall back to A8 in the table below.
+*If `central_get_named_vlans()` fails:* VLAN conflict check cannot complete. Fall back to A9 in the table below.
+*If Batch 1 was unavailable:* AOS8 role names / VLAN IDs are unknown — operator paste of `show configuration effective detail` required for ENRICH-04.
+
+After this sub-path, continue with the A1–A13 table below for any checks not superseded by ENRICH-01..04.
+
 | # | Check | Tool | Severity if failing |
 |---|---|---|---|
 | A1 | Central reachability | `health(platform="central")` | **REGRESSION** |
@@ -282,13 +437,49 @@ Run these in parallel with the parse stage. They use only Central / ClearPass / 
 | A8 | Existing Central roles / policies — flag if migration would conflict with existing role names | `central_get_roles()` | **INFO** |
 | A9 | Existing Central named VLANs — surface for operator's reuse-or-create planning | `central_get_named_vlans()` | **INFO** |
 | A10 | Existing Central RADIUS server groups — flag for reuse | `central_get_server_groups()` | **INFO** |
-| A11 | ClearPass local-user count (cross-reference with `show local-user db` output) — if both sides have local users, that's a sign of dual-source-of-truth that should be consolidated | `clearpass_get_local_users()` | **DRIFT** |
+| A11 | **RULES-03 cross-check** — Compare ClearPass local-user count against the AOS8 local-user count already collected in Stage 1 Batch 3 via `aos8_show_command(command='show local-user db')`. If both counts are non-zero, emit: **DRIFT** — AOS8 local users: `<X>`. ClearPass local users: `<Y>`. Dual-source-of-truth — consolidate to a single auth backend (AOS 10 has no Internal Auth Server per VSG §1134-§1136). (source: `aos8_show_command(command='show local-user db')` Batch 3 + `clearpass_get_local_users()`). If AOS8 Batch 3 was unavailable in this session, note "AOS8 count unknown — paste of `show local-user db` required for full cross-check" alongside the ClearPass count. | `clearpass_get_local_users()` | **DRIFT** if both non-zero |
 | A12 | GreenLake device inventory shows the controllers / APs from the source platform (proves they're licensed and discoverable) | `greenlake_get_devices()` | **INFO** |
 | A13 | Central firmware recommendation engine — what does Central recommend for the AP models in the inventory? | `central_recommend_firmware()` | **INFO** — guides target firmware |
 
 ### Stage 5 — Cutover sequencing + rollback validation
 
 The VSG provides a single-site cutover sequence (VSG §2352-§2576). The audit walks through the operator's plan and validates each phase has prerequisites met. Map operator's cutover plan against:
+
+#### AOS8 live-mode sub-path — cutover prerequisites (CUTOVER-01..03, used when Stage -1 announced "AOS8 API mode")
+
+When AOS8 live mode is active, three cutover prerequisites — cluster L2-connected health, controller firmware version floor, and pre-cutover AP-count baseline — are evaluated before the operator walks through the Phase 0–8 cutover sequence below. Two checks reuse Stage 1 batch data already in context (no re-fetch); the firmware floor check makes one **fresh** `aos8_show_command(command='show version')` call because controller firmware version is not reliably surfaced by `show inventory` (Batch 3).
+
+Each finding below uses the format **Severity — Description. (source: `tool_call(args)`, Batch N where applicable) (VSG §anchor when applicable)**.
+
+##### CUTOVER-01 — Live cluster health (REGRESSION on anything other than L2-connected)
+
+From the Batch 3 `aos8_get_cluster_state()` response already in context, inspect the cluster state field. If the state is anything other than `L2-connected`, emit:
+
+- **REGRESSION** — Cluster not L2-connected: `<state>`. Resolve before single-controller upgrade. (source: `aos8_get_cluster_state()`, Batch 3)
+
+If the state is `L2-connected`, emit a single INFO confirmation: `INFO — Cluster L2-connected (CUTOVER-01 PASS). (source: aos8_get_cluster_state(), Batch 3)`.
+
+*If Batch 3 was unavailable:* cluster health (CUTOVER-01) cannot be evaluated from live data. Mark as **inconclusive — paste required** and consult any pasted `show lc-cluster group-membership` output.
+
+##### CUTOVER-02 — Controller firmware floor (REGRESSION below 8.10.0.12 / 8.12.0.1, VSG §1643-§1649)
+
+Make a **fresh** call to `aos8_show_command(command='show version')` here in Stage 5 — do NOT pull firmware from Batch 3 / `show inventory`, which does not reliably include the running OS firmware string. Parse the controller firmware version from the response. Compare against the prerequisite floor: the running version must be at least `8.10.0.12` on the 8.10 train OR at least `8.12.0.1` on the 8.12 train. If the running firmware is below both floors, emit:
+
+- **REGRESSION** — Controller firmware `<running-version>` is below the 8.10.0.12 / 8.12.0.1 prerequisite. Upgrade the controller to a supported floor before AOS 10 migration. (source: `aos8_show_command(command='show version')`) (VSG §1643-§1649)
+
+If the running firmware meets or exceeds the floor, emit a single INFO confirmation: `INFO — Controller firmware <running-version> meets the 8.10.0.12 / 8.12.0.1 prerequisite (CUTOVER-02 PASS). (source: aos8_show_command(command='show version')) (VSG §1643-§1649)`.
+
+*If `aos8_show_command(command='show version')` fails:* firmware floor (CUTOVER-02) cannot be evaluated. Mark as **inconclusive — paste required** and consult any pasted `show version` output.
+
+##### CUTOVER-03 — Pre-cutover AP-count baseline (INFO)
+
+From the Batch 2 `aos8_get_ap_database()` response already in context, count total APs (call this `X`). Emit:
+
+- **INFO** — Pre-cutover AP baseline: `X` APs. (source: `aos8_get_ap_database()`, Batch 2) Use this count for post-cutover diff.
+
+*If Batch 2 was unavailable:* AP-count baseline (CUTOVER-03) cannot be captured from live data. Operator paste of `show ap database long` required for the baseline.
+
+After this sub-path, continue with the Phase 0–8 cutover table below — those steps apply regardless of source path.
 
 | Phase | What VSG specifies | Audit check |
 |---|---|---|
@@ -312,6 +503,7 @@ Aggregate findings from all stages into one verdict + structured report (see *Ou
 |---|---|
 | Operator hasn't picked source platform / target mode / scope / cluster type / HA mode | STOP. Don't proceed without all stage-0 answers. |
 | Operator hasn't pasted the data bundle | Output **PARTIAL** verdict — Central-side checks complete, source-side blocked. List exactly what's needed. |
+| AOS8 live mode AND one or more Stage 1 batches failed | **PARTIAL** — list which AOS8 checks could not run (e.g. "Batch 3 failed: cluster state, local-user db"). For each failed batch, include the exact CLI command(s) the operator must paste manually to complete those data points. All checks that did succeed are still reported. |
 | Source = `iap` AND target mode ≠ `bridge` | **REGRESSION** — IAP migrates to Bridge Mode per VSG §672-§676. Reject the combination; operator must plan a Tunnel Mode migration as a separate gateway-cluster deployment. |
 | AOS 8 controller firmware below `8.10.0.12` / `8.12.0.1` | **REGRESSION** — must upgrade controllers to the prerequisite version before AOS 10 swap (VSG §1643). |
 | Static AP IP addressing detected | **REGRESSION** — AOS 10 requires DHCP for AP IP (VSG §1232, §475). |
@@ -343,7 +535,27 @@ Aggregate findings from all stages into one verdict + structured report (see *Ou
 
 Use the EXACT structure below. Every section heading must be present even if empty. Lead with the verdict, then REGRESSION → DRIFT → INFO. Include a suggested AOS 10 hierarchy mapping table and a phased cutover plan.
 
+### Output hygiene (mandatory)
+
+These rules apply to every finding across Stages 3, 4, 5, and 6:
+
+1. **No raw JSON blobs.** When citing an API response, extract and quote only the specific field value relevant to the finding. Never dump the full response dict.
+2. **No tool-call syntax in finding text.** Tool names belong in the `(source: tool_name(), Batch N)` attribution at the end of the finding — never inside the finding sentence itself.
+3. **No stack traces.** If a tool call raises an exception, emit a brief one-line error note and the fallback CLI command. Never include a Python traceback.
+4. **No ellipsis or truncation markers.** Do not write `...`, `[truncated]`, or similar. Extract the relevant fields explicitly; if a response is large, summarise the salient values in prose.
+
 ```
+> Open the report with this paragraph (plain prose, 2–4 sentences, never a bullet list, never a table). Three elements in order:
+>   1. Verdict in bold caps — **GO** / **BLOCKED** / **PARTIAL**.
+>   2. Finding counts — exact integers for REGRESSION, DRIFT, INFO.
+>   3. One SE-ready sentence — name the source platform (AOS8 / AOS6 / IAP), AP count, controller count, and the key action a human SE can paste verbatim into a customer email.
+>
+> For PARTIAL verdict caused by AOS8 live-mode batch failure, append: "AOS8 live collection partially succeeded — <N> checks completed; <M> checks require manual CLI paste (see below)."
+>
+> Template (AI fills the angle-bracket placeholders at runtime; do NOT hard-code values):
+
+**<VERDICT>** — <X> REGRESSION / <Y> DRIFT / <Z> INFO findings. This <source> deployment (<N> APs, <M> controllers) <one plain-English action sentence>. <Optional context sentence — e.g. "Live AOS8 data collection was used for all checks." or PARTIAL note if applicable.>
+
 ## AOS migration readiness — <source: aos6/aos8/iap> → AOS 10 <target: tunnel/bridge/mixed>
 **Captured:** <ISO timestamp>
 **Migration scope:** <single-site PoC | multi-site | fleet-wide>

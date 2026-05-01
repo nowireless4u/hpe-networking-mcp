@@ -1,0 +1,6 @@
+{
+  "_global_result": {"status": "0", "status_str": "Success"},
+  "IPsec SAs": [
+    {"Peer": "203.0.113.5", "State": "active", "SPI-in": "0xabc123", "SPI-out": "0xdef456"}
+  ]
+}

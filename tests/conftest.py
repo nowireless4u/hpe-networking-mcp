@@ -4,6 +4,7 @@ import importlib
 from unittest.mock import MagicMock
 
 import pytest
+from loguru import logger as _loguru_logger
 
 
 def _install_registry_stubs() -> None:
@@ -21,6 +22,7 @@ def _install_registry_stubs() -> None:
     stubbing. Scoped to both unit and integration tests; idempotent.
     """
     platform_registries = (
+        "hpe_networking_mcp.platforms.aos8._registry",
         "hpe_networking_mcp.platforms.apstra._registry",
         "hpe_networking_mcp.platforms.central._registry",
         "hpe_networking_mcp.platforms.clearpass._registry",
@@ -61,6 +63,11 @@ def secrets_dir(tmp_path):
         "greenlake_client_id": "greenlake-client-id-value",
         "greenlake_client_secret": "greenlake-client-secret-value",
         "greenlake_workspace_id": "greenlake-workspace-id-value",
+        "aos8_host": "conductor.test.example.com",
+        "aos8_username": "admin",
+        "aos8_password": "aos8-test-password",
+        "aos8_port": "4343",
+        "aos8_verify_ssl": "true",
         "apstra_server": "apstra.test.example.com",
         "apstra_port": "443",
         "apstra_username": "admin",
@@ -70,6 +77,25 @@ def secrets_dir(tmp_path):
     for name, value in secrets.items():
         (tmp_path / name).write_text(value)
     return tmp_path
+
+
+@pytest.fixture
+def loguru_capture():
+    """Capture all loguru log records emitted during a test as a list of strings.
+
+    Returns the list. Each element is the fully-formatted log line. Used by
+    tests that must assert a secret never appears in any log output.
+    """
+    captured: list[str] = []
+    sink_id = _loguru_logger.add(
+        lambda msg: captured.append(str(msg)),
+        level="TRACE",
+        format="{level} | {name}:{function}:{line} | {message}",
+    )
+    try:
+        yield captured
+    finally:
+        _loguru_logger.remove(sink_id)
 
 
 @pytest.fixture

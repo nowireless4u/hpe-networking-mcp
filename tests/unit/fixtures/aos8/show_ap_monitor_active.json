@@ -1,0 +1,6 @@
+{
+  "_global_result": {"status": "0", "status_str": "Success"},
+  "Air Monitors": [
+    {"AP Name": "am-01", "Mode": "air-monitor", "Channels Scanned": "1,6,11,36,40,44"}
+  ]
+}

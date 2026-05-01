@@ -1,0 +1,6 @@
+{
+  "_global_result": {"status": "0", "status_str": "Success"},
+  "Cluster Membership": [
+    {"Controller IP": "10.0.0.2", "Role": "active", "State": "CONNECTED"}
+  ]
+}

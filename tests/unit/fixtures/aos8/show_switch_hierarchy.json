@@ -1,0 +1,7 @@
+{
+  "_global_result": {"status": "0", "status_str": "Success"},
+  "Switch Hierarchy": [
+    {"Name": "MC-01", "IP Address": "10.0.0.1", "Role": "master", "config_path": "/mm/mynode"},
+    {"Name": "MD-01", "IP Address": "10.0.0.2", "Role": "local", "config_path": "/md/branch1"}
+  ]
+}

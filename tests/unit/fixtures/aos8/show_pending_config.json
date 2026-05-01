@@ -1,0 +1,6 @@
+{
+  "_global_result": {"status": "0", "status_str": "Success"},
+  "Pending Configuration": [
+    {"config_path": "/md/branch1", "command": "wlan ssid-profile guest"}
+  ]
+}

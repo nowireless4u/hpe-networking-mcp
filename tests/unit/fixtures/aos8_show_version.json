@@ -1,0 +1,14 @@
+{
+  "_global_result": {
+    "status": "0",
+    "status_str": "ok",
+    "UIDARUBA": "session-token-placeholder"
+  },
+  "Hostname": "conductor-lab-01",
+  "Version": "ArubaOS (MODEL: ArubaMC-VA), Version 8.10.0.7",
+  "_data": [
+    "Aruba Operating System Software.",
+    "ArubaOS (MODEL: ArubaMC-VA), Version 8.10.0.7"
+  ],
+  "_meta": ["Hostname", "Version", "_data"]
+}

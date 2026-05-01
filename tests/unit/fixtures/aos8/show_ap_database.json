@@ -1,0 +1,18 @@
+{
+  "_meta": ["Name", "Group", "IP Address", "Status", "Flags", "Switch IP", "Standby IP", "Wired MAC Address", "Serial #", "AP Type"],
+  "_global_result": {"status": "0", "status_str": "Success"},
+  "AP Database": [
+    {
+      "Name": "AP-01",
+      "Group": "default",
+      "IP Address": "10.1.0.50",
+      "Status": "Up 1d:2h:3m",
+      "Flags": "",
+      "Switch IP": "10.0.0.1",
+      "Standby IP": "0.0.0.0",
+      "Wired MAC Address": "00:1a:1e:00:00:01",
+      "Serial #": "AB1234567",
+      "AP Type": "535"
+    }
+  ]
+}

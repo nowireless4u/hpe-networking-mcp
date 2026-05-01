@@ -93,6 +93,17 @@ class AxisSecrets:
 
 
 @dataclass
+class AOS8Secrets:
+    """Aruba OS 8 / Mobility Conductor credentials."""
+
+    host: str
+    username: str
+    password: str
+    port: int = 4343
+    verify_ssl: bool = True
+
+
+@dataclass
 class ServerConfig:
     """Global server configuration."""
 
@@ -104,6 +115,7 @@ class ServerConfig:
     enable_clearpass_write_tools: bool = False
     enable_apstra_write_tools: bool = False
     enable_axis_write_tools: bool = False
+    enable_aos8_write_tools: bool = False
     disable_elicitation: bool = False
     debug: bool = False
     log_file: str | None = None
@@ -141,6 +153,7 @@ class ServerConfig:
     clearpass: ClearPassSecrets | None = None
     apstra: ApstraSecrets | None = None
     axis: AxisSecrets | None = None
+    aos8: AOS8Secrets | None = None
 
     @property
     def enabled_platforms(self) -> list[str]:
@@ -157,6 +170,8 @@ class ServerConfig:
             platforms.append("apstra")
         if self.axis:
             platforms.append("axis")
+        if self.aos8:
+            platforms.append("aos8")
         return platforms
 
 
@@ -351,6 +366,61 @@ def _load_axis() -> AxisSecrets | None:
     return AxisSecrets(api_token=api_token)
 
 
+def _load_aos8() -> AOS8Secrets | None:
+    """Load AOS8 / Mobility Conductor credentials from Docker secrets.
+
+    Returns:
+        AOS8Secrets if all required secrets (host, username, password) are present
+        and non-empty. None otherwise — logged at INFO level with the list of
+        missing secret names. Optional secrets (port, verify_ssl) fall back to
+        defaults (4343, True) when absent or empty.
+    """
+    host = _read_secret("aos8_host")
+    username = _read_secret("aos8_username")
+    password = _read_secret("aos8_password")
+    port_str = _read_secret("aos8_port")
+    verify_ssl_str = _read_secret("aos8_verify_ssl")
+
+    missing: list[str] = []
+    if not host:
+        missing.append("aos8_host")
+    if not username:
+        missing.append("aos8_username")
+    if not password:
+        missing.append("aos8_password")
+
+    if missing:
+        logger.info("AOS8: disabled (missing secrets: {})", ", ".join(missing))
+        return None
+
+    assert host is not None
+    assert username is not None
+    assert password is not None
+
+    try:
+        port = int(port_str) if port_str else 4343
+    except ValueError:
+        logger.warning("AOS8: invalid aos8_port value '{}', defaulting to 4343", port_str)
+        port = 4343
+
+    verify_ssl = verify_ssl_str.lower() not in ("false", "0", "no") if verify_ssl_str else True
+
+    logger.info(
+        "AOS8: credentials loaded (host: {}, port: {}, user: {}, verify_ssl: {})",
+        host,
+        port,
+        username,
+        verify_ssl,
+    )
+    return AOS8Secrets(
+        host=host,
+        username=username,
+        password=password,
+        port=port,
+        verify_ssl=verify_ssl,
+    )
+
+
 def load_config() -> ServerConfig:
     """Load server configuration from Docker secrets and environment variables.
 
@@ -377,6 +447,7 @@ def load_config() -> ServerConfig:
     enable_clearpass_write = os.getenv("ENABLE_CLEARPASS_WRITE_TOOLS", "false").lower() in _truthy
     enable_apstra_write = os.getenv("ENABLE_APSTRA_WRITE_TOOLS", "false").lower() in _truthy
     enable_axis_write = os.getenv("ENABLE_AXIS_WRITE_TOOLS", "false").lower() in _truthy
+    enable_aos8_write = os.getenv("ENABLE_AOS8_WRITE_TOOLS", "false").lower() in _truthy
     disable_elicit = os.getenv("DISABLE_ELICITATION", "false").lower() in _truthy
     debug = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
     log_file = os.getenv("LOG_FILE") or None
@@ -417,6 +488,7 @@ def load_config() -> ServerConfig:
     clearpass = _load_clearpass()
     apstra = _load_apstra()
     axis = _load_axis()
+    aos8 = _load_aos8()
 
     config = ServerConfig(
         port=port,
@@ -427,6 +499,7 @@ def load_config() -> ServerConfig:
         enable_clearpass_write_tools=enable_clearpass_write,
         enable_apstra_write_tools=enable_apstra_write,
         enable_axis_write_tools=enable_axis_write,
+        enable_aos8_write_tools=enable_aos8_write,
         disable_elicitation=disable_elicit,
         debug=debug,
         log_file=log_file,
@@ -440,6 +513,7 @@ def load_config() -> ServerConfig:
         clearpass=clearpass,
         apstra=apstra,
         axis=axis,
+        aos8=aos8,
     )
 
     if not config.enabled_platforms:

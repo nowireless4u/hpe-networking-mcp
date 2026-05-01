@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0.2] - 2026-05-01
+
+**AOS8 PR #230 review fixes — squash-rebase onto upstream main + reviewer-requested code cleanups. No new functionality; addresses reviewer feedback B1, B2, B3, B4, C1, C2 from upstream PR review.**
+
+### Fixed
+
+- Fixed httpx client reuse so MockTransport-based tests pass (closes #230 review B1)
+- Fixed ruff I001 import-order errors in aos8/client.py and tests/unit/test_aos8_write.py (B2)
+- Reverted FASTMCP_STATELESS_HTTP=true addition in docker-compose.yml (B4)
+- Changed ENABLE_AOS8_WRITE_TOOLS default to false to match other platforms (C1)
+- Removed dead AOS8Client.reset_session() method (C2)
+- Rebased onto upstream/main and bumped version to 2.4.0.2 (B3)
+
 ## [2.3.1.8] - 2026-05-01
 
 **New skill: `morning-coffee-report`. Daily ops digest for the open-the-laptop-with-coffee read with two output modes — engineer-detailed (default) and executive-summary (business-language). Combines audit-log activity (who's been in Central / Mist over the last 24h and what they did), active alerts/alarms, top talkers (clients and APs by load), and Mist Marvis SLE insights. Phase 1 covers Mist + Central with last-24h scope. Day-over-day delta deferred to phase 2; ClearPass / Apstra / Axis coverage deferred to phase 3.**
@@ -400,6 +413,45 @@ curl -i -X POST http://127.0.0.1:8000/mcp \
 ### Tests
 
 - 653 passing — no test changes; behavior unit-testable end-to-end via curl above.
+
+## [2.4.0.1] - 2026-04-29
+
+### Fixed
+- **AOS8 differentiator tools (DIFF-01..09) production response-contract bug.** `differentiators.py` `_show()` and `_object()` previously returned a raw `httpx.Response` object instead of parsed JSON, causing all 9 DIFF tools (`aos8_get_md_hierarchy`, `aos8_get_effective_config`, `aos8_get_pending_changes`, `aos8_get_rf_neighbors`, `aos8_get_cluster_state`, `aos8_get_air_monitors`, `aos8_get_ap_wired_ports`, `aos8_get_ipsec_tunnels`, `aos8_get_md_health_check`) to fail in production. Refactored to use canonical `_helpers.run_show()` / `get_object()`. Test mocks updated to match the real `AOS8Client.request()` contract.
+- **Code-mode `execute_description`** now lists `aos8_` as a callable platform prefix. The sandboxed `execute()` LLM was previously told only 6 platform prefixes were dispatchable, causing `Unknown tool: aos8_*` failures despite the tools being registered. Added regression test `test_server_code_mode.py` that asserts every platform prefix appears in the literal.
+
+### Documentation
+- README.md, docs/TOOLS.md tool counts corrected from 38 → **47 AOS8 tools** (26 read + 12 write + 9 differentiators). The 9 differentiator tools were added in Phase 7 but the user-facing strings were not refreshed at the time. Note for [2.4.0.0]: tool count was incorrectly stated as 38; the actual shipped count was 47.
+- docs/TOOLS.md: new `### Differentiators (9)` subsection lists all 9 AOS8-unique read tools with descriptions.
+- `.planning/phases/04-differentiator-tools/04-VERIFICATION.md` added — formally documents that Phase 4 was administratively merged into Phase 7 (plans 07-01/07-02/07-03) and corrected by Phase 8 (plan 08-01).
+- REQUIREMENTS.md DIFF-01..09 traceability now reads "Complete".
+
+### Tests
+- New `tests/unit/test_server_code_mode.py` (2 tests) — guards code-mode `execute_description` literal against future platform-prefix drift.
+- Total unit tests: 766 (was 764).
+
+## [2.4.0.0] - 2026-04-28
+
+### Added
+- **Aruba OS 8 / Mobility Conductor platform module** (seventh platform).
+  - 38 tools across 6 categories: 8 health/inventory, 4 client, 3 alert/audit, 4 WLAN/config, 7 troubleshooting, 12 write
+  - 9 guided prompts: aos8_triage_client, aos8_triage_ap, aos8_health_check, aos8_audit_change, aos8_rf_analysis, aos8_wlan_review, aos8_client_flood, aos8_compare_md_config, aos8_pre_change_check
+  - Token-reusing UIDARUBA session client with single-flight 401 refresh, asyncio.Lock-serialized token rotation, lazy login (deferred to first tool call), and explicit aclose() that logs out on shutdown
+  - Write tools gated behind `ENABLE_AOS8_WRITE_TOOLS` (default false); every write returns `requires_write_memory_for`
+  - `aos8_write_memory` is the only path to persist staged config — never auto-called
+  - SSL verification enabled by default; opt-out emits a startup WARNING
+  - Five Docker secrets: `aos8_host`, `aos8_username`, `aos8_password`, `aos8_port` (default 4343), `aos8_verify_ssl`
+- New repo-root **INSTRUCTIONS.md** — operator-facing documentation covering AOS8 config_path semantics, write_memory contract, show_command passthrough, Conductor-vs-standalone behavior, and the guided-prompt index. Distinct from the in-package AI-facing src/hpe_networking_mcp/INSTRUCTIONS.md.
+- AOS8 tool reference section in **docs/TOOLS.md**.
+- AOS8 row in README.md capability table; AOS8 secrets reference section; AOS8 added to platform auto-disable example.
+
+### Changed
+- README.md tool counts and architecture diagram updated to include AOS8 (38 + 9 prompts).
+- Bumped version to 2.4.0.0 (minor — additive platform).
+
+### Tests
+- 11+ new unit tests in tests/unit/test_aos8_prompts.py covering prompt registration and non-empty return contract for all 9 PROMPT-01..09 prompts.
+- Phase-5 baseline of 737 tests remains green; total now 767+ tests passing.
 
 ## [2.3.0.8] - 2026-04-28
 

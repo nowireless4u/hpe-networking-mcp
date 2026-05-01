@@ -1,0 +1,13 @@
+{
+  "_meta": ["Time", "User", "IP", "Command", "Result"],
+  "_global_result": {"status": "0", "status_str": "Success"},
+  "Audit Trail": [
+    {
+      "Time": "2026-04-28 09:00:00",
+      "User": "admin",
+      "IP": "10.0.0.100",
+      "Command": "wlan ssid-profile corp",
+      "Result": "Success"
+    }
+  ]
+}

@@ -32,6 +32,9 @@ class TestRecordTool:
         spec = ToolSpec(name="apstra_get_blueprints", func=_fn, platform="apstra", category="blueprints")
         record_tool(spec)
         assert REGISTRIES["apstra"]["apstra_get_blueprints"] is spec
+        aos8_spec = ToolSpec(name="aos8_get_controllers", func=_fn, platform="aos8", category="devices")
+        record_tool(aos8_spec)
+        assert REGISTRIES["aos8"]["aos8_get_controllers"] is aos8_spec
 
     def test_record_does_not_leak_to_other_platforms(self):
         spec = ToolSpec(name="apstra_x", func=_fn, platform="apstra", category="x")
@@ -120,3 +123,35 @@ class TestIsToolEnabled:
     def test_unrelated_tag_does_not_gate(self):
         spec = ToolSpec(name="t", func=_fn, platform="apstra", category="c", tags={"random_tag"})
         assert is_tool_enabled(spec, self._make_config()) is True
+
+    def test_aos8_write_gate(self):
+        spec = ToolSpec(
+            name="aos8_create_wlan",
+            func=_fn,
+            platform="aos8",
+            category="w",
+            tags={"aos8_write"},
+        )
+        assert is_tool_enabled(spec, self._make_config()) is False
+        assert is_tool_enabled(spec, self._make_config(enable_aos8_write_tools=True)) is True
+
+    def test_aos8_write_delete_gate(self):
+        spec = ToolSpec(
+            name="aos8_delete_wlan",
+            func=_fn,
+            platform="aos8",
+            category="w",
+            tags={"aos8_write_delete"},
+        )
+        assert is_tool_enabled(spec, self._make_config()) is False
+        assert is_tool_enabled(spec, self._make_config(enable_aos8_write_tools=True)) is True
+
+
+@pytest.mark.unit
+class TestRecordToolAos8:
+    def test_records_into_the_right_platform(self):
+        clear_registry()
+        spec = ToolSpec(name="aos8_get_devices", func=_fn, platform="aos8", category="devices")
+        record_tool(spec)
+        assert REGISTRIES["aos8"]["aos8_get_devices"] is spec
+        clear_registry()

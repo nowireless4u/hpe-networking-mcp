@@ -1,0 +1,14 @@
+{
+  "_data": [
+    {
+      "ssid_prof": [
+        {
+          "profile-name": "corp",
+          "essid": {"essid": "CorpWiFi"},
+          "opmode": {"wpa2-aes": true}
+        }
+      ]
+    }
+  ],
+  "_global_result": {"status": "0"}
+}
