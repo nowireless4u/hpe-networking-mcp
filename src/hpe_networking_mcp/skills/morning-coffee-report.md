@@ -2,13 +2,24 @@
 name: morning-coffee-report
 title: Morning coffee report — daily ops digest of who-did-what + what's broken + top talkers
 description: |
-  Open-the-laptop-with-coffee read: a single combined digest of activity
-  (who logged into Central / Mist over the last 24h and what they did),
-  active alerts/alarms (what needs attention), top talkers (clients and
-  APs by load), and AI insights (Marvis SLEs, Central anomalies). Use
-  when the user asks for a "morning coffee report", "morning digest",
-  "give me the rundown", or "what happened overnight" — anything that
-  asks for an overnight ops summary across platforms.
+  Open-the-laptop-with-coffee read of the last 24h across Mist + Central.
+  Two output modes driven by the user's phrasing:
+
+  * **Engineer mode** (default): full digest with activity, alerts,
+    top talkers, SLE insights — covers tool names, platform names,
+    raw counts. Triggered by *"morning coffee report"*, *"morning
+    digest"*, *"give me the rundown"*, *"what happened overnight"*.
+
+  * **Executive mode**: one-paragraph business-language summary —
+    no tool/platform names, no raw counts, no top-talker list, no
+    audit-log per-user breakdown. Same gas-gauge color but framed
+    as plain-English impact. Triggered by *"executive summary"*,
+    *"exec briefing"*, *"summary for the boss / leadership"*,
+    *"high-level summary"*, *"30-second summary"*, *"what do I
+    tell my manager"*.
+
+  Both modes lead with a 🟢/🟡/🔴 gas-gauge status indicator so the
+  reader can decide in two seconds whether to read further.
 platforms: [mist, central]
 tags: [morning, daily-digest, audit, alerts, top-talkers, sle, baseline]
 tools: [health, mist_get_self, mist_search_audit_logs, mist_search_events, mist_search_alarms, mist_search_client, mist_search_device, mist_get_org_sle, mist_get_org_sites_sle, mist_get_site_sle, mist_get_insight_metrics, central_get_audit_logs, central_get_audit_log_detail, central_get_alerts, central_get_alert_classification, central_get_clients, central_get_aps, central_get_sites, central_get_site_health]
@@ -23,12 +34,35 @@ Covers the **last 24 hours** across enabled platforms (Mist + Central
 this release; ClearPass / Apstra / Axis follow in a later phase).
 
 The very first line of the report is a **gas-gauge status indicator**
-(🟢 GREEN / 🟡 YELLOW / 🔴 RED) so the operator can decide in two
+(🟢 GREEN / 🟡 YELLOW / 🔴 RED) so the reader can decide in two
 seconds whether they need to read the rest. Green means skip and go
 about your day; yellow means read the headline; red means read all the
 way through.
 
-Five sections, in this order:
+## Output modes
+
+Two output shapes, both driven by the same data-gathering procedure
+(steps 1–5 below). The mode is determined by the user's phrasing:
+
+- **Engineer mode** (default) — full digest. Use this when the
+  trigger is *"morning coffee report"*, *"morning digest"*, *"give
+  me the rundown"*, *"what happened overnight"*, or any phrasing
+  that doesn't explicitly call for an executive view. Output sections:
+  headline, activity, what's broken, top talkers, insights.
+- **Executive mode** — one-paragraph business-language summary.
+  Use this when the trigger is *"executive summary"*, *"exec
+  briefing"*, *"exec summary"*, *"summary for the boss"*, *"summary
+  for leadership"*, *"high-level summary"*, *"30-second summary"*,
+  *"non-technical morning report"*, or *"what do I tell my manager"*.
+  Output sections: gas gauge + plain-English summary + top 1–2
+  business-impact items + recommended action. No tool names, no
+  platform names, no raw counts.
+
+Run the same data-gathering procedure regardless of mode. Choose the
+output template at the end based on the trigger phrasing. If the
+user's phrasing is ambiguous, default to engineer mode.
+
+## Engineer-mode output sections (the default)
 
 1. **Headline + status indicator** — gas-gauge color + the
    if-you-only-read-one-paragraph view (3–5 lines).
@@ -262,6 +296,14 @@ mismatch on aggregation link"* for red).
 
 ## Output formatting
 
+The report must follow one of two exact structures depending on the
+mode (engineer-default or executive). Pick the template at the very end
+of the procedure based on the user's trigger phrasing — see "Output
+modes" near the top of this runbook for the trigger lists. If
+ambiguous, default to engineer mode.
+
+### Engineer-mode template (default)
+
 The report must follow this exact structure so different runs produce
 comparable output. Use Markdown headings; render in the AI client.
 
@@ -341,6 +383,72 @@ One sentence describing why this color was chosen. Examples:
 - Run `mist_get_site_sle(site_id=<HOME-KNAPP id>)` for the SLE breakdown
 ```
 
+### Executive-mode template
+
+For the leadership / non-technical audience. The whole report is short
+— under 100 words in most cases. Same gas-gauge color (universal
+signal) but everything else is rephrased in business language with
+zero tool / platform / IP / MAC / port references.
+
+```
+# Morning network report — <ISO date>
+
+## Status: 🟢 GREEN | 🟡 YELLOW | 🔴 RED
+
+**Bottom line:** one or two sentences in plain English.
+
+Examples:
+- 🟢 GREEN — Everything is running smoothly. No issues to address today; the network performed well overnight with normal usage patterns.
+- 🟡 YELLOW — One site has a non-critical warning that's worth reviewing this week, but no current impact to users. All wireless and wired services performing within targets.
+- 🔴 RED — One of our sites has a network reliability issue affecting wireless connectivity. Recommend a maintenance window before end of week to resolve. Other sites operating normally.
+
+## What matters today
+
+(0–2 bullets, business-language framing of the most important issues.
+Skip this section entirely if status is GREEN. Examples:)
+
+- A site is showing reduced wireless reliability that may affect users in the building. Engineering team investigating the underlying cause.
+- A network change made overnight by the engineering team appears to have introduced a configuration issue that needs review.
+
+## Recommended action
+
+(One bullet — what's the decision the leader needs to make? Skip if GREEN.)
+
+- Approve a brief maintenance window this week to fix the underlying issue, or wait for the engineering team's deeper assessment first.
+```
+
+#### Executive-mode authoring rules
+
+When producing the executive output, the AI MUST:
+
+- **Drop all technical jargon.** No tool names (`central_get_alerts`),
+  no platform names (`Mist` / `Central`), no IPs / MACs / port numbers
+  / VLAN IDs / SSID names / device serial numbers. If the engineer
+  template would say *"5 critical alerts at HOME-KNAPP — MTU mismatch
+  on aggregation link"*, the exec template says *"a site has a network
+  reliability issue affecting wireless connectivity."*
+- **Round counts.** *"Approximately 15% of clients"*, not *"47 clients"*.
+  *"A site"* not *"HOME-KNAPP"* unless naming the site is needed for
+  clarity (e.g. multi-site orgs where the leader actually knows site
+  names).
+- **Use business-impact framing.** *"Affecting users in the building"*,
+  *"reduced wireless reliability"*, *"network change introduced an
+  issue"*. Not *"BSSID 5 dropped to 78% throughput"*.
+- **No top-talker section.** Bandwidth-by-client is operational; not
+  exec-relevant.
+- **No audit-log per-user breakdown.** *"A change was made overnight by
+  the engineering team"* is enough; exec doesn't need to know it was
+  alice@corp.com vs bob@corp.com.
+- **Length under 100 words.** A 30-second read. If you're writing more
+  than 100 words you're including operational detail that belongs in
+  engineer mode.
+- **No "next steps" pointing at tools.** Either recommend a business
+  decision (*"approve a maintenance window"*) or omit the section.
+
+If status is GREEN: just the gas gauge + the one-sentence bottom line.
+Skip "What matters today" and "Recommended action" entirely. The whole
+report becomes 3 lines.
+
 ## Caveats
 
 - **No day-over-day delta in phase 1.** "What changed since yesterday"
@@ -357,8 +465,19 @@ One sentence describing why this color was chosen. Examples:
 
 ## Example queries
 
+**Engineer view (default):**
+
 > "morning coffee report"
 > "give me the morning rundown"
 > "what happened overnight"
 > "morning digest"
 > "who's been in Central / Mist over the last day"
+
+**Executive view:**
+
+> "executive summary of the morning report"
+> "exec briefing"
+> "summary for the boss"
+> "high-level summary of overnight"
+> "30-second morning summary"
+> "what do I tell my manager about the network this morning"

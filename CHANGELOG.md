@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.3.1.8] - 2026-05-01
 
-**New skill: `morning-coffee-report`. Daily ops digest for the open-the-laptop-with-coffee read — combines audit-log activity (who's been in Central / Mist over the last 24h and what they did), active alerts/alarms, top talkers (clients and APs by load), and Mist Marvis SLE insights into a single combined report. Phase 1 covers Mist + Central with last-24h scope. Day-over-day delta deferred to phase 2; ClearPass / Apstra / Axis coverage deferred to phase 3.**
+**New skill: `morning-coffee-report`. Daily ops digest for the open-the-laptop-with-coffee read with two output modes — engineer-detailed (default) and executive-summary (business-language). Combines audit-log activity (who's been in Central / Mist over the last 24h and what they did), active alerts/alarms, top talkers (clients and APs by load), and Mist Marvis SLE insights. Phase 1 covers Mist + Central with last-24h scope. Day-over-day delta deferred to phase 2; ClearPass / Apstra / Axis coverage deferred to phase 3.**
 
 Tracks GitHub issue [#231](https://github.com/nowireless4u/hpe-networking-mcp/issues/231). Requested by Seth and Bruno.
 
@@ -21,7 +21,16 @@ Tracks GitHub issue [#231](https://github.com/nowireless4u/hpe-networking-mcp/is
   - Mist: `health`, `mist_get_self`, `mist_search_audit_logs`, `mist_search_events`, `mist_search_alarms`, `mist_search_client`, `mist_search_device`, `mist_get_org_sle`, `mist_get_org_sites_sle`, `mist_get_site_sle`, `mist_get_insight_metrics`
   - Central: `central_get_audit_logs`, `central_get_audit_log_detail`, `central_get_alerts`, `central_get_alert_classification`, `central_get_clients`, `central_get_aps`, `central_get_sites`, `central_get_site_health`
 
-### What the report covers
+### Output modes
+
+Two output shapes share one data-gathering procedure. The mode is selected by the user's trigger phrasing — no parameter needed.
+
+- **Engineer mode (default)** — full digest with five sections (headline, activity, what's broken, top talkers, insights). Includes tool names, platform names, raw counts, IPs/MACs/sites. Triggered by *"morning coffee report"*, *"morning digest"*, *"give me the rundown"*, *"what happened overnight"*, *"who's been in Central / Mist over the last day"*.
+- **Executive mode (new)** — one-paragraph business-language summary, ≤100 words. No tool / platform / IP / MAC / port references. Same gas-gauge color but framed as plain-English impact and recommended decisions. Triggered by *"executive summary"*, *"exec briefing"*, *"summary for the boss / leadership"*, *"high-level summary"*, *"30-second summary"*, *"what do I tell my manager"*. Sections: gas gauge → bottom line → what matters today (0–2 bullets) → recommended action. On 🟢 GREEN status the report collapses to 3 lines.
+
+Authoring rules for executive mode are enforced in the skill body — drop technical jargon, round counts, use business-impact framing ("a site has reduced wireless reliability"), no top-talker section, no audit-log per-user breakdown.
+
+### What the report covers (engineer mode)
 
 1. **Status indicator + headline** — leads with a 🟢 GREEN / 🟡 YELLOW / 🔴 RED gas-gauge color so the operator can decide in two seconds whether to read deeper. Green = skip, yellow = read headline, red = read everything. The rubric is computed from data the procedure already collected (no extra tool calls): RED on any Critical alert / SLE <75% / unavailable platform; YELLOW on any Major alert / SLE 75–85% / capacity warnings; GREEN otherwise. Then the 3–5 sentence headline.
 2. **Activity** — audit-log digest: per-user event counts grouped by login / read / write actions. Highlights users who took config write actions; surfaces top 3 actions per user with target resource.
