@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1.8] - 2026-05-01
+
+**New skill: `morning-coffee-report`. Daily ops digest for the open-the-laptop-with-coffee read — combines audit-log activity (who's been in Central / Mist over the last 24h and what they did), active alerts/alarms, top talkers (clients and APs by load), and Mist Marvis SLE insights into a single combined report. Phase 1 covers Mist + Central with last-24h scope. Day-over-day delta deferred to phase 2; ClearPass / Apstra / Axis coverage deferred to phase 3.**
+
+Tracks GitHub issue [#231](https://github.com/nowireless4u/hpe-networking-mcp/issues/231). Requested by Seth and Bruno.
+
+### What's new
+
+- **`src/hpe_networking_mcp/skills/morning-coffee-report.md`** — new bundled skill (~250 lines). Five output sections: headline, activity, what's broken, top talkers, insights. Strict output template specified — same approach as `central-scope-audit` and `mist-scope-audit` to keep different runs comparable.
+
+- **Trigger phrases in `INSTRUCTIONS.md` Section 8:** *"morning coffee report"*, *"morning coffee"*, *"morning digest"*, *"morning rundown"*, *"give me the rundown"*, *"what happened overnight"*, *"who's been in Central / Mist over the last day"*. Universal trigger words from v2.3.1.4 (audit, summary, overview, daily) help narrow to skills generally; these specific phrases route to `morning-coffee-report`.
+
+- **Tools used (all existing — no new platform tools needed for phase 1):**
+  - Mist: `health`, `mist_get_self`, `mist_search_audit_logs`, `mist_search_events`, `mist_search_alarms`, `mist_search_client`, `mist_search_device`, `mist_get_org_sle`, `mist_get_org_sites_sle`, `mist_get_site_sle`, `mist_get_insight_metrics`
+  - Central: `central_get_audit_logs`, `central_get_audit_log_detail`, `central_get_alerts`, `central_get_alert_classification`, `central_get_clients`, `central_get_aps`, `central_get_sites`, `central_get_site_health`
+
+### What the report covers
+
+1. **Status indicator + headline** — leads with a 🟢 GREEN / 🟡 YELLOW / 🔴 RED gas-gauge color so the operator can decide in two seconds whether to read deeper. Green = skip, yellow = read headline, red = read everything. The rubric is computed from data the procedure already collected (no extra tool calls): RED on any Critical alert / SLE <75% / unavailable platform; YELLOW on any Major alert / SLE 75–85% / capacity warnings; GREEN otherwise. Then the 3–5 sentence headline.
+2. **Activity** — audit-log digest: per-user event counts grouped by login / read / write actions. Highlights users who took config write actions; surfaces top 3 actions per user with target resource.
+3. **What's broken right now** — active alerts/alarms severity-ordered (Central via `central_get_alert_classification`, Mist via `mist_search_alarms`). Top 5 per platform; collapses repeats; flags Critical with 🔴 prefix.
+4. **Top talkers** — top 5–10 clients by traffic and top APs by client count or load, per platform. Callouts when a single client uses >40% of traffic or an AP has 50+ concurrent clients.
+5. **Insights** — Mist SLE rollup (worst category, worst site). Central side surfaces alert-category trends from classification data.
+
+### What's deferred (per issue #231)
+
+- **Phase 2:** day-over-day delta — "what changed since yesterday" requires either re-querying with a yesterday time window and computing diffs in the runbook, or storing yesterday's snapshot. Approach decided in phase 2 design.
+- **Phase 3:** ClearPass session/auth-failure summary, Apstra fabric anomalies, Axis connector status — extend coverage to platforms beyond Mist + Central.
+
+### Tests
+
+- 742 passing (unchanged) — `test_skill_tool_references.py` verifies every tool referenced in the new runbook resolves to a registered tool, plus the new entry in `INSTRUCTIONS.md` Section 8.
+
+### Docs
+
+- `docs/TOOLS.md` skills table gains a `morning-coffee-report` row.
+- `INSTRUCTIONS.md` Section 8 gains the trigger row.
+
 ## [2.3.1.7] - 2026-04-30
 
 **Documentation refresh — pulls stale tool counts and structural references in `README.md`, `docs/TOOLS.md`, `CLAUDE.md`, `INSTRUCTIONS.md`, and `docs/MIGRATING_TO_V2.md` up to v2.3.1.6 reality. No code changes; one bandit/ruff/mypy/pytest run confirms 742 still passing.**

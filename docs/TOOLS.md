@@ -153,6 +153,7 @@ skills register in every mode without violating the code-mode design.
 | `central-scope-audit` | Aruba Central VSG-anchored scope audit — walks ~25 profile categories with per-setting checks, judges each finding against VSG-recommended scope | v2.3.0.5 |
 | `mist-scope-audit` | Juniper Mist comprehensive scope audit — WLAN templates, RF templates, switch templates, port profiles, virtual chassis, firmware policy, PSK strategy | v2.3.0.5 |
 | `aos-migration-readiness` | AOS 6 / AOS 8 / Instant AP → AOS 10 migration readiness audit (PoC) — paste-driven config bundle parsing, ~50 VSG-anchored rules per source × target combination, GO / BLOCKED / PARTIAL verdict with cutover sequencing | v2.3.0.6 |
+| `morning-coffee-report` | Daily ops digest covering the last 24h: who's been in (audit logs), what's broken (active alerts), top talkers (clients/APs by load), AI insights (Mist SLE). Day-over-day delta deferred to phase 2 | v2.3.1.8 |
 
 The `TEMPLATE.md` file in the skills directory is a starting point if you
 want to author a new skill — it's filtered out of the registry by name.
