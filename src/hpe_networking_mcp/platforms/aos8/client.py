@@ -32,18 +32,33 @@ _REQUEST_TIMEOUT = 30.0
 _HEALTH_TIMEOUT = 10.0
 
 _UIDARUBA_RE = re.compile(r"(UIDARUBA=)[^&\s]+", re.IGNORECASE)
+# AOS 8 carries the same UIDARUBA token in a SESSION cookie on every
+# request and rotates it via Set-Cookie on every response. Match the
+# value through the next `;`, `,`, or whitespace so a redacted Set-Cookie
+# header keeps its trailing attributes (`path=/`, `HttpOnly`, ...) intact.
+_SESSION_COOKIE_RE = re.compile(r"(SESSION=)[^;,\s]+", re.IGNORECASE)
 
 
-def _sanitize_url_for_log(url: str | httpx.URL) -> str:
-    """Redact any UIDARUBA token value in a URL string before logging.
+def _sanitize_for_log(value: str | httpx.URL) -> str:
+    """Redact UIDARUBA query values and SESSION cookie values for logging.
+
+    Applies to URLs, raw query strings, ``Cookie`` request headers, and
+    ``Set-Cookie`` response headers — every place the AOS 8 session token
+    can appear in transport metadata.
 
     Args:
-        url: The URL to sanitize (string or httpx.URL).
+        value: The string (URL, header, or query) to sanitize.
 
     Returns:
-        URL string with UIDARUBA=<value> replaced by UIDARUBA=<redacted>.
+        Same string with ``UIDARUBA=<value>`` and ``SESSION=<value>``
+        replaced by ``UIDARUBA=<redacted>`` and ``SESSION=<redacted>``.
     """
-    return _UIDARUBA_RE.sub(r"\1<redacted>", str(url))
+    sanitized = _UIDARUBA_RE.sub(r"\1<redacted>", str(value))
+    return _SESSION_COOKIE_RE.sub(r"\1<redacted>", sanitized)
+
+
+# Back-compat alias — older import sites may still reference this name.
+_sanitize_url_for_log = _sanitize_for_log
 
 
 class AOS8AuthError(RuntimeError):
@@ -85,22 +100,28 @@ class AOS8Client:
         """Create a fresh httpx.AsyncClient with debug event hooks."""
 
         async def _log_request(request: httpx.Request) -> None:
-            cookie_hdr = request.headers.get("cookie", "<none>")
-            params_str = str(request.url.params)
+            # The Cookie header carries SESSION=<UIDARUBA> and the query
+            # string carries UIDARUBA=<UIDARUBA>; both must be redacted
+            # before reaching the log sink. See issue #233.
+            cookie_hdr = _sanitize_for_log(request.headers.get("cookie", "<none>"))
+            params_str = _sanitize_for_log(str(request.url.params))
             logger.info(
                 "AOS8 HTTP → {} {} | cookie={!r} | params={}",
                 request.method,
                 request.url.path,
-                cookie_hdr[:40] if len(cookie_hdr) > 40 else cookie_hdr,
-                params_str[:80] if len(params_str) > 80 else params_str,
+                cookie_hdr,
+                params_str,
             )
 
         async def _log_response(response: httpx.Response) -> None:
+            # AOS 8 rotates the SESSION cookie on every successful response,
+            # so the Set-Cookie header carries a fresh UIDARUBA each time.
+            set_cookie = _sanitize_for_log(response.headers.get("set-cookie", "<none>"))
             logger.info(
                 "AOS8 HTTP ← {} {} | set-cookie={}",
                 response.status_code,
                 response.url.path,
-                response.headers.get("set-cookie", "<none>")[:60],
+                set_cookie,
             )
 
         return httpx.AsyncClient(

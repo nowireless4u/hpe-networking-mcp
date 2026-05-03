@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0.4] - 2026-05-03
+
+**Security patch — AOS 8 UIDARUBA session token was being written to INFO-level logs on every API request. Fix scope: redact `UIDARUBA=` query values and `SESSION=` cookie values in the AOS 8 transport request/response logging hooks; close the test blind spot that let the leak ship undetected.** Tracks issue [#233](https://github.com/nowireless4u/hpe-networking-mcp/issues/233). Affects every release in the v2.4.0.x series before this one running with AOS 8 secrets configured. Operators without AOS 8 enabled are unaffected (the platform is gated off when `aos8_*` secrets are missing or empty, and the leaking code never executes).
+
+### Fixed
+
+- **`src/hpe_networking_mcp/platforms/aos8/client.py`** — added a `SESSION=<value>` cookie regex to complement the existing `UIDARUBA=<value>` regex, and applied both via a new unified `_sanitize_for_log()` helper to the `Cookie` request header, the request query string, and the `Set-Cookie` response header in `_log_request` / `_log_response`. The previous slicing-only "redaction" (`[:40]`, `[:60]`, `[:80]`) chopped the end off the secret but left the leading entropy fully exposed. The login line continues to use `mask_secret()` for the head-and-tail-with-ellipsis form so operators can correlate sessions in logs without exposing the token.
+- **`tests/unit/test_aos8_client.py`** and **`tests/unit/test_aos8_security.py`** — fixed `_install_mock_transport` / `_install` to swap only the transport on the persistent `client._http` (`client._http._transport = MockTransport(...)`) instead of constructing a fresh `AsyncClient`. The fresh-client pattern silently dropped the request/response event hooks defined in `_make_http_client`, which is why the existing leak tests passed against vulnerable code — the leaking log statements never fired during the test. This change mirrors the production code path the round-1 PR #230 review fix B1 established (persistent `_http`).
+- **Tightened the existing leak assertions and added a new one** — every log line that mentions `UIDARUBA=` OR `SESSION=` must now also contain `<redacted>` (positive assertion, complementing the prior negative-only "bait token not in log" check). New `test_set_cookie_session_value_redacted_in_response_log` directly drives a `Set-Cookie: SESSION=<token>` header through the response hook and asserts the response-log line contains `SESSION=<redacted>`.
+
+### Mitigation if you've been running v2.4.0.0–v2.4.0.3 with AOS 8 enabled
+
+See issue #233 for detection (`docker compose logs | grep 'AOS8 HTTP.*UIDARUBA='`) and pre-fix mitigation (`LOG_LEVEL=warning`). Operators who collected logs and want to invalidate already-leaked tokens can rotate `aos8_username` / `aos8_password` Docker secrets; UIDARUBA tokens issued under the old credentials become unusable once the new credentials are first used.
+
 ## [2.4.0.3] - 2026-05-03
 
 **Final polish on the AOS 8 / Mobility Conductor platform module from PR #230 — the last 3 test failures, an `INSTRUCTIONS.md` doc gap, and a compose-default revert. Lands together with @dendyc's contribution rather than as a separate follow-up. No functional change to AOS8 itself.**

@@ -41,19 +41,21 @@ def _make_secrets(**overrides: Any) -> AOS8Secrets:
 
 
 def _install_mock_transport(client: AOS8Client, handler) -> list[httpx.Request]:
-    """Replace client._http with one driven by MockTransport. Returns request log."""
+    """Swap the transport on the persistent client. Returns request log.
+
+    Mirrors the production code path: the persistent ``client._http`` (with
+    its event hooks attached) is preserved; only the underlying transport is
+    replaced with a ``MockTransport``. Replacing the entire ``AsyncClient``
+    here would silently drop the request/response logging hooks defined in
+    ``_make_http_client``, hiding any log-side leaks (see issue #233).
+    """
     calls: list[httpx.Request] = []
 
     def _wrapper(request: httpx.Request) -> httpx.Response:
         calls.append(request)
         return handler(request)
 
-    transport = httpx.MockTransport(_wrapper)
-    client._http = httpx.AsyncClient(
-        base_url=f"https://{client._config.host}:{client._config.port}",
-        transport=transport,
-        verify=client._config.verify_ssl,
-    )
+    client._http._transport = httpx.MockTransport(_wrapper)
     return calls
 
 
@@ -205,6 +207,55 @@ class TestAOS8ClientLogging:
         await client.aclose()
         joined = "\n".join(loguru_capture)
         assert "tok-supersecret-12345" not in joined, f"UIDARUBA token leaked into log output: {joined!r}"
+        # Positive assertion (issue #233): every log line that mentions
+        # UIDARUBA= or SESSION= must also contain ``<redacted>``. Without
+        # this, a future change that swaps ``UIDARUBA=<token>`` for an
+        # unredacted ``SESSION=<token>`` (or vice versa) would still pass
+        # the negative-only assertion above as long as the bait token
+        # itself wasn't in the line. See issue #233.
+        for line in loguru_capture:
+            if "UIDARUBA=" in line or "SESSION=" in line:
+                assert "<redacted>" in line, f"Token marker present without redaction: {line!r}"
+
+    async def test_set_cookie_session_value_redacted_in_response_log(self, loguru_capture):
+        """Regression for issue #233: AOS 8 rotates ``Set-Cookie: SESSION=<token>``
+        on every response, and the response logger must redact it.
+
+        Distinct from ``test_uidaruba_never_in_logs`` — that test exercises
+        the request-side leak (cookie + query-param). This one drives a
+        ``Set-Cookie`` header through the response hook, which the prior
+        log statement printed verbatim (truncated, but with the leading
+        token entropy fully exposed).
+        """
+        client = AOS8Client(_make_secrets())
+        leak_bait = "rotated-session-token-leak-bait-9b2c"
+
+        def handler(request):
+            if request.url.path == "/v1/api/login":
+                return httpx.Response(200, json=_LOGIN_OK)
+            if request.url.path == "/v1/api/logout":
+                return httpx.Response(200, json={"_global_result": {"status": "0"}})
+            return httpx.Response(
+                200,
+                json={"_global_result": {"status": "0"}, "ok": True},
+                headers={"set-cookie": f"SESSION={leak_bait}; path=/; HttpOnly"},
+            )
+
+        _install_mock_transport(client, handler)
+        await client.request("GET", "/v1/configuration/object/foo")
+        await client.aclose()
+
+        joined = "\n".join(loguru_capture)
+        assert leak_bait not in joined, f"Rotated SESSION cookie leaked into log output: {joined!r}"
+        # And the response-log line for the API call must contain the
+        # redaction marker, proving the hook fired and substituted.
+        api_response_lines = [
+            line for line in loguru_capture if "AOS8 HTTP ←" in line and "/v1/configuration/object/foo" in line
+        ]
+        assert api_response_lines, f"Expected an AOS8 response log line, captured: {loguru_capture}"
+        assert any("SESSION=<redacted>" in line for line in api_response_lines), (
+            f"Set-Cookie SESSION value was not redacted in response log: {api_response_lines!r}"
+        )
 
 
 class TestAOS8ClientMisc:

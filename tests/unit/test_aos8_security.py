@@ -33,12 +33,13 @@ def _make_secrets(**overrides):
 
 
 def _install(client: AOS8Client, handler):
-    transport = httpx.MockTransport(handler)
-    client._http = httpx.AsyncClient(
-        base_url=f"https://{client._config.host}:{client._config.port}",
-        transport=transport,
-        verify=client._config.verify_ssl,
-    )
+    """Swap the transport on the persistent client so event hooks survive.
+
+    Replacing the entire ``AsyncClient`` would drop the request/response
+    logging hooks defined in ``_make_http_client``, hiding the very leak
+    these tests are meant to detect (see issue #233).
+    """
+    client._http._transport = httpx.MockTransport(handler)
 
 
 async def test_uidaruba_value_not_logged_during_read_tool(loguru_capture):
@@ -62,10 +63,11 @@ async def test_uidaruba_value_not_logged_during_read_tool(loguru_capture):
 
     joined = "\n".join(loguru_capture)
     assert _LEAK_BAIT_TOKEN not in joined, f"UIDARUBA token value leaked: {joined!r}"
-    # Per Pitfall 1: any line referencing UIDARUBA must redact it
+    # Per Pitfall 1 (and issue #233): any line referencing the UIDARUBA
+    # query param OR the SESSION cookie must redact the value.
     for line in loguru_capture:
-        if "UIDARUBA" in line:
-            assert "<redacted>" in line, f"UIDARUBA appeared without redaction: {line!r}"
+        if "UIDARUBA=" in line or "SESSION=" in line:
+            assert "<redacted>" in line, f"Token marker appeared without redaction: {line!r}"
 
 
 async def test_uidaruba_value_not_logged_during_write_tool(loguru_capture):
@@ -97,6 +99,7 @@ async def test_uidaruba_value_not_logged_during_write_tool(loguru_capture):
 
     joined = "\n".join(loguru_capture)
     assert _LEAK_BAIT_TOKEN not in joined
+    # Issue #233: cover both query-param and rotated-cookie leak vectors.
     for line in loguru_capture:
-        if "UIDARUBA" in line:
+        if "UIDARUBA=" in line or "SESSION=" in line:
             assert "<redacted>" in line
