@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0.3] - 2026-05-03
+
+**Final polish on the AOS 8 / Mobility Conductor platform module from PR #230 — the last 3 test failures, an `INSTRUCTIONS.md` doc gap, and a compose-default revert. Lands together with @dendyc's contribution rather than as a separate follow-up. No functional change to AOS8 itself.**
+
+### Fixed
+
+- **`docker-compose.yml`** — reverted Mist / Central / ClearPass / Apstra / Axis write-tool defaults from `:-true` back to `:-false`; AOS8 stays `:-false`. The `:-true` flips were an accidental capture of a local development compose during the PR rebase and would have changed every existing operator's security posture on upgrade.
+- **`tests/integration/test_server.py`** — `test_no_visibility_transform_when_write_tools_enabled` now passes `enable_aos8_write_tools=True` so the AOS8 visibility transform doesn't fail the assertion.
+- **`tests/unit/test_aos8_read_differentiators.py`** — aligned 2 test assertions to match implementation: `test_get_md_hierarchy` expects `"show switch hierarchy"` (was `"show configuration node-hierarchy"`), `test_get_cluster_state` expects `"show lc-cluster group-membership"` (was `"show switches"`). Implementation was correct; tests had stale strings from earlier iteration.
+
+### Added
+
+- **`src/hpe_networking_mcp/INSTRUCTIONS.md`** — added AOS 8 / Mobility Conductor as the 7th platform: top intro paragraph, `aos8_*` namespace row, MM vs MD context guidance, tool categories breakdown (health, WLAN, differentiators, clients, alerts, troubleshooting, writes), pending-changes workflow, write-tool safety notes. Also picked up the missing `axis_*` namespace row (pre-existing oversight from when AXIS shipped). Tool count at session start updated 24 → 27 (4 cross-platform + 7 × 3 meta-tools + 2 skills).
+
 ## [2.4.0.2] - 2026-05-01
 
 **AOS8 PR #230 review fixes — squash-rebase onto upstream main + reviewer-requested code cleanups. No new functionality; addresses reviewer feedback B1, B2, B3, B4, C1, C2 from upstream PR review.**

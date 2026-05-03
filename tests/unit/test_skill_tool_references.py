@@ -52,10 +52,15 @@ _GLOBAL_ALLOWLIST: frozenset[str] = frozenset(
         "greenlake_list_endpoints",
         # Secret names (axis_api_token is a secret file, not a tool).
         "axis_api_token",
+        "aos8_host",
+        "aos8_username",
+        "aos8_password",
+        "aos8_port",
         # Regex artifacts: incomplete platform-prefix mentions like
         # "use the apstra_get_* family". These end with an underscore
         # but the regex eats the trailing wildcard. Add as encountered.
         "apstra_get_",
+        "aos8_manage_",
         "axis_get_",
         "axis_manage_",
         "central_manage_",

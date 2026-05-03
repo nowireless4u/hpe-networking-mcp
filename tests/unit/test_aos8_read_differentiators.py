@@ -53,7 +53,7 @@ async def test_get_md_hierarchy():
     client.request.assert_awaited_once_with(
         "GET",
         "/v1/configuration/showcommand",
-        params={"command": "show configuration node-hierarchy"},
+        params={"command": "show switch hierarchy"},
     )
     assert "_meta" not in result
     assert "_global_result" not in result
@@ -154,7 +154,7 @@ async def test_get_cluster_state():
     client.request.assert_awaited_once_with(
         "GET",
         "/v1/configuration/showcommand",
-        params={"command": "show switches"},
+        params={"command": "show lc-cluster group-membership"},
     )
 
 
