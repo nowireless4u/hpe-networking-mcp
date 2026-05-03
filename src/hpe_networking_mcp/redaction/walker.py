@@ -36,6 +36,7 @@ from hpe_networking_mcp.redaction.rules import (
     PEM_BLOCK_RE,
     FieldClassification,
     TokenKind,
+    _normalize_field_name,
     classify_field,
 )
 from hpe_networking_mcp.redaction.tokenizer import (
@@ -54,13 +55,18 @@ _MAX_DEPTH = 32
 
 # Field names whose containing dict signals a MAC field — used to pull
 # bare-12-hex MACs (no separators) out without false-positive risk.
+# AOS 8 form variants (``"MAC Address"``, ``"Wired MAC Address"``) are
+# handled by the same space → underscore normalization that classify_field
+# uses (issue #235); the post-normalization keys are listed here.
 _MAC_FIELD_HINTS: frozenset[str] = frozenset(
     {
         "mac",
+        "mac_address",
         "device_mac",
         "client_mac",
         "ap_mac",
         "wired_mac",
+        "wired_mac_address",
         "bssid",
         "src_mac",
         "dst_mac",
@@ -196,8 +202,11 @@ def _walk_pair(
     if isinstance(value, list):
         return _walk_list(key, value, tokenizer, depth=depth + 1, parent_keys=parent_keys)
 
-    # MAC normalization — always-on regardless of tokenizer presence
-    field_name_lower = str(key).lower() if isinstance(key, str) else ""
+    # MAC normalization — always-on regardless of tokenizer presence.
+    # Apply the same field-name normalization the classifier uses so AOS 8
+    # space-separated headers (``"MAC Address"``, ``"Wired MAC Address"``)
+    # match the underscore-keyed hint set (issue #235).
+    field_name_lower = _normalize_field_name(str(key)) if isinstance(key, str) else ""
     if field_name_lower in _MAC_FIELD_HINTS and isinstance(value, str) and is_mac_address(value):
         value = canonicalize_mac(value)
 
