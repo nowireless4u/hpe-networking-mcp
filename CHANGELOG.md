@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0.7] - 2026-05-04
+
+**Technical corrections + scope hardening for the `aos-migration-readiness` skill, surfaced by three operator transcripts where AI behavior on the skill went off-spec.** Closes the immediate issues; the broader skill expansion (rename + per-object config translation) is tracked as [#239](https://github.com/nowireless4u/hpe-networking-mcp/issues/239) and shipping next as v2.5.0.0.
+
+### Fixed
+
+- **Technical correction — ARM is replaced by RF Profiles, not AirMatch.** The skill had been claiming "ARM Profiles / Dot11a/g Radio Profiles / Regulatory Domain Profiles … replaced by **AirMatch** in Central" in five places. That conflates two different RF management features: AirMatch already exists in AOS 8 as a separate feature and continues into AOS 10 / Central — it is not the AOS 10 ARM replacement. The legacy ARM (Adaptive Radio Management) profile system is replaced by **RF Profiles** in AOS 10 / Central. ClientMatch tunable language stays correct. Affected lines: skill body §1855, §1163-§1166 rule body, C4 rule row, paste-mode A-row table, REGRESSION findings template. (Has been wrong since v2.3.0.6.)
+- **VALID8 references removed.** VALID8 is HPE channel-partner-only; references in a public MCP project are inappropriate. Five mentions across the skill (objective intro, "data sources" block, "read-only" disclaimer, PoC caveats footer) replaced with neutral *"customer's standard change-management process and partner-tool guidance"* phrasing. Historical CHANGELOG entry for v2.3.0.6 also updated to remove the VALID8 callout.
+
+### Added
+
+- **`Scope boundaries (what this skill is and is NOT)` section** added directly under the Objective. Three IS bullets (readiness audit, hierarchy mapper, cutover sequencer) and three IS-NOT bullets (config translator, migration executor, per-object translation engine). The IS-NOT bullets reference issue [#239](https://github.com/nowireless4u/hpe-networking-mcp/issues/239) for the v2.5 expansion that will cover those gaps. Operators asking for any "is NOT" item now get an explicit boundary acknowledgement instead of AI flip-flopping or freelancing.
+- **`Output format is mandatory — do NOT substitute alternatives` clause** added to the Output formatting section. Explicitly forbids: diagrams/charts/ASCII art in place of mandatory tables; prose paragraphs in place of finding lists; collapsed multi-finding rows; reframed verdicts. Closes the failure mode where an AI argued that "a side-by-side hierarchy diagram is genuinely more legible" and tried to substitute its preferred format for the spec'd hierarchy mapping table.
+- **Promoted the trigger description from passive to imperative.** First line of the description is now `PRIMARY TRIGGER — invoke this skill whenever the operator mentions AOS 6, AOS 8, or Instant AP migration to AOS 10 or Aruba Central in any phrasing. Do NOT improvise or skip the skill: it carries the VSG-anchored rule set and the live AOS 8 collection sequence that free-form analysis cannot reproduce.` Previous wording read as suggestion; this reads as instruction.
+
+### Why
+
+Three operator transcripts captured AI behaviors that boil down to: (a) substituting output formats the AI judged "more legible" for the formats the skill specifies, (b) flip-flopping on what's in/out of scope when an operator asks a clarifying question, (c) treating the trigger phrase list as suggestive rather than authoritative ("the AI didn't want to use the skill at first"). The fix isn't "make the AI behave" — you can't — it's making the spec's boundaries explicit enough that going off-spec requires the AI to consciously override clear instructions, which is rarer.
+
 ## [2.4.0.6] - 2026-05-03
 
 **v2.4.0.5 follow-up — adds `version` and `release_type` to `DEVICE_CONTEXT_HINTS`. Tracks issue [#237](https://github.com/nowireless4u/hpe-networking-mcp/issues/237).**
@@ -581,7 +600,7 @@ Reauthentication interval (how often a 802.1X client must re-prove identity to R
   - **Stage 5**: Cutover sequencing + rollback per VSG §2352-§2576 (8-phase: AP redistribute → upgrade Controller 1 → AP convert test → upgrade remaining APs → upgrade Controller 2 → rollback validation)
 - **GO / BLOCKED / PARTIAL verdict** with structured report: source-platform inventory, target-side state, AOS 10 hierarchy mapping suggestion, REGRESSION / DRIFT / INFO findings (each citing VSG section), cutover sequence, recommended next actions, PoC caveats
 - **Decision matrix** maps ~30 conditions to verdicts so the AI doesn't have to invent ranking rules at runtime
-- **PoC scope explicitly noted:** PII / customer-data tokenization is *not* implemented — paste-into-chat workflow has known PII exposure since the AI client ingests configs before relaying. Production migrations should use HPE's VALID8 channel-partner-only discovery tool
+- **PoC scope explicitly noted:** PII / customer-data tokenization is *not* implemented — paste-into-chat workflow has known PII exposure since the AI client ingests configs before relaying. Production migration cutovers should follow the customer's standard change-management process
 
 ### Documentation
 

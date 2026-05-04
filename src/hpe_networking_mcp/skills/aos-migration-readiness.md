@@ -2,22 +2,30 @@
 name: aos-migration-readiness
 title: AOS 6 / AOS 8 / Instant AP → AOS 10 migration readiness audit (PoC)
 description: |
-  TRIGGERS — call this when the user asks: "AOS 8 to 10 migration",
-  "AOS 6 to AOS 10", "Instant AP migration to AOS 10", "IAP to AOS 10",
-  "migration readiness", "am I ready to upgrade to AOS 10", "audit my
-  AOS 8 environment for migration", "validate my migration plan",
-  "check Central readiness for AOS 10 cutover", "Tunnel vs Bridge vs
-  Mixed mode planning", "switchport configuration for AOS 10",
-  "RADIUS NAD changes for AOS 10". Anchored on Aruba Validated
-  Solution Guide — Campus Migrate. Operator runs a fixed set of CLI
-  commands on their source platform (AOS 6 Conductor / AOS 8 Mobility
-  Conductor + Controller / IAP Virtual Controller) and pastes all
-  outputs into the chat as one bundle; the audit parses the bundle,
-  runs Central-side API checks, applies VSG-anchored rules per
-  source/target combination across ~50 granular checks, and emits
-  a go/no-go readiness report with cutover sequencing and rollback
-  validation. PoC — for production migrations, use VALID8 (HPE
-  channel-partner-only discovery + analysis tool).
+  PRIMARY TRIGGER — invoke this skill whenever the operator mentions
+  AOS 6, AOS 8, or Instant AP migration to AOS 10 or Aruba Central in
+  any phrasing. Do NOT improvise or skip the skill: it carries the
+  VSG-anchored rule set and the live AOS 8 collection sequence that
+  free-form analysis cannot reproduce.
+
+  Trigger phrases include but are not limited to: "AOS 8 to 10
+  migration", "AOS 6 to AOS 10", "Instant AP migration to AOS 10",
+  "IAP to AOS 10", "migration readiness", "am I ready to upgrade to
+  AOS 10", "audit my AOS 8 environment for migration", "validate my
+  migration plan", "check Central readiness for AOS 10 cutover",
+  "Tunnel vs Bridge vs Mixed mode planning", "switchport configuration
+  for AOS 10", "RADIUS NAD changes for AOS 10".
+
+  Anchored on Aruba Validated Solution Guide — Campus Migrate. Operator
+  runs a fixed set of CLI commands on their source platform (AOS 6
+  Conductor / AOS 8 Mobility Conductor + Controller / IAP Virtual
+  Controller) and pastes all outputs into the chat as one bundle; the
+  audit parses the bundle, runs Central-side API checks, applies
+  VSG-anchored rules per source/target combination across ~50 granular
+  checks, and emits a go/no-go readiness report with cutover sequencing
+  and rollback validation. PoC — in-chat workflow for SE pre-engagement
+  use; production migrations follow the customer's standard
+  change-management process and partner-tool guidance.
 platforms: [central, aos8]
 tags: [central, migration, aos8, aos6, iap, aos10, readiness, audit, vsg]
 tools: [health, central_get_scope_tree, central_get_devices, central_get_aps, central_get_sites, central_get_site_name_id_mapping, central_recommend_firmware, central_get_config_assignments, central_get_server_groups, central_get_wlan_profiles, central_get_roles, central_get_named_vlans, clearpass_get_network_devices, clearpass_get_device_groups, clearpass_get_server_certificates, clearpass_get_local_users, greenlake_get_subscriptions, greenlake_get_workspace, greenlake_get_devices, aos8_get_md_hierarchy, aos8_get_effective_config, aos8_get_ap_database, aos8_get_cluster_state, aos8_show_command, aos8_get_clients, aos8_get_bss_table, aos8_get_active_aps, aos8_get_ap_wired_ports]
@@ -38,10 +46,26 @@ Anchored on **Aruba Campus Migrate VSG** — covering the three migration paths:
 
 The audit combines two data sources:
 
-1. **Operator-pasted CLI output** from the source platform (the same data items VALID8 collects). The skill tells the operator exactly which commands to run; operator runs them in one CLI session and pastes the bundle back into chat.
+1. **Operator-pasted CLI output** from the source platform — the skill tells the operator exactly which commands to run; operator runs them in one CLI session and pastes the bundle back into chat. (When AOS 8 is reachable via the MCP server, the live-mode sub-path replaces the paste with API calls; see Stage 1.)
 2. **Central-side API checks** — site/scope tree, AP onboarding state, licenses, ClearPass NAD list, GreenLake subscriptions, ClearPass certificate state.
 
-**Read-only.** Identifies blockers; does not fix them. For production migrations, use VALID8 (HPE channel-partner-only) for automated discovery — this skill is a PoC for the in-chat workflow.
+**Read-only.** Identifies blockers; does not fix them. PoC — in-chat workflow intended for SE pre-engagement readiness assessment; production migration cutovers should follow the customer's standard change-management process.
+
+## Scope boundaries (what this skill is and is NOT)
+
+The skill IS:
+
+- A **readiness audit** — parses source-platform inventory, runs ~50 VSG-anchored rules, classifies each source-platform construct as REGRESSION / DRIFT / INFO with a §-anchor citation.
+- A **hierarchy mapper** — produces the AOS 10 Site Collection / Site / Device Group placement table from the source `/md/<region>/<site>/<ap-group>` tree (or IAP cluster).
+- A **cutover sequencer** — emits a phased GO / BLOCKED / PARTIAL verdict with a recommended cutover order and rollback validation steps.
+
+The skill is NOT:
+
+- A **config translator.** The skill flags what changes (e.g. "ARM is replaced by RF Profiles in AOS 10") but does not generate the translated AOS 10 / Central configuration payloads. (Per-object translation tables are tracked in the `aos-migration` v2.5 expansion — issue #239.)
+- A **migration executor.** The skill never calls `central_manage_*` write tools. It produces a plan; the operator runs the plan.
+- A **per-object 1:1 mapping engine.** The skill does NOT emit "this AOS 8 user-role becomes this Central role with these specific attributes" — that level of translation is the v2.5 expansion (issue #239).
+
+If the operator asks for any of the "is NOT" items above, acknowledge the boundary explicitly, point them at the v2.5 follow-up, and offer to focus the audit on what's in scope.
 
 ## PoC scope + roadmap caveat
 
@@ -191,7 +215,7 @@ If AOS8 live mode is active (Stage -1 announced API mode), Stage 1 already colle
 | `show configuration node-hierarchy` | Hierarchy tree (`/md`, `/md/<region>`, `/md/<region>/<site>`, `/md/<region>/<site>/<ap-group>`) → suggested AOS 10 Sites / Site Collections / Device Groups | §1834 |
 | `show configuration committed <node>` + `show configuration effective detail <node>` | Per-node config keys; flag features in the "doesn't transfer" list (Stage 3) | §1847-§1850 |
 | `show ap database long` | Per-AP: model, MAC, serial, IP, IP-mode (static vs DHCP), AP-group, SSIDs, ap-name → table for the AOS 10 onboarding plan | §1740, §1851-§1852 |
-| `show ap-group <name>` | Per-group: VAP profile name, 802.11 radio profile, ARM profile (replaced in AOS 10), regulatory domain profile (replaced) | §1855-§1857 |
+| `show ap-group <name>` | Per-group: VAP profile name, 802.11 radio profile, ARM profile (replaced by RF Profiles in AOS 10), regulatory domain profile (replaced) | §1855-§1857 |
 | `show ap association` + `show user-table` | Aggregate counts: clients-by-SSID, total-clients, users-with-roles → baseline for post-cutover diff | §1858-§1861 |
 | `show ap lldp neighbors` | Per-AP: switch hostname / port → cutover wiring reference | §1862-§1864 |
 | `show ap essid` | SSID name + AP-broadcasting count per SSID + radio band | §1864-§1865 |
@@ -249,7 +273,7 @@ From the Batch 1 effective-config results for `arm_profile`, `dot11a_radio_prof`
 
 If any of the four profile types has at least one configured object at the queried `/md` root scope, emit:
 
-- **DRIFT** — Active legacy RF profiles detected at `/md` root: `<list of profile_type=profile_name pairs>`. These are replaced by Central AirMatch + ClientMatch in AOS 10 (channel, TX power, channel-width, DFS, band-steering all move to Central). (VSG §1163-§1166) (source: `aos8_get_effective_config(object_name='arm_profile|dot11a_radio_prof|dot11g_radio_prof|reg_domain_profile', config_path='/md')`, Batch 1)
+- **DRIFT** — Active ARM / 802.11 radio / regulatory-domain profiles detected at `/md` root: `<list of profile_type=profile_name pairs>`. ARM (Adaptive Radio Management) is replaced by **RF Profiles** in AOS 10 / Central. AirMatch already exists in AOS 8 and continues in Central — it is not the AOS 10 replacement for ARM. ClientMatch tunables (Band Steering / Sticky / Load Balancing) are no longer adjustable in Central — fixed at WLAN Control & Services. (VSG §1163-§1169) (source: `aos8_get_effective_config(object_name='arm_profile|dot11a_radio_prof|dot11g_radio_prof|reg_domain_profile', config_path='/md')`, Batch 1)
 
 Per-AP-group enumeration is out of scope for this phase — Batch 1 collects at the `/md` root and AOS8 effective config inherits down. Report at the granularity Stage 1 collected.
 
@@ -294,7 +318,7 @@ If no APs have a non-DHCP `ip_mode`, emit a single INFO confirmation: "AP databa
 | C1 | **AOS 8 controller firmware prerequisite**: AOS 8 controllers must be on `8.10.0.12`, `8.12.0.1`, or later before AOS 10 swap | **REGRESSION** if below | VSG §1643-§1649 |
 | C2 | **AP discovery configured properly**: AP system profiles use VRRP virtual IP (NOT individual controller IP); OR DHCP option 43/60 / DNS aruba-master / ADP working | **REGRESSION** if APs would strand on first controller upgrade | VSG §1651-§1657 |
 | C3 | **AP Override in use** (AOS 6 only — supported in 6, not in 8) | **DRIFT** — replaced by device-level override pattern in AOS 10 | VSG §422-§426 |
-| C4 | **ARM Profiles / Dot11a/g Radio Profiles / Regulatory Domain Profiles in active use** | **DRIFT** — replaced by **AirMatch** in Central. Channel, TX power, channel-width, DFS decisions all move to AirMatch (per §412-§415, §1163-§1166). ClientMatch tunables (Band Steering / Sticky / Load Balancing) are no longer adjustable per §416-§418, §1167-§1169 — fixed at Central WLAN Control & Services. | VSG §412-§418, §1163-§1169 |
+| C4 | **ARM Profiles / Dot11a/g Radio Profiles / Regulatory Domain Profiles in active use** | **DRIFT** — ARM (Adaptive Radio Management) is replaced by **RF Profiles** in AOS 10 / Central (per §412-§415, §1163-§1166). AirMatch already exists in AOS 8 and continues in Central; it is not the AOS 10 ARM replacement. ClientMatch tunables (Band Steering / Sticky / Load Balancing) are no longer adjustable per §416-§418, §1167-§1169 — fixed at Central WLAN Control & Services. | VSG §412-§418, §1163-§1169 |
 | C5 | **Cluster topology mapping**: AOS 8 L2/L3 cluster + LMS/Backup LMS → AOS 10 Auto Group / Auto Site / Manual modes. Operator selected target mode in Stage 0; verify it matches the source pattern's cleanest map. | **INFO** | VSG §1161-§1162, §410-§411 |
 | C6 | **Mobility Conductor configuration scope**: AOS 8 Conductor-Member hierarchy → AOS 10 Site / Collection / Group mapping (planned via `show configuration node-hierarchy` extract) | **INFO** — produce the suggested mapping table | VSG §1529-§1559 |
 | C7 | **AirWave deprecation**: any monitoring tooling that depends on AirWave (SNMP, AMON, syslog targets, scripts) needs replacement before cutover | **DRIFT** | VSG §312-§313, §514-§515 |
@@ -518,7 +542,7 @@ Aggregate findings from all stages into one verdict + structured report (see *Ou
 | Mixed target mode + bridged and tunneled clients sharing a VLAN | **REGRESSION** — different VLANs required (VSG §1107). |
 | ClearPass NAD list missing the new source IPs (Tunnel: gateway IPs; Bridge: AP IPs/subnet) | **REGRESSION** — auth will fail at cutover. |
 | AOS 6 source + AP Override in use | **DRIFT** — plan a device-level-override mapping. |
-| ARM / Dot11a/g / Regulatory Domain profiles in use | **DRIFT** — these are AirMatch-replaced. Document values for post-cutover comparison. |
+| ARM / Dot11a/g / Regulatory Domain profiles in use | **DRIFT** — ARM is replaced by RF Profiles in AOS 10 / Central. Document existing ARM/radio values for post-cutover comparison. |
 | ClientMatch tunables relied on (Band Steering / Sticky / Load Balancing) | **DRIFT** — not adjustable in AOS 10; settings are fixed at Central WLAN Control & Services. |
 | Cluster (AOS 8) currently not L2-connected at audit time | **REGRESSION** — `show lc-cluster group-membership` must report healthy before single-controller upgrade. |
 | Default ClearPass server cert in use | **DRIFT** — replace before production cutover. |
@@ -543,6 +567,17 @@ These rules apply to every finding across Stages 3, 4, 5, and 6:
 2. **No tool-call syntax in finding text.** Tool names belong in the `(source: tool_name(), Batch N)` attribution at the end of the finding — never inside the finding sentence itself.
 3. **No stack traces.** If a tool call raises an exception, emit a brief one-line error note and the fallback CLI command. Never include a Python traceback.
 4. **No ellipsis or truncation markers.** Do not write `...`, `[truncated]`, or similar. Extract the relevant fields explicitly; if a response is large, summarise the salient values in prose.
+
+### Output format is mandatory — do NOT substitute alternatives
+
+Every output element specified below — verdict paragraph, inventory section, hierarchy mapping table, finding lists, cutover sequence — must be produced in **exactly the format shown**. Do NOT substitute:
+
+- **Diagrams, charts, ASCII art, or rendered visualizations** in place of the markdown tables. The output is meant to be paste-able into customer emails / Slack threads / change-management tickets — formats that don't render as plain text are out of scope.
+- **Prose paragraphs** in place of finding lists. Findings are bullets so an SE can scan + cite each one independently.
+- **Collapsed multi-finding rows** (e.g. "These 4 SSIDs all conflict") in place of one bullet per finding. Each finding is its own row so each can be acted on independently.
+- **Reframed verdicts** (e.g. "tentatively GO" or "GO with caveats"). Verdicts are the literal three values: **GO**, **BLOCKED**, or **PARTIAL**.
+
+If you believe a different format would be more legible, the answer is no — the operator wants paste-ability and consistency across runs more than they want artistic legibility. The hierarchy mapping table is a table specifically because operators read mapping pairs left-to-right; a tree diagram makes them mentally re-pivot.
 
 ```
 > Open the report with this paragraph (plain prose, 2–4 sentences, never a bullet list, never a table). Three elements in order:
@@ -624,7 +659,7 @@ These rules apply to every finding across Stages 3, 4, 5, and 6:
 
 ### DRIFT findings (should address; not blocking)
 - **AP Override in use** (AOS 6): map to device-level overrides. (VSG §422)
-- **ARM / Dot11a/g / Regulatory Domain profiles in use**: AirMatch-replaced in AOS 10. Document values for post-cutover comparison. (VSG §1163)
+- **ARM / Dot11a/g / Regulatory Domain profiles in use**: ARM is replaced by **RF Profiles** in AOS 10 / Central. AirMatch already exists in AOS 8 and continues in Central — it is not the AOS 10 ARM replacement. Document existing values for post-cutover comparison. (VSG §1163)
 - **ClientMatch tunables relied on**: not adjustable in AOS 10. (VSG §1167)
 - **AirWave in path**: any monitoring tooling that depends on AirWave needs replacement. (VSG §312)
 - **Central scope tree minimal** (no Site Collections): pre-create before migration day.
@@ -675,7 +710,7 @@ These rules apply to every finding across Stages 3, 4, 5, and 6:
 10. Run this audit again post-fixes for clean GO verdict.
 
 ### PoC caveats (always include in the report)
-- This audit was assembled from operator-pasted CLI output. Output completeness depends on what the operator pasted. For production migrations, use VALID8 (HPE channel-partner-only discovery + analysis tool) — see VSG §1563-§1575.
+- This audit was assembled from operator-pasted CLI output (or live AOS 8 API calls when the platform is configured). Output completeness depends on what the operator pasted / what the AOS 8 batches collected. Production migration cutovers should follow the customer's standard change-management process and partner-tool guidance — see VSG §1563-§1575 for the production discovery checklist.
 - PII / sanitization is operator-side. The skill does NOT auto-redact pasted content. Operators should redact MAC addresses, RADIUS shared secrets, customer-identifying SSID names, and local user data before pasting if those are sensitive.
 - This output is not a substitute for a live engineer reviewing the migration plan. Engage HPE / partner SE for production migrations.
 - Scaling values (500 APs / 5,000 clients per Bridge Mode roaming domain; /20 max subnet sizes) are current at VSG publication; confirm against latest AOS 10 documentation.
