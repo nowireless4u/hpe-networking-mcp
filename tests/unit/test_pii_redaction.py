@@ -186,22 +186,26 @@ class TestFieldClassification:
 
     def test_aos8_controller_name_via_bare_name_with_device_siblings(self) -> None:
         """AOS 8 ``show switches`` returns a flat record where the controller
-        identifier is just ``"Name"``, with siblings ``"Model"`` and
-        (effectively) ``"firmware"`` via ``"Version"``. The bare-``name``
-        heuristic must accept space-separated sibling keys after
-        normalization (issue #235)."""
+        identifier is just ``"Name"``, with siblings ``"Model"``, ``"Version"``,
+        and ``"Release Type"``. The bare-``name`` heuristic must fire on this
+        exact live shape (issue #237 — original v2.4.0.5 fix used a rigged
+        ``"firmware"`` key in the test, masking that ``Version`` and
+        ``Release Type`` weren't yet device-context hints)."""
         cls, kind = classify_field(
             "Name",
             "MM-01",
             parent_keys=frozenset(
                 {
                     "Config ID",
+                    "Configuration State",
                     "IP Address",
+                    "Location",
                     "Model",
                     "Name",
+                    "Release Type",
                     "Status",
                     "Type",
-                    "firmware",
+                    "Version",
                 }
             ),
         )
@@ -509,28 +513,32 @@ class TestTokenizeResponse:
         assert result["a"]["psk"] == result["b"]["psk"]
 
     def test_aos8_controller_record_tokenizes_name(self, tokenizer: Tokenizer) -> None:
-        """End-to-end regression for issue #235.
+        """End-to-end regression for issues #235 + #237.
 
-        This is the exact shape live ``aos8_get_controllers`` returns:
-        space-separated keys, ``"Name"`` as the controller identifier,
-        ``"Model"`` as a device-context sibling, ``"Version"`` (which
-        normalizes alongside but isn't a context hint by itself). With
-        the fix, ``"Name"`` tokenizes as HOSTNAME because ``Model``
-        + ``firmware``-equivalent siblings are now matched after the
-        space normalization.
+        This is the EXACT shape live ``aos8_get_controllers`` returns —
+        captured directly from a real Mobility Conductor. The original
+        v2.4.0.5 fixture rigged a ``"firmware"`` key (which IS in
+        ``DEVICE_CONTEXT_HINTS``); live AOS 8 returns ``"Version"`` and
+        ``"Release Type"`` instead, neither of which were hints — so the
+        fix passed unit tests but failed in production. v2.4.0.6 adds
+        ``version`` + ``release_type`` to the hint set; this test now
+        uses the real shape with no rigging.
         """
         data = {
             "All Switches": [
                 {
                     "Config ID": "1728",
+                    "Config Sync Time (sec)": "0",
                     "Configuration State": "UPDATE SUCCESSFUL",
                     "IP Address": "172.23.4.21",
+                    "IPv6 Address": "None",
                     "Location": "Building1.floor1",
                     "Model": "ArubaMM-VA",
                     "Name": "MM-01",
+                    "Release Type": "SSR",
                     "Status": "up",
                     "Type": "conductor",
-                    "firmware": "8.12.0.5",
+                    "Version": "8.12.0.5_92330",
                 }
             ]
         }
