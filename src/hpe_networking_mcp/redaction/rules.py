@@ -193,6 +193,9 @@ TOKENIZED_IDENTIFIER_FIELDS: dict[str, TokenKind] = {
     "device_name": TokenKind.HOSTNAME,
     "ap_name": TokenKind.HOSTNAME,
     "hostname": TokenKind.HOSTNAME,
+    "host_name": TokenKind.HOSTNAME,  # AOS 8 client tables use "Host Name"
+    "controller_name": TokenKind.HOSTNAME,  # AOS 8 controller / MM identifier
+    "switch_name": TokenKind.HOSTNAME,  # AOS 8 / Central switch identifier
     "fqdn": TokenKind.HOSTNAME,
     "site_name": TokenKind.NAME,
     "org_name": TokenKind.NAME,
@@ -380,6 +383,17 @@ _COMMON_ENUM_VALUES: frozenset[str] = frozenset(
 # ---------------------------------------------------------------------------
 
 
+def _normalize_field_name(field_name: str) -> str:
+    """Lower-case, hyphen→underscore, space→underscore.
+
+    AOS 8 ``showcommand`` responses use space-separated headers
+    (``"IP Address"``, ``"AP name"``, ``"Wired MAC Address"``) — treat
+    those identically to snake_case. Mist/Central API responses don't
+    ship space-separated keys, so this is a no-op for them. (Issue #235.)
+    """
+    return field_name.lower().replace("-", "_").replace(" ", "_")
+
+
 def classify_field(
     field_name: str,
     value: object,
@@ -406,7 +420,7 @@ def classify_field(
     """
     if not isinstance(field_name, str):
         return FieldClassification.SKIP, None
-    name = field_name.lower().replace("-", "_")
+    name = _normalize_field_name(field_name)
 
     # Exact-match secret fields
     if name in SECRET_FIELD_NAMES:
@@ -432,8 +446,14 @@ def classify_field(
     # like a device — at least 2 device-shaped sibling fields (refined
     # in v2.3.1.2 from "any 1 hint" to fix wxtag false positives, where
     # the parent has a single ``mac`` field for client-MAC matching).
-    if name == "name" and parent_keys and len(parent_keys & DEVICE_CONTEXT_HINTS) >= 2:
-        return FieldClassification.TOKENIZE_IDENTIFIER, TokenKind.HOSTNAME
+    # Parent keys come in raw and may carry AOS 8 spacing/casing
+    # (e.g. ``"Model"``, ``"IP Address"``); normalize them before the
+    # intersection so the heuristic fires on AOS 8 controller / AP
+    # records (issue #235).
+    if name == "name" and parent_keys:
+        normalized_parents = frozenset(_normalize_field_name(k) for k in parent_keys if isinstance(k, str))
+        if len(normalized_parents & DEVICE_CONTEXT_HINTS) >= 2:
+            return FieldClassification.TOKENIZE_IDENTIFIER, TokenKind.HOSTNAME
 
     # Free-text fields
     if name in FREE_TEXT_FIELD_NAMES:

@@ -158,6 +158,56 @@ class TestFieldClassification:
         assert cls == FieldClassification.TOKENIZE_IDENTIFIER
         assert kind == TokenKind.HOSTNAME
 
+    # ---- AOS 8 space-separated-key normalization (issue #235) ------------
+
+    def test_aos8_ip_address_field_normalizes(self) -> None:
+        """AOS 8 ``"IP Address"`` lookalike normalizes to the same key as
+        ``ip-address`` / ``ip_address``. IPs are intentionally not in any
+        rule, so all three resolve to SKIP — but they must all resolve to
+        the *same* SKIP, not behave as different fields."""
+        a, _ = classify_field("IP Address", "172.23.4.21")
+        b, _ = classify_field("ip-address", "172.23.4.21")
+        c, _ = classify_field("ip_address", "172.23.4.21")
+        assert a == b == c == FieldClassification.SKIP
+
+    def test_aos8_ap_name_with_space_tokenizes_as_hostname(self) -> None:
+        """AOS 8 ``show ap database`` returns ``"AP name"`` as the column
+        header; with space normalization that becomes ``ap_name`` and
+        matches the existing HOSTNAME rule."""
+        cls, kind = classify_field("AP name", "Building1-Floor2-AP-07")
+        assert cls == FieldClassification.TOKENIZE_IDENTIFIER
+        assert kind == TokenKind.HOSTNAME
+
+    def test_aos8_host_name_field_tokenizes_as_hostname(self) -> None:
+        """AOS 8 client tables use ``"Host Name"``."""
+        cls, kind = classify_field("Host Name", "alice-laptop")
+        assert cls == FieldClassification.TOKENIZE_IDENTIFIER
+        assert kind == TokenKind.HOSTNAME
+
+    def test_aos8_controller_name_via_bare_name_with_device_siblings(self) -> None:
+        """AOS 8 ``show switches`` returns a flat record where the controller
+        identifier is just ``"Name"``, with siblings ``"Model"`` and
+        (effectively) ``"firmware"`` via ``"Version"``. The bare-``name``
+        heuristic must accept space-separated sibling keys after
+        normalization (issue #235)."""
+        cls, kind = classify_field(
+            "Name",
+            "MM-01",
+            parent_keys=frozenset(
+                {
+                    "Config ID",
+                    "IP Address",
+                    "Model",
+                    "Name",
+                    "Status",
+                    "Type",
+                    "firmware",
+                }
+            ),
+        )
+        assert cls == FieldClassification.TOKENIZE_IDENTIFIER
+        assert kind == TokenKind.HOSTNAME
+
     def test_unknown_field_skipped(self) -> None:
         cls, _ = classify_field("status", "online")
         assert cls == FieldClassification.SKIP
@@ -457,6 +507,57 @@ class TestTokenizeResponse:
         data = {"a": {"psk": "Welcome2024!"}, "b": {"psk": "Welcome2024!"}}
         result = tokenize_response(data, tokenizer)
         assert result["a"]["psk"] == result["b"]["psk"]
+
+    def test_aos8_controller_record_tokenizes_name(self, tokenizer: Tokenizer) -> None:
+        """End-to-end regression for issue #235.
+
+        This is the exact shape live ``aos8_get_controllers`` returns:
+        space-separated keys, ``"Name"`` as the controller identifier,
+        ``"Model"`` as a device-context sibling, ``"Version"`` (which
+        normalizes alongside but isn't a context hint by itself). With
+        the fix, ``"Name"`` tokenizes as HOSTNAME because ``Model``
+        + ``firmware``-equivalent siblings are now matched after the
+        space normalization.
+        """
+        data = {
+            "All Switches": [
+                {
+                    "Config ID": "1728",
+                    "Configuration State": "UPDATE SUCCESSFUL",
+                    "IP Address": "172.23.4.21",
+                    "Location": "Building1.floor1",
+                    "Model": "ArubaMM-VA",
+                    "Name": "MM-01",
+                    "Status": "up",
+                    "Type": "conductor",
+                    "firmware": "8.12.0.5",
+                }
+            ]
+        }
+        result = tokenize_response(data, tokenizer)
+        record = result["All Switches"][0]
+        # Name tokenized — does not equal cleartext, matches HOSTNAME prefix.
+        assert record["Name"] != "MM-01"
+        match = TOKEN_RE.fullmatch(record["Name"])
+        assert match is not None
+        assert match.group(1) == "HOSTNAME"
+        # IP Address remains cleartext (intentional: IPs not tokenized).
+        assert record["IP Address"] == "172.23.4.21"
+        # Geographic / model / status fields remain cleartext.
+        assert record["Model"] == "ArubaMM-VA"
+        assert record["Location"] == "Building1.floor1"
+
+    def test_aos8_mac_address_with_space_normalized(self, tokenizer: Tokenizer) -> None:
+        """AOS 8 ``"MAC Address"`` and ``"Wired MAC Address"`` columns
+        should reach the MAC canonicalizer the same as ``mac`` /
+        ``wired_mac`` (issue #235)."""
+        data = {
+            "Mac Address": "AA-BB-CC-DD-EE-FF",
+            "Wired MAC Address": "aabb.ccdd.eeff",
+        }
+        result = tokenize_response(data, tokenizer)
+        assert result["Mac Address"] == "aa:bb:cc:dd:ee:ff"
+        assert result["Wired MAC Address"] == "aa:bb:cc:dd:ee:ff"
 
     def test_macs_normalized_not_tokenized(self, tokenizer: Tokenizer) -> None:
         data = {"mac": "AA-BB-CC-DD-EE-FF", "client_mac": "aabb.ccdd.eeff"}

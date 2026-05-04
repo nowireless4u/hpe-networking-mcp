@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0.5] - 2026-05-03
+
+**PII tokenization improvement for AOS 8 — extend the field-name normalizer to treat spaces the same as hyphens, so AOS 8's space-separated `showcommand` headers (`"AP name"`, `"Host Name"`, `"Wired MAC Address"`) match the existing snake_case rules. Closes the *flat-record* tokenization gap on AOS 8 responses; the transposed key/value shape used by `show <foo> detail` commands (RADIUS / TACACS / LDAP server detail) is tracked separately as issue [#235](https://github.com/nowireless4u/hpe-networking-mcp/issues/235).** Mist and Central are not affected — their APIs use snake_case / camelCase exclusively, so the change is a no-op there.
+
+### Why
+
+When AOS 8 was added in v2.4.0.0 it inherited the Mist/Central PII rules unchanged. Live traffic against a real Mobility Conductor showed that AOS 8 responses use space-separated column headers, which our normalizer (lowercased + hyphen→underscore only) didn't reach. Result: AP names, host names, and `Mac Address`/`Wired MAC Address` columns were arriving cleartext to the AI even though Mist/Central rules already existed for those concepts.
+
+Live verification against a real `show switches` response confirmed `"Name": "MM-01"` survived as cleartext because:
+1. `"Name"` lowercased to `"name"` — bare, requires sibling-context to fire.
+2. The sibling `"Model"` was a valid hint, but `"IP Address"`, `"Type"`, etc. weren't normalizing for the parent-key intersection check, so only one device-context hint matched (need ≥2).
+
+### What changed
+
+- **`src/hpe_networking_mcp/redaction/rules.py`** — extracted the field-name normalizer into a `_normalize_field_name()` helper that does `lower() + "-" → "_" + " " → "_"`. `classify_field()` uses it for the field name being classified, AND for the parent-keys set when checking the bare-`name` heuristic. Added three identifier-field aliases: `host_name` (AOS 8 client tables), `controller_name`, `switch_name` — all → HOSTNAME.
+- **`src/hpe_networking_mcp/redaction/walker.py`** — MAC-field detection in `_walk_pair` now goes through the same normalizer. Added `mac_address` and `wired_mac_address` to `_MAC_FIELD_HINTS` to cover AOS 8's column-header form.
+- **`tests/unit/test_pii_redaction.py`** — added 6 regression tests using the actual live `aos8_get_controllers` response shape so future changes can't silently regress: `test_aos8_ip_address_field_normalizes`, `test_aos8_ap_name_with_space_tokenizes_as_hostname`, `test_aos8_host_name_field_tokenizes_as_hostname`, `test_aos8_controller_name_via_bare_name_with_device_siblings`, `test_aos8_controller_record_tokenizes_name`, `test_aos8_mac_address_with_space_normalized`.
+
+### Not addressed in this patch (tracked in #235)
+
+The transposed key/value shape used by `show <foo> detail` commands — where the actual JSON field names are literally `"Parameter"` and `"Value"` — defeats field-name-based classification entirely. RADIUS/TACACS server hosts/IPs visible in those responses still come through cleartext. AOS 8 itself masks the shared secret server-side (`'********'`), so secrets aren't at risk; the residual gap is server identifiers. Issue #235 covers the response-flattening work and the new `host` / `rad_server_name` / `tacacs_server_name` rules needed to close it.
+
 ## [2.4.0.4] - 2026-05-03
 
 **Security patch — AOS 8 UIDARUBA session token was being written to INFO-level logs on every API request. Fix scope: redact `UIDARUBA=` query values and `SESSION=` cookie values in the AOS 8 transport request/response logging hooks; close the test blind spot that let the leak ship undetected.** Tracks issue [#233](https://github.com/nowireless4u/hpe-networking-mcp/issues/233). Affects every release in the v2.4.0.x series before this one running with AOS 8 secrets configured. Operators without AOS 8 enabled are unaffected (the platform is gated off when `aos8_*` secrets are missing or empty, and the leaking code never executes).
