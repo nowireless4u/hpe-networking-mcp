@@ -63,10 +63,19 @@ _GLOBAL_ALLOWLIST: frozenset[str] = frozenset(
         "aos8_manage_",
         "axis_get_",
         "axis_manage_",
+        "central_get_",  # `aos-migration.md` Stage 10 — "every central_manage_* has a corresponding central_get_*"
         "central_manage_",
         "clearpass_manage_",
         "mist_change_org",
         "mist_update_org",
+        # Central API gaps explicitly cited as non-existent in `aos-migration.md`
+        # Stage 8.1 — listed by name so operators know which tools they would
+        # otherwise expect to find. The skill emits `[Central API gap — manual UI]`
+        # placeholders for these. Adding here so the regex enforcer doesn't
+        # mistake the deliberate "this tool does not exist" mention for a typo.
+        "central_manage_ap_system_profile",
+        "central_manage_server",
+        "central_manage_server_group",
     }
 )
 

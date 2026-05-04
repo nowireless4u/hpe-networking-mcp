@@ -1,12 +1,12 @@
 ---
-name: aos-migration-readiness
-title: AOS 6 / AOS 8 / Instant AP → AOS 10 migration readiness audit (PoC)
+name: aos-migration
+title: AOS 6 / AOS 8 / Instant AP → AOS 10 migration (PoC) — readiness + config translation plan
 description: |
   PRIMARY TRIGGER — invoke this skill whenever the operator mentions
   AOS 6, AOS 8, or Instant AP migration to AOS 10 or Aruba Central in
   any phrasing. Do NOT improvise or skip the skill: it carries the
-  VSG-anchored rule set and the live AOS 8 collection sequence that
-  free-form analysis cannot reproduce.
+  VSG-anchored rule set, the live AOS 8 collection sequence, and the
+  per-object disposition matrix that free-form analysis cannot reproduce.
 
   Trigger phrases include but are not limited to: "AOS 8 to 10
   migration", "AOS 6 to AOS 10", "Instant AP migration to AOS 10",
@@ -14,29 +14,36 @@ description: |
   AOS 10", "audit my AOS 8 environment for migration", "validate my
   migration plan", "check Central readiness for AOS 10 cutover",
   "Tunnel vs Bridge vs Mixed mode planning", "switchport configuration
-  for AOS 10", "RADIUS NAD changes for AOS 10".
+  for AOS 10", "RADIUS NAD changes for AOS 10", "translate AOS 8
+  config to AOS 10", "translate AOS 6 config to AOS 10", "translate
+  Instant AP config to AOS 10", "AOS 10 config mapping", "AOS 8 to
+  Central object mapping", "build me an AOS 10 migration plan",
+  "generate Central API call sequence for migration", "what objects do
+  I need to recreate in Central".
 
-  Anchored on Aruba Validated Solution Guide — Campus Migrate. Operator
-  runs a fixed set of CLI commands on their source platform (AOS 6
-  Conductor / AOS 8 Mobility Conductor + Controller / IAP Virtual
-  Controller) and pastes all outputs into the chat as one bundle; the
-  audit parses the bundle, runs Central-side API checks, applies
-  VSG-anchored rules per source/target combination across ~50 granular
-  checks, and emits a go/no-go readiness report with cutover sequencing
-  and rollback validation. PoC — in-chat workflow for SE pre-engagement
-  use; production migrations follow the customer's standard
+  Anchored on Aruba Validated Solution Guide — Campus Migrate.
+  Two-act workflow: Act I = readiness (operator paste OR live AOS 8
+  API collection, ~50 VSG-anchored rules, GO / BLOCKED / PARTIAL
+  verdict, cutover sequence, rollback validation). Act II = config
+  translation plan (hierarchy mapping, per-object disposition matrix,
+  Central API call sequence with dependencies, validation checklist).
+  Act II only fires after a non-BLOCKED verdict and explicit operator
+  confirmation. PoC — in-chat workflow for SE pre-engagement use;
+  production migration cutovers follow the customer's standard
   change-management process and partner-tool guidance.
 platforms: [central, aos8]
-tags: [central, migration, aos8, aos6, iap, aos10, readiness, audit, vsg]
-tools: [health, central_get_scope_tree, central_get_devices, central_get_aps, central_get_sites, central_get_site_name_id_mapping, central_recommend_firmware, central_get_config_assignments, central_get_server_groups, central_get_wlan_profiles, central_get_roles, central_get_named_vlans, clearpass_get_network_devices, clearpass_get_device_groups, clearpass_get_server_certificates, clearpass_get_local_users, greenlake_get_subscriptions, greenlake_get_workspace, greenlake_get_devices, aos8_get_md_hierarchy, aos8_get_effective_config, aos8_get_ap_database, aos8_get_cluster_state, aos8_show_command, aos8_get_clients, aos8_get_bss_table, aos8_get_active_aps, aos8_get_ap_wired_ports]
+tags: [central, migration, aos8, aos6, iap, aos10, readiness, audit, vsg, translation]
+tools: [health, central_get_scope_tree, central_get_devices, central_get_aps, central_get_sites, central_get_site_name_id_mapping, central_recommend_firmware, central_get_config_assignments, central_get_server_groups, central_get_wlan_profiles, central_get_roles, central_get_role_acls, central_get_net_groups, central_get_net_services, central_get_named_vlans, central_get_aliases, central_manage_site, central_manage_site_collection, central_manage_device_group, central_manage_role, central_manage_role_acl, central_manage_net_group, central_manage_net_service, central_manage_wlan_profile, central_manage_config_assignment, clearpass_get_network_devices, clearpass_get_device_groups, clearpass_get_server_certificates, clearpass_get_local_users, greenlake_get_subscriptions, greenlake_get_workspace, greenlake_get_devices, aos8_get_md_hierarchy, aos8_get_effective_config, aos8_get_ap_database, aos8_get_cluster_state, aos8_show_command, aos8_get_clients, aos8_get_bss_table, aos8_get_active_aps, aos8_get_ap_wired_ports]
 ---
 
-# AOS 6 / AOS 8 / Instant AP → AOS 10 migration readiness audit (PoC)
+# AOS 6 / AOS 8 / Instant AP → AOS 10 migration (PoC) — readiness + config translation plan
 
 ## Objective
 
-Decide **GO / BLOCKED / PARTIAL** for a migration from a legacy Aruba WLAN
-platform (AOS 6, AOS 8, or Instant AP) to AOS 10 / Aruba Central.
+Two-act workflow:
+
+- **Act I — Readiness.** Decide **GO / BLOCKED / PARTIAL** for a migration from a legacy Aruba WLAN platform (AOS 6, AOS 8, or Instant AP) to AOS 10 / Aruba Central.
+- **Act II — Translation plan.** Conditional on a non-BLOCKED verdict and explicit operator confirmation: produce a per-object disposition matrix mapping each legacy object (AAA / roles / ACLs / AP profiles / WLAN profiles / VAPs / 802.1X / captive portals) to its AOS 10 / Central equivalent, an ordered Central API call sequence, and a post-translation validation checklist.
 
 Anchored on **Aruba Campus Migrate VSG** — covering the three migration paths:
 
@@ -44,28 +51,33 @@ Anchored on **Aruba Campus Migrate VSG** — covering the three migration paths:
 - Instant AP cluster → AOS 10 Bridge Mode (VSG §589-§932)
 - AOS 8 Campus → AOS 10 Tunnel or Bridge or Mixed Mode (VSG §934-§1336)
 
-The audit combines two data sources:
+Act I combines two data sources:
 
 1. **Operator-pasted CLI output** from the source platform — the skill tells the operator exactly which commands to run; operator runs them in one CLI session and pastes the bundle back into chat. (When AOS 8 is reachable via the MCP server, the live-mode sub-path replaces the paste with API calls; see Stage 1.)
 2. **Central-side API checks** — site/scope tree, AP onboarding state, licenses, ClearPass NAD list, GreenLake subscriptions, ClearPass certificate state.
 
-**Read-only.** Identifies blockers; does not fix them. PoC — in-chat workflow intended for SE pre-engagement readiness assessment; production migration cutovers should follow the customer's standard change-management process.
+Act II reuses everything Act I already collected — it does NOT re-fetch effective-config, AP database, etc. — and produces a translation **plan**, not executed writes.
+
+**Read-only.** Identifies blockers and emits a translation plan. The skill never calls `central_manage_*` write tools — that's deferred to a future Phase 3 (issue #240). PoC — in-chat workflow intended for SE pre-engagement readiness + plan generation; production migration cutovers follow the customer's standard change-management process.
 
 ## Scope boundaries (what this skill is and is NOT)
 
 The skill IS:
 
-- A **readiness audit** — parses source-platform inventory, runs ~50 VSG-anchored rules, classifies each source-platform construct as REGRESSION / DRIFT / INFO with a §-anchor citation.
+- A **readiness audit** — parses source-platform inventory, runs ~50 VSG-anchored rules, classifies each source-platform construct as REGRESSION / DRIFT / INFO / OPERATOR-MAP with a §-anchor citation when one exists.
 - A **hierarchy mapper** — produces the AOS 10 Site Collection / Site / Device Group placement table from the source `/md/<region>/<site>/<ap-group>` tree (or IAP cluster).
+- A **per-object disposition mapper** — for each legacy object discovered, emits a row classifying it as `direct-translate` / `transform` / `drop` / `deprecated` / `operator-driven` with the target Central tool and VSG anchor.
+- A **Central API call sequencer** — emits an ordered call plan with explicit dependency annotations (server-group before WLAN profile, role-acl before role, etc.).
 - A **cutover sequencer** — emits a phased GO / BLOCKED / PARTIAL verdict with a recommended cutover order and rollback validation steps.
 
 The skill is NOT:
 
-- A **config translator.** The skill flags what changes (e.g. "ARM is replaced by RF Profiles in AOS 10") but does not generate the translated AOS 10 / Central configuration payloads. (Per-object translation tables are tracked in the `aos-migration` v2.5 expansion — issue #239.)
-- A **migration executor.** The skill never calls `central_manage_*` write tools. It produces a plan; the operator runs the plan.
-- A **per-object 1:1 mapping engine.** The skill does NOT emit "this AOS 8 user-role becomes this Central role with these specific attributes" — that level of translation is the v2.5 expansion (issue #239).
+- A **migration executor.** The skill never calls `central_manage_*` write tools. It produces a plan; a human runs the plan (or a follow-on Phase 3 capability does so under explicit guard rails — see issue #240).
+- A **rollback engine.** The skill emits the plan one-way. Rollback is captured as text in the cutover stage (Act I Stage 5) and is not auto-generated as reversible API calls.
+- A **gap-filler for missing Central write tools.** Three legacy object types — AAA RADIUS/TACACS server, AAA server-group, AP system profile — have no `central_manage_*` equivalent today. The skill emits `[Central API gap — manual UI action required]` for those rows; it does not invent tool names.
+- An **automatic VSG-anchor fabricator.** Several object types (TACACS server config, MAC-auth profile, captive portal, MAC randomization) have no per-object translation rules in the VSG. The skill marks those rows `operator-driven` with `vsg-anchor: none` and emits an `OPERATOR-MAP` finding so the operator knows to map manually.
 
-If the operator asks for any of the "is NOT" items above, acknowledge the boundary explicitly, point them at the v2.5 follow-up, and offer to focus the audit on what's in scope.
+If the operator asks for execution (running the plan against Central), acknowledge the boundary, point them at issue #240 (Phase 3 deferred), and stop.
 
 ## PoC scope + roadmap caveat
 
@@ -73,7 +85,22 @@ This skill expects the operator to **paste CLI output directly into chat**. That
 
 The skill's job here is to prove the in-chat workflow produces credible readiness findings on a representative dataset; sanitization is a separate problem.
 
-## Procedure — 6 stages, ~50 granular checks
+## Procedure — 10 stages across two acts
+
+**Act I (Stages -1 through 6) — readiness audit.** Always runs. Ends with a verdict + combined report.
+
+**Gate — operator confirmation.** After Stage 6, the AI emits the verdict report THEN literally prints the prompt: *"Verdict: <V>. Proceed to AOS 10 translation plan? (yes / no / edit-context)"* and stops. No Act II execution without operator `yes`.
+
+- If verdict is **BLOCKED**, the gate does not appear. The report ends with *"Translation locked until REGRESSIONs are resolved. Re-run the audit after fixes."*
+- If verdict is **PARTIAL**, the gate appears but warns which translation rows will be marked `inconclusive` (any object class where Stage 1 collection failed).
+- If verdict is **GO**, the gate appears with no caveat.
+
+**Act II (Stages 7 through 10) — translation plan.** Only fires on operator `yes` after a non-BLOCKED verdict. Reuses everything Act I already collected; no re-fetching, no second operator paste. Output is the **plan** (disposition matrix + ordered API call sequence + validation checklist), not executed `central_manage_*` writes.
+
+If the operator answers `no`, end the session with the Act I report unchanged.
+If the operator answers `edit-context` (e.g. "actually we're doing Bridge Mode not Tunnel"), update the corresponding Stage 0 / Stage 1 context fields, re-run Stage 3 + Stage 6 to re-verdict, and re-emit the gate prompt.
+
+---
 
 ### Stage -1 — Session-start AOS8 detection (DETECT-01)
 
@@ -521,6 +548,188 @@ After this sub-path, continue with the Phase 0–8 cutover table below — those
 
 Aggregate findings from all stages into one verdict + structured report (see *Output formatting* below).
 
+This stage produces the Act I report. Once the report is emitted, fire the Act-I → Act-II gate (next).
+
+---
+
+## Act I → Act II gate
+
+After emitting the Stage 6 readiness report, decide:
+
+- **Verdict = BLOCKED** — emit the literal sentence: *"Translation locked until REGRESSIONs are resolved. Re-run the audit after fixes."* Stop. Do NOT print the proceed prompt; do NOT run Stages 7-10.
+- **Verdict = GO** — emit the literal prompt: *"Verdict: GO. Proceed to AOS 10 translation plan? (yes / no / edit-context)"* and stop. Wait for the operator's reply.
+- **Verdict = PARTIAL** — emit the literal prompt: *"Verdict: PARTIAL — <N> Stage-1 collection items were inconclusive. Translation rows for those object classes will be marked `inconclusive — paste required`. Proceed to AOS 10 translation plan? (yes / no / edit-context)"* and stop. Wait for the operator's reply.
+
+On `yes` → proceed to Stage 7.
+On `no` → end the session with the Act I report unchanged.
+On `edit-context` → operator names which Stage 0 / Stage 1 field(s) to update, the AI updates the audit context, re-runs Stage 3 + Stage 6, re-emits the Act I report, and re-emits the gate prompt. (This is how the operator changes target mode mid-session, for example.)
+
+Do NOT run Stages 7-10 silently or pre-emptively.
+
+---
+
+### Stage 7 — Hierarchy translation (TRANSLATE-01)
+
+Promote the readiness-stage hierarchy mapping table (Stage 6 inventory section) into a translation stage with explicit rules. Reuse the Stage 1 COLLECT-01 effective-config or pasted `show configuration node-hierarchy` output already in context — do NOT re-fetch.
+
+**Rules** (anchor: VSG §1529-§1535 *"Mapping AOS-8 Hierarchy to AOS-10 Configuration Model"* + §1834-§1835):
+
+| Source node | AOS 10 placement | Disposition |
+|---|---|---|
+| `/md` (Mobility Conductor root) | (none — Central org root is implicit) | `drop` |
+| `/md/<region>` | Site Collection | `direct-translate` |
+| `/md/<region>/<site>` | Site | `direct-translate` |
+| `/md/<region>/<site>/<ap-group>` | Device Group | `direct-translate` |
+| IAP cluster (Virtual Controller scope) | Site + Device Group (Bridge Mode only) | `transform` |
+| AOS 6 Conductor-Member (no region tier) | Flat Site list (operator chooses Site Collection grouping or omits) | `operator-driven` |
+
+**Output:** the existing 3-column hierarchy table from the Stage 6 report, **extended to 5 columns**:
+
+| Source AOS node / IAP cluster | Source path | Disposition | Target type (AOS 10) | Target name (operator-named) | Notes |
+|---|---|---|---|---|---|
+| `<Mobility Conductor /md>` | `/md` | `drop` | (none) | n/a | Central org root is implicit |
+| `<region>` | `/md/USE` | `direct-translate` | Site Collection | `USE` (or operator override) | grouping |
+| `<site>` | `/md/USE/dallas-hq` | `direct-translate` | Site | `dallas-hq` | one Site per discrete physical location |
+| `<ap-group>` | `/md/USE/dallas-hq/floor-3` | `direct-translate` | Device Group | `dallas-hq-floor-3` | per-function device grouping |
+
+**Skip / inconclusive:** if Stage 1 paste-fallback was used and node hierarchy was not pasted, mark each row's disposition `inconclusive — paste required` and emit one INFO finding noting the gap.
+
+**Findings produced:**
+
+- For every proposed target name (Site Collection / Site / Device Group), check it against the Stage 4 Central scope-tree response. If a same-named node already exists at the same level: emit `DRIFT — proposed Site name '<X>' already exists in Central scope tree as <type>; rename or merge before translation.` (One finding per collision.)
+- If the source `/md` tree exceeds the AOS 10 *"per-Site Collection limits"* (out of scope per VSG; operator may need to flatten), emit one INFO bullet flagging the operator decision.
+
+---
+
+### Stage 8 — Per-object translation matrix (TRANSLATE-02)
+
+For each AOS 8 / AOS 6 / IAP object discovered in Stage 1, emit one row of the disposition matrix. **Reuse Stage 1 batch data already in context** — do NOT re-fetch effective-config or paste blocks.
+
+#### 8.1 — Disposition rules per object type
+
+The VSG **does not** contain per-object translation tables for most object types. The deepest concrete rules live in two worked SSID examples (CorpNet 802.1X at VSG §2127-§2219, OpsNet WPA3-Personal at §2222-§2308) plus the gestural feature-comparison tables (AOS 6 §366-§397, IAP §706-§769, AOS 8 §1121-§1175). Outside those anchors, dispositions for AAA / roles / ACLs / AP profiles are marked `operator-driven` with `vsg-anchor: none` — the skill does not fabricate VSG citations.
+
+| Object type | VSG anchor | Disposition guidance |
+|---|---|---|
+| **AAA RADIUS server** (`aaa authentication-server radius`) | §1121-§1141 (AOS 8), §366-§397 (AOS 6), §706-§731 (IAP) | `transform` — IP / port / shared-secret carry over; NAS-IP source must change per target mode (Tunnel = gateway IP; Bridge = AP subnet; Mixed = both). VSG describes the source-IP shift; field-mapping into Central is operator-driven. **Central API gap — no `central_manage_server` tool exists today.** Mark target tool as `[Central API gap — manual UI: Network Services → Servers]`. |
+| **AAA TACACS server** (`aaa authentication-server tacacs`) | (none) | `operator-driven` — VSG has no TACACS translation rule. Emit `OPERATOR-MAP` finding. **Central API gap — no manage tool.** Target tool: `[Central API gap — manual UI]`. |
+| **AAA LDAP server** | (none) | `operator-driven` — VSG silent. **Central API gap.** |
+| **AAA Internal Auth Server** | §391-§392, §725-§727, §1134-§1136 | `drop` — *"Local user authentication service is not supported."* If `local-userdb` has entries, emit `REGRESSION — <N> local users must migrate to ClearPass / Cloud Auth before cutover.` (Already covered by Act I rule U/A; cross-link rather than re-emit.) |
+| **AAA FastConnect / EAP-Offload** | §393-§397, §728-§731, §1137-§1141 | `drop` — *"Not supported."* If active, emit `REGRESSION — AAA FastConnect / EAP-Offload in use; plan ClearPass-only EAP termination.` (Cross-link to Act I rule.) |
+| **AAA server-group** (`aaa server-group`) | §2076-§2092 (worked example) | `transform` — group name + ordered server list. **Central API gap — no `central_manage_server_group` tool.** Target tool: `[Central API gap — manual UI: Network Services → Server Groups]`. |
+| **802.1X auth profile** (`aaa authentication dot1x`) | §1121-§1141 + §2159-§2208 (CorpNet 802.1X worked example) | `operator-driven` — folded into WLAN profile creation in Central; ESSID is in the WLAN SSID profile, allowed-bands and VLAN ID are in the VAP (collapsed into the WLAN profile in Central), key-management is in the SSID profile, primary/secondary RADIUS pointers are under authentication servers. No automatic field map; emit `OPERATOR-MAP`. Target tool: `central_manage_wlan_profile` (the auth profile is collapsed into it). |
+| **MAC-auth profile** (`aaa authentication mac`) | (none) | `operator-driven` — VSG silent. Emit `OPERATOR-MAP`. Target tool: `central_manage_wlan_profile` (mac-auth opmodes are flags inside it). |
+| **Captive portal profile** (`aaa authentication captive-portal`) | (none, passing mention only) | `operator-driven` — assigned through a role's `captive-portal` field on `central_manage_role`. Emit `OPERATOR-MAP`. Target tool: `central_manage_role` (captive-portal field). |
+| **User role** (`user-role`) | §766 (IAP), §1173-§1176 (AOS 8 — *"AP Override has been replaced with device-level override"* + supported list) | `transform` — role name + VLAN + ACL + bandwidth-contract + qos + captive-portal + session-timeout map directly. Per-attribute mapping is operator-driven; VSG only confirms roles "are supported." Emit `OPERATOR-MAP` per role. Target tool: `central_manage_role`. |
+| **Session ACL / role ACL** (`ip access-list session ...`) | (none — implied via role) | `transform` — split into Central primitives: `central_manage_net_group` (network-destination aliases referenced by ACL rules) + `central_manage_net_service` (port/protocol service aliases) + `central_manage_role_acl` (the ACL rule list itself). Per-rule mapping is operator-driven; emit `OPERATOR-MAP`. Target tools: `central_manage_net_group`, `central_manage_net_service`, `central_manage_role_acl`. |
+| **AP system profile** (`ap system-profile`) | §1651-§1657 (LMS prerequisite), §412-§415 (regulatory domain replaced) | Mixed: LMS-IP `transform` (must be VRRP VIP, not individual controller IP — already enforced as Act I REGRESSION rule); regulatory-domain-profile `deprecated`; ARM / Dot11a / Dot11g profiles `deprecated` (replaced by RF Profiles in AOS 10); syslog targets `operator-driven` (mapped to Central UI). **Central API gap — no `central_manage_ap_system_profile` tool today.** Target tool: `[Central API gap — manual UI]`. |
+| **WLAN SSID profile** (`wlan ssid-profile`) | §2127-§2219 (CorpNet 802.1X), §2222-§2308 (OpsNet WPA3-Personal) | `direct-translate` — ESSID, opmode, VLAN, forwarding-mode, key-management, RADIUS pointers map to the `central_manage_wlan_profile` payload schema. The two VSG worked examples are the gold-standard reference for field-by-field mapping; emit per-WLAN-profile rows that cite them. Target tool: `central_manage_wlan_profile`. |
+| **VAP profile** (`wlan virtual-ap`) | §2169-§2192 (Allowed bands "in the VAP", VLAN ID "in the VAP") | `transform` — AOS 8 VAP fields collapse INTO the WLAN profile in AOS 10; VAP is not a standalone object. Mark as `transform → folded into WLAN profile`. Target tool: `central_manage_wlan_profile` (collapsed). |
+| **MAC randomization handling** (per-SSID) | (none) | `operator-driven` — flag as a known AOS 10 behavioural difference. VSG does not address. Emit `OPERATOR-MAP`. |
+| **ARM / Dot11a / Dot11g / Regulatory Domain profiles** | §412-§415 (AOS 6), §1163-§1166 (AOS 8) | `deprecated` — ARM is replaced by **RF Profiles** in AOS 10 / Central. AirMatch already exists in AOS 8 and continues in Central — it is not the AOS 10 ARM replacement. Already raised as DRIFT in Act I; emit one summary `drop` row per profile family in the matrix. |
+| **ClientMatch tunables** | §416-§418, §1167-§1169 | `deprecated` — *"Settings cannot be tuned."* Already raised as DRIFT in Act I; emit one summary `drop` row in the matrix. |
+| **AP Override stanzas** (AOS 6 only) | §422-§426 | `transform` — map to AOS 10 device-level override. Per-stanza operator-driven. Already raised as DRIFT in Act I; emit one row per AP-override stanza found. |
+
+#### 8.2 — Output: the disposition matrix
+
+Emit a **single master table** with one row per legacy object discovered. Columns:
+
+| Source name | Source type | Source scope | Disposition | Target name | Target type | Central tool | VSG anchor | Notes |
+|---|---|---|---|---|---|---|---|---|
+
+- **Source name** — name as it appears in the source config (`corp-radius-1`, `corp-employee-role`, `corp-ssid-prof`).
+- **Source type** — one of: `aaa-radius-server`, `aaa-tacacs-server`, `aaa-server-group`, `dot1x-profile`, `mac-auth-profile`, `cp-profile`, `user-role`, `session-acl`, `ap-system-profile`, `wlan-ssid-profile`, `vap-profile`, `arm-profile`, `dot11a-radio-prof`, `dot11g-radio-prof`, `reg-domain-profile`, `clientmatch-profile`, `ap-override`.
+- **Source scope** — the `/md/...` node where the object is defined (or `iap-vc` for IAP, `aos6-conductor` for AOS 6).
+- **Disposition** — one of: `direct-translate` / `transform` / `drop` / `deprecated` / `operator-driven` / `inconclusive — paste required`.
+- **Target name** — the AOS 10 / Central object name. For `direct-translate` and `transform` rows, default to source name; the operator may rename. For `drop` / `deprecated`, leave blank or `n/a`. For `operator-driven`, leave blank — the operator names it during execution.
+- **Target type** — Central object type: `Site Collection` / `Site` / `Device Group` / `WLAN profile` / `Role` / `Role ACL` / `Net group` / `Net service` / `Server` / `Server group` / `(none)` / `(folded into WLAN profile)`.
+- **Central tool** — the `central_manage_*` tool that creates the object, OR the literal string `[Central API gap — manual UI: <area>]` for the three known gaps (servers, server-groups, AP system profiles).
+- **VSG anchor** — `§####-§####` if a real anchor exists. Literal string `none` if no per-object VSG rule exists; do NOT fabricate.
+- **Notes** — one short clause per row (e.g. *"NAS-IP source must change to gateway IP for Tunnel target"*, *"folded into WLAN profile per VSG §2169"*, *"manual UI required: Central API gap"*).
+
+#### 8.3 — Findings produced
+
+For each row in the matrix:
+
+- `direct-translate` rows produce no separate finding (the matrix row IS the finding). Counted in the Act II summary as `<N> direct-translate`.
+- `transform` rows produce no separate finding unless the transform requires operator decisions (NAS-IP source for AAA, role attribute mapping, ACL rule re-emission). When operator decisions exist, emit one `OPERATOR-MAP` finding per object.
+- `drop` and `deprecated` rows produce no separate finding (already raised in Act I if applicable). Counted in the Act II summary as `<N> dropped`.
+- `operator-driven` rows produce **one `OPERATOR-MAP` finding per row** so the operator can scan only the manual-mapping work items independently of the matrix.
+
+`OPERATOR-MAP` finding format:
+
+> `OPERATOR-MAP — <object_type> '<source_name>' has no automated translation in this skill. Map manually: <one-sentence operator guidance>. (VSG §anchor when applicable; otherwise none) (source: <Stage 1 batch reference>)`
+
+Examples:
+
+> `OPERATOR-MAP — User role 'corp-employee' requires per-attribute mapping. Set role's VLAN, ACL list, captive-portal, session-timeout in the Central role payload. (VSG §1173) (source: aos8_get_effective_config(object_name='user_role', config_path='/md'), Batch 1)`
+
+> `OPERATOR-MAP — TACACS server 'tacacs-mgmt' has no automated translation rule. Configure manually in Central UI under Network Services → Servers. (VSG §none) (source: aos8_get_effective_config(object_name='tacacs_server', config_path='/md'), Batch 1)`
+
+#### 8.4 — Skip / inconclusive
+
+If a Stage 1 batch failed and an object class can't be enumerated, emit ONE row per missing object class with disposition `inconclusive — paste required`, target left blank, notes `*"Stage 1 Batch <N> failed; paste `<exact CLI command>` to enumerate."*`. Do NOT guess at object counts or names.
+
+---
+
+### Stage 9 — Central API call sequence (TRANSLATE-03)
+
+For every row of the Stage 8 disposition matrix where Disposition is `direct-translate` or `transform` AND Central tool is **not** a `[Central API gap]`, compute a topological order respecting these dependency rules:
+
+1. **Hierarchy first.** `central_manage_site_collection` → `central_manage_site` → `central_manage_device_group`. All three must exist before any scoped object.
+2. **ACL primitives before role-acls.** `central_manage_net_group` and `central_manage_net_service` BEFORE `central_manage_role_acl` (role ACLs reference net-group / net-service aliases).
+3. **Role-acls before roles.** `central_manage_role_acl` BEFORE `central_manage_role` (a role's `access-list` field references role-acls by name).
+4. **Roles before WLAN profiles** when a WLAN profile references a default role.
+5. **WLAN profiles after roles + ACLs** but BEFORE `central_manage_config_assignment`.
+6. **`central_manage_config_assignment` last** — assigns the library objects to scopes (Site Collections / Sites / Device Groups). Without this step, objects exist in the Central library but aren't pushed to devices.
+7. **`[Central API gap]` rows** — emit as a placeholder step (`[manual UI step]`) at the position they would otherwise occupy in the dependency order. Subsequent steps that would reference the gap-filled object include the literal warning *"depends on prior manual UI step <step #> being completed."*
+
+**Output:** an ordered numbered list. One step per row of Stage 8 matrix where the row produces a Central API call (skip `drop` / `deprecated` / pure `operator-driven` rows that have no API target). Each step includes:
+
+- **Step #**
+- **Target object** (e.g. *"Role 'corp-employee'"*)
+- **Central tool** (e.g. `central_manage_role`)
+- **Payload sketch** (3-5 key fields; **NOT** a full JSON payload — operators don't need the AI to invent payload details, they need to know which fields matter): *"name='corp-employee', vlan_id=200, access_list_session=['employee-acl'], captive_portal=null"*.
+- **Depends on:** comma-separated list of prior step #s (or `none`).
+- **Notes** — one short clause per step (operator decisions, gotchas, links to VSG anchor for the disposition).
+
+**Skip:** if all dispositions in Stage 8 are `drop` / `deprecated` / `operator-driven` (zero `direct-translate` or `transform` rows reach a Central tool), output: *"No Central API calls required — the migration is purely a deletion / decommission of legacy features plus operator-driven manual configuration. See the disposition matrix above for manual work items."*
+
+**Findings produced:** none new. Stage 9's value is the ordered plan, not new findings.
+
+---
+
+### Stage 10 — Validation checklist (TRANSLATE-04)
+
+For every Stage 9 step that creates a Central object (i.e. excludes `[Central API gap]` placeholder steps), emit one row of a validation checklist mapping the create call to its corresponding read-back call.
+
+**Read-back mapping** (every `central_manage_*` has a corresponding `central_get_*`):
+
+| Created via | Verify via | Expected attributes |
+|---|---|---|
+| `central_manage_site_collection` | `central_get_scope_tree` | name, parent_id (root) |
+| `central_manage_site` | `central_get_sites` (also `central_get_scope_tree`) | name, parent collection name |
+| `central_manage_device_group` | `central_get_scope_tree` | name, parent site name |
+| `central_manage_role` | `central_get_roles` | name, vlan, access-list, captive-portal, session-timeout |
+| `central_manage_role_acl` | `central_get_role_acls` | name, rule list, ordering |
+| `central_manage_net_group` | `central_get_net_groups` | name, member list |
+| `central_manage_net_service` | `central_get_net_services` | name, protocol, port range |
+| `central_manage_wlan_profile` | `central_get_wlan_profiles` | name, ssid, opmode, VLAN, RADIUS server-group reference |
+| `central_manage_config_assignment` | `central_get_config_assignments` | scope_id, profile names assigned |
+
+**Output:** the validation checklist table — one row per Stage 9 create-step:
+
+| Step # (from Stage 9) | Target object | Verify with | Expected attributes |
+|---|---|---|---|
+
+**This stage emits the checklist but does NOT execute the reads.** Execution is operator-driven (or Phase 3 territory — see issue #240).
+
+**Findings produced:** none. Stage 10's output is purely a checklist.
+
+**Skip:** if Stage 9 had no create-steps, output *"No Central objects created — validation checklist is empty."*
+
+---
+
 ## Decision matrix
 
 | Condition | Action |
@@ -557,32 +766,42 @@ Aggregate findings from all stages into one verdict + structured report (see *Ou
 
 ## Output formatting
 
-Use the EXACT structure below. Every section heading must be present even if empty. Lead with the verdict, then REGRESSION → DRIFT → INFO. Include a suggested AOS 10 hierarchy mapping table and a phased cutover plan.
+The skill emits one or two reports:
+
+- **Act I report** — always emitted. Includes the verdict + readiness inventory + REGRESSION / DRIFT / INFO findings + hierarchy mapping + cutover sequence. Use the *Act I template* below.
+- **Act II report** — emitted only after operator `yes` at the gate. Includes the per-object disposition matrix + Central API call sequence + validation checklist + OPERATOR-MAP findings. Use the *Act II template* below.
+
+Use the EXACT structure shown. Every section heading must be present even if empty.
 
 ### Output hygiene (mandatory)
 
-These rules apply to every finding across Stages 3, 4, 5, and 6:
+These rules apply to every finding across Stages 3, 4, 5, 6, 7, 8, 9, 10:
 
 1. **No raw JSON blobs.** When citing an API response, extract and quote only the specific field value relevant to the finding. Never dump the full response dict.
 2. **No tool-call syntax in finding text.** Tool names belong in the `(source: tool_name(), Batch N)` attribution at the end of the finding — never inside the finding sentence itself.
 3. **No stack traces.** If a tool call raises an exception, emit a brief one-line error note and the fallback CLI command. Never include a Python traceback.
 4. **No ellipsis or truncation markers.** Do not write `...`, `[truncated]`, or similar. Extract the relevant fields explicitly; if a response is large, summarise the salient values in prose.
+5. **No fabricated VSG anchors.** If the disposition matrix row has no real VSG anchor, the cell reads literally `none`. Do not invent `§####-§####` ranges.
+6. **No invented Central tool names.** If a `central_manage_*` tool does not exist for a row, use the literal placeholder `[Central API gap — manual UI: <area>]`. Three known gaps: AAA servers (RADIUS/TACACS/LDAP individual server config), AAA server-groups, AP system profiles.
 
 ### Output format is mandatory — do NOT substitute alternatives
 
-Every output element specified below — verdict paragraph, inventory section, hierarchy mapping table, finding lists, cutover sequence — must be produced in **exactly the format shown**. Do NOT substitute:
+Every output element specified below — verdict paragraph, inventory section, hierarchy mapping table, finding lists, cutover sequence, **disposition matrix, API call sequence, validation checklist** — must be produced in **exactly the format shown**. Do NOT substitute:
 
 - **Diagrams, charts, ASCII art, or rendered visualizations** in place of the markdown tables. The output is meant to be paste-able into customer emails / Slack threads / change-management tickets — formats that don't render as plain text are out of scope.
 - **Prose paragraphs** in place of finding lists. Findings are bullets so an SE can scan + cite each one independently.
 - **Collapsed multi-finding rows** (e.g. "These 4 SSIDs all conflict") in place of one bullet per finding. Each finding is its own row so each can be acted on independently.
 - **Reframed verdicts** (e.g. "tentatively GO" or "GO with caveats"). Verdicts are the literal three values: **GO**, **BLOCKED**, or **PARTIAL**.
+- **Combined Act I + Act II output** when the operator has not yet answered the gate prompt. Act II is gated; do NOT pre-emit translation rows alongside the Act I report.
 
 If you believe a different format would be more legible, the answer is no — the operator wants paste-ability and consistency across runs more than they want artistic legibility. The hierarchy mapping table is a table specifically because operators read mapping pairs left-to-right; a tree diagram makes them mentally re-pivot.
 
+### Act I template
+
 ```
-> Open the report with this paragraph (plain prose, 2–4 sentences, never a bullet list, never a table). Three elements in order:
+> Open the Act I report with this paragraph (plain prose, 2–4 sentences, never a bullet list, never a table). Three elements in order:
 >   1. Verdict in bold caps — **GO** / **BLOCKED** / **PARTIAL**.
->   2. Finding counts — exact integers for REGRESSION, DRIFT, INFO.
+>   2. Finding counts — exact integers for REGRESSION, DRIFT, INFO. (OPERATOR-MAP findings are part of Act II; do NOT count them in the Act I header.)
 >   3. One SE-ready sentence — name the source platform (AOS8 / AOS6 / IAP), AP count, controller count, and the key action a human SE can paste verbatim into a customer email.
 >
 > For PARTIAL verdict caused by AOS8 live-mode batch failure, append: "AOS8 live collection partially succeeded — <N> checks completed; <M> checks require manual CLI paste (see below)."
@@ -591,7 +810,7 @@ If you believe a different format would be more legible, the answer is no — th
 
 **<VERDICT>** — <X> REGRESSION / <Y> DRIFT / <Z> INFO findings. This <source> deployment (<N> APs, <M> controllers) <one plain-English action sentence>. <Optional context sentence — e.g. "Live AOS8 data collection was used for all checks." or PARTIAL note if applicable.>
 
-## AOS migration readiness — <source: aos6/aos8/iap> → AOS 10 <target: tunnel/bridge/mixed>
+## AOS migration audit — <source: aos6/aos8/iap> → AOS 10 <target: tunnel/bridge/mixed>
 **Captured:** <ISO timestamp>
 **Migration scope:** <single-site PoC | multi-site | fleet-wide>
 **Cluster type (AOS 8):** <L2 / L3 / LMS / N/A>
@@ -716,6 +935,98 @@ If you believe a different format would be more legible, the answer is no — th
 - Scaling values (500 APs / 5,000 clients per Bridge Mode roaming domain; /20 max subnet sizes) are current at VSG publication; confirm against latest AOS 10 documentation.
 ```
 
+### Gate prompt — emit verbatim after the Act I report
+
+Choose ONE of the following based on the Act I verdict and emit it verbatim. Then stop. Wait for the operator's reply before doing anything else.
+
+```
+> If verdict = BLOCKED:
+Translation locked until REGRESSIONs are resolved. Re-run the audit after fixes.
+
+> If verdict = GO:
+Verdict: GO. Proceed to AOS 10 translation plan? (yes / no / edit-context)
+
+> If verdict = PARTIAL:
+Verdict: PARTIAL — <N> Stage-1 collection items were inconclusive. Translation rows for those object classes will be marked `inconclusive — paste required`. Proceed to AOS 10 translation plan? (yes / no / edit-context)
+```
+
+### Act II template (only after operator answers `yes` at the gate)
+
+```
+> Open the Act II report with this paragraph (plain prose, 2–4 sentences). Three elements in order:
+>   1. The literal phrase "Act II — translation plan."
+>   2. Disposition counts — exact integers for direct-translate, transform, drop, deprecated, operator-driven, inconclusive.
+>   3. Central API gap callout if any, e.g. "<K> object rows require manual UI configuration (no central_manage_* tool exists for: AAA servers, AAA server-groups, AP system profiles)."
+>
+> Template (AI fills the angle-bracket placeholders at runtime; do NOT hard-code values):
+
+**Act II — translation plan.** <D> direct-translate / <T> transform / <X> drop / <P> deprecated / <O> operator-driven / <I> inconclusive rows produced. <Optional Central-API-gap sentence.> <Optional one-line cross-reference to the Act II findings count, e.g. "<O+gap-count> OPERATOR-MAP findings require manual mapping decisions — see findings list below.">
+
+## AOS migration translation plan — <source: aos6/aos8/iap> → AOS 10 <target: tunnel/bridge/mixed>
+**Captured:** <ISO timestamp>
+**Reuses Act I context captured at:** <ISO timestamp from Act I report>
+
+### Hierarchy translation (Stage 7)
+| Source AOS node / IAP cluster | Source path | Disposition | Target type (AOS 10) | Target name | Notes |
+|---|---|---|---|---|---|
+| <Mobility Conductor /md> | `/md` | drop | (none) | n/a | Central org root is implicit |
+| <region> | `/md/<region>` | direct-translate | Site Collection | <name> | grouping |
+| <site> | `/md/<region>/<site>` | direct-translate | Site | <name> | one Site per discrete physical location |
+| <ap-group> | `/md/<region>/<site>/<ap-group>` | direct-translate | Device Group | <name> | per-function device grouping |
+| ... | ... | ... | ... | ... | ... |
+
+### Per-object disposition matrix (Stage 8)
+| Source name | Source type | Source scope | Disposition | Target name | Target type | Central tool | VSG anchor | Notes |
+|---|---|---|---|---|---|---|---|---|
+| corp-radius-1 | aaa-radius-server | /md | transform | corp-radius-1 | Server | [Central API gap — manual UI: Network Services → Servers] | §1121 | NAS-IP source must change to gateway IP for Tunnel target |
+| corp-employee | user-role | /md | transform | corp-employee | Role | central_manage_role | §1173 | per-attribute mapping required (VLAN, ACL list, captive-portal, session-timeout) |
+| corp-ssid-prof | wlan-ssid-profile | /md | direct-translate | corp-ssid-prof | WLAN profile | central_manage_wlan_profile | §2127-§2219 | direct field map per CorpNet 802.1X worked example |
+| arm-default | arm-profile | /md | deprecated | n/a | (none) | (none) | §1163 | Replaced by RF Profiles in AOS 10 |
+| ... | ... | ... | ... | ... | ... | ... | ... | ... |
+
+### OPERATOR-MAP findings (manual mapping work items)
+- **OPERATOR-MAP** — User role 'corp-employee' requires per-attribute mapping. Set role's VLAN, ACL list, captive-portal, session-timeout in the Central role payload. (VSG §1173) (source: aos8_get_effective_config(object_name='user_role', config_path='/md'), Batch 1)
+- **OPERATOR-MAP** — TACACS server 'tacacs-mgmt' has no automated translation rule. Configure manually in Central UI under Network Services → Servers. (VSG none) (source: aos8_get_effective_config(object_name='tacacs_server', config_path='/md'), Batch 1)
+- **OPERATOR-MAP** — Session ACL 'employee-acl' has 14 rules; per-rule translation to Central role-acl is operator-driven. Map net-destinations to net-groups, ports to net-services, then re-emit ordered rule list. (VSG none) (source: aos8_get_effective_config(object_name='ip_access_list', config_path='/md'), Batch 1)
+- ... (one bullet per `operator-driven` row in the matrix)
+- (or "No OPERATOR-MAP findings.")
+
+### Central API call sequence (Stage 9)
+1. **Site Collection 'USE'** — `central_manage_site_collection` — payload sketch: name='USE', parent=root — depends on: none — notes: hierarchy first.
+2. **Site 'dallas-hq'** — `central_manage_site` — payload sketch: name='dallas-hq', parent_collection='USE' — depends on: 1 — notes: standard.
+3. **Device Group 'dallas-hq-floor-3'** — `central_manage_device_group` — payload sketch: name='dallas-hq-floor-3', parent_site='dallas-hq' — depends on: 2 — notes: standard.
+4. **Net group 'corp-internal-subnets'** — `central_manage_net_group` — payload sketch: name='corp-internal-subnets', members=['10.10.0.0/16', '10.20.0.0/16'] — depends on: none — notes: ACL primitive.
+5. **Net service 'rdp'** — `central_manage_net_service` — payload sketch: name='rdp', protocol='tcp', port=3389 — depends on: none — notes: ACL primitive.
+6. **Role ACL 'employee-acl'** — `central_manage_role_acl` — payload sketch: name='employee-acl', rules=[{src=any, dst='corp-internal-subnets', svc='rdp', action=permit}, ...] — depends on: 4, 5 — notes: rules in original AOS 8 ordering.
+7. **Role 'corp-employee'** — `central_manage_role` — payload sketch: name='corp-employee', vlan=200, access_list_session=['employee-acl'], captive_portal=null, session_timeout=86400 — depends on: 6 — notes: per-attribute mapping operator-driven.
+8. **[Manual UI step]** — Server 'corp-radius-1' (RADIUS) — Central UI: Network Services → Servers → Add — payload sketch: name='corp-radius-1', host='10.50.10.7', shared_secret=<copy from source>, NAS-IP=<gateway_ip per Tunnel target> — depends on: 2 — notes: Central API gap; subsequent step 9 depends on this manual action.
+9. **[Manual UI step]** — Server group 'corp-radius-grp' — Central UI: Network Services → Server Groups — payload sketch: name='corp-radius-grp', servers=['corp-radius-1'] — depends on: 8 — notes: Central API gap.
+10. **WLAN profile 'corp-ssid-prof'** — `central_manage_wlan_profile` — payload sketch: name='corp-ssid-prof', ssid='CorpNet', opmode='wpa3-aes-ccm-128', vlan=200, server_group='corp-radius-grp' — depends on: 7, 9 — notes: per VSG §2127-§2219 worked example.
+11. **Config assignment** — `central_manage_config_assignment` — payload sketch: scope_id=<dallas-hq-floor-3 device-group ID>, profiles=['corp-ssid-prof'] — depends on: 3, 10 — notes: pushes WLAN to AP scope.
+... (one step per Stage 9 row)
+
+(or "No Central API calls required — the migration is purely a deletion / decommission of legacy features plus operator-driven manual configuration.")
+
+### Validation checklist (Stage 10)
+| Step # | Target object | Verify with | Expected attributes |
+|---|---|---|---|
+| 1 | Site Collection 'USE' | central_get_scope_tree | name='USE', parent_id=root |
+| 2 | Site 'dallas-hq' | central_get_sites | name='dallas-hq', parent='USE' |
+| 3 | Device Group 'dallas-hq-floor-3' | central_get_scope_tree | name, parent='dallas-hq' |
+| 6 | Role ACL 'employee-acl' | central_get_role_acls | name, rule list, ordering |
+| 7 | Role 'corp-employee' | central_get_roles | name, vlan=200, access-list=['employee-acl'], session-timeout=86400 |
+| 10 | WLAN profile 'corp-ssid-prof' | central_get_wlan_profiles | name, ssid='CorpNet', opmode, vlan, server_group |
+| 11 | Config assignment | central_get_config_assignments | scope_id, profile names |
+
+(Manual UI steps 8 + 9 are not in the validation checklist — they are operator-verified in the Central UI.)
+
+### Act II PoC caveats (always include in the Act II report)
+- The skill emits the **plan**. It does NOT execute `central_manage_*` write tools. Execution is operator-driven (or Phase 3 territory — see issue #240). Subsequent operator runs of `central_manage_*` tools fire the standard write-tool elicitation flow.
+- The disposition matrix represents AOS 8 → AOS 10 mapping at PoC quality. Per-object accuracy depends on the depth of Stage 1 collection (and the gestural nature of the VSG's per-object guidance — most rows are `operator-driven` because the VSG itself stops short of field-by-field rules outside the two worked SSID examples).
+- Three known Central API gaps (AAA servers, AAA server-groups, AP system profiles) require manual UI action. The plan steps marked `[Manual UI step]` are not optional — they are real prerequisites for downstream API calls in the same plan.
+- This translation plan is not a substitute for review by an Aruba SE.
+```
+
 ## Example queries that should trigger this skill
 
 > "AOS 8 to AOS 10 migration readiness"
@@ -732,3 +1043,10 @@ If you believe a different format would be more legible, the answer is no — th
 > "RADIUS NAD changes for AOS 10"
 > "AirWave deprecation impact for AOS 10"
 > "L3 Mobility migration to AOS 10"
+> "translate AOS 8 config to AOS 10"
+> "translate Instant AP config to AOS 10"
+> "AOS 10 config mapping"
+> "AOS 8 to Central object mapping"
+> "build me an AOS 10 migration plan"
+> "generate Central API call sequence for migration"
+> "what objects do I need to recreate in Central"

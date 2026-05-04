@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0.0] - 2026-05-04
+
+**Renames `aos-migration-readiness` skill → `aos-migration` and expands it from a readiness-only audit into a full migration workflow.** Closes [#239](https://github.com/nowireless4u/hpe-networking-mcp/issues/239). Substantial new subsystem → minor version bump per project policy.
+
+### What's new
+
+The skill now operates in two acts:
+
+- **Act I (Stages -1 through 6) — readiness audit.** Unchanged from v2.4.0.7. Always runs. Ends with the verdict + combined readiness report.
+- **Act I → Act II gate.** After the Act I report, the AI emits one of three literal prompts based on verdict (BLOCKED locks translation; GO/PARTIAL prompt for `yes / no / edit-context`) and stops. No Act II execution without operator `yes`.
+- **Act II (Stages 7 through 10) — translation plan.** Conditional on a non-BLOCKED verdict and explicit operator confirmation:
+  - **Stage 7 — Hierarchy translation.** AOS 8 `/md/<region>/<site>/<ap-group>` → AOS 10 Site Collection / Site / Device Group, anchored on VSG §1529-§1535.
+  - **Stage 8 — Per-object translation matrix.** Disposition matrix (direct-translate / transform / drop / deprecated / operator-driven / inconclusive) for AAA / roles / ACLs / AP profiles / WLAN profiles / VAPs / 802.1X / captive portals / ARM / ClientMatch / AP overrides. Per-row anchor cells use real VSG section numbers when they exist; literal `none` when the VSG is silent (most non-WLAN-SSID-profile rows).
+  - **Stage 9 — Central API call sequence.** Topologically ordered plan respecting dependencies (server-group → role-acl → role → WLAN profile → config-assignment). Three known Central API gaps (AAA servers, AAA server-groups, AP system profiles) emit `[Central API gap — manual UI: <area>]` placeholder steps that downstream API calls reference as prerequisites.
+  - **Stage 10 — Validation checklist.** Maps each `central_manage_*` create-step to its corresponding `central_get_*` read-back call with expected attributes.
+
+The skill emits the **plan**. It does NOT execute `central_manage_*` write tools. Phase 3 — actual execution — is deferred per [#240](https://github.com/nowireless4u/hpe-networking-mcp/issues/240).
+
+### New finding type
+
+`OPERATOR-MAP` joins the existing REGRESSION / DRIFT / INFO triple. One finding per `operator-driven` matrix row — flags object types the VSG doesn't auto-map (TACACS / LDAP servers, MAC-auth profiles, captive portals, MAC randomization, individual role/ACL attribute mappings). The Act II header narrative counts OPERATOR-MAP separately so operators can scan the manual-mapping work items independently.
+
+### Honest scope language
+
+The VSG itself stops short of per-object translation tables outside two worked SSID examples (CorpNet 802.1X §2127-§2219, OpsNet WPA3-Personal §2222-§2308). The skill does NOT fabricate VSG anchors where none exist; rows without real anchors carry the literal `vsg-anchor: none` cell and emit `OPERATOR-MAP` findings. The output-hygiene rules now explicitly forbid invented VSG anchors and invented Central tool names (the latter for the three documented Central API gaps).
+
+### File touches
+
+- **Renamed:** `src/hpe_networking_mcp/skills/aos-migration-readiness.md` → `src/hpe_networking_mcp/skills/aos-migration.md`. Frontmatter `name: aos-migration`. Tools array expanded with the Central write tools and read tools needed for Act II (`central_manage_site`, `central_manage_role`, `central_manage_role_acl`, `central_manage_net_group`, `central_manage_net_service`, `central_manage_wlan_profile`, `central_manage_config_assignment`, `central_get_role_acls`, `central_get_net_groups`, `central_get_net_services`, `central_get_aliases`).
+- **`tests/unit/test_skill_aos8_live_detection.py`** — `SKILL_PATH` updated to new filename; docstring + assertion message references updated.
+- **`src/hpe_networking_mcp/INSTRUCTIONS.md`** — line-88 trigger row expanded with translation-themed phrases (`"translate AOS 8 config to AOS 10"`, `"AOS 10 config mapping"`, `"build me an AOS 10 migration plan"`, `"generate Central API call sequence for migration"`).
+- **`docs/TOOLS.md`** — line-156 entry renamed and rewritten to describe the two-act workflow.
+
+### Why the rename
+
+Three operator transcripts captured AI behaviors on the readiness-only skill that revealed a broader scope mismatch — operators expected the skill to also produce config translation, and AIs flip-flopped or freelanced when asked. v2.4.0.7 hardened the readiness scope language to make the boundary explicit; v2.5.0.0 closes the gap by absorbing translation into the same skill. Single workflow, single invocation, conditional second half. Drops "readiness" from the name because the skill is no longer readiness-only.
+
+### Migration notes
+
+No tool / API breaking changes. The frontmatter `name:` rename means the skill loads under its new name in `skills_list()` / `skills_load()`. Operator-facing trigger phrases work identically (and now include translation phrases too). Operators who want only the readiness portion can answer `no` at the gate and end the session with the unchanged Act I report.
+
 ## [2.4.0.7] - 2026-05-04
 
 **Technical corrections + scope hardening for the `aos-migration-readiness` skill, surfaced by three operator transcripts where AI behavior on the skill went off-spec.** Closes the immediate issues; the broader skill expansion (rename + per-object config translation) is tracked as [#239](https://github.com/nowireless4u/hpe-networking-mcp/issues/239) and shipping next as v2.5.0.0.

@@ -1,7 +1,11 @@
-"""Phase 10 regression test: the 9 AOS8 tools the aos-migration-readiness
-skill calls for DETECT-01 + COLLECT-01..04 must be registered in the live
+"""Phase 10 regression test: the 9 AOS8 tools the aos-migration skill
+calls for DETECT-01 + COLLECT-01..04 must be registered in the live
 tool catalog. Belt-and-suspenders alongside the regex enforcement in
 test_skill_tool_references.py — if either guard catches a typo, CI fails.
+
+(Skill was renamed from aos-migration-readiness → aos-migration in v2.5.0.0
+when Act II / config translation stages 7-10 were added; the AOS8 live
+detection requirements are unchanged.)
 """
 
 from __future__ import annotations
@@ -35,7 +39,7 @@ REQUIRED_AOS8_TOOLS = (
     "aos8_get_ap_wired_ports",
 )
 
-SKILL_PATH = Path("src/hpe_networking_mcp/skills/aos-migration-readiness.md")
+SKILL_PATH = Path("src/hpe_networking_mcp/skills/aos-migration.md")
 
 
 @pytest.fixture(scope="module")
@@ -56,4 +60,4 @@ class TestAOS8LiveDetectionTools:
         )
 
     def test_skill_file_exists(self) -> None:
-        assert SKILL_PATH.is_file(), f"aos-migration-readiness skill file missing at {SKILL_PATH}"
+        assert SKILL_PATH.is_file(), f"aos-migration skill file missing at {SKILL_PATH}"
