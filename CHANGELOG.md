@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0.6] - 2026-05-03
+
+**v2.4.0.5 follow-up — adds `version` and `release_type` to `DEVICE_CONTEXT_HINTS`. Tracks issue [#237](https://github.com/nowireless4u/hpe-networking-mcp/issues/237).**
+
+v2.4.0.5 shipped with a passing unit test for the AOS 8 controller-record tokenization, but live verification immediately after release showed `Name: MM-01` was *still* coming through cleartext on real `aos8_get_controllers` responses. Root cause: the test fixture had been seeded with a `firmware` sibling key (which IS in `DEVICE_CONTEXT_HINTS`), but live AOS 8 returns `Version` and `Release Type` instead. Without those in the hint set, the bare-`name` heuristic had only `Model` matching — one hint, below the ≥2 threshold introduced in v2.3.1.2 — so tokenization didn't fire.
+
+### Fixed
+
+- **`src/hpe_networking_mcp/redaction/rules.py`** — added `version` and `release_type` to `DEVICE_CONTEXT_HINTS`. Both are strong device-shape signals: `version` is universal across switch/AP/controller records; `release_type` is Aruba-specific (LSR / SSR / UNCLASSIFIED) and effectively unique to Aruba device records, so false-positive risk is negligible.
+- **`tests/unit/test_pii_redaction.py`** — replaced the rigged `firmware` key in two AOS 8 fixtures (`test_aos8_controller_name_via_bare_name_with_device_siblings`, `test_aos8_controller_record_tokenizes_name`) with the actual live shape captured from a real Mobility Conductor: `Config ID`, `Configuration State`, `IP Address`, `Location`, `Model`, `Name`, `Release Type`, `Status`, `Type`, `Version`. The test now reflects production rather than a happy path.
+
+### Why this got past unit tests once already
+
+The v2.4.0.5 fixture seeded `"firmware": "8.12.0.5"` to "represent" the controller's `Version` field. That short-circuited the heuristic — `firmware` is a hint, so the test passed without proving that `Version` would also work. Lesson logged in memory: when adding regression tests for response-shape bugs, the fixture must come from real captured responses, not a hand-typed approximation that "looks similar."
+
+### Live verification
+
+After the v2.4.0.6 deploy, `aos8_get_controllers` now returns `"Name": "[[HOSTNAME:<uuid>]]"` instead of `"Name": "MM-01"`. The previously-cleartext fields (`IP Address`, `Location`, `Model`) remain cleartext per the design intent — IPs are intentionally not tokenized; geographic/model info is operational metadata.
+
 ## [2.4.0.5] - 2026-05-03
 
 **PII tokenization improvement for AOS 8 — extend the field-name normalizer to treat spaces the same as hyphens, so AOS 8's space-separated `showcommand` headers (`"AP name"`, `"Host Name"`, `"Wired MAC Address"`) match the existing snake_case rules. Closes the *flat-record* tokenization gap on AOS 8 responses; the transposed key/value shape used by `show <foo> detail` commands (RADIUS / TACACS / LDAP server detail) is tracked separately as issue [#235](https://github.com/nowireless4u/hpe-networking-mcp/issues/235).** Mist and Central are not affected — their APIs use snake_case / camelCase exclusively, so the change is a no-op there.

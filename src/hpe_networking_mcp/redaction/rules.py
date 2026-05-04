@@ -247,6 +247,8 @@ DEVICE_CONTEXT_HINTS: frozenset[str] = frozenset(
         "device_type",
         "hw_rev",
         "firmware",
+        "version",  # AOS 8 controller / switch records use ``Version``
+        "release_type",  # Aruba-specific (LSR / SSR / UNCLASSIFIED) — strong device-shape signal
     }
 )
 
