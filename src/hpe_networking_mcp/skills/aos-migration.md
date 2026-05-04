@@ -1,89 +1,102 @@
 ---
 name: aos-migration
-title: AOS 6 / AOS 8 / Instant AP → AOS 10 migration (PoC) — readiness + config translation plan
+title: AOS 8 → AOS 10 migration (PoC) — readiness + config translation plan
 description: |
   PRIMARY TRIGGER — invoke this skill whenever the operator mentions
-  AOS 6, AOS 8, or Instant AP migration to AOS 10 or Aruba Central in
-  any phrasing. Do NOT improvise or skip the skill: it carries the
-  VSG-anchored rule set, the live AOS 8 collection sequence, and the
-  per-object disposition matrix that free-form analysis cannot reproduce.
+  AOS 8 → AOS 10 / Aruba Central migration in any phrasing. Do NOT
+  improvise or skip the skill: it carries the live AOS 8 collection
+  pattern, the per-object disposition matrix, and the cluster-aware
+  inventory walk that free-form analysis cannot reproduce.
+
+  AOS 6 and Instant AP (IAP) are out of scope. AOS 6 has a different
+  migration path; IAP customers usually flow through classic Central.
+  If the operator names either one, redirect — do not run this skill.
 
   Trigger phrases include but are not limited to: "AOS 8 to 10
-  migration", "AOS 6 to AOS 10", "Instant AP migration to AOS 10",
-  "IAP to AOS 10", "migration readiness", "am I ready to upgrade to
-  AOS 10", "audit my AOS 8 environment for migration", "validate my
-  migration plan", "check Central readiness for AOS 10 cutover",
-  "Tunnel vs Bridge vs Mixed mode planning", "switchport configuration
-  for AOS 10", "RADIUS NAD changes for AOS 10", "translate AOS 8
-  config to AOS 10", "translate AOS 6 config to AOS 10", "translate
-  Instant AP config to AOS 10", "AOS 10 config mapping", "AOS 8 to
-  Central object mapping", "build me an AOS 10 migration plan",
-  "generate Central API call sequence for migration", "what objects do
-  I need to recreate in Central".
+  migration", "AOS 8 to AOS 10", "AOS 8 migration to Central",
+  "migration readiness", "am I ready to upgrade to AOS 10", "audit my
+  AOS 8 environment for migration", "validate my migration plan",
+  "check Central readiness for AOS 10 cutover", "Tunnel vs Bridge vs
+  Mixed mode planning", "switchport configuration for AOS 10", "RADIUS
+  NAD changes for AOS 10", "translate AOS 8 config to AOS 10",
+  "AOS 10 config mapping", "AOS 8 to Central object mapping",
+  "build me an AOS 10 migration plan", "generate Central API call
+  sequence for migration", "what objects do I need to recreate in
+  Central".
 
-  Anchored on Aruba Validated Solution Guide — Campus Migrate.
-  Two-act workflow: Act I = readiness (operator paste OR live AOS 8
-  API collection, ~50 VSG-anchored rules, GO / BLOCKED / PARTIAL
-  verdict, cutover sequence, rollback validation). Act II = config
-  translation plan (hierarchy mapping, per-object disposition matrix,
-  Central API call sequence with dependencies, validation checklist).
-  Act II only fires after a non-BLOCKED verdict and explicit operator
-  confirmation. PoC — in-chat workflow for SE pre-engagement use;
-  production migration cutovers follow the customer's standard
-  change-management process and partner-tool guidance.
+  Anchored on Aruba Validated Solution Guide — Campus Migrate
+  (AOS 8 sections, VSG §934-§1336). Two-act workflow: Act I =
+  readiness (live AOS 8 API collection across the full /md hierarchy,
+  feature-parity + orchestration prerequisite checks, GO / BLOCKED /
+  PARTIAL / EMPTY-SOURCE verdict, cutover sequence). Act II = config
+  translation plan (hierarchy mapping, per-object disposition matrix
+  covering EVERY configured object regardless of whether it is in
+  active use, Central API call sequence with dependencies, validation
+  checklist). Act II only fires after a non-BLOCKED verdict and
+  explicit operator confirmation.
+
+  No operator interview. The skill detects AOS 8 reachability via
+  health-probe, walks the entire /md hierarchy for inventory, and
+  derives every other input (target SSID forwarding mode, cluster
+  topology, AirWave presence, L3 Mobility usage) from the collected
+  config. Operator drives changes interactively from the report.
+
+  PoC — in-chat workflow for SE pre-engagement use; production
+  migration cutovers follow the customer's standard change-management
+  process and partner-tool guidance.
 platforms: [central, aos8]
-tags: [central, migration, aos8, aos6, iap, aos10, readiness, audit, vsg, translation]
+tags: [central, migration, aos8, aos10, readiness, audit, vsg, translation]
 tools: [health, central_get_scope_tree, central_get_devices, central_get_aps, central_get_sites, central_get_site_name_id_mapping, central_recommend_firmware, central_get_config_assignments, central_get_server_groups, central_get_wlan_profiles, central_get_roles, central_get_role_acls, central_get_net_groups, central_get_net_services, central_get_named_vlans, central_get_aliases, central_manage_site, central_manage_site_collection, central_manage_device_group, central_manage_role, central_manage_role_acl, central_manage_net_group, central_manage_net_service, central_manage_wlan_profile, central_manage_config_assignment, clearpass_get_network_devices, clearpass_get_device_groups, clearpass_get_server_certificates, clearpass_get_local_users, greenlake_get_subscriptions, greenlake_get_workspace, greenlake_get_devices, aos8_get_md_hierarchy, aos8_get_effective_config, aos8_get_ap_database, aos8_get_cluster_state, aos8_show_command, aos8_get_clients, aos8_get_bss_table, aos8_get_active_aps, aos8_get_ap_wired_ports]
 ---
 
-# AOS 6 / AOS 8 / Instant AP → AOS 10 migration (PoC) — readiness + config translation plan
+# AOS 8 → AOS 10 migration (PoC) — readiness + config translation plan
 
 ## Objective
 
-Two-act workflow:
+Two-act workflow for **AOS 8 → AOS 10 / Aruba Central** migration. AOS 6 and Instant AP (IAP) are out of scope (different migration paths).
 
-- **Act I — Readiness.** Decide **GO / BLOCKED / PARTIAL** for a migration from a legacy Aruba WLAN platform (AOS 6, AOS 8, or Instant AP) to AOS 10 / Aruba Central.
-- **Act II — Translation plan.** Conditional on a non-BLOCKED verdict and explicit operator confirmation: produce a per-object disposition matrix mapping each legacy object (AAA / roles / ACLs / AP profiles / WLAN profiles / VAPs / 802.1X / captive portals) to its AOS 10 / Central equivalent, an ordered Central API call sequence, and a post-translation validation checklist.
+- **Act I — Readiness.** Walk the entire AOS 8 `/md` hierarchy via API, inventory every configured object (in active use or not), and emit a structured report with feature-parity findings, orchestration-prerequisite findings, and a cutover sequence. Verdict: **GO / BLOCKED / PARTIAL / EMPTY-SOURCE**.
+- **Act II — Translation plan.** Conditional on a non-BLOCKED verdict and explicit operator confirmation: produce a per-object disposition matrix mapping each AOS 8 object (AAA / roles / ACLs / AP profiles / WLAN profiles / VAPs / 802.1X / captive portals) to its AOS 10 / Central equivalent, an ordered Central API call sequence, and a post-translation validation checklist. **Every configured object is in scope — including unused / orphaned ones — because what is or is not "in use" today is the customer's call, not the skill's.**
 
-Anchored on **Aruba Campus Migrate VSG** — covering the three migration paths:
+Anchored on **Aruba Campus Migrate VSG §934-§1336** (AOS 8 sections).
 
-- AOS 6 Campus → AOS 10 Tunnel or Bridge Mode (VSG §225-§588)
-- Instant AP cluster → AOS 10 Bridge Mode (VSG §589-§932)
-- AOS 8 Campus → AOS 10 Tunnel or Bridge or Mixed Mode (VSG §934-§1336)
+Act I uses live AOS 8 API collection (`aos8_*` tools). The skill walks the full `/md` hierarchy; configuration that lives at `/md/<region>` or `/md/<region>/<site>` does **not** always inherit up to `/md` root, so a root-only collection silently misses customer-specific config. The hierarchy walk is mandatory.
 
-Act I combines two data sources:
+Cluster-offline tolerance: if the source clusters are unreachable at audit time (cluster members down for maintenance, lab environment with controllers off, etc.), live-state checks (`aos8_get_cluster_state`, `aos8_get_active_aps` per-MD) return degraded data. The skill **proceeds** — static config is still parsed normally; live-state checks are marked `inconclusive` rather than failing the audit.
 
-1. **Operator-pasted CLI output** from the source platform — the skill tells the operator exactly which commands to run; operator runs them in one CLI session and pastes the bundle back into chat. (When AOS 8 is reachable via the MCP server, the live-mode sub-path replaces the paste with API calls; see Stage 1.)
-2. **Central-side API checks** — site/scope tree, AP onboarding state, licenses, ClearPass NAD list, GreenLake subscriptions, ClearPass certificate state.
+Act II reuses everything Act I already collected — does NOT re-fetch effective-config or hierarchy — and produces a translation **plan**, not executed writes.
 
-Act II reuses everything Act I already collected — it does NOT re-fetch effective-config, AP database, etc. — and produces a translation **plan**, not executed writes.
-
-**Read-only.** Identifies blockers and emits a translation plan. The skill never calls `central_manage_*` write tools — that's deferred to a future Phase 3 (issue #240). PoC — in-chat workflow intended for SE pre-engagement readiness + plan generation; production migration cutovers follow the customer's standard change-management process.
+**Read-only.** The skill never calls `central_manage_*` write tools — execution is deferred to a future Phase 3 (issue #240). PoC — in-chat workflow intended for SE pre-engagement readiness + plan generation.
 
 ## Scope boundaries (what this skill is and is NOT)
 
 The skill IS:
 
-- A **readiness audit** — parses source-platform inventory, runs ~50 VSG-anchored rules, classifies each source-platform construct as REGRESSION / DRIFT / INFO / OPERATOR-MAP with a §-anchor citation when one exists.
-- A **hierarchy mapper** — produces the AOS 10 Site Collection / Site / Device Group placement table from the source `/md/<region>/<site>/<ap-group>` tree (or IAP cluster).
-- A **per-object disposition mapper** — for each legacy object discovered, emits a row classifying it as `direct-translate` / `transform` / `drop` / `deprecated` / `operator-driven` with the target Central tool and VSG anchor.
-- A **Central API call sequencer** — emits an ordered call plan with explicit dependency annotations (server-group before WLAN profile, role-acl before role, etc.).
-- A **cutover sequencer** — emits a phased GO / BLOCKED / PARTIAL verdict with a recommended cutover order and rollback validation steps.
+- A **full-hierarchy AOS 8 inventory** — walks every node in `/md` and collects every object type at every scope. No root-only assumptions.
+- A **feature-parity finding generator** — flags AOS 8 features that AOS 10 doesn't support (Internal Auth Server, AAA FastConnect, L3 Mobility, AirWave dependency) so the operator knows what changes pre- or during cutover.
+- A **migration-orchestration prerequisite checker** — controller firmware floor, Central reachability, GreenLake AP-license capacity, ClearPass NAD coverage for new AP subnets.
+- A **per-object disposition mapper** — emits one row per configured object regardless of usage state. Maps each to its Central equivalent or flags `[Central API gap — manual UI]` for the three known gaps (AAA servers, AAA server-groups, AP system profiles).
+- A **Central API call sequencer** — emits an ordered call plan with dependency annotations.
+- A **cutover sequencer** — phased plan from VSG §2352-§2576.
 
 The skill is NOT:
 
-- A **migration executor.** The skill never calls `central_manage_*` write tools. It produces a plan; a human runs the plan (or a follow-on Phase 3 capability does so under explicit guard rails — see issue #240).
-- A **rollback engine.** The skill emits the plan one-way. Rollback is captured as text in the cutover stage (Act I Stage 5) and is not auto-generated as reversible API calls.
-- A **gap-filler for missing Central write tools.** Three legacy object types — AAA RADIUS/TACACS server, AAA server-group, AP system profile — have no `central_manage_*` equivalent today. The skill emits `[Central API gap — manual UI action required]` for those rows; it does not invent tool names.
-- An **automatic VSG-anchor fabricator.** Several object types (TACACS server config, MAC-auth profile, captive portal, MAC randomization) have no per-object translation rules in the VSG. The skill marks those rows `operator-driven` with `vsg-anchor: none` and emits an `OPERATOR-MAP` finding so the operator knows to map manually.
+- A **filter for "in use" config.** The customer's running config is the source of truth. Whether something is currently assigned, referenced, or actively serving traffic is **metadata** (`usage_state` column on disposition rows), not a basis for excluding it from the migration plan. Orphaned AAA server groups, unassigned captive portal profiles, AP system profiles configured but not bound to an AP group — all map and get translated.
+- A **legacy controller-plumbing validator.** Rules around LMS-IP, Backup-LMS-IP, AP Fast Failover that flag *"this internal AOS 8 controller-AP wiring is non-ideal"* do NOT fire as REGRESSION. AP-to-controller plumbing dissolves at migration — APs go to Central via TCP 443. These values still get **inventoried** so they can inform target HA mode recommendations, but they don't gate the verdict.
+- An **operator interview.** No Stage-0 questions. The skill detects AOS 8 reachability (Stage -1), walks the hierarchy (Stage 1), and derives every input it needs from the collected config — target SSID forwarding mode is auto-recommended from the source pattern, cluster topology comes from `aos8_get_cluster_state`, AirWave presence comes from config grep, L3 Mobility usage comes from effective-config. The operator can override any auto-derived value when reviewing the report.
+- A **migration executor.** Never calls `central_manage_*` write tools. Plan only; Phase 3 (issue #240) is the execution capability.
+- A **rollback engine.** Rollback is captured as text in the cutover stage; not auto-generated as reversible API calls.
+- A **gap-filler for missing Central write tools.** Three known gaps (AAA RADIUS/TACACS server, AAA server-group, AP system profile) get `[Central API gap — manual UI action required]` placeholders. No invented tool names.
+- An **automatic VSG-anchor fabricator.** Object types the VSG doesn't cover (TACACS / LDAP server config, MAC-auth profile, captive portal, MAC randomization) get `vsg-anchor: none` and emit `OPERATOR-MAP` findings.
+- An **AOS 6 / IAP migration tool.** If the operator names AOS 6 or IAP, redirect: *"AOS 6 has a different migration path; IAP customers usually flow through classic Central. Engage Aruba SE for those scenarios."*
 
-If the operator asks for execution (running the plan against Central), acknowledge the boundary, point them at issue #240 (Phase 3 deferred), and stop.
+If the operator asks for execution (running the plan against Central), point them at issue #240 (Phase 3 deferred) and stop.
 
 ## PoC scope + roadmap caveat
 
-This skill expects the operator to **paste CLI output directly into chat**. That output may contain customer-identifiable data (server IPs, MAC addresses, cleartext RADIUS shared secrets if `encrypt disable` is in use, local user databases, etc.). For this PoC the audit does **not** auto-redact or tokenize — that's deferred until a future architecture where the config can be uploaded to a place the AI client never sees, with the MCP server alone owning the parse + redact.
+Live AOS 8 API collection means the skill receives effective-config and cluster state directly from the controller — no operator paste. The output may include customer-identifiable data (server IPs, MAC addresses, RADIUS shared secrets when explicitly returned by AOS 8, local user databases). PII tokenization (when enabled in the MCP server) covers most of this; some fields may slip through. Operators reviewing the report should be aware before sharing it externally.
 
-The skill's job here is to prove the in-chat workflow produces credible readiness findings on a representative dataset; sanitization is a separate problem.
+The skill's job is to prove the in-chat workflow produces credible readiness findings + a translation plan. Sanitization layers and Phase-3 execution are tracked separately.
 
 ## Procedure — 10 stages across two acts
 
@@ -102,435 +115,357 @@ If the operator answers `edit-context` (e.g. "actually we're doing Bridge Mode n
 
 ---
 
-### Stage -1 — Session-start AOS8 detection (DETECT-01)
+### Stage -1 — AOS 8 reachability gate (DETECT-01)
 
-Before beginning the Stage 0 operator interview, call `health()` once and inspect the per-platform status.
+Call `health()` once and inspect `aos8.status`.
 
-**If `aos8.status == "ok"`** (AOS8 platform is configured and reachable):
-> Announce to the operator, verbatim:
-> **"AOS8 API mode — live data. Stage 1 collection will run via API; no CLI paste required for the AOS8 source path."**
->
-> Then proceed to Stage 0. The Stage 1 AOS8 section will use the live-mode sub-path (API calls in four grouped batches — COLLECT-01..04). The paste table is not used unless an individual API batch fails.
+**If `aos8.status == "ok"`** — proceed to Stage 1 silently. No announcement, no operator interview.
 
-**Otherwise** (AOS8 not configured, status `unavailable` / `degraded`, or no AOS8 secrets mounted):
-> Proceed silently to Stage 0. Make no announcement. The paste-driven flow is unchanged for AOS6, IAP, and unreachable-AOS8 sessions. Stage 1 will use the paste-fallback sub-path.
+**If `aos8.status == "degraded"`** — proceed to Stage 1 with cluster-offline tolerance enabled. Announce to the operator: *"AOS 8 reachable but reporting degraded — proceeding with config collection; live-state checks (active APs, cluster health, client baseline) will be marked inconclusive in the report."*
 
-This detection step never blocks the audit — failures silently fall through to the existing paste flow.
-### Stage 0 — Operator interview (mandatory before data collection)
+**If `aos8` is not configured (status missing) or the operator names AOS 6 / IAP** — stop. Emit:
 
-Lock these answers into the audit context:
+```
+AOS 8 not configured on this MCP server. This skill covers AOS 8 → AOS 10 migration only.
+- AOS 6 has a different migration path; engage Aruba SE.
+- Instant AP customers usually flow through classic Central; engage Aruba SE.
+```
 
-1. **Source platform** — which legacy environment are we migrating from?
-   - `aos6` — Aruba OS 6 Mobility Conductor + Mobility Controllers (Conductor-Member or standalone)
-   - `aos8` — Aruba OS 8 Mobility Conductor + Mobility Controllers
-   - `iap` — Instant AP cluster (Virtual Controller managed; VC may be local-only, AirWave-managed, or Central-managed)
-2. **Current AirWave state** (AOS 6 / AOS 8 only) — is AirWave currently in the path? AirWave + AMON + SNMP are deprecated in AOS 10 (VSG §312-§313, §514-§515).
-3. **Target SSID forwarding mode** — which AOS 10 model is the target?
-   - `tunnel` — keep tunneled traffic via Gateway cluster (AOS 10 Tunnel Mode)
-   - `bridge` — local-bridged at AP (AOS 10 Bridge Mode — required for IAP migrations per VSG §672-§676)
-   - `mixed` — per-SSID mode mix
-4. **Migration scope** — single-site PoC, multi-site, or fleet-wide?
-5. **Cluster type** (AOS 8 only) — L2 cluster, L3 cluster, or LMS/Backup LMS pattern? (Affects HA mapping per VSG §1161-§1162)
-6. **L3 Mobility in use** (AOS 6 / AOS 8 / IAP) — yes/no? AOS 10 **eliminates** L3 Mobility (VSG §897-§900); requires L2-adjacent VLANs in the roaming domain instead.
-7. **HA expectation in AOS 10** — Auto Group, Auto Site, or Manual? (per VSG §410-§411, §1161-§1162)
+No further stages run.
 
-The audit must NOT proceed without all seven answers.
+### Stage 0 — (deleted)
 
-### Stage 1 — Operator data collection (paste-driven, all-at-once)
+There is no operator interview. Every input the skill needs is derived from collected config:
 
-Tell the operator: *"Run all of the commands below in one CLI session, save the entire output, and paste the bundle back here in one message. Pre-flight tips:* `no paging` *to avoid space-bar prompts; enable session logging in PuTTY / SecureCRT first;* `encrypt disable` *if you want passphrases visible in cleartext (note: this exposes RADIUS shared secrets — confirm before pasting)."*
+- **Target SSID forwarding mode** — auto-recommended by Stage 3 from the source pattern (tunneled VAPs → recommend Tunnel; bridge VAPs → recommend Bridge; mixed → recommend Mixed). Operator can override when reviewing the report.
+- **Cluster topology** — pulled from `aos8_get_cluster_state` (Batch 3) plus cluster-profile config (Batch 1).
+- **AirWave presence** — detected from effective-config (`mgmt-server`, `ams-ip`, AMP profile entries).
+- **L3 Mobility usage** — detected from effective-config (`mobility l3-mobility` lines).
+- **HA mode mapping** — derived from cluster topology.
 
-Per VSG §1832-§1872 — *"Checklist for Information Collection"* — the data set differs per source platform.
-#### If source = `aos8` (anchor: VSG §1671-§1873)
+### Stage 1 — Live AOS 8 inventory across the full /md hierarchy (COLLECT-01..04)
 
-##### AOS8 live-mode sub-path — used when Stage -1 announced "AOS8 API mode"
-No CLI paste required. Calls AOS8 tools directly in **four grouped batches** (COLLECT-01..04). On any tool error, fall back per-batch to an exact-CLI paste request for that batch only.
+The skill is in code mode — collection runs as Python orchestration inside the `execute()` sandbox, NOT as a fixed sequence of skill-prescribed tool calls. The pattern below is the goal + data shape; the AI composes the actual calls.
 
-**Batch 1 — MD hierarchy + per-node effective config (COLLECT-01)**
-1. Call `aos8_get_md_hierarchy()`. Expected: node tree `/md`, `/md/<region>`, `/md/<region>/<site>`, `/md/<region>/<site>/<ap-group>`.
-2. For each config object type (`ap_sys_prof`, `virtual_ap`, `ssid_prof`, `aaa_prof`, `aaa_server_group`, `wlan_ssid_profile`, `reg_domain_profile`, `arm_profile`, `dot11a_radio_prof`, `dot11g_radio_prof`), call `aos8_get_effective_config(object_name="<type>", config_path="/md")`. Tool is **object-scoped** — iterate; results feed Stage 3 rule checks.
-3. Call `aos8_show_command(command="show configuration effective detail")` for a text capture.
-*On batch 1 error:* ask operator to run `show configuration node-hierarchy` and `show configuration effective detail <node>` and paste. Continue to Batch 2.
-**Batch 2 — Full AP inventory (COLLECT-02)**
-Call `aos8_get_ap_database()`. Expected: per-AP `model`, `mac`, `serial`, `ip_mode` (DHCP / static), `group`, `ap_name`, `ip` — replaces `show ap database long` (VSG §1740, §1851-§1852). Stage 3 RULES-04 reuses `ip_mode` directly.
-*On batch 2 error:* ask operator to run `show ap database long` and paste. Continue to Batch 3.
-**Batch 3 — Cluster state + running-config + local-user db + inventory + ports (COLLECT-03)**
-1. Call `aos8_get_cluster_state()`. Expected: cluster L2 / L3 status — replaces `show lc-cluster group-membership` (VSG §2399).
-2. Call `aos8_show_command(command="show running-config")`.
-3. Call `aos8_show_command(command="show local-user db")`.
-4. Call `aos8_show_command(command="show inventory")`.
-5. Call `aos8_show_command(command="show port status")` and `aos8_show_command(command="show trunk")`.
-*On batch 3 error:* identify which step(s) failed; ask operator for **only the failed CLI commands** by name. Continue to Batch 4.
-**Batch 4 — Client baseline + BSS/SSID table + active APs + AP wired ports (COLLECT-04)**
-1. Call `aos8_get_clients()`. Expected: aggregate counts (clients-by-SSID, total, users-with-roles) — replaces `show ap association` + `show user-table`.
-2. Call `aos8_get_bss_table()`. Expected: SSID name + AP-broadcasting count + radio band — replaces `show ap essid`.
-3. Call `aos8_get_active_aps()`. Expected: active AP list with channel / TX power / client count — replaces `show ap active`.
-4. For each AP from Batch 2 (or a representative sample), call `aos8_get_ap_wired_ports(ap_name="<ap_name>")`. Tool is **per-AP** — iterate. Replaces `show ap lldp neighbors`.
-*On batch 4 error:* identify which call(s) failed; ask operator to run the failed command(s) and paste. Continue to Stage 2.
+#### COLLECT-01 — Hierarchy walk (mandatory; no `/md`-root-only shortcut)
 
-After all four batches, present a compiled Stage 1 inventory table (AP count, controller list, cluster state, local-user count, SSID count) before Stage 2.
+The biggest historical bug in this skill was Stage 1 collecting only at `/md` root. AOS 8 inheritance does **not** always roll customer-specific config up to root — objects defined at `/md/<region>` or `/md/<region>/<site>` are invisible to a `/md`-only call. Always walk the full hierarchy.
 
-##### AOS8 paste-fallback sub-path — used when Stage -1 was silent (AOS8 unreachable or not configured)
-Use the same 16-command bundle (API path unavailable):
+```python
+# Goal: produce config_by_scope = {scope: {object_type: response, ...}, ...}
+# covering EVERY node in the /md tree.
 
-| # | Where | Command | Purpose (VSG anchor) |
-|---|---|---|---|
-| 1 | Mobility Conductor | `show configuration node-hierarchy` | Plan AOS 10 Site / Site Collection / Device Group structure (§1834-§1835) |
-| 2 | Mobility Conductor | `show configuration committed <node>` (per node from #1) | What's committed at each node (§1847-§1850) |
-| 3 | Mobility Conductor | `show configuration effective detail <node>` (per node from #1) | Resolved/inherited config at each node (§1847-§1850) |
-| 4 | Mobility Conductor | `show ap database long` | AP inventory: model, MAC, serial (§1740, §1851-§1852) |
-| 5 | Mobility Controller (each) | `show ap-group` then `show ap-group <group_name>` per group | AP-group → VAP / RF-profile mapping (§1756-§1761) |
-| 6 | Mobility Controller (each) | `show ap association` and `show user-table` | Active client baseline for post-cutover diff (§1769-§1770) |
-| 7 | Mobility Controller (each) | `show ap lldp neighbors` | Switch / port per AP (cutover troubleshooting reference) (§1787) |
-| 8 | Mobility Controller (each) | `show ap essid` | Active SSID + AP-per-SSID counts (§1796) |
-| 9 | Mobility Controller (each) | `show ap active` | Active AP list + radio statistics (§1806) |
-| 10 | Mobility Controller (each) | `show running-config` | Full config: firmware version, RADIUS server groups, NAS-IP value, VRRP VIP, auth servers (§1815) |
-| 11 | Mobility Controller (each) | `show port status` | Identify active ports (§1881-§1882) |
-| 12 | Mobility Controller (each) | `show trunk` | VLAN/port assignments (§1883-§1884) |
-| 13 | Mobility Controller (each) | `show controller-ip` | Controller management IP + VLAN (§1885-§1886) |
-| 14 | Mobility Controller (each) | `show local-user db` | Local users (need to be re-homed in AOS 10 — VSG §1898-§1899) |
-| 15 | Mobility Controller (each) | `show inventory` | Serial + MAC of controller (§1900-§1901) |
-| 16 | Mobility Controller (each) | `show lc-cluster group-membership` | Cluster L2/L3 status — required pre-flight before single-controller upgrade (§2399) |
+OBJECT_TYPES = [
+    "ap_sys_prof", "virtual_ap", "ssid_prof", "aaa_prof",
+    "aaa_server_group", "wlan_ssid_profile", "reg_domain_profile",
+    "arm_profile", "dot11a_radio_prof", "dot11g_radio_prof",
+    "lc_cluster_profile", "user_role", "ip_access_list",
+    "captive_portal_auth_profile", "dot1x_authentication_profile",
+    "mac_authentication_profile", "rad_server", "tacacs_server",
+    "ldap_server", "internal_db_server",
+]
 
-Operator also captures, if available:
-- AirWave Group + Site structure (VSG §1820-§1827, cross-validation against CLI)
-- Configuration backup (TAR/snapshot) of each Mobility Controller per VSG §2435 — *"Always perform a backup and save a copy of the appliance configuration prior to any upgrade."*
+hierarchy = await call_tool("aos8_get_md_hierarchy", {})
+# Parse the tree; flatten to a list of every scope path:
+#   ["/md", "/md/USE", "/md/USE/dallas-hq", "/md/USE/dallas-hq/floor-3", ...]
+# Walk every node — root, regions, sites, ap-groups.
+scopes = flatten_hierarchy_paths(hierarchy)
 
-#### If source = `aos6` (anchor: VSG §225-§588)
+config_by_scope = {}
+for scope in scopes:
+    config_by_scope[scope] = {}
+    for obj_type in OBJECT_TYPES:
+        try:
+            config_by_scope[scope][obj_type] = await call_tool(
+                "aos8_get_effective_config",
+                {"object_name": obj_type, "config_path": scope},
+            )
+        except Exception as exc:
+            config_by_scope[scope][obj_type] = {"_collection_error": str(exc)}
+```
 
-Use the AOS 8 command set as a baseline; substitute as needed:
+If the hierarchy walk yields zero customer-defined objects across all scopes (only AOS 8 system defaults), Stage 6 should emit verdict **EMPTY-SOURCE** rather than running rule checks against defaults.
 
-- AOS 6 standalone Conductor (no Mobility Conductor): drop the `node-hierarchy` / `committed` / `effective` triplet — use `show running-config` only on the Conductor.
-- AOS 6 Conductor-Member: use the same commands as AOS 8.
-- AOS 6 has additional considerations vs AOS 8: AP Override is **supported** in AOS 6 but not AOS 8 (VSG §422-§426). Look for AP-override stanzas in the running-config.
-- HA pattern naming: AOS 6 has *LMS / Backup LMS, Active-Active, AP Fast Failover* (VSG §410-§411) — different from AOS 8's L2/L3 cluster terminology.
+If `aos8_get_md_hierarchy` fails or returns degraded data (clusters offline), fall back to `config_path="/md"` only and tag the entire collection result with `_partial: "hierarchy unreachable"`. Continue — don't block.
 
-Plus AirWave (per VSG §1818-§1827):
-- Group / Site structure export
-- AP inventory + associated SSIDs
-- Per-AP configuration overrides
+#### COLLECT-02 — AP inventory
 
-#### If source = `iap` (anchor: VSG §603-§932)
+```python
+ap_database = await call_tool("aos8_get_ap_database", {})
+```
 
-| # | Where | Command | Purpose |
-|---|---|---|---|
-| 1 | IAP cluster Virtual Controller | `show running-config` | Full IAP config: cluster + WLANs + RF + VC config |
-| 2 | IAP cluster Virtual Controller | `show aps` | Cluster member list (note which is acting as VC / Conductor AP per VSG §606-§607) |
-| 3 | IAP cluster Virtual Controller | `show clients` | Active client baseline for post-cutover diff |
-| 4 | IAP cluster Virtual Controller | `show network` | SSID list + auth modes + VC-managed (NAT'd) flag per SSID |
-| 5 | IAP cluster Virtual Controller | `show ap-env` | Per-AP environment / overrides (these become device-level overrides in AOS 10) |
-| 6 | IAP cluster Virtual Controller | `show summary` | Cluster state + VC IP |
-| 7 | IAP cluster Virtual Controller | `show ssid-profile <name>` (per SSID from #4) | Per-SSID profile detail (auth, VLAN, security) |
-| 8 | IAP cluster Virtual Controller | `show ap-group` | Cluster-level AP group config |
-| 9 | IAP cluster Virtual Controller | `show audit-trail-log` | Recent config changes (cross-check with operator's expected state) |
-| 10 | Switch attached to APs | LLDP neighbor query (varies per switch vendor — operator's call) | Switch / port per AP for cutover reference |
+If the database is empty (`AP Database: []`), don't gate the audit — record it and continue. An empty AP database means no APs are deployed yet; the migration plan still translates the configured ap-groups, ssid profiles, etc. (those translate regardless of whether APs are present).
 
-Plus, if AirWave is in use — same AirWave exports as AOS 6 / 8.
+#### COLLECT-03 — Cluster + running-config + local users + inventory + ports
 
-### Stage 2 — Parse the pasted bundle
+```python
+cluster_state = await call_tool("aos8_get_cluster_state", {})
+running_config = await call_tool("aos8_show_command", {"command": "show running-config"})
+local_users = await call_tool("aos8_show_command", {"command": "show local-user db"})
+inventory = await call_tool("aos8_show_command", {"command": "show inventory"})
+port_status = await call_tool("aos8_show_command", {"command": "show port status"})
+trunks = await call_tool("aos8_show_command", {"command": "show trunk"})
+```
 
-For each pasted artifact, extract the data points listed below. The audit produces an **inventory table** as part of the report; the parsed values feed the rule checks in Stage 3.
+`cluster_state` may return `{"_global_result": {"status": "1", ...}}` or empty list when no cluster is currently active. **Look for `lc_cluster_profile` rows in `config_by_scope` first** — a cluster *profile* defined at any scope (commonly `/md/<region>` or `/md/<region>/<site>`, NOT `/md` root) is the source of truth even when live cluster membership is empty (controllers offline). Live cluster state is supplementary.
 
-##### AOS8 live-mode sub-path — used when Stage -1 announced "AOS8 API mode"
+#### COLLECT-04 — Client baseline + BSS table + active APs + per-AP wired ports
 
-If AOS8 live mode is active (Stage -1 announced API mode), Stage 1 already collected every AOS8 data point in the table below via the four-batch live-mode sub-path. **Skip paste parsing for AOS8 data points and proceed directly to Stage 3.** The AOS8 extraction table below remains authoritative for the paste-fallback path (used when AOS8 is unreachable, or for AOS6 / IAP source platforms which always use paste).
+```python
+clients = await call_tool("aos8_get_clients", {})
+bss_table = await call_tool("aos8_get_bss_table", {})
+active_aps = await call_tool("aos8_get_active_aps", {})
 
-#### AOS 8 — what to extract from each artifact
+ap_names = [ap["ap_name"] for ap in ap_database.get("AP Database", [])]
+ap_wired_ports = {}
+for ap_name in ap_names:
+    ap_wired_ports[ap_name] = await call_tool(
+        "aos8_get_ap_wired_ports", {"ap_name": ap_name}
+    )
+```
 
-| Artifact | Extract | VSG anchor |
+For empty / offline environments, `clients`, `bss_table`, `active_aps` may be empty or report degraded. Mark live-state findings as `inconclusive` and continue.
+
+#### After Stage 1
+
+Compile and emit a brief inventory summary before Stage 2:
+
+```
+Hierarchy: <N> scopes walked (root + <N-1> sub-nodes)
+Configured objects: <total count> across the hierarchy
+APs in database: <N> (<active>: <N>, offline: <N>)
+Cluster profiles: <names from config_by_scope>; live cluster: <state or "offline">
+Local users: <N>
+SSIDs: <N> ssid profiles, <N> active in BSS table
+```
+
+This summary is shown to the operator BEFORE Stage 2 runs so the operator can sanity-check that the hierarchy walk found what they expect. If the hierarchy walk missed something the operator knows is configured (e.g. customer says *"I have a cluster at /md/ACX but you didn't find it"*), they can intervene before rules fire on incomplete data.
+
+### Stage 2 — Parse the live-collected inventory + auto-derive interview-equivalent inputs
+
+Stage 1 collected raw API responses across the full hierarchy. Stage 2 normalizes those responses into a structured inventory and derives the inputs the old skill used to ask the operator for. **No paste parsing — Stage 1 is API-only.**
+
+#### Normalize the inventory
+
+For each scope in `config_by_scope`, group responses into:
+
+```python
+inventory = {
+    "scopes": [...],                                # /md tree paths
+    "ap_database": [...],                           # one entry per AP
+    "active_aps": [...],                            # subset that are currently up (may be [] if offline)
+    "clients": {...},                               # aggregate per-SSID counts
+    "bss_table": [...],                             # one entry per ESSID broadcast
+    "cluster_profiles": [...],                      # lc_cluster_profile rows (any scope)
+    "live_cluster_state": {...},                    # aos8_get_cluster_state result
+    "ap_groups": [...],                             # virtual_ap and ap_sys_prof
+    "ssid_profiles": [...],
+    "user_roles": [...],
+    "session_acls": [...],
+    "aaa_servers": {radius: [...], tacacs: [...], ldap: [...], internal_db: [...]},
+    "aaa_server_groups": [...],
+    "auth_profiles": {dot1x: [...], mac_auth: [...], captive_portal: [...]},
+    "ap_system_profiles": [...],
+    "rf_profiles": {arm: [...], reg_domain: [...], dot11a: [...], dot11g: [...]},
+    "local_users": [...],
+    "controller_inventory": {serials, macs, mgmt_ips},
+    "controller_firmware_versions": [...],
+    "ports_and_trunks": [...],
+}
+```
+
+Each entry tagged with `source_scope` (which `/md/...` node defined it). The same logical object (e.g. an `ssid_prof` named "CorpNet") may appear at multiple scopes — preserve all instances; do not dedupe.
+
+#### Auto-derive inputs (replaces deleted Stage 0 interview)
+
+The old skill asked the operator 7 questions before proceeding. With the live inventory in hand, derive every one of them:
+
+| Input | Derive from |
+|---|---|
+| **Source platform** | Always `aos8` — the skill's only supported source |
+| **Target SSID forwarding mode** (`tunnel` / `bridge` / `mixed`) | Inspect `forward-mode` in `virtual_ap` rows. All `tunnel` → recommend Tunnel. All `bridge` → recommend Bridge. Mix → recommend Mixed. The recommendation appears in the report; operator can override at any time. |
+| **AirWave in path** | Look in `running_config` for `mgmt-server` / `ams-ip` / `mobility-manager` lines. Present → emit DRIFT finding. |
+| **Cluster topology** (L2 / L3 / standalone) | Inspect `lc_cluster_profile` rows. `controller-l2-only` flag → L2; cross-VLAN members → L3; no cluster profiles → standalone. **Default L2** when ambiguous (per project guidance: L3 is rare). |
+| **L3 Mobility usage** | Look in `running_config` for `mobility l3-mobility` lines. |
+| **HA mode mapping recommendation** | Cluster-topology-derived: L2 cluster → recommend Auto Group; L2 cluster + LMS pattern → recommend Auto Site; standalone → recommend Manual. |
+| **AP-group → forwarding-mode mapping** | Per `virtual_ap` row's `forward-mode`, grouped by `ap-group` reference. Drives mixed-mode finding granularity. |
+
+These derivations feed Stage 3 rules. The **report** explicitly shows the derived value and how it was derived (e.g. *"Target SSID forwarding mode: Tunnel (auto-recommended — 4 of 4 virtual_ap rows have forward-mode=tunnel)"*) so the operator can override with confidence.
+
+#### Cluster-offline tolerance
+
+When `aos8_get_cluster_state()` returns degraded data (clusters offline at audit time), prefer **`lc_cluster_profile` config rows** as the source of truth. Examples:
+
+- Live cluster state empty + `lc_cluster_profile` rows present → cluster IS configured but currently offline; emit *"Cluster `<name>` is configured at scope `<source_scope>` but live cluster membership is empty (members offline at audit time). Static config is parsed normally."*
+- Live cluster state empty + no cluster profiles found at any scope → no cluster configured. Note in inventory; no rules fire.
+
+The audit MUST proceed in either case. Don't refuse to verdict.
+
+### Stage 3 — Apply rules with applicability gates
+
+Rules fall into three buckets:
+
+1. **INVENTORY** — record what's there; never fires as REGRESSION/DRIFT. Includes legacy AOS 8 controller plumbing (LMS-IP, Backup-LMS-IP, AP Fast Failover, cluster topology) that dissolves at migration but informs Act II translation. Drives the report's inventory section, not its findings list.
+2. **Feature-parity findings** — fire as REGRESSION/DRIFT/INFO when the source uses a feature AOS 10 doesn't support or handles differently. **Each rule has an applicability gate** — no rule fires on an empty source surface.
+3. **Orchestration prerequisites** — fire as REGRESSION when the operator can't successfully run the cutover (Central unreachable, GreenLake under-licensed, controllers below firmware floor).
+
+Each finding format: **Severity — Description (VSG §anchor when one exists; else literal `none`) (source: <inventory key>)**.
+
+#### Applicability principle
+
+Before a rule fires, evaluate its `requires` clause. If the gate isn't met, the rule emits **no finding**.
+
+```python
+applicability_gates = {
+    "U2_static_ap_ip": ap_count > 0,
+    "U5_NAD_list":     ap_count > 0 OR new_subnets_planned,
+    "U6_FastConnect":  fastconnect_in_config,
+    "U7_internal_auth_server": local_user_count > 0,
+    "U10_backup":      controller_count > 0,
+    "B/T/M_*":         target_mode_recommended in {bridge, tunnel, mixed},
+    "AirWave_DRIFT":   airwave_in_config,
+    "L3_mobility":     l3_mobility_in_config,
+}
+```
+
+If **all** gates are false (zero APs, zero local users, zero AAA infrastructure, no clusters, no AirWave) → Stage 6 emits **EMPTY-SOURCE** verdict with no rule findings; Act II is still offered (translation plan for whatever defaults exist).
+
+#### INVENTORY rows (record only — do NOT fire as findings)
+
+These describe the source's controller-AP plumbing. Post-migration APs go to Central via TCP 443 — every value below either translates to AOS 10 Central HA mode or vanishes entirely. Each row appears in the inventory table; **none** fire as REGRESSION/DRIFT.
+
+| Row | What | Why inventory-only |
 |---|---|---|
-| `show configuration node-hierarchy` | Hierarchy tree (`/md`, `/md/<region>`, `/md/<region>/<site>`, `/md/<region>/<site>/<ap-group>`) → suggested AOS 10 Sites / Site Collections / Device Groups | §1834 |
-| `show configuration committed <node>` + `show configuration effective detail <node>` | Per-node config keys; flag features in the "doesn't transfer" list (Stage 3) | §1847-§1850 |
-| `show ap database long` | Per-AP: model, MAC, serial, IP, IP-mode (static vs DHCP), AP-group, SSIDs, ap-name → table for the AOS 10 onboarding plan | §1740, §1851-§1852 |
-| `show ap-group <name>` | Per-group: VAP profile name, 802.11 radio profile, ARM profile (replaced by RF Profiles in AOS 10), regulatory domain profile (replaced) | §1855-§1857 |
-| `show ap association` + `show user-table` | Aggregate counts: clients-by-SSID, total-clients, users-with-roles → baseline for post-cutover diff | §1858-§1861 |
-| `show ap lldp neighbors` | Per-AP: switch hostname / port → cutover wiring reference | §1862-§1864 |
-| `show ap essid` | SSID name + AP-broadcasting count per SSID + radio band | §1864-§1865 |
-| `show ap active` | Active AP list with radio stats (channel, TX power, client count) → RF baseline | §1866-§1867 |
-| `show running-config` (controller) | Controller firmware version (must be 8.10.0.12 / 8.12.0.1+ per §1643-§1645); cluster definitions; RADIUS server groups; NAS-IP value; VRRP virtual IP; AP system profiles with LMS IP (must be VRRP VIP, not individual controller IP per §1654-§1656); 802.1X auth servers; captive portal config; user roles + ACLs | §1815 |
-| `show port status` + `show trunk` | Switch-side port status per controller; VLAN trunking → AP-uplink VLAN baseline for switchport-config validation | §1881-§1884 |
-| `show controller-ip` | Controller management IP + VLAN | §1885-§1886 |
-| `show local-user db` | Local user list — these can't move directly to AOS 10 (no Internal Auth Server in AOS 10 per §1134-§1136); operator must plan ClearPass migration | §1898-§1899 |
-| `show inventory` | Controller serial + MAC + model | §1900-§1901 |
-| `show lc-cluster group-membership` | Cluster L2/L3 status; pre-flight blocker if cluster isn't healthy at audit time | §2399 |
+| LMS-IP per `ap_sys_prof` | Record the value + which scope it was defined at + which `ap-group` it's bound to (or "unbound") | APs go to Central post-migration; LMS-IP is legacy controller plumbing |
+| Backup-LMS-IP per `ap_sys_prof` | Same | Same |
+| Cluster topology (L2 / L3 / standalone) per `lc_cluster_profile` | Cluster name, scope, member list, VRRP VIP(s) | Drives target HA mode auto-recommendation |
+| AP Fast Failover config | Record presence/absence | No AOS 10 equivalent — APs reconnect to Central, not via Fast Failover |
+| VRRP VIPs configured | Record values + member controllers | Inputs to disposition matrix; drives hierarchy translation |
 
-#### AOS 6 — extra extraction items (vs AOS 8)
+#### Feature-parity findings (fire only when applicability gate is met)
 
-- **AP Override stanzas in running-config** — per VSG §422-§426, AP Override is supported in AOS 6 but not AOS 8 / not in AOS 10. Each AP-override must map to an AOS 10 device-level override (DRIFT, not REGRESSION; VSG explicitly provides a device-level-override mapping in AOS 10).
-- **HA mode**: scan running-config for *LMS-IP*, *Backup-LMS-IP*, *AP Fast Failover* — map to AOS 10 Auto Group / Auto Site / Manual per VSG §410-§411.
-- **AirWave references**: AOS 6 deployments commonly require SNMP / AMON to AirWave (VSG §312-§313, §285-§287). These are deprecated in AOS 10 — flag the firewall rules / monitoring agent dependencies.
+| # | Rule | Gate | Severity if triggered | Anchor |
+|---|---|---|---|---|
+| F1 | **AAA FastConnect / EAP-Offload in use** — not supported in AOS 10 | `fastconnect_in_config` | REGRESSION | VSG §1137-§1141 |
+| F2 | **Internal Authentication Server in use with local users** — no Internal Auth Server in AOS 10 | `local_user_count > 0` | REGRESSION; operator plans ClearPass / Cloud Auth migration | VSG §1134-§1136 |
+| F3 | **L3 Mobility load-bearing in source design** — eliminated in AOS 10 | `l3_mobility_in_config AND target_mode_recommended in {bridge, mixed}` | REGRESSION (Bridge target) / DRIFT (Tunnel target) | VSG §897-§900 |
+| F4 | **VC-managed (NAT'd) WLANs** depending on controller-side NAT/DHCP — AOS 10 Bridge APs don't provide NAT/DHCP | `vc_managed_wlans_present AND target_mode_recommended in {bridge, mixed}` | REGRESSION | VSG §854-§857 |
+| F5 | **Static AP IPs detected** — AOS 10 requires DHCP | `any_ap_has_static_ip` | REGRESSION | VSG §1232-§1234 |
+| F6 | **AirWave-dependent monitoring** in path (`mgmt-server` / `ams-ip` / AMP profile) — AirWave deprecated | `airwave_in_config` | DRIFT | VSG §312-§313 |
+| F7 | **ARM / 802.11 radio / regulatory-domain profiles in active use** — replaced by RF Profiles in AOS 10 | `arm_or_radio_or_reg_domain_profile_present` | DRIFT — record values for post-cutover comparison | VSG §1163-§1166 |
+| F8 | **ClientMatch tunables** (Band Steering / Sticky / Load Balancing) currently tuned away from defaults — fixed at WLAN Control & Services in Central | `clientmatch_tunables_modified` | DRIFT | VSG §1167-§1169 |
+| F9 | **Captive Portal default certificate** in use | `captive_portal_uses_default_cert` | REGRESSION | VSG §364, §370 |
+| F10 | **Internal management LAN blocks Internet** + cutover requires TCP 443 outbound to Central | `internet_blocked_from_mgmt_lan` | REGRESSION | VSG §315-§317 |
 
-#### IAP — what to extract
+#### Orchestration prerequisite findings (fire regardless of source surface)
 
-| Artifact | Extract | VSG anchor |
-|---|---|---|
-| `show running-config` | VC IP / cluster ID; SSIDs and their security; static-vs-DHCP AP IP; PoE settings; AP group config; RADIUS server config; NAS-IP source (VC IP if Dynamic Radius Proxy enabled per §721-§723) | §603-§669 |
-| `show aps` | Cluster member list; identify which AP is currently acting as VC / Conductor AP | §603-§607 |
-| `show clients` | Active client baseline | §1763-§1770 (analogous to AOS 8) |
-| `show network` | SSIDs + auth modes; flag VC-managed (NAT'd) WLANs — these change behavior in AOS 10 Bridge Mode (no central NAT point per §854-§857, §907-§909) | §641-§645 |
-| `show ap-env` | Per-AP environment overrides → these become device-level overrides in AOS 10 | §735-§739 |
-| `show summary` | Cluster state, VC IP — note that IAP VC is deprecated in AOS 10 (per §752-§756, §1262-§1264); Bridge Mode AOS 10 scales ~4× IAP cluster limits |
-| `show ssid-profile <name>` | Per-SSID profile detail | §641-§645 |
-| `show ap-group` | Cluster-level AP group config | n/a |
-| `show audit-trail-log` | Recent config changes (sanity for the operator's expected baseline) | n/a |
-
-### Stage 3 — Apply VSG-anchored readiness rules
-
-Different rule sets apply based on **source platform** AND **target SSID mode**. The audit walks the rules below and classifies each finding as **REGRESSION** (must fix before migration), **DRIFT** (should address; not blocking), or **INFO** (operator reference).
-
-#### AOS8 live-mode sub-path — rules evaluated from Stage 1 data (used when Stage -1 announced "AOS8 API mode")
-
-When AOS8 live mode is active, RULES-01, RULES-02, and RULES-04 are evaluated directly from the Stage 1 batch data already in context — no re-fetching, no operator paste. RULES-03 result is **pending Stage 4 A11** (ClearPass cross-check). After this sub-path, continue with the universal + AOS6/8 + per-target-mode rule tables below — those apply regardless of source path.
-
-Each finding below uses the format **Severity — Description (VSG §anchor) (source: `tool_call(args)`, Batch N)**.
-
-##### RULES-01 — VRRP VIP for AP system profiles (REGRESSION, VSG §1654-§1657)
-
-From the Batch 1 `aos8_get_effective_config(object_name='ap_sys_prof', config_path='/md')` response, inspect the LMS IP field (and Backup-LMS IP, if present) of each `ap_sys_prof` returned. If the LMS IP matches a controller management IP (any individual managed-device address from `aos8_get_md_hierarchy()` Batch 1) rather than the VRRP virtual IP, emit:
-
-- **REGRESSION** — AP system profile `<profile_name>` LMS IP is `<lms_ip_value>`, which matches an individual controller management IP rather than the VRRP virtual IP. APs will strand on first controller upgrade. (VSG §1654-§1657) (source: `aos8_get_effective_config(object_name='ap_sys_prof', config_path='/md')`, Batch 1)
-
-Reference the field by intent ("the LMS IP field in the `ap_sys_prof` response") — do **not** pin a specific JSON key path; introspect the response structure at runtime. If multiple `ap_sys_prof` objects return, emit one finding per profile with the wrong IP.
-
-*If Batch 1 failed:* RULES-01 cannot be evaluated from live data. Mark as **inconclusive — paste required** and consult any per-batch fallback paste of `show running-config` already supplied. Equivalent paste-mode rule is C2 below.
-
-##### RULES-02 — ARM / radio / regulatory-domain profile detection (DRIFT, VSG §1163-§1166)
-
-From the Batch 1 effective-config results for `arm_profile`, `dot11a_radio_prof`, `dot11g_radio_prof`, and `reg_domain_profile` (each fetched via `aos8_get_effective_config(object_name=<profile_type>, config_path='/md')`), detect presence of any configured object across all four profile types. Empty/absent at every queried path means no DRIFT for that profile type — distinguish "envelope present" from "objects present".
-
-If any of the four profile types has at least one configured object at the queried `/md` root scope, emit:
-
-- **DRIFT** — Active ARM / 802.11 radio / regulatory-domain profiles detected at `/md` root: `<list of profile_type=profile_name pairs>`. ARM (Adaptive Radio Management) is replaced by **RF Profiles** in AOS 10 / Central. AirMatch already exists in AOS 8 and continues in Central — it is not the AOS 10 replacement for ARM. ClientMatch tunables (Band Steering / Sticky / Load Balancing) are no longer adjustable in Central — fixed at WLAN Control & Services. (VSG §1163-§1169) (source: `aos8_get_effective_config(object_name='arm_profile|dot11a_radio_prof|dot11g_radio_prof|reg_domain_profile', config_path='/md')`, Batch 1)
-
-Per-AP-group enumeration is out of scope for this phase — Batch 1 collects at the `/md` root and AOS8 effective config inherits down. Report at the granularity Stage 1 collected.
-
-*If Batch 1 failed:* RULES-02 cannot be evaluated from live data. Mark as **inconclusive — paste required** and consult any pasted `show configuration effective detail` output. Equivalent paste-mode rule is C4 below.
-
-##### RULES-03 — Local user count cross-check (DRIFT) — pending Stage 4 A11
-
-Stage 1 Batch 3 already collected the AOS8 local-user count via `aos8_show_command(command='show local-user db')`. The cross-check against ClearPass executes in **Stage 4 A11** (`clearpass_get_local_users()`) — do **not** call ClearPass twice. Stage 3 emits no RULES-03 finding here; the determination is deferred. See Stage 4 A11 for the dual-source-of-truth comparison.
-
-*If Batch 3 failed:* The AOS8 local-user count is unavailable; A11 will note "AOS8 count unknown — paste of `show local-user db` required for full cross-check".
-
-##### RULES-04 — Static AP IP detection (REGRESSION, VSG §1232-§1234)
-
-From the Batch 2 `aos8_get_ap_database()` response, inspect the `ip_mode` field of each AP entry. For every AP whose `ip_mode` is anything other than DHCP (e.g., `static`), emit one finding:
-
-- **REGRESSION** — AP `<ap_name>` (MAC `<wired_mac>`) has `ip_mode='<value>'` (statically addressed). AOS 10 does not support static AP IPs — APs must be DHCP-addressed before AP convert. (VSG §1232-§1234) (source: `aos8_get_ap_database()`, Batch 2)
-
-If no APs have a non-DHCP `ip_mode`, emit a single INFO confirmation: "AP database shows all APs DHCP-addressed (RULES-04 PASS)."
-
-*If Batch 2 failed:* RULES-04 cannot be evaluated from live data. Mark as **inconclusive — paste required** and consult any pasted `show ap database long` output. Equivalent paste-mode rule is U2 (Universal rules table) below.
-
-#### Universal rules (apply to all source → target combinations)
-
-| # | Check | Severity | Anchor |
+| # | Rule | Severity | Anchor |
 |---|---|---|---|
-| U1 | TCP 443 outbound from AP/controller management to Aruba Central reachable; firewall rules permit Central FQDNs | **REGRESSION** if blocked | VSG §312-§319, §1190-§1193 |
-| U2 | DHCP available for AP IP assignment (static APs are NOT supported on AOS 10) | **REGRESSION** if any AP is statically addressed | VSG §1232-§1234, §475-§477 |
-| U3 | GreenLake account / `workspace_id` configured + Central / AOS 10 subscriptions present | **REGRESSION** if missing | VSG §1619-§1620 |
-| U4 | Central scope tree set up (Sites + Site Collections + Device Groups) for the migration's target sites | **DRIFT** if not pre-created (operator can do at cutover; per VSG §30-§34 this is part of "New Central Readiness") | VSG §30-§34 |
-| U5 | NAD/RADIUS client list on RADIUS server (typically ClearPass) updated for the new source IPs (see per-target-mode rules below for which IPs) | **REGRESSION** if not updated before cutover | VSG §1121-§1141 |
-| U6 | AAA FastConnect (EAP-Offload) **NOT in use** — feature is **not supported in AOS 10** | **REGRESSION** if in use | VSG §1137-§1141, §393-§396, §728-§731 |
-| U7 | Internal Authentication Server **NOT in use** (no Local Auth Server in AOS 10) | **REGRESSION** if in use; operator must plan ClearPass / Cloud Auth | VSG §1134-§1136, §390-§392, §725-§727 |
-| U8 | Cryptographic key distribution flow: in AOS 10, key distribution is managed by Central (VSG §915-§917). Verify that any custom OKC / 802.11r config doesn't depend on AOS 8 controller-managed key distribution | **DRIFT** | VSG §915-§917 |
-| U9 | Round-trip time latency to Central services < 500 ms for global / WAN-served sites | **DRIFT** if WAN-served sites haven't been measured | VSG §919-§920 |
-| U10 | Backup taken of source-platform configuration before cutover | **REGRESSION** if no backup procedure established | VSG §2435 — *"Always perform a backup..."* |
-| U11 | Rollback procedure documented for each cutover stage (controller upgrade, AP convert) | **DRIFT** if not documented | VSG §1624, §2590-§2591 |
+| O1 | **Mobility Conductor firmware** at `8.10.0.12` / `8.12.0.1` or later (required for AOS 10 image push) | REGRESSION if below | VSG §1643-§1649 |
+| O2 | **TCP 443 outbound from AP / controller management to Aruba Central reachable** | REGRESSION if blocked | VSG §312-§319 |
+| O3 | **GreenLake workspace + AOS 10 / Central subscriptions present** | REGRESSION if missing | VSG §1619-§1620 |
+| O4 | **Central scope tree pre-created** (Sites + Site Collections + Device Groups) | DRIFT if not pre-created | VSG §30-§34 |
+| O5 | **Backup procedure documented** for source-platform configuration | DRIFT if not documented | VSG §2435 |
+| O6 | **Rollback procedure documented** for each cutover stage | DRIFT if not documented | VSG §1624, §2590-§2591 |
 
-#### AOS 6 / AOS 8 source — additional rules
+#### Per-target-mode findings (fire only when target_mode_recommended matches)
 
-| # | Check | Severity | Anchor |
+##### When target_mode_recommended = Tunnel (VSG §340-§357, §1102-§1110, §1213-§1227, §1930-§1953)
+
+Applicability gate: `target_mode_recommended == "tunnel" AND ap_count > 0`.
+
+| # | Rule | Severity | Anchor |
 |---|---|---|---|
-| C1 | **AOS 8 controller firmware prerequisite**: AOS 8 controllers must be on `8.10.0.12`, `8.12.0.1`, or later before AOS 10 swap | **REGRESSION** if below | VSG §1643-§1649 |
-| C2 | **AP discovery configured properly**: AP system profiles use VRRP virtual IP (NOT individual controller IP); OR DHCP option 43/60 / DNS aruba-master / ADP working | **REGRESSION** if APs would strand on first controller upgrade | VSG §1651-§1657 |
-| C3 | **AP Override in use** (AOS 6 only — supported in 6, not in 8) | **DRIFT** — replaced by device-level override pattern in AOS 10 | VSG §422-§426 |
-| C4 | **ARM Profiles / Dot11a/g Radio Profiles / Regulatory Domain Profiles in active use** | **DRIFT** — ARM (Adaptive Radio Management) is replaced by **RF Profiles** in AOS 10 / Central (per §412-§415, §1163-§1166). AirMatch already exists in AOS 8 and continues in Central; it is not the AOS 10 ARM replacement. ClientMatch tunables (Band Steering / Sticky / Load Balancing) are no longer adjustable per §416-§418, §1167-§1169 — fixed at Central WLAN Control & Services. | VSG §412-§418, §1163-§1169 |
-| C5 | **Cluster topology mapping**: AOS 8 L2/L3 cluster + LMS/Backup LMS → AOS 10 Auto Group / Auto Site / Manual modes. Operator selected target mode in Stage 0; verify it matches the source pattern's cleanest map. | **INFO** | VSG §1161-§1162, §410-§411 |
-| C6 | **Mobility Conductor configuration scope**: AOS 8 Conductor-Member hierarchy → AOS 10 Site / Collection / Group mapping (planned via `show configuration node-hierarchy` extract) | **INFO** — produce the suggested mapping table | VSG §1529-§1559 |
-| C7 | **AirWave deprecation**: any monitoring tooling that depends on AirWave (SNMP, AMON, syslog targets, scripts) needs replacement before cutover | **DRIFT** | VSG §312-§313, §514-§515 |
-| C8 | **Internal management LAN Internet block**: AOS 6 / AOS 8 deployments commonly block Internet from management LAN; AOS 10 needs outbound TCP 443 to Central from APs (and any tunneled-mode gateway) | **REGRESSION** if currently blocked and not yet permitted | VSG §315-§317, §1067-§1070 |
-| C9 | **Internal AirGroup / Bonjour proxies**: the way mDNS / Bonjour is handled may differ in AOS 10. Operator must validate per-SSID. | **DRIFT** | VSG §641-§645 (datapath patterns) |
-| C10 | **Captive Portal certificate**: replace any default cert before AOS 10 cutover (per VSG §364, §370 — same rule as scope audit) | **REGRESSION** if default cert | VSG §364, §370 |
+| T1 | **NAD source IP changes to Gateway management address**. ClearPass NAD list must include the AOS 10 Gateway management IP(s). | REGRESSION if missing | VSG §1130-§1133 |
+| T2 | **AP switch ports in access mode** (or trunk with native VLAN = AP management VLAN). | REGRESSION if currently misconfigured | VSG §342-§346, §1930-§1953 |
+| T3 | **Tunneled-SSID data VLANs pruned from AP switch ports** | REGRESSION if not pruned | VSG §1213-§1223 |
+| T4 | **VLAN 1 NOT used for tunneled-SSID clients** | REGRESSION if currently configured | VSG §1224-§1227 |
+| T5 | **Gateway cluster sizing** | INFO | VSG §410-§411 |
+| T6 | **Jumbo frames** between APs and Gateway cluster | DRIFT if not enabled | VSG §294-§295 |
 
-#### IAP source — additional rules
+##### When target_mode_recommended = Bridge (VSG §486-§556, §891-§932, §1239-§1336, §1956-§2003)
 
-| # | Check | Severity | Anchor |
+Applicability gate: `target_mode_recommended == "bridge" AND ap_count > 0`.
+
+| # | Rule | Severity | Anchor |
 |---|---|---|---|
-| I1 | **Target mode = Bridge** required for IAP migration (Tunnel target requires standing up new gateway clusters) | **REGRESSION** if operator picked Tunnel | VSG §672-§676 |
-| I2 | **AP cluster size**: AOS 10 Bridge Mode max AP-management subnet `/20`; user VLANs no greater than `/20`; max **500 APs / 5,000 clients** per Bridge Mode roaming domain (current at VSG publication; not hard limits) | **DRIFT** if currently exceeded | VSG §544-§548, §893-§895, §865-§867 |
-| I3 | **L2 adjacency for AP management subnet** (across the roaming domain) | **REGRESSION** if currently routed | VSG §1247-§1248, §494-§495 |
-| I4 | **L2 adjacency for wireless user VLANs** (across roaming domain — AOS 10 eliminates L3 Mobility per VSG §897-§900) | **REGRESSION** if currently routed and L3 Mobility was load-bearing | VSG §897-§900 |
-| I5 | **VC-managed (NAT'd) WLANs**: any SSID with the *Virtual Controller Managed* flag must have NAT + DHCP services moved upstream (L3 switch / firewall / router / Aruba Gateway) before cutover — AOS 10 Bridge Mode APs do **not** provide NAT or DHCP | **REGRESSION** if VC-managed WLANs depend on VC NAT/DHCP and upstream services aren't in place | VSG §641-§645, §854-§857, §907-§909 |
-| I6 | **Dynamic Radius Proxy (DRP)**: deprecated in AOS 10 Bridge Mode (no VC). If currently relied on for RADIUS source-IP consistency, replace with per-AP NAD entries on the RADIUS server | **REGRESSION** if currently relied on | VSG §1262-§1264, §721-§723 |
-| I7 | **Secure PAPI between APs** (UDP 8211): AOS 10 requires Secure PAPI permitted between all APs in the roaming domain (firewall / ACL on the management VLAN must allow) | **REGRESSION** if currently blocked | VSG §902-§905 |
-| I8 | **L3 Mobility deprecation**: if the IAP design currently uses cross-cluster L3 Mobility, AOS 10 doesn't have it. The expanded Bridge Mode roaming domain (~4× IAP) often eliminates the need but must be validated. | **DRIFT** if L3 Mobility was load-bearing | VSG §897-§900, §865-§882 |
-| I9 | **Per-AP environment overrides** (`show ap-env` outputs): each becomes a device-level override in AOS 10. Operator should plan which to keep and which to consolidate into device profiles. | **INFO** | VSG §735-§739 |
-| I10 | **AP discovery method**: IAPs use Unified AP discovery (DHCP option 43/60, ADP multicast, ADP broadcast, DNS aruba-master, IAP VC discovery, AirWave discovery, Activate, SetMeUp). AOS 10 prefers TCP 443 to Central first; falls back to Unified discovery if not in Central / not licensed (per VSG §796-§807). Confirm Central reachability + license assignment before AP convert. | **REGRESSION** if license + reachability gap | VSG §796-§807 |
+| B1 | **NAD source IP changes to individual AP management address**. | REGRESSION if missing | VSG §1259-§1264 |
+| B2 | **AP management subnet L2-adjacent across the roaming domain** | REGRESSION if currently routed | VSG §1247-§1248 |
+| B4 | **AP switch ports in trunk mode** with appropriate data VLANs | REGRESSION if access-mode-only | VSG §1956-§1972 |
+| B5 | **East/west AP-to-AP traffic permitted** (Secure PAPI UDP 8211) | REGRESSION if blocked | VSG §902-§905 |
+| B6 | **Roaming domain scaling within limits**: max 500 APs, 5,000 clients | DRIFT if exceeded | VSG §544-§548 |
+| B7 | **AP management subnet sizing**: max `/20` | DRIFT if exceeded | VSG §544 |
+| B8 | **User VLAN sizing**: max `/20`; consider Tunnel Mode if exceeded | DRIFT if exceeded | VSG §545-§546 |
+| B10 | **QoS prioritization** for AP management traffic | DRIFT if not configured | VSG §537-§538 |
+| B11 | **Authentication latency** target < 500 ms RTT to Central from APs | DRIFT if WAN sites unmeasured | VSG §919-§920 |
 
-#### Per-target-mode rules (apply on top of source rules)
+##### When target_mode_recommended = Mixed (VSG §347-§357, §556-§584, §1102-§1110, §1975-§2003)
 
-##### Target = Tunnel Mode (anchors: VSG §340-§357, §1102-§1110, §1213-§1227, §1930-§1953)
+Applicability gate: `target_mode_recommended == "mixed" AND ap_count > 0`.
 
-| # | Check | Severity | Anchor |
+All Tunnel rules apply to tunneled-mode SSIDs; all Bridge rules apply to bridge-mode SSIDs. Plus:
+
+| # | Rule | Severity | Anchor |
 |---|---|---|---|
-| T1 | **NAD source IP changes to Gateway management address**. ClearPass NAD list must include the AOS 10 Gateway management IP(s). If multiple gateways in cluster, all gateway management IPs. | **REGRESSION** if missing | VSG §1130-§1133, §376-§378 |
-| T2 | **AP switch ports in access mode**, native VLAN = AP management VLAN. Trunk mode is also acceptable but native VLAN must equal access VLAN to handle AP management traffic correctly (per VSG §1936-§1938). | **REGRESSION** if currently trunked with broader allowed-VLAN list when only Tunnel mode is the target | VSG §342-§346, §1930-§1953 |
-| T3 | **Tunneled-SSID data VLANs pruned from AP switch ports** — APs must NOT learn client MAC addresses via the wired interface. Example from VSG §1213-§1223: if SSID `CorpWiFi` places users on VLAN 10, VLAN 10 must NOT be allowed (native or tagged) on the AP-uplink switchport. | **REGRESSION** if not pruned | VSG §1213-§1223 |
-| T4 | **VLAN 1 NOT used for tunneled-SSID clients** — AP uplink VLAN is VLAN 1 by default (cannot be changed currently per VSG §1224-§1227); using VLAN 1 for tunneled clients creates a learning loop. | **REGRESSION** if currently configured | VSG §1224-§1227 |
-| T5 | **Gateway cluster sizing** for Tunnel Mode: confirm the AOS 10 gateway model + cluster mode (Auto Group / Auto Site / Manual) supports the planned client load | **INFO** | VSG §410-§411 |
-| T6 | **Jumbo frame support** between APs and Gateway cluster — recommended for tunneled traffic encapsulation (best practice carryover from AOS 6 / AOS 8 per VSG §294-§295, §1244-§1245) | **DRIFT** if not enabled on the path | VSG §294-§295 |
-| T7 | **Encrypt/Decrypt 802.11 frames** moves to AP (vs at controller in AOS 6/8 Tunnel) per VSG §471-§473, §1228-§1231. AP CPU load consideration. | **INFO** | VSG §471-§473 |
+| M2 | **VLAN segmentation strict**: bridged + tunneled clients cannot share the same VLAN | REGRESSION if reused | VSG §1107 |
+| M3 | **AP switch port = trunk** with native VLAN for AP management + tagged for bridged + pruned tunneled VLANs | REGRESSION if not exact | VSG §1975-§1993 |
+| M4 | **NAD registration per mode**: gateways for tunnel SSIDs, APs for bridge SSIDs | REGRESSION if either set missing | VSG §576-§580 |
+| M5 | **AP management VLAN as native (untagged)** on AP switch ports | DRIFT if not set | VSG §575 |
 
-##### Target = Bridge Mode (anchors: VSG §486-§556, §891-§932, §1239-§1336, §1956-§2003)
+### Stage 4 — Central-side API checks (orchestration prerequisites only)
 
-| # | Check | Severity | Anchor |
+Stage 4 is **trimmed**. The previous version conflated three distinct concerns:
+
+1. **Migration orchestration prerequisites** — Central reachable, GreenLake AP-license capacity covering the source AP count, NAD list extending to new AP subnets. KEPT.
+2. **Translation enrichment** — what Central / ClearPass already has that the disposition matrix should flag for conflict. KEPT, scoped to translation (Stages 7-10), not Stage 6 verdict.
+3. **General platform health** — ClearPass certificate validity, GreenLake subscription enumeration, Central WLAN profile inventory. **MOVED OUT** — these are infrastructure-readiness concerns that belong in `infrastructure-health-check` or a future `central-readiness-audit` skill, not in migration audit.
+
+#### Stage 4a — Migration orchestration prerequisites
+
+| # | Check | Tool | Applicability gate | Severity if failing |
+|---|---|---|---|---|
+| A1 | **Central reachability** | `health(platform="central")` | always | REGRESSION |
+| A2 | **GreenLake AOS subscription capacity** ≥ source AP count | `greenlake_get_workspace()` + `greenlake_get_subscriptions()` | always | REGRESSION if AP count > active AP-license count |
+| A3 | **AP onboarding gap** (source APs not yet in Central) | `central_get_aps()` + `aos8_get_ap_database()` | `ap_count > 0` | INFO — emit gap value as a single integer (no per-AP enumeration) |
+| A4 | **NAD list coverage for new AP subnets** | `clearpass_get_network_devices()` | `ap_count > 0` AND `target_mode_recommended in {bridge, mixed}` AND `is_clearpass_used` | REGRESSION if missing |
+| A5 | **NAD list coverage for cluster gateways/VRRP VIPs** | `clearpass_get_network_devices()` | `cluster_profile_present` AND `is_clearpass_used` | REGRESSION if any cluster VRRP VIP missing from NAD list |
+
+`is_clearpass_used` = the source's `aaa_server_group` references at least one `rad_server` whose host matches a configured ClearPass instance OR the operator runs ClearPass per inventory. If false, A4 / A5 don't fire — the source uses non-ClearPass RADIUS or none at all.
+
+#### Stage 4b — Translation enrichment (feeds Act II disposition matrix)
+
+Findings in this section are NOT used to compute the Stage 6 verdict. They populate the disposition matrix in Stage 8 — when an AOS 8 object collides with a same-named Central object, the disposition row notes the collision and proposes a target name suffix or rename.
+
+| # | Enrichment | Tool | Used by Stage 8 to |
 |---|---|---|---|
-| B1 | **NAD source IP changes to individual AP management address**. ClearPass NAD list must include the AP management subnet (e.g. 10.x.x.0/24) **or** each AP's individual IP. | **REGRESSION** if missing | VSG §1259-§1264, §501-§508, §912-§925 |
-| B2 | **AP management subnet L2-adjacent across the roaming domain** (no L3 separation between APs participating in the same Bridge Mode roaming domain) | **REGRESSION** if currently routed | VSG §1247-§1248, §494-§495 |
-| B3 | **Wireless user VLANs L2-adjacent across roaming domain** (AOS 10 eliminates L3 Mobility per VSG §897-§900; if you had L3 Mobility you must collapse user VLANs to L2 OR move to Tunnel Mode with a Gateway cluster) | **REGRESSION** if currently routed and L3 Mobility was load-bearing | VSG §897-§900 |
-| B4 | **AP switch ports in trunk mode** with appropriate data VLANs (per VSG §1956-§1972 — trunk port with native VLAN for management + tagged VLANs for bridged traffic) | **REGRESSION** if access-mode-only | VSG §1956-§1972 |
-| B5 | **East/west AP-to-AP traffic permitted** (Secure PAPI UDP 8211 between APs in roaming domain) | **REGRESSION** if blocked | VSG §902-§905, §1281-§1287 |
-| B6 | **Roaming domain scaling within limits**: max 500 APs, 5,000 clients per Bridge Mode roaming domain (current at VSG publication) | **DRIFT** if exceeded | VSG §544-§548, §865-§867 |
-| B7 | **AP management subnet sizing**: max `/20` (currently tested + supported per VSG §544) | **DRIFT** if exceeded | VSG §544 |
-| B8 | **User VLAN sizing**: subnet should be no greater than `/20`; greater scale → switch to Tunnel Mode with Gateway cluster | **DRIFT** if exceeded | VSG §545-§546 |
-| B9 | **NAT / DHCP services** for any historically VC-managed WLANs must be relocated upstream (L3 switch / firewall / router / Aruba Gateway) — APs do not provide NAT/DHCP in AOS 10 Bridge Mode | **REGRESSION** if VC-managed WLANs exist and upstream services aren't ready | VSG §854-§857, §907-§909 |
-| B10 | **QoS prioritization** for AP management traffic recommended in dense Bridge Mode deployments | **DRIFT** if not configured | VSG §537-§538, §1287 |
-| B11 | **Authentication latency** target < 500 ms RTT to Central from APs | **DRIFT** if WAN sites haven't been measured | VSG §919-§920 |
+| E1 | Central WLAN-profile name collision check | `central_get_wlan_profiles()` | Tag `wlan_ssid_profile` rows where the AOS 8 ESSID already exists as a Central WLAN profile. |
+| E2 | Central role-name collision check | `central_get_roles()` | Tag `user_role` rows where the AOS 8 role name already exists in Central. |
+| E3 | Central named-VLAN ID collision check | `central_get_named_vlans()` | Tag VLAN rows where the AOS 8 VLAN ID already maps in Central under a different name. |
+| E4 | Central server-group collision check | `central_get_server_groups()` | Tag `aaa_server_group` rows where the same name already exists in Central. |
+| E5 | Per-AP-model AOS 10 firmware recommendation | `central_recommend_firmware()` | Append a "Recommended AOS 10 firmware" column to the inventory's AP-model summary. INFO only — never gates the verdict. |
 
-##### Target = Mixed Mode (anchors: VSG §347-§357, §556-§584, §1102-§1110, §1975-§2003)
+Each enrichment emits **at most one INFO bullet** in the Act I report ("Found N name collisions; see disposition matrix for per-row detail in Act II"). No per-collision bullets in Act I — they belong in Act II.
 
-| # | Check | Severity | Anchor |
-|---|---|---|---|
-| M1 | All Tunnel rules (T1-T7) AND all Bridge rules (B1-B11) apply per-SSID depending on which forwarding mode each SSID uses | various | VSG §1102-§1107 |
-| M2 | **VLAN segmentation strict**: bridged + tunneled clients **cannot** share the same VLAN (VSG §1107). Each SSID gets a dedicated VLAN. | **REGRESSION** if VLAN reuse detected | VSG §1107 |
-| M3 | **AP switch port = trunk** with native VLAN for AP management + tagged VLANs for bridged traffic + tunneled-SSID VLANs **pruned** (per VSG §1975-§1993) | **REGRESSION** if VLAN handling not exact | VSG §1975-§1993 |
-| M4 | **NAD registration per mode**: Tunnel Mode SSIDs require gateway(s) as RADIUS NAD; Bridge Mode SSIDs require all APs as RADIUS NAD (per VSG §576-§580) | **REGRESSION** if either set is missing | VSG §576-§580 |
-| M5 | **AP management VLAN as native (untagged)** on AP switch ports — best practice per VSG §575 | **DRIFT** if not set | VSG §575 |
+#### What's deliberately not in Stage 4 anymore
 
-### Stage 4 — Central-side API checks (no operator paste needed)
-
-Run these in parallel with the parse stage. They use only Central / ClearPass / GreenLake tools — no operator data needed. Each maps to specific MCP tools in the catalog.
-
-#### AOS8 live-mode sub-path — Central enrichment (ENRICH-01..04, used when Stage -1 announced "AOS8 API mode")
-
-When AOS8 live mode is active, the four Central enrichment checks (AP count gap, per-model AOS10 firmware recommendations, SSID conflicts, role/VLAN conflicts) are evaluated using AOS8 Stage 1 batch data already in context plus a small set of Central tool calls — no operator paste, no re-fetching of AOS8 batches. After this sub-path, continue with the A1–A13 Central API checks below; A4 / A7 / A8 / A9 / A13 are superseded by this sub-path's findings when live mode is active.
-
-Each finding below uses the format **Severity — Description. (source: `tool_call(args)`, Batch N where applicable)**.
-
-##### ENRICH-01 — AP count gap (INFO)
-
-From the Batch 2 `aos8_get_ap_database()` response already in context, count total APs (call this `X`). Then call `central_get_aps()` with no filter and count the response (call this `Y`). Compute `Z = X - Y` (Z may be negative if Central reports more — surface that as-is). Emit one finding:
-
-- **INFO** — Source AP count: `X`. Central onboarded: `Y`. Gap: `Z` not yet onboarded. (source: `aos8_get_ap_database()` Batch 2 + `central_get_aps()`)
-
-*If `central_get_aps()` fails:* AP count gap (ENRICH-01) cannot complete from live data. Fall back to A4 in the table below.
-*If Batch 2 was unavailable:* AOS8 AP count is unknown — operator paste of `show ap database long` required for ENRICH-01.
-
-##### ENRICH-02 — Per-model AOS10 firmware recommendation (INFO)
-
-Make **one call**, fleet-wide, no filter: `central_recommend_firmware()`. Central returns a fleet-wide recommendation list already grouped by device model — do NOT iterate per model. Extract the distinct AP `model` values from the Batch 2 `aos8_get_ap_database()` response, then for each distinct model walk the `central_recommend_firmware()` response and pull the recommended AOS10 firmware version for that model. Emit a compact two-column markdown table inline:
-
-| AP Model | Recommended AOS10 Firmware |
-|----------|----------------------------|
-| `<model>` | `<version-from-central>` |
-| `<model>` | `<version-from-central>` |
-
-(source: distinct models from `aos8_get_ap_database()` Batch 2; recommendations from `central_recommend_firmware()`)
-
-If Central's recommendation list omits a model present in the AOS8 fleet, emit one row per missing model with the value `no recommendation returned — verify with Aruba support`. Restrict the table to AP models only — controller firmware is owned by CUTOVER-02 in Stage 5, not by this rule.
-
-*If `central_recommend_firmware()` fails:* per-model firmware recommendation (ENRICH-02) cannot complete. Fall back to A13 in the table below.
-*If Batch 2 was unavailable:* distinct AP models are unknown — operator paste of `show ap database long` required for ENRICH-02.
-
-##### ENRICH-03 — SSID conflict detection (REGRESSION, one finding per conflict)
-
-From the Batch 4 `aos8_get_bss_table()` response already in context, extract the distinct AOS8 SSID names. Call `central_get_wlan_profiles()` with no `ssid` argument to retrieve the full Central WLAN profile list. For every AOS8 SSID name that already appears as a profile in the Central response, emit ONE finding (do not collapse multiple conflicts into a single bullet):
-
-- **REGRESSION** — SSID `"<ssid_name>"` already exists in Central (profile present in `central_get_wlan_profiles()` response). A conflicting SSID name in Central blocks a clean migration. (source: `aos8_get_bss_table()` Batch 4 + `central_get_wlan_profiles()`)
-
-If no AOS8 SSID names match any Central WLAN profile, emit a single INFO bullet: `INFO — No SSID conflicts detected against existing Central WLAN profiles. (source: aos8_get_bss_table() Batch 4 + central_get_wlan_profiles())`.
-
-*If `central_get_wlan_profiles()` fails:* SSID conflict check (ENRICH-03) cannot complete. Fall back to A7 in the table below.
-*If Batch 4 was unavailable:* AOS8 SSID list is unknown — operator paste of `show ap essid` required for ENRICH-03.
-
-##### ENRICH-04 — Role and VLAN conflict detection (REGRESSION, one finding per conflict)
-
-From the Batch 1 `aos8_get_effective_config()` response already in context, extract:
-- distinct user-role names (from `user_role` / `aaa.user_role` objects)
-- distinct named VLAN IDs (from `vlan` / `interface vlan` objects)
-
-Call `central_get_roles()` with no `name` argument and `central_get_named_vlans()` with no `name` argument to retrieve the full Central role list and VLAN list. For every AOS8 role name that already appears in the Central role response, emit ONE finding:
-
-- **REGRESSION** — Role `"<role_name>"` already exists in Central. A conflicting role name in Central blocks a clean migration. (source: `aos8_get_effective_config()` Batch 1 + `central_get_roles()`)
-
-For every AOS8 VLAN ID that already appears as a named VLAN in the Central response, emit ONE finding:
-
-- **REGRESSION** — Named VLAN ID `<vlan_id>` already mapped in Central (existing name: `"<central-vlan-name>"`). A conflicting VLAN ID in Central blocks a clean migration. (source: `aos8_get_effective_config()` Batch 1 + `central_get_named_vlans()`)
-
-If no role names or VLAN IDs collide, emit a single INFO bullet: `INFO — No role or VLAN conflicts detected against existing Central roles / named VLANs. (source: aos8_get_effective_config() Batch 1 + central_get_roles() + central_get_named_vlans())`.
-
-*If `central_get_roles()` fails:* role conflict check cannot complete. Fall back to A8 in the table below.
-*If `central_get_named_vlans()` fails:* VLAN conflict check cannot complete. Fall back to A9 in the table below.
-*If Batch 1 was unavailable:* AOS8 role names / VLAN IDs are unknown — operator paste of `show configuration effective detail` required for ENRICH-04.
-
-After this sub-path, continue with the A1–A13 table below for any checks not superseded by ENRICH-01..04.
-
-| # | Check | Tool | Severity if failing |
-|---|---|---|---|
-| A1 | Central reachability | `health(platform="central")` | **REGRESSION** |
-| A2 | GreenLake workspace + AOS 10 / Central subscriptions | `greenlake_get_workspace()` + `greenlake_get_subscriptions()` | **REGRESSION** if missing AOS 10 / Central subscriptions |
-| A3 | Central scope tree present (Sites + Site Collections if multi-site) | `central_get_scope_tree(view="committed")` | **DRIFT** if minimal — operator can pre-stage during preparation |
-| A4 | APs already onboarded to Central (compare to operator's `show ap database long` count) | `central_get_aps()` | **INFO** — gap = source AP count − Central onboarded count |
-| A5 | ClearPass NAD list includes the planned source-IP delta (per chosen target mode) | `clearpass_get_network_devices()` | **REGRESSION** if missing the new IPs |
-| A6 | ClearPass server-cert NOT default (replace before production cutover) | `clearpass_get_server_certificates()` | **DRIFT** if default cert |
-| A7 | Existing Central WLAN profiles match planned new SSID set (warns if Central already has conflicting profiles) | `central_get_wlan_profiles()` | **INFO** |
-| A8 | Existing Central roles / policies — flag if migration would conflict with existing role names | `central_get_roles()` | **INFO** |
-| A9 | Existing Central named VLANs — surface for operator's reuse-or-create planning | `central_get_named_vlans()` | **INFO** |
-| A10 | Existing Central RADIUS server groups — flag for reuse | `central_get_server_groups()` | **INFO** |
-| A11 | **RULES-03 cross-check** — Compare ClearPass local-user count against the AOS8 local-user count already collected in Stage 1 Batch 3 via `aos8_show_command(command='show local-user db')`. If both counts are non-zero, emit: **DRIFT** — AOS8 local users: `<X>`. ClearPass local users: `<Y>`. Dual-source-of-truth — consolidate to a single auth backend (AOS 10 has no Internal Auth Server per VSG §1134-§1136). (source: `aos8_show_command(command='show local-user db')` Batch 3 + `clearpass_get_local_users()`). If AOS8 Batch 3 was unavailable in this session, note "AOS8 count unknown — paste of `show local-user db` required for full cross-check" alongside the ClearPass count. | `clearpass_get_local_users()` | **DRIFT** if both non-zero |
-| A12 | GreenLake device inventory shows the controllers / APs from the source platform (proves they're licensed and discoverable) | `greenlake_get_devices()` | **INFO** |
-| A13 | Central firmware recommendation engine — what does Central recommend for the AP models in the inventory? | `central_recommend_firmware()` | **INFO** — guides target firmware |
+- **ClearPass server certificate validity** — out of scope. Cert health is a ClearPass operations concern, not a migration predictor.
+- **GreenLake subscription enumeration** — A2 reduces to a single comparison (license capacity vs AP count). The previous skill enumerated 32 of 34 subscriptions one-by-one as theater; the only number that matters is `active_AP_license_count >= source_ap_count`.
+- **Central RADIUS server-group inventory** — moved to E4 (translation enrichment), not a separate finding.
+- **A11 dual-source-of-truth local-user cross-check** — folded into rule F2 (Internal Authentication Server in use). If F2 fires, the report mentions ClearPass as the recommended migration target; no separate Stage 4 entry.
 
 ### Stage 5 — Cutover sequencing + rollback validation
 
-The VSG provides a single-site cutover sequence (VSG §2352-§2576). The audit walks through the operator's plan and validates each phase has prerequisites met. Map operator's cutover plan against:
+The VSG provides a single-site cutover sequence (VSG §2352-§2576). Reuse Stage 1 collected data — do NOT re-fetch except where called out below. Three cutover prerequisites first, then walk the Phase 0–8 sequence.
 
-#### AOS8 live-mode sub-path — cutover prerequisites (CUTOVER-01..03, used when Stage -1 announced "AOS8 API mode")
+#### Cutover prerequisites
 
-When AOS8 live mode is active, three cutover prerequisites — cluster L2-connected health, controller firmware version floor, and pre-cutover AP-count baseline — are evaluated before the operator walks through the Phase 0–8 cutover sequence below. Two checks reuse Stage 1 batch data already in context (no re-fetch); the firmware floor check makes one **fresh** `aos8_show_command(command='show version')` call because controller firmware version is not reliably surfaced by `show inventory` (Batch 3).
+| # | Check | From | Severity |
+|---|---|---|---|
+| C-01 | **Live cluster health** — when `lc_cluster_profile` rows exist (cluster is configured), `aos8_get_cluster_state()` should report `L2-connected`. If degraded, the audit notes it but does NOT block — clusters can be brought to L2-connected before cutover. | `live_cluster_state` from Stage 1 COLLECT-03 | DRIFT if degraded; INFO if L2-connected; INFO with `cluster offline at audit time` note if `lc_cluster_profile` exists but live state empty |
+| C-02 | **Mobility Conductor firmware floor** — running version on Conductor must be `8.10.0.12` / `8.12.0.1` or later (prerequisite for AOS 10 image push). One **fresh** call: `aos8_show_command(command='show version')` (cannot rely on `show inventory` — running firmware not reliably surfaced there). | fresh call in Stage 5 | REGRESSION if below |
+| C-03 | **Pre-cutover AP-count baseline** — record `len(ap_database)` for post-cutover diff. | Stage 1 COLLECT-02 | INFO |
 
-Each finding below uses the format **Severity — Description. (source: `tool_call(args)`, Batch N where applicable) (VSG §anchor when applicable)**.
-
-##### CUTOVER-01 — Live cluster health (REGRESSION on anything other than L2-connected)
-
-From the Batch 3 `aos8_get_cluster_state()` response already in context, inspect the cluster state field. If the state is anything other than `L2-connected`, emit:
-
-- **REGRESSION** — Cluster not L2-connected: `<state>`. Resolve before single-controller upgrade. (source: `aos8_get_cluster_state()`, Batch 3)
-
-If the state is `L2-connected`, emit a single INFO confirmation: `INFO — Cluster L2-connected (CUTOVER-01 PASS). (source: aos8_get_cluster_state(), Batch 3)`.
-
-*If Batch 3 was unavailable:* cluster health (CUTOVER-01) cannot be evaluated from live data. Mark as **inconclusive — paste required** and consult any pasted `show lc-cluster group-membership` output.
-
-##### CUTOVER-02 — Controller firmware floor (REGRESSION below 8.10.0.12 / 8.12.0.1, VSG §1643-§1649)
-
-Make a **fresh** call to `aos8_show_command(command='show version')` here in Stage 5 — do NOT pull firmware from Batch 3 / `show inventory`, which does not reliably include the running OS firmware string. Parse the controller firmware version from the response. Compare against the prerequisite floor: the running version must be at least `8.10.0.12` on the 8.10 train OR at least `8.12.0.1` on the 8.12 train. If the running firmware is below both floors, emit:
-
-- **REGRESSION** — Controller firmware `<running-version>` is below the 8.10.0.12 / 8.12.0.1 prerequisite. Upgrade the controller to a supported floor before AOS 10 migration. (source: `aos8_show_command(command='show version')`) (VSG §1643-§1649)
-
-If the running firmware meets or exceeds the floor, emit a single INFO confirmation: `INFO — Controller firmware <running-version> meets the 8.10.0.12 / 8.12.0.1 prerequisite (CUTOVER-02 PASS). (source: aos8_show_command(command='show version')) (VSG §1643-§1649)`.
-
-*If `aos8_show_command(command='show version')` fails:* firmware floor (CUTOVER-02) cannot be evaluated. Mark as **inconclusive — paste required** and consult any pasted `show version` output.
-
-##### CUTOVER-03 — Pre-cutover AP-count baseline (INFO)
-
-From the Batch 2 `aos8_get_ap_database()` response already in context, count total APs (call this `X`). Emit:
-
-- **INFO** — Pre-cutover AP baseline: `X` APs. (source: `aos8_get_ap_database()`, Batch 2) Use this count for post-cutover diff.
-
-*If Batch 2 was unavailable:* AP-count baseline (CUTOVER-03) cannot be captured from live data. Operator paste of `show ap database long` required for the baseline.
-
-After this sub-path, continue with the Phase 0–8 cutover table below — those steps apply regardless of source path.
+If `lc_cluster_profile` rows are absent (no cluster configured), C-01 doesn't fire and C-02 still runs. C-03 always runs.
 
 | Phase | What VSG specifies | Audit check |
 |---|---|---|
@@ -580,12 +515,10 @@ Promote the readiness-stage hierarchy mapping table (Stage 6 inventory section) 
 | `/md/<region>` | Site Collection | `direct-translate` |
 | `/md/<region>/<site>` | Site | `direct-translate` |
 | `/md/<region>/<site>/<ap-group>` | Device Group | `direct-translate` |
-| IAP cluster (Virtual Controller scope) | Site + Device Group (Bridge Mode only) | `transform` |
-| AOS 6 Conductor-Member (no region tier) | Flat Site list (operator chooses Site Collection grouping or omits) | `operator-driven` |
 
 **Output:** the existing 3-column hierarchy table from the Stage 6 report, **extended to 5 columns**:
 
-| Source AOS node / IAP cluster | Source path | Disposition | Target type (AOS 10) | Target name (operator-named) | Notes |
+| Source AOS node | Source path | Disposition | Target type (AOS 10) | Target name (operator-named) | Notes |
 |---|---|---|---|---|---|
 | `<Mobility Conductor /md>` | `/md` | `drop` | (none) | n/a | Central org root is implicit |
 | `<region>` | `/md/USE` | `direct-translate` | Site Collection | `USE` (or operator override) | grouping |
@@ -603,49 +536,51 @@ Promote the readiness-stage hierarchy mapping table (Stage 6 inventory section) 
 
 ### Stage 8 — Per-object translation matrix (TRANSLATE-02)
 
-For each AOS 8 / AOS 6 / IAP object discovered in Stage 1, emit one row of the disposition matrix. **Reuse Stage 1 batch data already in context** — do NOT re-fetch effective-config or paste blocks.
+For **every AOS 8 object discovered in Stage 1's full hierarchy walk** (regardless of whether it is in active use, assigned, referenced, or orphaned), emit one row of the disposition matrix. **Reuse Stage 1 collected data already in context** — do NOT re-fetch.
+
+**Critical principle (this is the rule, not a guideline):** the customer's running config is the source of truth. Whether something is "in use" today is metadata on the row (`usage_state` column), not a basis for excluding it from the migration plan. Orphaned AAA server groups, unassigned captive portal profiles, AP system profiles configured but not bound to any AP group — every one gets a row.
 
 #### 8.1 — Disposition rules per object type
 
-The VSG **does not** contain per-object translation tables for most object types. The deepest concrete rules live in two worked SSID examples (CorpNet 802.1X at VSG §2127-§2219, OpsNet WPA3-Personal at §2222-§2308) plus the gestural feature-comparison tables (AOS 6 §366-§397, IAP §706-§769, AOS 8 §1121-§1175). Outside those anchors, dispositions for AAA / roles / ACLs / AP profiles are marked `operator-driven` with `vsg-anchor: none` — the skill does not fabricate VSG citations.
+The VSG **does not** contain per-object translation tables for most object types. The deepest concrete rules live in two worked SSID examples (CorpNet 802.1X at VSG §2127-§2219, OpsNet WPA3-Personal at §2222-§2308) plus the gestural feature-comparison table for AOS 8 (§1121-§1175). Outside those anchors, dispositions for AAA / roles / ACLs / AP profiles are marked `operator-driven` with `vsg-anchor: none` — the skill does not fabricate VSG citations.
 
 | Object type | VSG anchor | Disposition guidance |
 |---|---|---|
-| **AAA RADIUS server** (`aaa authentication-server radius`) | §1121-§1141 (AOS 8), §366-§397 (AOS 6), §706-§731 (IAP) | `transform` — IP / port / shared-secret carry over; NAS-IP source must change per target mode (Tunnel = gateway IP; Bridge = AP subnet; Mixed = both). VSG describes the source-IP shift; field-mapping into Central is operator-driven. **Central API gap — no `central_manage_server` tool exists today.** Mark target tool as `[Central API gap — manual UI: Network Services → Servers]`. |
-| **AAA TACACS server** (`aaa authentication-server tacacs`) | (none) | `operator-driven` — VSG has no TACACS translation rule. Emit `OPERATOR-MAP` finding. **Central API gap — no manage tool.** Target tool: `[Central API gap — manual UI]`. |
-| **AAA LDAP server** | (none) | `operator-driven` — VSG silent. **Central API gap.** |
-| **AAA Internal Auth Server** | §391-§392, §725-§727, §1134-§1136 | `drop` — *"Local user authentication service is not supported."* If `local-userdb` has entries, emit `REGRESSION — <N> local users must migrate to ClearPass / Cloud Auth before cutover.` (Already covered by Act I rule U/A; cross-link rather than re-emit.) |
-| **AAA FastConnect / EAP-Offload** | §393-§397, §728-§731, §1137-§1141 | `drop` — *"Not supported."* If active, emit `REGRESSION — AAA FastConnect / EAP-Offload in use; plan ClearPass-only EAP termination.` (Cross-link to Act I rule.) |
+| **AAA RADIUS server** (`rad_server`) | §1121-§1141 | `transform` — IP / port / shared-secret carry over; NAS-IP source must change per target mode (Tunnel = gateway IP; Bridge = AP subnet; Mixed = both). VSG describes the source-IP shift; field-mapping into Central is operator-driven. **Central API gap — no `central_manage_server` tool exists today.** Mark target tool as `[Central API gap — manual UI: Network Services → Servers]`. |
+| **AAA TACACS server** (`tacacs_server`) | (none) | `operator-driven` — VSG has no TACACS translation rule. Emit `OPERATOR-MAP` finding. **Central API gap — no manage tool.** Target tool: `[Central API gap — manual UI]`. |
+| **AAA LDAP server** (`ldap_server`) | (none) | `operator-driven` — VSG silent. **Central API gap.** |
+| **AAA Internal Auth Server** (`internal_db_server`) | §1134-§1136 | `drop` — *"Local user authentication service is not supported."* If `local-userdb` has entries, emit `REGRESSION — <N> local users must migrate to ClearPass / Cloud Auth before cutover.` (Already covered by Act I rule F2; cross-link rather than re-emit.) |
+| **AAA FastConnect / EAP-Offload** | §1137-§1141 | `drop` — *"Not supported."* If active, emit `REGRESSION — AAA FastConnect / EAP-Offload in use; plan ClearPass-only EAP termination.` (Cross-link to Act I rule F1.) |
 | **AAA server-group** (`aaa server-group`) | §2076-§2092 (worked example) | `transform` — group name + ordered server list. **Central API gap — no `central_manage_server_group` tool.** Target tool: `[Central API gap — manual UI: Network Services → Server Groups]`. |
 | **802.1X auth profile** (`aaa authentication dot1x`) | §1121-§1141 + §2159-§2208 (CorpNet 802.1X worked example) | `operator-driven` — folded into WLAN profile creation in Central; ESSID is in the WLAN SSID profile, allowed-bands and VLAN ID are in the VAP (collapsed into the WLAN profile in Central), key-management is in the SSID profile, primary/secondary RADIUS pointers are under authentication servers. No automatic field map; emit `OPERATOR-MAP`. Target tool: `central_manage_wlan_profile` (the auth profile is collapsed into it). |
 | **MAC-auth profile** (`aaa authentication mac`) | (none) | `operator-driven` — VSG silent. Emit `OPERATOR-MAP`. Target tool: `central_manage_wlan_profile` (mac-auth opmodes are flags inside it). |
 | **Captive portal profile** (`aaa authentication captive-portal`) | (none, passing mention only) | `operator-driven` — assigned through a role's `captive-portal` field on `central_manage_role`. Emit `OPERATOR-MAP`. Target tool: `central_manage_role` (captive-portal field). |
-| **User role** (`user-role`) | §766 (IAP), §1173-§1176 (AOS 8 — *"AP Override has been replaced with device-level override"* + supported list) | `transform` — role name + VLAN + ACL + bandwidth-contract + qos + captive-portal + session-timeout map directly. Per-attribute mapping is operator-driven; VSG only confirms roles "are supported." Emit `OPERATOR-MAP` per role. Target tool: `central_manage_role`. |
+| **User role** (`user_role`) | §1173-§1176 (AOS 8 supported-features list) | `transform` — role name + VLAN + ACL + bandwidth-contract + qos + captive-portal + session-timeout map directly. Per-attribute mapping is operator-driven; VSG only confirms roles "are supported." Emit `OPERATOR-MAP` per role. Target tool: `central_manage_role`. |
 | **Session ACL / role ACL** (`ip access-list session ...`) | (none — implied via role) | `transform` — split into Central primitives: `central_manage_net_group` (network-destination aliases referenced by ACL rules) + `central_manage_net_service` (port/protocol service aliases) + `central_manage_role_acl` (the ACL rule list itself). Per-rule mapping is operator-driven; emit `OPERATOR-MAP`. Target tools: `central_manage_net_group`, `central_manage_net_service`, `central_manage_role_acl`. |
 | **AP system profile** (`ap system-profile`) | §1651-§1657 (LMS prerequisite), §412-§415 (regulatory domain replaced) | Mixed: LMS-IP `transform` (must be VRRP VIP, not individual controller IP — already enforced as Act I REGRESSION rule); regulatory-domain-profile `deprecated`; ARM / Dot11a / Dot11g profiles `deprecated` (replaced by RF Profiles in AOS 10); syslog targets `operator-driven` (mapped to Central UI). **Central API gap — no `central_manage_ap_system_profile` tool today.** Target tool: `[Central API gap — manual UI]`. |
 | **WLAN SSID profile** (`wlan ssid-profile`) | §2127-§2219 (CorpNet 802.1X), §2222-§2308 (OpsNet WPA3-Personal) | `direct-translate` — ESSID, opmode, VLAN, forwarding-mode, key-management, RADIUS pointers map to the `central_manage_wlan_profile` payload schema. The two VSG worked examples are the gold-standard reference for field-by-field mapping; emit per-WLAN-profile rows that cite them. Target tool: `central_manage_wlan_profile`. |
 | **VAP profile** (`wlan virtual-ap`) | §2169-§2192 (Allowed bands "in the VAP", VLAN ID "in the VAP") | `transform` — AOS 8 VAP fields collapse INTO the WLAN profile in AOS 10; VAP is not a standalone object. Mark as `transform → folded into WLAN profile`. Target tool: `central_manage_wlan_profile` (collapsed). |
 | **MAC randomization handling** (per-SSID) | (none) | `operator-driven` — flag as a known AOS 10 behavioural difference. VSG does not address. Emit `OPERATOR-MAP`. |
-| **ARM / Dot11a / Dot11g / Regulatory Domain profiles** | §412-§415 (AOS 6), §1163-§1166 (AOS 8) | `deprecated` — ARM is replaced by **RF Profiles** in AOS 10 / Central. AirMatch already exists in AOS 8 and continues in Central — it is not the AOS 10 ARM replacement. Already raised as DRIFT in Act I; emit one summary `drop` row per profile family in the matrix. |
+| **ARM / Dot11a / Dot11g / Regulatory Domain profiles** | §1163-§1166 | `deprecated` — ARM is replaced by **RF Profiles** in AOS 10 / Central. AirMatch already exists in AOS 8 and continues in Central — it is not the AOS 10 ARM replacement. Already raised as DRIFT in Act I; emit one summary `drop` row per profile family in the matrix. |
 | **ClientMatch tunables** | §416-§418, §1167-§1169 | `deprecated` — *"Settings cannot be tuned."* Already raised as DRIFT in Act I; emit one summary `drop` row in the matrix. |
-| **AP Override stanzas** (AOS 6 only) | §422-§426 | `transform` — map to AOS 10 device-level override. Per-stanza operator-driven. Already raised as DRIFT in Act I; emit one row per AP-override stanza found. |
 
 #### 8.2 — Output: the disposition matrix
 
-Emit a **single master table** with one row per legacy object discovered. Columns:
+Emit a **single master table** with one row per legacy object discovered, **including unused / orphaned / unassigned ones**. Columns:
 
-| Source name | Source type | Source scope | Disposition | Target name | Target type | Central tool | VSG anchor | Notes |
-|---|---|---|---|---|---|---|---|---|
+| Source name | Source type | Source scope | Usage state | Disposition | Target name | Target type | Central tool | VSG anchor | Notes |
+|---|---|---|---|---|---|---|---|---|---|
 
 - **Source name** — name as it appears in the source config (`corp-radius-1`, `corp-employee-role`, `corp-ssid-prof`).
-- **Source type** — one of: `aaa-radius-server`, `aaa-tacacs-server`, `aaa-server-group`, `dot1x-profile`, `mac-auth-profile`, `cp-profile`, `user-role`, `session-acl`, `ap-system-profile`, `wlan-ssid-profile`, `vap-profile`, `arm-profile`, `dot11a-radio-prof`, `dot11g-radio-prof`, `reg-domain-profile`, `clientmatch-profile`, `ap-override`.
-- **Source scope** — the `/md/...` node where the object is defined (or `iap-vc` for IAP, `aos6-conductor` for AOS 6).
-- **Disposition** — one of: `direct-translate` / `transform` / `drop` / `deprecated` / `operator-driven` / `inconclusive — paste required`.
-- **Target name** — the AOS 10 / Central object name. For `direct-translate` and `transform` rows, default to source name; the operator may rename. For `drop` / `deprecated`, leave blank or `n/a`. For `operator-driven`, leave blank — the operator names it during execution.
+- **Source type** — one of: `rad_server`, `tacacs_server`, `ldap_server`, `internal_db_server`, `aaa_server_group`, `dot1x_authentication_profile`, `mac_authentication_profile`, `captive_portal_auth_profile`, `user_role`, `ip_access_list`, `ap_sys_prof`, `wlan_ssid_profile`, `virtual_ap`, `arm_profile`, `dot11a_radio_prof`, `dot11g_radio_prof`, `reg_domain_profile`, `lc_cluster_profile`.
+- **Source scope** — the `/md/...` node where the object is defined (e.g. `/md`, `/md/ACX`, `/md/ACX/dallas-hq/floor-3`). Captured during the Stage 1 hierarchy walk; **never assume an object lives at `/md` root**.
+- **Usage state** — one of: `assigned-and-active` (referenced by an ap-group or other object that's currently bound to active devices), `assigned-but-inactive` (referenced but the binding scope has no active devices), `configured-but-unassigned` (defined but not referenced by any other object), `orphaned` (referenced only by objects that are themselves unused). **This is metadata only — never a basis for excluding the row from migration.** Customers regularly migrate unused config because *"unused right now"* is a different statement from *"won't be needed after migration."*
+- **Disposition** — one of: `direct-translate` / `transform` / `drop` / `deprecated` / `operator-driven` / `inconclusive`.
+- **Target name** — the AOS 10 / Central object name. For `direct-translate` / `transform` rows, default to source name (with `_<scope>` suffix when the same name appears at multiple scopes — operator can rename). For `drop` / `deprecated`, leave blank or `n/a`. For `operator-driven`, leave blank.
 - **Target type** — Central object type: `Site Collection` / `Site` / `Device Group` / `WLAN profile` / `Role` / `Role ACL` / `Net group` / `Net service` / `Server` / `Server group` / `(none)` / `(folded into WLAN profile)`.
 - **Central tool** — the `central_manage_*` tool that creates the object, OR the literal string `[Central API gap — manual UI: <area>]` for the three known gaps (servers, server-groups, AP system profiles).
 - **VSG anchor** — `§####-§####` if a real anchor exists. Literal string `none` if no per-object VSG rule exists; do NOT fabricate.
-- **Notes** — one short clause per row (e.g. *"NAS-IP source must change to gateway IP for Tunnel target"*, *"folded into WLAN profile per VSG §2169"*, *"manual UI required: Central API gap"*).
+- **Notes** — one short clause per row (e.g. *"NAS-IP source must change to gateway IP for Tunnel target"*, *"folded into WLAN profile per VSG §2169"*, *"manual UI required: Central API gap"*, *"orphaned in source — operator may choose to skip in target"*).
 
 #### 8.3 — Findings produced
 
@@ -734,35 +669,23 @@ For every Stage 9 step that creates a Central object (i.e. excludes `[Central AP
 
 | Condition | Action |
 |---|---|
-| Operator hasn't picked source platform / target mode / scope / cluster type / HA mode | STOP. Don't proceed without all stage-0 answers. |
-| Operator hasn't pasted the data bundle | Output **PARTIAL** verdict — Central-side checks complete, source-side blocked. List exactly what's needed. |
-| AOS8 live mode AND one or more Stage 1 batches failed | **PARTIAL** — list which AOS8 checks could not run (e.g. "Batch 3 failed: cluster state, local-user db"). For each failed batch, include the exact CLI command(s) the operator must paste manually to complete those data points. All checks that did succeed are still reported. |
-| Source = `iap` AND target mode ≠ `bridge` | **REGRESSION** — IAP migrates to Bridge Mode per VSG §672-§676. Reject the combination; operator must plan a Tunnel Mode migration as a separate gateway-cluster deployment. |
-| AOS 8 controller firmware below `8.10.0.12` / `8.12.0.1` | **REGRESSION** — must upgrade controllers to the prerequisite version before AOS 10 swap (VSG §1643). |
-| Static AP IP addressing detected | **REGRESSION** — AOS 10 requires DHCP for AP IP (VSG §1232, §475). |
-| AAA FastConnect / Internal Auth Server in use | **REGRESSION** — not supported in AOS 10. |
-| AP system profile uses individual controller IP for LMS (not VRRP virtual IP) | **REGRESSION** — APs will strand on first controller upgrade (VSG §1654-§1657). |
-| Tunnel target mode + tunneled-SSID VLAN found on AP switch ports | **REGRESSION** — must prune (VSG §1213-§1223). |
-| Tunnel target mode + VLAN 1 used for tunneled SSID clients | **REGRESSION** — AP uplink default VLAN is VLAN 1 (VSG §1224-§1227). |
-| Bridge target mode + AP management subnet routed (not L2-adjacent) | **REGRESSION** — must collapse before migration (VSG §1247). |
-| Bridge target mode + roaming domain > 500 APs / 5,000 clients | **DRIFT** — exceeds tested scaling; consider segmenting or moving to Tunnel Mode. |
-| Bridge target mode + VC-managed WLANs without upstream NAT/DHCP plan | **REGRESSION** — APs don't provide NAT/DHCP in AOS 10 (VSG §907-§909). |
-| Bridge target mode + Secure PAPI (UDP 8211) blocked between APs | **REGRESSION** — required for AOS 10 Bridge Mode (VSG §902-§905). |
-| Mixed target mode + bridged and tunneled clients sharing a VLAN | **REGRESSION** — different VLANs required (VSG §1107). |
-| ClearPass NAD list missing the new source IPs (Tunnel: gateway IPs; Bridge: AP IPs/subnet) | **REGRESSION** — auth will fail at cutover. |
-| AOS 6 source + AP Override in use | **DRIFT** — plan a device-level-override mapping. |
-| ARM / Dot11a/g / Regulatory Domain profiles in use | **DRIFT** — ARM is replaced by RF Profiles in AOS 10 / Central. Document existing ARM/radio values for post-cutover comparison. |
-| ClientMatch tunables relied on (Band Steering / Sticky / Load Balancing) | **DRIFT** — not adjustable in AOS 10; settings are fixed at Central WLAN Control & Services. |
-| Cluster (AOS 8) currently not L2-connected at audit time | **REGRESSION** — `show lc-cluster group-membership` must report healthy before single-controller upgrade. |
-| Default ClearPass server cert in use | **DRIFT** — replace before production cutover. |
-| Internet block on source-platform management LAN AND not yet permitted to Central FQDNs | **REGRESSION** — TCP 443 to Central required. |
-| L3 Mobility load-bearing in source design AND target = Bridge | **REGRESSION** — AOS 10 eliminates L3 Mobility. Either collapse to L2 roaming domain or pick Tunnel target mode. |
-| WAN-served sites without Central RTT measurement | **DRIFT** — confirm < 500 ms target. |
-| Backup procedure for source-platform configs not documented | **REGRESSION** — required pre-cutover step per VSG §2435. |
-| Rollback plan not documented | **DRIFT** — VSG §2590-§2591 references rollback section in AOS 10 docs. |
-| All REGRESSIONs resolved + DRIFTs noted | **GO**. |
-| Any REGRESSION present | **BLOCKED**. Lead the report with the must-fix list. |
-| Audit incomplete (operator hasn't pasted the bundle yet) | **PARTIAL** — output what's been validated so far + the action list. |
+| AOS 8 not configured on this MCP server (Stage -1 gate fails) | STOP. Skill does not run. Emit the AOS 6 / IAP redirect message. |
+| Operator names AOS 6 or IAP source | STOP. Same redirect. |
+| Stage 1 hierarchy walk completes; zero customer-defined objects across all scopes (only AOS 8 system defaults) | **EMPTY-SOURCE** verdict. Act II is still offered (translation plan for whatever defaults exist) but no rule findings — the source has nothing to migrate. |
+| Stage 1 hierarchy walk fails entirely (`aos8_get_md_hierarchy` errors) | **PARTIAL** — fall back to `/md` root-only collection; emit one INFO bullet listing what the operator should re-run when the controller is reachable. |
+| Stage 1 partial (e.g. cluster state degraded; live-state checks inconclusive) | **PARTIAL** — config-side findings still emit; live-state findings are tagged `inconclusive — clusters offline at audit time`. Do NOT block on cluster-offline. |
+| Any REGRESSION fires (only feature-parity rules F1–F10 and orchestration rules O1–O3 can trigger this) | **BLOCKED**. Lead the report with the must-fix list. |
+| Only DRIFT / INFO findings present, no REGRESSION | **GO**. |
+| Stage 6 verdict gates the Act II gate prompt | BLOCKED → no prompt; GO → standard prompt; PARTIAL → prompt with inconclusive-rows caveat; EMPTY-SOURCE → prompt with "minimal translation plan" caveat. |
+
+**Rules removed from the decision matrix in v2.5.0.1:**
+
+- LMS-IP rules (controller plumbing — moved to inventory; APs go to Central post-cutover, LMS-IP is not migration-predictive).
+- Cluster-not-L2-connected REGRESSION (now DRIFT with cluster-offline tolerance).
+- AOS 6 / IAP-specific gates (out of scope).
+- Stage 0 interview gate ("STOP without all 7 answers" — there is no Stage 0).
+- ClearPass cert default REGRESSION (out of scope — ClearPass cert health is its own concern).
+- Internet-block-from-mgmt-LAN REGRESSION (folded into O2 — TCP 443 reachability check).
 
 ## Output formatting
 
@@ -800,107 +723,99 @@ If you believe a different format would be more legible, the answer is no — th
 
 ```
 > Open the Act I report with this paragraph (plain prose, 2–4 sentences, never a bullet list, never a table). Three elements in order:
->   1. Verdict in bold caps — **GO** / **BLOCKED** / **PARTIAL**.
->   2. Finding counts — exact integers for REGRESSION, DRIFT, INFO. (OPERATOR-MAP findings are part of Act II; do NOT count them in the Act I header.)
->   3. One SE-ready sentence — name the source platform (AOS8 / AOS6 / IAP), AP count, controller count, and the key action a human SE can paste verbatim into a customer email.
+>   1. Verdict in bold caps — **GO** / **BLOCKED** / **PARTIAL** / **EMPTY-SOURCE**.
+>   2. Finding counts — exact integers for REGRESSION, DRIFT, INFO. (OPERATOR-MAP findings are part of Act II; do NOT count them in the Act I header. EMPTY-SOURCE has zero findings.)
+>   3. One SE-ready sentence — AP count, controller count, and the key action a human SE can paste verbatim into a customer email.
 >
-> For PARTIAL verdict caused by AOS8 live-mode batch failure, append: "AOS8 live collection partially succeeded — <N> checks completed; <M> checks require manual CLI paste (see below)."
+> For PARTIAL verdict, append: *"Stage 1 partial — <N> live-state checks were inconclusive (clusters offline at audit time / hierarchy walk degraded). Static config was parsed normally."*
+> For EMPTY-SOURCE verdict, replace the action sentence with: *"Source has only AOS 8 system defaults — no customer-defined objects to migrate. Translation plan in Act II will be minimal."*
 >
 > Template (AI fills the angle-bracket placeholders at runtime; do NOT hard-code values):
 
-**<VERDICT>** — <X> REGRESSION / <Y> DRIFT / <Z> INFO findings. This <source> deployment (<N> APs, <M> controllers) <one plain-English action sentence>. <Optional context sentence — e.g. "Live AOS8 data collection was used for all checks." or PARTIAL note if applicable.>
+**<VERDICT>** — <X> REGRESSION / <Y> DRIFT / <Z> INFO findings. This AOS 8 deployment (<N> APs, <M> controllers, <K> scopes walked) <one plain-English action sentence>. <Optional PARTIAL or EMPTY-SOURCE note if applicable.>
 
-## AOS migration audit — <source: aos6/aos8/iap> → AOS 10 <target: tunnel/bridge/mixed>
+## AOS 8 → AOS 10 migration audit
 **Captured:** <ISO timestamp>
-**Migration scope:** <single-site PoC | multi-site | fleet-wide>
-**Cluster type (AOS 8):** <L2 / L3 / LMS / N/A>
-**Target HA mode (AOS 10):** <Auto Group | Auto Site | Manual>
-**L3 Mobility in source design:** <yes / no>
-**Verdict:** GO / BLOCKED / PARTIAL
+**Target SSID forwarding mode (auto-recommended):** <tunnel | bridge | mixed> — derived from <X virtual_ap rows: forward-mode breakdown>. Operator can override.
+**Cluster topology (auto-detected):** <L2 cluster <name> at <scope> | L3 cluster | standalone | offline-at-audit-time>
+**Target HA mode (auto-recommended):** <Auto Group | Auto Site | Manual> — derived from cluster topology
+**L3 Mobility detected in source:** <yes / no>
+**AirWave detected in source:** <yes / no>
+**Verdict:** GO / BLOCKED / PARTIAL / EMPTY-SOURCE
 
-### Source-platform inventory (parsed from operator paste)
-- Mobility Conductor / VC firmware: <version>
+### Source inventory (live AOS 8 collection — full /md hierarchy walk)
+- Hierarchy: <K> scopes walked (root + <K-1> sub-nodes)
+- Mobility Conductor firmware: <version>
 - Mobility Controller(s) / cluster member count: <N>
-- AP count: <N> (models: <table>)
-- AP IP addressing: <DHCP / static / mixed>
+- AP count: <N> (models: <table>; static IPs: <Y>; DHCP: <N>)
 - Active SSIDs: <list with mode + VLAN>
-- Active client baseline: <N total, breakdown per SSID>
-- Local users (`show local-user db`): <count> — must migrate to ClearPass / Cloud Auth
+- Active client baseline: <N total, breakdown per SSID> (or "live-state inconclusive" if clusters offline)
+- Local users: <count>
 - AP groups: <count + names>
-- Configuration nodes: <count> (suggested AOS 10 mapping below)
-- Cluster L2/L3 status (AOS 8): <healthy / unhealthy>
-- AP system profile LMS IP: <VRRP VIP / individual controller IP>
-- AP Override stanzas (AOS 6): <count if applicable>
+- Configuration nodes: <K> (suggested AOS 10 mapping below)
+- Cluster L2/L3 status: <state> (or "configured but offline at audit time" if `lc_cluster_profile` rows present + live cluster empty)
+- AP system profile LMS-IPs (inventory only — not a finding): <list of value, scope, ap-group binding>
 - AirWave in path: <yes / no>
 
 ### Target-side state (Central API)
 - Central reachable: ok / degraded
 - GreenLake workspace_id: <value>
-- AOS 10 / Central subscriptions: present / missing (subscription details)
+- AOS 10 / Central subscriptions: AP-license capacity = <N>; source AP count = <M> (sufficient | INSUFFICIENT)
 - Central scope tree: <site count> sites, <collection count> collections, <device-group count> device groups
 - APs already onboarded to Central: <N> (vs <M> in source — gap = <M-N>)
-- ClearPass NAD list source-IP coverage: <complete | missing X.Y.Z entries>
-- ClearPass server cert: default / replaced
-- Central existing WLAN profiles that conflict with source SSIDs: <list>
-- Central existing roles that conflict: <list>
-- Central named VLANs available for reuse: <list>
+- ClearPass NAD list coverage for new AP/Gateway IPs: <complete | missing X.Y.Z entries> (only present when ClearPass is in use AND target mode requires new NADs)
+- Central name collisions detected (translation enrichment): <count, see Act II disposition matrix>
 
 ### Suggested AOS 10 hierarchy mapping
-| Source AOS node / IAP cluster | Suggested AOS 10 placement | Notes |
+| Source AOS node | Suggested AOS 10 placement | Notes |
 |---|---|---|
 | <Mobility Conductor /md> | (root, not represented in AOS 10) | n/a |
 | <md/<region>> | Site Collection: <name> | grouping |
 | <md/<region>/<site>> | Site: <name> | one Site per discrete physical location |
 | <md/<region>/<site>/<ap-group>> | Device Group: <name> | per-function device grouping |
-| <IAP cluster> | Site: <name> + Device Group: <name> | IAP cluster collapses to one Site (Bridge Mode) |
 | ... | ... | ... |
 
 ### REGRESSION findings (must fix before migration)
-- **AOS 8 controller firmware below requirement**: <controllers + their version>. Required: 8.10.0.12 or 8.12.0.1+. (VSG §1643)
-- **Static AP IP detected**: <list>. Convert to DHCP. (VSG §1232)
-- **AAA FastConnect (EAP-Offload) in use**: <auth profiles using it>. Plan ClearPass-only termination. (VSG §1137)
-- **Internal Auth Server in use**: <user count>. Migrate to ClearPass / Cloud Auth. (VSG §1134)
-- **AP system profile uses individual controller IP for LMS**: APs will strand on first controller upgrade. Switch to VRRP VIP. (VSG §1654-§1657)
-- **TCP 443 to Central blocked from <subnet>**: required for AOS 10 management. (VSG §312-§319)
-- **Tunneled-SSID VLAN <X> present on AP switch port for SSID `<name>`**: must prune. (VSG §1213-§1223) [Tunnel target only]
-- **VLAN 1 used for tunneled-SSID clients**: AP uplink default; choose another VLAN. (VSG §1224) [Tunnel target only]
-- **AP management subnet routed (not L2-adjacent)**: required L2 for Bridge / IAP target. (VSG §1247)
-- **Wireless user VLANs routed (L3-separated)** AND L3 Mobility was load-bearing: AOS 10 eliminates L3 Mobility. (VSG §897-§900) [Bridge target only]
-- **Secure PAPI (UDP 8211) blocked between APs**: required for AOS 10 Bridge Mode roaming. (VSG §902-§905) [Bridge / Mixed target only]
-- **ClearPass NAD list missing**: <list of expected new source IPs>. Will auth-fail at cutover. (VSG §1130)
-- **AP cluster size or roaming-domain scaling exceeds tested limits**: <N> APs / <M> clients. (VSG §544-§548) [Bridge target only]
-- **VC-managed (NAT'd) WLANs without upstream NAT/DHCP plan**: <list>. (VSG §907-§909) [IAP source]
-- **Mixed Mode + bridged/tunneled VLAN reuse**: <list>. (VSG §1107) [Mixed target only]
-- **Cluster not L2-connected at audit time** (AOS 8): `show lc-cluster group-membership` reports unhealthy. Cannot proceed safely.
-- **Backup procedure not documented**: VSG §2435 requires backup before any upgrade.
-- **Default ClearPass server cert in use**: replace before cutover.
+Findings only fire when their applicability gate is met (see Stage 3). Possible REGRESSIONs include:
+- **Mobility Conductor firmware below 8.10.0.12 / 8.12.0.1**: <conductor + running version>. (O1, VSG §1643)
+- **TCP 443 to Central blocked from <subnet>**: required for AOS 10 management. (O2, VSG §312-§319)
+- **GreenLake AP-license capacity insufficient**: source has <M> APs; GreenLake reports <N> active AP licenses. (O3, VSG §1619-§1620)
+- **Static AP IP detected**: <list>. Convert to DHCP. (F5, VSG §1232)
+- **AAA FastConnect (EAP-Offload) in use**: <auth profiles using it>. Plan ClearPass-only termination. (F1, VSG §1137)
+- **Internal Auth Server in use with local users**: <user count>. Migrate to ClearPass / Cloud Auth. (F2, VSG §1134)
+- **L3 Mobility load-bearing AND target = Bridge**: AOS 10 eliminates L3 Mobility. (F3, VSG §897-§900)
+- **VC-managed (NAT'd) WLANs without upstream NAT/DHCP plan**: APs don't provide NAT/DHCP in AOS 10 Bridge. (F4, VSG §854-§857)
+- **Captive Portal default certificate in use**: replace before cutover. (F9, VSG §364)
+- **Internal management LAN blocks Internet**: TCP 443 to Central required. (F10, VSG §315-§317)
+- **Tunneled-SSID VLAN present on AP switch port** [Tunnel target]: prune. (T3)
+- **VLAN 1 used for tunneled-SSID clients** [Tunnel target]. (T4)
+- **AP management subnet routed (not L2)** [Bridge / Mixed target]. (B2)
+- **AP switch ports access-mode-only** [Bridge target]: should be trunk. (B4)
+- **Secure PAPI (UDP 8211) blocked between APs** [Bridge target]. (B5)
+- **Mixed Mode + bridged/tunneled VLAN reuse** [Mixed target]. (M2)
 - (or "No REGRESSION findings.")
 
 ### DRIFT findings (should address; not blocking)
-- **AP Override in use** (AOS 6): map to device-level overrides. (VSG §422)
-- **ARM / Dot11a/g / Regulatory Domain profiles in use**: ARM is replaced by **RF Profiles** in AOS 10 / Central. AirMatch already exists in AOS 8 and continues in Central — it is not the AOS 10 ARM replacement. Document existing values for post-cutover comparison. (VSG §1163)
-- **ClientMatch tunables relied on**: not adjustable in AOS 10. (VSG §1167)
-- **AirWave in path**: any monitoring tooling that depends on AirWave needs replacement. (VSG §312)
-- **Central scope tree minimal** (no Site Collections): pre-create before migration day.
-- **Roaming domain near scaling limit**: 480/500 APs or 4800/5000 clients.
-- **Jumbo frames not enabled** between APs and Gateway cluster (Tunnel target).
-- **No RTT measurement to Central** for WAN-served sites: confirm < 500 ms.
-- **Local users present on both source platform AND ClearPass**: dual source-of-truth.
-- **L3 Mobility load-bearing** AND target = Bridge: confirm Bridge Mode roaming domain consolidates.
-- **Rollback plan not documented**: reference VSG §2590-§2591.
+- **AirWave in path**: monitoring tooling that depends on AirWave needs replacement. (F6, VSG §312)
+- **ARM / Dot11a/g / Regulatory Domain profiles in use**: ARM is replaced by **RF Profiles** in AOS 10 / Central. AirMatch already exists in AOS 8 and continues in Central — it is not the AOS 10 ARM replacement. Document existing values for post-cutover comparison. (F7, VSG §1163)
+- **ClientMatch tunables relied on**: not adjustable in AOS 10. (F8, VSG §1167)
+- **Central scope tree minimal** (no Site Collections): pre-create before migration day. (O4)
+- **Backup procedure not documented**: pre-cutover step. (O5, VSG §2435)
+- **Rollback plan not documented**: reference VSG §2590-§2591. (O6)
+- **Cluster degraded at audit time** (cluster profile present + live members offline): note for cutover prerequisites. (C-01)
+- **Roaming domain near scaling limit**: 480/500 APs or 4800/5000 clients. (B6)
+- **Jumbo frames not enabled** between APs and Gateway cluster (Tunnel target). (T6)
+- **No RTT measurement to Central** for WAN-served sites: confirm < 500 ms. (B11)
 - (or "No DRIFT findings.")
 
 ### INFO findings (operational reference)
-- **Cluster topology mapping** (AOS 8 → AOS 10): <existing L2/L3/LMS pattern> → recommended <Auto Group / Auto Site / Manual> per VSG §1161.
-- **AP-to-switch wiring reference** (from `show ap lldp neighbors`): <table for cutover troubleshooting>.
-- **Active client baseline**: <N> total, <M> per SSID — for post-cutover diff.
-- **AP-per-SSID counts** (from `show ap essid`): <table>.
-- **AP RF baseline** (from `show ap active`): channel, TX power, client count per AP — for post-cutover comparison.
-- **Per-AP environment overrides** (IAP — `show ap-env`): <table> — these become device-level overrides in AOS 10.
-- **APs already onboarded to Central**: <N> (gap = <M-N>).
+- **AP onboarding gap**: <N> source APs not yet in Central. (A3)
+- **AP-per-SSID counts**: <table> — baseline for post-cutover diff.
+- **Active client baseline**: <N> total, breakdown per SSID — for post-cutover diff (or "live-state inconclusive — clusters offline at audit time").
+- **AP RF baseline**: channel, TX power, client count per AP — for post-cutover comparison.
+- **Cluster topology** (auto-detected): <L2 cluster / L3 cluster / standalone / offline> at scope <X> → recommended target HA mode <Y>.
+- **Central name collisions** (translation enrichment): <N> collisions detected; full per-row detail appears in Act II disposition matrix.
 - **Central-recommended firmware** for the AP models in inventory: <model → version table>.
-- **Central existing roles / VLANs / WLAN profiles** that can be reused: <lists>.
-- **Encrypt/Decrypt 802.11 frames** moves to AP in AOS 10: AP CPU load consideration. (VSG §471, §1228)
 
 ### Suggested cutover sequence (per VSG §2352-§2576)
 
@@ -921,7 +836,7 @@ If you believe a different format would be more legible, the answer is no — th
 2. Pre-stage Central scope tree to match the suggested hierarchy mapping.
 3. Update ClearPass NAD list with the new source IPs (Tunnel: gateway IPs; Bridge: AP IPs/subnet; Mixed: both sets).
 4. Run controller firmware upgrade to meet prerequisite (AOS 8 only).
-5. Switch AP system profiles from individual controller IP to VRRP virtual IP (AOS 8 / AOS 6).
+5. (Optional, for legacy controller plumbing) — confirm AP system profile LMS-IPs reference VRRP VIPs; this matters only if you choose to keep APs on AOS 8 alongside the migration. Post-cutover, APs go to Central via TCP 443 and LMS-IP becomes irrelevant.
 6. Configure AP switch ports per target mode (per VSG §1924-§2034).
 7. Take configuration backup of every Mobility Controller / Conductor / VC.
 8. Document rollback procedure (per VSG §2590-§2591).
@@ -962,12 +877,13 @@ Verdict: PARTIAL — <N> Stage-1 collection items were inconclusive. Translation
 
 **Act II — translation plan.** <D> direct-translate / <T> transform / <X> drop / <P> deprecated / <O> operator-driven / <I> inconclusive rows produced. <Optional Central-API-gap sentence.> <Optional one-line cross-reference to the Act II findings count, e.g. "<O+gap-count> OPERATOR-MAP findings require manual mapping decisions — see findings list below.">
 
-## AOS migration translation plan — <source: aos6/aos8/iap> → AOS 10 <target: tunnel/bridge/mixed>
+## AOS 8 → AOS 10 translation plan
 **Captured:** <ISO timestamp>
 **Reuses Act I context captured at:** <ISO timestamp from Act I report>
+**Target SSID forwarding mode:** <tunnel | bridge | mixed> (Act-I-recommended; operator confirmed/overrode)
 
 ### Hierarchy translation (Stage 7)
-| Source AOS node / IAP cluster | Source path | Disposition | Target type (AOS 10) | Target name | Notes |
+| Source AOS node | Source path | Disposition | Target type (AOS 10) | Target name | Notes |
 |---|---|---|---|---|---|
 | <Mobility Conductor /md> | `/md` | drop | (none) | n/a | Central org root is implicit |
 | <region> | `/md/<region>` | direct-translate | Site Collection | <name> | grouping |
@@ -976,13 +892,15 @@ Verdict: PARTIAL — <N> Stage-1 collection items were inconclusive. Translation
 | ... | ... | ... | ... | ... | ... |
 
 ### Per-object disposition matrix (Stage 8)
-| Source name | Source type | Source scope | Disposition | Target name | Target type | Central tool | VSG anchor | Notes |
-|---|---|---|---|---|---|---|---|---|
-| corp-radius-1 | aaa-radius-server | /md | transform | corp-radius-1 | Server | [Central API gap — manual UI: Network Services → Servers] | §1121 | NAS-IP source must change to gateway IP for Tunnel target |
-| corp-employee | user-role | /md | transform | corp-employee | Role | central_manage_role | §1173 | per-attribute mapping required (VLAN, ACL list, captive-portal, session-timeout) |
-| corp-ssid-prof | wlan-ssid-profile | /md | direct-translate | corp-ssid-prof | WLAN profile | central_manage_wlan_profile | §2127-§2219 | direct field map per CorpNet 802.1X worked example |
-| arm-default | arm-profile | /md | deprecated | n/a | (none) | (none) | §1163 | Replaced by RF Profiles in AOS 10 |
-| ... | ... | ... | ... | ... | ... | ... | ... | ... |
+| Source name | Source type | Source scope | Usage state | Disposition | Target name | Target type | Central tool | VSG anchor | Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| corp-radius-1 | rad_server | /md/ACX | assigned-and-active | transform | corp-radius-1 | Server | [Central API gap — manual UI: Network Services → Servers] | §1121 | NAS-IP source must change to gateway IP for Tunnel target |
+| CPPM-PUB-ONLY | aaa_server_group | /md/ACX | configured-but-unassigned | transform | CPPM-PUB-ONLY | Server group | [Central API gap — manual UI: Network Services → Server Groups] | §2076 | Orphan in source — operator may choose to skip |
+| corp-employee | user_role | /md/ACX | assigned-and-active | transform | corp-employee | Role | central_manage_role | §1173 | per-attribute mapping required (VLAN, ACL list, captive-portal, session-timeout) |
+| ACX_apsys_ui | ap_sys_prof | /md/ACX | configured-but-unassigned | transform | ACX_apsys_ui | (none — folded into Device Group config) | [Central API gap — manual UI] | §1651 | Profile not bound to any active ap-group, but still translates per principle |
+| corp-ssid-prof | wlan_ssid_profile | /md/ACX | assigned-and-active | direct-translate | corp-ssid-prof | WLAN profile | central_manage_wlan_profile | §2127-§2219 | direct field map per CorpNet 802.1X worked example |
+| arm-default | arm_profile | /md | configured-but-unassigned | deprecated | n/a | (none) | (none) | §1163 | Replaced by RF Profiles in AOS 10 |
+| ... | ... | ... | ... | ... | ... | ... | ... | ... | ... |
 
 ### OPERATOR-MAP findings (manual mapping work items)
 - **OPERATOR-MAP** — User role 'corp-employee' requires per-attribute mapping. Set role's VLAN, ACL list, captive-portal, session-timeout in the Central role payload. (VSG §1173) (source: aos8_get_effective_config(object_name='user_role', config_path='/md'), Batch 1)
@@ -1029,11 +947,10 @@ Verdict: PARTIAL — <N> Stage-1 collection items were inconclusive. Translation
 
 ## Example queries that should trigger this skill
 
-> "AOS 8 to AOS 10 migration readiness"
+> "AOS 8 to AOS 10 migration"
+> "AOS 8 migration to Central"
 > "am I ready to migrate from AOS 8 to AOS 10?"
-> "audit my AOS 6 environment for AOS 10 migration"
-> "Instant AP to AOS 10 migration"
-> "IAP to Bridge Mode migration audit"
+> "audit my AOS 8 environment for AOS 10 migration"
 > "migration readiness check"
 > "validate my migration plan"
 > "what do I need before AOS 10 cutover"
@@ -1044,7 +961,6 @@ Verdict: PARTIAL — <N> Stage-1 collection items were inconclusive. Translation
 > "AirWave deprecation impact for AOS 10"
 > "L3 Mobility migration to AOS 10"
 > "translate AOS 8 config to AOS 10"
-> "translate Instant AP config to AOS 10"
 > "AOS 10 config mapping"
 > "AOS 8 to Central object mapping"
 > "build me an AOS 10 migration plan"

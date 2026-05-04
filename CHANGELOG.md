@@ -5,6 +5,56 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0.1] - 2026-05-04
+
+**Eight-item cleanup pass on the `aos-migration` skill driven by operator transcripts.** Drops AOS 6 and Instant AP support, deletes the Stage 0 operator interview, replaces controller-plumbing REGRESSION rules with inventory-only entries, adds applicability gates so empty environments don't generate spurious findings, introduces an `EMPTY-SOURCE` verdict, makes Stage 1 walk the full `/md` hierarchy in code-mode orchestration, and adds a `usage_state` column to the disposition matrix so unused/orphaned config still gets translated.
+
+### Why
+
+Three operator transcripts surfaced overlapping issues:
+
+1. The skill was generating four pages of AI reasoning to converge on **BLOCKED** for an environment with **zero APs** — rule logic that made sense for a populated production migration produced false positives against empty/lab deployments.
+2. The AI was getting hung up on `lms-ip: 192.168.120.1` when source clusters were offline. LMS-IP is controller plumbing that dissolves at migration (APs go to Central, not to controllers); flagging it as REGRESSION is technically correct under the old rule set but operationally meaningless.
+3. The Stage 1 collection at `/md` root only — silently missing customer config defined at `/md/<region>` or below. The AI in one session discovered this organically by widening the scope manually; the skill should have done it by design.
+
+The user's framing was sharp: *"It should never assume configuration shouldn't be migrated just because it isn't used."* That's now a design principle encoded in Stage 8.
+
+### Eight changes
+
+1. **Delete Stage 0 interview entirely.** No operator questions. The skill detects AOS 8 reachability via `health()` and derives every input from collected config (target SSID forwarding mode auto-recommended from `forward-mode` in `virtual_ap` rows; cluster topology from `lc_cluster_profile` + `aos8_get_cluster_state`; AirWave presence from config grep; L3 Mobility from effective-config). Operator overrides any auto-derived value when reviewing the report.
+2. **Delete AOS 6 + Instant AP support.** Skill is AOS 8 → AOS 10 only. AOS 6 has a different migration path; IAP customers usually flow through classic Central. Operator-facing redirect message at Stage -1 if either is named.
+3. **Stage 1 hierarchy walk in code-mode orchestration.** The skill now describes a Python pattern the AI executes inside `mcp__hpe-networking__execute`: walk every node in `aos8_get_md_hierarchy()`, query effective-config per object type per scope, aggregate. No new tools needed — this is pure orchestration in code mode. Closes the silent under-collection bug.
+4. **Reframe rules: inventory vs feature-parity vs orchestration prerequisite.** Controller-plumbing rules (LMS-IP, Backup-LMS-IP, AP Fast Failover, cluster L2/L3 connectivity, VRRP VIP placement) are now **inventory rows** — they appear in the report's inventory section and inform Act II translation, but do NOT fire as REGRESSION/DRIFT. Real REGRESSION rules are limited to **feature-parity gaps** (Internal Auth Server, AAA FastConnect, L3 Mobility, VC-managed WLANs, static AP IPs, AirWave dependency, default Captive Portal cert) and **orchestration prerequisites** (controller firmware floor, Central reachable, GreenLake AP-license capacity).
+5. **Applicability gates on every rule.** Each rule has a `requires:` clause. Rules don't fire on empty source surfaces (zero APs → no Static-AP-IP rule fires; zero local users → no Internal-Auth-Server REGRESSION; etc.). Eliminates the false-positive cascade against bare deployments.
+6. **`EMPTY-SOURCE` verdict** for environments with zero customer-defined objects across all `/md` scopes. Skill stops emitting REGRESSION for hypothetical scenarios and acknowledges *"source has only AOS 8 system defaults — no migration work required."* Act II is still offered (translation plan for whatever defaults exist).
+7. **`usage_state` column on the disposition matrix.** Every configured object gets a row regardless of whether it's `assigned-and-active` / `configured-but-unassigned` / `orphaned`. The customer's running config is the source of truth; whether something is in use today is metadata, not a basis for excluding it from migration.
+8. **Cluster-offline tolerance.** When `aos8_get_cluster_state()` returns degraded data (clusters offline at audit time), prefer `lc_cluster_profile` config rows as the source of truth. Rules that need live state mark `inconclusive`. Audit always proceeds — never blocks on cluster-offline.
+
+### Stage 4 trim
+
+Translated the previous 13-row Central-side check table into:
+- **Stage 4a — Migration orchestration prerequisites** (5 checks): Central reachable, GreenLake AP-license capacity ≥ source AP count, AP onboarding gap, NAD list coverage for new AP subnets (gated), NAD list coverage for cluster gateways/VRRP VIPs (gated).
+- **Stage 4b — Translation enrichment for Act II** (5 enrichments): WLAN-profile name collisions, role-name collisions, named-VLAN ID collisions, server-group collisions, per-AP-model AOS 10 firmware recommendation. These don't gate the verdict — they tag rows in the disposition matrix.
+
+Removed: ClearPass server-certificate validity check (out of scope; ClearPass cert health is its own ops concern, not a migration predictor); GreenLake subscription-by-subscription enumeration (replaced with single AP-license-vs-AP-count comparison); A11 ClearPass-vs-AOS8 local-user dual-source-of-truth check (folded into rule F2).
+
+### Bugs filed alongside this patch
+
+Two real platform-tool bugs surfaced by the operator transcripts; filed as separate issues with one-line tool-layer fixes:
+
+- [#243](https://github.com/nowireless4u/hpe-networking-mcp/issues/243) — `greenlake_get_subscriptions` `state` field shows `?` instead of actual values
+- [#244](https://github.com/nowireless4u/hpe-networking-mcp/issues/244) — `central_get_aps` returns `None` for empty AP list (should return `[]`)
+
+### File touches
+
+- `src/hpe_networking_mcp/skills/aos-migration.md` — skill rewrite (~400 lines changed, 968 lines total)
+- `src/hpe_networking_mcp/INSTRUCTIONS.md` — line-88 trigger row drops AOS 6 / IAP triggers, adds AOS-8-only note
+- `docs/TOOLS.md` — line-156 entry rewritten for v2.5.0.1 changes
+- `pyproject.toml` — version 2.5.0.0 → 2.5.0.1
+- `CHANGELOG.md` — this entry
+
+No code/platform changes. Skill text + docs only.
+
 ## [2.5.0.0] - 2026-05-04
 
 **Renames `aos-migration-readiness` skill → `aos-migration` and expands it from a readiness-only audit into a full migration workflow.** Closes [#239](https://github.com/nowireless4u/hpe-networking-mcp/issues/239). Substantial new subsystem → minor version bump per project policy.
