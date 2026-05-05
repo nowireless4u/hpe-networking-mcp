@@ -161,7 +161,7 @@ def _sample_sites_health_response() -> list[dict]:
     """Single-site fragment matching the live ``/sites-health`` response shape."""
     return [
         {
-            "siteName": "HOME",
+            "siteName": "HQ",
             "id": "18413656377",
             "address": {"city": "Anytown", "country": "US"},
             "location": {"latitude": "39.0", "longitude": "-77.0"},
@@ -204,7 +204,7 @@ def _sample_sites_device_health_response() -> list[dict]:
     """Single-site fragment matching the live ``/sites-device-health`` response shape."""
     return [
         {
-            "siteName": "HOME",
+            "siteName": "HQ",
             "id": "18413656377",
             "type": "v1",
             "deviceTypes": [
@@ -227,7 +227,7 @@ def _sample_sites_client_health_response() -> list[dict]:
     """Single-site fragment matching the live ``/sites-client-health`` response shape."""
     return [
         {
-            "siteName": "HOME",
+            "siteName": "HQ",
             "id": "18413656377",
             "type": "v1",
             "clientTypes": [
@@ -269,7 +269,7 @@ class TestProcessSiteHealthData:
             _sample_sites_device_health_response(),
             _sample_sites_client_health_response(),
         )
-        assert "HOME" in result, (
+        assert "HQ" in result, (
             "process_site_health_data must key on the 'siteName' field — "
             "if this fails, the API response shape changed or the field-rename regressed"
         )
@@ -282,7 +282,7 @@ class TestProcessSiteHealthData:
             _sample_sites_device_health_response(),
             _sample_sites_client_health_response(),
         )
-        details = result["HOME"].metrics.devices.get("Details")
+        details = result["HQ"].metrics.devices.get("Details")
         assert details is not None, "deviceTypes details missing — siteName merge regression"
         assert "Access Points" in details
 
@@ -293,7 +293,7 @@ class TestProcessSiteHealthData:
             _sample_sites_device_health_response(),
             _sample_sites_client_health_response(),
         )
-        details = result["HOME"].metrics.clients.get("Details")
+        details = result["HQ"].metrics.clients.get("Details")
         assert details is not None, "clientTypes details missing — siteName merge regression"
         assert "Wired" in details and "Wireless" in details
 
@@ -307,7 +307,7 @@ class TestTransformToSiteData:
         exist in the real response — yielding empty-string names everywhere.
         """
         site = transform_to_site_data(_sample_sites_health_response()[0])
-        assert site.name == "HOME", f"Expected 'HOME', got '{site.name}' — siteName mapping regressed"
+        assert site.name == "HQ", f"Expected 'HQ', got '{site.name}' — siteName mapping regressed"
 
     def test_summary_total_derived_from_groups_when_count_present(self):
         """Per-site totals come from summing the health.groups[] values via

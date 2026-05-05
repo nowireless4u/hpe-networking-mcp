@@ -606,10 +606,10 @@ class TestTokenizeResponse:
         # Mist's MPSK pattern uses the user's email as the PSK display
         # name — which would have leaked pre-v2.3.1.2.
         result = tokenize_response(
-            {"name": "travis.knapp@burninlab.com", "ssid": "MPSK", "vlan_id": 1},
+            {"name": "taylor.morgan@example.com", "ssid": "MPSK", "vlan_id": 1},
             tokenizer,
         )
-        assert "travis.knapp@burninlab.com" not in str(result)
+        assert "taylor.morgan@example.com" not in str(result)
         assert "[[EMAIL:" in result["name"]
         assert result["ssid"] == "MPSK"  # SSID still passes through
         assert result["vlan_id"] == 1

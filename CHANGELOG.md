@@ -1731,8 +1731,8 @@ The empty-list and zero-counts symptoms reproduced in both `dynamic` and `code` 
 
 | Tool | Before | After |
 |---|---|---|
-| `central_get_site_health` | `[]` | 13 sites; HOME = 38 clients / 17 devices, with full per-type breakdown |
-| `central_get_site_name_id_mapping` (HOME) | `health: 0, total_devices: 0, total_clients: 0, total_alerts: 0` | `health: 81, total_devices: 17, total_clients: 38, total_alerts: 3` |
+| `central_get_site_health` | `[]` | 13 sites; HQ = 38 clients / 17 devices, with full per-type breakdown |
+| `central_get_site_name_id_mapping` (HQ) | `health: 0, total_devices: 0, total_clients: 0, total_alerts: 0` | `health: 81, total_devices: 17, total_clients: 38, total_alerts: 3` |
 
 ### Tests
 
@@ -1824,7 +1824,7 @@ This lets `tags(detail=brief)` surface useful platform buckets and `search(query
 - `tags(brief)` returns platform buckets (`mist (31 tools)`, `central (73)`, `axis (0)`, etc.) plus module categories.
 - `search(query="disconnected", tags=["mist"])` returns 7 of 173 tools, BM25-ranked and platform-scoped.
 - `execute` with `return await call_tool("health", {})` returns the live health report.
-- Cross-platform join (mist_get_self → mist_search_device → central_get_aps) runs in ONE execute call, returning `{"mist_aps_count": 5, "central_aps_count": 3, "sample_mist_ap": "KNAPP-BASEMENT", "sample_central_ap": "HOME-GARAGE-AP", "cross_platform_match": True}`.
+- Cross-platform join (mist_get_self → mist_search_device → central_get_aps) runs in ONE execute call, returning `{"mist_aps_count": 5, "central_aps_count": 3, "sample_mist_ap": "BRANCH-1-AP-1", "sample_central_ap": "HQ-AP-1", "cross_platform_match": True}`.
 - `call_tool("site_health_check", ...)` correctly raises `Unknown tool: site_health_check` — gating verified.
 - `MCP_TOOL_MODE=dynamic` (default) — unchanged. Still 18 tools advertised (15 meta + health + site_health_check + site_rf_check).
 
@@ -1915,7 +1915,7 @@ Channel notation differs across platforms: Central uses bonded-channel suffixes 
 
 ### Verified live
 
-3 Aruba AP-755s at site HOME (Central) — full report rendered with 2.4G/5G/6G channel bars, noise floors, utilization meters, per-AP table. Picker mode tested across 19 sites with accurate online counts. Mist-side picker uses `connected: bool` from `/orgs/{id}/inventory` (not the `status` field — that endpoint doesn't carry it).
+3 Aruba AP-755s at site HQ (Central) — full report rendered with 2.4G/5G/6G channel bars, noise floors, utilization meters, per-AP table. Picker mode tested across 19 sites with accurate online counts. Mist-side picker uses `connected: bool` from `/orgs/{id}/inventory` (not the `status` field — that endpoint doesn't carry it).
 
 ### Test additions
 

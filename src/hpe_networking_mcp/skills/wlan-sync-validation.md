@@ -140,5 +140,5 @@ keep going. Always group by bucket so "everything is fine" is one glance.
 
 > "are our WLANs in sync between Mist and Central?"
 > "did the WLAN sync run cleanly?"
-> "audit WLAN drift for site HOME"
+> "audit WLAN drift for site HQ"
 > "compare WLANs across platforms"

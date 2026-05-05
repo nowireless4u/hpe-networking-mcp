@@ -10,9 +10,9 @@ Fields marked **[NEEDS REVIEW]** may have a mapping but need confirmation.
 
 Central and Mist have fundamentally different naming models:
 
-- **Central**: WLAN profile name ≠ SSID name. The profile has a name (e.g. "ADAMS-WIFI2")
-  and an optional SSID alias (e.g. "AdamsLAB") that resolves to the broadcasted SSID name
-  (e.g. "ADAMS-WIFI"). When `essid.use-alias` is true, the alias must be resolved via
+- **Central**: WLAN profile name ≠ SSID name. The profile has a name (e.g. "CORP-WIFI-2")
+  and an optional SSID alias (e.g. "CORP-LAB") that resolves to the broadcasted SSID name
+  (e.g. "CORP-WIFI"). When `essid.use-alias` is true, the alias must be resolved via
   `GET /network-config/v1alpha1/aliases/{alias_name}` to get the actual SSID.
 - **Mist**: WLAN template name is the container. The WLAN `ssid` field IS the broadcasted name.
 

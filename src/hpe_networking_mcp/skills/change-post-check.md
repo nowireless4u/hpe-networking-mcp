@@ -139,8 +139,8 @@ active session count by service).
 
 | Metric | Baseline | Now | Delta % |
 |---|---|---|---|
-| Clients (HOME) | 38 | 35 | -7.9% |
-| APs up (HOME) | 17 | 17 | 0% |
+| Clients (HQ) | 38 | 35 | -7.9% |
+| APs up (HQ) | 17 | 17 | 0% |
 | Active NAC sessions | 1240 | 1198 | -3.4% |
 
 **Verdict contribution by delta magnitude:**
@@ -169,7 +169,7 @@ Format the report as shown below.
 | Condition | Action |
 |---|---|
 | No baseline available in chat or paste | STOP. Ask user for the pre-check snapshot. Don't run blind. |
-| Baseline target ≠ current scope | STOP. Pre-check covered site `HOME`, post-check shouldn't run against site `OFFICE`. Confirm with user. |
+| Baseline target ≠ current scope | STOP. Pre-check covered site `HQ`, post-check shouldn't run against site `OFFICE`. Confirm with user. |
 | Change landed less than 5 minutes ago + Wi-Fi affected | Note that client/RF metrics may still be settling; consider a follow-up post-check in 10 minutes |
 | Verdict is REGRESSION | Lead the report with the regression specifics. Suggest the operator consider rollback. |
 | Audit log shows unplanned admin actions | Surface the actor + timestamp explicitly so the operator can investigate |
@@ -206,8 +206,8 @@ verdicts, lead with the specifics under "Verdict reasoning."
 ### Impact metrics
 | Metric | Baseline | Now | Delta |
 |---|---|---|---|
-| Clients (HOME) | 38 | 35 | -7.9% (within normal churn) |
-| APs up (HOME) | 17 | 17 | 0% |
+| Clients (HQ) | 38 | 35 | -7.9% (within normal churn) |
+| APs up (HQ) | 17 | 17 | 0% |
 
 ### Verdict reasoning
 - Reachability unchanged

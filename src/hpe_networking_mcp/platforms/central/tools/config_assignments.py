@@ -153,7 +153,7 @@ async def central_manage_config_assignment(
         Field(
             description=(
                 "Name of the specific profile to assign. For WLAN SSIDs "
-                "this is the SSID name (e.g. 'ADAMS-TEST'). For roles "
+                "this is the SSID name (e.g. 'TEST-SSID'). For roles "
                 "this is the role name, etc."
             ),
         ),
@@ -175,7 +175,7 @@ async def central_manage_config_assignment(
     - scope_id = the site's scope ID (from central_get_scope_tree)
     - device_function = "CAMPUS_AP"
     - profile_type = "wlan-ssids"
-    - profile_instance = "ADAMS-TEST"
+    - profile_instance = "TEST-SSID"
 
     To find the scope_id, call central_get_scope_tree and look up the
     target scope (Global, site collection, or site) by name.

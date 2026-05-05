@@ -165,8 +165,8 @@ sections; if you have observations, put them under "Notes."
 <paste of relevant config block(s) — typically 5-30 lines>
 
 ### Active impact metrics (snapshot for post-change diff)
-- Mist site `HOME`: 38 clients, 17 APs up, 0 disconnected
-- Central site `HOME`: 24 switches, 0 alerts
+- Mist site `HQ`: 38 clients, 17 APs up, 0 disconnected
+- Central site `HQ`: 24 switches, 0 alerts
 
 ### Notes
 - Pre-existing minor alarm on AP-12 — NOT my change.
@@ -185,6 +185,6 @@ End the response by reminding the operator:
 
 ## Example queries that should trigger this skill
 
-> "I'm about to push a config change to the HOME WLAN — give me a baseline"
+> "I'm about to push a config change to the HQ WLAN — give me a baseline"
 > "running pre-change checks for the AP firmware push tonight"
 > "before I touch the NAC policy can you snapshot the current state"

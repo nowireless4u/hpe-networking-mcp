@@ -518,7 +518,7 @@ Use the EXACT structure below. Every section must be present even if its content
 
 ### REGRESSION findings (lead with these)
 - **Bare site-level WLANs**: <N> findings.
-  - Site `HOME`: 2 bare site-level WLANs (`legacy-corp`, `guest-test`) — created without a template. Recommendation: move into an org-level WLAN template + delete site-level copies.
+  - Site `HQ`: 2 bare site-level WLANs (`legacy-corp`, `guest-test`) — created without a template. Recommendation: move into an org-level WLAN template + delete site-level copies.
 - **Switch managed via CLI** (Mist Wired explicitly forbids): <N> findings.
   - Switch `<name>`: CLI changes detected outside Mist management. Recommendation: re-import config into a template + revert CLI.
 - **Hardcoded RADIUS IPs**: <N> findings.

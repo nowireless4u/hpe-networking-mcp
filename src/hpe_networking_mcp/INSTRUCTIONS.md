@@ -31,7 +31,7 @@ Every per-platform tool listed below this section is reachable through the meta-
 ```
 central_list_tools(filter="sites")
 → [{"name":"central_get_site_health","params":{"site_name":"string","platform":"string?",...}}, ...]
-central_invoke_tool(name="central_get_site_health", params={"site_name":"HOME"})
+central_invoke_tool(name="central_get_site_health", params={"site_name":"HQ"})
 → <tool result>
 ```
 
@@ -348,11 +348,11 @@ The same cross-platform behavior applies to **sites** — when asked generically
 
 | User says | Call |
 |---|---|
-| "how is site HOME doing" (no platform named) | `site_health_check(site_name="HOME")` — queries every enabled platform (default) |
-| "how is site HOME doing **in Central**" | `site_health_check(site_name="HOME", platform="central")` |
-| "how is site HOME doing **on Mist**" | `site_health_check(site_name="HOME", platform="mist")` |
-| "how is site HOME doing **in ClearPass**" | `site_health_check(site_name="HOME", platform="clearpass")` |
-| "how is HOME doing in Central and Mist" | `site_health_check(site_name="HOME", platform=["central", "mist"])` |
+| "how is site HQ doing" (no platform named) | `site_health_check(site_name="HQ")` — queries every enabled platform (default) |
+| "how is site HQ doing **in Central**" | `site_health_check(site_name="HQ", platform="central")` |
+| "how is site HQ doing **on Mist**" | `site_health_check(site_name="HQ", platform="mist")` |
+| "how is site HQ doing **in ClearPass**" | `site_health_check(site_name="HQ", platform="clearpass")` |
+| "how is HQ doing in Central and Mist" | `site_health_check(site_name="HQ", platform=["central", "mist"])` |
 
 Valid `platform` values are `"mist"`, `"central"`, `"clearpass"` (or a list). Apstra and GreenLake don't have site-scoped telemetry and aren't accepted. Omit `platform` entirely (null/None) for the full cross-platform view — that's the right default when the user asks generically.
 

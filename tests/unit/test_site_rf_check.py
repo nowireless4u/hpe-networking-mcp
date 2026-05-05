@@ -304,10 +304,10 @@ class TestSynthesize:
 class TestRenderReport:
     def test_smoke(self):
         report = SiteRFReport(
-            site_name="HOME",
+            site_name="HQ",
             platforms_queried=["mist", "central"],
             platforms_matched=["mist", "central"],
-            headline="Site 'HOME': all good",
+            headline="Site 'HQ': all good",
             bands={
                 "2.4": BandSummary(band="2.4", ap_count=2, radios_active=2, channel_distribution={"1": 2}),
                 "5": BandSummary(band="5", ap_count=0, radios_active=0, channel_distribution={}),
@@ -321,8 +321,8 @@ class TestRenderReport:
         )
         out = _render_report(report)
         # Headline + bands header + AP table + recommendations all present
-        assert "# RF Check — HOME" in out
-        assert "Site 'HOME'" in out
+        assert "# RF Check — HQ" in out
+        assert "Site 'HQ'" in out
         assert "### 2.4 GHz — 2 radio(s)" in out
         assert "ch   1" in out  # channel occupancy line
         assert "## Per-AP radio snapshot" in out
@@ -399,11 +399,11 @@ class TestRenderSiteOptions:
 
     def test_with_options(self):
         opts = [
-            SiteOption(name="HOME", platform="central", ap_count=3, online_ap_count=3),
-            SiteOption(name="HOME", platform="mist", ap_count=5, online_ap_count=0),
+            SiteOption(name="HQ", platform="central", ap_count=3, online_ap_count=3),
+            SiteOption(name="HQ", platform="mist", ap_count=5, online_ap_count=0),
         ]
         out = _render_site_options(opts)
-        assert "HOME" in out
+        assert "HQ" in out
         assert "central" in out and "mist" in out
         assert "site_rf_check" in out
         # Header columns rendered
@@ -422,7 +422,7 @@ class TestRenderSiteOptions:
 class TestModels:
     def test_site_rf_report_serializes_with_rendered_field(self):
         report = SiteRFReport(
-            site_name="HOME",
+            site_name="HQ",
             platforms_queried=["mist"],
             platforms_matched=["mist"],
             headline="ok",
@@ -430,7 +430,7 @@ class TestModels:
         )
         dumped = report.model_dump()
         assert dumped["rendered_report"] == "# test"
-        assert dumped["site_name"] == "HOME"
+        assert dumped["site_name"] == "HQ"
 
     def test_mist_central_summaries_default_missing(self):
         # A report with no platforms found should still serialize cleanly.

@@ -46,7 +46,7 @@ me = await call_tool("mist_get_self", {"action_type": "account_info"})
 org_id = me["result"]["privileges"][0]["org_id"]
 
 mist_aps = await call_tool("mist_search_device", {"org_id": org_id, "device_type": "ap", "limit": 5})
-central_aps = await call_tool("central_get_aps", {"site_name": "HOME", "status": "ONLINE"})
+central_aps = await call_tool("central_get_aps", {"site_name": "HQ", "status": "ONLINE"})
 
 return {
     "mist_count": len(mist_aps["result"]["results"]),

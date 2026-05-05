@@ -66,4 +66,4 @@ so different skill runs produce comparable output.
 A 1-2 line example query that should trigger this skill, e.g.:
 
 > "give me the daily infra health snapshot"
-> "is everything healthy at site HOME?"
+> "is everything healthy at site HQ?"

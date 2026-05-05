@@ -278,7 +278,7 @@ rules in order; the first match wins.
 Show the rubric color at the very top of the report on its own line,
 followed by a single sentence summarizing why that color was chosen
 (*"all SLEs above 90%, no critical alerts overnight, only routine
-audit activity"* for green; *"5 critical alerts at HOME-KNAPP, MTU
+audit activity"* for green; *"5 critical alerts at BRANCH-1, MTU
 mismatch on aggregation link"* for red).
 
 ## Decision matrix
@@ -317,8 +317,8 @@ comparable output. Use Markdown headings; render in the AI client.
 One sentence describing why this color was chosen. Examples:
 
 - 🟢 GREEN — all SLEs above 90%, 0 critical alerts, only routine audit activity
-- 🟡 YELLOW — 2 major alerts at HOME-KNAPP (PoE budget warning), all SLEs healthy
-- 🔴 RED — 5 critical alerts at HOME-KNAPP (MTU mismatch + VSX keepalive), Time-to-Connect SLE at 72%
+- 🟡 YELLOW — 2 major alerts at BRANCH-1 (PoE budget warning), all SLEs healthy
+- 🔴 RED — 5 critical alerts at BRANCH-1 (MTU mismatch + VSX keepalive), Time-to-Connect SLE at 72%
 
 ## Headline
 
@@ -326,14 +326,14 @@ One sentence describing why this color was chosen. Examples:
 
 - "All quiet overnight — no critical alerts, 2 admin logins, top talker
   is a single client at 8.2 GB."
-- "5 critical alerts at HOME-KNAPP — MTU mismatch on aggregation
+- "5 critical alerts at BRANCH-1 — MTU mismatch on aggregation
   link is the priority. 1 admin made 14 config changes overnight."
 
 ## Activity
 
 **Central** (N total events, M write actions):
 - alice@corp.com — 12 events: 3 logins, 9 reads, 0 writes
-- bob@corp.com — 4 events: 1 login, 1 write (`Update Site` at HOME)
+- bob@corp.com — 4 events: 1 login, 1 write (`Update Site` at HQ)
 - system — 23 events: routine (skip detail)
 
 **Mist** (N total events, M write actions):
@@ -342,8 +342,8 @@ One sentence describing why this color was chosen. Examples:
 ## What's broken right now
 
 **Central** (severity counts: X critical / Y major / Z minor):
-- 🔴 [CRITICAL] MTU mismatch — HOME-AGG-SW1-1 1/1/4 ↔ 6100 1/1/15 (9198 vs 1500)
-- [MAJOR] VSX keepalive failed — HOME-AGG-SW1-1 loopback0
+- 🔴 [CRITICAL] MTU mismatch — HQ-AGG-SW1-1 1/1/4 ↔ 6100 1/1/15 (9198 vs 1500)
+- [MAJOR] VSX keepalive failed — HQ-AGG-SW1-1 loopback0
 - ... (top 5)
 
 **Mist** (N alarm types, M total events):
@@ -355,13 +355,13 @@ One sentence describing why this color was chosen. Examples:
 **Central — top clients:**
 | Client | SSID | Site | Traffic (24h) |
 |---|---|---|---|
-| johns-laptop | Corp-Wifi | HOME | 8.2 GB |
+| user-laptop-1 | Corp-Wifi | HQ | 8.2 GB |
 | ... |
 
 **Central — top APs:**
 | AP | Site | Clients | Load |
 |---|---|---|---|
-| AP-Floor-3 | HOME | 47 | 78% |
+| AP-Floor-3 | HQ | 47 | 78% |
 | ... |
 
 **Mist — top clients / top APs:**
@@ -371,7 +371,7 @@ One sentence describing why this color was chosen. Examples:
 
 **Mist SLE:**
 - Worst category: Time-to-Connect at 87% (org-wide)
-- Worst site: HOME-KNAPP at 78% aggregate
+- Worst site: BRANCH-1 at 78% aggregate
 
 **Central:**
 - Alert category trending up: "Client" alerts +40% vs the 7-day average
@@ -379,8 +379,8 @@ One sentence describing why this color was chosen. Examples:
 ## Suggested next steps
 
 1–3 bullets, each pointing at a tool/skill to drill in:
-- Run `central-scope-audit` on HOME-KNAPP to investigate the MTU and VSX issues
-- Run `mist_get_site_sle(site_id=<HOME-KNAPP id>)` for the SLE breakdown
+- Run `central-scope-audit` on BRANCH-1 to investigate the MTU and VSX issues
+- Run `mist_get_site_sle(site_id=<BRANCH-1 id>)` for the SLE breakdown
 ```
 
 ### Executive-mode template
@@ -424,11 +424,11 @@ When producing the executive output, the AI MUST:
 - **Drop all technical jargon.** No tool names (`central_get_alerts`),
   no platform names (`Mist` / `Central`), no IPs / MACs / port numbers
   / VLAN IDs / SSID names / device serial numbers. If the engineer
-  template would say *"5 critical alerts at HOME-KNAPP — MTU mismatch
+  template would say *"5 critical alerts at BRANCH-1 — MTU mismatch
   on aggregation link"*, the exec template says *"a site has a network
   reliability issue affecting wireless connectivity."*
 - **Round counts.** *"Approximately 15% of clients"*, not *"47 clients"*.
-  *"A site"* not *"HOME-KNAPP"* unless naming the site is needed for
+  *"A site"* not *"BRANCH-1"* unless naming the site is needed for
   clarity (e.g. multi-site orgs where the leader actually knows site
   names).
 - **Use business-impact framing.** *"Affecting users in the building"*,

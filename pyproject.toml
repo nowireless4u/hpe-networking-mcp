@@ -40,8 +40,8 @@ dependencies = [
 hpe-networking-mcp = "hpe_networking_mcp.__main__:main"
 
 [project.urls]
-Repository = "https://github.com/jonadams/hpe-networking-mcp"
-Issues = "https://github.com/jonadams/hpe-networking-mcp/issues"
+Repository = "https://github.com/nowireless4u/hpe-networking-mcp"
+Issues = "https://github.com/nowireless4u/hpe-networking-mcp/issues"
 
 [tool.hatch.metadata]
 allow-direct-references = true
