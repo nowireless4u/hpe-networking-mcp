@@ -5,6 +5,59 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.1.4] - 2026-05-05
+
+**`aos-migration` skill — completes the Stage 7 cluster-mode derivation that v2.5.1.3 left as TBD.** Closes [#261](https://github.com/nowireless4u/hpe-networking-mcp/issues/261).
+
+### Why
+
+v2.5.1.3 shipped the 5-type AOS 10 placement model (Site Collection / Site / Device Group / device persona scope / global root) with naming heuristics, persona dimension, and cluster-mode-driven decisions — but left the cluster-mode derivation itself as TBD pending live cluster validation. The TBD note in Stage 7 said the auto-vs-manual mode field in the AOS 8 `cluster_prof` schema needed validation against a populated cluster.
+
+Live probing against a real ArubaMM-VA Conductor with three populated clusters (`site-cluster`, `East`, `ACX-AOS8-CLUSTER`) confirmed that **AOS 8 has no `cluster-mode` field at all**. The mode is fully derivable from data the skill already collects.
+
+### How the AOS 10 cluster-mode is derived
+
+AOS 8 multizone splits an AP's traffic across multiple controllers:
+- **Primary zone** = the cluster the AP is *adopted to* (determined by `ap_database.Switch IP` / `Standby IP` matching `cluster_prof.cluster_controller[].ip`)
+- **Data zones** = additional clusters acting as tunnel anchors for specific VAPs (determined by `ap_multizone_prof.controller[].ip`)
+
+AOS 10 represents these as:
+- Primary zones → Sites with auto-clustering re-enabled (`CM_SITE`)
+- Data-zone anchors and unused-active clusters → Device Groups (`CM_MANUAL`)
+
+The decision is binary and fully data-driven — operator confirms placement / target name only, not cluster mode.
+
+### What's new
+
+- **`src/hpe_networking_mcp/skills/aos-migration.md`** — Stage 7 Step 4 rewritten with the explicit derivation algorithm, including:
+  - Pseudo-code for the cluster-mode classification
+  - Multizone enrichment (distinguishes anchor clusters from DMZ/unused clusters in the Notes column)
+  - External multizone target detection (multizone IPs that are neither in any source `cluster_prof` nor in `aos8_get_controllers`)
+  - Conductor exclusion (skip clusters whose members include the MM IP)
+- **Stage 6 readiness template** — Cluster mode column changes from `decide` to `CM_SITE` / `CM_MANUAL` (auto-derived). Removes the operator-confirms-cluster-mode language.
+- **Act II Stage 7 report template** — same column treatment with three example rows: AP-bearing site, multizone anchor, and unused/DMZ.
+- **Stage 8 cluster_prof + group_membership disposition row** — Notes column now references the GCIS target (`gw-cluster-intent` profile + realized `gw-cluster`), the field-level mapping (`cluster_controller[].ip` → `ipv4-gateways[].ip`), and flags the Central API gap (no `central_manage_gateway_cluster_intent_profile` / `central_manage_gateway_cluster` tools yet).
+- **New INFO finding** — *External multizone target* surfaced when an AP-group's multizone profile references an IP that's not in `cluster_prof` AND not managed by this conductor. Translates to a single Central gateway, not a `gw-cluster`.
+- **Skill overview line 86** — adds AOS 10 cluster-mode to the list of auto-derived inputs.
+
+### Validated against live data
+
+Lab probing on ArubaMM-VA at 172.23.4.21 (AOS 8.12.0.5):
+
+| Cluster | Origin scope | APs adopted | Multizone anchor for | AOS 10 mode (derived) | AOS 10 target |
+|---|---|---|---|---|---|
+| `site-cluster` | `/md/Campus/West` | 1 AP (Switch IP 10.104.23.219) | n/a (primary) | CM_SITE | Site |
+| `East` | `/md/Campus` | 0 | none | CM_MANUAL | Device Group |
+| `ACX-AOS8-CLUSTER` | `/md/ACX` | 0 | none | CM_MANUAL | Device Group |
+
+Plus one INFO finding from the lab: *"AP-group 'Indoor' multizone-1 references 192.168.199.250 — not in any source cluster, not managed by this conductor. External standalone controller; migrates to a single Central gateway."*
+
+### Notes
+
+- This release completes the v2.5.1.3 deferred work (#255 had Stage 7 with a TBD; #261 closes that gap).
+- The Central read tools for `/gw-cluster-intent-config` and `/gateway-clusters` (4 read tools mapping to the AOS 10 GCIS APIs) remain unbuilt — tracked separately. The skill flags this as a Central API gap in the Stage 8 disposition row, just like it does for AAA Server, AAA Server Group, and AP System Profile gaps.
+- Skill markdown only — no code changes, no test changes (950 tests still pass).
+
 ## [2.5.1.3] - 2026-05-05
 
 **`aos-migration` skill — full alignment with the v2.5.1.2 OBJECT_TYPES rewrite + new hierarchy mapping rules engine.** Closes [#255](https://github.com/nowireless4u/2hpe-networking-mcp/issues/255), [#256](https://github.com/nowireless4u/hpe-networking-mcp/issues/256), [#257](https://github.com/nowireless4u/hpe-networking-mcp/issues/257).
