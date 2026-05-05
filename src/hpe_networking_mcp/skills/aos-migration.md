@@ -234,7 +234,7 @@ port_status = await call_tool("aos8_show_command", {"command": "show port status
 trunks = await call_tool("aos8_show_command", {"command": "show trunk"})
 ```
 
-`cluster_state` may return `{"_global_result": {"status": "1", ...}}` or empty list when no cluster is currently active. **Look for `lc_cluster_profile` rows in `config_by_scope` first** — a cluster *profile* defined at any scope (commonly `/md/<region>` or `/md/<region>/<site>`, NOT `/md` root) is the source of truth even when live cluster membership is empty (controllers offline). Live cluster state is supplementary.
+`cluster_state` may return `{"_global_result": {"status": "1", ...}}` or empty list when no cluster is currently active. **Look for `cluster_prof` rows in `config_by_scope` first** — a cluster *profile* defined at any scope (commonly `/md/<region>` or `/md/<region>/<site>`, NOT `/md` root) is the source of truth even when live cluster membership is empty (controllers offline). Live cluster state is supplementary.
 
 #### COLLECT-04 — Client baseline + BSS table + active APs + per-AP wired ports
 
@@ -283,17 +283,17 @@ inventory = {
     "active_aps": [...],                            # subset that are currently up (may be [] if offline)
     "clients": {...},                               # aggregate per-SSID counts
     "bss_table": [...],                             # one entry per ESSID broadcast
-    "cluster_profiles": [...],                      # lc_cluster_profile rows (any scope)
+    "cluster_profiles": [...],                      # cluster_prof rows (any scope)
     "live_cluster_state": {...},                    # aos8_get_cluster_state result
     "ap_groups": [...],                             # virtual_ap and ap_sys_prof
-    "ssid_profiles": [...],
-    "user_roles": [...],
-    "session_acls": [...],
-    "aaa_servers": {radius: [...], tacacs: [...], ldap: [...], internal_db: [...]},
-    "aaa_server_groups": [...],
-    "auth_profiles": {dot1x: [...], mac_auth: [...], captive_portal: [...]},
-    "ap_system_profiles": [...],
-    "rf_profiles": {arm: [...], reg_domain: [...], dot11a: [...], dot11g: [...]},
+    "ssid_profiles": [...],                                        # ssid_prof rows
+    "user_roles": [...],                                            # role rows
+    "session_acls": [...],                                          # acl_sess rows (acl_eth and acl_mac collected separately if present)
+    "aaa_servers": {radius: [...], tacacs: [...], ldap: [...]},   # internal_db dropped — Central replaces internal-DB auth entirely
+    "aaa_server_groups": [...],                                    # server_group_prof rows
+    "auth_profiles": {dot1x: [...], mac_auth: [...], captive_portal: [...]},  # dot1x_auth_profile / mac_auth_profile / cp_auth_profile
+    "ap_system_profiles": [...],                                   # ap_sys_prof rows
+    "rf_profiles": {arm: [...], reg_domain: [...], ht_radio: [...]},  # arm_prof / reg_domain_prof / ht_radio_prof (single combined object since AOS 8.4)
     "local_users": [...],
     "controller_inventory": {serials, macs, mgmt_ips},
     "controller_firmware_versions": [...],
@@ -312,7 +312,7 @@ The old skill asked the operator 7 questions before proceeding. With the live in
 | **Source platform** | Always `aos8` — the skill's only supported source |
 | **Target SSID forwarding mode** (`tunnel` / `bridge` / `mixed`) | Inspect `forward-mode` in `virtual_ap` rows. All `tunnel` → recommend Tunnel. All `bridge` → recommend Bridge. Mix → recommend Mixed. The recommendation appears in the report; operator can override at any time. |
 | **AirWave in path** | Look in `running_config` for `mgmt-server` / `ams-ip` / `mobility-manager` lines. Present → emit DRIFT finding. |
-| **Cluster topology** (L2 / L3 / standalone) | Inspect `lc_cluster_profile` rows. `controller-l2-only` flag → L2; cross-VLAN members → L3; no cluster profiles → standalone. **Default L2** when ambiguous (per project guidance: L3 is rare). |
+| **Cluster topology** (L2 / L3 / standalone) | Inspect `cluster_prof` + `group_membership` rows. `controller-l2-only` flag → L2; cross-VLAN members → L3; no cluster profiles → standalone. **Default L2** when ambiguous (per project guidance: L3 is rare). |
 | **L3 Mobility usage** | Look in `running_config` for `mobility l3-mobility` lines. |
 | **HA mode mapping recommendation** | Cluster-topology-derived: L2 cluster → recommend Auto Group; L2 cluster + LMS pattern → recommend Auto Site; standalone → recommend Manual. |
 | **AP-group → forwarding-mode mapping** | Per `virtual_ap` row's `forward-mode`, grouped by `ap-group` reference. Drives mixed-mode finding granularity. |
@@ -321,9 +321,9 @@ These derivations feed Stage 3 rules. The **report** explicitly shows the derive
 
 #### Cluster-offline tolerance
 
-When `aos8_get_cluster_state()` returns degraded data (clusters offline at audit time), prefer **`lc_cluster_profile` config rows** as the source of truth. Examples:
+When `aos8_get_cluster_state()` returns degraded data (clusters offline at audit time), prefer **`cluster_prof` config rows** as the source of truth. Examples:
 
-- Live cluster state empty + `lc_cluster_profile` rows present → cluster IS configured but currently offline; emit *"Cluster `<name>` is configured at scope `<source_scope>` but live cluster membership is empty (members offline at audit time). Static config is parsed normally."*
+- Live cluster state empty + `cluster_prof` rows present → cluster IS configured but currently offline; emit *"Cluster `<name>` is configured at scope `<source_scope>` but live cluster membership is empty (members offline at audit time). Static config is parsed normally."*
 - Live cluster state empty + no cluster profiles found at any scope → no cluster configured. Note in inventory; no rules fire.
 
 The audit MUST proceed in either case. Don't refuse to verdict.
@@ -365,7 +365,7 @@ These describe the source's controller-AP plumbing. Post-migration APs go to Cen
 |---|---|---|
 | LMS-IP per `ap_sys_prof` | Record the value + which scope it was defined at + which `ap-group` it's bound to (or "unbound") | APs go to Central post-migration; LMS-IP is legacy controller plumbing |
 | Backup-LMS-IP per `ap_sys_prof` | Same | Same |
-| Cluster topology (L2 / L3 / standalone) per `lc_cluster_profile` | Cluster name, scope, member list, VRRP VIP(s) | Drives target HA mode auto-recommendation |
+| Cluster topology (L2 / L3 / standalone) per `cluster_prof` | Cluster name, scope, member list, VRRP VIP(s) | Drives target HA mode auto-recommendation |
 | AP Fast Failover config | Record presence/absence | No AOS 10 equivalent — APs reconnect to Central, not via Fast Failover |
 | VRRP VIPs configured | Record values + member controllers | Inputs to disposition matrix; drives hierarchy translation |
 
@@ -379,7 +379,7 @@ These describe the source's controller-AP plumbing. Post-migration APs go to Cen
 | F4 | **VC-managed (NAT'd) WLANs** depending on controller-side NAT/DHCP — AOS 10 Bridge APs don't provide NAT/DHCP | `vc_managed_wlans_present AND target_mode_recommended in {bridge, mixed}` | REGRESSION | VSG §854-§857 |
 | F5 | **Static AP IPs detected** — AOS 10 requires DHCP | `any_ap_has_static_ip` | REGRESSION | VSG §1232-§1234 |
 | F6 | **AirWave-dependent monitoring** in path (`mgmt-server` / `ams-ip` / AMP profile) — AirWave deprecated | `airwave_in_config` | DRIFT | VSG §312-§313 |
-| F7 | **ARM / 802.11 radio / regulatory-domain profiles in active use** — replaced by RF Profiles in AOS 10 | `arm_or_radio_or_reg_domain_profile_present` | DRIFT — record values for post-cutover comparison | VSG §1163-§1166 |
+| F7 | **ARM / HT radio / regulatory-domain profiles in active use** (`arm_prof` / `ht_radio_prof` / `reg_domain_prof`) — replaced by RF Profiles in AOS 10 | `arm_or_ht_radio_or_reg_domain_profile_present` | DRIFT — record values for post-cutover comparison | VSG §1163-§1166 |
 | F8 | **ClientMatch tunables** (Band Steering / Sticky / Load Balancing) currently tuned away from defaults — fixed at WLAN Control & Services in Central | `clientmatch_tunables_modified` | DRIFT | VSG §1167-§1169 |
 | F9 | **Captive Portal default certificate** in use | `captive_portal_uses_default_cert` | REGRESSION | VSG §364, §370 |
 | F10 | **Internal management LAN blocks Internet** + cutover requires TCP 443 outbound to Central | `internet_blocked_from_mgmt_lan` | REGRESSION | VSG §315-§317 |
@@ -457,7 +457,7 @@ Stage 4 is **trimmed**. The previous version conflated three distinct concerns:
 | A4 | **NAD list coverage for new AP subnets** | `clearpass_get_network_devices()` | `ap_count > 0` AND `target_mode_recommended in {bridge, mixed}` AND `is_clearpass_used` | REGRESSION if missing |
 | A5 | **NAD list coverage for cluster gateways/VRRP VIPs** | `clearpass_get_network_devices()` | `cluster_profile_present` AND `is_clearpass_used` | REGRESSION if any cluster VRRP VIP missing from NAD list |
 
-`is_clearpass_used` = the source's `aaa_server_group` references at least one `rad_server` whose host matches a configured ClearPass instance OR the operator runs ClearPass per inventory. If false, A4 / A5 don't fire — the source uses non-ClearPass RADIUS or none at all.
+`is_clearpass_used` = the source's `server_group_prof` references at least one `rad_server` whose host matches a configured ClearPass instance OR the operator runs ClearPass per inventory. If false, A4 / A5 don't fire — the source uses non-ClearPass RADIUS or none at all.
 
 #### Stage 4b — Translation enrichment (feeds Act II disposition matrix)
 
@@ -465,10 +465,10 @@ Findings in this section are NOT used to compute the Stage 6 verdict. They popul
 
 | # | Enrichment | Tool | Used by Stage 8 to |
 |---|---|---|---|
-| E1 | Central WLAN-profile name collision check | `central_get_wlan_profiles()` | Tag `wlan_ssid_profile` rows where the AOS 8 ESSID already exists as a Central WLAN profile. |
-| E2 | Central role-name collision check | `central_get_roles()` | Tag `user_role` rows where the AOS 8 role name already exists in Central. |
+| E1 | Central WLAN-profile name collision check | `central_get_wlan_profiles()` | Tag `ssid_prof` rows where the AOS 8 ESSID already exists as a Central WLAN profile. |
+| E2 | Central role-name collision check | `central_get_roles()` | Tag `role` rows where the AOS 8 role name already exists in Central. |
 | E3 | Central named-VLAN ID collision check | `central_get_named_vlans()` | Tag VLAN rows where the AOS 8 VLAN ID already maps in Central under a different name. |
-| E4 | Central server-group collision check | `central_get_server_groups()` | Tag `aaa_server_group` rows where the same name already exists in Central. |
+| E4 | Central server-group collision check | `central_get_server_groups()` | Tag `server_group_prof` rows where the same name already exists in Central. |
 | E5 | Per-AP-model AOS 10 firmware recommendation | `central_recommend_firmware()` | Append a "Recommended AOS 10 firmware" column to the inventory's AP-model summary. INFO only — never gates the verdict. |
 
 Each enrichment emits **at most one INFO bullet** in the Act I report ("Found N name collisions; see disposition matrix for per-row detail in Act II"). No per-collision bullets in Act I — they belong in Act II.
@@ -488,11 +488,11 @@ The VSG provides a single-site cutover sequence (VSG §2352-§2576). Reuse Stage
 
 | # | Check | From | Severity |
 |---|---|---|---|
-| C-01 | **Live cluster health** — when `lc_cluster_profile` rows exist (cluster is configured), `aos8_get_cluster_state()` should report `L2-connected`. If degraded, the audit notes it but does NOT block — clusters can be brought to L2-connected before cutover. | `live_cluster_state` from Stage 1 COLLECT-03 | DRIFT if degraded; INFO if L2-connected; INFO with `cluster offline at audit time` note if `lc_cluster_profile` exists but live state empty |
+| C-01 | **Live cluster health** — when `cluster_prof` rows exist (cluster is configured), `aos8_get_cluster_state()` should report `L2-connected`. If degraded, the audit notes it but does NOT block — clusters can be brought to L2-connected before cutover. | `live_cluster_state` from Stage 1 COLLECT-03 | DRIFT if degraded; INFO if L2-connected; INFO with `cluster offline at audit time` note if `cluster_prof` exists but live state empty |
 | C-02 | **Mobility Conductor firmware floor** — running version on Conductor must be `8.10.0.12` / `8.12.0.1` or later (prerequisite for AOS 10 image push). One **fresh** call: `aos8_show_command(command='show version')` (cannot rely on `show inventory` — running firmware not reliably surfaced there). | fresh call in Stage 5 | REGRESSION if below |
 | C-03 | **Pre-cutover AP-count baseline** — record `len(ap_database)` for post-cutover diff. | Stage 1 COLLECT-02 | INFO |
 
-If `lc_cluster_profile` rows are absent (no cluster configured), C-01 doesn't fire and C-02 still runs. C-03 always runs.
+If `cluster_prof` rows are absent (no cluster configured), C-01 doesn't fire and C-02 still runs. C-03 always runs.
 
 | Phase | What VSG specifies | Audit check |
 |---|---|---|
@@ -536,21 +536,55 @@ Promote the readiness-stage hierarchy mapping table (Stage 6 inventory section) 
 
 **Rules** (anchor: VSG §1529-§1535 *"Mapping AOS-8 Hierarchy to AOS-10 Configuration Model"* + §1834-§1835):
 
-| Source node | AOS 10 placement | Disposition |
-|---|---|---|
-| `/md` (Mobility Conductor root) | (none — Central org root is implicit) | `drop` |
-| `/md/<region>` | Site Collection | `direct-translate` |
-| `/md/<region>/<site>` | Site | `direct-translate` |
-| `/md/<region>/<site>/<ap-group>` | Device Group | `direct-translate` |
+AOS 10 / Central has **5 placement types** (not 4): `Site Collection`, `Site`, `Device Group`, `device persona scope`, and the implicit `(global)` root. Persona is a first-class scope dimension in AOS 10 — config can be applied to "all VPNCs at scope X" without creating a Device Group. The skill produces a draft classification per `/md/<path>` Group node using the rules below; **operator confirms low-confidence rows before Stage 7 emits its final mapping.**
 
-**Output:** the existing 3-column hierarchy table from the Stage 6 report, **extended to 5 columns**:
+**Step 1 — Drop conductor / mobility-manager scope:**
+- `/md` → `drop` (Central org root is implicit)
+- `/mm` and descendants → `drop` (Mobility Manager scope; not part of the migrated tree)
 
-| Source AOS node | Source path | Disposition | Target type (AOS 10) | Target name (operator-named) | Notes |
-|---|---|---|---|---|---|
-| `<Mobility Conductor /md>` | `/md` | `drop` | (none) | n/a | Central org root is implicit |
-| `<region>` | `/md/USE` | `direct-translate` | Site Collection | `USE` (or operator override) | grouping |
-| `<site>` | `/md/USE/dallas-hq` | `direct-translate` | Site | `dallas-hq` | one Site per discrete physical location |
-| `<ap-group>` | `/md/USE/dallas-hq/floor-3` | `direct-translate` | Device Group | `dallas-hq-floor-3` | per-function device grouping |
+**Step 2 — Determine persona for each Device child** by cross-referencing the Stage 1 inventory (`aos8_get_controllers`, `aos8_get_ap_database`, controller-model lookups). Personas in scope for the wireless-focused migration:
+- `MOBILITY_GW` — WLAN gateway. **Default for AOS 8 Mobility Controllers (MDs).**
+- `VPNC` — VPN Concentrator. Never has APs. Rare in 8.x.
+- `BRANCH_GW` — SD-Branch CPE. Never has APs. Rare in 8.x.
+- `MICROBRANCH_AP` — Microbranch / RAP.
+- `CAMPUS_AP` — typical campus AP.
+
+Out-of-scope personas (`ACCESS_SWITCH`, `AGG_SWITCH`, `CORE_SWITCH`, `BRIDGE`, `HYBRID_NAC`) — flag the row as `out-of-scope (wired/NAC migration not in this skill)` and skip.
+
+**Step 3 — Classify each Group node by structure + naming + persona** (rules in priority order; first match wins):
+
+| Signal | Inferred placement | Confidence | Notes |
+|---|---|---|---|
+| Has child Group nodes (no Devices directly) | Site Collection | high | structural — pure container |
+| Plural noun in node name (`Branch_Sites`, `Stores`, `Floors`) | Site Collection | medium | naming heuristic; operator confirms if children later contradict |
+| `_Static` suffix in name | Device Group | medium | naming heuristic for config-pinned device groupings |
+| Children include APs (CAMPUS_AP or MICROBRANCH_AP) | Site (auto-clustering re-enabled in AOS 10) | high | AP-bearing scopes always become Sites |
+| Persona token in name (`VPNC`, `BGW`, `Microbranch`) AND children uniformly that persona | persona-scope at parent (NO Device Group) UNLESS cluster_prof present at scope AND mode = manual → Device Group | medium | VPNC/BRANCH_GW never have APs, so persona-scope is the natural mapping |
+| Children uniformly MOBILITY_GW (no APs — DMZ pattern) AND cluster_prof present at scope | operator confirms cluster mode: auto-site → Site, manual → Device Group | medium | DMZ MGW cluster pattern |
+| Geographic / cardinal noun (`East`, `West`, `Dallas`, three-letter region codes) at leaf or near-leaf | Site | high | naming heuristic for true sites |
+| No matching signal | Device Group (default fallback) | low | operator review required |
+
+**Step 4 — Cluster mode disambiguation:**
+
+When `cluster_prof` is defined at a scope, the **auto-site vs manual cluster mode determines whether the scope becomes a Site or a Device Group**:
+
+- **Auto-site cluster** → Site. Central recreates the AOS 8 auto-site behavior under its native auto-clustering at the Site scope. No explicit Device Group needed.
+- **Manual cluster** → Device Group. Preserves the operator-chosen cluster-member boundary (typical for DMZ VPNCs and DMZ MGW clusters).
+
+> **TBD — automated detection:** the field that distinguishes auto-site mode from manual mode in the `cluster_prof` schema has not yet been validated against a populated cluster. Until then, **operator confirms the cluster mode for every scope where `cluster_prof` is defined**. The draft mapping marks those rows `decide`. Automated detection is a planned enhancement.
+
+**Output:** the existing 3-column hierarchy table from the Stage 6 readiness report is **promoted to a 9-column translation table** that captures the inferred placement, persona, cluster signal, confidence, and target name:
+
+| Source AOS node | Source path | Disposition | Target type (AOS 10) | Inferred persona | Cluster mode signal | Target name (operator-named) | Confidence | Notes |
+|---|---|---|---|---|---|---|---|---|
+| `<Mobility Conductor /md>` | `/md` | `drop` | (none) | n/a | n/a | n/a | high | Central org root is implicit |
+| `<region with child Groups>` | `/md/USE` | `direct-translate` | Site Collection | n/a (container) | n/a | `USE` | high | child Group nodes present |
+| `<plural-named region>` | `/md/Branch/Branch_Sites` | `direct-translate` | Site Collection | n/a (container) | n/a | `Branch_Sites` | medium | plural-noun naming heuristic |
+| `<site with APs>` | `/md/USE/dallas-hq` | `direct-translate` | Site | CAMPUS_AP | auto-site (re-enabled in AOS 10) | `dallas-hq` | high | AP children present |
+| `<DMZ MGW cluster, manual>` | `/md/DMZ` | `direct-translate` | Device Group | MOBILITY_GW | manual (operator-confirmed) | `DMZ-MGW-Cluster` | medium | cluster_prof present + operator-confirmed manual mode |
+| `<persona-named VPNC node>` | `/md/Branch/Branch_VPNC` | `transform (persona-scope)` | (none — persona at parent) | VPNC | n/a (no cluster_prof) | (no group; persona-scope at `/md/Branch`) | medium | VPNC token in name; no manual cluster — fold into parent persona scope |
+| `<_Static-suffix node>` | `/md/Branch/Branch_Sites_Static` | `direct-translate` | Device Group | MOBILITY_GW | n/a | `Branch_Sites_Static` | medium | `_Static` suffix → device group |
+| `<unsignaled node>` | `/md/Foo123` | `inconclusive — operator confirm` | Device Group (default) | n/a | n/a | (operator names) | low | no naming or structural signal — operator review required |
 
 **Skip / inconclusive:** if Stage 1 paste-fallback was used and node hierarchy was not pasted, mark each row's disposition `inconclusive — paste required` and emit one INFO finding noting the gap.
 
@@ -576,19 +610,19 @@ The VSG **does not** contain per-object translation tables for most object types
 | **AAA RADIUS server** (`rad_server`) | §1121-§1141 | `transform` — IP / port / shared-secret carry over; NAS-IP source must change per target mode (Tunnel = gateway IP; Bridge = AP subnet; Mixed = both). VSG describes the source-IP shift; field-mapping into Central is operator-driven. **Central API gap — no `central_manage_server` tool exists today.** Mark target tool as `[Central API gap — manual UI: Network Services → Servers]`. |
 | **AAA TACACS server** (`tacacs_server`) | (none) | `operator-driven` — VSG has no TACACS translation rule. Emit `OPERATOR-MAP` finding. **Central API gap — no manage tool.** Target tool: `[Central API gap — manual UI]`. |
 | **AAA LDAP server** (`ldap_server`) | (none) | `operator-driven` — VSG silent. **Central API gap.** |
-| **AAA Internal Auth Server** (`internal_db_server`) | §1134-§1136 | `drop` — *"Local user authentication service is not supported."* If `local-userdb` has entries, emit `REGRESSION — <N> local users must migrate to ClearPass / Cloud Auth before cutover.` (Already covered by Act I rule F2; cross-link rather than re-emit.) |
 | **AAA FastConnect / EAP-Offload** | §1137-§1141 | `drop` — *"Not supported."* If active, emit `REGRESSION — AAA FastConnect / EAP-Offload in use; plan ClearPass-only EAP termination.` (Cross-link to Act I rule F1.) |
-| **AAA server-group** (`aaa server-group`) | §2076-§2092 (worked example) | `transform` — group name + ordered server list. **Central API gap — no `central_manage_server_group` tool.** Target tool: `[Central API gap — manual UI: Network Services → Server Groups]`. |
-| **802.1X auth profile** (`aaa authentication dot1x`) | §1121-§1141 + §2159-§2208 (CorpNet 802.1X worked example) | `operator-driven` — folded into WLAN profile creation in Central; ESSID is in the WLAN SSID profile, allowed-bands and VLAN ID are in the VAP (collapsed into the WLAN profile in Central), key-management is in the SSID profile, primary/secondary RADIUS pointers are under authentication servers. No automatic field map; emit `OPERATOR-MAP`. Target tool: `central_manage_wlan_profile` (the auth profile is collapsed into it). |
-| **MAC-auth profile** (`aaa authentication mac`) | (none) | `operator-driven` — VSG silent. Emit `OPERATOR-MAP`. Target tool: `central_manage_wlan_profile` (mac-auth opmodes are flags inside it). |
-| **Captive portal profile** (`aaa authentication captive-portal`) | (none, passing mention only) | `operator-driven` — assigned through a role's `captive-portal` field on `central_manage_role`. Emit `OPERATOR-MAP`. Target tool: `central_manage_role` (captive-portal field). |
-| **User role** (`user_role`) | §1173-§1176 (AOS 8 supported-features list) | `transform` — role name + VLAN + ACL + bandwidth-contract + qos + captive-portal + session-timeout map directly. Per-attribute mapping is operator-driven; VSG only confirms roles "are supported." Emit `OPERATOR-MAP` per role. Target tool: `central_manage_role`. |
-| **Session ACL / role ACL** (`ip access-list session ...`) | (none — implied via role) | `transform` — split into Central primitives: `central_manage_net_group` (network-destination aliases referenced by ACL rules) + `central_manage_net_service` (port/protocol service aliases) + `central_manage_role_acl` (the ACL rule list itself). Per-rule mapping is operator-driven; emit `OPERATOR-MAP`. Target tools: `central_manage_net_group`, `central_manage_net_service`, `central_manage_role_acl`. |
-| **AP system profile** (`ap system-profile`) | §1651-§1657 (LMS prerequisite), §412-§415 (regulatory domain replaced) | Mixed: LMS-IP `transform` (must be VRRP VIP, not individual controller IP — already enforced as Act I REGRESSION rule); regulatory-domain-profile `deprecated`; ARM / Dot11a / Dot11g profiles `deprecated` (replaced by RF Profiles in AOS 10); syslog targets `operator-driven` (mapped to Central UI). **Central API gap — no `central_manage_ap_system_profile` tool today.** Target tool: `[Central API gap — manual UI]`. |
-| **WLAN SSID profile** (`wlan ssid-profile`) | §2127-§2219 (CorpNet 802.1X), §2222-§2308 (OpsNet WPA3-Personal) | `direct-translate` — ESSID, opmode, VLAN, forwarding-mode, key-management, RADIUS pointers map to the `central_manage_wlan_profile` payload schema. The two VSG worked examples are the gold-standard reference for field-by-field mapping; emit per-WLAN-profile rows that cite them. Target tool: `central_manage_wlan_profile`. |
-| **VAP profile** (`wlan virtual-ap`) | §2169-§2192 (Allowed bands "in the VAP", VLAN ID "in the VAP") | `transform` — AOS 8 VAP fields collapse INTO the WLAN profile in AOS 10; VAP is not a standalone object. Mark as `transform → folded into WLAN profile`. Target tool: `central_manage_wlan_profile` (collapsed). |
+| **AAA server-group** (`server_group_prof`) | §2076-§2092 (worked example) | `transform` — group name + ordered server list. **Central API gap — no `central_manage_server_group` tool.** Target tool: `[Central API gap — manual UI: Network Services → Server Groups]`. |
+| **802.1X auth profile** (`dot1x_auth_profile`) | §1121-§1141 + §2159-§2208 (CorpNet 802.1X worked example) | `operator-driven` — folded into WLAN profile creation in Central; ESSID is in the WLAN SSID profile, allowed-bands and VLAN ID are in the VAP (collapsed into the WLAN profile in Central), key-management is in the SSID profile, primary/secondary RADIUS pointers are under authentication servers. No automatic field map; emit `OPERATOR-MAP`. Target tool: `central_manage_wlan_profile` (the auth profile is collapsed into it). |
+| **MAC-auth profile** (`mac_auth_profile`) | (none) | `operator-driven` — VSG silent. Emit `OPERATOR-MAP`. Target tool: `central_manage_wlan_profile` (mac-auth opmodes are flags inside it). |
+| **Captive portal profile** (`cp_auth_profile`) | (none, passing mention only) | `operator-driven` — assigned through a role's `captive-portal` field on `central_manage_role`. Emit `OPERATOR-MAP`. Target tool: `central_manage_role` (captive-portal field). |
+| **User role** (`role`) | §1173-§1176 (AOS 8 supported-features list) | `transform` — role name + VLAN + ACL + bandwidth-contract + qos + captive-portal + session-timeout map directly. Per-attribute mapping is operator-driven; VSG only confirms roles "are supported." Emit `OPERATOR-MAP` per role. Target tool: `central_manage_role`. |
+| **Session / Eth / MAC ACL** (`acl_sess`, `acl_eth`, `acl_mac`) | (none — implied via role for `acl_sess`; VSG silent on `acl_eth` / `acl_mac`) | `transform` — split into Central primitives: `central_manage_net_group` (network-destination aliases referenced by ACL rules) + `central_manage_net_service` (port/protocol service aliases) + `central_manage_role_acl` (the ACL rule list itself). Per-rule mapping is operator-driven; emit `OPERATOR-MAP`. The bulk of ACLs are `acl_sess`; `acl_eth` and `acl_mac` are rarer and use the same translation primitives. Target tools: `central_manage_net_group`, `central_manage_net_service`, `central_manage_role_acl`. |
+| **AP system profile** (`ap_sys_prof`) | §1651-§1657 (LMS prerequisite), §412-§415 (regulatory domain replaced) | Mixed: LMS-IP `transform` (must be VRRP VIP, not individual controller IP — already enforced as Act I REGRESSION rule); `reg_domain_prof` `deprecated`; `arm_prof` / `ht_radio_prof` `deprecated` (replaced by RF Profiles in AOS 10); syslog targets `operator-driven` (mapped to Central UI). **Central API gap — no `central_manage_ap_system_profile` tool today.** Target tool: `[Central API gap — manual UI]`. |
+| **WLAN SSID profile** (`ssid_prof`) | §2127-§2219 (CorpNet 802.1X), §2222-§2308 (OpsNet WPA3-Personal) | `direct-translate` — ESSID, opmode, VLAN, forwarding-mode, key-management, RADIUS pointers map to the `central_manage_wlan_profile` payload schema. The two VSG worked examples are the gold-standard reference for field-by-field mapping; emit per-WLAN-profile rows that cite them. Target tool: `central_manage_wlan_profile`. |
+| **VAP profile** (`virtual_ap`) | §2169-§2192 (Allowed bands "in the VAP", VLAN ID "in the VAP") | `transform` — AOS 8 VAP fields collapse INTO the WLAN profile in AOS 10; VAP is not a standalone object. Mark as `transform → folded into WLAN profile`. Target tool: `central_manage_wlan_profile` (collapsed). |
 | **MAC randomization handling** (per-SSID) | (none) | `operator-driven` — flag as a known AOS 10 behavioural difference. VSG does not address. Emit `OPERATOR-MAP`. |
-| **ARM / Dot11a / Dot11g / Regulatory Domain profiles** | §1163-§1166 | `deprecated` — ARM is replaced by **RF Profiles** in AOS 10 / Central. AirMatch already exists in AOS 8 and continues in Central — it is not the AOS 10 ARM replacement. Already raised as DRIFT in Act I; emit one summary `drop` row per profile family in the matrix. |
+| **ARM / HT radio / Regulatory Domain profiles** (`arm_prof`, `ht_radio_prof`, `reg_domain_prof`) | §1163-§1166 | `deprecated` — ARM is replaced by **RF Profiles** in AOS 10 / Central. AirMatch already exists in AOS 8 and continues in Central — it is not the AOS 10 ARM replacement. The pre-AOS-8.4 band-split (`dot11a_radio_prof` / `dot11g_radio_prof`) was consolidated into `ht_radio_prof` upstream; the skill collects the single combined object. Already raised as DRIFT in Act I; emit one summary `drop` row per profile family in the matrix. |
+| **Cluster profile + group membership** (`cluster_prof`, `group_membership`) | (none — implied via cluster topology) | `transform` — cluster topology and member binding fold into Central HA mode + scope placement. Auto-site cluster → Site with auto-clustering re-enabled; manual cluster → Device Group with explicit member binding. See Stage 7 hierarchy translation for the placement rule. No standalone Central object — the cluster's behavior is recreated through the HA mode + scope. |
 | **ClientMatch tunables** | §416-§418, §1167-§1169 | `deprecated` — *"Settings cannot be tuned."* Already raised as DRIFT in Act I; emit one summary `drop` row in the matrix. |
 
 #### 8.2 — Output: the disposition matrix
@@ -599,7 +633,7 @@ Emit a **single master table** with one row per legacy object discovered, **incl
 |---|---|---|---|---|---|---|---|---|---|
 
 - **Source name** — name as it appears in the source config (`corp-radius-1`, `corp-employee-role`, `corp-ssid-prof`).
-- **Source type** — one of: `rad_server`, `tacacs_server`, `ldap_server`, `internal_db_server`, `aaa_server_group`, `dot1x_authentication_profile`, `mac_authentication_profile`, `captive_portal_auth_profile`, `user_role`, `ip_access_list`, `ap_sys_prof`, `wlan_ssid_profile`, `virtual_ap`, `arm_profile`, `dot11a_radio_prof`, `dot11g_radio_prof`, `reg_domain_profile`, `lc_cluster_profile`.
+- **Source type** — AOS 8 REST schema name (verified against developer.arubanetworks.com/aos8/reference). One of: `rad_server`, `tacacs_server`, `ldap_server`, `server_group_prof`, `dot1x_auth_profile`, `mac_auth_profile`, `cp_auth_profile`, `role`, `acl_sess`, `acl_eth`, `acl_mac`, `ap_sys_prof`, `ssid_prof`, `virtual_ap`, `arm_prof`, `ht_radio_prof`, `reg_domain_prof`, `cluster_prof`, `group_membership`. (Note: `internal_db_server` is intentionally absent — Central replaces internal-DB auth entirely; the F2 REGRESSION finding flags local-user migration via the `local-userdb` text dump, not via a REST-object lookup.)
 - **Source scope** — the `/md/...` node where the object is defined (e.g. `/md`, `/md/ACX`, `/md/ACX/dallas-hq/floor-3`). Captured during the Stage 1 hierarchy walk; **never assume an object lives at `/md` root**.
 - **Usage state** — one of: `assigned-and-active` (referenced by an ap-group or other object that's currently bound to active devices), `assigned-but-inactive` (referenced but the binding scope has no active devices), `configured-but-unassigned` (defined but not referenced by any other object), `orphaned` (referenced only by objects that are themselves unused). **This is metadata only — never a basis for excluding the row from migration.** Customers regularly migrate unused config because *"unused right now"* is a different statement from *"won't be needed after migration."*
 - **Disposition** — one of: `direct-translate` / `transform` / `drop` / `deprecated` / `operator-driven` / `inconclusive`.
@@ -624,9 +658,9 @@ For each row in the matrix:
 
 Examples:
 
-> `OPERATOR-MAP — User role 'corp-employee' requires per-attribute mapping. Set role's VLAN, ACL list, captive-portal, session-timeout in the Central role payload. (VSG §1173) (source: aos8_get_effective_config(object_name='user_role', config_path='/md'), Batch 1)`
+> `OPERATOR-MAP — User role 'corp-employee' requires per-attribute mapping. Set role's VLAN, ACL list, captive-portal, session-timeout in the Central role payload. (VSG §1173) (source: aos8_get_effective_config(object_name='role', config_path='/md', entry_type='user'), Batch 1)`
 
-> `OPERATOR-MAP — TACACS server 'tacacs-mgmt' has no automated translation rule. Configure manually in Central UI under Network Services → Servers. (VSG §none) (source: aos8_get_effective_config(object_name='tacacs_server', config_path='/md'), Batch 1)`
+> `OPERATOR-MAP — TACACS server 'tacacs-mgmt' has no automated translation rule. Configure manually in Central UI under Network Services → Servers. (VSG §none) (source: aos8_get_effective_config(object_name='tacacs_server', config_path='/md', entry_type='user'), Batch 1)`
 
 #### 8.4 — Skip / inconclusive
 
@@ -780,7 +814,7 @@ If you believe a different format would be more legible, the answer is no — th
 - Local users: <count>
 - AP groups: <count + names>
 - Configuration nodes: <K> (suggested AOS 10 mapping below)
-- Cluster L2/L3 status: <state> (or "configured but offline at audit time" if `lc_cluster_profile` rows present + live cluster empty)
+- Cluster L2/L3 status: <state> (or "configured but offline at audit time" if `cluster_prof` rows present + live cluster empty)
 - AP system profile LMS-IPs (inventory only — not a finding): <list of value, scope, ap-group binding>
 - AirWave in path: <yes / no>
 
@@ -793,14 +827,22 @@ If you believe a different format would be more legible, the answer is no — th
 - ClearPass NAD list coverage for new AP/Gateway IPs: <complete | missing X.Y.Z entries> (only present when ClearPass is in use AND target mode requires new NADs)
 - Central name collisions detected (translation enrichment): <count, see Act II disposition matrix>
 
-### Suggested AOS 10 hierarchy mapping
-| Source AOS node | Suggested AOS 10 placement | Notes |
-|---|---|---|
-| <Mobility Conductor /md> | (root, not represented in AOS 10) | n/a |
-| <md/<region>> | Site Collection: <name> | grouping |
-| <md/<region>/<site>> | Site: <name> | one Site per discrete physical location |
-| <md/<region>/<site>/<ap-group>> | Device Group: <name> | per-function device grouping |
-| ... | ... | ... |
+### Suggested AOS 10 hierarchy mapping (operator-confirmable draft)
+
+The skill produces a draft inference per `/md/<path>` Group node using naming heuristics, structural signals, and Device-persona cross-reference (see Stage 7 rules). **Rows marked `medium` or `low` confidence — and any row where `cluster_prof` is defined at the scope — require operator confirmation before Stage 7 emits the final mapping.**
+
+| Source AOS node | Inferred placement | Inferred persona | Confidence | Cluster mode | Reason | Operator action |
+|---|---|---|---|---|---|---|
+| `/md` | (none — root) | n/a | high | n/a | Conductor root, dropped | — |
+| `<row per Group node>` | Site Collection / Site / Device Group / persona-scope | MOBILITY_GW / VPNC / BRANCH_GW / MICROBRANCH_AP / CAMPUS_AP / n/a | high / medium / low | n/a / auto-site / manual / **decide** | <which rule fired — child Group nodes \| plural noun \| `_Static` \| persona token \| AP children \| geographic noun \| cluster_prof present \| no signal> | confirm \| decide \| — |
+
+**Persona key:**
+- `MOBILITY_GW` — WLAN gateway. Default for AOS 8 Mobility Controllers (MDs).
+- `VPNC` / `BRANCH_GW` — gateway-only personas; never have APs. Persona-scope at parent (no Device Group) unless manually clustered.
+- `MICROBRANCH_AP` / `CAMPUS_AP` — wireless AP roles.
+- (out of scope) `ACCESS_SWITCH`, `AGG_SWITCH`, `CORE_SWITCH`, `BRIDGE`, `HYBRID_NAC` — flagged as wired/NAC migration not in this skill's scope; not translated.
+
+**Cluster mode column:** `auto-site` and `manual` are recorded only after operator confirmation. Until automated detection of the auto-site-vs-manual signal in `cluster_prof` is wired in (planned), the skill marks every cluster_prof-bearing scope as **`decide`** and surfaces a per-scope confirmation prompt before Stage 7. Auto-site clusters → Site (Central re-enables auto-clustering). Manual clusters → Device Group (preserves explicit member boundary).
 
 ### REGRESSION findings (must fix before migration)
 Findings only fire when their applicability gate is met (see Stage 3). Possible REGRESSIONs include:
@@ -910,29 +952,31 @@ Verdict: PARTIAL — <N> Stage-1 collection items were inconclusive. Translation
 **Target SSID forwarding mode:** <tunnel | bridge | mixed> (Act-I-recommended; operator confirmed/overrode)
 
 ### Hierarchy translation (Stage 7)
-| Source AOS node | Source path | Disposition | Target type (AOS 10) | Target name | Notes |
-|---|---|---|---|---|---|
-| <Mobility Conductor /md> | `/md` | drop | (none) | n/a | Central org root is implicit |
-| <region> | `/md/<region>` | direct-translate | Site Collection | <name> | grouping |
-| <site> | `/md/<region>/<site>` | direct-translate | Site | <name> | one Site per discrete physical location |
-| <ap-group> | `/md/<region>/<site>/<ap-group>` | direct-translate | Device Group | <name> | per-function device grouping |
-| ... | ... | ... | ... | ... | ... |
+| Source AOS node | Source path | Disposition | Target type (AOS 10) | Inferred persona | Cluster mode signal | Target name | Confidence | Notes |
+|---|---|---|---|---|---|---|---|---|
+| <Mobility Conductor /md> | `/md` | drop | (none) | n/a | n/a | n/a | high | Central org root is implicit |
+| <region with child Groups> | `/md/<region>` | direct-translate | Site Collection | n/a (container) | n/a | <name> | high | child Group nodes present |
+| <site with APs> | `/md/<region>/<site>` | direct-translate | Site | CAMPUS_AP | auto-site | <name> | high | AP children + auto-site cluster |
+| <DMZ MGW cluster, manual> | `/md/<region>/<dmz-cluster>` | direct-translate | Device Group | MOBILITY_GW | manual (operator-confirmed) | <name> | medium | cluster_prof + operator-confirmed manual mode |
+| <persona-named VPNC node> | `/md/<region>/<vpnc-node>` | transform (persona-scope) | (none — persona at parent) | VPNC | n/a (no cluster_prof) | (no group; persona-scope at `/md/<region>`) | medium | persona token in name; persona-scope at parent |
+| <ap-group / static device group> | `/md/<region>/<site>/<ap-group>` | direct-translate | Device Group | CAMPUS_AP | n/a | <name> | medium | per-function device grouping |
+| ... | ... | ... | ... | ... | ... | ... | ... | ... |
 
 ### Per-object disposition matrix (Stage 8)
 | Source name | Source type | Source scope | Usage state | Disposition | Target name | Target type | Central tool | VSG anchor | Notes |
 |---|---|---|---|---|---|---|---|---|---|
 | corp-radius-1 | rad_server | /md/ACX | assigned-and-active | transform | corp-radius-1 | Server | [Central API gap — manual UI: Network Services → Servers] | §1121 | NAS-IP source must change to gateway IP for Tunnel target |
-| CPPM-PUB-ONLY | aaa_server_group | /md/ACX | configured-but-unassigned | transform | CPPM-PUB-ONLY | Server group | [Central API gap — manual UI: Network Services → Server Groups] | §2076 | Orphan in source — operator may choose to skip |
-| corp-employee | user_role | /md/ACX | assigned-and-active | transform | corp-employee | Role | central_manage_role | §1173 | per-attribute mapping required (VLAN, ACL list, captive-portal, session-timeout) |
+| CPPM-PUB-ONLY | server_group_prof | /md/ACX | configured-but-unassigned | transform | CPPM-PUB-ONLY | Server group | [Central API gap — manual UI: Network Services → Server Groups] | §2076 | Orphan in source — operator may choose to skip |
+| corp-employee | role | /md/ACX | assigned-and-active | transform | corp-employee | Role | central_manage_role | §1173 | per-attribute mapping required (VLAN, ACL list, captive-portal, session-timeout) |
 | ACX_apsys_ui | ap_sys_prof | /md/ACX | configured-but-unassigned | transform | ACX_apsys_ui | (none — folded into Device Group config) | [Central API gap — manual UI] | §1651 | Profile not bound to any active ap-group, but still translates per principle |
-| corp-ssid-prof | wlan_ssid_profile | /md/ACX | assigned-and-active | direct-translate | corp-ssid-prof | WLAN profile | central_manage_wlan_profile | §2127-§2219 | direct field map per CorpNet 802.1X worked example |
-| arm-default | arm_profile | /md | configured-but-unassigned | deprecated | n/a | (none) | (none) | §1163 | Replaced by RF Profiles in AOS 10 |
+| corp-ssid-prof | ssid_prof | /md/ACX | assigned-and-active | direct-translate | corp-ssid-prof | WLAN profile | central_manage_wlan_profile | §2127-§2219 | direct field map per CorpNet 802.1X worked example |
+| arm-default | arm_prof | /md | configured-but-unassigned | deprecated | n/a | (none) | (none) | §1163 | Replaced by RF Profiles in AOS 10 |
 | ... | ... | ... | ... | ... | ... | ... | ... | ... | ... |
 
 ### OPERATOR-MAP findings (manual mapping work items)
-- **OPERATOR-MAP** — User role 'corp-employee' requires per-attribute mapping. Set role's VLAN, ACL list, captive-portal, session-timeout in the Central role payload. (VSG §1173) (source: aos8_get_effective_config(object_name='user_role', config_path='/md'), Batch 1)
-- **OPERATOR-MAP** — TACACS server 'tacacs-mgmt' has no automated translation rule. Configure manually in Central UI under Network Services → Servers. (VSG none) (source: aos8_get_effective_config(object_name='tacacs_server', config_path='/md'), Batch 1)
-- **OPERATOR-MAP** — Session ACL 'employee-acl' has 14 rules; per-rule translation to Central role-acl is operator-driven. Map net-destinations to net-groups, ports to net-services, then re-emit ordered rule list. (VSG none) (source: aos8_get_effective_config(object_name='ip_access_list', config_path='/md'), Batch 1)
+- **OPERATOR-MAP** — User role 'corp-employee' requires per-attribute mapping. Set role's VLAN, ACL list, captive-portal, session-timeout in the Central role payload. (VSG §1173) (source: aos8_get_effective_config(object_name='role', config_path='/md', entry_type='user'), Batch 1)
+- **OPERATOR-MAP** — TACACS server 'tacacs-mgmt' has no automated translation rule. Configure manually in Central UI under Network Services → Servers. (VSG none) (source: aos8_get_effective_config(object_name='tacacs_server', config_path='/md', entry_type='user'), Batch 1)
+- **OPERATOR-MAP** — Session ACL 'employee-acl' has 14 rules; per-rule translation to Central role-acl is operator-driven. Map net-destinations to net-groups, ports to net-services, then re-emit ordered rule list. (VSG none) (source: aos8_get_effective_config(object_name='acl_sess', config_path='/md', entry_type='user'), Batch 1)
 - ... (one bullet per `operator-driven` row in the matrix)
 - (or "No OPERATOR-MAP findings.")
 

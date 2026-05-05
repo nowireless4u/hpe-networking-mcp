@@ -5,6 +5,73 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.1.3] - 2026-05-05
+
+**`aos-migration` skill — full alignment with the v2.5.1.2 OBJECT_TYPES rewrite + new hierarchy mapping rules engine.** Closes [#255](https://github.com/nowireless4u/2hpe-networking-mcp/issues/255), [#256](https://github.com/nowireless4u/hpe-networking-mcp/issues/256), [#257](https://github.com/nowireless4u/hpe-networking-mcp/issues/257).
+
+### Why
+
+v2.5.1.2 fixed the COLLECT-01 `OBJECT_TYPES` list (correct REST schema names) but left the rest of the skill internally inconsistent. Stage 6 readiness templates, Stage 7 hierarchy rules, Stage 8 disposition matrix, and the Act II report templates all still embedded the OLD object names and an OLD 4-level structural hierarchy model that didn't match what the skill was actually collecting. Operators reading the audit output would have seen mismatched names and a hierarchy mapping that didn't reflect any of the design discussion (5 placement types, persona dimension, naming heuristics, cluster-mode-driven decisions).
+
+This release closes that loop. Surfaced when Jon manually inspected the skill after v2.5.1.2 shipped — would have caused confusing test output otherwise.
+
+### Hierarchy mapping rules engine (#255)
+
+AOS 10 / Central has **5 placement types**, not 4: `Site Collection`, `Site`, `Device Group`, **`device persona scope`**, and the implicit `(global)` root. Persona is a first-class scope dimension — config can apply to "all VPNCs at scope X" without creating a Device Group. Stage 7 now produces a draft classification per `/md/<path>` Group node using:
+
+- **Step 1 — Drop conductor / mobility-manager scope:** `/md` and `/mm`+descendants → `drop`.
+- **Step 2 — Determine persona for each Device child** by cross-referencing the Stage 1 inventory. Personas in scope: `MOBILITY_GW` (default for AOS 8 MDs — = WLAN gateway), `VPNC` (never has APs), `BRANCH_GW` (SD-Branch CPE; never has APs; rare in 8.x), `MICROBRANCH_AP`, `CAMPUS_AP`. Out-of-scope (`ACCESS_SWITCH`, `AGG_SWITCH`, `CORE_SWITCH`, `BRIDGE`, `HYBRID_NAC`) are flagged and skipped.
+- **Step 3 — Classify each Group node** by structure + naming + persona signal (priority-ordered):
+  - Has child Group nodes → `Site Collection` (high)
+  - Plural noun in name (`Branch_Sites`, `Stores`) → `Site Collection` (medium)
+  - `_Static` suffix → `Device Group` (medium)
+  - Children include APs → `Site` (auto-clustering re-enabled in AOS 10) (high)
+  - Children uniformly VPNC or BRANCH_GW → persona-scope at parent **unless** `cluster_prof` present + manual mode → Device Group (medium)
+  - Children uniformly MOBILITY_GW (no APs — DMZ pattern) AND `cluster_prof` present → operator confirms cluster mode (medium)
+  - Geographic / cardinal noun (`East`, `Dallas`, three-letter region codes) → `Site` (high)
+  - No matching signal → `Device Group` (low; operator review)
+- **Step 4 — Cluster mode disambiguation:** auto-site cluster → Site; manual cluster → Device Group. **The auto-vs-manual mode field in `cluster_prof` has not yet been validated against a populated cluster** — until then, operator confirms the mode for every scope where `cluster_prof` is defined. The draft mapping marks those rows `decide`. Automated detection is a planned enhancement.
+
+The Stage 7 output table is **promoted from 5 columns to 9** to capture: `Source AOS node`, `Source path`, `Disposition`, `Target type`, **`Inferred persona`**, **`Cluster mode signal`**, `Target name`, **`Confidence`**, `Notes`. The Stage 6 readiness template ("Suggested AOS 10 hierarchy mapping") and the Act II Stage 7 report template both adopt the same expanded shape. Operator confirmation is required for any `medium` or `low` confidence row, and for any row where `cluster_prof` is defined.
+
+### Object-name corrections (#256)
+
+13+ downstream references in the skill still used AOS 8 CLI nouns instead of REST schema names. v2.5.1.2 fixed COLLECT-01 but didn't propagate. Now all aligned:
+
+| Old (CLI noun) | New (REST schema) |
+|---|---|
+| `aaa_server_group` | `server_group_prof` |
+| `wlan_ssid_profile` | `ssid_prof` |
+| `lc_cluster_profile` | `cluster_prof` (+ `group_membership` where MD-binding is referenced) |
+| `reg_domain_profile` | `reg_domain_prof` |
+| `arm_profile` | `arm_prof` |
+| `user_role` | `role` |
+| `ip_access_list` | split: `acl_sess` / `acl_eth` / `acl_mac` |
+| `captive_portal_auth_profile` | `cp_auth_profile` |
+| `dot1x_authentication_profile` | `dot1x_auth_profile` |
+| `mac_authentication_profile` | `mac_auth_profile` |
+| `dot11a_radio_prof` + `dot11g_radio_prof` | `ht_radio_prof` (combined since AOS 8.4) |
+
+Stage 8 source-type enumeration rewritten with all corrected names plus `cluster_prof`, `group_membership`, and the 3-way ACL split. Disposition rules table updated to reflect the new names. Example disposition matrix rows in the Act II report template updated. F7 finding text updated to reference `arm_prof` / `ht_radio_prof` / `reg_domain_prof`. OPERATOR-MAP example findings updated with corrected object names and the new `entry_type='user'` argument.
+
+### `internal_db_server` cleanup (#257)
+
+Central replaces internal-DB auth entirely (per session discussion). The Stage 8 disposition row for `internal_db_server` has been removed — the F2 REGRESSION finding ("Internal Authentication Server in use with local users") stays and is sourced from `local-userdb` text dump, not from a missing REST-object lookup. Stage 8 source-type enumeration explicitly notes the absence to prevent future re-introduction. Inventory dict's `aaa_servers.internal_db` key removed.
+
+### Files changed
+
+- `src/hpe_networking_mcp/skills/aos-migration.md` — Stage 6 readiness template, Stage 7 rules + output template, Stage 8 disposition rules + source-type enumeration, Act II Stage 7 report template, F7 finding, OPERATOR-MAP examples, inventory dict structure. ~9 KB of skill content rewritten.
+- `pyproject.toml` — v2.5.1.3.
+
+### What this does NOT do
+
+The cluster auto-vs-manual mode signal still requires operator confirmation. The exact `cluster_prof` schema field that distinguishes the two modes hasn't been validated against a populated cluster yet — when that's done, the rules engine can detect it automatically and the `decide` action can become `auto`. Marked as TBD in the skill.
+
+### Notes
+
+- This release was prompted by Jon's manual inspection catching that v2.5.1.2 only updated COLLECT-01 and not the rest of the skill. Saved as a feedback memory: when a discussion produces a new model, audit every place the old model is embedded — not just the immediate code path.
+- Verified live against an ArubaMM-VA Conductor (AOS 8.12.0.5) for the v2.5.1.2 work; the v2.5.1.3 skill rewrite uses the same source-of-truth examples (ACX, Branch, Branch_VPNC, Branch_Sites_Static, Branch_Sites, Campus East/West).
+
 ## [2.5.1.2] - 2026-05-04
 
 **Comprehensive AOS 8 audit fallout — restores 8 broken read tools, adds `entry_type` filter for ~93% smaller migration audits, fixes 11 wrong object names in `aos-migration` skill.** Surfaced by a live audit of all 35 aos8 tools against an ArubaMM-VA Conductor (AOS 8.12.0.5).
