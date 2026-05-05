@@ -216,6 +216,7 @@ def create_server(config: ServerConfig) -> FastMCP:
     from hpe_networking_mcp.middleware.pii_tokenization import (
         PIITokenizationMiddleware,
     )
+    from hpe_networking_mcp.middleware.response_envelope import ResponseEnvelopeMiddleware
     from hpe_networking_mcp.middleware.retry import RetryMiddleware
     from hpe_networking_mcp.middleware.sandbox_error_catch import (
         SandboxErrorCatchMiddleware,
@@ -238,6 +239,10 @@ def create_server(config: ServerConfig) -> FastMCP:
     #                         post-detokenization, which is correct (the user is
     #                         the trust boundary holder, not the AI)
     #   Retry               — transient failures retry transparently after elicit
+    #   ResponseEnvelope    — v2.5.1.0 prototype (#246): wraps the 4 cross-platform
+    #                         tools' raw output in {ok, data, status, message, tool,
+    #                         platform}. Innermost so retry's status-code extraction
+    #                         + PII tokenization see the envelope shape on the way out.
     mcp = FastMCP(
         name="HPE Networking MCP",
         instructions=_INSTRUCTIONS,
@@ -251,6 +256,7 @@ def create_server(config: ServerConfig) -> FastMCP:
             PIITokenizationMiddleware(token_store, enabled=config.enable_pii_tokenization),
             ElicitationMiddleware(),
             RetryMiddleware(),
+            ResponseEnvelopeMiddleware(),
         ],
     )
 

@@ -104,6 +104,28 @@ When `ENABLE_PII_TOKENIZATION=true` (operator-controlled, off by default), the M
 
 When tokenization is off, tool responses contain plaintext values — your behavior is unchanged.
 
+## Response envelope on cross-platform tools (v2.5.1.0+ prototype)
+
+The four cross-platform tools — `health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile` — wrap their responses in a uniform envelope:
+
+```
+{
+  "ok":       bool,            # success indicator
+  "status":   int | null,      # HTTP status (200 / 401 / 503) or null for non-HTTP
+  "data":     <any>,           # the actual payload — list, dict, or null
+  "message":  str | null,      # human-readable error / context message
+  "tool":     str,             # tool name
+  "platform": str | null       # null for these cross-platform tools
+}
+```
+
+**Practical implications:**
+- For these four tools, the actual payload lives at `result["data"]`. Reading `result["status"]` etc. directly gets the envelope's metadata, not the inner data fields.
+- All other tools (`mist_*`, `central_*`, `clearpass_*`, `apstra_*`, `axis_*`, `aos8_*`, `greenlake_*`) return their **native shape unchanged** — no envelope. Don't navigate through `["data"]` for those.
+- Errors uniformly arrive as `{"ok": false, "message": "...", "data": null}` for the wrapped tools.
+
+This is a **prototype scope** — issue [#246](https://github.com/nowireless4u/hpe-networking-mcp/issues/246) tracks expanding the envelope to every tool in v3.0.0.0 (which would be a breaking change for static-mode consumers).
+
 ---
 
 # JUNIPER MIST (mist_* tools)

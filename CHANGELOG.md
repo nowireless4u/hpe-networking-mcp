@@ -5,6 +5,63 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.1.0] - 2026-05-04
+
+**Response envelope prototype (v3.0.0.0 candidate).** Wraps the four cross-platform tools (`health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`) in a uniform response envelope so AIs navigating their output learn one shape instead of four bespoke ones. Tracked in issue [#246](https://github.com/nowireless4u/hpe-networking-mcp/issues/246) for the full v3.0.0.0 expansion to every tool in the catalog.
+
+### Why
+
+Operator transcripts surfaced a code-mode AI hitting *"`central.message` / `http_status` were read from the wrong level"* — a class of error caused by every tool having its own response structure. A smart-dict wrapper (overridden `__missing__` for helpful KeyError messages) was prototyped and **empirically rejected**: the Monty sandbox runtime strips dict subclasses across the boundary, so subclass behavior doesn't reach the AI. The only structural fix that survives marshaling is changing the data **shape** itself.
+
+This release ships the shape change scoped to four tools to validate the pattern before committing to the full v3 refactor (which would be a breaking change for static-mode consumers across all 312 tools).
+
+### Envelope shape
+
+```
+{
+  "ok":       bool,            # success indicator
+  "status":   int | null,      # HTTP status (200 / 401 / 503) or null for non-HTTP
+  "data":     <any>,           # the actual payload — list, dict, or null
+  "message":  str | null,      # human-readable error / context message
+  "tool":     str,             # tool name (e.g. "health")
+  "platform": str | null       # platform-prefix-derived; null for cross-platform
+}
+```
+
+For multi-platform tools like `health`, the inner `data` preserves each platform's natural shape rather than triple-nesting envelopes.
+
+### What's new
+
+- **`src/hpe_networking_mcp/middleware/response_envelope.py`** — new `ResponseEnvelopeMiddleware`. Allowlist-scoped to `PROTOTYPE_TOOLS = {health, site_health_check, site_rf_check, manage_wlan_profile}`. Other tools short-circuit and pass through unchanged. Idempotency check ensures already-enveloped responses (a tool returning the envelope explicitly) are not re-wrapped.
+- **`src/hpe_networking_mcp/server.py`** — middleware wired into the chain as **innermost** (last in the list), so it wraps raw tool output before retry / PII / elicitation / etc. process the response. RetryMiddleware's status-code extraction works equally on the envelope's `status` field as on raw `status_code`/`code`/`http_status`.
+- **`tests/unit/test_response_envelope_middleware.py`** — 27 new unit tests covering platform inference, status extraction, envelope-shape detection, success wrapping, prototype-tool short-circuit (non-allowlisted tools pass through), idempotency on already-enveloped responses, and `None`-structured-content handling.
+- **`INSTRUCTIONS.md`** — new "Response envelope on cross-platform tools" section telling AIs how to navigate the new shape: payload is at `result["data"]` for these four tools; everything else returns native shape.
+
+### What this does NOT do
+
+- **Doesn't apply to the other 308 tools.** Their response shapes are unchanged. The full v3 refactor is tracked separately as [#246](https://github.com/nowireless4u/hpe-networking-mcp/issues/246).
+- **Doesn't fix wrong-level access inside `data`.** The envelope makes the *outer* shape uniform; the inner `data` field still has tool-specific structure. Reduces the navigation surface from "every tool has a different shape" to "the four cross-platform tools all start at `data`," which is genuinely simpler but not a panacea.
+- **Doesn't fix pure Python logic errors** like `same_scope_id = scope_a or scope_b` returning a string instead of a bool. Those are AI capability issues no platform change can paper over.
+- **Doesn't update skill text** to reference the new envelope shape — skills describe data semantically and AIs adapt with one global note in `INSTRUCTIONS.md`. Skill-text updates are deferred to v3 to amortize across the full refactor.
+
+### Decision criteria for promoting to v3
+
+- Operator sessions on the four wrapped tools show no regressions from the existing shape.
+- AI behavior is observably better on these tools (fewer wrong-level errors).
+- Test/skill update pattern is mechanical enough to scale to 312 tools without surprises.
+- PII tokenization continues to work correctly through the envelope (verified — PII walker descends into `data` recursively; envelope metadata fields like `tool` and `platform` aren't tracked field names).
+
+### File touches
+
+- `src/hpe_networking_mcp/middleware/response_envelope.py` — new (143 lines)
+- `src/hpe_networking_mcp/server.py` — added 1 import + 1 line in middleware chain
+- `tests/unit/test_response_envelope_middleware.py` — new (213 lines, 27 tests)
+- `src/hpe_networking_mcp/INSTRUCTIONS.md` — new envelope-explanation section
+- `pyproject.toml` — version 2.5.0.1 → 2.5.1.0
+- `CHANGELOG.md` — this entry
+
+No skill text changes; no breaking changes; no platform code changes.
+
 ## [2.5.0.1] - 2026-05-04
 
 **Eight-item cleanup pass on the `aos-migration` skill driven by operator transcripts.** Drops AOS 6 and Instant AP support, deletes the Stage 0 operator interview, replaces controller-plumbing REGRESSION rules with inventory-only entries, adds applicability gates so empty environments don't generate spurious findings, introduces an `EMPTY-SOURCE` verdict, makes Stage 1 walk the full `/md` hierarchy in code-mode orchestration, and adds a `usage_state` column to the disposition matrix so unused/orphaned config still gets translated.
