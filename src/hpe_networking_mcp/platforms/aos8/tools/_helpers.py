@@ -20,7 +20,23 @@ from hpe_networking_mcp.platforms.aos8.client import (
     AOS8Client,
 )
 
-__all__ = ["strip_meta", "run_show", "get_object", "post_object", "format_aos8_error"]
+__all__ = [
+    "strip_meta",
+    "run_show",
+    "get_object",
+    "post_object",
+    "format_aos8_error",
+    "AOS8DecodeError",
+]
+
+
+class AOS8DecodeError(RuntimeError):
+    """Raised when an AOS 8 endpoint returns a 2xx body that isn't valid JSON.
+
+    Common triggers: an unrecognized show-command (CLI parser silently
+    rejects, returns empty body), an HTML login redirect, or a plaintext
+    error from a misrouted request.
+    """
 
 
 def strip_meta(body: Any) -> Any:
@@ -36,6 +52,30 @@ def strip_meta(body: Any) -> Any:
     if not isinstance(body, dict):
         return body
     return {k: v for k, v in body.items() if k not in ("_meta", "_global_result")}
+
+
+def _decode_json_or_raise(response: httpx.Response, what: str) -> Any:
+    """Return ``response.json()`` or raise AOS8DecodeError with diagnostics.
+
+    AOS 8 may return a 2xx response with an empty body, an HTML login page,
+    or a plaintext error when the CLI parser silently rejects a command or
+    a session cookie has gone stale. Surface enough metadata for the AI
+    caller to act on (status, content-type, body length, body preview)
+    instead of leaking the raw json-module ValueError.
+    """
+    try:
+        return response.json()
+    except ValueError as exc:
+        body = response.text or ""
+        preview = body[:120].replace("\n", " ").strip()
+        content_type = response.headers.get("content-type", "<missing>")
+        raise AOS8DecodeError(
+            f"AOS 8 returned non-JSON body for {what} "
+            f"(HTTP {response.status_code}, content-type={content_type}, {len(body)} bytes)"
+            + (f": {preview!r}" if preview else " — body was empty")
+            + ". Likely causes: command not recognized by the controller's"
+            " CLI parser, an HTML login redirect, or a misrouted endpoint."
+        ) from exc
 
 
 async def run_show(
@@ -59,7 +99,7 @@ async def run_show(
     if config_path is not None:
         params["config_path"] = config_path
     response = await client.request("GET", "/v1/configuration/showcommand", params=params)
-    return strip_meta(response.json())
+    return strip_meta(_decode_json_or_raise(response, f"show command {command!r}"))
 
 
 async def get_object(
@@ -83,7 +123,7 @@ async def get_object(
         f"/v1/configuration/object/{object_path}",
         params={"config_path": config_path},
     )
-    return strip_meta(response.json())
+    return strip_meta(_decode_json_or_raise(response, f"object {object_path!r}"))
 
 
 async def post_object(
@@ -139,6 +179,8 @@ def format_aos8_error(exc: BaseException, action: str) -> str:
         return f"AOS8 authentication failed while attempting to {action}: {exc}"
     if isinstance(exc, AOS8APIError):
         return f"AOS8 API error while attempting to {action}: {exc}"
+    if isinstance(exc, AOS8DecodeError):
+        return f"AOS8 decode error while attempting to {action}: {exc}"
     if isinstance(exc, httpx.HTTPStatusError):
         return f"AOS8 HTTP {exc.response.status_code} while attempting to {action}: {exc}"
     if isinstance(exc, httpx.HTTPError):

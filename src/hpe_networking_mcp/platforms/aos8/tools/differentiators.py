@@ -53,12 +53,12 @@ async def aos8_get_md_hierarchy(ctx: Context) -> dict[str, Any] | str:
         ctx: FastMCP request context (provides ``aos8_client``).
 
     Returns:
-        Dict with the AOS8 ``Switch Hierarchy`` table on success; error
-        string on failure.
+        Dict with the AOS8 ``Configuration node hierarchy`` table on success;
+        error string on failure.
     """
     client = ctx.lifespan_context["aos8_client"]
     try:
-        return await run_show(client, "show switch hierarchy")
+        return await run_show(client, "show configuration node-hierarchy")
     except Exception as exc:  # noqa: BLE001
         return format_aos8_error(exc, "fetch MD hierarchy")
 

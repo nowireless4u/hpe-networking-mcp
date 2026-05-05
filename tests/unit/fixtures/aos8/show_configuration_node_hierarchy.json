@@ -1,0 +1,23 @@
+{
+  "_meta": ["Config Node", "Name", "Type"],
+  "_data": ["Default-node is not configured. Autopark is disabled."],
+  "Configuration node hierarchy": [
+    {"Config Node": "/", "Name": null, "Type": "System"},
+    {"Config Node": "/md", "Name": null, "Type": "System"},
+    {"Config Node": "/md/ACX", "Name": null, "Type": "Group"},
+    {"Config Node": "/md/ACX/00:0c:29:3b:0e:6d", "Name": "ACX-VMC02", "Type": "Device"},
+    {"Config Node": "/md/ACX/00:0c:29:41:37:35", "Name": "ACX-VMC01", "Type": "Device"},
+    {"Config Node": "/md/Branch", "Name": null, "Type": "Group"},
+    {"Config Node": "/md/Branch/Branch_Sites", "Name": null, "Type": "Group"},
+    {"Config Node": "/md/Branch/Branch_Sites_Static", "Name": null, "Type": "Group"},
+    {"Config Node": "/md/Branch/Branch_VPNC", "Name": null, "Type": "Group"},
+    {"Config Node": "/md/Campus", "Name": null, "Type": "Group"},
+    {"Config Node": "/md/Campus/East", "Name": null, "Type": "Group"},
+    {"Config Node": "/md/Campus/East/00:0c:29:41:a2:5a", "Name": "MJG-EAST-02", "Type": "Device"},
+    {"Config Node": "/md/Campus/East/00:0c:29:a1:08:18", "Name": "MJG-EAST-01", "Type": "Device"},
+    {"Config Node": "/md/Campus/West", "Name": null, "Type": "Group"},
+    {"Config Node": "/mm", "Name": null, "Type": "System"},
+    {"Config Node": "/mm/mynode", "Name": null, "Type": "System"}
+  ],
+  "_global_result": {"status": "0", "status_str": "Success"}
+}

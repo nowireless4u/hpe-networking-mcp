@@ -625,7 +625,7 @@ Authentication is automatic — the client logs in to `/v1/api/login` with `aos8
 ## Mobility Conductor (MM) vs Managed Device (MD) Context
 - **MM** is the configuration/policy plane — cluster state, AP database, AP groups, SSID profiles, virtual APs, user roles, AAA all live here.
 - **MD** is the data plane — clients terminate on MDs; runtime state (active APs per MD, RF radios, IPsec tunnels) is queried per-MD.
-- Several tools accept an explicit MD context argument; when omitted they query MM. `aos8_get_md_hierarchy` lists MDs under MM.
+- Several tools accept an explicit MD context argument; when omitted they query MM. `aos8_get_md_hierarchy` returns the full configuration node tree (`/`, `/md`, `/md/<group>`, `/md/<group>/<device-mac>`, `/mm/...`) with `Type` of `System`, `Group`, or `Device`.
 
 ## Tool Categories
 - **Health/inventory**: `aos8_get_controllers`, `aos8_get_ap_database`, `aos8_get_active_aps`, `aos8_get_ap_detail`, `aos8_get_bss_table`, `aos8_get_radio_summary`, `aos8_get_version`, `aos8_get_licenses`.

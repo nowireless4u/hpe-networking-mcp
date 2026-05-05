@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.1.1] - 2026-05-04
+
+**`aos8_get_md_hierarchy` was sending an unrecognized CLI command — fixed; AOS 8 helpers now diagnose decode failures.** Two related bugs surfaced from an `aos-migration` operator transcript:
+
+- The differentiator tool was issuing `show switch hierarchy` (singular), which is not a real AOS 8 CLI command. The Conductor's CLI parser silently rejected it and returned an empty body, which `run_show()` couldn't parse → bare `JSONDecodeError` → cryptic *"Expecting value: line 1 column 1 (char 0)"* error reaching the AI. The hand-built fixture invented both the command name and the response shape, so the unit test was passing against a fiction. Verified live against an ArubaMM-VA conductor (AOS 8.12.0.5): the correct command is `show configuration node-hierarchy`, returning a `Configuration node hierarchy` table with `Config Node` / `Name` / `Type` columns. Issue [#248](https://github.com/nowireless4u/hpe-networking-mcp/issues/248).
+- More generally, every AOS 8 read tool that goes through `run_show()` or `get_object()` was leaking raw `json.JSONDecodeError` messages on any 2xx-with-non-JSON response (empty body, HTML login redirect, plaintext error). The bare error gave the AI no hint about *what* failed. Helpers now raise `AOS8DecodeError` with HTTP status, content-type, body length, and a body preview, which `format_aos8_error()` renders as an actionable diagnostic. Issue [#249](https://github.com/nowireless4u/hpe-networking-mcp/issues/249).
+
+A follow-up issue [#250](https://github.com/nowireless4u/hpe-networking-mcp/issues/250) tracks the related `aos-migration` skill bug — 13 of 20 names in the COLLECT-01 `OBJECT_TYPES` list are not valid AOS 8 REST schema names; that fix lands separately.
+
+### What's new
+
+- **`src/hpe_networking_mcp/platforms/aos8/tools/differentiators.py`** — `aos8_get_md_hierarchy` now sends `show configuration node-hierarchy`. Docstring updated to reflect the real top-level response key.
+- **`src/hpe_networking_mcp/platforms/aos8/tools/_helpers.py`** — new `AOS8DecodeError` class + `_decode_json_or_raise()` helper. `run_show()` and `get_object()` route their `response.json()` calls through it. `format_aos8_error()` gains a branch for `AOS8DecodeError` so the diagnostic surfaces verbatim instead of falling into the generic *"Unexpected error"* path.
+- **`tests/unit/fixtures/aos8/show_configuration_node_hierarchy.json`** — replaces hand-built `show_switch_hierarchy.json` with a real-shape capture (16 rows: System / Group / Device entries spanning `/md/ACX`, `/md/Branch`, `/md/Campus/East`, `/md/Campus/West`, `/mm/mynode`).
+- **`tests/unit/test_aos8_read_differentiators.py`** — `test_get_md_hierarchy` updated to the new command + shape; new `test_get_md_hierarchy_non_json_body_diagnoses_decode_error` regression test ensures decode failures surface a structured diagnostic with HTTP status, content-type, and body length, and that the bare json-module error never leaks to callers.
+
+### Notes
+
+- This is the second instance (after [#237](https://github.com/nowireless4u/hpe-networking-mcp/issues/237)) of a hand-fabricated fixture masking a real-world bug. Live-capture-only fixtures remain mandatory for new code paths.
+
 ## [2.5.1.0] - 2026-05-04
 
 **Response envelope prototype (v3.0.0.0 candidate).** Wraps the four cross-platform tools (`health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`) in a uniform response envelope so AIs navigating their output learn one shape instead of four bespoke ones. Tracked in issue [#246](https://github.com/nowireless4u/hpe-networking-mcp/issues/246) for the full v3.0.0.0 expansion to every tool in the catalog.

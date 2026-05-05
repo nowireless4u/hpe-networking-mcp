@@ -45,7 +45,7 @@ def _make_ctx(body: dict):
 async def test_get_md_hierarchy():
     from hpe_networking_mcp.platforms.aos8.tools.differentiators import aos8_get_md_hierarchy
 
-    body = _load("show_switch_hierarchy.json")
+    body = _load("show_configuration_node_hierarchy.json")
     ctx, client = _make_ctx(body)
 
     result = await aos8_get_md_hierarchy(ctx)
@@ -53,11 +53,44 @@ async def test_get_md_hierarchy():
     client.request.assert_awaited_once_with(
         "GET",
         "/v1/configuration/showcommand",
-        params={"command": "show switch hierarchy"},
+        params={"command": "show configuration node-hierarchy"},
     )
     assert "_meta" not in result
     assert "_global_result" not in result
-    assert result["Switch Hierarchy"][0]["Name"] == "MC-01"
+    rows = result["Configuration node hierarchy"]
+    assert {r["Type"] for r in rows} >= {"System", "Group", "Device"}
+    assert any(r["Config Node"] == "/md" for r in rows)
+    assert any(r["Type"] == "Device" and r["Name"] for r in rows)
+
+
+async def test_get_md_hierarchy_non_json_body_diagnoses_decode_error():
+    """Empty / non-JSON 2xx bodies must surface a diagnostic — not a bare
+    json-module ValueError. Regression test for issue #248 / #249.
+    """
+    from hpe_networking_mcp.platforms.aos8.tools.differentiators import aos8_get_md_hierarchy
+
+    # Simulate an empty body returned with HTTP 200 + text/html (CLI parser
+    # silently rejected an unrecognized command).
+    r = MagicMock()
+    r.json.side_effect = json.JSONDecodeError("Expecting value", "", 0)
+    r.text = ""
+    r.status_code = 200
+    r.headers = {"content-type": "text/html"}
+
+    client = MagicMock()
+    client.request = AsyncMock(return_value=r)
+    ctx = MagicMock()
+    ctx.lifespan_context = {"aos8_client": client}
+
+    result = await aos8_get_md_hierarchy(ctx)
+
+    assert isinstance(result, str)
+    assert "decode error" in result.lower()
+    assert "HTTP 200" in result
+    assert "text/html" in result
+    assert "0 bytes" in result
+    # The bare json-module error must NOT leak through
+    assert "Expecting value: line 1 column 1" not in result
 
 
 # ---------------------------------------------------------------------------
