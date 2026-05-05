@@ -73,6 +73,7 @@ async def aos8_get_effective_config(
     ctx: Context,
     object_name: str,
     config_path: str = "/md",
+    entry_type: str | None = None,
 ) -> dict[str, Any] | str:
     """Return the effective resolved config for ``object_name`` at ``config_path``.
 
@@ -83,13 +84,22 @@ async def aos8_get_effective_config(
         ctx: FastMCP request context.
         object_name: AOS8 object name (e.g. ``ssid_prof``, ``virtual_ap``).
         config_path: Hierarchy scope; defaults to ``/md``.
+        entry_type: Optional ``type`` filter (``"user"``, ``"local"``,
+            ``"default"``, ``"inherited"``). Pass ``"user"`` to strip
+            factory defaults and return only customer-defined entries —
+            useful for migration audits where defaults are noise.
 
     Returns:
         Parsed JSON body on success; error string on failure.
     """
     client = ctx.lifespan_context["aos8_client"]
     try:
-        return await get_object(client, object_name, config_path=config_path)
+        return await get_object(
+            client,
+            object_name,
+            config_path=config_path,
+            entry_type=entry_type,
+        )
     except Exception as exc:  # noqa: BLE001
         return format_aos8_error(exc, f"fetch effective config for {object_name}")
 

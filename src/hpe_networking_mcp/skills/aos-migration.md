@@ -155,14 +155,23 @@ The biggest historical bug in this skill was Stage 1 collecting only at `/md` ro
 # Goal: produce config_by_scope = {scope: {object_type: response, ...}, ...}
 # covering EVERY node in the /md tree.
 
+# Object names are the AOS 8 REST schema names (NOT the CLI nouns).
+# Live-verified against an AOS 8.12 Mobility Conductor — earlier versions
+# of this list mixed CLI nouns with REST names and 13 of 20 silently
+# returned {"ERROR": "Invalid Object"}. See issue #250 for the audit.
 OBJECT_TYPES = [
-    "ap_sys_prof", "virtual_ap", "ssid_prof", "aaa_prof",
-    "aaa_server_group", "wlan_ssid_profile", "reg_domain_profile",
-    "arm_profile", "dot11a_radio_prof", "dot11g_radio_prof",
-    "lc_cluster_profile", "user_role", "ip_access_list",
-    "captive_portal_auth_profile", "dot1x_authentication_profile",
-    "mac_authentication_profile", "rad_server", "tacacs_server",
-    "ldap_server", "internal_db_server",
+    # WLAN / radio
+    "ssid_prof", "virtual_ap", "ht_radio_prof", "reg_domain_prof",
+    "arm_prof", "ap_sys_prof",
+    # Authentication / AAA
+    "aaa_prof", "rad_server", "tacacs_server", "ldap_server",
+    "server_group_prof", "dot1x_auth_profile", "mac_auth_profile",
+    "cp_auth_profile",
+    # RBAC / ACLs
+    "role", "acl_sess", "acl_eth", "acl_mac",
+    # Cluster (paired — cluster_prof defines the profile, group_membership
+    # binds devices to it)
+    "cluster_prof", "group_membership",
 ]
 
 hierarchy = await call_tool("aos8_get_md_hierarchy", {})
@@ -176,10 +185,28 @@ for scope in scopes:
     config_by_scope[scope] = {}
     for obj_type in OBJECT_TYPES:
         try:
-            config_by_scope[scope][obj_type] = await call_tool(
+            # entry_type="user" strips factory defaults and inherited
+            # entries — for migration audits, defaults are noise. Reduces
+            # response size by ~93% on this Conductor; the AI sees only
+            # customer-defined config.
+            response = await call_tool(
                 "aos8_get_effective_config",
-                {"object_name": obj_type, "config_path": scope},
+                {
+                    "object_name": obj_type,
+                    "config_path": scope,
+                    "entry_type": "user",
+                },
             )
+            # Surface "Invalid Object" loudly — the AOS 8 REST schema may
+            # drift between versions, and a silently-dropped object means
+            # the migration plan is materially incomplete.
+            inner = response.get("result") if isinstance(response, dict) and "result" in response else response
+            if isinstance(inner, dict) and inner.get("ERROR") == "Invalid Object":
+                config_by_scope[scope][obj_type] = {
+                    "_collection_error": f"Invalid Object — REST schema may have renamed {obj_type!r} on this AOS build"
+                }
+            else:
+                config_by_scope[scope][obj_type] = response
         except Exception as exc:
             config_by_scope[scope][obj_type] = {"_collection_error": str(exc)}
 ```

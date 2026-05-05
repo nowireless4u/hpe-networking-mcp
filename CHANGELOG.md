@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.1.2] - 2026-05-04
+
+**Comprehensive AOS 8 audit fallout — restores 8 broken read tools, adds `entry_type` filter for ~93% smaller migration audits, fixes 11 wrong object names in `aos-migration` skill.** Surfaced by a live audit of all 35 aos8 tools against an ArubaMM-VA Conductor (AOS 8.12.0.5).
+
+### Why
+
+After v2.5.1.1 fixed `aos8_get_md_hierarchy` (#248) and improved decode-error diagnostics (#249), an audit of every aos8 tool against the live Conductor showed **9 more tools** were silently broken and **11 of 20** object names in the `aos-migration` skill's COLLECT-01 list were wrong. Three discoveries:
+
+1. **`run_show()` crashed on valid commands with empty / text bodies.** Tools like `aos8_get_alarms`, `aos8_get_clients`, `aos8_get_events`, `aos8_get_audit_trail`, `aos8_get_logs`, etc. were all returning the cryptic *"Expecting value: line 1 column 1 (char 0)"* error — but the underlying commands were valid. The AOS 8 `showcommand` REST endpoint just returns an empty body when there's no data (no clients, no alarms) or a plain-text body for log/audit dumps. `run_show()` called `response.json()` and crashed. Issue [#252](https://github.com/nowireless4u/hpe-networking-mcp/issues/252).
+2. **`/v1/configuration/object/<name>` accepts a `type=user` filter** that strips factory defaults and returns only customer-defined entries. Live A/B testing across 20 object types × 5 hierarchy scopes: response payload shrinks ~93% (~145 KB → ~10 KB per scope). For migration audits, defaults are pure noise — the AI should only see customer config. Issue [#253](https://github.com/nowireless4u/hpe-networking-mcp/issues/253).
+3. **The `aos-migration` skill's hard-coded `OBJECT_TYPES` list was authored against AOS 8 CLI command nouns**, not REST schema names. 11 of 20 names silently returned `{"ERROR": "Invalid Object"}` — meaning critical config (RBAC roles, ACLs, ARM, auth profiles, cluster) was being dropped from every migration plan against every Conductor. Operator-facing translation was materially incomplete and the failure mode was invisible. Issue [#250](https://github.com/nowireless4u/hpe-networking-mcp/issues/250).
+
+### What's new
+
+- **`src/hpe_networking_mcp/platforms/aos8/tools/_helpers.py`**:
+  - `run_show()` now mirrors `aos8_show_command`'s passthrough contract on non-JSON bodies: empty body → `{}` (success, no data); text body → `{"output": <text>}`. Restores 8 tools to working state without changing their tool surfaces.
+  - `get_object()` adds an optional `entry_type` parameter that maps to AOS 8's `type` query filter (`"user"`, `"local"`, `"default"`, `"inherited"`). `get_object()` remains strict on JSON parsing — the object endpoint always returns JSON or an `Invalid Object` envelope, so non-JSON bodies there indicate a real protocol problem (AOS8DecodeError from v2.5.1.1).
+- **`src/hpe_networking_mcp/platforms/aos8/tools/differentiators.py`** — `aos8_get_effective_config` exposes `entry_type` to AI callers with documentation pointing at migration audits as the primary use case.
+- **`src/hpe_networking_mcp/skills/aos-migration.md`** — COLLECT-01 `OBJECT_TYPES` list rewritten with 11 corrected REST schema names: `aaa_server_group` → `server_group_prof`; `wlan_ssid_profile` dropped (duplicate of `ssid_prof`); `reg_domain_profile` → `reg_domain_prof`; `arm_profile` → `arm_prof`; `dot11a_radio_prof` + `dot11g_radio_prof` → `ht_radio_prof` (combined since AOS 8.4); `user_role` → `role`; `ip_access_list` → 3-way split into `acl_sess` / `acl_eth` / `acl_mac`; `captive_portal_auth_profile` → `cp_auth_profile`; `dot1x_authentication_profile` → `dot1x_auth_profile`; `mac_authentication_profile` → `mac_auth_profile`; `lc_cluster_profile` → `cluster_prof` + `group_membership` (paired); `internal_db_server` dropped (Central replaces internal-DB auth entirely). COLLECT-01 loop now defaults to `entry_type="user"` and surfaces `Invalid Object` responses as `_collection_error` so future schema drift fails loudly instead of silently dropping rows.
+- **`tests/unit/test_aos8_read_differentiators.py`** — replaces the v2.5.1.1 strict-decode test on `aos8_get_md_hierarchy` (now graceful) with two new tests for the empty/text body shapes; adds a strict-decode test on `aos8_get_effective_config` to pin the `get_object()` contract; adds two tests for `entry_type` (passes through as `type` query param when set; omitted from query when `None`).
+
+### What this does NOT do
+
+Air-monitor coverage (`aos8_get_air_monitors` sends `show ap monitor active-laser-beams`, which is a WIDS feature, not the AM AP list) is **not fixed in this release**. Dropped from scope: the `aos-migration` skill doesn't use it, AP mode is already accessible from `aos8_get_ap_database`, and dedicated air-monitor APs are largely deprecated in AOS 10. Tool stays broken-but-harmless until a future skill needs it.
+
+The hierarchy-mapping rules engine for the `aos-migration` skill (translating AOS 8 `/md/<path>` nodes to AOS 10 site collection / site / device group / device persona) is **deferred** — design discussion in progress; needs live cluster data before rules can be locked in.
+
+### Notes
+
+- This is the third instance ([#237](https://github.com/nowireless4u/hpe-networking-mcp/issues/237), [#248](https://github.com/nowireless4u/hpe-networking-mcp/issues/248), now [#250](https://github.com/nowireless4u/hpe-networking-mcp/issues/250)) of mistakes that would have been caught by live verification against a real device. Future schema-touching changes should be live-verified before merge — not just unit-tested against fixtures.
+- Verified live against a `developer.arubanetworks.com/aos8/reference`-documented schema. The reference site is the authoritative source for REST object names; CLI nouns are not a reliable mapping.
+
 ## [2.5.1.1] - 2026-05-04
 
 **`aos8_get_md_hierarchy` was sending an unrecognized CLI command — fixed; AOS 8 helpers now diagnose decode failures.** Two related bugs surfaced from an `aos-migration` operator transcript:

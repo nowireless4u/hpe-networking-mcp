@@ -638,6 +638,16 @@ Authentication is automatic — the client logs in to `/v1/api/login` with `aos8
 
 For AOS 8 reachability call `health(platform="aos8")`.
 
+## Filtering object responses with `entry_type`
+`aos8_get_effective_config` accepts an optional `entry_type` parameter that maps to AOS 8's `type` query filter on `/v1/configuration/object/<name>`:
+- `entry_type="user"` — returns only customer-defined entries (no factory defaults, no inherited). **Use this for migration audits and config-drift analysis** — typical response shrinks ~93% across a hierarchy walk and the AI doesn't have to filter `_flags.default: true` entries.
+- `entry_type="local"` — entries defined at THIS scope only (no inherited resolution).
+- `entry_type="default"` — factory defaults only.
+- `entry_type="inherited"` — only entries resolved from parent scopes.
+- (omitted) — returns everything (defaults + user + inherited).
+
+The canonical REST schema names (e.g. `role` not `user_role`, `cluster_prof` not `lc_cluster_profile`, `acl_sess` / `acl_eth` / `acl_mac` not `ip_access_list`) are documented at https://developer.arubanetworks.com/aos8/reference. CLI command nouns are NOT a reliable mapping to REST object names.
+
 ## Pending-Changes Workflow
 AOS 8 buffers configuration writes on MM until they are committed and pushed to MDs.
 

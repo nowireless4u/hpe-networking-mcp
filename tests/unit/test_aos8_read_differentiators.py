@@ -63,19 +63,19 @@ async def test_get_md_hierarchy():
     assert any(r["Type"] == "Device" and r["Name"] for r in rows)
 
 
-async def test_get_md_hierarchy_non_json_body_diagnoses_decode_error():
-    """Empty / non-JSON 2xx bodies must surface a diagnostic — not a bare
-    json-module ValueError. Regression test for issue #248 / #249.
+async def test_run_show_empty_body_returns_empty_dict():
+    """run_show() must treat empty 2xx bodies as success-with-no-data (return
+    {}), not raise. Many AOS 8 commands legitimately return empty bodies on
+    Conductors with no matching state — e.g. ``show alarms`` with no active
+    alarms, ``show user-table`` with no clients. Regression for issue #252.
     """
     from hpe_networking_mcp.platforms.aos8.tools.differentiators import aos8_get_md_hierarchy
 
-    # Simulate an empty body returned with HTTP 200 + text/html (CLI parser
-    # silently rejected an unrecognized command).
     r = MagicMock()
     r.json.side_effect = json.JSONDecodeError("Expecting value", "", 0)
     r.text = ""
     r.status_code = 200
-    r.headers = {"content-type": "text/html"}
+    r.headers = {"content-type": "text/plain"}
 
     client = MagicMock()
     client.request = AsyncMock(return_value=r)
@@ -84,12 +84,60 @@ async def test_get_md_hierarchy_non_json_body_diagnoses_decode_error():
 
     result = await aos8_get_md_hierarchy(ctx)
 
+    assert result == {}
+
+
+async def test_run_show_text_body_wraps_as_output():
+    """run_show() must wrap plain text 2xx bodies as {"output": <text>} —
+    matches aos8_show_command's passthrough contract. Some commands like
+    ``show log system`` and ``show audit-trail`` return text dumps, not
+    JSON. Regression for issue #252.
+    """
+    from hpe_networking_mcp.platforms.aos8.tools.differentiators import aos8_get_md_hierarchy
+
+    text_body = "<my_xml_tag3xxx>\nMay 4 22:10:46 2026 :354028: log line\n"
+    r = MagicMock()
+    r.json.side_effect = json.JSONDecodeError("Expecting value", text_body, 0)
+    r.text = text_body
+    r.status_code = 200
+    r.headers = {"content-type": "text/plain"}
+
+    client = MagicMock()
+    client.request = AsyncMock(return_value=r)
+    ctx = MagicMock()
+    ctx.lifespan_context = {"aos8_client": client}
+
+    result = await aos8_get_md_hierarchy(ctx)
+
+    assert result == {"output": text_body}
+
+
+async def test_get_object_still_diagnoses_decode_errors():
+    """get_object() (used by aos8_get_effective_config) must REMAIN strict —
+    the /v1/configuration/object endpoint always returns JSON or an
+    Invalid-Object envelope, so any non-JSON body indicates a real protocol
+    problem. Surface the diagnostic introduced in v2.5.1.1 / issue #249.
+    """
+    from hpe_networking_mcp.platforms.aos8.tools.differentiators import aos8_get_effective_config
+
+    r = MagicMock()
+    r.json.side_effect = json.JSONDecodeError("Expecting value", "", 0)
+    r.text = "<html>session expired</html>"
+    r.status_code = 200
+    r.headers = {"content-type": "text/html"}
+
+    client = MagicMock()
+    client.request = AsyncMock(return_value=r)
+    ctx = MagicMock()
+    ctx.lifespan_context = {"aos8_client": client}
+
+    result = await aos8_get_effective_config(ctx, object_name="ssid_prof")
+
     assert isinstance(result, str)
     assert "decode error" in result.lower()
     assert "HTTP 200" in result
     assert "text/html" in result
-    assert "0 bytes" in result
-    # The bare json-module error must NOT leak through
+    # Bare json-module error must not leak
     assert "Expecting value: line 1 column 1" not in result
 
 
@@ -127,6 +175,49 @@ async def test_get_effective_config_defaults_config_path():
         "/v1/configuration/object/ssid_prof",
         params={"config_path": "/md"},
     )
+
+
+async def test_get_effective_config_entry_type_user():
+    """When entry_type is set, it MUST be passed to the API as the ``type``
+    query param. AOS 8 uses this to filter out factory defaults / inherited
+    entries. Verified live: type=user reduces response size ~93% across
+    typical migration audits. Issue #253.
+    """
+    from hpe_networking_mcp.platforms.aos8.tools.differentiators import aos8_get_effective_config
+
+    body = {"_global_result": {"status": "0"}, "_data": {"role": []}}
+    ctx, client = _make_ctx(body)
+
+    await aos8_get_effective_config(
+        ctx,
+        object_name="role",
+        config_path="/md/Campus/East",
+        entry_type="user",
+    )
+
+    client.request.assert_awaited_once_with(
+        "GET",
+        "/v1/configuration/object/role",
+        params={"config_path": "/md/Campus/East", "type": "user"},
+    )
+
+
+async def test_get_effective_config_no_entry_type_omits_type_param():
+    """When entry_type is omitted (default None), the ``type`` query param
+    MUST NOT be sent — preserves pre-#253 behavior for callers that haven't
+    opted into filtering.
+    """
+    from hpe_networking_mcp.platforms.aos8.tools.differentiators import aos8_get_effective_config
+
+    body = {"_global_result": {"status": "0"}, "_data": {"role": []}}
+    ctx, client = _make_ctx(body)
+
+    await aos8_get_effective_config(ctx, object_name="role", config_path="/md")
+
+    # type must not appear in params at all
+    call_kwargs = client.request.await_args.kwargs
+    assert "type" not in call_kwargs["params"]
+    assert call_kwargs["params"] == {"config_path": "/md"}
 
 
 # ---------------------------------------------------------------------------

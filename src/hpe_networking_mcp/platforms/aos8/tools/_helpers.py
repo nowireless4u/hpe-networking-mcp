@@ -86,6 +86,19 @@ async def run_show(
 ) -> Any:
     """Execute an AOS8 show command and return the cleaned JSON body.
 
+    The AOS 8 ``showcommand`` endpoint responds in three shapes:
+
+    * **JSON body** — for structured ``show`` output (most ``show`` commands).
+      Returned with ``_meta`` and ``_global_result`` stripped.
+    * **Empty body** — for valid commands that have no data to return on this
+      controller (e.g. ``show alarms`` with no active alarms, ``show user-table``
+      with no clients). Returned as ``{}`` so callers see "success, no data"
+      rather than a parse error.
+    * **Plain text body** — for commands whose output is a text dump
+      (e.g. ``show log system``, ``show audit-trail``, ``show running-config``).
+      Wrapped as ``{"output": <text>}`` to match ``aos8_show_command``'s
+      passthrough contract.
+
     Args:
         client: ``AOS8Client`` from ``ctx.lifespan_context["aos8_client"]``.
         command: Full show command string (e.g. ``"show ap database"``).
@@ -93,13 +106,18 @@ async def run_show(
             query params only when not ``None``.
 
     Returns:
-        Parsed JSON body with ``_meta`` and ``_global_result`` stripped.
+        Parsed JSON body with envelope keys stripped, or one of the
+        empty/text shapes described above.
     """
     params: dict[str, Any] = {"command": command}
     if config_path is not None:
         params["config_path"] = config_path
     response = await client.request("GET", "/v1/configuration/showcommand", params=params)
-    return strip_meta(_decode_json_or_raise(response, f"show command {command!r}"))
+    try:
+        return strip_meta(response.json())
+    except ValueError:
+        body = response.text or ""
+        return {"output": body} if body else {}
 
 
 async def get_object(
@@ -107,6 +125,7 @@ async def get_object(
     object_path: str,
     *,
     config_path: str = "/md",
+    entry_type: str | None = None,
 ) -> Any:
     """Fetch a configuration object via ``/v1/configuration/object/<path>``.
 
@@ -114,14 +133,22 @@ async def get_object(
         client: ``AOS8Client`` instance.
         object_path: Object name (e.g. ``"ssid_prof"``, ``"ap_group"``).
         config_path: Hierarchy node; defaults to ``"/md"``.
+        entry_type: Optional ``type`` filter (``"user"``, ``"local"``,
+            ``"default"``, ``"inherited"``). When set, AOS 8 returns only
+            entries matching the filter — most useful is ``"user"`` which
+            strips factory defaults and returns only customer-defined
+            configuration.
 
     Returns:
         Parsed JSON body with ``_meta`` and ``_global_result`` stripped.
     """
+    params: dict[str, Any] = {"config_path": config_path}
+    if entry_type is not None:
+        params["type"] = entry_type
     response = await client.request(
         "GET",
         f"/v1/configuration/object/{object_path}",
-        params={"config_path": config_path},
+        params=params,
     )
     return strip_meta(_decode_json_or_raise(response, f"object {object_path!r}"))
 
