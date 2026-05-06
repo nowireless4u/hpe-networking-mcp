@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0.5] - 2026-05-06
+
+**Patch release — AOS 8 transposed-table tokenization fix.**
+
+AOS 8 `show <thing> detail`-style commands (notably `show aaa authentication-server radius/tacacs/ldap/internal <name>`) return their content as a **transposed key/value table** — a list of two-column rows where every row is a dict with literal field names `"Parameter"` and `"Value"`. The PII tokenization walker classifies values by JSON field name, so it could never see the *semantic* field name (`Host`, `Key`, `NAS IP`, ...) hidden in the `Parameter` column. Identifier-field rules keyed on names like `host` could not fire — RADIUS/TACACS/LDAP server IPs and FQDNs leaked to the AI in cleartext.
+
+Fix: added `flatten_param_value_lists()` to `aos8/tools/_helpers.py` that recursively detects `[{Parameter: k, Value: v}, ...]` and rewrites it into a regular dict (`{k: v, ...}`). Applied in `run_show()` so every AOS 8 show-command response gets the treatment automatically. The walker's existing space-→-underscore normalization (added in v2.4.0.5) makes `"Host"` resolve to `host`, so a new `host` rule in `TOKENIZED_IDENTIFIER_FIELDS` fires on the AAA-server IP/FQDN. Carve-out from the v2.3.1.2 "internal IPs not tokenized" decision — AAA infrastructure is auth-fabric-critical.
+
+Live-verified the transposed shape against an AOS 8.13.1.2 LSR Mobility Conductor before designing the flattener (captured `show aaa authentication-server radius ClearPass70` → `RADIUS Server ClearPass70: [{Parameter: Host, Value: 192.168.20.70}, ...]`). Fixture saved to `tests/unit/fixtures/aos8/show_aaa_radius_server_detail.json`.
+
+Closes [#235](https://github.com/nowireless4u/hpe-networking-mcp/issues/235).
+
+### Files
+
+- **`src/hpe_networking_mcp/platforms/aos8/tools/_helpers.py`** — added `flatten_param_value_lists()`. Conservative detection: only flattens lists where *every* element is a dict containing at minimum `Parameter` and `Value` keys. Non-matching shapes pass through unchanged. Applied in `run_show()` after `strip_meta()`.
+- **`src/hpe_networking_mcp/redaction/rules.py`** — added `host: TokenKind.HOSTNAME` to `TOKENIZED_IDENTIFIER_FIELDS`. Carve-out from the v2.3.1.2 IP-passthrough rule, scoped to AAA server detail (where the field name `host` is the server's IP/FQDN). Comment cites issue #235.
+- **`tests/unit/test_aos8_helpers.py`** — new unit-test file for the flattener (8 tests covering: transposed list flattens; nested transposed list flattens in place; non-transposed list passes through; empty list passes through; scalar passes through; mixed-shape list passes through; real fixture flattens; idempotent on already-flattened dict). Plus an integration-style test for `run_show()`.
+- **`tests/unit/fixtures/aos8/show_aaa_radius_server_detail.json`** — captured fixture from a live AOS 8.13.1.2 MM, with the masked `Key: ********` value preserved as-returned by the controller.
+- **`tests/unit/test_pii_redaction.py`** — updated two Mist/Central RADIUS-server fixture tests (`test_full_walk`, `test_server_group_radius_secrets_tokenized`) to reflect the new contract: `host` in a RADIUS-server context IS tokenized as HOSTNAME, where v2.3.1.2 had treated it as a generic IP. Added `test_aos8_aaa_radius_detail_after_flatten_tokenizes_host` end-to-end regression.
+- **`pyproject.toml`** — bump 3.0.0.4 → 3.0.0.5.
+
+### Behavior change to flag
+
+The `host` rule applies fleet-wide, not just to AOS 8. Mist/Central tools that return RADIUS server records with a `host` field will now tokenize the IP/FQDN where they previously did not. This is consistent with the issue's stated threat model (AAA infrastructure is critical, regardless of platform).
+
+The masked `Key: "********"` placeholder that AOS 8 returns for shared secrets gets tokenized as APITOKEN after flattening, because the walker sees `Key` (a generic credential field name) and `********` looks credential-shaped to its heuristic. The detokenize round-trip returns `********` unchanged, so this is harmless — just a slightly noisier representation of an already-masked value.
+
+### Notes
+
+- 989 tests pass (was 979; +10 from the new helper + tokenization tests).
+- The flattener is conservative (requires *every* row to match the shape), so existing show commands that return regular records (e.g. `show ap database`, `show aaa authentication-server radius` listing) are untouched.
+
 ## [3.0.0.4] - 2026-05-06
 
 **Patch release — ClearPass `_send_request` private-method dependency wrapped (refactor only).**

@@ -22,6 +22,7 @@ from hpe_networking_mcp.platforms.aos8.client import (
 
 __all__ = [
     "strip_meta",
+    "flatten_param_value_lists",
     "run_show",
     "get_object",
     "post_object",
@@ -52,6 +53,54 @@ def strip_meta(body: Any) -> Any:
     if not isinstance(body, dict):
         return body
     return {k: v for k, v in body.items() if k not in ("_meta", "_global_result")}
+
+
+def flatten_param_value_lists(body: Any) -> Any:
+    """Flatten AOS 8 ``[{Parameter: k, Value: v}, ...]`` rows into ``{k: v, ...}``.
+
+    AOS 8 ``show <thing> detail``-style commands (notably the AAA
+    authentication-server detail commands —
+    ``show aaa authentication-server radius/tacacs/ldap/internal <name>``)
+    return their content as a transposed key/value table where every row
+    is a dict with literal field names ``Parameter`` and ``Value``. The
+    PII tokenization walker classifies values by their JSON field name,
+    so it can never see the *semantic* field name (``Host``, ``NAS IP``,
+    ``Key``, ...) hidden in the ``Parameter`` column. Rules keyed on
+    server-identifier names like ``host`` cannot fire.
+
+    This helper detects the transposed shape recursively and rewrites it
+    into a regular dict (``{"Host": "192.168.20.70", "Key": "********",
+    ...}``). The walker's space → underscore normalization
+    (``Host`` → ``host``) then makes identifier-field rules fire normally.
+
+    Non-matching shapes pass through unchanged. The detection is
+    conservative: a list is only flattened when *every* element is a
+    dict containing at minimum the ``Parameter`` and ``Value`` keys —
+    so a list whose elements happen to share those keys among others
+    (a richer record shape) is preserved as-is.
+
+    See [issue #235](https://github.com/nowireless4u/hpe-networking-mcp/issues/235)
+    for context.
+
+    Args:
+        body: Parsed AOS 8 JSON body. May be a dict, list, or scalar.
+
+    Returns:
+        A new structure with transposed-table lists flattened. Other
+        nested dicts/lists/scalars are returned unchanged.
+    """
+    if isinstance(body, list):
+        if body and all(isinstance(row, dict) and {"Parameter", "Value"} <= set(row.keys()) for row in body):
+            # Transposed shape detected — flatten this list.
+            # Last-wins on duplicate Parameter names (extremely rare in
+            # AOS 8; the transposed-table semantics are key-unique within
+            # a single block).
+            return {row["Parameter"]: row["Value"] for row in body}
+        # Otherwise: recurse element-wise.
+        return [flatten_param_value_lists(item) for item in body]
+    if isinstance(body, dict):
+        return {k: flatten_param_value_lists(v) for k, v in body.items()}
+    return body
 
 
 def _decode_json_or_raise(response: httpx.Response, what: str) -> Any:
@@ -114,7 +163,7 @@ async def run_show(
         params["config_path"] = config_path
     response = await client.request("GET", "/v1/configuration/showcommand", params=params)
     try:
-        return strip_meta(response.json())
+        return flatten_param_value_lists(strip_meta(response.json()))
     except ValueError:
         body = response.text or ""
         return {"output": body} if body else {}

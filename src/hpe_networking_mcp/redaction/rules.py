@@ -194,6 +194,10 @@ TOKENIZED_IDENTIFIER_FIELDS: dict[str, TokenKind] = {
     "ap_name": TokenKind.HOSTNAME,
     "hostname": TokenKind.HOSTNAME,
     "host_name": TokenKind.HOSTNAME,  # AOS 8 client tables use "Host Name"
+    # AOS 8 AAA-server detail (after transposed-table flatten); RADIUS/TACACS/LDAP
+    # server IP/FQDN. Carve-out from the v2.3.1.2 "internal IPs not tokenized"
+    # rule — AAA infrastructure is auth-fabric-critical (issue #235).
+    "host": TokenKind.HOSTNAME,
     "controller_name": TokenKind.HOSTNAME,  # AOS 8 controller / MM identifier
     "switch_name": TokenKind.HOSTNAME,  # AOS 8 / Central switch identifier
     "fqdn": TokenKind.HOSTNAME,

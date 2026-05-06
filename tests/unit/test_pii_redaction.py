@@ -555,6 +555,49 @@ class TestTokenizeResponse:
         assert record["Model"] == "ArubaMM-VA"
         assert record["Location"] == "Building1.floor1"
 
+    def test_aos8_aaa_radius_detail_after_flatten_tokenizes_host(self, tokenizer: Tokenizer) -> None:
+        """End-to-end regression for issue #235.
+
+        AOS 8 ``show aaa authentication-server radius <name>`` returns a
+        transposed key/value table. The ``run_show()`` helper flattens
+        ``[{Parameter: k, Value: v}, ...]`` rows into a regular dict
+        before the tokenizer sees the response. After flattening, the
+        ``Host`` field carries the RADIUS server's IP/FQDN and must be
+        tokenized as HOSTNAME — even though general IPs pass through
+        per the v2.3.1.2 carve-out, AAA infrastructure is auth-fabric-
+        critical (issue #235 carve-out).
+        """
+        # Post-flatten shape, as run_show() returns it
+        flattened = {
+            "RADIUS Server ClearPass70": {
+                "Host": "192.168.20.70",
+                "Key": "********",
+                "Auth Port": "1812",
+                "NAS IP": "N/A",
+            }
+        }
+        result = tokenize_response(flattened, tokenizer)
+        record = result["RADIUS Server ClearPass70"]
+
+        # Host tokenized as HOSTNAME (the issue #235 carve-out)
+        assert record["Host"] != "192.168.20.70"
+        match = TOKEN_RE.fullmatch(record["Host"])
+        assert match is not None
+        assert match.group(1) == "HOSTNAME"
+
+        # ``Key`` is a generic credential-named field and the AOS-masked
+        # placeholder ``********`` looks credential-shaped to the walker —
+        # so it gets tokenized. Round-trip (detokenize) returns the
+        # placeholder unchanged. Tokenizing a placeholder is harmless and
+        # consistent with the walker's "treat anything credential-shaped
+        # as a credential" contract.
+        assert record["Key"] != "********"
+        assert TOKEN_RE.fullmatch(record["Key"]) is not None
+
+        # Non-PII config values stay cleartext.
+        assert record["Auth Port"] == "1812"
+        assert record["NAS IP"] == "N/A"
+
     def test_aos8_mac_address_with_space_normalized(self, tokenizer: Tokenizer) -> None:
         """AOS 8 ``"MAC Address"`` and ``"Wired MAC Address"`` columns
         should reach the MAC canonicalizer the same as ``mac`` /
@@ -772,10 +815,15 @@ class TestRealisticMistFixture:
         # SSID — passes through (broadcast, refined in v2.3.1.1)
         assert result["ssid"] == "Corp-Wifi"
 
-        # IPs — pass through everywhere (refined in v2.3.1.2)
-        assert result["radius_servers"][0]["host"] == "10.50.10.10"
-        assert result["radius_servers"][1]["host"] == "10.50.10.11"
+        # IPs in arbitrary fields — pass through (refined in v2.3.1.2)
         assert "10.50.10.1" in result["description"]  # internal IP in free text
+
+        # ...except `host` in a RADIUS-server context, which IS tokenized
+        # (issue #235 carve-out: AAA infrastructure is auth-fabric-critical).
+        assert TOKEN_RE.fullmatch(result["radius_servers"][0]["host"]).group(1) == "HOSTNAME"
+        assert TOKEN_RE.fullmatch(result["radius_servers"][1]["host"]).group(1) == "HOSTNAME"
+        # Different IPs get different tokens (deterministic per session).
+        assert result["radius_servers"][0]["host"] != result["radius_servers"][1]["host"]
 
         # Hostnames — still tokenized (real customer naming pattern)
         assert result["device_name"] != "AP-Floor3-Conf"
@@ -940,9 +988,11 @@ class TestRealisticCentralFixture:
             secret_token = server["shared-secret"]
             assert TOKEN_RE.fullmatch(secret_token).group(1) == "RADSEC"
 
-        # IPs — pass through everywhere (v2.3.1.2)
-        assert result["radius_servers"][0]["host"] == "10.50.10.10"
-        assert result["radius_servers"][1]["host"] == "10.50.10.11"
+        # `host` in a RADIUS-server context IS tokenized (issue #235 carve-out:
+        # AAA infrastructure is auth-fabric-critical, even though general IPs
+        # pass through per v2.3.1.2).
+        assert TOKEN_RE.fullmatch(result["radius_servers"][0]["host"]).group(1) == "HOSTNAME"
+        assert TOKEN_RE.fullmatch(result["radius_servers"][1]["host"]).group(1) == "HOSTNAME"
 
         # Different secrets get different tokens
         assert result["radius_servers"][0]["shared-secret"] != result["radius_servers"][1]["shared-secret"]

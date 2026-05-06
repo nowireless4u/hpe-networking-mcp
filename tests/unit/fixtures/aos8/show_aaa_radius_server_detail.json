@@ -1,0 +1,32 @@
+{
+  "RADIUS Server ClearPass70": [
+    {"Parameter": "Enable IPv6", "Value": "Disabled"},
+    {"Parameter": "Host", "Value": "192.168.20.70"},
+    {"Parameter": "Key", "Value": "********"},
+    {"Parameter": "CPPM credentials", "Value": "N/A"},
+    {"Parameter": "Auth Port", "Value": "1812"},
+    {"Parameter": "Acct Port", "Value": "1813"},
+    {"Parameter": "RadSec Port", "Value": "2083"},
+    {"Parameter": "Retransmits", "Value": "3"},
+    {"Parameter": "Timeout", "Value": "5 sec"},
+    {"Parameter": "NAS ID", "Value": "N/A"},
+    {"Parameter": "NAS IP", "Value": "N/A"},
+    {"Parameter": "NAS IPv6", "Value": "N/A"},
+    {"Parameter": "Source Interface", "Value": "N/A"},
+    {"Parameter": "Use MD5", "Value": "Disabled"},
+    {"Parameter": "Use IP address for calling station ID", "Value": "Disabled"},
+    {"Parameter": "Mode", "Value": "Enabled"},
+    {"Parameter": "Lowercase MAC addresses", "Value": "Disabled"},
+    {"Parameter": "MAC address delimiter", "Value": "none"},
+    {"Parameter": "Service-type of FRAMED-USER", "Value": "Disabled"},
+    {"Parameter": "RadSec", "Value": "Disabled"},
+    {"Parameter": "RadSec Trusted CA Name", "Value": "N/A"},
+    {"Parameter": "RadSec Server Cert Name", "Value": "N/A"},
+    {"Parameter": "RadSec Client Cert", "Value": "N/A"},
+    {"Parameter": "called-station-id", "Value": "macaddr colon disable"},
+    {"Parameter": "Access-Request Modifier", "Value": "N/A"},
+    {"Parameter": "Accounting-Request Modifier", "Value": "N/A"},
+    {"Parameter": "Message-Authenticator required in Access-Accept/Reject/Challenge", "Value": "No"}
+  ],
+  "_meta": ["Parameter", "Value"]
+}
