@@ -85,6 +85,6 @@ docs/mist/
 # operator-environment data we don't want in public repo)
 docs/Qwen3_4B_OpenClaw_HPE_MCP_Test_Report.pdf
 
-# Aruba / HPE VSG content saved locally for skill authoring — vendor copyright,
-# do not redistribute via the repo.
+# Earlier root-level copy of the Central Configuration Model VSG markdown;
+# canonical copy now lives at docs/central/vsg/ (covered by the broader rule).
 docs/central_configuration_model.md
