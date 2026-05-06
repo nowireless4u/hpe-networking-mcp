@@ -667,11 +667,38 @@ Multizone targets that ARE managed by this conductor but aren't part of any clus
 | `<site with APs adopted to cluster X>` | `/md/USE/dallas-hq` | `direct-translate` | Site | CAMPUS_AP | CM_SITE (derived: primary zone for N APs) | `dallas-hq` | high | AP children + cluster_prof matched via Switch IP |
 | `<DMZ cluster — no APs adopted, multizone anchor>` | `/md/DMZ` | `direct-translate` | Device Group | MOBILITY_GW | CM_MANUAL (derived: multizone anchor for `<ap-group>`) | `DMZ-MGW-Cluster` | medium | cluster_prof present, no Switch IP match, multizone reference found |
 | `<active cluster — no APs, no multizone reference>` | `/md/StagingCluster` | `direct-translate` | Device Group | MOBILITY_GW | CM_MANUAL (derived: active cluster, no APs adopted, no multizone reference) | `Staging-MGW-Cluster` | medium | cluster_prof present, no APs, no multizone — DMZ or unused |
-| `<persona-named VPNC node>` | `/md/Branch/Branch_VPNC` | `transform (persona-scope)` | (none — persona at parent) | VPNC | n/a (no cluster_prof) | (no group; persona-scope at `/md/Branch`) | medium | VPNC token in name; no manual cluster — fold into parent persona scope |
+| `<persona-named VPNC node>` | `/md/Branch/Branch_VPNC` | `transform (persona-scope)` | (none — persona at parent) | VPNC | n/a (no cluster_prof) | (no group; persona-scope at `Branch` Site Collection) | medium | VPNC token in name; no manual cluster — fold into parent persona scope |
 | `<_Static-suffix node>` | `/md/Branch/Branch_Sites_Static` | `direct-translate` | Device Group | MOBILITY_GW | n/a | `Branch_Sites_Static` | medium | `_Static` suffix → device group |
 | `<unsignaled node>` | `/md/Foo123` | `inconclusive — operator confirm` | Device Group (default) | n/a | n/a | (operator names) | low | no naming or structural signal — operator review required |
 
+**AOS 10 / Central scope notation:** Central has **no `/md/` prefix** in its scope tree — Site Collections / Sites / Device Groups live directly under the workspace root. Whenever this skill references a scope in the **Target name** column or a `persona-scope at X` placement, `X` is the AOS 10 / Central name (operator-confirmable), NOT the AOS 8 source path. Source paths (`/md/...`) appear only in the **Source path** column for cross-reference.
+
 **Skip / inconclusive:** if Stage 1 paste-fallback was used and node hierarchy was not pasted, mark each row's disposition `inconclusive — paste required` and emit one INFO finding noting the gap.
+
+#### Per-scope configuration inventory (REQUIRED — emit alongside the mapping table)
+
+The mapping table above shows *where* each AOS 8 node lands in Central. The operator also needs to know *what configuration objects live at each scope* so they can plan per-scope translation work. Without this, the operator has the destination but no manifest of what travels there.
+
+Iterate `inventory["scopes"]` (Stage 2 normalization output, with `_flags.inherited == True` rows already filtered) and for each scope emit one row counting the **definition-scope** instances of every object class collected in COLLECT-01. **Inherited copies do not count** — they live at their definition scope and travel with it.
+
+```
+| Source scope | AOS 10 target | cluster_prof | ssid_prof | virtual_ap | role | acl_sess | acl_eth | acl_mac | server_group_prof | rad/tacacs/ldap | dot1x | mac_auth | cp_auth | ap_sys_prof | rf_prof family (arm/ht_radio/reg_domain) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `/md` | (drop — root implicit) | 0 | … | … | … | … | … | … | … | … | … | … | … | (definitions present here, e.g. `ACX_apsys_ui`) | … |
+| `/md/<region>` | `<region>` (Site Collection) | … | … | … | … | … | … | … | … | … | … | … | … | … | … |
+| `/md/<region>/<site>` | `<site>` (Site, CM_SITE) | (definition rows only — e.g. `site-cluster`) | … | … | … | … | … | … | … | … | … | … | … | … | … |
+```
+
+For each non-zero cell, emit a follow-up bullet listing the object **names** (not just counts) so the operator can spot which scope owns which named profile. Example:
+
+> `/md/Campus/West` → `West` Site:
+> - cluster_prof (1): `site-cluster`
+> - ap_sys_prof (1): `west-aps`
+> - acl_sess (2): `guest-preauth`, `Windows-Policy`
+
+Object names are the source-of-truth artifacts the operator carries forward into Stage 8's per-object translation matrix; this per-scope view is the index from "Stage 7 placement" to "Stage 8 row".
+
+When `/md` (root) carries customer-defined objects (e.g. `ap_sys_prof: ACX_apsys_ui` defined at root in the operator's transcript), call it out explicitly — the AOS 10 root is implicit and there is **no** Central scope to pin those to. Each root-defined object becomes a `(global)`-scope row in Stage 8 OR an operator decision to re-pin it under a specific Site / Device Group at translation time. Flag this as `OPERATOR-MAP — /md root carries definitions; Central root is implicit; choose target scope for each.`
 
 **Findings produced:**
 
