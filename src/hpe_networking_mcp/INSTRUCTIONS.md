@@ -12,12 +12,17 @@ Tools are namespaced by platform:
 - `axis_*` — Axis Atmos Cloud (SASE / cloud-edge, connectors, tunnels)
 - `aos8_*` — Aruba OS 8 / Mobility Conductor (legacy controller-based wireless, AOS 8.x)
 
-# TOOL DISCOVERY (dynamic mode — default since v2.0)
+# TOOL DISCOVERY
 
-Only 27 tools are directly visible at session start:
-- **4 cross-platform static tools**: `health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`
-- **3 meta-tools per platform × 7 platforms** = 21: `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`
-- **2 skills tools** (since v2.3.0.0): `skills_list`, `skills_load`
+Two modes are supported (the `static` mode was removed in v3.0.0.0):
+
+- **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 367 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. The smallest initial surface; best for orchestrators driving small / local LLMs.
+- **`MCP_TOOL_MODE=dynamic`** (opt-in since v3.0.0.0; was the v2.x default) — 24 tools visible:
+    - **4 cross-platform tools**: `health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`
+    - **3 meta-tools per platform × 7 platforms** = 21: `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`
+    - **2 skills tools** (since v2.3.0.0): `skills_list`, `skills_load`
+
+The discovery patterns below describe **dynamic mode** (the v2.x default). In code mode, the AI calls `await call_tool("<platform>_list_tools", {"filter": "..."})` (or any other tool name) inside `execute()`, gets back the wrapped envelope `{"ok": ..., "data": [...], ...}`, and acts on `result["data"]`.
 
 Every per-platform tool listed below this section is reachable through the meta-tools. **Use this discovery pattern:**
 
@@ -61,7 +66,7 @@ Use the cross-platform tools directly when they apply — they replace several p
 - `site_rf_check(site_name=...)` — unified per-AP, per-band RF state (channels, power, utilization, noise floor) across Mist + Central; includes a pre-rendered ASCII RF dashboard. **Use for any channel-planning / spectrum / RF-health / "how are my 5/6 GHz channels" question** — do NOT fall back to Mist-only or Central-only RF tools without a reason.
 - `manage_wlan_profile(...)` — the mandatory entry point for any WLAN create/copy/sync request
 
-If `MCP_TOOL_MODE=static` is set, every per-platform tool is visible up front without needing the meta-tool round-trip. The names and behaviors are identical either way — only the discovery mechanism differs.
+**Static mode was removed in v3.0.0.0.** Setting `MCP_TOOL_MODE=static` now raises `ValueError` at startup; switch to `dynamic` (per-platform meta-tools) or `code` (sandboxed Python `execute`) per the discovery section above.
 
 # CRITICAL RULES
 1. **Never assume IDs or MAC addresses.** Always retrieve them with the appropriate tools before using them. This especially applies to org_id — ALWAYS call `mist_get_self(action_type=account_info)` first to get the correct org_id. Do NOT use an org_id from memory, a previous conversation, or any other source.
@@ -104,9 +109,9 @@ When `ENABLE_PII_TOKENIZATION=true` (operator-controlled, off by default), the M
 
 When tokenization is off, tool responses contain plaintext values — your behavior is unchanged.
 
-## Response envelope on cross-platform tools (v2.5.1.0+ prototype)
+## Response envelope (universal since v3.0.0.0)
 
-The four cross-platform tools — `health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile` — wrap their responses in a uniform envelope:
+**Every tool's response is wrapped in a uniform envelope.** v2.5.1.0 prototyped this on 4 cross-platform tools; v3.0.0.0 expanded it to every tool in the catalog after Zach's OpenClaw + Qwen3 4B test confirmed it worked for the small-local-model use case.
 
 ```
 {
@@ -115,16 +120,15 @@ The four cross-platform tools — `health`, `site_health_check`, `site_rf_check`
   "data":     <any>,           # the actual payload — list, dict, or null
   "message":  str | null,      # human-readable error / context message
   "tool":     str,             # tool name
-  "platform": str | null       # null for these cross-platform tools
+  "platform": str | null       # "central" / "mist" / etc. — null for cross-platform
 }
 ```
 
 **Practical implications:**
-- For these four tools, the actual payload lives at `result["data"]`. Reading `result["status"]` etc. directly gets the envelope's metadata, not the inner data fields.
-- All other tools (`mist_*`, `central_*`, `clearpass_*`, `apstra_*`, `axis_*`, `aos8_*`, `greenlake_*`) return their **native shape unchanged** — no envelope. Don't navigate through `["data"]` for those.
-- Errors uniformly arrive as `{"ok": false, "message": "...", "data": null}` for the wrapped tools.
-
-This is a **prototype scope** — issue [#246](https://github.com/nowireless4u/hpe-networking-mcp/issues/246) tracks expanding the envelope to every tool in v3.0.0.0 (which would be a breaking change for static-mode consumers).
+- The actual API payload always lives at `result["data"]`. Reading `result["status"]` etc. directly gets the envelope's metadata, not the inner data fields.
+- Errors uniformly arrive as `{"ok": false, "message": "...", "data": null}` regardless of which platform / tool failed.
+- The `platform` field is inferred from the tool-name prefix (`central_*` → `"central"`, `aos8_*` → `"aos8"`, etc.); cross-platform tools (`health`, `site_health_check`, etc.) get `null`.
+- A small number of tools that explicitly return an envelope shape are passed through without re-wrapping (idempotent behavior).
 
 ---
 

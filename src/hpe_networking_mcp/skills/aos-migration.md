@@ -200,7 +200,11 @@ for scope in scopes:
             # Surface "Invalid Object" loudly — the AOS 8 REST schema may
             # drift between versions, and a silently-dropped object means
             # the migration plan is materially incomplete.
-            inner = response.get("result") if isinstance(response, dict) and "result" in response else response
+            #
+            # v3.0.0.0+: every tool response is wrapped in the envelope
+            # {ok, status, data, message, tool, platform}. The actual API
+            # payload lives at response["data"].
+            inner = response.get("data", response)  # envelope unwrap; fall back to raw if shape changes
             if isinstance(inner, dict) and inner.get("ERROR") == "Invalid Object":
                 config_by_scope[scope][obj_type] = {
                     "_collection_error": f"Invalid Object — REST schema may have renamed {obj_type!r} on this AOS build"
@@ -243,7 +247,8 @@ clients = await call_tool("aos8_get_clients", {})
 bss_table = await call_tool("aos8_get_bss_table", {})
 active_aps = await call_tool("aos8_get_active_aps", {})
 
-ap_names = [ap["ap_name"] for ap in ap_database.get("AP Database", [])]
+ap_db_data = ap_database.get("data", ap_database)  # v3.0.0.0+: envelope unwrap
+ap_names = [ap["ap_name"] for ap in ap_db_data.get("AP Database", [])]
 ap_wired_ports = {}
 for ap_name in ap_names:
     ap_wired_ports[ap_name] = await call_tool(
