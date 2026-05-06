@@ -30,11 +30,17 @@ Closes [#235](https://github.com/nowireless4u/hpe-networking-mcp/issues/235).
 
 The `host` rule applies fleet-wide, not just to AOS 8. Mist/Central tools that return RADIUS server records with a `host` field will now tokenize the IP/FQDN where they previously did not. This is consistent with the issue's stated threat model (AAA infrastructure is critical, regardless of platform).
 
-The masked `Key: "********"` placeholder that AOS 8 returns for shared secrets gets tokenized as APITOKEN after flattening, because the walker sees `Key` (a generic credential field name) and `********` looks credential-shaped to its heuristic. The detokenize round-trip returns `********` unchanged, so this is harmless — just a slightly noisier representation of an already-masked value.
+### Subtlety: masked-placeholder skip (also added in this release)
+
+AOS 8 returns shared secrets / passwords as runs of asterisks (`"********"`) — the real value never leaves the controller. After this release's transposed-table flattening, the walker would see `Key: "********"` as a `key` field with a credential-shaped value, and tokenize the placeholder as `[[APITOKEN:uuid]]`.
+
+That sounds harmless, but it isn't: a tokenized placeholder creates the **dangerous illusion** that the AI has a real tokenized secret it can pass to a write tool. The detokenize round-trip restores `"********"` — which Central / AOS 10 would happily accept as a literal RADIUS shared secret, and RADIUS auth would then fail silently the next time a client tries to associate. Better to fail loudly: AI sees `"********"` directly and knows it has to ask the operator for the real secret.
+
+Added `is_masked_placeholder(value)` to `redaction/rules.py` (recognizes all-asterisk strings of length 4+) and a short-circuit at the top of `classify_field` that skips tokenization for masked values regardless of which rule path the field name matches. Future placeholder patterns (`<hidden>`, `[REDACTED]`, etc.) can be added as they surface.
 
 ### Notes
 
-- 989 tests pass (was 979; +10 from the new helper + tokenization tests).
+- 998 tests pass (was 979; +19 total: +10 from the flattener + tokenization tests, +9 from the placeholder-skip tests).
 - The flattener is conservative (requires *every* row to match the shape), so existing show commands that return regular records (e.g. `show ap database`, `show aaa authentication-server radius` listing) are untouched.
 
 ## [3.0.0.4] - 2026-05-06

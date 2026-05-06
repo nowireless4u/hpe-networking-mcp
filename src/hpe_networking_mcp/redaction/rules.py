@@ -357,6 +357,34 @@ def is_known_enum_value(value: str) -> bool:
     return lowered in _COMMON_ENUM_VALUES
 
 
+def is_masked_placeholder(value: str) -> bool:
+    """Return True if ``value`` is a source-platform-side masked placeholder.
+
+    AOS 8 (and similar systems) returns shared secrets, passwords, and other
+    sensitive fields as runs of asterisks (``"********"``) rather than the
+    cleartext value. The real secret never leaves the source platform.
+
+    Such placeholders must NEVER be tokenized: a tokenized placeholder
+    creates a *dangerous illusion* — the AI sees ``[[APITOKEN:uuid]]`` and
+    believes it has a real tokenized secret it can pass to a write tool.
+    The detokenize round-trip restores only the placeholder ``"********"``,
+    which downstream platforms accept as a literal value. The result is a
+    silent production failure (RADIUS auth breaks the next time a client
+    tries to associate) rather than the loud failure of "AI can't get the
+    secret, must ask operator".
+
+    Returns True for all-asterisk strings of length 4 or more. Other
+    common masked patterns (``<hidden>``, ``[REDACTED]``, etc.) can be
+    added as they surface.
+
+    See [issue #235](https://github.com/nowireless4u/hpe-networking-mcp/issues/235)
+    for the AOS 8 ``Key: "********"`` case.
+    """
+    if not isinstance(value, str) or not value:
+        return False
+    return len(value) >= 4 and all(c == "*" for c in value)
+
+
 _COMMON_ENUM_VALUES: frozenset[str] = frozenset(
     {
         "auto",
@@ -427,6 +455,13 @@ def classify_field(
     if not isinstance(field_name, str):
         return FieldClassification.SKIP, None
     name = _normalize_field_name(field_name)
+
+    # Source-platform-masked placeholders (e.g. AOS 8's ``"********"``) must
+    # never be tokenized regardless of which rule path matches the field name.
+    # See ``is_masked_placeholder`` for the rationale (dangerous illusion of
+    # a tokenized real secret; round-trip restores only the placeholder).
+    if isinstance(value, str) and is_masked_placeholder(value):
+        return FieldClassification.SKIP, None
 
     # Exact-match secret fields
     if name in SECRET_FIELD_NAMES:

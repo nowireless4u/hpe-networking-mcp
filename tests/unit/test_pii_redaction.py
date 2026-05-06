@@ -17,6 +17,7 @@ from hpe_networking_mcp.redaction.rules import (
     TokenKind,
     classify_field,
     is_known_enum_value,
+    is_masked_placeholder,
     looks_like_credential,
 )
 from hpe_networking_mcp.redaction.token_store import (
@@ -398,6 +399,56 @@ class TestTokenStoreLifecycle:
         assert re.match(rf"\[\[PSK:{UUID_PART}\]\]", token)
 
 
+class TestIsMaskedPlaceholder:
+    """is_masked_placeholder() recognizes source-platform-masked values
+    that must not be tokenized (they would create the illusion of a
+    tokenized real secret while the round-trip restores only the
+    placeholder). See issue #235."""
+
+    def test_eight_asterisks_is_placeholder(self) -> None:
+        assert is_masked_placeholder("********")
+
+    def test_four_asterisks_is_placeholder(self) -> None:
+        assert is_masked_placeholder("****")
+
+    def test_three_asterisks_too_short(self) -> None:
+        # Conservative lower bound — three '*' could be a regex artifact
+        # in a description field, etc. Real AOS 8 placeholder is 8 chars.
+        assert not is_masked_placeholder("***")
+
+    def test_real_credential_with_asterisks_not_placeholder(self) -> None:
+        # An asterisk *inside* a real credential doesn't trigger the
+        # placeholder rule — the rule only matches all-asterisk strings.
+        assert not is_masked_placeholder("Welcome*123!")
+
+    def test_empty_string_not_placeholder(self) -> None:
+        assert not is_masked_placeholder("")
+
+    def test_non_string_not_placeholder(self) -> None:
+        assert not is_masked_placeholder(None)
+        assert not is_masked_placeholder(42)
+
+    def test_classify_field_skips_masked_secret_field(self) -> None:
+        # ``shared_secret`` is in SECRET_FIELD_NAMES — would normally
+        # tokenize unconditionally. Masked placeholder must short-circuit
+        # to SKIP.
+        cls, _ = classify_field("shared_secret", "********")
+        assert cls == FieldClassification.SKIP
+
+    def test_classify_field_skips_masked_generic_credential_field(self) -> None:
+        # ``key`` is in GENERIC_CREDENTIAL_FIELD_NAMES with shape-check.
+        # Even though ``********`` passes looks_like_credential, the
+        # placeholder check fires first.
+        cls, _ = classify_field("key", "********")
+        assert cls == FieldClassification.SKIP
+
+    def test_classify_field_still_tokenizes_real_credential(self) -> None:
+        # Sanity: the placeholder skip must not affect real values.
+        cls, kind = classify_field("shared_secret", "MyRealSecret123!")
+        assert cls == FieldClassification.TOKENIZE_SECRET
+        assert kind == TokenKind.RADSEC
+
+
 class TestTokenizer:
     def _make(self, max_entries: int = 100) -> Tokenizer:
         keymap = SessionKeymap()
@@ -585,14 +636,17 @@ class TestTokenizeResponse:
         assert match is not None
         assert match.group(1) == "HOSTNAME"
 
-        # ``Key`` is a generic credential-named field and the AOS-masked
-        # placeholder ``********`` looks credential-shaped to the walker —
-        # so it gets tokenized. Round-trip (detokenize) returns the
-        # placeholder unchanged. Tokenizing a placeholder is harmless and
-        # consistent with the walker's "treat anything credential-shaped
-        # as a credential" contract.
-        assert record["Key"] != "********"
-        assert TOKEN_RE.fullmatch(record["Key"]) is not None
+        # ``Key: "********"`` is a source-platform-masked placeholder.
+        # AOS 8 returns this for any retrieved shared secret — the real
+        # value never leaves the controller. The walker MUST NOT tokenize
+        # it: a tokenized placeholder creates the dangerous illusion that
+        # the AI has a real tokenized secret it can pass to a write tool.
+        # The detokenize round-trip would restore only ``"********"``,
+        # which Central / AOS 10 would accept as a literal RADIUS shared
+        # secret — RADIUS auth then fails silently in production. Skipping
+        # the tokenization makes the AI see ``"********"`` directly and
+        # know it has to ask the operator for the real secret.
+        assert record["Key"] == "********"
 
         # Non-PII config values stay cleartext.
         assert record["Auth Port"] == "1812"
