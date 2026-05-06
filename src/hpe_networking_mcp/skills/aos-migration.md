@@ -147,6 +147,29 @@ There is no operator interview. Every input the skill needs is derived from coll
 
 The skill is in code mode — collection runs as Python orchestration inside the `execute()` sandbox, NOT as a fixed sequence of skill-prescribed tool calls. The pattern below is the goal + data shape; the AI composes the actual calls.
 
+#### Envelope helper — define once, reuse everywhere (USE UNMODIFIED)
+
+Define `_unwrap()` at the top of every `execute()` block in Stages 1, 4, 5, 7 and reuse it. **Do NOT paraphrase this helper into a one-liner** — AIs that did so crashed when an AOS 8 read tool returned a string error at `data` (issue [#269](https://github.com/nowireless4u/hpe-networking-mcp/issues/269)).
+
+```python
+def _unwrap(response):
+    """Strip the v3.0.0.0 envelope + optional inner {"result": ...} wrapper.
+
+    Tolerates any shape: returns ``response`` unchanged when not enveloped,
+    a string payload when ``data`` is a string (AOS 8 read tools are typed
+    ``dict | str`` and return strings on error/timeout), and the inner
+    payload when the tool double-wraps in ``{"result": ...}``.
+    """
+    if not isinstance(response, dict):
+        return response
+    payload = response.get("data", response)
+    if isinstance(payload, dict) and "result" in payload:
+        return payload["result"]
+    return payload
+```
+
+Every `call_tool(...)` result in Stages 1-7 should be passed through `_unwrap()` before further indexing. The contract is: `_unwrap()` always returns a value safe to test with `isinstance(x, (dict, list, str))` — the *caller* still has to branch on the return type before calling `.get()` or iterating.
+
 #### COLLECT-01 — Hierarchy walk (mandatory; no `/md`-root-only shortcut)
 
 The biggest historical bug in this skill was Stage 1 collecting only at `/md` root. AOS 8 inheritance does **not** always roll customer-specific config up to root — objects defined at `/md/<region>` or `/md/<region>/<site>` are invisible to a `/md`-only call. Always walk the full hierarchy.
@@ -200,17 +223,7 @@ for scope in scopes:
             # Surface "Invalid Object" loudly — the AOS 8 REST schema may
             # drift between versions, and a silently-dropped object means
             # the migration plan is materially incomplete.
-            #
-            # v3.0.0.0+: every tool response is wrapped in the envelope
-            # {ok, status, data, message, tool, platform}. The API payload
-            # lives at response["data"]. Some tools additionally wrap their
-            # return in {"result": ...} — handle both shapes via fallback.
-            envelope_data = response.get("data", response)
-            inner = (
-                envelope_data["result"]
-                if isinstance(envelope_data, dict) and "result" in envelope_data
-                else envelope_data
-            )
+            inner = _unwrap(response)
             if isinstance(inner, dict) and inner.get("ERROR") == "Invalid Object":
                 config_by_scope[scope][obj_type] = {
                     "_collection_error": f"Invalid Object — REST schema may have renamed {obj_type!r} on this AOS build"
@@ -253,11 +266,11 @@ clients = await call_tool("aos8_get_clients", {})
 bss_table = await call_tool("aos8_get_bss_table", {})
 active_aps = await call_tool("aos8_get_active_aps", {})
 
-# v3.0.0.0+: envelope unwrap, then handle the inner {"result": ...} wrapper
-# that some tools return (aos8_get_ap_database does).
-_envelope_data = ap_database.get("data", ap_database)
-_payload = _envelope_data.get("result", _envelope_data) if isinstance(_envelope_data, dict) else _envelope_data
-ap_names = [ap["ap_name"] for ap in _payload.get("AP Database", [])]
+ap_db_payload = _unwrap(ap_database)
+ap_names = [
+    ap["Name"]
+    for ap in (ap_db_payload.get("AP Database", []) if isinstance(ap_db_payload, dict) else [])
+]
 ap_wired_ports = {}
 for ap_name in ap_names:
     ap_wired_ports[ap_name] = await call_tool(
@@ -297,7 +310,14 @@ inventory = {
     "active_aps": [...],                            # subset that are currently up (may be [] if offline)
     "clients": {...},                               # aggregate per-SSID counts
     "bss_table": [...],                             # one entry per ESSID broadcast
-    "cluster_profiles": [...],                      # cluster_prof rows (any scope)
+    "cluster_profiles": [...],                      # cluster_prof DEFINITION rows only —
+                                                    # filter out entries where _flags.inherited == True.
+                                                    # entry_type="user" keeps user-config but does NOT
+                                                    # strip the inherited copies that AOS 8 surfaces at
+                                                    # every descendant scope; the SAME profile re-appears
+                                                    # at /md/<region>, /md/<region>/<site>, etc. Dedupe
+                                                    # by keeping only the row at the scope that defines
+                                                    # it. (issue #270)
     "live_cluster_state": {...},                    # aos8_get_cluster_state result
     "ap_groups": [...],                             # virtual_ap and ap_sys_prof
     "ssid_profiles": [...],                                        # ssid_prof rows
@@ -582,45 +602,51 @@ Out-of-scope personas (`ACCESS_SWITCH`, `AGG_SWITCH`, `CORE_SWITCH`, `BRIDGE`, `
 
 AOS 8 has no `cluster-mode` knob. The AOS 10 cluster-mode (`CM_SITE` / `CM_MANUAL`) is derived from three Stage 1 signals already in `config_by_scope`:
 
-1. `cluster_prof.cluster_controller[].ip` — cluster member IPs (from COLLECT-01)
+1. `cluster_prof.cluster_controller[].ip` — cluster member IPs (from COLLECT-01). **Use the `ip` field, NOT `vrrp_ip`** — AP `Switch IP` / `Standby IP` is the per-controller management address (matches `cluster_controller[].ip`); `vrrp_ip` is the VRRP virtual address and never appears as an AP's adoption target. Live-verified against AOS 8.13 cluster_prof — see [issue #270](https://github.com/nowireless4u/hpe-networking-mcp/issues/270).
 2. `ap_database.Switch IP` and `ap_database.Standby IP` — each AP's adoption controller (from COLLECT-02)
 3. `ap_multizone_prof.controller[].ip` — multizone tunnel anchor IPs per AP-group (from COLLECT-01)
 
-For each `cluster_prof` (skipping any cluster whose members include the conductor's IP — clusters are between MDs, not MM):
+**Iterate EVERY deduped cluster_prof in `inventory["cluster_profiles"]`** — emit one row per profile. The Stage 2 normalization already filtered `_flags.inherited == True` entries; do not skip, dedupe-by-name, or short-circuit on the first profile. AOS 8 commonly carries multiple distinct cluster_profs at sibling scopes (e.g. an `East` cluster at `/md/Campus` PLUS a `site-cluster` at `/md/Campus/West`); the AP's adoption controller may match the second one even when the first is "closer" alphabetically.
+
+Skip any cluster whose `cluster_controller[].ip` set includes the Mobility Conductor's own management IP — clusters are between MDs, not MM.
 
 ```python
-member_ips = {c["ip"] for c in cluster_prof["cluster_controller"]}
+for cluster_prof in inventory["cluster_profiles"]:           # iterate ALL — see note above
+    member_ips = {c["ip"] for c in cluster_prof["cluster_controller"]}
 
-# Primary zone test
-primary_aps = [
-    ap for ap in ap_database
-    if ap.get("Switch IP") in member_ips
-       or ap.get("Standby IP") in member_ips
-]
+    if conductor_mgmt_ip in member_ips:
+        continue                                             # MM is not a cluster member
 
-if primary_aps:
-    cluster.aos10_mode = "CM_SITE"
-    cluster.aos10_target = "Site"
-    cluster.notes = f"primary zone for {len(primary_aps)} APs"
-else:
-    cluster.aos10_mode = "CM_MANUAL"
-    cluster.aos10_target = "Device Group"
-    # Enrichment: distinguish multizone anchor from DMZ
-    multizone_for = [
-        ag["profile-name"] for ag in ap_groups_in_use
-        if ag.get("ap_multizone_prof", {}).get("profile-name")
-        and any(
-            c["ip"] in member_ips
-            for c in resolve_multizone_prof(ag["ap_multizone_prof"]["profile-name"]).get("controller", [])
-        )
+    # Primary zone test
+    primary_aps = [
+        ap for ap in ap_database
+        if ap.get("Switch IP") in member_ips
+           or ap.get("Standby IP") in member_ips
     ]
-    cluster.notes = (
-        f"tunnel anchor (multizone data zone) for AP-groups: {multizone_for}"
-        if multizone_for
-        else "active cluster with no APs adopted (DMZ pattern or unused)"
-    )
 
-cluster.aos10_scope = cluster.origin_scope  # /md/<region>/<site> per Stage 1 hierarchy walk
+    if primary_aps:
+        cluster.aos10_mode = "CM_SITE"
+        cluster.aos10_target = "Site"
+        cluster.notes = f"primary zone for {len(primary_aps)} APs"
+    else:
+        cluster.aos10_mode = "CM_MANUAL"
+        cluster.aos10_target = "Device Group"
+        # Enrichment: distinguish multizone anchor from DMZ
+        multizone_for = [
+            ag["profile-name"] for ag in ap_groups_in_use
+            if ag.get("ap_multizone_prof", {}).get("profile-name")
+            and any(
+                c["ip"] in member_ips
+                for c in resolve_multizone_prof(ag["ap_multizone_prof"]["profile-name"]).get("controller", [])
+            )
+        ]
+        cluster.notes = (
+            f"tunnel anchor (multizone data zone) for AP-groups: {multizone_for}"
+            if multizone_for
+            else "active cluster with no APs adopted (DMZ pattern or unused)"
+        )
+
+    cluster.aos10_scope = cluster.origin_scope               # /md/<region>/<site> per Stage 1 hierarchy walk
 ```
 
 **Why this works:** AOS 8 multizone splits an AP's traffic across multiple controllers — the *primary zone* is the cluster the AP is adopted to (determined by `Switch IP` / `Standby IP`), and *data zones* are additional clusters acting as tunnel anchors for specific VAPs. AOS 10 represents primary zones as Sites with auto-clustering (`CM_SITE`); data-zone anchors and unused-active clusters become Device Groups (`CM_MANUAL`). The decision is binary and fully derivable.

@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0.1] - 2026-05-06
+
+**Patch release — aos-migration skill robustness pass from operator transcript.**
+
+Two fixes from a live AOS 8.13.1.2 LSR audit transcript shared by Jon:
+
+1. **Sandbox `AttributeError: 'str' object has no attribute 'get'`** when the AI hand-rolled an unwrap helper that dropped the outer dict-guard. AOS 8 read tools are typed `dict | str` and the v3 envelope wraps the string at `data` — so the inner payload can be a string. The skill's documented pattern was correct but verbose enough that AIs paraphrased it into a one-liner that crashed. Fix: skill now defines a verbatim `_unwrap()` helper at the top of Stage 1 with a "USE UNMODIFIED" directive. All inline unwrap snippets in COLLECT-01 / COLLECT-04 collapsed to `_unwrap(response)` calls.
+2. **Stage 7 cluster-mode derivation false-negative on adopted APs** — the AI consulted the wrong `cluster_prof` (an inherited `East` cluster surfaced at the AP's site) and concluded the AP wasn't adopted, downgrading `CM_SITE` → `CM_MANUAL`. Live evidence confirmed `cluster_prof.cluster_controller[].ip` is the correct field and matches AP `Switch IP` / `Standby IP` exactly when iterated against the right profile. Fix: Stage 2 normalization now explicitly filters `_flags.inherited == True` cluster_prof rows (AOS 8's `entry_type="user"` keeps user-config but does NOT strip inherited copies); Stage 7 Step 4 now emphatically says "iterate EVERY deduped cluster_prof, do not skip / dedupe-by-name / short-circuit on the first match"; field-name guidance clarifies `ip` (per-controller mgmt) vs `vrrp_ip` (VRRP virtual — never an AP adoption target).
+
+Closes [#269](https://github.com/nowireless4u/hpe-networking-mcp/issues/269), [#270](https://github.com/nowireless4u/hpe-networking-mcp/issues/270).
+
+### Files
+
+- **`src/hpe_networking_mcp/skills/aos-migration.md`** — added `_unwrap()` helper block at start of Stage 1 with USE-UNMODIFIED directive; replaced inline COLLECT-01 / COLLECT-04 unwrap snippets with `_unwrap()` calls; corrected COLLECT-04 AP name field (`ap["Name"]`, not `ap["ap_name"]`, per live AOS 8 API shape); Stage 2 normalization now requires `_flags.inherited == True` filter on cluster_profiles; Stage 7 Step 4 hardened with "iterate EVERY deduped cluster_prof" directive + `ip` vs `vrrp_ip` field clarification + skip-conductor-IP guard.
+- **`pyproject.toml`** — bump 3.0.0.0 → 3.0.0.1.
+
 ## [3.0.0.0] - 2026-05-06
 
 **Major release.** Three breaking changes bundled into one:
