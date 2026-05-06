@@ -411,7 +411,7 @@ These describe the source's controller-AP plumbing. Post-migration APs go to Cen
 | F2 | **Internal Authentication Server in use with local users** — no Internal Auth Server in AOS 10 | `local_user_count > 0` | REGRESSION; operator plans ClearPass / Cloud Auth migration | VSG §1134-§1136 |
 | F3 | **L3 Mobility load-bearing in source design** — eliminated in AOS 10 | `l3_mobility_in_config AND target_mode_recommended in {bridge, mixed}` | REGRESSION (Bridge target) / DRIFT (Tunnel target) | VSG §897-§900 |
 | F4 | **VC-managed (NAT'd) WLANs** depending on controller-side NAT/DHCP — AOS 10 Bridge APs don't provide NAT/DHCP | `vc_managed_wlans_present AND target_mode_recommended in {bridge, mixed}` | REGRESSION | VSG §854-§857 |
-| F5 | **Static AP IPs detected** — AOS 10 requires DHCP | `any_ap_has_static_ip` | REGRESSION | VSG §1232-§1234 |
+| F5 | **Static AP IPs detected** — APs need **DHCP during initial Central onboarding** (Aruba Activate + first call-home to Central require DHCP-supplied IP / DNS / default-gateway). Operator may switch APs back to static IPs **after** they're adopted into Central. Constraint is AP-specific — gateways and switches do NOT have this onboarding-DHCP requirement and can be brought in static. | `any_ap_has_static_ip` | DRIFT (operator must ensure AP onboarding window has DHCP available; not a permanent requirement) | VSG §1232-§1234 |
 | F6 | **AirWave-dependent monitoring** in path (`mgmt-server` / `ams-ip` / AMP profile) — AirWave deprecated | `airwave_in_config` | DRIFT | VSG §312-§313 |
 | F7 | **ARM / HT radio / regulatory-domain profiles in active use** (`arm_prof` / `ht_radio_prof` / `reg_domain_prof`) — replaced by RF Profiles in AOS 10 | `arm_or_ht_radio_or_reg_domain_profile_present` | DRIFT — record values for post-cutover comparison | VSG §1163-§1166 |
 | F8 | **ClientMatch tunables** (Band Steering / Sticky / Load Balancing) currently tuned away from defaults — fixed at WLAN Control & Services in Central | `clientmatch_tunables_modified` | DRIFT | VSG §1167-§1169 |
@@ -991,7 +991,6 @@ Findings only fire when their applicability gate is met (see Stage 3). Possible 
 - **Mobility Conductor firmware below 8.10.0.12 / 8.12.0.1**: <conductor + running version>. (O1, VSG §1643)
 - **TCP 443 to Central blocked from <subnet>**: required for AOS 10 management. (O2, VSG §312-§319)
 - **GreenLake AP-license capacity insufficient**: source has <M> APs; GreenLake reports <N> active AP licenses. (O3, VSG §1619-§1620)
-- **Static AP IP detected**: <list>. Convert to DHCP. (F5, VSG §1232)
 - **AAA FastConnect (EAP-Offload) in use**: <auth profiles using it>. Plan ClearPass-only termination. (F1, VSG §1137)
 - **Internal Auth Server in use with local users**: <user count>. Migrate to ClearPass / Cloud Auth. (F2, VSG §1134)
 - **L3 Mobility load-bearing AND target = Bridge**: AOS 10 eliminates L3 Mobility. (F3, VSG §897-§900)
@@ -1008,6 +1007,7 @@ Findings only fire when their applicability gate is met (see Stage 3). Possible 
 
 ### DRIFT findings (should address; not blocking)
 - **AirWave in path**: monitoring tooling that depends on AirWave needs replacement. (F6, VSG §312)
+- **Static AP IPs detected** (AP-only): <list>. APs need DHCP for the initial Central onboarding window (Aruba Activate + first call-home); operator can re-pin static IPs **after** APs are adopted. Gateways and switches do not share this constraint. (F5, VSG §1232)
 - **ARM / Dot11a/g / Regulatory Domain profiles in use**: ARM is replaced by **RF Profiles** in AOS 10 / Central. AirMatch already exists in AOS 8 and continues in Central — it is not the AOS 10 ARM replacement. Document existing values for post-cutover comparison. (F7, VSG §1163)
 - **ClientMatch tunables relied on**: not adjustable in AOS 10. (F8, VSG §1167)
 - **Central scope tree minimal** (no Site Collections): pre-create before migration day. (O4)
