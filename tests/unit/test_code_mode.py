@@ -47,20 +47,28 @@ class TestCodeModeConfig:
         cfg = self._load_with_mode("code")
         assert cfg.tool_mode == "code"
 
-    def test_unknown_value_falls_back_to_dynamic(self):
+    def test_unknown_value_falls_back_to_code(self):
+        # Default fell back to "dynamic" pre-v3.0.0.0; now falls back to "code".
         cfg = self._load_with_mode("codee")
-        assert cfg.tool_mode == "dynamic"
+        assert cfg.tool_mode == "code"
 
-    def test_static_still_accepted(self):
-        cfg = self._load_with_mode("static")
-        assert cfg.tool_mode == "static"
+    def test_static_raises_value_error(self):
+        # MCP_TOOL_MODE=static was REMOVED in v3.0.0.0 — at 367 tools / ~64K
+        # tokens it was no longer practical. Setting it now raises with a
+        # migration message pointing at dynamic / code.
+        import pytest
+
+        with pytest.raises(ValueError, match="REMOVED in v3.0.0.0"):
+            self._load_with_mode("static")
 
     def test_dynamic_still_accepted(self):
         cfg = self._load_with_mode("dynamic")
         assert cfg.tool_mode == "dynamic"
 
-    def test_default_is_dynamic(self):
-        # No MCP_TOOL_MODE env var set.
+    def test_default_is_code(self):
+        # No MCP_TOOL_MODE env var set. Default flipped from "dynamic" → "code"
+        # in v3.0.0.0; the server logs a migration message at startup when this
+        # happens.
         from hpe_networking_mcp.config import MistSecrets, load_config
 
         with (
@@ -76,7 +84,7 @@ class TestCodeModeConfig:
             patch("hpe_networking_mcp.config._load_axis", return_value=None),
         ):
             cfg = load_config()
-        assert cfg.tool_mode == "dynamic"
+        assert cfg.tool_mode == "code"
 
 
 @pytest.mark.unit
@@ -132,17 +140,6 @@ class TestCodeModeCrossPlatformGating:
         assert mocks["code_mode"].call_count == 0
         assert mocks["skills_register"].call_count == 1, (
             "skills.register must be called in dynamic mode (skills via @mcp.tool)"
-        )
-
-    def test_static_mode_registers_all_aggregators(self):
-        mocks = self._run_create_server("static")
-        assert mocks["health"].call_count == 1
-        assert mocks["rf"].call_count == 1
-        assert mocks["sync_tools"].call_count == 1
-        assert mocks["sync_prompts"].call_count == 1
-        assert mocks["code_mode"].call_count == 0
-        assert mocks["skills_register"].call_count == 1, (
-            "skills.register must be called in static mode (skills via @mcp.tool)"
         )
 
     def test_code_mode_skips_every_aggregator_and_invokes_code_mode_hook(self):

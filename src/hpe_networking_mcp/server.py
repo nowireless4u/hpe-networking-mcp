@@ -307,12 +307,12 @@ def create_server(config: ServerConfig) -> FastMCP:
     _register_health(mcp)
 
     # --- Skills (markdown-defined multi-step procedures, always visible) ---
-    # In dynamic / static modes, register via @mcp.tool — they appear at the
-    # top level via the standard catalog. In CODE mode, we deliberately skip
-    # this path and instead pass discovery-tool factories to CodeMode below
-    # (see _register_code_mode); CodeMode's transform_tools replaces the
-    # visible catalog with [discovery_tools, execute] only, which would
-    # otherwise hide @mcp.tool registrations.
+    # In dynamic mode, register via @mcp.tool — they appear at the top level
+    # via the standard catalog. In CODE mode (default since v3.0.0.0), we
+    # deliberately skip this path and instead pass discovery-tool factories
+    # to CodeMode below (see _register_code_mode); CodeMode's transform_tools
+    # replaces the visible catalog with [discovery_tools, execute] only,
+    # which would otherwise hide @mcp.tool registrations.
     if config.tool_mode != "code":
         from hpe_networking_mcp.skills import register as _register_skills
 

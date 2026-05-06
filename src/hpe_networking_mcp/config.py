@@ -128,12 +128,19 @@ class ServerConfig:
     allowed_origins: list[str] = field(default_factory=lambda: ["http://localhost:8000", "http://127.0.0.1:8000"])
 
     # Tool exposure mode (generalized from GreenLake's original setting, #151).
-    # "static"  — every tool registers with FastMCP individually; all visible.
+    # "code"    — only ``execute`` + 5 discovery tools (``tags``, ``search``,
+    #             ``get_schema``, ``skills_list``, ``skills_load``) are exposed
+    #             at the top level; every underlying tool is reachable via
+    #             ``call_tool(name, args)`` inside a sandboxed Python
+    #             ``execute()`` call. Default since v3.0.0.0.
     # "dynamic" — the per-platform 3 meta-tools (list / schema / invoke) are
     #             exposed; the underlying tools are hidden via a Visibility
-    #             transform. Default since v2.0.0.0; set MCP_TOOL_MODE=static
-    #             to opt out.
-    tool_mode: str = "dynamic"
+    #             transform. Set MCP_TOOL_MODE=dynamic to opt back in to the
+    #             v2.x default behavior.
+    # "static" was REMOVED in v3.0.0.0 — at 367 tools / ~64K tokens it was no
+    # longer practical. Setting MCP_TOOL_MODE=static now raises ValueError
+    # at startup with a migration message.
+    tool_mode: str = "code"
 
     # PII tokenization (v2.3.1.0). When enabled, sensitive fields (PSKs,
     # RADIUS secrets, certificates) and identifiers (UUIDs, hostnames,
@@ -452,14 +459,30 @@ def load_config() -> ServerConfig:
     debug = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
     log_file = os.getenv("LOG_FILE") or None
 
-    # Tool exposure mode — MCP_TOOL_MODE env var. Same env-var name as the
-    # old GreenLake-specific setting; the internal config field is now just
-    # ``tool_mode`` because every platform honors it in v2.0. Default flipped
-    # from "static" → "dynamic" in v2.0.0.0.
-    tool_mode = os.getenv("MCP_TOOL_MODE", "dynamic").lower().strip()
-    if tool_mode not in ("static", "dynamic", "code"):
-        logger.warning("Ignoring unknown MCP_TOOL_MODE={!r}, defaulting to 'dynamic'", tool_mode)
-        tool_mode = "dynamic"
+    # Tool exposure mode — MCP_TOOL_MODE env var. Default flipped from
+    # "static" → "dynamic" in v2.0.0.0; flipped again from "dynamic" → "code"
+    # in v3.0.0.0. The "static" value was REMOVED in v3.0.0.0 — at 367 tools
+    # / ~64K tokens it was no longer practical.
+    tool_mode_raw = os.getenv("MCP_TOOL_MODE")
+    if tool_mode_raw is None:
+        tool_mode = "code"
+        logger.info(
+            "MCP_TOOL_MODE not set — defaulting to 'code' (changed in v3.0.0.0 from 'dynamic'). "
+            "Set MCP_TOOL_MODE=dynamic in your environment to keep the v2.x default behavior."
+        )
+    else:
+        tool_mode = tool_mode_raw.lower().strip()
+        if tool_mode == "static":
+            raise ValueError(
+                "MCP_TOOL_MODE=static was REMOVED in v3.0.0.0. "
+                "At 367 tools / ~64K tokens of schema, static mode was no longer practical. "
+                "Switch to MCP_TOOL_MODE=dynamic (per-platform meta-tools, ~3,700 tokens) or "
+                "MCP_TOOL_MODE=code (sandboxed Python execute, ~minimal tokens). "
+                "See the v3.0.0.0 CHANGELOG entry for migration guidance."
+            )
+        if tool_mode not in ("dynamic", "code"):
+            logger.warning("Ignoring unknown MCP_TOOL_MODE={!r}, defaulting to 'code'", tool_mode)
+            tool_mode = "code"
 
     # ALLOWED_ORIGINS — comma-separated. Empty value falls back to the
     # localhost defaults (most users). ``*`` disables the check.

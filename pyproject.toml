@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hpe-networking-mcp"
-version = "2.5.2.1"
+version = "3.0.0.0"
 description = "Unofficial, community-driven MCP server for Juniper Mist, Aruba Central, HPE GreenLake, and ClearPass. Not affiliated with HPE, Aruba, or Juniper."
 readme = "README.md"
 license = "MIT"
@@ -13,7 +13,9 @@ keywords = ["mcp", "networking", "mist", "aruba", "central", "greenlake", "clear
 authors = [{ name = "Jon Adams" }]
 
 dependencies = [
-    # MCP framework — Central requires code-mode, Mist requires >=3.1.0
+    # MCP framework — code-mode is the default tool mode since v3.0.0.0
+    # (was opt-in via the fastmcp[code-mode] extra in v2.x); the extra is
+    # now a hard requirement.
     "fastmcp[code-mode]>=3.1.1",
     # MCP protocol — GreenLake requires >=1.20.0, Mist requires >=1.9.2
     "mcp[cli]>=1.20.0",

@@ -60,6 +60,6 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
             len(loaded),
         )
     else:
-        logger.info("Template: {} tools registered (static mode)", len(loaded))
+        logger.info("Template: {} underlying tools registered (code mode)", len(loaded))
 
     return len(loaded)

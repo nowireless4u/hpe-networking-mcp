@@ -17,7 +17,10 @@ services:
       - ENABLE_AXIS_WRITE_TOOLS=${ENABLE_AXIS_WRITE_TOOLS:-false}
       - ENABLE_AOS8_WRITE_TOOLS=${ENABLE_AOS8_WRITE_TOOLS:-false}
       - DISABLE_ELICITATION=${DISABLE_ELICITATION:-false}
-      - MCP_TOOL_MODE=${MCP_TOOL_MODE:-dynamic}
+      # Tool exposure mode (since v3.0.0.0 the application default is "code").
+      # Uncomment + set to "dynamic" to opt back into the per-platform meta-tool
+      # surface (the v2.x default). The "static" value was REMOVED in v3.0.0.0.
+      # - MCP_TOOL_MODE=${MCP_TOOL_MODE:-code}
     secrets:
       # Mist (remove lines for platforms you don't use)
       - mist_api_token

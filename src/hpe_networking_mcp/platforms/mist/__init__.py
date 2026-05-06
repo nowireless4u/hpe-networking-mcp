@@ -104,9 +104,7 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
             "Mist: {} underlying tools + 3 meta-tools registered (dynamic mode)",
             len(loaded),
         )
-    elif config.tool_mode == "code":
-        logger.info("Mist: {} underlying tools registered (code mode)", len(loaded))
     else:
-        logger.info("Mist: {} tools registered (static mode)", len(loaded))
+        logger.info("Mist: {} underlying tools registered (code mode)", len(loaded))
 
     return len(loaded)

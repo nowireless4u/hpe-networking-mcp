@@ -107,12 +107,9 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
     except Exception as e:
         logger.warning("AOS8: failed to load prompts -- {}", e)
 
-    mode = config.tool_mode
-    if mode == "dynamic":
+    if config.tool_mode == "dynamic":
         build_meta_tools("aos8", mcp)
         logger.info("AOS8: registered {} underlying tools + 3 meta-tools (dynamic mode)", total)
-    elif mode == "code":
-        logger.info("AOS8: registered {} tools (code mode)", total)
     else:
-        logger.info("AOS8: registered {} tools (static mode)", total)
+        logger.info("AOS8: registered {} underlying tools (code mode)", total)
     return total
