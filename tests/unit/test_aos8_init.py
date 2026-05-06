@@ -117,14 +117,18 @@ def test_register_tools_dynamic_mode():
     assert len(REGISTRIES.get("aos8", {})) == EXPECTED_TOTAL
 
 
-def test_register_tools_static_mode():
+def test_register_tools_code_mode():
+    """v3.0.0.0: code mode is the default. Static mode was REMOVED. This
+    test verifies code mode registers all underlying tools (the meta-tools
+    aren't built; tools are reachable via call_tool() inside execute()).
+    """
     from fastmcp import FastMCP
 
     from hpe_networking_mcp.platforms.aos8 import register_tools
 
-    mcp = FastMCP("test-aos8-static", on_duplicate="replace")
+    mcp = FastMCP("test-aos8-code", on_duplicate="replace")
     config = MagicMock()
-    config.tool_mode = "static"
+    config.tool_mode = "code"
 
     count = register_tools(mcp, config)
 

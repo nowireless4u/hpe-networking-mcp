@@ -129,6 +129,15 @@ When tokenization is off, tool responses contain plaintext values — your behav
 - Errors uniformly arrive as `{"ok": false, "message": "...", "data": null}` regardless of which platform / tool failed.
 - The `platform` field is inferred from the tool-name prefix (`central_*` → `"central"`, `aos8_*` → `"aos8"`, etc.); cross-platform tools (`health`, `site_health_check`, etc.) get `null`.
 - A small number of tools that explicitly return an envelope shape are passed through without re-wrapping (idempotent behavior).
+- **Some tools additionally wrap their return in an inner `{"result": ...}` shape** (a pre-v3 convention from when their backing API client returned that shape). The envelope wraps that wrapper — so for those tools the actual data lives at `result["data"]["result"]`. To handle both shapes uniformly inside `execute()`, use a fallback:
+
+  ```python
+  envelope_data = response.get("data", response)
+  payload = envelope_data.get("result", envelope_data) if isinstance(envelope_data, dict) and "result" in envelope_data else envelope_data
+  # `payload` is the actual API response regardless of which wrapping convention the tool used
+  ```
+
+  Tools known to use the inner wrapper as of v3.0.0.0: most `central_*` and `aos8_*` reads (e.g. `central_get_sites`, `aos8_get_ap_database`, `aos8_get_effective_config`). Tools that return the payload directly (no inner wrapper): `health`, the 4 cross-platform tools, most `mist_*` reads. When in doubt, use the fallback pattern above — it's safe for both shapes.
 
 ---
 
