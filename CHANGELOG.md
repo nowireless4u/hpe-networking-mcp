@@ -5,6 +5,58 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0.0] - 2026-05-06
+
+**Major release.** Three breaking changes bundled into one:
+
+1. **`MCP_TOOL_MODE=static` REMOVED** — at 367 tools / ~64K tokens of schema, static mode was no longer practical. Setting it now raises `ValueError` at startup with a migration message.
+2. **Default tool mode flipped from `dynamic` → `code`** — code mode exposes only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`); all 367 underlying tools are reachable via `await call_tool(name, params)` inside the sandboxed Python `execute()` block. Smallest initial token cost; best for orchestrators driving small / local LLMs.
+3. **Response envelope universal** — every tool's response is wrapped in `{ok, status, data, message, tool, platform}`. v2.5.1.0 prototyped this on 4 cross-platform tools; v3.0.0.0 expanded to every tool after Zach's OpenClaw + Qwen3 4B test confirmed the envelope worked for the small-local-model use case (#246 reassessment). The actual API payload always lives at `result["data"]`.
+
+Closes [#246](https://github.com/nowireless4u/hpe-networking-mcp/issues/246), [#267](https://github.com/nowireless4u/hpe-networking-mcp/issues/267).
+
+### Why this is one release, not three
+
+The three changes are tightly coupled:
+- Removing static mode removes the breaking-change concern from the original [#246](https://github.com/nowireless4u/hpe-networking-mcp/issues/246) envelope expansion (which had cited static-mode consumers as the load-bearing reason it had to be a major bump).
+- Flipping the default to code mode fully realizes the envelope's value (uniform shape across every `call_tool()` return inside `execute()`).
+- Doing all three together gives operators ONE breaking-change story to learn instead of three separate releases close together.
+
+The original effort estimate was ~3 days per [#246](https://github.com/nowireless4u/hpe-networking-mcp/issues/246); actual work was a fraction of that because the test rewrite was much smaller than expected (unit tests call tool functions directly and bypass middleware, so envelope expansion didn't break them).
+
+### Migration paths
+
+| If you were running... | After v3.0.0.0... | Action |
+|---|---|---|
+| `MCP_TOOL_MODE=static` (explicit) | Hard error at startup with migration message | Switch to `dynamic` (per-platform meta-tools, ~3,700 tokens) or `code` (sandboxed `execute`, ~minimal tokens) |
+| `MCP_TOOL_MODE=dynamic` (explicit) | Continues to work as before | Nothing required |
+| `MCP_TOOL_MODE=code` (explicit) | Continues to work as before | Nothing required |
+| No `MCP_TOOL_MODE` set (implicit default) | Now defaults to `code` mode (was `dynamic` in v2.x); startup log warns once | Set `MCP_TOOL_MODE=dynamic` in your compose to keep prior behavior |
+| AI client checking `result["foo"]` directly on tool calls | Now needs `result["data"]["foo"]` (envelope wraps everything) | Update client code to navigate through the envelope |
+| Static-mode `tools/call` usage | No longer supported | Use code mode (`execute` + `call_tool`) or dynamic mode (`<platform>_invoke_tool`) |
+| `pydantic_monty` was previously installed via `fastmcp[code-mode]` extra | Now a hard requirement (code mode is default) | The extra is still on the dependency line; nothing to do for fresh installs |
+
+### What's new
+
+- **`src/hpe_networking_mcp/config.py`** — drop `static` from valid `MCP_TOOL_MODE` values; raise `ValueError` with migration message. Flip application default from `dynamic` → `code`. Log a startup migration message when env var unset.
+- **Per-platform `__init__.py`** (Mist, Central, GreenLake, ClearPass, Apstra, Axis, AOS 8, `_template`) — drop the static-mode log branch; only dynamic / code remain.
+- **`src/hpe_networking_mcp/server.py`** — cleanup `dynamic / static modes` comment to just `dynamic mode`.
+- **`src/hpe_networking_mcp/middleware/response_envelope.py`** — drop `PROTOTYPE_TOOLS` allowlist; envelope wraps every tool universally. Already-enveloped responses still pass through idempotently.
+- **`pyproject.toml`** — bump 2.5.2.1 → 3.0.0.0; updated `fastmcp[code-mode]` dependency comment to reflect code-mode-as-default (the extra is still required as a hard dep).
+- **`docker-compose.yml`** (committed template) — comment out `MCP_TOOL_MODE=${MCP_TOOL_MODE:-dynamic}` so the application default takes effect for fresh installs. Explanatory comment for opting back into dynamic.
+- **`tests/unit/test_code_mode.py`** — test contract updates: default is `code`, unknown values fall back to `code`, `static` raises ValueError. Removed `test_static_mode_registers_all_aggregators` (premise no longer applies).
+- **`tests/unit/test_response_envelope_middleware.py`** — drop `PROTOTYPE_TOOLS` import; flipped `test_passes_through_non_prototype_tool` → `test_wraps_platform_prefixed_tool` (asserts `central_get_sites` IS wrapped now); replaced `test_prototype_tools_set_membership` with `test_wraps_aos8_tool` (verifies AOS 8 tools added after v2.5.1.0 are also wrapped).
+- **`src/hpe_networking_mcp/skills/aos-migration.md`** — `response.get("result")` envelope unwrap → `response.get("data", response)` for v3 envelope shape; same for ap_database access in COLLECT-04.
+- **`src/hpe_networking_mcp/INSTRUCTIONS.md`** — rewrote tool-discovery preamble for code-default + dynamic-opt-in; expanded "Response envelope" section to universal scope; flagged static-mode removal.
+- **`README.md`** — comparison table heading + default-tool-surface callout + startup-log examples + architecture-diagram ASCII art + env-var table + troubleshooting section all updated for v3.0.0.0 reality.
+- **`docs/TOOLS.md`** — code mode documented first (as default); dynamic mode follows (opt-in); static mode removal documented.
+
+### Notes
+
+- 964 tests still pass throughout. The unit-test suite calls tool functions directly (bypassing middleware) so the envelope expansion didn't break them. AI clients / orchestrators that previously checked `result["foo"]` directly on the wire will need to navigate through `result["data"]["foo"]` post-v3.0.0.0.
+- `pydantic_monty` was already pulled in via `fastmcp[code-mode]` — no new dependency.
+- Code mode's premise (LLM composes per-platform tools via `call_tool` inside the sandbox) explicitly does NOT include the cross-platform aggregators (`site_health_check`, `site_rf_check`, `manage_wlan_profile`) — those are workarounds for dynamic mode's "AI picks one platform and stops" problem. They remain registered only in dynamic mode.
+
 ## [2.5.2.1] - 2026-05-05
 
 **`SandboxErrorCatchMiddleware` now signals `isError: true` on the wire for code-mode sandbox failures.** Reported by Zach during OpenClaw MCP execute testing — sandbox parse/runtime errors were reaching MCP clients as `isError: false` tool results, making it impossible for orchestrators to distinguish failed execution from successful JSON output that happened to contain error-shaped strings.
