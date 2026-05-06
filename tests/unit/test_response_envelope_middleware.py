@@ -1,8 +1,11 @@
-"""Unit tests for ResponseEnvelopeMiddleware (v2.5.1.0 prototype, issue #246).
+"""Unit tests for ResponseEnvelopeMiddleware.
 
-Verifies the envelope-wrapping middleware against the four tool-name
-scopes defined in ``PROTOTYPE_TOOLS``. Non-prototype tools pass through
-unchanged. Already-enveloped responses pass through idempotently.
+v2.5.1.0 prototype scoped wrapping to 4 cross-platform tools via
+``PROTOTYPE_TOOLS``. v3.0.0.0 expanded to every tool — the allowlist is
+gone. These tests verify the universal-wrapping contract: every tool
+gets enveloped, already-enveloped responses pass through idempotently,
+and edge cases (None structured content, status-code extraction, platform
+inference) all behave correctly.
 """
 
 from __future__ import annotations
@@ -13,7 +16,6 @@ import pytest
 from fastmcp.tools.tool import ToolResult
 
 from hpe_networking_mcp.middleware.response_envelope import (
-    PROTOTYPE_TOOLS,
     ResponseEnvelopeMiddleware,
     _extract_status,
     _infer_platform,
@@ -200,8 +202,11 @@ class TestResponseEnvelopeMiddleware:
         assert result.structured_content["ok"] is True
 
     @pytest.mark.asyncio
-    async def test_passes_through_non_prototype_tool(self):
-        """Tools NOT in PROTOTYPE_TOOLS are not wrapped — short-circuit."""
+    async def test_wraps_platform_prefixed_tool(self):
+        """v3.0.0.0: every tool gets wrapped — including platform-prefixed ones.
+        v2.5.1.0 prototype passed these through unchanged; v3 wraps them in
+        the envelope with platform field inferred from the prefix.
+        """
         middleware = ResponseEnvelopeMiddleware()
         ctx = _make_context("central_get_sites")
         raw = {"sites": [{"name": "dallas-hq"}]}
@@ -210,13 +215,20 @@ class TestResponseEnvelopeMiddleware:
 
         result = await middleware.on_call_tool(ctx, call_next)
 
-        # Same object — no wrapping
-        assert result is original
-        assert result.structured_content == raw
+        # Wrapped now
+        assert result is not original
+        assert result.structured_content == {
+            "ok": True,
+            "status": None,
+            "data": raw,
+            "message": None,
+            "tool": "central_get_sites",
+            "platform": "central",
+        }
 
     @pytest.mark.asyncio
     async def test_already_enveloped_passes_through(self):
-        """If a prototype tool already returned an envelope, don't re-wrap."""
+        """If a tool already returned an envelope, don't re-wrap."""
         middleware = ResponseEnvelopeMiddleware()
         ctx = _make_context("health")
         existing_envelope = {
@@ -255,10 +267,20 @@ class TestResponseEnvelopeMiddleware:
         }
 
     @pytest.mark.asyncio
-    async def test_prototype_tools_set_membership(self):
-        """All four documented prototype tools are in PROTOTYPE_TOOLS."""
-        assert "health" in PROTOTYPE_TOOLS
-        assert "site_health_check" in PROTOTYPE_TOOLS
-        assert "site_rf_check" in PROTOTYPE_TOOLS
-        assert "manage_wlan_profile" in PROTOTYPE_TOOLS
-        assert len(PROTOTYPE_TOOLS) == 4
+    async def test_wraps_aos8_tool(self):
+        """v3.0.0.0: AOS 8 tools (added after the v2.5.1.0 prototype) are
+        wrapped just like every other tool. Pin a sample so future regressions
+        in the platform-prefix list are caught.
+        """
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context("aos8_get_md_hierarchy")
+        raw = {"Configuration node hierarchy": [{"Config Node": "/md", "Type": "System"}]}
+        call_next = AsyncMock(return_value=_make_tool_result(structured=raw))
+
+        result = await middleware.on_call_tool(ctx, call_next)
+
+        envelope = result.structured_content
+        assert envelope["tool"] == "aos8_get_md_hierarchy"
+        assert envelope["platform"] == "aos8"
+        assert envelope["data"] == raw
+        assert envelope["ok"] is True

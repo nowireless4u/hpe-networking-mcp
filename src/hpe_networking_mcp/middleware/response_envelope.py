@@ -1,9 +1,11 @@
 """Response envelope middleware — wraps tool responses in a uniform shape.
 
-v2.5.1.0 prototype scope: applies only to the 4 cross-platform tools
-(``health``, ``site_health_check``, ``site_rf_check``, ``manage_wlan_profile``)
-to validate the pattern before committing to the full v3.0.0.0 refactor across
-every tool in the catalog. Tracked in issue #246.
+v3.0.0.0 scope: applies to **every tool** in the catalog. The v2.5.1.0
+prototype was scoped to the 4 cross-platform tools (``health``,
+``site_health_check``, ``site_rf_check``, ``manage_wlan_profile``) to
+validate the pattern; Zach's OpenClaw + Qwen3 4B test (#246 reassessment
+comment) confirmed the envelope worked for the small-local-model use case
+that motivated v3 in the first place. Allowlist removed in v3.0.0.0.
 
 Envelope shape::
 
@@ -21,9 +23,9 @@ The middleware sits **innermost** in the chain so it wraps raw tool output
 ``_extract_status_code`` works equally on the envelope's ``status`` field
 as it does on raw tool output's ``status_code`` / ``code`` / ``status``.
 
-When a tool already returned a dict matching the envelope shape (i.e. one
-of the 4 tools manually returned an envelope), the middleware passes through
-without re-wrapping.
+When a tool already returned a dict matching the envelope shape (e.g. a
+tool that explicitly constructed and returned an envelope), the middleware
+passes through without re-wrapping (idempotency check via ``_is_envelope_shape``).
 """
 
 from __future__ import annotations
@@ -34,16 +36,6 @@ import mcp.types
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from fastmcp.tools.tool import ToolResult
 from loguru import logger
-
-# v2.5.1.0 prototype scope. v3.0.0.0 expands this to every tool — see #246.
-PROTOTYPE_TOOLS: frozenset[str] = frozenset(
-    {
-        "health",
-        "site_health_check",
-        "site_rf_check",
-        "manage_wlan_profile",
-    }
-)
 
 # Platform prefixes used to derive the ``platform`` envelope field. Cross-platform
 # tools (those without one of these prefixes) end up with ``platform: null``.
@@ -118,11 +110,15 @@ def _build_envelope(
 
 
 class ResponseEnvelopeMiddleware(Middleware):
-    """Wrap allowlisted tool responses in the uniform envelope shape.
+    """Wrap every tool response in the uniform envelope shape.
 
     Position **innermost** in the middleware chain (last in the
     ``middleware=[...]`` list) so the wrap happens on raw tool output
     *before* retry / PII / elicitation see the response.
+
+    v2.5.1.0 had an allowlist (``PROTOTYPE_TOOLS``); v3.0.0.0 removes it
+    and the envelope applies fleet-wide. Tools that explicitly returned an
+    envelope shape are still passed through via the idempotency check.
     """
 
     async def on_call_tool(
@@ -131,10 +127,6 @@ class ResponseEnvelopeMiddleware(Middleware):
         call_next,
     ) -> ToolResult:
         tool_name = context.message.name
-
-        if tool_name not in PROTOTYPE_TOOLS:
-            return await call_next(context)  # type: ignore[return-value]
-
         platform = _infer_platform(tool_name)
         result = await call_next(context)
 
