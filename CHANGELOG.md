@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0.2] - 2026-05-06
+
+**Patch release — `central_get_aps` empty-list contract fix.**
+
+`central_get_aps()` returned the human-string `"No access points found matching the specified criteria."` when the AP list was empty, which broke caller patterns like `len(result)` (returned 38, the string length) and `for ap in result` (iterates over characters). Fix: return `[]` instead so callers can iterate without `None`/`str` guards.
+
+Live-verified the broken behavior against the maintainer's Central workspace before fixing (issue #244 also reported `None` as a possible value, but the actual current behavior was the string — both fixed by the same change).
+
+Closes [#244](https://github.com/nowireless4u/hpe-networking-mcp/issues/244).
+
+### Files
+
+- **`src/hpe_networking_mcp/platforms/central/tools/monitoring.py`** — replaced the empty-result string fallback with `return aps or []`. Single-line change. Type signature `-> list[dict] | str` unchanged (str now reserved for actual error paths).
+- **`tests/unit/test_central_monitoring.py`** — new unit-test file pinning the empty-list contract (covers `None` → `[]`, `[]` → `[]`, populated → passthrough, SDK exception → error string).
+- **`pyproject.toml`** — bump 3.0.0.1 → 3.0.0.2.
+
+### Side housekeeping (not in this release; closed during review)
+
+- **#243** (GreenLake `state` field shows `?`) — closed; verified live the GreenLake API field is `subscriptionStatus`, not `state`. Tool wrapper passes the raw response through unchanged. The `?` rendering was the AI's own placeholder for a missing field name. No code change needed.
+- **#165** (Phase 7 v2.0 cleanup) — closed as no-longer-applicable; verified GreenLake aliases gone, `greenlake_tool_mode` config alias gone, dynamic-mode benchmarking implicitly answered by v3.0.0.0's default flip to code mode.
+
 ## [3.0.0.1] - 2026-05-06
 
 **Patch release — aos-migration skill robustness pass from operator transcript.**

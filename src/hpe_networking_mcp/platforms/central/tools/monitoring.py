@@ -89,9 +89,7 @@ async def central_get_aps(
     except Exception as e:
         return f"Error fetching access points: {e}"
 
-    if not aps:
-        return "No access points found matching the specified criteria."
-    return aps
+    return aps or []
 
 
 @tool(annotations=READ_ONLY)
