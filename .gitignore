@@ -80,3 +80,7 @@ docs/central/vsg/
 # for skill authoring; do not redistribute via the repo.
 docs/mist/vsg/
 docs/mist/
+
+# Test reports shared by external collaborators (kept local — may contain
+# operator-environment data we don't want in public repo)
+docs/Qwen3_4B_OpenClaw_HPE_MCP_Test_Report.pdf
