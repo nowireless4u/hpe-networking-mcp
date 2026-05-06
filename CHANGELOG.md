@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0.4] - 2026-05-06
+
+**Patch release — ClearPass `_send_request` private-method dependency wrapped (refactor only).**
+
+ClearPass GET reads have to use `pyclearpass.ClearPassAPILogin._send_request(path, "get")` because the SDK doesn't expose a public list method for most resource types. That direct dependency on a private SDK method (the leading underscore) was scattered across 69 call sites in 16 tool files — if a future pyclearpass release renames or removes `_send_request`, all 69 sites break.
+
+Wrapped the dependency in a single `clearpass_get(client, path)` helper in `platforms/clearpass/utils.py`, alongside the `build_query_string` helper added in v3.0.0.3. Now there's exactly one place to update if pyclearpass changes its transport layer.
+
+Pure refactor. No behavior change — every call site produces the same HTTP request as before.
+
+Closes [#126](https://github.com/nowireless4u/hpe-networking-mcp/issues/126).
+
+### Files
+
+- **`src/hpe_networking_mcp/platforms/clearpass/utils.py`** — added `clearpass_get(client, path)` helper. Single line of meaningful code (`return client._send_request(path, "get")`); the rest is a docstring explaining why the wrapper exists.
+- **16 ClearPass tool files** (`audit.py`, `auth.py`, `certificate_authority.py`, `certificates.py`, `endpoint_visibility.py`, `endpoints.py`, `enforcement.py`, `guest_config.py`, `guests.py`, `identities.py`, `integrations.py`, `network_devices.py`, `policy_elements.py`, `roles.py`, `server_config.py`, `sessions.py`) — replaced 69 \`client._send_request(path, "get")\` calls with `clearpass_get(client, path)`. 10 files extended their existing `build_query_string` import; 6 files added a fresh import.
+- **`tests/unit/test_clearpass_utils.py`** — added 3 new tests covering `clearpass_get` (delegation contract, path passthrough, return-value passthrough). 11 tests total in the file.
+- **`pyproject.toml`** — bump 3.0.0.3 → 3.0.0.4.
+
+### Notes
+
+- 979 tests pass (was 976; +3 from the new helper tests).
+- Scope deliberately limited to GET reads (the issue's stated target). The 139 remaining `_send_request` write-method call sites (POST / PATCH / DELETE) are unchanged. If a future pyclearpass change breaks them too, a follow-up PR can extend the wrapper to method-agnostic.
+
 ## [3.0.0.3] - 2026-05-06
 
 **Patch release — ClearPass `build_query_string` consolidation (refactor only).**

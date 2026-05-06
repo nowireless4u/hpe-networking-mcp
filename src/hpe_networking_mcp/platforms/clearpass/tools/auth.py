@@ -7,6 +7,7 @@ from fastmcp import Context
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
+from hpe_networking_mcp.platforms.clearpass.utils import clearpass_get
 
 
 @tool(annotations=READ_ONLY)
@@ -49,7 +50,7 @@ async def clearpass_get_auth_sources(
             f"calculate_count={'true' if calculate_count else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
-        return client._send_request("/auth-source" + query, "get")
+        return clearpass_get(client, "/auth-source" + query)
     except Exception as e:
         return f"Error fetching auth sources: {e}"
 
@@ -144,6 +145,6 @@ async def clearpass_get_auth_methods(
             f"calculate_count={'true' if calculate_count else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
-        return client._send_request("/auth-method" + query, "get")
+        return clearpass_get(client, "/auth-method" + query)
     except Exception as e:
         return f"Error fetching auth methods: {e}"

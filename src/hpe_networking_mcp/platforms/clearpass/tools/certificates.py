@@ -7,7 +7,7 @@ from fastmcp import Context
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
-from hpe_networking_mcp.platforms.clearpass.utils import build_query_string
+from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
 
 
 @tool(annotations=READ_ONLY)
@@ -48,7 +48,7 @@ async def clearpass_get_trust_list(
                 cert_trust_list_id=cert_trust_list_id,
             )
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/cert-trust-list" + query, "get")
+        return clearpass_get(client, "/cert-trust-list" + query)
     except Exception as e:
         return f"Error fetching trust list: {e}"
 
@@ -82,7 +82,7 @@ async def clearpass_get_client_certificates(
         if client_cert_id:
             return client.get_client_cert_by_client_cert_id(client_cert_id=client_cert_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/client-cert" + query, "get")
+        return clearpass_get(client, "/client-cert" + query)
     except Exception as e:
         return f"Error fetching client certificates: {e}"
 
@@ -116,7 +116,7 @@ async def clearpass_get_server_certificates(
                 server_uuid=server_uuid,
                 service_name=service_name,
             )
-        return client._send_request("/server-cert", "get")
+        return clearpass_get(client, "/server-cert")
     except Exception as e:
         return f"Error fetching server certificates: {e}"
 
@@ -150,7 +150,7 @@ async def clearpass_get_service_certificates(
         if service_cert_id:
             return client.get_service_cert_by_service_cert_id(service_cert_id=service_cert_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/service-cert" + query, "get")
+        return clearpass_get(client, "/service-cert" + query)
     except Exception as e:
         return f"Error fetching service certificates: {e}"
 
@@ -188,8 +188,8 @@ async def clearpass_get_revocation_list(
 
         client = await get_clearpass_session(ApiPlatformCertificates)
         if revocation_list_id:
-            return client._send_request(f"/revocation-list/{revocation_list_id}", "get")
+            return clearpass_get(client, f"/revocation-list/{revocation_list_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/revocation-list" + query, "get")
+        return clearpass_get(client, "/revocation-list" + query)
     except Exception as e:
         return f"Error fetching revocation lists: {e}"

@@ -19,7 +19,7 @@ from fastmcp import Context
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
-from hpe_networking_mcp.platforms.clearpass.utils import build_query_string
+from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
 
 
 @tool(annotations=READ_ONLY)
@@ -57,11 +57,11 @@ async def clearpass_get_certificates(
 
         client = await get_clearpass_session(ApiCertificateAuthority)
         if certificate_id and chain:
-            return client._send_request(f"/certificate/{certificate_id}/chain", "get")
+            return clearpass_get(client, f"/certificate/{certificate_id}/chain")
         if certificate_id:
-            return client._send_request(f"/certificate/{certificate_id}", "get")
+            return clearpass_get(client, f"/certificate/{certificate_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/certificate" + query, "get")
+        return clearpass_get(client, "/certificate" + query)
     except Exception as e:
         return f"Error fetching CA certificates: {e}"
 
@@ -104,8 +104,8 @@ async def clearpass_get_onboard_devices(
 
         client = await get_clearpass_session(ApiCertificateAuthority)
         if onboard_device_id:
-            return client._send_request(f"/onboard/device/{onboard_device_id}", "get")
+            return clearpass_get(client, f"/onboard/device/{onboard_device_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/onboard/device" + query, "get")
+        return clearpass_get(client, "/onboard/device" + query)
     except Exception as e:
         return f"Error fetching onboard devices: {e}"

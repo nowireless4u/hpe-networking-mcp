@@ -7,6 +7,7 @@ from fastmcp import Context
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
+from hpe_networking_mcp.platforms.clearpass.utils import clearpass_get
 
 
 @tool(annotations=READ_ONLY)
@@ -57,7 +58,7 @@ async def clearpass_get_endpoints(
             f"profile_details={'true' if profile_details else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
-        return client._send_request("/endpoint" + query, "get")
+        return clearpass_get(client, "/endpoint" + query)
     except Exception as e:
         return f"Error fetching endpoints: {e}"
 

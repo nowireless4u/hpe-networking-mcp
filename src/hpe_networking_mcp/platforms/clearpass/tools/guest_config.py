@@ -7,7 +7,7 @@ from fastmcp import Context
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
-from hpe_networking_mcp.platforms.clearpass.utils import build_query_string
+from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
 
 
 @tool(annotations=READ_ONLY)
@@ -39,7 +39,7 @@ async def clearpass_get_pass_templates(
         if template_id:
             return client.get_template_pass_by_id(id=template_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/template/pass" + query, "get")
+        return clearpass_get(client, "/template/pass" + query)
     except Exception as e:
         return f"Error fetching pass templates: {e}"
 
@@ -73,7 +73,7 @@ async def clearpass_get_print_templates(
         if template_id:
             return client.get_template_print_by_id(id=template_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/template/print" + query, "get")
+        return clearpass_get(client, "/template/print" + query)
     except Exception as e:
         return f"Error fetching print templates: {e}"
 
@@ -111,7 +111,7 @@ async def clearpass_get_weblogin_pages(
         if page_name:
             return client.get_weblogin_page_name_by_page_name(page_name=page_name)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/weblogin" + query, "get")
+        return clearpass_get(client, "/weblogin" + query)
     except Exception as e:
         return f"Error fetching web login pages: {e}"
 

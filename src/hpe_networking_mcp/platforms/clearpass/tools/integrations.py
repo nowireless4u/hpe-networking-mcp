@@ -7,7 +7,7 @@ from fastmcp import Context
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
-from hpe_networking_mcp.platforms.clearpass.utils import build_query_string
+from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
 
 
 @tool(annotations=READ_ONLY)
@@ -44,7 +44,7 @@ async def clearpass_get_extensions(
         if extension_id:
             return client.get_extension_instance_by_id(id=extension_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/extension/instance" + query, "get")
+        return clearpass_get(client, "/extension/instance" + query)
     except Exception as e:
         return f"Error fetching extensions: {e}"
 
@@ -78,7 +78,7 @@ async def clearpass_get_syslog_targets(
         if syslog_target_id:
             return client.get_syslog_target_by_syslog_target_id(syslog_target_id=syslog_target_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/syslog-target" + query, "get")
+        return clearpass_get(client, "/syslog-target" + query)
     except Exception as e:
         return f"Error fetching syslog targets: {e}"
 
@@ -114,7 +114,7 @@ async def clearpass_get_syslog_export_filters(
                 syslog_export_filter_id=syslog_export_filter_id,
             )
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/syslog-export-filter" + query, "get")
+        return clearpass_get(client, "/syslog-export-filter" + query)
     except Exception as e:
         return f"Error fetching syslog export filters: {e}"
 
@@ -148,7 +148,7 @@ async def clearpass_get_event_sources(
         if event_sources_id:
             return client.get_event_sources_by_event_sources_id(event_sources_id=event_sources_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/event-sources" + query, "get")
+        return clearpass_get(client, "/event-sources" + query)
     except Exception as e:
         return f"Error fetching event sources: {e}"
 
@@ -184,7 +184,7 @@ async def clearpass_get_context_servers(
                 context_server_action_id=context_server_action_id,
             )
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/context-server-action" + query, "get")
+        return clearpass_get(client, "/context-server-action" + query)
     except Exception as e:
         return f"Error fetching context server actions: {e}"
 
@@ -220,7 +220,7 @@ async def clearpass_get_endpoint_context_servers(
                 endpoint_context_server_id=endpoint_context_server_id,
             )
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/endpoint-context-server" + query, "get")
+        return clearpass_get(client, "/endpoint-context-server" + query)
     except Exception as e:
         return f"Error fetching endpoint context servers: {e}"
 
@@ -249,6 +249,6 @@ async def clearpass_get_extension_log(
         path = f"/extension-instance/{extension_id}/log"
         if tail is not None:
             path += f"?tail={tail}"
-        return client._send_request(path, "get")
+        return clearpass_get(client, path)
     except Exception as e:
         return f"Error fetching extension log: {e}"

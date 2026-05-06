@@ -7,6 +7,7 @@ from fastmcp import Context
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
+from hpe_networking_mcp.platforms.clearpass.utils import clearpass_get
 
 
 @tool(annotations=READ_ONLY)
@@ -52,7 +53,7 @@ async def clearpass_get_enforcement_policies(
             f"calculate_count={'true' if calculate_count else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
-        return client._send_request("/enforcement-policy" + query, "get")
+        return clearpass_get(client, "/enforcement-policy" + query)
     except Exception as e:
         return f"Error fetching enforcement policies: {e}"
 
@@ -100,7 +101,7 @@ async def clearpass_get_enforcement_profiles(
             f"calculate_count={'true' if calculate_count else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
-        return client._send_request("/enforcement-profile" + query, "get")
+        return clearpass_get(client, "/enforcement-profile" + query)
     except Exception as e:
         return f"Error fetching enforcement profiles: {e}"
 

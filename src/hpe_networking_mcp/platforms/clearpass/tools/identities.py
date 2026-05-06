@@ -7,7 +7,7 @@ from fastmcp import Context
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
-from hpe_networking_mcp.platforms.clearpass.utils import build_query_string
+from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
 
 
 @tool(annotations=READ_ONLY)
@@ -39,7 +39,7 @@ async def clearpass_get_api_clients(
         if client_id:
             return client.get_api_client_by_client_id(client_id=client_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/api-client" + query, "get")
+        return clearpass_get(client, "/api-client" + query)
     except Exception as e:
         return f"Error fetching API clients: {e}"
 
@@ -78,7 +78,7 @@ async def clearpass_get_local_users(
         if user_id:
             return client.get_local_user_user_id_by_user_id(user_id=user_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/local-user" + query, "get")
+        return clearpass_get(client, "/local-user" + query)
     except Exception as e:
         return f"Error fetching local users: {e}"
 
@@ -118,7 +118,7 @@ async def clearpass_get_static_host_lists(
         if name:
             return client.get_static_host_list_name_by_name(name=name)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/static-host-list" + query, "get")
+        return clearpass_get(client, "/static-host-list" + query)
     except Exception as e:
         return f"Error fetching static host lists: {e}"
 
@@ -156,7 +156,7 @@ async def clearpass_get_devices(
         if macaddr:
             return client.get_device_mac_by_macaddr(macaddr=macaddr)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/device" + query, "get")
+        return clearpass_get(client, "/device" + query)
     except Exception as e:
         return f"Error fetching devices: {e}"
 
@@ -192,7 +192,7 @@ async def clearpass_get_deny_listed_users(
                 deny_listed_users_id=deny_listed_users_id,
             )
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/deny-listed-users" + query, "get")
+        return clearpass_get(client, "/deny-listed-users" + query)
     except Exception as e:
         return f"Error fetching deny-listed users: {e}"
 
@@ -234,10 +234,10 @@ async def clearpass_get_external_accounts(
 
         client = await get_clearpass_session(ApiIdentities)
         if external_account_id:
-            return client._send_request(f"/external-account/{external_account_id}", "get")
+            return clearpass_get(client, f"/external-account/{external_account_id}")
         if name:
-            return client._send_request(f"/external-account/name/{name}", "get")
+            return clearpass_get(client, f"/external-account/name/{name}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/external-account" + query, "get")
+        return clearpass_get(client, "/external-account" + query)
     except Exception as e:
         return f"Error fetching external accounts: {e}"

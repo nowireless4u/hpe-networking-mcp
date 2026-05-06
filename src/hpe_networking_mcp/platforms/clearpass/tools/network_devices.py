@@ -7,7 +7,7 @@ from fastmcp import Context
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
-from hpe_networking_mcp.platforms.clearpass.utils import build_query_string
+from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
 
 
 @tool(annotations=READ_ONLY)
@@ -43,7 +43,7 @@ async def clearpass_get_network_devices(
         if name:
             return client.get_network_device_name_by_name(name=name)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/network-device" + query, "get")
+        return clearpass_get(client, "/network-device" + query)
     except Exception as e:
         return f"Error fetching network devices: {e}"
 

@@ -1,16 +1,43 @@
 """Unit tests for the shared ClearPass utility helpers.
 
-Pins the contract for ``build_query_string`` after consolidating ten
-file-local copies into ``platforms/clearpass/utils.py`` (issue #125).
+Pins the contract for ``build_query_string`` (consolidated from 10 file-local
+copies in issue #125) and ``clearpass_get`` (the centralized wrapper around
+pyclearpass's private ``_send_request`` method, issue #126).
 """
 
 from __future__ import annotations
 
+from unittest.mock import MagicMock
+
 import pytest
 
-from hpe_networking_mcp.platforms.clearpass.utils import build_query_string
+from hpe_networking_mcp.platforms.clearpass.utils import (
+    build_query_string,
+    clearpass_get,
+)
 
 pytestmark = pytest.mark.unit
+
+
+class TestClearPassGet:
+    def test_delegates_to_send_request_with_get_method(self):
+        client = MagicMock()
+        client._send_request.return_value = {"items": []}
+        result = clearpass_get(client, "/network-device?offset=0&limit=25")
+        client._send_request.assert_called_once_with("/network-device?offset=0&limit=25", "get")
+        assert result == {"items": []}
+
+    def test_passes_path_through_unchanged(self):
+        client = MagicMock()
+        clearpass_get(client, "/cert-trust-list/42")
+        # Single-item lookups (no query string) work the same way.
+        client._send_request.assert_called_once_with("/cert-trust-list/42", "get")
+
+    def test_returns_whatever_the_sdk_returns(self):
+        client = MagicMock()
+        sentinel = object()
+        client._send_request.return_value = sentinel
+        assert clearpass_get(client, "/anything") is sentinel
 
 
 class TestBuildQueryString:

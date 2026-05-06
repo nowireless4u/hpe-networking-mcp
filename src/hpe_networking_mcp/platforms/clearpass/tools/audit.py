@@ -7,7 +7,7 @@ from fastmcp import Context
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
-from hpe_networking_mcp.platforms.clearpass.utils import build_query_string
+from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
 
 
 @tool(annotations=READ_ONLY)
@@ -58,7 +58,7 @@ async def clearpass_get_system_events(
 
         client = await get_clearpass_session(ApiLogs)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/system-event" + query, "get")
+        return clearpass_get(client, "/system-event" + query)
     except Exception as e:
         return f"Error fetching system events: {e}"
 
@@ -97,7 +97,7 @@ async def clearpass_get_insight_alerts(
         if name:
             return client.get_alert_by_name(name=name)
         query = f"?offset={offset}&limit={limit}&calculate_count={'true' if calculate_count else 'false'}"
-        return client._send_request("/alert" + query, "get")
+        return clearpass_get(client, "/alert" + query)
     except Exception as e:
         return f"Error fetching insight alerts: {e}"
 
@@ -136,7 +136,7 @@ async def clearpass_get_insight_reports(
         if name:
             return client.get_report_by_name(name=name)
         query = f"?offset={offset}&limit={limit}&calculate_count={'true' if calculate_count else 'false'}"
-        return client._send_request("/report" + query, "get")
+        return clearpass_get(client, "/report" + query)
     except Exception as e:
         return f"Error fetching insight reports: {e}"
 

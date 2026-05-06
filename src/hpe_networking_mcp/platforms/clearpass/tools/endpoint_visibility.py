@@ -14,7 +14,7 @@ from fastmcp import Context
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
-from hpe_networking_mcp.platforms.clearpass.utils import build_query_string
+from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
 
 
 @tool(annotations=READ_ONLY)
@@ -49,11 +49,11 @@ async def clearpass_get_onguard_activity(
 
         client = await get_clearpass_session(ApiEndpointVisibility)
         if activity_id:
-            return client._send_request(f"/onguard-activity/{activity_id}", "get")
+            return clearpass_get(client, f"/onguard-activity/{activity_id}")
         if mac:
-            return client._send_request(f"/onguard-activity/mac/{mac}", "get")
+            return clearpass_get(client, f"/onguard-activity/mac/{mac}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/onguard-activity" + query, "get")
+        return clearpass_get(client, "/onguard-activity" + query)
     except Exception as e:
         return f"Error fetching OnGuard activity: {e}"
 
@@ -92,9 +92,9 @@ async def clearpass_get_fingerprint_dictionary(
 
         client = await get_clearpass_session(ApiEndpointVisibility)
         if fingerprint_id:
-            return client._send_request(f"/fingerprint/{fingerprint_id}", "get")
+            return clearpass_get(client, f"/fingerprint/{fingerprint_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/fingerprint" + query, "get")
+        return clearpass_get(client, "/fingerprint" + query)
     except Exception as e:
         return f"Error fetching fingerprint dictionary: {e}"
 
@@ -133,9 +133,9 @@ async def clearpass_get_network_scan(
 
         client = await get_clearpass_session(ApiEndpointVisibility)
         if scan_id:
-            return client._send_request(f"/config/network-scan/{scan_id}", "get")
+            return clearpass_get(client, f"/config/network-scan/{scan_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/config/network-scan" + query, "get")
+        return clearpass_get(client, "/config/network-scan" + query)
     except Exception as e:
         return f"Error fetching network scans: {e}"
 
@@ -163,6 +163,6 @@ async def clearpass_get_onguard_settings(
 
         client = await get_clearpass_session(ApiEndpointVisibility)
         path = "/onguard/global-settings" if global_settings else "/onguard/settings"
-        return client._send_request(path, "get")
+        return clearpass_get(client, path)
     except Exception as e:
         return f"Error fetching OnGuard settings: {e}"

@@ -7,6 +7,7 @@ from fastmcp import Context
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
+from hpe_networking_mcp.platforms.clearpass.utils import clearpass_get
 
 
 @tool(annotations=READ_ONLY)
@@ -49,7 +50,7 @@ async def clearpass_get_roles(
             f"calculate_count={'true' if calculate_count else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
-        return client._send_request("/role" + query, "get")
+        return clearpass_get(client, "/role" + query)
     except Exception as e:
         return f"Error fetching roles: {e}"
 
@@ -97,6 +98,6 @@ async def clearpass_get_role_mappings(
             f"calculate_count={'true' if calculate_count else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
-        return client._send_request("/role-mapping" + query, "get")
+        return clearpass_get(client, "/role-mapping" + query)
     except Exception as e:
         return f"Error fetching role mappings: {e}"

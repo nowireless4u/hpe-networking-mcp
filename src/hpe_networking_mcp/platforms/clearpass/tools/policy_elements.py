@@ -7,7 +7,7 @@ from fastmcp import Context
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
-from hpe_networking_mcp.platforms.clearpass.utils import build_query_string
+from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
 
 
 @tool(annotations=READ_ONLY)
@@ -43,7 +43,7 @@ async def clearpass_get_services(
         if name:
             return client.get_config_service_name_by_name(name=name)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/config/service" + query, "get")
+        return clearpass_get(client, "/config/service" + query)
     except Exception as e:
         return f"Error fetching services: {e}"
 
@@ -81,7 +81,7 @@ async def clearpass_get_posture_policies(
         if name:
             return client.get_posture_policy_name_by_name(name=name)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/posture-policy" + query, "get")
+        return clearpass_get(client, "/posture-policy" + query)
     except Exception as e:
         return f"Error fetching posture policies: {e}"
 
@@ -121,7 +121,7 @@ async def clearpass_get_device_groups(
         if name:
             return client.get_network_device_group_name_by_name(name=name)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/network-device-group" + query, "get")
+        return clearpass_get(client, "/network-device-group" + query)
     except Exception as e:
         return f"Error fetching device groups: {e}"
 
@@ -159,7 +159,7 @@ async def clearpass_get_proxy_targets(
         if name:
             return client.get_proxy_target_name_by_name(name=name)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/proxy-target" + query, "get")
+        return clearpass_get(client, "/proxy-target" + query)
     except Exception as e:
         return f"Error fetching proxy targets: {e}"
 
@@ -199,7 +199,7 @@ async def clearpass_get_radius_dictionaries(
         if name:
             return client.get_radius_dictionary_name_by_name(name=name)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/radius-dictionary" + query, "get")
+        return clearpass_get(client, "/radius-dictionary" + query)
     except Exception as e:
         return f"Error fetching RADIUS dictionaries: {e}"
 
@@ -239,7 +239,7 @@ async def clearpass_get_tacacs_dictionaries(
         if name:
             return client.get_tacacs_service_dictionary_name_by_name(name=name)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/tacacs-service-dictionary" + query, "get")
+        return clearpass_get(client, "/tacacs-service-dictionary" + query)
     except Exception as e:
         return f"Error fetching TACACS+ dictionaries: {e}"
 
@@ -279,7 +279,7 @@ async def clearpass_get_application_dictionaries(
         if name:
             return client.get_application_dictionary_name_by_name(name=name)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/application-dictionary" + query, "get")
+        return clearpass_get(client, "/application-dictionary" + query)
     except Exception as e:
         return f"Error fetching application dictionaries: {e}"
 
@@ -320,10 +320,10 @@ async def clearpass_get_radius_dynamic_authorization_template(
 
         client = await get_clearpass_session(ApiPolicyElements)
         if template_id:
-            return client._send_request(f"/radius-dynamic-authorization-template/{template_id}", "get")
+            return clearpass_get(client, f"/radius-dynamic-authorization-template/{template_id}")
         if name:
-            return client._send_request(f"/radius-dynamic-authorization-template/name/{name}", "get")
+            return clearpass_get(client, f"/radius-dynamic-authorization-template/name/{name}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/radius-dynamic-authorization-template" + query, "get")
+        return clearpass_get(client, "/radius-dynamic-authorization-template" + query)
     except Exception as e:
         return f"Error fetching RADIUS dynamic authorization templates: {e}"

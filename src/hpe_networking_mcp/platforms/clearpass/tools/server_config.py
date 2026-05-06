@@ -7,7 +7,7 @@ from fastmcp import Context
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
-from hpe_networking_mcp.platforms.clearpass.utils import build_query_string
+from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
 
 
 @tool(annotations=READ_ONLY)
@@ -39,7 +39,7 @@ async def clearpass_get_admin_users(
         if admin_user_id:
             return client.get_admin_user_by_admin_user_id(admin_user_id=admin_user_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/admin-user" + query, "get")
+        return clearpass_get(client, "/admin-user" + query)
     except Exception as e:
         return f"Error fetching admin users: {e}"
 
@@ -75,7 +75,7 @@ async def clearpass_get_admin_privileges(
                 admin_privilege_id=admin_privilege_id,
             )
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/admin-privilege" + query, "get")
+        return clearpass_get(client, "/admin-privilege" + query)
     except Exception as e:
         return f"Error fetching admin privileges: {e}"
 
@@ -104,7 +104,7 @@ async def clearpass_get_operator_profiles(
 
         client = await get_clearpass_session(ApiGlobalServerConfiguration)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/operator-profile" + query, "get")
+        return clearpass_get(client, "/operator-profile" + query)
     except Exception as e:
         return f"Error fetching operator profiles: {e}"
 
@@ -202,7 +202,7 @@ async def clearpass_get_attributes(
         if attribute_id:
             return client.get_attribute_by_attribute_id(attribute_id=attribute_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/attribute" + query, "get")
+        return clearpass_get(client, "/attribute" + query)
     except Exception as e:
         return f"Error fetching attributes: {e}"
 
@@ -236,7 +236,7 @@ async def clearpass_get_data_filters(
         if data_filter_id:
             return client.get_data_filter_by_data_filter_id(data_filter_id=data_filter_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/data-filter" + query, "get")
+        return clearpass_get(client, "/data-filter" + query)
     except Exception as e:
         return f"Error fetching data filters: {e}"
 
@@ -272,7 +272,7 @@ async def clearpass_get_file_backup_servers(
                 file_backup_server_id=file_backup_server_id,
             )
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/file-backup-server" + query, "get")
+        return clearpass_get(client, "/file-backup-server" + query)
     except Exception as e:
         return f"Error fetching file backup servers: {e}"
 
@@ -326,7 +326,7 @@ async def clearpass_get_snmp_trap_receivers(
                 snmp_trap_receiver_id=snmp_trap_receiver_id,
             )
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/snmp-trap-receiver" + query, "get")
+        return clearpass_get(client, "/snmp-trap-receiver" + query)
     except Exception as e:
         return f"Error fetching SNMP trap receivers: {e}"
 
@@ -362,7 +362,7 @@ async def clearpass_get_policy_manager_zones(
                 policy_manager_zones_id=policy_manager_zones_id,
             )
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return client._send_request("/server/policy-manager-zones" + query, "get")
+        return clearpass_get(client, "/server/policy-manager-zones" + query)
     except Exception as e:
         return f"Error fetching Policy Manager zones: {e}"
 
@@ -380,6 +380,6 @@ async def clearpass_get_oauth_privileges(
         from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
 
         client = await get_clearpass_session(ApiGlobalServerConfiguration)
-        return client._send_request("/oauth/all-privileges", "get")
+        return clearpass_get(client, "/oauth/all-privileges")
     except Exception as e:
         return f"Error fetching OAuth privileges: {e}"
