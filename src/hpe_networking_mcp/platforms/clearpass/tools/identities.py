@@ -7,34 +7,7 @@ from fastmcp import Context
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
-
-
-def _build_query_string(
-    filter: str | None = None,
-    sort: str | None = None,
-    offset: int = 0,
-    limit: int = 25,
-    calculate_count: bool = False,
-) -> str:
-    """Build ClearPass REST API query string for list endpoints.
-
-    Args:
-        filter: JSON filter expression (ClearPass REST API syntax).
-        sort: Sort order (e.g. "+name" or "-id").
-        offset: Pagination offset.
-        limit: Max results per page.
-
-    Returns:
-        Query string starting with '?' for appending to a path.
-    """
-    params = [
-        f"filter={filter}" if filter else "",
-        f"sort={sort}" if sort else "",
-        f"offset={offset}",
-        f"limit={limit}",
-        f"calculate_count={'true' if calculate_count else 'false'}",
-    ]
-    return "?" + "&".join(p for p in params if p)
+from hpe_networking_mcp.platforms.clearpass.utils import build_query_string
 
 
 @tool(annotations=READ_ONLY)
@@ -65,7 +38,7 @@ async def clearpass_get_api_clients(
         client = await get_clearpass_session(ApiIdentities)
         if client_id:
             return client.get_api_client_by_client_id(client_id=client_id)
-        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        query = build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/api-client" + query, "get")
     except Exception as e:
         return f"Error fetching API clients: {e}"
@@ -104,7 +77,7 @@ async def clearpass_get_local_users(
             return client.get_local_user_by_local_user_id(local_user_id=local_user_id)
         if user_id:
             return client.get_local_user_user_id_by_user_id(user_id=user_id)
-        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        query = build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/local-user" + query, "get")
     except Exception as e:
         return f"Error fetching local users: {e}"
@@ -144,7 +117,7 @@ async def clearpass_get_static_host_lists(
             )
         if name:
             return client.get_static_host_list_name_by_name(name=name)
-        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        query = build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/static-host-list" + query, "get")
     except Exception as e:
         return f"Error fetching static host lists: {e}"
@@ -182,7 +155,7 @@ async def clearpass_get_devices(
             return client.get_device_by_device_id(device_id=device_id)
         if macaddr:
             return client.get_device_mac_by_macaddr(macaddr=macaddr)
-        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        query = build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/device" + query, "get")
     except Exception as e:
         return f"Error fetching devices: {e}"
@@ -218,7 +191,7 @@ async def clearpass_get_deny_listed_users(
             return client.get_deny_listed_users_by_deny_listed_users_id(
                 deny_listed_users_id=deny_listed_users_id,
             )
-        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        query = build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/deny-listed-users" + query, "get")
     except Exception as e:
         return f"Error fetching deny-listed users: {e}"
@@ -264,7 +237,7 @@ async def clearpass_get_external_accounts(
             return client._send_request(f"/external-account/{external_account_id}", "get")
         if name:
             return client._send_request(f"/external-account/name/{name}", "get")
-        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        query = build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/external-account" + query, "get")
     except Exception as e:
         return f"Error fetching external accounts: {e}"

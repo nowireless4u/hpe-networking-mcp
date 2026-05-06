@@ -7,34 +7,7 @@ from fastmcp import Context
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
-
-
-def _build_query_string(
-    filter: str | None = None,
-    sort: str | None = None,
-    offset: int = 0,
-    limit: int = 25,
-    calculate_count: bool = False,
-) -> str:
-    """Build ClearPass REST API query string for list endpoints.
-
-    Args:
-        filter: JSON filter expression (ClearPass REST API syntax).
-        sort: Sort order (e.g. "+name" or "-id").
-        offset: Pagination offset.
-        limit: Max results per page.
-
-    Returns:
-        Query string starting with '?' for appending to a path.
-    """
-    params = [
-        f"filter={filter}" if filter else "",
-        f"sort={sort}" if sort else "",
-        f"offset={offset}",
-        f"limit={limit}",
-        f"calculate_count={'true' if calculate_count else 'false'}",
-    ]
-    return "?" + "&".join(p for p in params if p)
+from hpe_networking_mcp.platforms.clearpass.utils import build_query_string
 
 
 @tool(annotations=READ_ONLY)
@@ -65,7 +38,7 @@ async def clearpass_get_admin_users(
         client = await get_clearpass_session(ApiGlobalServerConfiguration)
         if admin_user_id:
             return client.get_admin_user_by_admin_user_id(admin_user_id=admin_user_id)
-        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        query = build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/admin-user" + query, "get")
     except Exception as e:
         return f"Error fetching admin users: {e}"
@@ -101,7 +74,7 @@ async def clearpass_get_admin_privileges(
             return client.get_admin_privilege_by_admin_privilege_id(
                 admin_privilege_id=admin_privilege_id,
             )
-        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        query = build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/admin-privilege" + query, "get")
     except Exception as e:
         return f"Error fetching admin privileges: {e}"
@@ -130,7 +103,7 @@ async def clearpass_get_operator_profiles(
         from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
 
         client = await get_clearpass_session(ApiGlobalServerConfiguration)
-        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        query = build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/operator-profile" + query, "get")
     except Exception as e:
         return f"Error fetching operator profiles: {e}"
@@ -228,7 +201,7 @@ async def clearpass_get_attributes(
         client = await get_clearpass_session(ApiGlobalServerConfiguration)
         if attribute_id:
             return client.get_attribute_by_attribute_id(attribute_id=attribute_id)
-        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        query = build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/attribute" + query, "get")
     except Exception as e:
         return f"Error fetching attributes: {e}"
@@ -262,7 +235,7 @@ async def clearpass_get_data_filters(
         client = await get_clearpass_session(ApiGlobalServerConfiguration)
         if data_filter_id:
             return client.get_data_filter_by_data_filter_id(data_filter_id=data_filter_id)
-        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        query = build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/data-filter" + query, "get")
     except Exception as e:
         return f"Error fetching data filters: {e}"
@@ -298,7 +271,7 @@ async def clearpass_get_file_backup_servers(
             return client.get_file_backup_server_by_file_backup_server_id(
                 file_backup_server_id=file_backup_server_id,
             )
-        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        query = build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/file-backup-server" + query, "get")
     except Exception as e:
         return f"Error fetching file backup servers: {e}"
@@ -352,7 +325,7 @@ async def clearpass_get_snmp_trap_receivers(
             return client.get_snmp_trap_receiver_by_snmp_trap_receiver_id(
                 snmp_trap_receiver_id=snmp_trap_receiver_id,
             )
-        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        query = build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/snmp-trap-receiver" + query, "get")
     except Exception as e:
         return f"Error fetching SNMP trap receivers: {e}"
@@ -388,7 +361,7 @@ async def clearpass_get_policy_manager_zones(
             return client.get_server_policy_manager_zones_by_policy_manager_zones_id(
                 policy_manager_zones_id=policy_manager_zones_id,
             )
-        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        query = build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/server/policy-manager-zones" + query, "get")
     except Exception as e:
         return f"Error fetching Policy Manager zones: {e}"

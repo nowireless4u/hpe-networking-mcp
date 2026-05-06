@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0.3] - 2026-05-06
+
+**Patch release — ClearPass `build_query_string` consolidation (refactor only).**
+
+Ten ClearPass tool files each carried a private byte-identical copy of `_build_query_string()` (52 grep hits across the platform). Extracted to a single `platforms/clearpass/utils.py` shared helper, dropped the leading underscore (it's now a real shared module-public helper, not module-private), and updated all 42 call sites. Net **−245 lines** across the ClearPass tool layer with no behavior change.
+
+The new helper follows the same pattern as `central/utils.py:normalize_site_name_filter` — a small platform-scoped utility module for cross-tool helpers.
+
+Closes [#125](https://github.com/nowireless4u/hpe-networking-mcp/issues/125).
+
+### Files
+
+- **`src/hpe_networking_mcp/platforms/clearpass/utils.py`** — new module; defines `build_query_string(filter, sort, offset, limit, calculate_count)`. Same body as the previous file-local copies.
+- **`src/hpe_networking_mcp/platforms/clearpass/tools/`** (10 files: `audit.py`, `certificate_authority.py`, `certificates.py`, `endpoint_visibility.py`, `guest_config.py`, `identities.py`, `integrations.py`, `network_devices.py`, `policy_elements.py`, `server_config.py`) — removed the local `_build_query_string` definition; added `from hpe_networking_mcp.platforms.clearpass.utils import build_query_string`; renamed all call sites.
+- **`tests/unit/test_clearpass_utils.py`** — new file pinning the helper's contract (defaults, filter/sort omission when None, calculate_count true/false casing, full-string ordering).
+- **`pyproject.toml`** — bump 3.0.0.2 → 3.0.0.3.
+
+### Notes
+
+- 976 tests pass (was 968; +8 from the new test file).
+- Pure refactor — no runtime behavior change. Every existing call site produces the exact same query string as before.
+
 ## [3.0.0.2] - 2026-05-06
 
 **Patch release — `central_get_aps` empty-list contract fix.**

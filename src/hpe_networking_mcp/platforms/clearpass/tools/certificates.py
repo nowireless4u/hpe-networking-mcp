@@ -7,35 +7,7 @@ from fastmcp import Context
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
-
-
-def _build_query_string(
-    filter: str | None = None,
-    sort: str | None = None,
-    offset: int = 0,
-    limit: int = 25,
-    calculate_count: bool = False,
-) -> str:
-    """Build ClearPass REST API query string for list endpoints.
-
-    Args:
-        filter: JSON filter expression (ClearPass REST API syntax).
-        sort: Sort order (e.g. "+name" or "-id").
-        offset: Pagination offset.
-        limit: Max results per page.
-        calculate_count: When true, response includes total item count.
-
-    Returns:
-        Query string starting with '?' for appending to a path.
-    """
-    params = [
-        f"filter={filter}" if filter else "",
-        f"sort={sort}" if sort else "",
-        f"offset={offset}",
-        f"limit={limit}",
-        f"calculate_count={'true' if calculate_count else 'false'}",
-    ]
-    return "?" + "&".join(p for p in params if p)
+from hpe_networking_mcp.platforms.clearpass.utils import build_query_string
 
 
 @tool(annotations=READ_ONLY)
@@ -75,7 +47,7 @@ async def clearpass_get_trust_list(
             return client.get_cert_trust_list_by_cert_trust_list_id(
                 cert_trust_list_id=cert_trust_list_id,
             )
-        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        query = build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/cert-trust-list" + query, "get")
     except Exception as e:
         return f"Error fetching trust list: {e}"
@@ -109,7 +81,7 @@ async def clearpass_get_client_certificates(
         client = await get_clearpass_session(ApiPlatformCertificates)
         if client_cert_id:
             return client.get_client_cert_by_client_cert_id(client_cert_id=client_cert_id)
-        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        query = build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/client-cert" + query, "get")
     except Exception as e:
         return f"Error fetching client certificates: {e}"
@@ -177,7 +149,7 @@ async def clearpass_get_service_certificates(
         client = await get_clearpass_session(ApiPlatformCertificates)
         if service_cert_id:
             return client.get_service_cert_by_service_cert_id(service_cert_id=service_cert_id)
-        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        query = build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/service-cert" + query, "get")
     except Exception as e:
         return f"Error fetching service certificates: {e}"
@@ -217,7 +189,7 @@ async def clearpass_get_revocation_list(
         client = await get_clearpass_session(ApiPlatformCertificates)
         if revocation_list_id:
             return client._send_request(f"/revocation-list/{revocation_list_id}", "get")
-        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        query = build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/revocation-list" + query, "get")
     except Exception as e:
         return f"Error fetching revocation lists: {e}"

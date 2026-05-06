@@ -7,24 +7,7 @@ from fastmcp import Context
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
-
-
-def _build_query_string(
-    filter: str | None = None,
-    sort: str | None = None,
-    offset: int = 0,
-    limit: int = 25,
-    calculate_count: bool = False,
-) -> str:
-    """Build ClearPass REST API query string for list endpoints."""
-    params = [
-        f"filter={filter}" if filter else "",
-        f"sort={sort}" if sort else "",
-        f"offset={offset}",
-        f"limit={limit}",
-        f"calculate_count={'true' if calculate_count else 'false'}",
-    ]
-    return "?" + "&".join(p for p in params if p)
+from hpe_networking_mcp.platforms.clearpass.utils import build_query_string
 
 
 @tool(annotations=READ_ONLY)
@@ -55,7 +38,7 @@ async def clearpass_get_pass_templates(
         client = await get_clearpass_session(ApiGuestConfiguration)
         if template_id:
             return client.get_template_pass_by_id(id=template_id)
-        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        query = build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/template/pass" + query, "get")
     except Exception as e:
         return f"Error fetching pass templates: {e}"
@@ -89,7 +72,7 @@ async def clearpass_get_print_templates(
         client = await get_clearpass_session(ApiGuestConfiguration)
         if template_id:
             return client.get_template_print_by_id(id=template_id)
-        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        query = build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/template/print" + query, "get")
     except Exception as e:
         return f"Error fetching print templates: {e}"
@@ -127,7 +110,7 @@ async def clearpass_get_weblogin_pages(
             return client.get_weblogin_by_id(id=page_id)
         if page_name:
             return client.get_weblogin_page_name_by_page_name(page_name=page_name)
-        query = _build_query_string(filter, sort, offset, limit, calculate_count)
+        query = build_query_string(filter, sort, offset, limit, calculate_count)
         return client._send_request("/weblogin" + query, "get")
     except Exception as e:
         return f"Error fetching web login pages: {e}"
