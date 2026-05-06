@@ -76,11 +76,6 @@ _GLOBAL_ALLOWLIST: frozenset[str] = frozenset(
         "central_manage_ap_system_profile",
         "central_manage_server",
         "central_manage_server_group",
-        # Cluster-related Central API gaps cited in v2.5.1.4's Stage 8 cluster_prof
-        # disposition row. Maps to `/gw-cluster-intent-config` and `/gateway-clusters`
-        # AOS 10 GCIS APIs. Tools are planned but not yet built.
-        "central_manage_gateway_cluster_intent_profile",
-        "central_manage_gateway_cluster",
     }
 )
 

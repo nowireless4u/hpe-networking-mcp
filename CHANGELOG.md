@@ -5,58 +5,71 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.5.1.4] - 2026-05-05
+## [2.5.2.0] - 2026-05-05
 
-**`aos-migration` skill — completes the Stage 7 cluster-mode derivation that v2.5.1.3 left as TBD.** Closes [#261](https://github.com/nowireless4u/hpe-networking-mcp/issues/261).
+**Central Gateway Cluster Intent (GCIS) tools + `aos-migration` Stage 7 cluster-mode derivation.** Closes [#261](https://github.com/nowireless4u/hpe-networking-mcp/issues/261). Adds 4 new Central tools for managing AOS 10's gateway cluster orchestration plane — the migration target for AOS 8 `cluster_prof` + `group_membership`.
 
-### Why
+### Why a minor (`x.x.X.x`) bump
 
-v2.5.1.3 shipped the 5-type AOS 10 placement model (Site Collection / Site / Device Group / device persona scope / global root) with naming heuristics, persona dimension, and cluster-mode-driven decisions — but left the cluster-mode derivation itself as TBD pending live cluster validation. The TBD note in Stage 7 said the auto-vs-manual mode field in the AOS 8 `cluster_prof` schema needed validation against a populated cluster.
+Two changes that depend on each other:
 
-Live probing against a real ArubaMM-VA Conductor with three populated clusters (`site-cluster`, `East`, `ACX-AOS8-CLUSTER`) confirmed that **AOS 8 has no `cluster-mode` field at all**. The mode is fully derivable from data the skill already collects.
+1. **Skill change** (Stage 7 cluster-mode derivation) cites `central_manage_gateway_cluster_intent_profile` and `central_manage_gateway_cluster` as the migration targets. Without those tools, the disposition matrix would emit a `[Central API gap]` placeholder — operators reading the migration plan would see "use these tools" with no tools to use.
+2. **Tool change** (4 new Central tools for GCIS + realized cluster profiles) is a new subsystem area on Central — gateway clustering wasn't covered before.
 
-### How the AOS 10 cluster-mode is derived
+Bundling them so the skill and the tool surface ship together; an image with the skill update but missing the tools would be a half-shipped feature.
 
-AOS 8 multizone splits an AP's traffic across multiple controllers:
-- **Primary zone** = the cluster the AP is *adopted to* (determined by `ap_database.Switch IP` / `Standby IP` matching `cluster_prof.cluster_controller[].ip`)
-- **Data zones** = additional clusters acting as tunnel anchors for specific VAPs (determined by `ap_multizone_prof.controller[].ip`)
+### What's new — Central tools
 
-AOS 10 represents these as:
-- Primary zones → Sites with auto-clustering re-enabled (`CM_SITE`)
-- Data-zone anchors and unused-active clusters → Device Groups (`CM_MANUAL`)
+Two new tool files (4 tools total):
 
-The decision is binary and fully data-driven — operator confirms placement / target name only, not cluster mode.
+- **`src/hpe_networking_mcp/platforms/central/tools/gateway_cluster_intent.py`**:
+  - `central_get_gateway_cluster_intent_profiles` — list or single GCIS intent profile (optional `name` and `scope_id` parameters). API path: `network-config/v1alpha1/gw-cluster-intent-config[/{name}]`.
+  - `central_manage_gateway_cluster_intent_profile` — create / update / delete a GCIS intent profile. Supports `cluster-mode` (`CM_SITE` / `CM_MANUAL`), `device-type` (persona — defaults to `MOBILITY_GW`), `multicast-vlan`, `heartbeat-threshold`, `ipv6-enable`, `coa-enable`, `coa-vrrp`, `default-gateway-mode` (1:1 redundancy for BRANCH_GW), `uplink-tracking`, `uplink-sharing`, `description`. Scope-id + device-function for LOCAL profiles. Gated by `ENABLE_CENTRAL_WRITE_TOOLS=true` + elicitation on update / delete.
+- **`src/hpe_networking_mcp/platforms/central/tools/gateway_clusters.py`**:
+  - `central_get_gateway_clusters` — list or single realized gw-cluster profile. API path: `network-config/v1alpha1/gateway-clusters[/{name}]`.
+  - `central_manage_gateway_cluster` — create / update / delete a realized cluster profile. Supports `ipv4-gateways[].mac` and `ipv6-gateways[].mac` member lists (up to 12 per profile, fewer on some platforms), `auto-cluster` (false for manual; reserved for GCIS-managed auto-clusters when true), `one-to-one-redundancy`, `multicast-vlan`, `heartbeat-threshold`, `uplink-tracking`, `coa-vrrp`, `description`. Manual cluster names cannot start with `auto_` (reserved prefix) or contain spaces. Scope-id + device-function for LOCAL profiles. Gated + elicitation as above.
 
-### What's new
+Both tool files modeled on the existing `roles.py` / `server_groups.py` patterns: shared/local scoping via `scope_id` + `device_function` query params, elicitation on non-create operations, success/error response normalization.
 
-- **`src/hpe_networking_mcp/skills/aos-migration.md`** — Stage 7 Step 4 rewritten with the explicit derivation algorithm, including:
-  - Pseudo-code for the cluster-mode classification
-  - Multizone enrichment (distinguishes anchor clusters from DMZ/unused clusters in the Notes column)
-  - External multizone target detection (multizone IPs that are neither in any source `cluster_prof` nor in `aos8_get_controllers`)
-  - Conductor exclusion (skip clusters whose members include the MM IP)
-- **Stage 6 readiness template** — Cluster mode column changes from `decide` to `CM_SITE` / `CM_MANUAL` (auto-derived). Removes the operator-confirms-cluster-mode language.
-- **Act II Stage 7 report template** — same column treatment with three example rows: AP-bearing site, multizone anchor, and unused/DMZ.
-- **Stage 8 cluster_prof + group_membership disposition row** — Notes column now references the GCIS target (`gw-cluster-intent` profile + realized `gw-cluster`), the field-level mapping (`cluster_controller[].ip` → `ipv4-gateways[].ip`), and flags the Central API gap (no `central_manage_gateway_cluster_intent_profile` / `central_manage_gateway_cluster` tools yet).
-- **New INFO finding** — *External multizone target* surfaced when an AP-group's multizone profile references an IP that's not in `cluster_prof` AND not managed by this conductor. Translates to a single Central gateway, not a `gw-cluster`.
-- **Skill overview line 86** — adds AOS 10 cluster-mode to the list of auto-derived inputs.
+### What's new — `aos-migration` skill
+
+Completes the Stage 7 cluster-mode derivation work that v2.5.1.3 left as TBD. The algorithm was locked after live probing confirmed AOS 8 has no cluster-mode field — the mode is fully derivable from `ap_database.Switch IP`/`Standby IP` matching `cluster_prof.cluster_controller[].ip`, with `ap_multizone_prof.controller[].ip` providing enrichment for distinguishing tunnel anchors from DMZ/unused clusters.
+
+8 places in the skill updated:
+
+- Stage 7 Step 4 — pseudo-code for the derivation, conductor exclusion, multizone enrichment, external multizone target detection.
+- Stage 7 output template (9-column shape) — example rows for AP-bearing site, multizone anchor, and unused/DMZ clusters.
+- Stage 6 readiness template — Cluster mode column changes from `decide` to `CM_SITE` / `CM_MANUAL` (auto-derived).
+- Act II Stage 7 report template — same column treatment.
+- Stage 8 cluster_prof + group_membership disposition row — Notes column now references the GCIS target tool flow (no longer a `[Central API gap]` since the tools exist).
+- Stage 9 API call sequence — new dependency rule: cluster intent profile → realized cluster (manual only) before any object scoped to cluster gateways.
+- Stage 10 validation checklist — 2 new rows mapping the cluster manage tools to their read-back tools.
+- New INFO finding type — *External multizone target* surfaces multizone IPs that are neither in any source `cluster_prof` nor managed by this conductor.
+- Skill `tools:` allowlist — 4 new Central tool names added.
+- Line 86 overview — adds AOS 10 cluster-mode to the auto-derived inputs list.
 
 ### Validated against live data
 
 Lab probing on ArubaMM-VA at 172.23.4.21 (AOS 8.12.0.5):
 
-| Cluster | Origin scope | APs adopted | Multizone anchor for | AOS 10 mode (derived) | AOS 10 target |
-|---|---|---|---|---|---|
-| `site-cluster` | `/md/Campus/West` | 1 AP (Switch IP 10.104.23.219) | n/a (primary) | CM_SITE | Site |
-| `East` | `/md/Campus` | 0 | none | CM_MANUAL | Device Group |
-| `ACX-AOS8-CLUSTER` | `/md/ACX` | 0 | none | CM_MANUAL | Device Group |
+| Cluster | Origin scope | APs adopted | AOS 10 mode (derived) | AOS 10 target tool flow |
+|---|---|---|---|---|
+| `site-cluster` | `/md/Campus/West` | 1 AP (Switch IP 10.104.23.219) | CM_SITE | `central_manage_gateway_cluster_intent_profile` (intent) → GCIS auto-creates realized profile |
+| `East` | `/md/Campus` | 0 | CM_MANUAL | intent + `central_manage_gateway_cluster` (explicit member MACs) |
+| `ACX-AOS8-CLUSTER` | `/md/ACX` | 0 | CM_MANUAL | intent + `central_manage_gateway_cluster` (explicit member MACs) |
 
 Plus one INFO finding from the lab: *"AP-group 'Indoor' multizone-1 references 192.168.199.250 — not in any source cluster, not managed by this conductor. External standalone controller; migrates to a single Central gateway."*
 
+### Tests
+
+- **`tests/unit/test_central_gateway_clusters.py`** — new test file covering all 4 new tools: API-path pinning, query-param shape (object-type + scope-id + device-function for LOCAL), method-per-action (POST/PATCH/DELETE for create/update/delete), error-response normalization, invalid-action-type validation. 12 new tests.
+- **`tests/unit/test_skill_tool_references.py`** — removed the temporary allowlist entries for `central_manage_gateway_cluster_intent_profile` and `central_manage_gateway_cluster` (added in v2.5.1.4 as forward references; now the tools exist).
+
 ### Notes
 
-- This release completes the v2.5.1.3 deferred work (#255 had Stage 7 with a TBD; #261 closes that gap).
-- The Central read tools for `/gw-cluster-intent-config` and `/gateway-clusters` (4 read tools mapping to the AOS 10 GCIS APIs) remain unbuilt — tracked separately. The skill flags this as a Central API gap in the Stage 8 disposition row, just like it does for AAA Server, AAA Server Group, and AP System Profile gaps.
-- Skill markdown only — no code changes, no test changes (950 tests still pass).
+- Central tool count: 83 → 87 (+4 in the new gateway clustering subsystem).
+- The skill's disposition row no longer flags this as a `[Central API gap]` — operators following the migration plan can now run the tools end-to-end.
+- Did NOT ship as v2.5.1.4 (the original plan) because the tool addition is a new Central subsystem area, qualifying for a minor bump per the project's versioning rules.
 
 ## [2.5.1.3] - 2026-05-05
 

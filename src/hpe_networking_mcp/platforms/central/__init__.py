@@ -109,6 +109,14 @@ TOOLS = {
         "central_manage_site_collection",
         "central_manage_device_group",
     ],
+    "gateway_cluster_intent": [
+        "central_get_gateway_cluster_intent_profiles",
+        "central_manage_gateway_cluster_intent_profile",
+    ],
+    "gateway_clusters": [
+        "central_get_gateway_clusters",
+        "central_manage_gateway_cluster",
+    ],
     "firmware": ["central_recommend_firmware"],
 }
 

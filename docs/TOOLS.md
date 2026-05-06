@@ -655,7 +655,7 @@ logged and skipped; the rest of the catalog still loads. See
 
 ---
 
-## Aruba Central (83 tools + 12 prompts)
+## Aruba Central (87 tools + 12 prompts)
 
 ### Sites
 
@@ -1396,6 +1396,16 @@ and optional `scope_id` + `device_function` for local (scoped) objects.
 #### `central_get_role_gpids` / `central_manage_role_gpid`
 
 > Role GPIDs — map roles to policy group IDs. Controls which policy group is assigned to each role.
+
+### Gateway Clustering (since v2.5.2.0)
+
+#### `central_get_gateway_cluster_intent_profiles` / `central_manage_gateway_cluster_intent_profile`
+
+> Read or manage Gateway Cluster Intent (GCIS) profiles — the policy/intent layer for AOS 10 gateway clusters. An intent profile bound at a scope (Global / Site Collection / Site) declares cluster behavior and Central auto-forms realized cluster profiles per the intent. Key field: `cluster-mode` (`CM_SITE` for auto-clustering at Site level, or `CM_MANUAL` to disable auto-formation). Other fields: `device-type` (persona — MOBILITY_GW, BRANCH_GW, VPNC, CAMPUS_AP, MICROBRANCH_AP, etc.), `multicast-vlan`, `heartbeat-threshold`, `coa-vrrp`, `default-gateway-mode` (1:1 redundancy), `uplink-tracking`, `uplink-sharing`, `ipv6-enable`. The realized cluster profiles for CM_SITE intents are auto-created with `auto_*` naming. Manage tool gated by `ENABLE_CENTRAL_WRITE_TOOLS=true`. API: `network-config/v1alpha1/gw-cluster-intent-config`.
+
+#### `central_get_gateway_clusters` / `central_manage_gateway_cluster`
+
+> Read or manage realized gateway cluster profiles. Each profile contains the actual member gateways (keyed by MAC, not IP — up to 12 per profile, fewer on some platforms) and runtime configuration (heartbeat, multicast VLAN, CoA-VRRP, redundancy mode). For GCIS-managed CM_SITE clusters, Central creates and maintains realized profiles automatically (`auto_*` naming). For manual (CM_MANUAL) clusters, operators create them directly here with explicit member MACs. Key field: `auto-cluster` (false for manual clusters; true is reserved for GCIS-managed). Manual cluster names cannot start with `auto_` or contain spaces. `ipv6-enable` is set-once at creation. Manage tool gated by `ENABLE_CENTRAL_WRITE_TOOLS=true`. API: `network-config/v1alpha1/gateway-clusters`.
 
 ### Firmware
 

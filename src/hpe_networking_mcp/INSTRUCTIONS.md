@@ -264,6 +264,18 @@ When asked to create a new site based on an existing site:
   - Use `central_manage_config_assignment` to assign or remove a profile at a scope. Required for WLAN sync — assigns the profile after creating it. Parameters: scope_id (from `central_get_scope_tree`), device_function (`CAMPUS_AP`), profile_type (`wlan-ssids`), profile_instance (SSID name).
 - **Configuration (Write)**: central_manage_site, central_manage_site_collection, central_manage_device_group — requires `ENABLE_CENTRAL_WRITE_TOOLS=true`
   - **Site creation payload**: All fields must use full names, no abbreviations (e.g. "Indiana" not "IN", "United States" not "US"). The `timezone` object is required and must include `timezoneName` (e.g. "Eastern Standard Time"), `timezoneId` (e.g. "America/Indiana/Indianapolis"), and `rawOffset` in milliseconds (e.g. -18000000 for EST). Determine the correct timezone from the address.
+- **Gateway Cluster Intent (GCIS)**: central_get_gateway_cluster_intent_profiles, central_manage_gateway_cluster_intent_profile
+  - GCIS is the policy/intent layer for gateway clusters. An intent profile bound at a scope (Global / Site Collection / Site) declares cluster behavior and Central auto-forms realized cluster profiles from it.
+  - **Key field — `cluster-mode`**: `CM_SITE` (auto-cluster at Site level — Central creates `auto_*` realized profiles automatically) or `CM_MANUAL` (auto-formation disabled — operator creates realized profiles via `central_manage_gateway_cluster`).
+  - **`device-type` enum** (persona): `MOBILITY_GW` (default — WLAN gateway), `BRANCH_GW` (SD-Branch CPE), `VPNC` (VPN concentrator), `CAMPUS_AP`, `MICROBRANCH_AP`, plus switch / bridge / NAC personas. Wireless-relevant clusters typically use MOBILITY_GW, BRANCH_GW, or VPNC.
+  - For `BRANCH_GW` with `default-gateway-mode=true`, only 2 gateways per profile (1:1 active/standby); enables `uplink-tracking` / `uplink-sharing`.
+  - Manage tool requires `ENABLE_CENTRAL_WRITE_TOOLS=true`.
+- **Gateway Clusters (realized)**: central_get_gateway_clusters, central_manage_gateway_cluster
+  - The realized cluster profile contains the actual member gateways (by MAC) and runtime config (heartbeat, multicast VLAN, CoA-VRRP, redundancy). For CM_SITE intent profiles, Central auto-creates these (`auto_*` naming); operators create them directly only for CM_MANUAL clusters.
+  - **Member gateways are keyed by MAC**, not IP. Resolve IP→MAC via `central_get_devices` when migrating from a source that uses IPs.
+  - **Manual cluster naming**: profile names must NOT start with `auto_` (reserved for GCIS-managed auto-clusters) and must not contain spaces.
+  - `auto-cluster=false` for manual clusters; `ipv6-enable` is set-once at creation (cannot toggle later).
+  - Manage tool requires `ENABLE_CENTRAL_WRITE_TOOLS=true`.
 - **Firmware Recommendations**: central_recommend_firmware
   - Use when the user asks what firmware version a device or fleet should be on, whether any devices need upgrades, or for a firmware audit. The tool applies an LSR-preferred upgrade policy on top of Central's built-in `recommendedVersion`: devices classified as SSR are recommended to move to the newest LSR version seen in the fleet, rather than staying on SSR as Central would suggest.
   - Filter with `device_type`, `site_id`, `site_name`, or `serial_number`. Default behavior omits devices already on Central's recommended version; pass `include_up_to_date=True` to see them too.
