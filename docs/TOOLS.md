@@ -34,7 +34,7 @@ With `MCP_TOOL_MODE=code` the server replaces the exposed catalog with a 4-tool 
 
 | Tier | Tool | What the LLM calls |
 |---|---|---|
-| 1 | `tags(detail="brief")` | Browse the tag space — returns platform buckets (`mist (35 tools)`, `central (83)`, `axis (25)`, etc.) plus module categories |
+| 1 | `tags(detail="brief")` | Browse the tag space — returns platform buckets (`mist (35 tools)`, `central (87)`, `axis (25)`, etc.) plus module categories |
 | 2 | `search(query, tags=[...], detail)` | BM25 search the catalog, optionally scoped by tag |
 | 3 | `get_schema(tools=[...], detail)` | Fetch parameter shape for named tools |
 | 4 | `execute(code)` | Run async Python; `call_tool(name, params)` available in scope |

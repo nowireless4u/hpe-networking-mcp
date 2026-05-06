@@ -52,7 +52,7 @@ Managing HPE networking infrastructure with AI assistants today means juggling m
 | **Staged Writes + Commit Workflow** | — | — | — | — | ✅ | ✅ | — |
 | **Guided Prompts** | ✅ | ✅ | — | — | — | — | ✅ |
 | **Dynamic Tool Discovery** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Underlying tools (static mode)** | **35 + 2 prompts** | **83 + 12 prompts** | **10** | **140** | **19** | **25** | **47 + 9 prompts** |
+| **Underlying tools (static mode)** | **35 + 2 prompts** | **87 + 12 prompts** | **10** | **140** | **19** | **25** | **47 + 9 prompts** |
 | **Exposed meta-tools (dynamic mode, default)** | **3** | **3** | **3** | **3** | **3** | **3** | **3** |
 | **Cross-Platform** | **3 tools + 3 prompts** | **3 tools + 3 prompts** | — | **1 tool** | — | — | — |
 
@@ -453,7 +453,7 @@ Set `ENABLE_AOS8_WRITE_TOOLS=true` to expose the 12 AOS8 write tools (gated by e
 │ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐           │
 │ │  Mist  │ │Central │ │GreenLk │ │ClrPass │ │ Apstra │ │  Axis  │ │  AOS8  │           │
 │ │ mist_* │ │centrl_*│ │grnlake │ │clrpass │ │apstra_*│ │ axis_* │ │ aos8_* │           │
-│ │35 tools│ │83 tools│ │10 tools│ │140 tool│ │19 tools│ │25 tools│ │47 tools│           │
+│ │35 tools│ │87 tools│ │10 tools│ │140 tool│ │19 tools│ │25 tools│ │47 tools│           │
 │ │+2 prmt │ │+12prmt │ │        │ │        │ │        │ │        │ │+9 prmt │           │
 │                                                                                         │
 │  Hidden behind meta-tools in dynamic mode;  fully exposed in static mode.               │
@@ -599,7 +599,7 @@ hpe-networking-mcp/
 │       ├── _common/             # Shared tool registry + meta-tool factory (dynamic mode)
 │       ├── health.py            # Cross-platform health probe tool
 │       ├── mist/                # 35 Mist tools + 2 prompts + API client
-│       ├── central/             # 73 Central tools + 12 prompts + API client
+│       ├── central/             # 87 Central tools + 12 prompts + API client
 │       ├── greenlake/           # 10 GreenLake tools + OAuth2 client
 │       ├── clearpass/           # 140 ClearPass tools + pyclearpass SDK client
 │       ├── apstra/              # 19 Apstra tools + async httpx client
@@ -609,7 +609,7 @@ hpe-networking-mcp/
 │       ├── sync_prompts.py      # Cross-platform WLAN sync prompts
 │       ├── site_health_check.py # Cross-platform site health aggregator
 │       └── site_rf_check.py     # Cross-platform Wi-Fi RF dashboard
-├── tests/                       # Unit and integration tests (767+ unit tests)
+├── tests/                       # Unit and integration tests (964+ unit tests)
 ├── docs/                        # PRD, PRP, tool reference
 ├── secrets/                     # Secret files (only .example committed)
 ├── .github/workflows/           # CI, security, Docker publish
