@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.2.1] - 2026-05-05
+
+**`SandboxErrorCatchMiddleware` now signals `isError: true` on the wire for code-mode sandbox failures.** Reported by Zach during OpenClaw MCP execute testing — sandbox parse/runtime errors were reaching MCP clients as `isError: false` tool results, making it impossible for orchestrators to distinguish failed execution from successful JSON output that happened to contain error-shaped strings.
+
+### Why
+
+`SandboxErrorCatchMiddleware` (added in v2.x as the fix for [#208](https://github.com/nowireless4u/hpe-networking-mcp/issues/208) so the LLM can read sandbox error messages and self-correct) was returning the unwrapped error text via `ToolResult(content=...)`. FastMCP's `ToolResult` doesn't expose `isError` — that flag is set on the wire only when a tool raises an exception. Returning a `ToolResult` always gets `isError: false`.
+
+The trade-off had been: LLM gets readable error message ✓ / orchestrator sees error flag ✗. After Zach's bug report we have evidence both halves are needed: the agent self-corrected through 5+ retries (the message is reaching it correctly), but the orchestrator's trace recorded every failed iteration as a successful tool call.
+
+### Fix
+
+`SandboxErrorCatchMiddleware` now **re-raises a fresh `ToolError`** carrying the unwrapped sandbox error text, instead of returning a `ToolResult`. Verified empirically against FastMCP's masking logic (`server.py:1241-1243`): the `except FastMCPError` branch re-raises `ToolError` instances unchanged before the generic `except Exception` masking branch can wrap them. So a middleware-raised `ToolError` propagates to the wire with `isError: true` AND our enriched message intact.
+
+Live verification in the dev container with intentionally bad indentation (` return 1` — the same shape as the model-generated code that triggered Zach's report):
+
+```
+Sandbox error: Unexpected indentation at byte range 1..2
+```
+
+The MCP client received the response wrapped in error-marker tags (proving `isError: true` on the wire) AND the readable cause text in the content. Successful execute calls continue to work unchanged.
+
+### What's new
+
+- **`src/hpe_networking_mcp/middleware/sandbox_error_catch.py`** — middleware now raises `ToolError(error_text) from cause` instead of returning `ToolResult(content=error_text)`. Module docstring updated with the call-chain reasoning (middleware sits outside the masking layer; `ToolError` from middleware bypasses `mask_error_details`). Removed the unused `ToolResult` import.
+- **`tests/unit/test_middleware.py`** — `test_catches_monty_runtime_error_on_execute` renamed to `test_catches_monty_runtime_error_on_execute_and_re_raises`, asserts `pytest.raises(ToolError)` instead of `result.content`. New regression test `test_catches_monty_syntax_error_and_re_raises` pins the OpenClaw-reported syntax-error path specifically (built via real `MontySyntaxError` from ` return 1`). Both tests verify the original cause is preserved on `ToolError.__cause__` for telemetry.
+
+### Validates / closes
+
+- Closes the OpenClaw-reported isError signaling bug (no GitHub issue filed; reported via maintainer's session).
+- Re-validates [#208](https://github.com/nowireless4u/hpe-networking-mcp/issues/208) — message readability is preserved (the LLM still sees the actual error cause, just now via the standard error-response path instead of via content of a successful response).
+
+### Notes
+
+- Patch (`x.x.x.X`) bump — bug fix, no API surface change. Behavior change: clients that previously checked `result.content` for error-shaped text on a successful response now need to check `isError` per the MCP spec. This matches what the spec says clients should do anyway.
+- Docs-only files (README, INSTRUCTIONS, TOOLS.md) unchanged — no tool surface change, no operator-visible workflow change.
+
 ## [2.5.2.0] - 2026-05-05
 
 **Central Gateway Cluster Intent (GCIS) tools + `aos-migration` Stage 7 cluster-mode derivation.** Closes [#261](https://github.com/nowireless4u/hpe-networking-mcp/issues/261). Adds 4 new Central tools for managing AOS 10's gateway cluster orchestration plane — the migration target for AOS 8 `cluster_prof` + `group_membership`.

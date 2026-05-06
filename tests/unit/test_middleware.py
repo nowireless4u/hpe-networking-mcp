@@ -277,6 +277,23 @@ async def _make_monty_error(message: str):
     raise AssertionError("expected MontyError")  # pragma: no cover
 
 
+async def _make_monty_error_via_syntax_error():
+    """Build a real ``MontySyntaxError`` (Rust-backed; only obtainable by
+    feeding malformed code to ``Monty(...)``). Note that syntax errors
+    raise at construction time, not at ``run_async()`` — different from
+    runtime errors which raise during execution.
+    """
+    import pydantic_monty
+
+    # Stray leading space on a top-level line — same shape as the model-
+    # generated code that triggered the OpenClaw bug report.
+    try:
+        pydantic_monty.Monty(" return 1\n")
+    except pydantic_monty.MontyError as e:
+        return e
+    raise AssertionError("expected MontyError at construction")  # pragma: no cover
+
+
 def _wrap_in_tool_error(cause: BaseException) -> ToolError:
     """Mirror what FastMCP's ``server.call_tool`` does with
     ``mask_error_details=True``: wrap the original exception in a generic
@@ -291,9 +308,10 @@ def _wrap_in_tool_error(cause: BaseException) -> ToolError:
 class TestSandboxErrorCatchMiddleware:
     """The middleware must intercept the ``ToolError`` that FastMCP wraps
     around a sandbox ``MontyError`` (caused by the masking layer) and
-    return the underlying error's text as a structured ToolResult, so the
-    AI can read the actual cause and self-correct instead of seeing a
-    generic "Error calling tool 'execute'". Closes #208.
+    re-raise a fresh ``ToolError`` carrying the unwrapped error text. This
+    propagates to the wire as ``isError: true`` AND keeps the readable
+    message in ``content`` — fixing both LLM self-correction (#208) and
+    orchestrator-visible error signaling.
 
     We synthesize the wrap-in-ToolError shape in tests because that's
     exactly what FastMCP's ``server.call_tool`` produces when
@@ -301,11 +319,13 @@ class TestSandboxErrorCatchMiddleware:
     """
 
     @pytest.mark.asyncio
-    async def test_catches_monty_runtime_error_on_execute(self):
+    async def test_catches_monty_runtime_error_on_execute_and_re_raises(self):
         """The originally-bug-inducing case: LLM calls `search` from inside
         execute() → sandbox raises MontyError("Unknown tool: search")
-        → FastMCP wraps as ToolError → middleware unwraps → ToolResult
-        content carries the readable text.
+        → FastMCP wraps as ToolError with masked message
+        → middleware unwraps, re-raises fresh ToolError with readable text.
+        Re-raising (not returning ToolResult) is what gives the wire
+        response ``isError: true``.
         """
         cause = await _make_monty_error("Unknown tool: search")
         wrapped = _wrap_in_tool_error(cause)
@@ -316,12 +336,42 @@ class TestSandboxErrorCatchMiddleware:
         async def _raise(_ctx):
             raise wrapped
 
-        result = await middleware.on_call_tool(ctx, _raise)
+        with pytest.raises(ToolError) as exc_info:
+            await middleware.on_call_tool(ctx, _raise)
 
-        assert hasattr(result, "content"), "must return a ToolResult-like object"
-        text = result.content[0].text if result.content else ""
+        text = str(exc_info.value)
         assert "sandbox error" in text.lower()
         assert "Unknown tool: search" in text
+        # Generic FastMCP-masked text must NOT survive — only our enriched message
+        assert text != "Error calling tool 'execute'"
+        # Original cause is preserved on __cause__ for telemetry
+        assert exc_info.value.__cause__ is cause
+
+    @pytest.mark.asyncio
+    async def test_catches_monty_syntax_error_and_re_raises(self):
+        """Regression test for the OpenClaw-reported case: model-generated code
+        with stray indentation triggers MontySyntaxError. Same code path as
+        the runtime-error case, but pinned separately because syntax errors
+        are the most user-visible failure mode (LLMs generate them often).
+        """
+        cause = await _make_monty_error_via_syntax_error()
+        wrapped = _wrap_in_tool_error(cause)
+
+        middleware = SandboxErrorCatchMiddleware()
+        ctx = _make_call_tool_context("execute")
+
+        async def _raise(_ctx):
+            raise wrapped
+
+        with pytest.raises(ToolError) as exc_info:
+            await middleware.on_call_tool(ctx, _raise)
+
+        text = str(exc_info.value)
+        assert "sandbox error" in text.lower()
+        # The Monty error text mentions "Unexpected indentation" or similar;
+        # we don't pin the exact string (Monty/Rust may rewrap it) but we DO
+        # pin that something descriptive made it through, not the masked text
+        assert text != "Error calling tool 'execute'"
 
     @pytest.mark.asyncio
     async def test_does_not_catch_on_non_execute_tools(self):
@@ -387,8 +437,9 @@ class TestSandboxErrorCatchMiddleware:
 
     @pytest.mark.asyncio
     async def test_error_text_carries_actionable_detail(self):
-        """The wrapped error's str() form must be preserved in the returned
-        text — that's what the LLM reads to fix its code.
+        """The wrapped error's str() form must be preserved in the raised
+        ToolError's message — that's what the LLM reads to fix its code,
+        carried via the wire response's content alongside isError: true.
         """
         cause = await _make_monty_error("division by zero at line 4")
         wrapped = _wrap_in_tool_error(cause)
@@ -399,9 +450,10 @@ class TestSandboxErrorCatchMiddleware:
         async def _raise(_ctx):
             raise wrapped
 
-        result = await middleware.on_call_tool(ctx, _raise)
-        text = result.content[0].text
+        with pytest.raises(ToolError) as exc_info:
+            await middleware.on_call_tool(ctx, _raise)
 
+        text = str(exc_info.value)
         assert "division by zero" in text
         assert "line 4" in text
 
