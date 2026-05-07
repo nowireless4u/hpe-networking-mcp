@@ -88,3 +88,7 @@ docs/Qwen3_4B_OpenClaw_HPE_MCP_Test_Report.pdf
 # Earlier root-level copy of the Central Configuration Model VSG markdown;
 # canonical copy now lives at docs/central/vsg/ (covered by the broader rule).
 docs/central_configuration_model.md
+
+# Local working artifacts kept under docs/mappings/ — early drafts of cross-
+# platform configuration mapping references. Not tracked.
+docs/mappings/
