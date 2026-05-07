@@ -298,6 +298,43 @@ class TestSchemaValidation:
         assert "invalid JSON" in msg
 
 
+def test_loads_shipped_policy_translation_cleanly() -> None:
+    """The shipped Central policy translation handles AOS 8 acl_sess records.
+
+    Schema-validates: target_platform=central, target_id=policy, 2 emits,
+    composite source with both acl_sess + role objects, required runtime
+    values include both central_scope_id and role_attribution.
+    """
+    translations = load_translations()
+    assert "central:policy" in translations
+    p = translations["central:policy"]
+    assert p.target_platform == "central"
+    assert p.target_id == "policy"
+    assert len(p.target_emits) == 2
+    assert p.target_meta.device_functions == ["MOBILITY_GW"]
+    assert "central_scope_id" in p.required_runtime_values
+    assert "role_attribution" in p.required_runtime_values
+
+    src = p.sources["aos8"]
+    assert src.mapping_kind == "composite"
+    assert src.merge_rule is not None
+    # Two source objects: acl_sess (the ACL definition) + role (for attribution lookup)
+    object_names = {obj.object for obj in src.objects}
+    assert object_names == {"acl_sess", "role"}
+
+    # Required mapping for the policy name; transform mapping for rules
+    assert src.key_mappings["name"].optional is False
+    assert src.key_mappings["policy_rules"].transform == "aos8_acl_sess_to_central_policy_rules"
+    assert src.key_mappings["policy_rules"].optional is True
+
+    # Body shape sanity-checks
+    body = next(e.body for e in p.target_emits if e.step == 1)
+    assert body is not None
+    assert body["type"] == "POLICY_TYPE_SECURITY"
+    assert body["association"] == "ASSOCIATION_ROLE"
+    assert body["security-policy"]["type"] == "SECURITY_POLICY_TYPE_DEFAULT"
+
+
 def test_translation_pydantic_model_round_trip() -> None:
     """A loaded Translation survives model_dump → model_validate cycles intact."""
     translations = load_translations()

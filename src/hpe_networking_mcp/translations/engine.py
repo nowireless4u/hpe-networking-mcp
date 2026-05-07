@@ -34,6 +34,7 @@ producing wrong calls. Failures should be loud at integration-test time.
 
 from __future__ import annotations
 
+import inspect
 import re
 from dataclasses import dataclass, field
 from typing import Any
@@ -182,7 +183,7 @@ def _build_base_context(
             # Required field absent from source — leave unset; emits that
             # need it will fail at substitution time with a clear error
             continue
-        ctx[key] = _apply_transform(km, raw)
+        ctx[key] = _apply_transform(km, raw, source_data=source_data, runtime_values=runtime_values)
 
     # Layer 3: target-side derived values (e.g. alias_name = lower(vlan_name))
     for key, rule in translation.derived.items():
@@ -199,8 +200,27 @@ def _build_base_context(
     return ctx
 
 
-def _apply_transform(km: KeyMapping, raw: Any) -> Any:
-    """Apply a key-mapping's named transform to a raw source value."""
+def _apply_transform(
+    km: KeyMapping,
+    raw: Any,
+    *,
+    source_data: dict[str, Any] | None = None,
+    runtime_values: dict[str, Any] | None = None,
+) -> Any:
+    """Apply a key-mapping's named transform to a raw source value.
+
+    Transforms can declare either of two signatures:
+
+    * ``(value) -> result`` — the simple case. Most transforms in the
+      registry use this form. Backward compatible.
+    * ``(value, ctx) -> result`` — context-aware. Used by transforms that
+      need access to the full ``source_data`` (e.g. to read fields beyond
+      the one the key_mapping's ``from`` path resolves to) or the
+      caller-supplied ``runtime_values`` (e.g. ``role_attribution`` on
+      ``central:policy``). The engine inspects the function signature and
+      passes ``ctx = {"source_data": ..., "runtime_values": ...}`` when the
+      transform declares a second positional parameter.
+    """
     if km.transform == "operator_overridable":
         return raw
     try:
@@ -208,9 +228,31 @@ def _apply_transform(km: KeyMapping, raw: Any) -> Any:
     except KeyError as exc:
         raise EngineError(str(exc)) from exc
     try:
+        if _transform_accepts_ctx(fn):
+            ctx = {
+                "source_data": source_data or {},
+                "runtime_values": runtime_values or {},
+            }
+            return fn(raw, ctx)
         return fn(raw)
     except Exception as exc:  # noqa: BLE001 — surface any transform error to caller
         raise EngineError(f"Transform {km.transform!r} failed on value {raw!r}: {exc}") from exc
+
+
+def _transform_accepts_ctx(fn: Any) -> bool:
+    """True when the transform's signature has 2+ positional parameters.
+
+    Conservative — falls back to False on any introspection error (e.g.
+    builtins or C-extension functions). Counts only POSITIONAL_ONLY and
+    POSITIONAL_OR_KEYWORD parameters.
+    """
+    try:
+        sig = inspect.signature(fn)
+    except (ValueError, TypeError):
+        return False
+    positional_kinds = (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD)
+    positional = [p for p in sig.parameters.values() if p.kind in positional_kinds]
+    return len(positional) >= 2
 
 
 def _resolve_derived(*, rule_name: str, key: str, ctx: dict[str, Any]) -> Any:

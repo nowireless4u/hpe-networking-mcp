@@ -698,3 +698,706 @@ def test_role_bwc_exclude_array_fans_out_to_app_and_appcategory_groups(role) -> 
         "exclude-app-contract": {"exclude-app": [{"exclude-app-name": "netflix"}]},
         "exclude-app-cat-contract": {"exclude-app-category": [{"exclude-app-category-name": "COLLABORATION"}]},
     }
+
+
+# --------------------------------------------------------------------------- #
+# Engine 2-arg transform support
+# --------------------------------------------------------------------------- #
+
+
+def test_engine_dispatches_2arg_transforms_with_ctx() -> None:
+    """A registered transform with a 2-arg signature receives the engine's ctx
+    (source_data + runtime_values) as its second positional argument.
+    """
+    from hpe_networking_mcp.translations.transforms import _REGISTRY  # noqa: PLC2701
+
+    captured: dict = {}
+
+    def _spy_transform(value, ctx):
+        captured["value"] = value
+        captured["ctx"] = ctx
+        return f"saw:{value}"
+
+    _REGISTRY["__test_2arg_spy"] = _spy_transform
+    try:
+        # Minimal translation that uses the spy
+        from hpe_networking_mcp.translations.loader import Translation
+
+        spec = {
+            "version": 1,
+            "target_platform": "central",
+            "target_id": "spy",
+            "target_emits": [
+                {
+                    "step": 1,
+                    "name": "spy_emit",
+                    "purpose": "test",
+                    "endpoint": "/spy/{out}",
+                    "method": "POST",
+                    "iteration": "once",
+                }
+            ],
+            "target_meta": {},
+            "target_scope_id_resolution": {"rule": "x", "input": "x", "output": "x"},
+            "required_runtime_values": ["my_runtime_key"],
+            "sources": {
+                "aos8": {
+                    "kind": "rest",
+                    "mapping_kind": "simple",
+                    "objects": [{"object": "x"}],
+                    "key_mappings": {
+                        "out": {"from": "input_field", "to": "spy", "transform": "__test_2arg_spy"},
+                    },
+                }
+            },
+        }
+        t = Translation.model_validate(spec)
+        emit_calls(
+            t,
+            {"input_field": "hello", "extra": "data"},
+            "aos8",
+            runtime_values={"my_runtime_key": "rt-value"},
+        )
+        assert captured["value"] == "hello"
+        assert captured["ctx"]["source_data"] == {"input_field": "hello", "extra": "data"}
+        assert captured["ctx"]["runtime_values"] == {"my_runtime_key": "rt-value"}
+    finally:
+        del _REGISTRY["__test_2arg_spy"]
+
+
+def test_engine_still_dispatches_1arg_transforms_unchanged() -> None:
+    """1-arg transforms (the existing convention) MUST NOT receive ctx.
+
+    Adding 2-arg support shouldn't break the simpler signature; existing
+    transforms continue to work as before.
+    """
+    from hpe_networking_mcp.translations.transforms import _REGISTRY  # noqa: PLC2701
+
+    received_args: list = []
+
+    def _legacy_transform(value):
+        received_args.append(value)
+        return value.upper()
+
+    _REGISTRY["__test_1arg_legacy"] = _legacy_transform
+    try:
+        from hpe_networking_mcp.translations.loader import Translation
+
+        spec = {
+            "version": 1,
+            "target_platform": "central",
+            "target_id": "legacy",
+            "target_emits": [
+                {
+                    "step": 1,
+                    "name": "legacy_emit",
+                    "purpose": "test",
+                    "endpoint": "/legacy/{out}",
+                    "method": "POST",
+                    "iteration": "once",
+                }
+            ],
+            "target_meta": {},
+            "target_scope_id_resolution": {"rule": "x", "input": "x", "output": "x"},
+            "sources": {
+                "aos8": {
+                    "kind": "rest",
+                    "mapping_kind": "simple",
+                    "objects": [{"object": "x"}],
+                    "key_mappings": {
+                        "out": {"from": "field", "to": "spy", "transform": "__test_1arg_legacy"},
+                    },
+                }
+            },
+        }
+        t = Translation.model_validate(spec)
+        calls = emit_calls(t, {"field": "hello"}, "aos8")
+        assert calls[0].endpoint == "/legacy/HELLO"
+        assert received_args == ["hello"]
+    finally:
+        del _REGISTRY["__test_1arg_legacy"]
+
+
+# --------------------------------------------------------------------------- #
+# central:policy — AOS 8 acl_sess -> Central /policies translation
+# --------------------------------------------------------------------------- #
+
+
+@pytest.fixture
+def policy(translations: dict):
+    return translations["central:policy"]
+
+
+def _policy_runtime(scope_id: str = "SCOPE", role_attribution: list[str] | None = None) -> dict:
+    rv: dict = {
+        "central_scope_id": scope_id,
+        "role_attribution": role_attribution or ["parent"],
+    }
+    return rv
+
+
+def test_policy_minimum_acl_emits_two_calls(policy) -> None:
+    """ACL with one any-any-any permit rule + role_attribution=['parent'] →
+    POST /policies/parent + config-assignments.
+
+    Note: AOS 8 'any any' on a role-bound ACL is BIDIRECTIONAL — Central
+    represents this as TWO unidirectional rules (role->any AND any->role)
+    so return traffic is matched. One AOS 8 rule expands to 2 Central rules.
+    """
+    source = {
+        "accname": "parent",
+        "acl_sess__v4policy": [
+            {
+                "sany": True,
+                "src": "sany",
+                "dany": True,
+                "dst": "dany",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "permit": True,
+                "action": "permit",
+            }
+        ],
+        "acl_sess__v6policy": [],
+    }
+    calls = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime("SCOPE-A"))
+    assert len(calls) == 2
+    assert [c.step for c in calls] == [1, 2]
+
+    step1 = calls[0]
+    assert step1.method == "POST"
+    assert step1.endpoint == "/network-config/v1alpha1/policies/parent"
+    assert step1.body == {
+        "name": "parent",
+        "type": "POLICY_TYPE_SECURITY",
+        "association": "ASSOCIATION_ROLE",
+        "security-policy": {
+            "type": "SECURITY_POLICY_TYPE_DEFAULT",
+            "policy-rule": [
+                {
+                    "position": 1,
+                    "condition": {
+                        "rule-type": "RULE_ANY",
+                        "address-family": "IPV4",
+                        "source": {"type": "ADDRESS_ROLE", "role-list": ["parent"]},
+                        "destination": {"type": "ADDRESS_ANY"},
+                    },
+                    "action": {"type": "ACTION_ALLOW"},
+                },
+                {
+                    "position": 2,
+                    "condition": {
+                        "rule-type": "RULE_ANY",
+                        "address-family": "IPV4",
+                        "source": {"type": "ADDRESS_ANY"},
+                        "destination": {"type": "ADDRESS_ROLE", "role-list": ["parent"]},
+                    },
+                    "action": {"type": "ACTION_ALLOW"},
+                },
+            ],
+        },
+    }
+
+
+def test_policy_suser_dst_uses_role_attribution(policy) -> None:
+    """suser source + role_attribution=['parent','guest'] → ADDRESS_ROLE with role-list."""
+    source = {
+        "accname": "user-rule",
+        "acl_sess__v4policy": [
+            {
+                "suser": True,
+                "src": "suser",
+                "dany": True,
+                "dst": "dany",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "permit": True,
+                "action": "permit",
+            }
+        ],
+    }
+    rt = _policy_runtime(role_attribution=["parent", "guest"])
+    body = emit_calls(policy, source, "aos8", runtime_values=rt)[0].body or {}
+    rule = body["security-policy"]["policy-rule"][0]
+    assert rule["condition"]["source"] == {"type": "ADDRESS_ROLE", "role-list": ["parent", "guest"]}
+    assert rule["condition"]["destination"] == {"type": "ADDRESS_ANY"}
+
+
+def test_policy_dst_host_with_ip(policy) -> None:
+    """dst=dhost + dipaddr=10.1.1.1 → ADDRESS_HOST with host-ipv4-address."""
+    source = {
+        "accname": "host-rule",
+        "acl_sess__v4policy": [
+            {
+                "suser": True,
+                "src": "suser",
+                "dipaddr": "10.1.1.1",
+                "dst": "dhost",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "permit": True,
+                "action": "permit",
+            }
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    rule = body["security-policy"]["policy-rule"][0]
+    assert rule["condition"]["destination"] == {
+        "type": "ADDRESS_HOST",
+        "host-address": {"host-ipv4-address": "10.1.1.1"},
+    }
+
+
+def test_policy_dst_userrole_with_durname(policy) -> None:
+    """dst=duserrole + durname='parent' → ADDRESS_ROLE with explicit role (not role-list)."""
+    source = {
+        "accname": "userrole-rule",
+        "acl_sess__v4policy": [
+            {
+                "suser": True,
+                "src": "suser",
+                "durname": "parent",
+                "dst": "duserrole",
+                "appname": "youtube",
+                "app_web_type": "app",
+                "service_app": "app_opt",
+                "appdeny": True,
+                "appaction": "appdeny_opt",
+            }
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    rule = body["security-policy"]["policy-rule"][0]
+    assert rule["condition"]["destination"] == {"type": "ADDRESS_ROLE", "role": "parent"}
+    assert rule["condition"]["services"] == {"application": "youtube"}
+    assert rule["condition"]["rule-type"] == "RULE_APPLICATION"
+    assert rule["action"]["type"] == "ACTION_DENY"
+
+
+def test_policy_dst_localip(policy) -> None:
+    source = {
+        "accname": "local-rule",
+        "acl_sess__v4policy": [
+            {
+                "suser": True,
+                "src": "suser",
+                "dlocalip": True,
+                "dst": "dlocalip",
+                "appname": "netflix",
+                "app_web_type": "app",
+                "service_app": "app_opt",
+                "appdeny": True,
+                "appaction": "appdeny_opt",
+            }
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    rule = body["security-policy"]["policy-rule"][0]
+    assert rule["condition"]["destination"] == {"type": "ADDRESS_LOCAL"}
+
+
+def test_policy_named_service_svc_http_uses_central_net_service(policy) -> None:
+    """svc-http (named service) → RULE_NET_SERVICE + services.net-service: 'svc-http'.
+
+    Central ships a net-services catalog with svc-* names mirroring AOS 8's
+    convention (svc-http, svc-https, svc-dns, svc-icmp, etc.). The translation
+    references those by name rather than mapping to raw protocol+port —
+    cleaner, uses Central's authoritative catalog, and lets unknown svc-*
+    names produce a clean Central error instead of silent mistranslation.
+    """
+    source = {
+        "accname": "http-rule",
+        "acl_sess__v4policy": [
+            {
+                "suser": True,
+                "src": "suser",
+                "dany": True,
+                "dst": "dany",
+                "service-name": "svc-http",
+                "svc": "service-name",
+                "service_app": "service",
+                "permit": True,
+                "action": "permit",
+            }
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    rule = body["security-policy"]["policy-rule"][0]
+    assert rule["condition"]["rule-type"] == "RULE_NET_SERVICE"
+    assert rule["condition"]["services"] == {"net-service": "svc-http"}
+    # No raw protocol/port for named-service rules — Central looks up the
+    # net-service catalog entry instead
+    assert "ip-header" not in rule["condition"]
+    assert "transport-fields" not in rule["condition"]
+
+
+def test_policy_icmp_echo_rule(policy) -> None:
+    """svc=icmp + icmp_type=echo → RULE_PROTOCOL + ip-header.protocol=IP_ICMP + icmp.icmp-type=echo."""
+    source = {
+        "accname": "icmp-rule",
+        "acl_sess__v4policy": [
+            {
+                "sany": True,
+                "src": "sany",
+                "dany": True,
+                "dst": "dany",
+                "echo": True,
+                "icmp_type": "echo",
+                "svc": "icmp",
+                "service_app": "service",
+                "permit": True,
+                "action": "permit",
+            }
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    rule = body["security-policy"]["policy-rule"][0]
+    assert rule["condition"]["rule-type"] == "RULE_PROTOCOL"
+    assert rule["condition"]["ip-header"] == {"protocol": "IP_ICMP", "icmp": {"icmp-type": "echo"}}
+
+
+def test_policy_dst_nat_action(policy) -> None:
+    """action=dst-nat with dnatport=8080 → ACTION_DESTINATION_NAT + destination-nat.dest-port=8080."""
+    source = {
+        "accname": "dst-nat-rule",
+        "acl_sess__v4policy": [
+            {
+                "suser": True,
+                "src": "suser",
+                "dany": True,
+                "dst": "dany",
+                "service-name": "svc-http",
+                "svc": "service-name",
+                "service_app": "service",
+                "dnatport": 8080,
+                "action": "dst-nat",
+            }
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    rule = body["security-policy"]["policy-rule"][0]
+    assert rule["action"] == {
+        "type": "ACTION_DESTINATION_NAT",
+        "destination-nat": {"dest-port": 8080},
+    }
+
+
+def test_policy_redirect_tunnel_group(policy) -> None:
+    """action=redir_opt + re_dir=tunnel-group + tungrpname → ACTION_REDIRECT + redirect.tunnel-group."""
+    source = {
+        "accname": "redir-rule",
+        "acl_sess__v4policy": [
+            {
+                "suser": True,
+                "src": "suser",
+                "dany": True,
+                "dst": "dany",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "tungrpname": "test",
+                "re_dir": "tunnel-group",
+                "action": "redir_opt",
+            }
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    rule = body["security-policy"]["policy-rule"][0]
+    assert rule["action"] == {
+        "type": "ACTION_REDIRECT",
+        "redirect": {"tunnel-group": "test"},
+    }
+
+
+def test_policy_time_range_reference_lands_in_condition(policy) -> None:
+    source = {
+        "accname": "tr-rule",
+        "acl_sess__v4policy": [
+            {
+                "sany": True,
+                "src": "sany",
+                "dany": True,
+                "dst": "dany",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "permit": True,
+                "action": "permit",
+                "trname": "business-hours",
+            }
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    rule = body["security-policy"]["policy-rule"][0]
+    assert rule["condition"]["time-range-name"] == "business-hours"
+
+
+def test_policy_v6policy_tagged_address_family_ipv6(policy) -> None:
+    """Rules from acl_sess__v6policy get address-family: IPV6.
+
+    Each AOS 8 'any any' rule expands to 2 Central rules (bidirectional);
+    one v4 any-any + one v6 any-any → 4 Central rules total. Positions are
+    sequential across the merged v4+v6 array.
+    """
+    source = {
+        "accname": "dual-stack",
+        "acl_sess__v4policy": [
+            {
+                "sany": True,
+                "src": "sany",
+                "dany": True,
+                "dst": "dany",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "permit": True,
+                "action": "permit",
+            },
+        ],
+        "acl_sess__v6policy": [
+            {
+                "sany": True,
+                "src": "sany",
+                "dany": True,
+                "dst": "dany",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "permit": True,
+                "action": "permit",
+            },
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    rules = body["security-policy"]["policy-rule"]
+    # 1 v4 any-any (expands to 2) + 1 v6 any-any (expands to 2) = 4 rules
+    assert len(rules) == 4
+    # v4 first (rules 1-2), then v6 (rules 3-4)
+    assert rules[0]["condition"]["address-family"] == "IPV4"
+    assert rules[1]["condition"]["address-family"] == "IPV4"
+    assert rules[2]["condition"]["address-family"] == "IPV6"
+    assert rules[3]["condition"]["address-family"] == "IPV6"
+    # Positions sequential across v4+v6
+    assert [r["position"] for r in rules] == [1, 2, 3, 4]
+    # Rules 1+3 are role->any (the "outbound" half of any-any)
+    assert rules[0]["condition"]["source"]["type"] == "ADDRESS_ROLE"
+    assert rules[0]["condition"]["destination"] == {"type": "ADDRESS_ANY"}
+    # Rules 2+4 are any->role (the "inbound" half)
+    assert rules[1]["condition"]["source"] == {"type": "ADDRESS_ANY"}
+    assert rules[1]["condition"]["destination"]["type"] == "ADDRESS_ROLE"
+
+
+def test_policy_inherited_rules_skipped(policy) -> None:
+    """Defensive: rules with _flags.inherited=True are skipped by the transform."""
+    source = {
+        "accname": "with-inherited",
+        "acl_sess__v4policy": [
+            {
+                "sany": True,
+                "src": "sany",
+                "dany": True,
+                "dst": "dany",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "permit": True,
+                "action": "permit",
+                "_flags": {"inherited": True},
+            },  # should be skipped
+            {
+                "suser": True,
+                "src": "suser",
+                "dany": True,
+                "dst": "dany",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "permit": True,
+                "action": "permit",
+            },  # should land
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    rules = body["security-policy"]["policy-rule"]
+    assert len(rules) == 1
+    assert rules[0]["condition"]["source"] == {"type": "ADDRESS_ROLE", "role-list": ["parent"]}
+
+
+def test_policy_step2_assigns_to_mobility_gw(policy) -> None:
+    source = {
+        "accname": "demo",
+        "acl_sess__v4policy": [
+            {
+                "sany": True,
+                "src": "sany",
+                "dany": True,
+                "dst": "dany",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "permit": True,
+                "action": "permit",
+            },
+        ],
+    }
+    step2 = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime("SCOPE-X"))[1]
+    items = (step2.body or {})["config-assignment"]
+    assert len(items) == 1
+    assert items[0] == {
+        "scope-id": "SCOPE-X",
+        "device-function": "MOBILITY_GW",
+        "profile-type": "policy",
+        "profile-instance": "demo",
+    }
+
+
+def test_policy_missing_role_attribution_raises(policy) -> None:
+    """role_attribution is required — engine should raise on missing."""
+    with pytest.raises(EngineError, match="role_attribution"):
+        emit_calls(
+            policy, {"accname": "test"}, "aos8", runtime_values={"central_scope_id": "SCOPE"}
+        )  # missing role_attribution
+
+
+def test_policy_empty_acl_drops_policy_rule_key(policy) -> None:
+    """ACL with empty rule arrays: transform returns None; engine drops policy-rule key."""
+    source = {"accname": "empty", "acl_sess__v4policy": [], "acl_sess__v6policy": []}
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    # security-policy now has only 'type' (policy-rule was None and got dropped)
+    assert body["security-policy"] == {"type": "SECURITY_POLICY_TYPE_DEFAULT"}
+
+
+# --------------------------------------------------------------------------- #
+# central:policy — "any any" rewrite rule (operator-confirmed)
+# --------------------------------------------------------------------------- #
+
+
+def test_policy_any_any_rule_replaces_source_with_role_attribution(policy) -> None:
+    """AOS 8 'any any' rule on a role-bound ACL → Central 'role any' rewrite.
+
+    Central can't represent any-any for a role-bound policy. The translation
+    replaces the source (only) with role_attribution to produce 'role → any'
+    (the Central-canonical equivalent).
+    """
+    source = {
+        "accname": "any-any",
+        "acl_sess__v4policy": [
+            {
+                "sany": True,
+                "src": "sany",
+                "dany": True,
+                "dst": "dany",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "permit": True,
+                "action": "permit",
+            }
+        ],
+    }
+    rt = _policy_runtime(role_attribution=["faculty", "staff"])
+    body = emit_calls(policy, source, "aos8", runtime_values=rt)[0].body or {}
+    rule = body["security-policy"]["policy-rule"][0]
+    assert rule["condition"]["source"] == {"type": "ADDRESS_ROLE", "role-list": ["faculty", "staff"]}
+    assert rule["condition"]["destination"] == {"type": "ADDRESS_ANY"}
+
+
+def test_policy_any_specific_keeps_source_as_address_any(policy) -> None:
+    """sany source + DESTINATION-specific (host/network/role) → keep source ADDRESS_ANY.
+
+    Per Reading A: only the literal 'any-any' pattern gets rewritten. Rules
+    where AOS 8 says 'any → specific-something' translate to Central
+    'any → specific-something' since Central does support that pattern.
+    """
+    source = {
+        "accname": "any-host",
+        "acl_sess__v4policy": [
+            {
+                "sany": True,
+                "src": "sany",
+                "dipaddr": "10.1.1.1",
+                "dst": "dhost",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "permit": True,
+                "action": "permit",
+            }
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    rule = body["security-policy"]["policy-rule"][0]
+    assert rule["condition"]["source"] == {"type": "ADDRESS_ANY"}
+    assert rule["condition"]["destination"] == {
+        "type": "ADDRESS_HOST",
+        "host-address": {"host-ipv4-address": "10.1.1.1"},
+    }
+
+
+def test_policy_any_to_network_keeps_source_as_address_any(policy) -> None:
+    """sany source + dst=dnetwork (specific destination network) → source stays ADDRESS_ANY.
+
+    Same Reading A logic: Central allows 'any → network' so no rewrite
+    needed. Companion to test_policy_any_specific_keeps_source_as_address_any
+    which exercises 'any → host'.
+    """
+    source = {
+        "accname": "any-network",
+        "acl_sess__v4policy": [
+            {
+                "sany": True,
+                "src": "sany",
+                "snetaddr": None,
+                "dnetaddr": "10.0.0.0",
+                "dnetmask": "255.0.0.0",
+                "dst": "dnetwork",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "deny": True,
+                "action": "deny_opt",
+            }
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    rule = body["security-policy"]["policy-rule"][0]
+    assert rule["condition"]["source"] == {"type": "ADDRESS_ANY"}
+    assert rule["condition"]["destination"] == {
+        "type": "ADDRESS_NETWORK",
+        "network-address": {"network-ipv4-address": "10.0.0.0/8"},
+    }
+    assert rule["action"] == {"type": "ACTION_DENY"}
+
+
+def test_policy_any_any_with_empty_role_attribution_falls_back_to_address_any(policy) -> None:
+    """Defensive: when role_attribution is empty AND src=sany+dst=dany, the
+    'any-any' rewrite has no role to attribute to. Fall back to ADDRESS_ANY
+    rather than producing an invalid empty role-list.
+
+    Per the LLD, ACLs with no role attribution shouldn't reach the translation
+    at all (consumer should filter), but the transform is defensive.
+    """
+    source = {
+        "accname": "orphan-acl",
+        "acl_sess__v4policy": [
+            {
+                "sany": True,
+                "src": "sany",
+                "dany": True,
+                "dst": "dany",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "permit": True,
+                "action": "permit",
+            }
+        ],
+    }
+    rt = {"central_scope_id": "SCOPE", "role_attribution": []}
+    body = emit_calls(policy, source, "aos8", runtime_values=rt)[0].body or {}
+    rule = body["security-policy"]["policy-rule"][0]
+    assert rule["condition"]["source"] == {"type": "ADDRESS_ANY"}
+    assert rule["condition"]["destination"] == {"type": "ADDRESS_ANY"}

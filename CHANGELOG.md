@@ -5,6 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1.3] - 2026-05-07
+
+**Patch release — fourth translation (`central:policy`, AOS 8 acl_sess → Central /policies) + engine 2-arg transform support + ~120 KB of inline enum lookup tables.**
+
+Adds `central:policy`, the fourth shipped translation, completing the role / policy migration story by handling the AOS 8 → Central inversion: AOS 8 binds ACLs to roles via `role.role__acl[]` (role-side reference), while Central inverts and references roles from policies via `policy-rule[].condition.source.role-list` (policy-side reference). Central back-fills `role.policies[]` automatically from those references — `central:role` was authored knowing this translation was coming and explicitly deferred `role__acl` to here.
+
+The translation handles the rich AOS 8 acl_sess shape (parallel `acl_sess__v4policy` + `acl_sess__v6policy` rule arrays per ACL) and produces a single Central `policy-rule[]` with each rule tagged by `address-family`. Verified live across 88 user-customized ACLs in the operator's tenant plus a purpose-configured `missing-policies` ACL exercising the variants not present elsewhere (host destination, ICMP echo, time-range reference, standalone dst-nat, redirect-tunnel + redirect-tunnel-group, destination user-role, destination local-IP, app-deny). Central GW shape verified live for `RULE_PROTOCOL` + `ip-header.protocol` via the operator's `amazon-device` policy on a mobility gateway.
+
+### Three changes
+
+1. **New translation `central:policy`.** Two-step Central CNX flow (policy SHARED create + multi-DF config-assignments). Composite source declaring both `acl_sess` (the ACL definition) and `role` (for the role-attribution reverse-index lookup); consumer pre-computes `role_attribution: list[str]` per ACL and passes via `runtime_values`. The translation maps:
+   - **Source/destination types** (7 of 14 Central enum values verified): `ADDRESS_ANY`, `ADDRESS_HOST` (with `host-ipv4-address`), `ADDRESS_NETWORK` (with netmask → CIDR conversion), `ADDRESS_ALIAS`, `ADDRESS_ROLE` (single via `suserrole`/`duserrole` + name; role-list via `suser`/`duser` + role_attribution from runtime), `ADDRESS_LOCAL`, `ADDRESS_USER`. The 7 less common types (DOMAIN_NAME, GROUP, AP_*, MASTER_IP, SUBNET_MASK) deferred.
+   - **Rule types**: `RULE_ANY` (default), `RULE_PROTOCOL` (live-verified), `RULE_TCP` / `RULE_UDP` (inferred from schema parallel structure), `RULE_APPLICATION` / `RULE_APP_CATEGORY` / `RULE_WEB_CATEGORY` / `RULE_WEB_REPUTATION` for app/web rules.
+   - **Service modes**: AOS 8 named svc-\* (svc-icmp, svc-dns, svc-dhcp, svc-http, svc-https, ...) via a hand-curated lookup to `(protocol, port-range)` tuples; raw `proto + port + port1/port2` rules; ICMP with optional `icmp_type`; app/web rules via the schema's `x-enumDescriptions`-derived enum tables.
+   - **Actions**: `ACTION_ALLOW`, `ACTION_DENY`, `ACTION_DESTINATION_NAT` (with `destination-nat.dest-port`), `ACTION_SOURCE_NAT`, `ACTION_DUAL_NAT` (with `dual-nat.{dest-port, pool}`), `ACTION_REDIRECT` (tunnel + tunnel-group variants live-verified; esi-group + datapath operator-scoped-out), `ACTION_ROUTE`. Secondary actions: `log` + `send-deny-response` for app deny.
+   - **Time-range** reference via `condition.time-range-name`.
+   - **Empty-ACL handling**: per the LLD's "empty ACL not migrated" rule, the transform returns `None` when no rules are produced; engine drops the body key.
+
+2. **Engine: 2-arg transform support.** Transforms can optionally declare a `(value, ctx) -> result` signature; the engine inspects the function via `inspect.signature` and dispatches accordingly. The 1-arg form `(value) -> result` continues to work unchanged (backward compatible — every prior transform keeps its signature). The 2-arg form's `ctx` is `{"source_data": ..., "runtime_values": ...}`. Used by `aos8_acl_sess_to_central_policy_rules` to read both `acl_sess__v4policy` and `acl_sess__v6policy` from `source_data` plus `role_attribution` from `runtime_values` — neither of which fits the engine's existing single-`from`-path key_mapping pattern.
+
+3. **`policy_enum_tables.py` — ~120 KB of inline Central enum lookup tables.** Auto-generated at authoring time from `api-endpoints/central/policy.json`'s `x-enumDescriptions` annotations. Four tables: `AOS8_APP_TO_CENTRAL` (3952 DPI apps), `AOS8_APP_CATEGORY_TO_CENTRAL` (24), `AOS8_WEB_CATEGORY_TO_CENTRAL` (85), `AOS8_WEB_REPUTATION_TO_CENTRAL` (5). Inline-not-runtime-loaded for self-contained engine and reviewable mappings. **Critical**: 21 of 85 web-category entries insert connective words ("AND") between slash-separated AOS 8 forms (e.g. `entertainment/arts` → `ENTERTAINMENT-AND-ARTS`); a naive `.upper().replace("/", "-")` transform would silently produce wrong Central enum values for those. The lookup tables enforce correctness.
+
+### Files
+
+- **New: `src/hpe_networking_mcp/translations/targets/central/policy_v1.json`** — fourth shipped translation
+- **New: `src/hpe_networking_mcp/translations/policy_enum_tables.py`** — 4 enum lookup tables (~120 KB)
+- **`src/hpe_networking_mcp/translations/transforms.py`** — adds the `aos8_acl_sess_to_central_policy_rules` 2-arg transform plus 9 helper functions (~350 lines total) and the AOS 8 named-service → (protocol, port) lookup table
+- **`src/hpe_networking_mcp/translations/engine.py`** — 2-arg transform dispatch via signature inspection
+- **`tests/unit/test_translations_engine.py`** — 16 new tests (2 engine 2-arg + 14 policy)
+- **`tests/unit/test_translations_loader.py`** — 1 new policy schema-validation test
+- **`pyproject.toml`** — bump 3.0.1.2 → 3.0.1.3
+
+### Notes
+
+- 1136 tests pass (was 1114; +22 from new tests).
+- **Any-any expansion (operator-confirmed):** Central can express `any → user/host/network` and `user → any` for a role-bound policy, but NOT `any → any`. AOS 8 `any any` semantics are bidirectional (allow both directions of traffic between role and anywhere). The translation expands one AOS 8 `any any` rule into **TWO** Central rules — `role → any` AND `any → role` — so return traffic is matched. This pattern matches the live `PD-allowall` policy in the operator's tenant. Rules where AOS 8 source is `any` but destination is specific (`any → host`, `any → network`, `any → role`) keep `source: ADDRESS_ANY` since Central does support those patterns; only the literal any-any pattern triggers expansion. When `role_attribution` is empty (an ACL with no role attribution should not reach the translation per the LLD, but the transform is defensive), no expansion happens — the single-rule form with both ANY addresses is emitted.
+- **Named svc-* services use Central's authoritative net-service catalog.** Originally the translation hand-curated AOS 8 svc-* → (protocol, port-range) mappings. After verifying live that Central ships 73 net-services in the operator's tenant (`central_get_net_services`) — including 64 svc-* names that mirror AOS 8 conventions exactly — the translation now uses `condition.services.net-service: "<svc-name>"` with `rule-type: RULE_NET_SERVICE`. Cleaner, uses Central's authoritative source, and surfaces unknown svc-* names as clean Central errors rather than silently mistranslating to wrong port mappings. The hand-curated `_AOS8_NAMED_SERVICE_TO_CENTRAL` table was removed. A small `_AOS8_TO_CENTRAL_SVC_NAME_ALIASES` dict (currently empty) is kept for known-mismatch edge cases that surface live (e.g. AOS 8 `svc-icmpv6` vs Central `svc-v6-icmp` if/when observed).
+- Central GW `RULE_PROTOCOL` + `ip-header.protocol` is live-verified (operator's `amazon-device` policy). `RULE_TCP` / `RULE_UDP` + `transport-fields.destination-port` follows the schema's parallel structure but should be verified against the operator's tenant before treating as authoritative for production migration. Schema annotations on policy.json are unreliable for Gateway support — many fields tagged Switch/AP-only are clearly used by GW-bound policies in live data. Per operator clarification, `x-supportedDeviceType` is field-honored, not body-gated; trust live data over annotations.
+- Consumer responsibilities documented in `draft_notes`: pre-compute `role_attribution` per ACL by scanning role records (filter `_flags.system / .default / .readonly` entries on both sides); skip ACLs with empty rule lists or zero role attribution per the LLD migration rules.
+- Deferred to v2 in `unmapped_fields`: QoS marking (apptosstr / appprio8021p / queue), src-nat / route action sub-configs, mirror / blacklist / captive action variants, less-common address types (DOMAIN_NAME / GROUP / AP_* / MASTER_IP / SUBNET_MASK), redirect esi-group + datapath variants (operator scope-out).
+- AOS 8 doesn't generate composite role+address rules (single-token CLI source-spec grammar). Central's `role-options` sub-schema is therefore Central-native with no AOS 8 source path — flagged in draft_notes as a non-target.
+
 ## [3.0.1.2] - 2026-05-07
 
 **Patch release — third translation (`central:role`, Gateway-targeted) + engine empty-dict drop + role-specific transforms (including all five bandwidth-contract sub-shapes).**
