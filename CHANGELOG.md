@@ -7,17 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.0.1.0] - 2026-05-07
 
-**Minor release — migration mappings foundation (loader + engine + first mapping).**
+**Minor release — translations engine (loader + runtime engine + first translation).**
 
-Adds the data-driven foundation for translating source-platform configurations to Aruba Central, in service of issue [#240](https://github.com/nowireless4u/hpe-networking-mcp/issues/240) (aos-migration Phase 3 — execute Central writes). Per the design in [#279](https://github.com/nowireless4u/hpe-networking-mcp/issues/279), three pieces ship together:
+Adds the data-driven foundation for **cross-platform configuration translations** in service of issue [#240](https://github.com/nowireless4u/hpe-networking-mcp/issues/240) (aos-migration Phase 3 — execute Central writes) and future use cases like Mist ↔ Central WLAN sync. Per the design in [#279](https://github.com/nowireless4u/hpe-networking-mcp/issues/279), three pieces ship together:
 
-1. **Mapping data files** under `src/hpe_networking_mcp/migrations/central_targets/` — JSON files describing per-target Central API call sequences with source-platform-specific extraction logic. v1 ships one mapping (`named_vlan_v1.json`) covering the AOS 8 named-VLAN → Central named-VLAN/alias/layer2-vlan chain. The format is **multi-source-ready**: each mapping has a `sources.<platform_id>` block, with `aos8` as the only platform v1 authors against. Future source platforms plug in by adding new source blocks to existing mappings; no schema changes required.
-2. **Loader** (`migrations/loader.py`) — pydantic-validated mapping schema; reads every `*.json` under `central_targets/` at lifespan startup; supports operator overrides via `MIGRATION_MAPPINGS_PATH` env var (file-level replacement); fails fast at startup with aggregated error messages on malformed files.
-3. **Runtime engine** (`migrations/engine.py`) — `emit_calls(mapping, source_data, source_platform_id, central_scope_id, device_functions, overrides)` returns ordered `CentralCall` descriptors ready for dispatch. The engine **does not** call Central — Phase 3 / #240 will be the dispatcher.
+1. **Translation data files** under `src/hpe_networking_mcp/translations/targets/<platform>/` — JSON files describing per-target API call sequences with source-platform-specific extraction logic. v1 ships one translation: `targets/central/named_vlan_v1.json`, covering the AOS 8 named-VLAN → Central named-VLAN/alias/layer2-vlan chain. The format is **multi-source AND multi-target ready**: each translation has a `target_platform` field + `sources.<platform_id>` blocks. v1 authors AOS 8 → Central only.
+2. **Loader** (`translations/loader.py`) — pydantic-validated `Translation` schema; reads every `*.json` under `targets/<platform>/` at lifespan startup; supports operator overrides via `TRANSLATIONS_PATH` env var (file-level replacement); fails fast at startup with aggregated error messages on malformed files; returns `dict[str, Translation]` keyed by `"<target_platform>:<target_id>"`.
+3. **Runtime engine** (`translations/engine.py`) — `emit_calls(translation, source_data, source_platform_id, runtime_values, overrides)` returns ordered `TargetCall` descriptors ready for dispatch. The engine **does not** call any target platform — Phase 3 / #240 (or future skills) will be the dispatcher. Generic `runtime_values: dict[str, Any]` carries target-platform-specific runtime context (e.g. for Central: `central_scope_id`, `device_functions`); the translation's `required_runtime_values` declares which keys must be present.
 
-The `named_vlan_v1.json` mapping captures six empirical findings verified against the maintainer's live Central tenant during design (see #279 for details), notably: SHARED + LOCAL profile distinction, multi-device-function packing in `config-assignments` arrays, alias auto-pull behavior when a named-VLAN is assigned, and AOS 8's asymmetric range-syntax handling between `vlan_id` (expands) and `vlan_name_id` (preserves).
+The named-VLAN translation captures six empirical findings verified against the maintainer's live Central tenant during design (see #279 for details), notably: SHARED + LOCAL profile distinction, multi-device-function packing in `config-assignments` arrays, alias auto-pull behavior when a named-VLAN is assigned, and AOS 8's asymmetric range-syntax handling between `vlan_id` (expands) and `vlan_name_id` (preserves).
 
-Closes acceptance criteria 3, 4, and 7 of [#279](https://github.com/nowireless4u/hpe-networking-mcp/issues/279).
+### Why "translations" and not "migrations"
+
+Migration is one-time and end-state-oriented (AOS 8 → Central). The engine's actual job — translate source-shape to ordered target-API-calls — also covers ongoing operational sync (Mist ↔ Central WLAN reconciliation runs repeatedly, not once). Same primitive, different consumer modes. Naming the package "migrations" would have locked us into a one-time-use framing that becomes obsolete after AOS 8 → Central work completes.
 
 ### Why minor (3rd-digit) bump
 
@@ -25,20 +27,20 @@ Per the project's version-bump scope rule, "minor (3rd) for substantial new subs
 
 ### Files
 
-- **New: `src/hpe_networking_mcp/migrations/__init__.py`** — package init, public API exports
-- **New: `src/hpe_networking_mcp/migrations/loader.py`** — pydantic schemas + `load_mappings()` entry point
-- **New: `src/hpe_networking_mcp/migrations/engine.py`** — `emit_calls()` + `CentralCall` dataclass + iteration/template logic
-- **New: `src/hpe_networking_mcp/migrations/transforms.py`** — registry of named transforms (`split_csv_to_string_array`, `expand_vlan_id_csv`, `direct_int`, `flag_to_bool`, etc.)
-- **New: `src/hpe_networking_mcp/migrations/central_targets/named_vlan_v1.json`** — first shipped mapping (AOS 8 named-VLAN → Central, 6-emit chain)
-- **New: `tests/unit/test_migrations_loader.py`** — 7 tests covering shipped-mapping validation, override path, schema rejection, JSON parse errors
-- **New: `tests/unit/test_migrations_engine.py`** — 13 tests covering end-to-end call generation, per-step assertions, iteration patterns (per-VLAN-ID range expansion, multi-device-function array packing, per-device-function override), error paths
+- **New: `src/hpe_networking_mcp/translations/__init__.py`** — package init, public API exports
+- **New: `src/hpe_networking_mcp/translations/loader.py`** — pydantic schemas + `load_translations()` entry point
+- **New: `src/hpe_networking_mcp/translations/engine.py`** — `emit_calls()` + `TargetCall` dataclass + iteration/template logic
+- **New: `src/hpe_networking_mcp/translations/transforms.py`** — registry of named transforms (`split_csv_to_string_array`, `expand_vlan_id_csv`, `direct_int`, `flag_to_bool`, etc.)
+- **New: `src/hpe_networking_mcp/translations/targets/central/named_vlan_v1.json`** — first shipped translation (AOS 8 named-VLAN → Central, 6-emit chain)
+- **New: `tests/unit/test_translations_loader.py`** — 8 tests covering shipped-translation validation, composite-key isolation across platforms, override path, schema rejection, JSON parse errors
+- **New: `tests/unit/test_translations_engine.py`** — 14 tests covering end-to-end call generation, per-step assertions, iteration patterns (per-VLAN-ID range expansion, multi-device-function array packing, runtime-values device-function override), error paths
 - **`pyproject.toml`** — bump 3.0.0.6 → 3.0.1.0
 
 ### Notes
 
-- 1026 tests pass (was 1006; +20 from the new migration tests).
+- 1028 tests pass (was 1006; +22 from the new translation tests).
 - The loader is **not** wired into `server.py:lifespan()` in this release. The engine has no consumer yet (the aos-migration skill still emits a text plan; Phase 3 / #240 will integrate). Wiring + lifespan exposure will land in the same PR as the first consumer to avoid unused startup cost.
-- The legacy `aos8_to_central` directory naming proposed in earlier drafts was discarded in favor of `central_targets` per #279's "to Central" framing — Central is the canonical destination, source platforms are pluggable adapters.
+- The cross-platform `manage_wlan_profile` aggregator tool will eventually be deprecated in favor of a future Mist-targeted translation + a WLAN-sync skill that consumes the same engine. Tracked in #279.
 
 ## [3.0.0.6] - 2026-05-06
 

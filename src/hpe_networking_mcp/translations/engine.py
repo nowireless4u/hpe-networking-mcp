@@ -1,14 +1,15 @@
-"""Runtime engine — turns a Mapping + source data into ordered Central calls.
+"""Runtime engine — turns a Translation + source data into ordered API calls.
 
-The engine takes a validated ``Mapping`` (from the loader), a source-side
-dict produced by extracting/merging the AOS 8 (or future-platform) source
-objects, a Central scope_id resolved by Stage 7 of the aos-migration skill,
-and a list of device functions, and returns an ordered list of ``CentralCall``
-descriptors.
+The engine takes a validated ``Translation`` (from the loader), a source-
+side dict produced by extracting/merging the source-platform objects, and
+a generic ``runtime_values`` dict carrying target-platform-specific runtime
+context (e.g. for Central: ``central_scope_id``, ``device_functions``; for
+future Mist: ``mist_org_id``, ``mist_site_id``). Returns an ordered list of
+``TargetCall`` descriptors.
 
-The engine **does not** dispatch to Central. The caller (aos-migration
-Phase 3 / issue #240) iterates the descriptors and invokes ``central_*``
-write tools with elicitation gating.
+The engine **does not** dispatch calls. The consuming skill (aos-migration
+Phase 3 / issue #240, future WLAN-sync skill, etc.) iterates the descriptors
+and invokes the appropriate platform's write tools with elicitation gating.
 
 Iteration patterns recognized by v1:
 
@@ -16,14 +17,15 @@ Iteration patterns recognized by v1:
 * ``per_vlan_id_in_binding`` — one call per discrete VLAN ID (range expansion
   handled by ``expand_vlan_id_csv``)
 * ``per_device_function`` — one call per device function in
-  ``central_target_meta.device_functions``
+  ``runtime_values["device_functions"]`` (or ``target_meta.device_functions``
+  if not overridden)
 * ``per_vlan_id_per_device_function`` — Cartesian product
 
 Body-level array iteration (used by the multi-device-function
-``config-assignments`` POSTs in steps 4 + 5 of the named-vlan mapping) is
-expressed via ``body_template`` — the engine recognizes a small set of
-template patterns. As more mappings show up, new patterns get added here
-in clearly-marked branches.
+``config-assignments`` POSTs in steps 4 + 5 of the named-vlan translation)
+is expressed via ``body_template`` — the engine recognizes a small set of
+template patterns. As more translations show up, new patterns get added
+here in clearly-marked branches.
 
 Future-pattern policy: the engine raises ``EngineError`` on unknown
 iteration rules or unknown ``body_template`` shapes rather than silently
@@ -36,21 +38,17 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
-from hpe_networking_mcp.migrations.loader import CentralEmit, KeyMapping, Mapping
-from hpe_networking_mcp.migrations.transforms import expand_vlan_id_csv, get_transform
+from hpe_networking_mcp.translations.loader import KeyMapping, TargetEmit, Translation
+from hpe_networking_mcp.translations.transforms import expand_vlan_id_csv, get_transform
 
 
 class EngineError(RuntimeError):
-    """Raised when the engine cannot produce calls from a mapping/source pair.
-
-    Wraps the original Mapping name + emit step plus a human-readable cause.
-    Caller (skill / executor) surfaces this to the operator and halts.
-    """
+    """Raised when the engine cannot produce calls from a translation/source pair."""
 
 
 @dataclass
-class CentralCall:
-    """One Central API call, ready to dispatch.
+class TargetCall:
+    """One target-platform API call, ready to dispatch.
 
     The engine produces these in dependency order; the caller dispatches
     them one at a time and records results. Idempotency strategy lives in
@@ -69,61 +67,74 @@ class CentralCall:
 
 
 def emit_calls(
-    mapping: Mapping,
+    translation: Translation,
     source_data: dict[str, Any],
     source_platform_id: str,
-    central_scope_id: str,
-    device_functions: list[str] | None = None,
+    runtime_values: dict[str, Any] | None = None,
     overrides: dict[str, Any] | None = None,
-) -> list[CentralCall]:
-    """Walk the mapping's emits and produce ordered Central call descriptors.
+) -> list[TargetCall]:
+    """Walk the translation's emits and produce ordered target API call descriptors.
 
     Args:
-        mapping: A validated Mapping from ``loader.load_mappings``.
+        translation: A validated Translation from ``loader.load_translations``.
         source_data: Merged source-side dict. Shape depends on
-            ``mapping.sources[source_platform_id]``. For the named-VLAN
-            mapping with AOS 8, expected shape is ``{"name": ..., "vlan-ids": ...}``
-            from a single ``vlan_name_id`` record.
-        source_platform_id: Which ``mapping.sources[X]`` block to consume.
-            Raises if the mapping doesn't declare this source.
-        central_scope_id: Central scope_id for the deployment scope, resolved
-            by Stage 7 of the aos-migration skill.
-        device_functions: Override for ``central_target_meta.device_functions``.
-            ``None`` (default) uses the mapping's full list.
-        overrides: Per-session operator overrides (e.g. custom ``vlan_name``
-            or ``alias_name`` conventions). Currently honored for derived
-            values; per-key transform overrides not yet implemented.
+            ``translation.sources[source_platform_id]``.
+        source_platform_id: Which ``translation.sources[X]`` block to consume.
+            Raises if the translation doesn't declare this source.
+        runtime_values: Generic dict of target-platform-specific runtime context
+            keyed by name (e.g. ``{"central_scope_id": "...", "device_functions": [...]}``).
+            The translation's ``required_runtime_values`` declares which keys
+            must be present. May also override ``target_meta.device_functions``
+            via the ``device_functions`` key.
+        overrides: Per-session operator overrides for derived values
+            (e.g. ``{"alias_name": "custom-name"}``).
 
     Returns:
-        List of ``CentralCall`` descriptors in dependency order. Caller
-        dispatches each one.
+        List of ``TargetCall`` descriptors in dependency order. Caller
+        dispatches each one to the target platform.
 
     Raises:
-        EngineError: On malformed source data, unknown iteration rules,
-            unknown body_template shapes, or transform errors.
+        EngineError: On unknown source platform, missing required runtime
+            values, malformed source data, unknown iteration rules, unknown
+            body_template shapes, or transform errors.
     """
-    if source_platform_id not in mapping.sources:
+    if source_platform_id not in translation.sources:
         raise EngineError(
-            f"Mapping {mapping.central_target_id!r} does not declare source "
-            f"{source_platform_id!r}; available: {sorted(mapping.sources.keys())}"
+            f"Translation {translation.target_platform}:{translation.target_id} "
+            f"does not declare source {source_platform_id!r}; "
+            f"available: {sorted(translation.sources.keys())}"
         )
-    source = mapping.sources[source_platform_id]
-    overrides = overrides or {}
-    device_functions = device_functions or mapping.central_target_meta.device_functions
 
-    # Build a substitution context from the source data + derived rules.
-    # All emits share this base; per-iteration values get layered on top.
+    runtime_values = runtime_values or {}
+    overrides = overrides or {}
+
+    # Validate required runtime keys are present
+    missing = [k for k in translation.required_runtime_values if k not in runtime_values]
+    if missing:
+        raise EngineError(
+            f"Translation {translation.target_platform}:{translation.target_id} requires "
+            f"runtime_values keys {missing} (got {sorted(runtime_values.keys())})"
+        )
+
+    source = translation.sources[source_platform_id]
+
+    # device_functions: either supplied via runtime_values (operator override)
+    # or pulled from target_meta. None for non-Central targets that don't use
+    # the concept; iteration rules that need it will raise if it's missing.
+    device_functions = runtime_values.get("device_functions") or translation.target_meta.device_functions or []
+
+    # Build the substitution context shared by every emit
     base_ctx = _build_base_context(
-        mapping=mapping,
+        translation=translation,
         source_data=source_data,
         source=source,
-        central_scope_id=central_scope_id,
+        runtime_values=runtime_values,
         overrides=overrides,
     )
 
     # Sort emits by step so depends_on is satisfied naturally
-    emits_in_order = sorted(mapping.central_emits, key=lambda e: e.step)
-    out: list[CentralCall] = []
+    emits_in_order = sorted(translation.target_emits, key=lambda e: e.step)
+    out: list[TargetCall] = []
     for emit in emits_in_order:
         out.extend(_render_emit(emit=emit, base_ctx=base_ctx, device_functions=device_functions))
     return out
@@ -136,27 +147,29 @@ def emit_calls(
 
 def _build_base_context(
     *,
-    mapping: Mapping,
+    translation: Translation,
     source_data: dict[str, Any],
     source: Any,
-    central_scope_id: str,
+    runtime_values: dict[str, Any],
     overrides: dict[str, Any],
 ) -> dict[str, Any]:
     """Build the substitution context shared by every emit.
 
-    Resolves source-side key_mappings (e.g. ``name`` → ``vlan_name``) and
-    target-side derived values (e.g. ``alias_name`` = lower(``vlan_name``)).
+    Layered build order:
+    1. ``runtime_values`` — caller-supplied target-platform-specific context
+    2. ``source.key_mappings`` resolved against ``source_data``
+    3. ``translation.derived`` — target-only derived values
+    4. ``overrides`` — per-session operator overrides
+
     Per-iteration values like ``{vlan_id}`` and ``{device_function}`` are
     layered on top of this base by ``_render_emit``.
     """
-    ctx: dict[str, Any] = {
-        "central_scope_id": central_scope_id,
-    }
+    # Layer 1: runtime values (target-platform-specific)
+    ctx: dict[str, Any] = dict(runtime_values)
 
-    # Source-side key mappings: source_data["name"] -> ctx["vlan_name"], etc.
+    # Layer 2: source-side key mappings: source_data["name"] -> ctx["vlan_name"], etc.
     for key, km in source.key_mappings.items():
         if km.from_ is None:
-            # Reserved for future from_derived mappings; nothing to do today
             continue
         try:
             raw = _path_lookup(source_data, km.from_)
@@ -166,12 +179,17 @@ def _build_base_context(
             continue
         ctx[key] = _apply_transform(km, raw)
 
-    # Target-side derived values (e.g. alias_name = lower(vlan_name))
-    for key, rule in mapping.derived.items():
+    # Layer 3: target-side derived values (e.g. alias_name = lower(vlan_name))
+    for key, rule in translation.derived.items():
         if key in overrides:
             ctx[key] = overrides[key]
             continue
         ctx[key] = _resolve_derived(rule_name=rule.rule, key=key, ctx=ctx)
+
+    # Layer 4: any other operator overrides not handled by derived rules
+    for key, value in overrides.items():
+        if key not in ctx:
+            ctx[key] = value
 
     return ctx
 
@@ -179,7 +197,6 @@ def _build_base_context(
 def _apply_transform(km: KeyMapping, raw: Any) -> Any:
     """Apply a key-mapping's named transform to a raw source value."""
     if km.transform == "operator_overridable":
-        # No transform defined; pass through as a string
         return raw
     try:
         fn = get_transform(km.transform)
@@ -196,7 +213,7 @@ def _resolve_derived(*, rule_name: str, key: str, ctx: dict[str, Any]) -> Any:
 
     Rules are named identifiers (e.g. ``lowercase_of_central_named_vlan_name``)
     that map to small computed transformations. v1 supports the ones we
-    need for the named-VLAN mapping; new mappings add new rules here.
+    need for the named-VLAN translation; new translations add new rules here.
     """
     if rule_name == "lowercase_of_central_named_vlan_name":
         try:
@@ -213,26 +230,23 @@ def _resolve_derived(*, rule_name: str, key: str, ctx: dict[str, Any]) -> Any:
 
 def _render_emit(
     *,
-    emit: CentralEmit,
+    emit: TargetEmit,
     base_ctx: dict[str, Any],
     device_functions: list[str],
-) -> list[CentralCall]:
-    """Expand one emit's iteration rule into one or more CentralCall objects."""
+) -> list[TargetCall]:
+    """Expand one emit's iteration rule into one or more TargetCall objects."""
     iteration = emit.iteration.split()[0]  # ignore parenthesized notes after the keyword
 
     if iteration == "once_per_named_vlan":
         return [_build_call(emit=emit, ctx=base_ctx, device_functions=device_functions)]
 
     if iteration == "per_vlan_id_in_binding":
-        # source_vlan_ids is the CSV string from the source; expand to discrete IDs
         try:
             csv = base_ctx["vlan_ids"]
         except KeyError as exc:
             raise EngineError(
                 f"Emit {emit.name!r} requires 'vlan_ids' in context but no source key_mapping populated it"
             ) from exc
-        # vlan_ids in the context is already split-by-comma per the transform;
-        # for per_vlan_id we further expand any range elements
         expanded = expand_vlan_id_csv(",".join(csv) if isinstance(csv, list) else csv)
         return [
             _build_call(
@@ -244,6 +258,11 @@ def _render_emit(
         ]
 
     if iteration == "per_device_function":
+        if not device_functions:
+            raise EngineError(
+                f"Emit {emit.name!r} requires 'per_device_function' iteration but no "
+                f"device_functions are available (target_meta or runtime_values must supply them)"
+            )
         return [
             _build_call(emit=emit, ctx={**base_ctx, "device_function": df}, device_functions=device_functions)
             for df in device_functions
@@ -274,15 +293,15 @@ def _render_emit(
 
 def _build_call(
     *,
-    emit: CentralEmit,
+    emit: TargetEmit,
     ctx: dict[str, Any],
     device_functions: list[str],
-) -> CentralCall:
-    """Substitute templates and assemble one CentralCall."""
+) -> TargetCall:
+    """Substitute templates and assemble one TargetCall."""
     endpoint = _substitute_str(emit.endpoint, ctx)
     query_params = {k: _substitute_str(v, ctx) for k, v in emit.query_params.items()}
     body = _render_body(emit=emit, ctx=ctx, device_functions=device_functions)
-    return CentralCall(
+    return TargetCall(
         step=emit.step,
         step_name=emit.name,
         endpoint=endpoint,
@@ -297,7 +316,7 @@ def _build_call(
 
 def _render_body(
     *,
-    emit: CentralEmit,
+    emit: TargetEmit,
     ctx: dict[str, Any],
     device_functions: list[str],
 ) -> dict[str, Any] | None:
@@ -308,27 +327,16 @@ def _render_body(
     if emit.body_template is None:
         return None
 
-    # body_template: recognized patterns
     return _render_body_template(emit=emit, ctx=ctx, device_functions=device_functions)
 
 
 def _render_body_template(
     *,
-    emit: CentralEmit,
+    emit: TargetEmit,
     ctx: dict[str, Any],
     device_functions: list[str],
 ) -> dict[str, Any]:
-    """Render a body_template — v1 recognizes the multi-DF config-assignments shape.
-
-    Pattern: a top-level dict with one key whose value is a single-element
-    list whose element is a free-text description starting ``{one entry per
-    device_function``. We interpret this as: array packed with one entry
-    per device_function, item is the natural ``config-assignment`` shape.
-
-    As more body_template patterns appear in mappings, add new branches
-    here. Free-text is intentionally permissive in v1 — tighten the
-    template language as patterns crystallize.
-    """
+    """Render a body_template — v1 recognizes the multi-DF config-assignments shape."""
     template = emit.body_template
     if template is None:
         return {}
@@ -354,7 +362,7 @@ def _render_body_template(
     )
 
 
-def _config_assignment_item(*, emit: CentralEmit, ctx: dict[str, Any]) -> dict[str, str]:
+def _config_assignment_item(*, emit: TargetEmit, ctx: dict[str, Any]) -> dict[str, str]:
     """Build one config-assignment array item for the multi-DF shape.
 
     Reads profile-type from the emit's body_template descriptor (the
@@ -370,9 +378,6 @@ def _config_assignment_item(*, emit: CentralEmit, ctx: dict[str, Any]) -> dict[s
         raise EngineError(f"Emit {emit.name!r} body_template descriptor missing profile-type clause: {descriptor!r}")
     profile_type = m.group(1)
 
-    # profile-instance source is keyed by what's in ctx — vlan_id for layer2-vlan,
-    # vlan_name for named-vlan. The descriptor explicitly references one or the
-    # other via {vlan_id} / {vlan_name} placeholders.
     inst_match = re.search(r"profile-instance='\{([^}]+)\}'", descriptor)
     if not inst_match:
         raise EngineError(
@@ -384,6 +389,10 @@ def _config_assignment_item(*, emit: CentralEmit, ctx: dict[str, Any]) -> dict[s
             f"Emit {emit.name!r} body_template references {{{inst_key}}} "
             f"but it isn't in the context (available: {sorted(ctx.keys())})"
         )
+
+    # scope-id pulled from runtime_values (named central_scope_id by Central convention)
+    if "central_scope_id" not in ctx:
+        raise EngineError(f"Emit {emit.name!r} config-assignment item requires 'central_scope_id' in context")
 
     return {
         "scope-id": str(ctx["central_scope_id"]),
@@ -399,6 +408,7 @@ def _config_assignment_item(*, emit: CentralEmit, ctx: dict[str, Any]) -> dict[s
 
 
 _PLACEHOLDER_RE = re.compile(r"\{([^{}]+)\}")
+_WHOLE_STRING_PLACEHOLDER_RE = re.compile(r"^\{([^{}]+)\}$")
 
 
 def _substitute_str(value: str, ctx: dict[str, Any]) -> str:
@@ -413,9 +423,6 @@ def _substitute_str(value: str, ctx: dict[str, Any]) -> str:
         return str(ctx[key])
 
     return _PLACEHOLDER_RE.sub(replace, value)
-
-
-_WHOLE_STRING_PLACEHOLDER_RE = re.compile(r"^\{([^{}]+)\}$")
 
 
 def _substitute_in_dict(value: Any, ctx: dict[str, Any]) -> Any:

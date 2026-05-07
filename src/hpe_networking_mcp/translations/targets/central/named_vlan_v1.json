@@ -1,7 +1,8 @@
 {
   "version": 1,
-  "central_target_id": "named_vlan",
-  "central_emits": [
+  "target_platform": "central",
+  "target_id": "named_vlan",
+  "target_emits": [
     {
       "step":     1,
       "name":     "create_layer2_vlan_shared",
@@ -11,7 +12,7 @@
       "query_params": {},
       "body":     { "vlan": "{vlan_id}" },
       "iteration": "per_vlan_id_in_binding",
-      "iteration_notes": "If source vlan-ids = '108-110', emit step 1 three times — once each for VLAN 108, 109, 110. If source vlan-ids = '107', emit once. If source vlan-ids = '104,160', emit twice. Range expansion happens here because Central's layer2-vlan profile-instance is a single integer ID per profile.",
+      "iteration_notes": "If source vlan-ids = '108-110', emit step 1 three times — once each for VLAN 108, 109, 110. Range expansion happens here because Central's layer2-vlan profile-instance is a single integer ID per profile.",
       "depends_on": []
     },
     {
@@ -34,7 +35,7 @@
     {
       "step":     3,
       "name":     "create_named_vlan_shared",
-      "purpose":  "Create the named-VLAN profile in the Library that references the alias by name. The named-VLAN ALWAYS uses vlan-alias in this migration pattern; vlan-id-ranges on the named-VLAN body is a separate Central use case (VLAN groups) and not what this mapping is for.",
+      "purpose":  "Create the named-VLAN profile in the Library that references the alias by name. The named-VLAN ALWAYS uses vlan-alias in this translation pattern; vlan-id-ranges on the named-VLAN body is a separate Central use case (VLAN groups) and not what this translation is for.",
       "endpoint": "/network-config/v1alpha1/named-vlan/{vlan_name}",
       "method":   "POST",
       "query_params": {},
@@ -54,10 +55,11 @@
       "query_params": {},
       "body_template": {
         "config-assignment": [
-          "{one entry per device_function in central_target_meta.device_functions: { scope-id, device-function, profile-type='layer2-vlan', profile-instance='{vlan_id}' }}"
+          "{one entry per device_function in target_meta.device_functions: { scope-id, device-function, profile-type='layer2-vlan', profile-instance='{vlan_id}' }}"
         ]
       },
-      "iteration": "per_vlan_id_in_binding (one POST per VLAN ID; all device-functions share the array)",
+      "iteration": "per_vlan_id_in_binding",
+      "iteration_notes": "One POST per VLAN ID; all device-functions share the array.",
       "depends_on": [1]
     },
     {
@@ -72,7 +74,8 @@
           "{one entry per device_function: { scope-id, device-function, profile-type='named-vlan', profile-instance='{vlan_name}' }}"
         ]
       },
-      "iteration": "once_per_named_vlan (one POST; all device-functions share the array)",
+      "iteration": "once_per_named_vlan",
+      "iteration_notes": "One POST; all device-functions share the array.",
       "depends_on": [3]
     },
     {
@@ -98,15 +101,16 @@
       "depends_on": [5]
     }
   ],
-  "central_target_meta": {
+  "target_meta": {
     "device_functions": ["MOBILITY_GW", "CAMPUS_AP"],
-    "device_function_filtering_rule": "Steps 1-3 are SHARED creates with no device-function param. Steps 4 + 5 use the config-assignments array shape and pack all applicable device-functions into one POST per profile per VLAN ID. Step 6 is per device-function (LOCAL override path takes scope-id + device-function as query params, not as an array). Operator can configure which device functions apply per migration based on the WLAN forwarding mode and where the named-VLAN is referenced (e.g., tunnel-mode SSIDs need MOBILITY_GW for gateway VLAN termination; bridge-mode SSIDs need CAMPUS_AP for AP-side bridging)."
+    "device_function_filtering_rule": "Steps 1-3 are SHARED creates with no device-function param. Steps 4 + 5 use the config-assignments array shape and pack all applicable device-functions into one POST per profile per VLAN ID. Step 6 is per device-function (LOCAL override path takes scope-id + device-function as query params, not as an array). Operator can configure which device functions apply per session by overriding device_functions in runtime_values."
   },
-  "central_scope_id_resolution": {
-    "rule":   "Central scope_id for emits 4-6 is derived from the source binding scope via the aos-migration skill's Stage 7 hierarchy mapping. Supplied at runtime by the migration skill, not baked into this mapping.",
-    "input":  "Source binding scope (string path / identifier)",
-    "output": "Central scope_id (string)"
+  "target_scope_id_resolution": {
+    "rule":   "Central scope_id for emits 4-6 is supplied by the consuming skill at runtime, derived from the source binding scope (e.g. for the aos-migration skill: AOS 8 vlan_name_id binding scope -> Central scope_id via Stage 7 hierarchy mapping).",
+    "input":  "Source binding scope (string path / identifier); skill-specific",
+    "output": "Central scope_id (string), supplied via runtime_values['central_scope_id']"
   },
+  "required_runtime_values": ["central_scope_id"],
   "derived": {
     "alias_name": {
       "rule":      "lowercase_of_central_named_vlan_name",
@@ -121,13 +125,13 @@
   },
   "dependencies": [
     {
-      "depends_on":  "(none — this is a foundational mapping)",
+      "depends_on":  "(none — this is a foundational translation)",
       "depended_by": [
         {
-          "central_target_id": "ssid_prof / virtual_ap",
-          "field":             "vlan.vlan",
-          "relation":          "vlan-by-name reference (string)",
-          "notes":             "When a source's virtual_ap.vlan.vlan is a string matching a 'name' from this mapping (e.g., 'user'), the WLAN translation references the Central named-vlan by name. When it's a numeric string (e.g., '107'), the WLAN translation goes through the bare layer2-vlan path instead. Downstream WLAN/SSID mapping needs to disambiguate."
+          "target_id": "ssid_prof / virtual_ap",
+          "field":     "vlan.vlan",
+          "relation":  "vlan-by-name reference (string)",
+          "notes":     "When a source's virtual_ap.vlan.vlan is a string matching a 'name' from this translation (e.g., 'user'), the WLAN translation references the Central named-vlan by name. When it's a numeric string (e.g., '107'), the WLAN translation goes through the bare layer2-vlan path instead. Downstream WLAN/SSID translation needs to disambiguate."
         }
       ]
     }
@@ -173,7 +177,7 @@
           "to":        "vlan_name (Central path param + body 'name' on step 3, profile-instance on step 5)",
           "transform": "operator_overridable",
           "default":   "direct (use AOS 8 name as-is, e.g., 'user' -> 'user')",
-          "notes":     "AOS 8 'name' value becomes Central's named-vlan name. Operator can override per migration session (live observation: maintainer's existing tenant uses upper-case '-VLAN' suffix style like USER-VLAN / IOT-VLAN, but two outliers PD-user-vlan and Home Office prove operators don't always follow it)."
+          "notes":     "AOS 8 'name' value becomes Central's named-vlan name. Operator can override per session (live observation: existing tenants often use upper-case '-VLAN' suffix style like USER-VLAN / IOT-VLAN, but operators don't always follow it)."
         },
         "vlan_ids": {
           "from":      "vlan-ids",
@@ -197,17 +201,17 @@
       "ignored_variants": [
         {
           "form":   "vlan_pool",
-          "reason": "Separate AOS 8 REST object for VLAN pool / VLAN-grp configuration. Out of scope for this mapping — gets its own sibling mapping (vlan_pool_v1.json, not yet authored)."
+          "reason": "Separate AOS 8 REST object for VLAN pool / VLAN-grp configuration. Out of scope for this translation — gets its own sibling translation (vlan_pool_v1.json, not yet authored)."
         }
       ]
     }
   },
   "draft_notes": [
-    "Verified empirically (2026-05-07) against the live Central tenant: SHARED-only POST creates a Library orphan with no scope assignments; LOCAL-only POST does not auto-create a Library entry; SHARED + scope-id is rejected with HTTP 400 'For shared objects, do not provide scope id and/or persona'. Migration MUST do the explicit 6-step flow above.",
+    "Verified empirically (2026-05-07) against the live Central tenant: SHARED-only POST creates a Library orphan with no scope assignments; LOCAL-only POST does not auto-create a Library entry; SHARED + scope-id is rejected with HTTP 400 'For shared objects, do not provide scope id and/or persona'. Translation MUST do the explicit 6-step flow above.",
     "Verified empirically: config-assignments POST accepts a multi-element array — single POST with [{MOBILITY_GW}, {CAMPUS_AP}] entries returned 200 success and both assignments were visible via GET /config-assignments. Steps 4 + 5 use this packing.",
-    "Verified empirically (2026-05-07): assigning a SHARED named-VLAN profile to a scope/device-function set AUTO-PULLS the referenced alias to the same scope + same device-function set. Test setup: created SHARED alias + SHARED named-VLAN, then assigned ONLY the named-VLAN to Global/MOBILITY_GW + Global/CAMPUS_AP via a single multi-element config-assignments POST. The alias appeared in GET /config-assignments?profile-type=aliases at both device-functions WITHOUT any explicit alias assignment call. Step 5 (explicit alias assignment) was therefore dropped from the original 7-step flow as redundant.",
+    "Verified empirically (2026-05-07): assigning a SHARED named-VLAN profile to a scope/device-function set AUTO-PULLS the referenced alias to the same scope + same device-function set. Step 5 (explicit alias assignment) was therefore dropped from the original 7-step flow as redundant.",
     "Verified the SHARED vs LOCAL distinction via aruba-annotation:object_type metadata on GET responses: SHARED at GLOBAL with default placeholder; LOCAL at scope with overridden_scope='GLOBAL' tag. The same body shape (name + type + default-value) is used for both; only request context (query params + scope) determines which type Central creates.",
     "Verified AOS 8 vlan_name_id PRESERVES range syntax in vlan-ids ('108-110' for the 'iot' name). The bare vlan_id object EXPANDS ranges to discrete entries. So step 6 alias-override carries the range string verbatim while step 1/4 iterate over expanded discrete IDs.",
-    "The named-vlan body uses ONLY vlan-alias in this migration pattern. Central's named-VLAN schema also supports vlan-id-ranges directly (without an alias), but that's a separate use case (VLAN groups) and not what this migration produces — every named-VLAN we emit goes through the alias-first pattern so values can be overridden per scope without modifying the named-VLAN profile itself."
+    "The named-vlan body uses ONLY vlan-alias in this translation pattern. Central's named-VLAN schema also supports vlan-id-ranges directly (without an alias), but that's a separate use case (VLAN groups) and not what this translation produces — every named-VLAN we emit goes through the alias-first pattern so values can be overridden per scope without modifying the named-VLAN profile itself."
   ]
 }

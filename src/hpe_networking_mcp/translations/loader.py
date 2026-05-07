@@ -1,15 +1,15 @@
-"""Loader for migration mapping JSON files.
+"""Loader for translation JSON files.
 
-Reads every ``*.json`` under the package's ``central_targets/`` directory
-(plus an optional override path), validates each against the pydantic
-schemas below, and returns a dict keyed by ``central_target_id``. Fails
-fast at startup with readable error messages on malformed mappings.
+Reads every ``*.json`` under the package's ``targets/<platform>/`` directories
+(plus an optional override path), validates each against the pydantic schemas
+below, and returns a dict keyed by ``"<target_platform>:<target_id>"``. Fails
+fast at startup with readable error messages on malformed translations.
 
 The schemas are deliberately permissive in places (``dict[str, Any]`` for
 free-form body templates, optional fields throughout) because the format
-is still evolving as we author additional mappings. As patterns crystallize
+is still evolving as we author additional translations. As patterns crystallize
 the validation will tighten. ``ConfigDict(extra="forbid")`` is set on the
-top-level Mapping so typos in well-known field names fail loudly.
+top-level Translation so typos in well-known field names fail loudly.
 """
 
 from __future__ import annotations
@@ -23,26 +23,26 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 
 class LoaderError(RuntimeError):
-    """Raised when one or more mapping files fail to load or validate.
+    """Raised when one or more translation files fail to load or validate.
 
     Carries a human-readable summary the lifespan handler logs at startup.
     """
 
 
 # --------------------------------------------------------------------------- #
-# Mapping schema (pydantic v2)
+# Translation schema (pydantic v2)
 # --------------------------------------------------------------------------- #
 
 
-class CentralEmit(BaseModel):
-    """One ordered POST/PUT to Central within a mapping's emits chain."""
+class TargetEmit(BaseModel):
+    """One ordered API call to the target platform within a translation's emits chain."""
 
     model_config = ConfigDict(extra="forbid")
 
     step: int = Field(ge=1, description="1-based step number; used by depends_on")
     name: str = Field(min_length=1, description="Short identifier, e.g. 'create_layer2_vlan_shared'")
     purpose: str = Field(min_length=1, description="Why this emit exists; surfaced to operators")
-    endpoint: str = Field(min_length=1, description="Central API path; may contain {placeholder} fields")
+    endpoint: str = Field(min_length=1, description="Target API path; may contain {placeholder} fields")
     method: Literal["POST", "PUT", "PATCH", "DELETE", "GET"]
     query_params: dict[str, str] = Field(
         default_factory=dict,
@@ -58,7 +58,7 @@ class CentralEmit(BaseModel):
             "Free-form description of array-shaped bodies that need iterated rendering "
             "(e.g. config-assignments with multi-device-function arrays). The engine "
             "interprets named patterns. v1 is intentionally permissive here — the "
-            "engine grows to handle new shapes as they show up in mappings."
+            "engine grows to handle new shapes as they show up in translations."
         ),
     )
     iteration: str = Field(
@@ -76,23 +76,29 @@ class CentralEmit(BaseModel):
     )
 
 
-class CentralTargetMeta(BaseModel):
-    """Target-side metadata that drives iteration + filtering."""
+class TargetMeta(BaseModel):
+    """Target-platform-specific metadata that drives iteration + filtering.
+
+    Schema is intentionally lenient in v1 — Central uses ``device_functions`` +
+    ``device_function_filtering_rule``; future target platforms (Mist, etc.)
+    will introduce their own platform-specific keys here. Add a discriminated
+    union when the second target platform lands.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
-    device_functions: list[str] = Field(
-        min_length=1,
-        description="Central device functions (MOBILITY_GW, CAMPUS_AP, etc.) the emits target",
+    device_functions: list[str] | None = Field(
+        default=None,
+        description="Central-specific: device functions (MOBILITY_GW, CAMPUS_AP, etc.) the emits target",
     )
-    device_function_filtering_rule: str = Field(
-        min_length=1,
-        description="Plain-English explanation of how each step iterates over device_functions",
+    device_function_filtering_rule: str | None = Field(
+        default=None,
+        description="Central-specific: plain-English rule for how each step iterates over device_functions",
     )
 
 
 class ScopeResolution(BaseModel):
-    """Contract for resolving the source binding scope to a Central scope_id."""
+    """Documentation for which runtime value the consumer must supply for the deployment scope."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -113,18 +119,18 @@ class DerivedRule(BaseModel):
 
 
 class DependencyDependedBy(BaseModel):
-    """A reverse dependency: which other mappings consume this target."""
+    """A reverse dependency: which other translations consume this target."""
 
     model_config = ConfigDict(extra="forbid")
 
-    central_target_id: str
+    target_id: str
     field: str
     relation: str
     notes: str | None = None
 
 
 class Dependency(BaseModel):
-    """Forward + reverse dependency declarations for a mapping."""
+    """Forward + reverse dependency declarations for a translation."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -144,7 +150,7 @@ class SourceObject(BaseModel):
     )
     role: str | None = Field(
         default=None,
-        description="Role this object plays in a composite mapping (e.g. 'name_registration')",
+        description="Role this object plays in a composite source (e.g. 'name_registration')",
     )
     docs: dict[str, str] = Field(default_factory=dict, description="Per-operation deep-links to vendor docs")
     live_shape_example: str | None = None
@@ -167,9 +173,8 @@ class KeyMapping(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    # Either 'from' (source path) or 'from_derived' (computed) — at least one required.
     from_: str | None = Field(default=None, alias="from", description="Source field path")
-    to: str = Field(min_length=1, description="Central destination (path/role description)")
+    to: str = Field(min_length=1, description="Target destination (path/role description)")
     transform: str = Field(min_length=1, description="Named transform; resolved by transforms.py")
     default: str | None = None
     transform_examples: list[dict[str, Any]] = Field(default_factory=list)
@@ -189,7 +194,7 @@ class UnmappedField(BaseModel):
 
 
 class IgnoredVariant(BaseModel):
-    """A source form explicitly out of scope for this mapping."""
+    """A source form explicitly out of scope for this translation."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -198,12 +203,12 @@ class IgnoredVariant(BaseModel):
 
 
 class SourceBlock(BaseModel):
-    """One source-platform's view: how to extract data + transforms to Central."""
+    """One source-platform's view: how to extract data + transforms to the target."""
 
     model_config = ConfigDict(extra="forbid")
 
     kind: Literal["rest", "cli_show_run", "paste_yaml"] = Field(
-        description="Source-platform extraction shape; v1 only ships 'rest' (AOS 8)"
+        description="Source-platform extraction shape; v1 only ships 'rest' (AOS 8 / Central / Mist REST)"
     )
     mapping_kind: Literal["simple", "composite"] = "simple"
     objects: list[SourceObject] = Field(min_length=1)
@@ -216,19 +221,31 @@ class SourceBlock(BaseModel):
     ignored_variants: list[IgnoredVariant] = Field(default_factory=list)
 
 
-class Mapping(BaseModel):
-    """Top-level mapping: target Central artifact + per-source extraction recipes."""
+class Translation(BaseModel):
+    """Top-level translation: target platform + emits + per-source extraction recipes."""
 
     model_config = ConfigDict(extra="forbid")
 
     version: int = Field(ge=1, description="Schema version; 1 today")
-    central_target_id: str = Field(
+    target_platform: str = Field(
         min_length=1,
-        description="Stable identifier for the mapping; used as the loader's dict key",
+        description="Which platform the emits target (e.g. 'central', 'mist', 'clearpass')",
     )
-    central_emits: list[CentralEmit] = Field(min_length=1)
-    central_target_meta: CentralTargetMeta
-    central_scope_id_resolution: ScopeResolution
+    target_id: str = Field(
+        min_length=1,
+        description="Stable identifier within the target platform; loader composite key is '<platform>:<id>'",
+    )
+    target_emits: list[TargetEmit] = Field(min_length=1)
+    target_meta: TargetMeta
+    target_scope_id_resolution: ScopeResolution
+    required_runtime_values: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Runtime-context keys this translation needs supplied by the consumer "
+            "(e.g. ['central_scope_id'] for Central targets). Engine validates these "
+            "are present in runtime_values before emitting calls."
+        ),
+    )
     derived: dict[str, DerivedRule] = Field(default_factory=dict)
     dependencies: list[Dependency] = Field(default_factory=list)
     tokenize_kind_per_field: dict[str, str] = Field(default_factory=dict)
@@ -241,40 +258,51 @@ class Mapping(BaseModel):
 # --------------------------------------------------------------------------- #
 
 
-def _shipped_mappings_dir() -> Path:
-    """Path to the ``central_targets/`` directory inside the installed package."""
-    return Path(str(resources.files("hpe_networking_mcp.migrations") / "central_targets"))
+def _shipped_targets_root() -> Path:
+    """Path to the ``targets/`` directory inside the installed package."""
+    return Path(str(resources.files("hpe_networking_mcp.translations") / "targets"))
 
 
-def load_mappings(
+def _composite_key(translation: Translation) -> str:
+    """Build the loader's dict key: '<target_platform>:<target_id>'."""
+    return f"{translation.target_platform}:{translation.target_id}"
+
+
+def load_translations(
     base_path: Path | None = None,
     overrides_path: Path | None = None,
-) -> dict[str, Mapping]:
-    """Load + validate every ``*.json`` under the mapping directories.
+) -> dict[str, Translation]:
+    """Load + validate every ``*.json`` under the targets directories.
 
     Args:
-        base_path: Directory for shipped mappings. Defaults to the
-            package's ``central_targets/``.
+        base_path: Root directory containing ``<platform>/`` subdirectories
+            with translation JSONs. Defaults to the package's ``targets/``.
         overrides_path: Optional operator-supplied directory whose files
-            replace any same-named shipped mapping (file-level merge).
+            replace any same-keyed shipped translation (file-level merge).
 
     Returns:
-        Dict keyed by ``central_target_id``. Order: shipped mappings load
-        first, then overrides replace any matching ``central_target_id``.
+        Dict keyed by ``"<target_platform>:<target_id>"``. Order: shipped
+        translations load first, then overrides replace any matching key.
 
     Raises:
         LoaderError: If any file fails to parse or validate. The error
             message lists every failure in one shot rather than stopping
             on the first one — easier to fix multiple issues per restart.
     """
-    base_path = base_path or _shipped_mappings_dir()
+    base_path = base_path or _shipped_targets_root()
     paths: list[Path] = []
     if base_path.exists():
-        paths.extend(sorted(base_path.glob("*.json")))
+        # Walk every <platform>/*.json under the targets root
+        for platform_dir in sorted(base_path.iterdir()):
+            if platform_dir.is_dir():
+                paths.extend(sorted(platform_dir.glob("*.json")))
     if overrides_path is not None and overrides_path.exists():
-        paths.extend(sorted(overrides_path.glob("*.json")))
+        # Same shape under overrides root
+        for platform_dir in sorted(overrides_path.iterdir()):
+            if platform_dir.is_dir():
+                paths.extend(sorted(platform_dir.glob("*.json")))
 
-    mappings: dict[str, Mapping] = {}
+    translations: dict[str, Translation] = {}
     errors: list[str] = []
 
     for path in paths:
@@ -285,26 +313,26 @@ def load_mappings(
             continue
 
         try:
-            mapping = Mapping.model_validate(raw)
+            translation = Translation.model_validate(raw)
         except ValidationError as exc:
             errors.append(f"{path}: pydantic validation failed —\n{exc}")
             continue
 
-        # Composite mappings must have a merge_rule on every source block
-        for src_id, src in mapping.sources.items():
+        # Composite sources must have a merge_rule on every block
+        for src_id, src in translation.sources.items():
             if src.mapping_kind == "composite" and src.merge_rule is None:
                 errors.append(f"{path}: sources.{src_id} declares mapping_kind='composite' but is missing 'merge_rule'")
 
         # depends_on step refs must point at real steps
-        valid_steps = {emit.step for emit in mapping.central_emits}
-        for emit in mapping.central_emits:
+        valid_steps = {emit.step for emit in translation.target_emits}
+        for emit in translation.target_emits:
             for dep in emit.depends_on:
                 if dep not in valid_steps:
                     errors.append(f"{path}: emit '{emit.name}' depends_on={dep} but no such step exists")
 
-        mappings[mapping.central_target_id] = mapping
+        translations[_composite_key(translation)] = translation
 
     if errors:
-        raise LoaderError("Migration mapping load failed with the following errors:\n  - " + "\n  - ".join(errors))
+        raise LoaderError("Translation load failed with the following errors:\n  - " + "\n  - ".join(errors))
 
-    return mappings
+    return translations
