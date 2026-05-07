@@ -29,7 +29,7 @@
           "vlan-value": { "vlan-id-ranges": ["1"] }
         }
       },
-      "iteration": "once_per_named_vlan",
+      "iteration": "once",
       "depends_on": []
     },
     {
@@ -43,7 +43,7 @@
         "name": "{vlan_name}",
         "vlan": { "vlan-alias": "{alias_name}" }
       },
-      "iteration": "once_per_named_vlan",
+      "iteration": "once",
       "depends_on": []
     },
     {
@@ -74,7 +74,7 @@
           "{one entry per device_function: { scope-id, device-function, profile-type='named-vlan', profile-instance='{vlan_name}' }}"
         ]
       },
-      "iteration": "once_per_named_vlan",
+      "iteration": "once",
       "iteration_notes": "One POST; all device-functions share the array.",
       "depends_on": [3]
     },

@@ -13,7 +13,7 @@ and invokes the appropriate platform's write tools with elicitation gating.
 
 Iteration patterns recognized by v1:
 
-* ``once_per_named_vlan`` — single call, no fan-out
+* ``once`` — single call, no fan-out
 * ``per_vlan_id_in_binding`` — one call per discrete VLAN ID (range expansion
   handled by ``expand_vlan_id_csv``)
 * ``per_device_function`` — one call per device function in
@@ -174,8 +174,13 @@ def _build_base_context(
         try:
             raw = _path_lookup(source_data, km.from_)
         except KeyError:
-            # Field absent from source — leave unset; emits that need it
-            # will fail at substitution time with a clear error
+            if km.optional:
+                # Optional field missing — set None so body templates can
+                # drop the resulting key cleanly (see _drop_none_keys).
+                ctx[key] = None
+                continue
+            # Required field absent from source — leave unset; emits that
+            # need it will fail at substitution time with a clear error
             continue
         ctx[key] = _apply_transform(km, raw)
 
@@ -237,7 +242,7 @@ def _render_emit(
     """Expand one emit's iteration rule into one or more TargetCall objects."""
     iteration = emit.iteration.split()[0]  # ignore parenthesized notes after the keyword
 
-    if iteration == "once_per_named_vlan":
+    if iteration == "once":
         return [_build_call(emit=emit, ctx=base_ctx, device_functions=device_functions)]
 
     if iteration == "per_vlan_id_in_binding":
@@ -322,12 +327,28 @@ def _render_body(
 ) -> dict[str, Any] | None:
     """Render the emit's body via direct substitution OR body_template patterns."""
     if emit.body is not None:
-        return _substitute_in_dict(emit.body, ctx)
+        rendered = _substitute_in_dict(emit.body, ctx)
+        return _drop_none_keys(rendered) if isinstance(rendered, dict) else rendered
 
     if emit.body_template is None:
         return None
 
     return _render_body_template(emit=emit, ctx=ctx, device_functions=device_functions)
+
+
+def _drop_none_keys(value: Any) -> Any:
+    """Recursively drop dict keys whose value is ``None``.
+
+    Used for optional body fields: when a key_mapping is ``optional=True`` and
+    the source record lacks that field, the engine substitutes ``None`` and
+    this pass strips the key from the wire payload entirely (rather than
+    sending ``"description": null``).
+    """
+    if isinstance(value, dict):
+        return {k: _drop_none_keys(v) for k, v in value.items() if v is not None}
+    if isinstance(value, list):
+        return [_drop_none_keys(item) for item in value]
+    return value
 
 
 def _render_body_template(

@@ -34,6 +34,24 @@ def test_loads_shipped_named_vlan_translation_cleanly() -> None:
     assert "central_scope_id" in nv.required_runtime_values
 
 
+def test_loads_shipped_vlan_id_translation_cleanly() -> None:
+    """The shipped Central vlan_id translation handles bare + rich AOS 8 records."""
+    translations = load_translations()
+    assert "central:vlan_id" in translations
+    v = translations["central:vlan_id"]
+    assert v.target_platform == "central"
+    assert v.target_id == "vlan_id"
+    assert len(v.target_emits) == 2
+    src = v.sources["aos8"]
+    assert src.mapping_kind == "simple"
+    # Required mapping for id
+    assert src.key_mappings["vlan_id"].optional is False
+    # Optional mappings for sub-properties
+    assert src.key_mappings["description"].optional is True
+    assert src.key_mappings["option_82"].optional is True
+    assert src.key_mappings["wired_aaa_profile"].optional is True
+
+
 def test_loader_key_is_composite_platform_and_id(tmp_path: Path) -> None:
     """Loader key is '<target_platform>:<target_id>'; same target_id under
     different platforms doesn't collide."""
@@ -54,7 +72,7 @@ def test_loader_key_is_composite_platform_and_id(tmp_path: Path) -> None:
                     "purpose": "x",
                     "endpoint": "/x",
                     "method": "POST",
-                    "iteration": "once_per_named_vlan",
+                    "iteration": "once",
                 }
             ],
             "target_meta": {},
@@ -88,7 +106,7 @@ def test_overrides_path_replaces_shipped_translation(tmp_path: Path) -> None:
                 "purpose": "test",
                 "endpoint": "/test",
                 "method": "POST",
-                "iteration": "once_per_named_vlan",
+                "iteration": "once",
             }
         ],
         "target_meta": {},
@@ -123,7 +141,7 @@ class TestSchemaValidation:
                     "purpose": "x",
                     "endpoint": "/x",
                     "method": "POST",
-                    "iteration": "once_per_named_vlan",
+                    "iteration": "once",
                 }
             ],
             "target_meta": {},
@@ -149,7 +167,7 @@ class TestSchemaValidation:
                     "purpose": "x",
                     "endpoint": "/x",
                     "method": "POST",
-                    "iteration": "once_per_named_vlan",
+                    "iteration": "once",
                 }
             ],
             "target_meta": {},
@@ -181,7 +199,7 @@ class TestSchemaValidation:
                     "purpose": "x",
                     "endpoint": "/x",
                     "method": "POST",
-                    "iteration": "once_per_named_vlan",
+                    "iteration": "once",
                     "depends_on": [99],
                 }
             ],

@@ -26,6 +26,11 @@ def named_vlan(translations: dict):
     return translations["central:named_vlan"]
 
 
+@pytest.fixture
+def vlan_id(translations: dict):
+    return translations["central:vlan_id"]
+
+
 def _runtime(scope_id: str = "SCOPE", device_functions: list[str] | None = None) -> dict:
     """Helper: build Central-shaped runtime_values for the named-VLAN translation."""
     rv: dict = {"central_scope_id": scope_id}
@@ -223,3 +228,98 @@ def test_missing_source_field_raises_when_used(named_vlan) -> None:
     source = {"name": "user"}  # vlan-ids missing
     with pytest.raises(EngineError, match="vlan_ids"):
         emit_calls(named_vlan, source, "aos8", runtime_values=_runtime())
+
+
+# --------------------------------------------------------------------------- #
+# central:vlan_id — bare and rich AOS 8 vlan_id records
+# --------------------------------------------------------------------------- #
+
+
+def test_vlan_id_bare_record_emits_two_calls(vlan_id) -> None:
+    """Bare vlan_id source {id: 108}: step 1 body has only 'vlan'; step 2 multi-DF."""
+    source = {"id": 108}
+    calls = emit_calls(vlan_id, source, "aos8", runtime_values=_runtime("SCOPE-A"))
+    assert len(calls) == 2
+    assert [c.step for c in calls] == [1, 2]
+
+    step1 = calls[0]
+    assert step1.method == "POST"
+    assert step1.endpoint == "/network-config/v1alpha1/layer2-vlan/108"
+    # Optional fields absent → keys dropped from body
+    assert step1.body == {"vlan": "108"}
+
+
+def test_vlan_id_bare_record_step2_assigns_to_all_device_functions(vlan_id) -> None:
+    source = {"id": 108}
+    calls = emit_calls(vlan_id, source, "aos8", runtime_values=_runtime("SCOPE-A"))
+    step2 = calls[1]
+    assert step2.endpoint == "/network-config/v1alpha1/config-assignments"
+    items = (step2.body or {})["config-assignment"]
+    assert len(items) == 2
+    assert {item["device-function"] for item in items} == {"MOBILITY_GW", "CAMPUS_AP"}
+    assert all(item["profile-type"] == "layer2-vlan" for item in items)
+    assert all(item["profile-instance"] == "108" for item in items)
+    assert all(item["scope-id"] == "SCOPE-A" for item in items)
+
+
+def test_vlan_id_rich_record_includes_all_subproperties(vlan_id) -> None:
+    """Rich record with description / option-82 / wired-aaa-profile fills the body."""
+    source = {
+        "id": 104,
+        "option-82": True,
+        "vlan_id__aaa": {"profile-name": "corp-aaa"},
+        "vlan_id__descr": {"descr": "Corp VLAN"},
+    }
+    calls = emit_calls(vlan_id, source, "aos8", runtime_values=_runtime())
+    step1 = calls[0]
+    assert step1.body == {
+        "vlan": "104",
+        "description": "Corp VLAN",
+        "option-82": True,
+        "wired-aaa-profile": "corp-aaa",
+    }
+
+
+def test_vlan_id_partial_rich_record_only_description(vlan_id) -> None:
+    """Only description present: option-82 + wired-aaa-profile keys drop out."""
+    source = {"id": 200, "vlan_id__descr": {"descr": "Mgmt"}}
+    calls = emit_calls(vlan_id, source, "aos8", runtime_values=_runtime())
+    step1 = calls[0]
+    assert step1.body == {"vlan": "200", "description": "Mgmt"}
+
+
+def test_vlan_id_partial_rich_record_only_option82(vlan_id) -> None:
+    """Only option-82 present: description + wired-aaa-profile keys drop out."""
+    source = {"id": 200, "option-82": True}
+    calls = emit_calls(vlan_id, source, "aos8", runtime_values=_runtime())
+    step1 = calls[0]
+    assert step1.body == {"vlan": "200", "option-82": True}
+
+
+def test_vlan_id_option82_false_is_preserved(vlan_id) -> None:
+    """option-82=false should appear in the body — only None drops keys, not falsy."""
+    source = {"id": 200, "option-82": False}
+    calls = emit_calls(vlan_id, source, "aos8", runtime_values=_runtime())
+    step1 = calls[0]
+    assert step1.body == {"vlan": "200", "option-82": False}
+
+
+def test_vlan_id_runtime_device_functions_override(vlan_id) -> None:
+    """Caller can restrict device functions via runtime_values for the multi-DF step."""
+    source = {"id": 108}
+    calls = emit_calls(
+        vlan_id,
+        source,
+        "aos8",
+        runtime_values=_runtime(device_functions=["MOBILITY_GW"]),
+    )
+    step2 = calls[1]
+    items = (step2.body or {})["config-assignment"]
+    assert len(items) == 1
+    assert items[0]["device-function"] == "MOBILITY_GW"
+
+
+def test_vlan_id_missing_required_id_raises(vlan_id) -> None:
+    """Without 'id' the engine can't build the path — surface clear error."""
+    with pytest.raises(EngineError, match="vlan_id"):
+        emit_calls(vlan_id, {}, "aos8", runtime_values=_runtime())

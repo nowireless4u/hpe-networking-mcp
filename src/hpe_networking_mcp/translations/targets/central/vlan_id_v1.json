@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "target_platform": "central",
+  "target_id": "vlan_id",
+  "target_emits": [
+    {
+      "step":     1,
+      "name":     "create_layer2_vlan_shared",
+      "purpose":  "Create the L2 VLAN profile in the Library. Sub-properties (description, option-82, wired-aaa-profile) are conditionally included based on whether the source AOS 8 vlan_id record carries them — engine drops body keys whose source field is absent.",
+      "endpoint": "/network-config/v1alpha1/layer2-vlan/{vlan_id}",
+      "method":   "POST",
+      "query_params": {},
+      "body":     {
+        "vlan":              "{vlan_id}",
+        "description":       "{description}",
+        "option-82":         "{option_82}",
+        "wired-aaa-profile": "{wired_aaa_profile}"
+      },
+      "iteration": "once",
+      "iteration_notes": "Optional sub-property fields drop out of the body when the source record lacks them (key_mappings declare optional=true; engine drops None-valued keys post-substitution).",
+      "depends_on": []
+    },
+    {
+      "step":     2,
+      "name":     "assign_layer2_vlan",
+      "purpose":  "Assign the L2 VLAN profile to the target scope. Multi-device-function array packed into a single POST.",
+      "endpoint": "/network-config/v1alpha1/config-assignments",
+      "method":   "POST",
+      "query_params": {},
+      "body_template": {
+        "config-assignment": [
+          "{one entry per device_function in target_meta.device_functions: { scope-id, device-function, profile-type='layer2-vlan', profile-instance='{vlan_id}' }}"
+        ]
+      },
+      "iteration": "once",
+      "iteration_notes": "One POST; all device-functions share the array.",
+      "depends_on": [1]
+    }
+  ],
+  "target_meta": {
+    "device_functions": ["MOBILITY_GW", "CAMPUS_AP"],
+    "device_function_filtering_rule": "Step 1 is SHARED with no device-function param. Step 2 packs all device-functions into a single config-assignments array. Operator can override device_functions in runtime_values. option-82 + wired-aaa-profile are GW-only AOS 8 features per the AOS 8 reference; for AP-only target scopes the consumer should drop those fields before dispatch (or the source record won't carry them in the first place since they're configured GW-side)."
+  },
+  "target_scope_id_resolution": {
+    "rule":   "Central scope_id is supplied by the consuming skill at runtime, derived from the AOS 8 vlan_id record's scope path.",
+    "input":  "Source binding scope (string path / identifier); skill-specific",
+    "output": "Central scope_id (string), supplied via runtime_values['central_scope_id']"
+  },
+  "required_runtime_values": ["central_scope_id"],
+  "derived": {},
+  "dependencies": [
+    {
+      "depends_on":  "(none — this is a foundational translation)",
+      "depended_by": [
+        {
+          "target_id": "ssid_prof / virtual_ap",
+          "field":     "vlan.vlan",
+          "relation":  "vlan-by-id reference (numeric string)",
+          "notes":     "When a source virtual_ap.vlan.vlan is a numeric string (e.g. '107'), the WLAN translation references the bare layer2-vlan profile produced here. Symbolic names go through central:named_vlan instead. Downstream WLAN translation must disambiguate."
+        },
+        {
+          "target_id": "aaa_prof",
+          "field":     "wired-aaa-profile",
+          "relation":  "wired-aaa-profile reference (when sub-property present)",
+          "notes":     "If vlan_id__aaa.profile-name is present on the source record, the referenced AAA profile must already exist on the Central side before this translation runs (POST returns 4xx otherwise). Consumer should sequence the AAA-profile translation first."
+        }
+      ]
+    }
+  ],
+  "tokenize_kind_per_field": {},
+  "sources": {
+    "aos8": {
+      "kind":         "rest",
+      "mapping_kind": "simple",
+      "objects": [
+        {
+          "object":      "vlan_id",
+          "object_path": "/v1/configuration/object/vlan_id",
+          "role":        "vlan_registration_with_optional_subproperties",
+          "docs": {
+            "get":  "https://developer.arubanetworks.com/aos8/reference/get_object-vlan-id",
+            "post": "https://developer.arubanetworks.com/aos8/reference/post_object-vlan-id"
+          },
+          "live_shape_example": "[{\"id\": 108}, {\"id\": 109}, {\"id\": 104, \"option-82\": true, \"vlan_id__aaa\": {\"profile-name\": \"corp-aaa\"}, \"vlan_id__descr\": {\"descr\": \"Corp VLAN\"}}]",
+          "notes": "Bare entries have just an integer 'id'. Richer entries surface sub-properties INLINE on the same record: 'option-82' (boolean, top-level) and nested 'vlan_id__aaa.profile-name' + 'vlan_id__descr.descr'. AOS 8 EXPANDS VLAN ranges to discrete entries here (verified live during named_vlan authoring; vlan_name_id is the form that PRESERVES range syntax). option-82 + wired-aaa-profile are GW-only features. Inheritance: copies appear at descendant scopes with _flags.inherited=true; consumer must filter those out before iterating. Live-verified shape against the operator's tenant during translation authoring."
+        }
+      ],
+      "key_mappings": {
+        "vlan_id": {
+          "from":      "id",
+          "to":        "vlan_id (Central layer2-vlan path param + body 'vlan' on step 1, profile-instance on step 2)",
+          "transform": "direct_str",
+          "notes":     "AOS 8 'id' is integer; coerce to string for path-param + profile-instance use."
+        },
+        "description": {
+          "from":      "vlan_id__descr.descr",
+          "to":        "Central layer2-vlan body 'description' (string)",
+          "transform": "direct_str",
+          "optional":  true,
+          "notes":     "Source is nested under vlan_id__descr.descr per the AOS 8 REST shape. AOS 8 reference notes a 32-char limit on GW; consumer should validate length before dispatch and surface a finding for over-length values. Optional — bare vlan_id records without a description simply drop this body key."
+        },
+        "option_82": {
+          "from":      "option-82",
+          "to":        "Central layer2-vlan body 'option-82' (boolean, GW-only)",
+          "transform": "flag_to_bool",
+          "optional":  true,
+          "notes":     "Top-level field on the AOS 8 vlan_id record (when configured). flag_to_bool handles both bool and string-flag source forms. Optional — bare records without option-82 drop the body key."
+        },
+        "wired_aaa_profile": {
+          "from":      "vlan_id__aaa.profile-name",
+          "to":        "Central layer2-vlan body 'wired-aaa-profile' (string reference, GW-only)",
+          "transform": "direct_str",
+          "optional":  true,
+          "notes":     "Source is nested under vlan_id__aaa.profile-name per the AOS 8 REST shape. Reference to a wired AAA profile that must exist in Central before this translation runs. Optional — bare records without a wired AAA profile drop the body key."
+        }
+      },
+      "unmapped_fields": [],
+      "ignored_variants": [
+        {
+          "form":   "vlan_name + vlan_name_id",
+          "reason": "Named-VLAN form with alias chain is the sibling translation central:named_vlan."
+        },
+        {
+          "form":   "vlan_pool",
+          "reason": "VLAN pool / VLAN group is a separate AOS 8 form. Out of scope for v1 of the translations subsystem."
+        }
+      ]
+    }
+  },
+  "draft_notes": [
+    "Single translation handles both bare records ({id: 108}) and rich records (with description / option-82 / wired-aaa-profile). The Central CNX layer2-vlan POST accepts these as optional body fields per the AOS 8 -> CNX LLD reference. Engine drops body keys whose source field is absent (via the optional=true flag on key_mappings).",
+    "Idempotency: if a layer2-vlan profile for the same VLAN ID already exists (e.g., previously created by central:named_vlan or a prior run of this translation), the SHARED POST returns HTTP 409. Consumer must handle 409 idempotently rather than treating it as a hard error.",
+    "Source object shape was live-verified (basic shape) during named_vlan authoring; rich-record shape (vlan_id__aaa, vlan_id__descr, top-level option-82) was provided by the operator from a tenant where these sub-properties are configured."
+  ]
+}

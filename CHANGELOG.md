@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1.1] - 2026-05-07
+
+**Patch release — second translation (`central:vlan_id`) + engine optional-field support + iteration rename.**
+
+Adds the second shipped translation, `central:vlan_id`, covering the AOS 8 bare-and-rich `vlan_id` REST object → Central layer2-vlan profile. Source field names were live-verified against the maintainer's tenant during authoring; the operator supplied a sample rich-record payload (with sub-properties nested under `vlan_id__aaa.profile-name` and `vlan_id__descr.descr`, plus top-level `option-82`) that drove the design. The earlier speculative split into separate `central:vlan_id` (bare) and `central:vlan` (rich) translations was abandoned once the live shape confirmed it's a single object — the same translation handles both cases via optional body fields.
+
+### Three changes
+
+1. **New translation `central:vlan_id`.** Two-step Central CNX flow (layer2-vlan SHARED create + multi-DF config-assignments), structurally a subset of `central:named_vlan` steps 1+4. Step 1 body is `{"vlan": "<id>"}` for bare records; for rich records the body grows to include `description`, `option-82`, and `wired-aaa-profile` only when the source carries them. Live-verified the rich-record source shape from the operator's tenant (top-level `option-82`, nested `vlan_id__aaa`/`vlan_id__descr` sub-objects).
+
+2. **Engine optional-field support.** New `optional: bool` field on `KeyMapping`. When set and the source record lacks the field, the engine substitutes `None` into the body and a post-render pass drops `None`-valued keys from the rendered dict. Required (default) fields still raise `EngineError` on missing source data — unchanged behavior. Falsy non-`None` values (e.g. `option-82=false`) are preserved; only literal `None` triggers key drop.
+
+3. **Iteration value rename: `once_per_named_vlan` → `once`.** The original name was specific to the named-VLAN translation and became misleading once a second translation needed a no-fan-out emit. Clean rename — engine only recognizes `"once"` now (no backwards-compat alias). `named_vlan_v1.json` and the test fixtures were updated accordingly.
+
+### Files
+
+- **New: `src/hpe_networking_mcp/translations/targets/central/vlan_id_v1.json`** — second shipped translation
+- **`src/hpe_networking_mcp/translations/loader.py`** — `KeyMapping.optional` field added
+- **`src/hpe_networking_mcp/translations/engine.py`** — `optional` flag wired through `_build_base_context`; new `_drop_none_keys` post-render pass; `once_per_named_vlan` → `once`
+- **`src/hpe_networking_mcp/translations/targets/central/named_vlan_v1.json`** — iteration values renamed to `once`
+- **`tests/unit/test_translations_engine.py`** — 8 new tests for `central:vlan_id` covering bare records, rich records, partial-rich (description-only, option-82-only), `option-82=false` preservation, runtime device-function override, and missing-required-id error
+- **`tests/unit/test_translations_loader.py`** — 1 new test for `central:vlan_id` schema validation; existing fixtures renamed to `once`
+- **`pyproject.toml`** — bump 3.0.1.0 → 3.0.1.1
+
+### Notes
+
+- 1037 tests pass (was 1028; +9 from the new `central:vlan_id` tests).
+- The earlier session draft authored a separate `central:vlan_v1.json` for the rich form before live verification revealed there's only one AOS 8 object. That speculative file was deleted before the PR.
+- Pattern for future translations with optional body fields: declare `optional: true` on `KeyMapping` entries; engine handles the rest. Tests should cover both presence and absence cases.
+
 ## [3.0.1.0] - 2026-05-07
 
 **Minor release — translations engine (loader + runtime engine + first translation).**

@@ -64,7 +64,7 @@ class TargetEmit(BaseModel):
     iteration: str = Field(
         description=(
             "How to fan out this emit at runtime. Recognized values: "
-            "'once_per_named_vlan', 'per_vlan_id_in_binding', 'per_device_function', "
+            "'once', 'per_vlan_id_in_binding', 'per_device_function', "
             "'per_vlan_id_per_device_function'. Free text outside that set is reserved "
             "for future patterns; engine raises if it encounters an unknown value."
         )
@@ -177,6 +177,15 @@ class KeyMapping(BaseModel):
     to: str = Field(min_length=1, description="Target destination (path/role description)")
     transform: str = Field(min_length=1, description="Named transform; resolved by transforms.py")
     default: str | None = None
+    optional: bool = Field(
+        default=False,
+        description=(
+            "If True, a missing source field does not raise — the resulting body key is "
+            "dropped from the rendered call instead. Use for sub-properties that may or "
+            "may not be present on the source record (e.g. AOS 8 vlan_id sub-properties "
+            "like description, option-82, wired-aaa-profile)."
+        ),
+    )
     transform_examples: list[dict[str, Any]] = Field(default_factory=list)
     notes: str | None = None
 
