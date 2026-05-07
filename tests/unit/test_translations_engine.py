@@ -31,6 +31,11 @@ def vlan_id(translations: dict):
     return translations["central:vlan_id"]
 
 
+@pytest.fixture
+def role(translations: dict):
+    return translations["central:role"]
+
+
 def _runtime(scope_id: str = "SCOPE", device_functions: list[str] | None = None) -> dict:
     """Helper: build Central-shaped runtime_values for the named-VLAN translation."""
     rv: dict = {"central_scope_id": scope_id}
@@ -323,3 +328,349 @@ def test_vlan_id_missing_required_id_raises(vlan_id) -> None:
     """Without 'id' the engine can't build the path — surface clear error."""
     with pytest.raises(EngineError, match="vlan_id"):
         emit_calls(vlan_id, {}, "aos8", runtime_values=_runtime())
+
+
+# --------------------------------------------------------------------------- #
+# central:role — Gateway-targeted, sourced from live AOS 8 captures
+# --------------------------------------------------------------------------- #
+
+
+def _role_runtime(scope_id: str = "SCOPE") -> dict:
+    """Helper: role translation defaults to MOBILITY_GW only (no AP)."""
+    return {"central_scope_id": scope_id}
+
+
+def test_role_minimum_record_emits_two_calls(role) -> None:
+    """Source with just rname: step 1 body has only 'name'; nested groups drop entirely."""
+    source = {"rname": "minimal-role"}
+    calls = emit_calls(role, source, "aos8", runtime_values=_role_runtime("SCOPE-A"))
+    assert len(calls) == 2
+    assert [c.step for c in calls] == [1, 2]
+    step1 = calls[0]
+    assert step1.method == "POST"
+    assert step1.endpoint == "/network-config/v1alpha1/roles/minimal-role"
+    assert step1.body == {"name": "minimal-role"}
+
+
+def test_role_with_named_vlan_emits_root_access_vlan_name(role) -> None:
+    """Per Central role schema, GW VLAN binding is at the ROOT (not vlan-parameters)."""
+    source = {"rname": "camera_role_ubt", "role__vlan": {"vlanstr": "internal"}}
+    body = emit_calls(role, source, "aos8", runtime_values=_role_runtime())[0].body or {}
+    assert body == {
+        "name": "camera_role_ubt",
+        "access-vlan-name": "internal",
+        "vlan-type": "VLAN_NAME",
+    }
+
+
+def test_role_with_numeric_vlan_emits_root_access_vlan_id(role) -> None:
+    source = {"rname": "data-role", "role__vlan": {"vlanstr": "104"}}
+    body = emit_calls(role, source, "aos8", runtime_values=_role_runtime())[0].body or {}
+    assert body == {"name": "data-role", "access-vlan-id": 104, "vlan-type": "VLAN_ID"}
+
+
+def test_role_pattern_b_flags_render_as_true(role) -> None:
+    """Empty-dict source flags (live shape on configured 'parent' role) -> body bool true.
+
+    Source: role__enforce_dhcp/role__robust_age_out/role__reg_role/role__dpi_disable/
+    role__disable_webcc surface as {} when configured. Single-underscore variants
+    (role_disable_ipclassify / role_enable_youtubeedu) too. role__openflow is
+    deliberately omitted to confirm it doesn't appear in the body.
+    """
+    source = {
+        "rname": "parent",
+        "role__enforce_dhcp": {},
+        "role__robust_age_out": {},
+        "role__reg_role": {},
+        "role__dpi_disable": {},
+        "role__disable_webcc": {},
+        "role_disable_ipclassify": {},
+        "role_enable_youtubeedu": {},
+    }
+    body = emit_calls(role, source, "aos8", runtime_values=_role_runtime())[0].body or {}
+    assert body == {
+        "name": "parent",
+        "miscellaneous-parameters": {
+            "enforce-dhcp": True,
+            "robust-age-out": True,
+            "registration-role": True,
+        },
+        "classification-parameters": {
+            "ip-classification": True,
+            "dpi-classification": True,
+            "dpi-youtube-education": True,
+            "web-cc": True,
+        },
+    }
+    assert "openflow-enable" not in body["miscellaneous-parameters"]
+
+
+def test_role_pattern_a_flags_render_as_true(role) -> None:
+    """Pattern-A flags ({_present: true} live shape on system defaults) also -> True."""
+    source = {
+        "rname": "logon-role",
+        "role__cp_acc": {"_present": True, "_flags": {"default": True}},
+        "role__openflow": {"_present": True, "_flags": {"default": True}},
+    }
+    body = emit_calls(role, source, "aos8", runtime_values=_role_runtime())[0].body or {}
+    assert body == {
+        "name": "logon-role",
+        "session-parameters": {"check-for-accounting": True},
+        "miscellaneous-parameters": {"openflow-enable": True},
+    }
+
+
+def test_role_reauth_minutes_routes_to_minutes_field(role) -> None:
+    source = {"rname": "r1", "role__reauth": {"reauthperiod": 30}}
+    body = emit_calls(role, source, "aos8", runtime_values=_role_runtime())[0].body or {}
+    assert body == {"name": "r1", "session-parameters": {"reauthentication-interval": 30}}
+
+
+def test_role_reauth_seconds_routes_to_seconds_field(role) -> None:
+    """Live shape from configured 'parent' role: {seconds: true, reauthperiod: 3600}."""
+    source = {"rname": "parent", "role__reauth": {"seconds": True, "reauthperiod": 3600}}
+    body = emit_calls(role, source, "aos8", runtime_values=_role_runtime())[0].body or {}
+    assert body == {
+        "name": "parent",
+        "session-parameters": {"reauthentication-interval-seconds": 3600},
+    }
+
+
+def test_role_captive_portal_lands_in_session_parameters(role) -> None:
+    source = {"rname": "onguard-role", "role__cp": {"cp_profile_name": "onguard-captive-portal"}}
+    body = emit_calls(role, source, "aos8", runtime_values=_role_runtime())[0].body or {}
+    assert body == {
+        "name": "onguard-role",
+        "session-parameters": {"captive-portal": "onguard-captive-portal"},
+    }
+
+
+def test_role_max_sessions_lands_in_session_parameters(role) -> None:
+    source = {"rname": "r", "role__max_sess": {"max_sess": 1024}}
+    body = emit_calls(role, source, "aos8", runtime_values=_role_runtime())[0].body or {}
+    assert body == {"name": "r", "session-parameters": {"max-sessions": 1024}}
+
+
+def test_role_full_rich_record_renders_all_three_groups(role) -> None:
+    """Reproduce the live 'parent' role at /md/Campus/West (full Tier 1 + reauth-seconds)."""
+    source = {
+        "rname": "parent",
+        "role__vlan": {"vlanstr": "104"},
+        "role__cp_acc": {"_present": True},
+        "role__openflow": {"_present": True},
+        "role__reauth": {"seconds": True, "reauthperiod": 3600},
+        "role__max_sess": {"max_sess": 65535},
+        "role__enforce_dhcp": {},
+        "role__robust_age_out": {},
+        "role__reg_role": {},
+        "role__dpi_disable": {},
+        "role__disable_webcc": {},
+        "role_disable_ipclassify": {},
+        "role_enable_youtubeedu": {},
+    }
+    body = emit_calls(role, source, "aos8", runtime_values=_role_runtime())[0].body or {}
+    assert body == {
+        "name": "parent",
+        "access-vlan-id": 104,
+        "vlan-type": "VLAN_ID",
+        "session-parameters": {
+            "check-for-accounting": True,
+            "max-sessions": 65535,
+            "reauthentication-interval-seconds": 3600,
+        },
+        "miscellaneous-parameters": {
+            "enforce-dhcp": True,
+            "robust-age-out": True,
+            "registration-role": True,
+            "openflow-enable": True,
+        },
+        "classification-parameters": {
+            "ip-classification": True,
+            "dpi-classification": True,
+            "dpi-youtube-education": True,
+            "web-cc": True,
+        },
+    }
+
+
+def test_role_does_not_emit_policies_field(role) -> None:
+    """Critical inversion: AOS 8 role.role__acl is NOT mapped to body 'policies'.
+
+    Central back-fills role.policies[] from policy-side references; sending
+    policies[] would either be rejected or silently overwritten.
+    """
+    source = {
+        "rname": "guest-postauth-role",
+        "role__acl": [
+            {"acl_type": "session", "pname": "ra-guard"},
+            {"acl_type": "session", "pname": "guest-postauth"},
+        ],
+    }
+    body = emit_calls(role, source, "aos8", runtime_values=_role_runtime())[0].body or {}
+    assert body == {"name": "guest-postauth-role"}
+    assert "policies" not in body
+
+
+def test_role_step2_assigns_only_to_mobility_gw_by_default(role) -> None:
+    """target_meta declares MOBILITY_GW only — no CAMPUS_AP."""
+    source = {"rname": "demo"}
+    step2 = emit_calls(role, source, "aos8", runtime_values=_role_runtime("SCOPE-A"))[1]
+    items = (step2.body or {})["config-assignment"]
+    assert len(items) == 1
+    assert items[0]["device-function"] == "MOBILITY_GW"
+    assert items[0]["profile-type"] == "role"
+    assert items[0]["profile-instance"] == "demo"
+
+
+def test_role_missing_required_rname_raises(role) -> None:
+    with pytest.raises(EngineError, match="name"):
+        emit_calls(role, {}, "aos8", runtime_values=_role_runtime())
+
+
+def test_role_empty_nested_groups_drop_when_no_subfields_set(role) -> None:
+    """Confirm session-parameters / miscellaneous-parameters / classification-parameters
+    drop entirely when the source has no fields targeting them.
+    """
+    body = emit_calls(role, {"rname": "bare"}, "aos8", runtime_values=_role_runtime())[0].body or {}
+    assert "session-parameters" not in body
+    assert "miscellaneous-parameters" not in body
+    assert "classification-parameters" not in body
+
+
+# --------------------------------------------------------------------------- #
+# central:role — bandwidth-contract sub-shapes
+# --------------------------------------------------------------------------- #
+
+
+def test_role_bwc_basic_lands_in_aaa_bw_contract(role) -> None:
+    """Source from 'blacklisted' role: role__bwc=[{dir_type, name}]."""
+    source = {
+        "rname": "blacklisted",
+        "role__bwc": [
+            {"dir_type": "downstream", "name": "blacklisteddownstreamper-roleui"},
+            {"dir_type": "upstream", "name": "blacklistedupstreamper-roleui"},
+        ],
+    }
+    body = emit_calls(role, source, "aos8", runtime_values=_role_runtime())[0].body or {}
+    assert body == {
+        "name": "blacklisted",
+        "aaa-bw-contract": {
+            "bw-contract": [
+                {"bwc-name": "blacklisteddownstreamper-roleui", "direction": "DOWNSTREAM"},
+                {"bwc-name": "blacklistedupstreamper-roleui", "direction": "UPSTREAM"},
+            ]
+        },
+    }
+
+
+def test_role_bwc_app_array_fans_out_to_app_and_appcategory_groups(role) -> None:
+    """Live shape: role__bwc_app mixes app + appcategory; the engine fans out
+    via paired filter transforms to two distinct Central body fields.
+    """
+    source = {
+        "rname": "parent",
+        "role__bwc_app": [
+            {"app_type": "app", "dir": "downstream", "appname": "youtube", "name": "parentyoutubedownstream"},
+            {"app_type": "app", "dir": "upstream", "appname": "youtube", "name": "parentyoutubeupstream"},
+            {
+                "app_type": "appcategory",
+                "dir": "downstream",
+                "appname": "streaming",
+                "name": "parentstreamingdownstream",
+            },
+            {
+                "app_type": "appcategory",
+                "dir": "upstream",
+                "appname": "streaming",
+                "name": "parentstreamingupstream",
+            },
+        ],
+    }
+    body = emit_calls(role, source, "aos8", runtime_values=_role_runtime())[0].body or {}
+    assert body == {
+        "name": "parent",
+        "app-aaa-contract": {
+            "app": [
+                {"appname": "youtube", "bwc-name": "parentyoutubedownstream", "direction": "DOWNSTREAM"},
+                {"appname": "youtube", "bwc-name": "parentyoutubeupstream", "direction": "UPSTREAM"},
+            ]
+        },
+        "app-category-aaa-contract": {
+            "app-category": [
+                {"category-name": "STREAMING", "bwc-name": "parentstreamingdownstream", "direction": "DOWNSTREAM"},
+                {"category-name": "STREAMING", "bwc-name": "parentstreamingupstream", "direction": "UPSTREAM"},
+            ]
+        },
+    }
+
+
+def test_role_bwc_web_array_fans_out_to_category_and_reputation_groups(role) -> None:
+    """Live shape: role__bwc_web mixes web-cc-category + web-cc-reputation."""
+    source = {
+        "rname": "parent",
+        "role__bwc_web": [
+            {
+                "webcccatgname": "streaming/media",
+                "web_opt": "web-cc-category",
+                "dir": "downstream",
+                "name": "parent-streaming-down",
+            },
+            {
+                "webcccatgname": "streaming/media",
+                "web_opt": "web-cc-category",
+                "dir": "upstream",
+                "name": "parent-streaming-up",
+            },
+            {
+                "web_rep": "trustworthy",
+                "web_opt": "web-cc-reputation",
+                "dir": "downstream",
+                "name": "parent-trustworthy-down",
+            },
+            {
+                "web_rep": "trustworthy",
+                "web_opt": "web-cc-reputation",
+                "dir": "upstream",
+                "name": "parent-trustworthy-up",
+            },
+        ],
+    }
+    body = emit_calls(role, source, "aos8", runtime_values=_role_runtime())[0].body or {}
+    assert body == {
+        "name": "parent",
+        "web-category-aaa-contract": {
+            "web-category": [
+                {
+                    "webcategory-name": "STREAMING-MEDIA",
+                    "bwc-name": "parent-streaming-down",
+                    "direction": "DOWNSTREAM",
+                },
+                {
+                    "webcategory-name": "STREAMING-MEDIA",
+                    "bwc-name": "parent-streaming-up",
+                    "direction": "UPSTREAM",
+                },
+            ]
+        },
+        "web-reputation-aaa-contract": {
+            "web-reputation": [
+                {"webrepname": "TRUSTWORTHY", "bwc-name": "parent-trustworthy-down", "direction": "DOWNSTREAM"},
+                {"webrepname": "TRUSTWORTHY", "bwc-name": "parent-trustworthy-up", "direction": "UPSTREAM"},
+            ]
+        },
+    }
+
+
+def test_role_no_bwc_configured_drops_all_bw_contract_keys(role) -> None:
+    """Confirm a role without any bw-contract source doesn't produce empty
+    aaa-bw-contract / app-aaa-contract / etc. groups.
+    """
+    body = emit_calls(role, {"rname": "no-bwc"}, "aos8", runtime_values=_role_runtime())[0].body or {}
+    for key in (
+        "aaa-bw-contract",
+        "app-aaa-contract",
+        "app-category-aaa-contract",
+        "web-category-aaa-contract",
+        "web-reputation-aaa-contract",
+    ):
+        assert key not in body

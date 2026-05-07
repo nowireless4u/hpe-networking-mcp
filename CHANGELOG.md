@@ -5,6 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1.2] - 2026-05-07
+
+**Patch release — third translation (`central:role`, Gateway-targeted) + engine empty-dict drop + role-specific transforms (including all five bandwidth-contract sub-shapes).**
+
+Adds `central:role`, the third shipped translation, covering AOS 8 user-role REST object → Central role profile for the Gateway device-function. This is the **second iteration** of the role translation: the first iteration (PR #282, never merged) was caught in operator-led review with several wire-incorrect fields (a `policies[]` body field that doesn't exist on Central's role schema, VLAN binding nested inside `vlan-parameters` when GW puts it at the root, and 5 LLD-INFERRED source field names that turned out wrong). The current version is fully cross-referenced against the live AOS 8 tenant **and** the Central role schema's `x-supportedDeviceType=Gateway` annotations. Bandwidth contracts (originally deferred to v2) shipped after the operator configured the missing variants on the test role.
+
+### Three changes
+
+1. **New translation `central:role`.** Two-step Central CNX flow (role SHARED create + multi-DF config-assignments). Body has the role at the root plus three nested groups (`session-parameters`, `miscellaneous-parameters`, `classification-parameters`). Every body field is Gateway-supported per the Central role schema. `target_meta.device_functions` is **`["MOBILITY_GW"]` only** — AP-targeted role definitions use a different schema (`vlan-parameters`, `named-vlan`, etc.) and would need a separate translation.
+
+   Source-side field names verified live, including a purpose-configured `parent` role at `/md/Campus/West` with the full Tier 1 flag set + `reauthentication-interval 3600 seconds`. The single-underscore prefix gotcha (`role_disable_ipclassify`, `role_enable_youtubeedu`) is real and called out in the JSON. The reauth disambiguator (`role__reauth.seconds: true` flag distinguishes the seconds-form from the minutes-form) is handled by paired transforms. Bandwidth contracts (`role__bwc`) deferred to a future v2 — one variant captured live (basic per-role with `dir_type` discriminator) but the 4 other LLD sub-shapes still need samples. VIA + IP pool families excluded from v1 per operator's call (rarely used; alternative products handle that workflow).
+
+   **Inversion call-out (the bug the review caught):** AOS 8 carries the role→ACL binding inside the role record (`role__acl[]`). Central inverts this — policies reference roles via `policy-rule[].condition.source.role`, and Central back-fills `role.policies[]` automatically from those references. This translation does **NOT** send `policies[]` in the role body; ACL/policy binding is owned by the future `central:policy` translation.
+
+2. **Engine: `_drop_none_keys` now drops empty nested dicts.** When every member of a nested body group is an optional field whose source value was missing, the post-render pass now drops the now-empty parent key entirely. Top-level empty dicts pass through unchanged. Critical for the role translation since most roles configure only a small subset of the ~16 mappable fields (and all three nested groups are entirely optional).
+
+3. **Eleven new transforms in `translations/transforms.py`:**
+   - `vlanstr_to_id_if_numeric` / `vlanstr_to_name_if_nonnumeric` / `vlanstr_to_vlan_type` — disambiguate AOS 8's combined `role__vlan.vlanstr` field (Central splits it into separate `access-vlan-id` int / `access-vlan-name` string + `vlan-type` enum).
+   - `aos8_field_present_to_true` — handles both the older Pattern A flag shape (`{_present: true, _flags: {default: true}}` on `role__cp_acc` / `role__openflow`) and the newer Pattern B shape (empty `{}` when configured on `role__enforce_dhcp` / `role__reg_role` / `role__dpi_disable` / etc.). Returns `True` for any non-`None` input — reaching the transform implies the path resolved.
+   - `aos8_reauth_minutes_value` / `aos8_reauth_seconds_value` — paired transforms reading the `role__reauth` dict; one returns the value when `seconds` is falsy/absent (minutes form), the other when `seconds: true` (seconds form). Live-verified on the `parent` role.
+   - **`aos8_role_bwc_basic_to_central`** — basic per-role bandwidth contract: `role__bwc[]` → `aaa-bw-contract.bw-contract[]`. Live shape verified on `blacklisted` role.
+   - **`aos8_role_bwc_app_filter_app`** / **`aos8_role_bwc_app_filter_appcategory`** — paired transforms that fan out the AOS 8 `role__bwc_app[]` array (which mixes per-app + per-appcategory entries discriminated by `app_type`) into Central's two distinct schemas (`app-aaa-contract.app[]` and `app-category-aaa-contract.app-category[]`). Live-verified on `parent` role with `youtube` (app) and `streaming` (appcategory).
+   - **`aos8_role_bwc_web_filter_category`** / **`aos8_role_bwc_web_filter_reputation`** — same fan-out pattern for `role__bwc_web[]` (mixed per-web-cc-category + per-web-cc-reputation discriminated by `web_opt`) → `web-category-aaa-contract.web-category[]` / `web-reputation-aaa-contract.web-reputation[]`. Category names are uppercased + slash-replaced (e.g. `streaming/media` → `STREAMING-MEDIA`); reputations are uppercased + dash-to-underscore-replaced (e.g. `low-risk` → `LOW_RISK`).
+
+### Files
+
+- **New: `src/hpe_networking_mcp/translations/targets/central/role_v1.json`** — third shipped translation
+- **`src/hpe_networking_mcp/translations/transforms.py`** — six new transforms + registry entries
+- **`src/hpe_networking_mcp/translations/engine.py`** — `_drop_none_keys` enhanced to drop empty nested dicts
+- **New: `tests/unit/test_translations_transforms.py`** — 36 tests covering the role-specific transforms + the registry
+- **`tests/unit/test_translations_engine.py`** — 13 new role tests (minimum record, named-VLAN at root, numeric-VLAN at root, Pattern-A flags, Pattern-B flags, reauth-minutes routing, reauth-seconds routing, captive portal, max-sessions, full rich record, no-policies-emitted, MOBILITY_GW-only assignment, missing-rname error, empty-group drop)
+- **`tests/unit/test_translations_loader.py`** — 1 new role schema-validation test (asserts the corrected source field names + that `policies` doesn't appear in the body template + that `role__bwc` and `role__acl` are explicitly captured as deferred)
+- **`pyproject.toml`** — bump 3.0.1.1 → 3.0.1.2
+
+### Notes
+
+- 1107 tests pass (was 1037; +70 from new transforms + role tests including bw-contract coverage).
+- Cross-referenced the operator's live tenant (55 roles at `/md/Campus/West`, including the test `parent` role with all 5 bw-contract sub-shapes configured) against `api-endpoints/central/role.json`'s `x-supportedDeviceType` annotations. The body shape is now the strict intersection of "AOS 8 carries it" + "Central role schema accepts it for Gateway".
+- Consumer responsibility documented: pre-filter `_flags.default=true` sub-objects (and top-level `_flags.default=true` roles) from source records before passing to `emit_calls`. Otherwise every role POST will explicitly carry AOS 8 system defaults (`max-sessions=65535`, `check-for-accounting=true`, etc.) which may overwrite Central's own role-profile defaults.
+- Deferred (now narrower): `role__bwc_excl` (bw-contract exclude variants — AOS 8 source field name not yet sampled), `role__acl` (handled by future `central:policy` translation), VIA + pool fields (operator scoped them out as rarely used / better handled by alternative products), `disable-cp-gw-translation` (Gateway-only Central field; AOS 8 source name unknown).
+- Earlier draft from PR #282 is gone — the rework is a clean replacement, not a patch.
+
 ## [3.0.1.1] - 2026-05-07
 
 **Patch release — second translation (`central:vlan_id`) + engine optional-field support + iteration rename.**
