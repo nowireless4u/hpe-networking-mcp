@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 
 import pytest
@@ -229,7 +230,7 @@ class TestFieldClassification:
     def test_generic_secret_with_credential_shape_tokenized(self) -> None:
         cls, kind = classify_field("secret", "L0ng-StRong-S3cret!")
         assert cls == FieldClassification.TOKENIZE_SECRET
-        assert kind == TokenKind.RADSEC
+        assert kind == TokenKind.RAD
 
     def test_generic_password_with_enum_value_skipped(self) -> None:
         # 'password': 'disabled' would be a config flag, not a credential
@@ -340,7 +341,7 @@ class TestFieldClassification:
     def test_hyphenated_shared_secret_tokenized(self) -> None:
         cls, kind = classify_field("shared-secret", "RadiusSharedSecret123!")
         assert cls == FieldClassification.TOKENIZE_SECRET
-        assert kind == TokenKind.RADSEC
+        assert kind == TokenKind.RAD
 
 
 class TestCredentialShapeHeuristic:
@@ -446,7 +447,110 @@ class TestIsMaskedPlaceholder:
         # Sanity: the placeholder skip must not affect real values.
         cls, kind = classify_field("shared_secret", "MyRealSecret123!")
         assert cls == FieldClassification.TOKENIZE_SECRET
-        assert kind == TokenKind.RADSEC
+        assert kind == TokenKind.RAD
+
+
+class TestStructuralSecretContexts:
+    """Issue #277 — wrappings like ``rad_key`` make a generic ``key`` field
+    unambiguously a credential. Walker passes the wrapping name down so
+    classify_field can short-circuit the shape-check that would otherwise
+    leak short single-class shared secrets like ``"protocol"``.
+    """
+
+    def test_rad_key_key_tokenizes_unconditionally_short_value(self) -> None:
+        # ``"protocol"`` — 8 chars, all lowercase, 1 char class — would FAIL
+        # ``looks_like_credential`` and skip without the structural rule.
+        cls, kind = classify_field("key", "protocol", parent_field_name="rad_key")
+        assert cls == FieldClassification.TOKENIZE_SECRET
+        assert kind == TokenKind.RAD
+
+    def test_rad_key_key_tokenizes_long_value_too(self) -> None:
+        cls, kind = classify_field("key", "nowireless4u", parent_field_name="rad_key")
+        assert cls == FieldClassification.TOKENIZE_SECRET
+        assert kind == TokenKind.RAD
+
+    def test_tacacs_key_key_classifies_as_tacacs(self) -> None:
+        cls, kind = classify_field("key", "tacsecret", parent_field_name="tacacs_key")
+        assert cls == FieldClassification.TOKENIZE_SECRET
+        assert kind == TokenKind.TACACS
+
+    def test_bare_key_outside_known_wrapper_still_skipped(self) -> None:
+        # ``{"key": "ssid"}`` template-style usage — no wrapper context —
+        # must still pass through SKIP (preserves the existing false-positive guard).
+        cls, _ = classify_field("key", "ssid")
+        assert cls == FieldClassification.SKIP
+
+    def test_bare_key_under_unknown_wrapper_still_uses_shape_check(self) -> None:
+        # Wrapper isn't in STRUCTURAL_SECRET_CONTEXTS — falls through to
+        # the generic-credential rule, which applies the shape check.
+        cls, _ = classify_field("key", "ssid", parent_field_name="some_unknown_wrapper")
+        assert cls == FieldClassification.SKIP
+
+    def test_masked_placeholder_under_rad_key_still_skipped(self) -> None:
+        # The placeholder skip runs BEFORE the structural rule so an AOS-8
+        # masked secret nested under rad_key doesn't get tokenized
+        # (would create the dangerous-illusion problem from PR #275).
+        cls, _ = classify_field("key", "********", parent_field_name="rad_key")
+        assert cls == FieldClassification.SKIP
+
+
+class TestVrrpPassphraseRule:
+    """Issue #277 — AOS 8 cluster_prof.vrrp_info.vrrp_passphrase is a shared
+    key between cluster members. Live captures show it as the deterministic-
+    encrypted form (~48 hex chars). Tokenize unconditionally as PSK.
+    """
+
+    def test_vrrp_passphrase_tokenizes_as_psk(self) -> None:
+        cls, kind = classify_field("vrrp_passphrase", "8590c58ea2da22474eef003b5c4ee6b42524d2e44a631b87")
+        assert cls == FieldClassification.TOKENIZE_SECRET
+        assert kind == TokenKind.PSK
+
+
+class TestStructuralWalkerEndToEnd:
+    """End-to-end: walking a realistic AOS 8 rad_server response should
+    tokenize the rad_key.key shared secret correctly, even when the value
+    is short and single-class."""
+
+    def test_rad_server_record_with_short_secret_tokenizes(self) -> None:
+        keymap = SessionKeymap()
+        tokenizer = Tokenizer(keymap, session_id="test-session-rad", max_entries=100)
+        # Mirrors the live shape captured from /v1/configuration/object/rad_server
+        data = {
+            "_data": {
+                "rad_server": [
+                    {
+                        "rad_server_name": "AG_CPPM_PUB",
+                        "rad_host": {"host": "192.168.20.70"},
+                        "rad_key": {"key": "protocol"},
+                    },
+                    {
+                        "rad_server_name": "CPPM-PUB",
+                        "rad_host": {"host": "192.168.20.70"},
+                        "rad_key": {"key": "nowireless4u"},
+                    },
+                ]
+            }
+        }
+        result = tokenize_response(data, tokenizer)
+        records = result["_data"]["rad_server"]
+
+        # Both shared secrets tokenized as RAD — even the short single-class one
+        for rec in records:
+            secret_token = rec["rad_key"]["key"]
+            assert secret_token != rec["rad_key"]["key"][0]  # not cleartext
+            match = TOKEN_RE.fullmatch(secret_token)
+            assert match is not None
+            assert match.group(1) == "RAD"
+
+        # Cleartext secrets must not survive anywhere in the response
+        flat = json.dumps(result)
+        assert "protocol" not in flat
+        assert "nowireless4u" not in flat
+
+        # Hosts tokenized as HOSTNAME (the carve-out from PR #275)
+        for rec in records:
+            host_token = rec["rad_host"]["host"]
+            assert TOKEN_RE.fullmatch(host_token).group(1) == "HOSTNAME"
 
 
 class TestTokenizer:
@@ -1040,7 +1144,7 @@ class TestRealisticCentralFixture:
         assert "CentralRadiusSecret456!" not in str(result)
         for server in result["radius_servers"]:
             secret_token = server["shared-secret"]
-            assert TOKEN_RE.fullmatch(secret_token).group(1) == "RADSEC"
+            assert TOKEN_RE.fullmatch(secret_token).group(1) == "RAD"
 
         # `host` in a RADIUS-server context IS tokenized (issue #235 carve-out:
         # AAA infrastructure is auth-fabric-critical, even though general IPs

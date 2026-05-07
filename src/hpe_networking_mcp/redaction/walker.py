@@ -162,12 +162,17 @@ def _walk_dict(
     tokenizer: Tokenizer | None,
     *,
     depth: int,
+    parent_field_name: str | None = None,
 ) -> dict:
     """Recursively walk a dict, applying classification rules to each pair.
 
     ``tokenizer`` is None when only MAC normalization is requested
     (tokenization disabled). In that mode the walker still recurses to
     apply MAC normalization but skips all tokenization paths.
+
+    ``parent_field_name`` is the wrapping key under which this dict was
+    found, used by structural-context rules in ``classify_field``
+    (issue #277). ``None`` at the top level.
     """
     if depth > _MAX_DEPTH:
         return data
@@ -182,6 +187,7 @@ def _walk_dict(
             tokenizer,
             depth=depth,
             parent_keys=parent_keys,
+            parent_field_name=parent_field_name,
         )
         out[key] = new_value
     return out
@@ -194,13 +200,24 @@ def _walk_pair(
     *,
     depth: int,
     parent_keys: frozenset[str],
+    parent_field_name: str | None = None,
 ) -> object:
     """Apply classification + recursion to one key/value pair."""
-    # Recursion into nested structures comes first
+    # Recursion into nested structures comes first. When recursing into a
+    # dict, the *current* key becomes the parent_field_name for the dict's
+    # children — that's what structural-context rules consume.
+    next_parent = str(key) if isinstance(key, str) else None
     if isinstance(value, dict):
-        return _walk_dict(value, tokenizer, depth=depth + 1)
+        return _walk_dict(value, tokenizer, depth=depth + 1, parent_field_name=next_parent)
     if isinstance(value, list):
-        return _walk_list(key, value, tokenizer, depth=depth + 1, parent_keys=parent_keys)
+        return _walk_list(
+            key,
+            value,
+            tokenizer,
+            depth=depth + 1,
+            parent_keys=parent_keys,
+            parent_field_name=parent_field_name,
+        )
 
     # MAC normalization — always-on regardless of tokenizer presence.
     # Apply the same field-name normalization the classifier uses so AOS 8
@@ -214,7 +231,7 @@ def _walk_pair(
     if tokenizer is None or not isinstance(key, str):
         return value
 
-    classification, kind = classify_field(key, value, parent_keys=parent_keys)
+    classification, kind = classify_field(key, value, parent_keys=parent_keys, parent_field_name=parent_field_name)
 
     if classification == FieldClassification.SKIP:
         # Universal scan still runs on un-classified string values so
@@ -241,20 +258,35 @@ def _walk_list(
     *,
     depth: int,
     parent_keys: frozenset[str],
+    parent_field_name: str | None = None,
 ) -> list:
     """Recursively walk a list. Lists inherit the parent's field name for
     classification purposes — e.g. ``ip_addresses: ["10.1.1.1", "10.1.1.2"]``
     each element is treated as if it were under ``ip_addresses``.
+
+    For dicts inside the list, the structural-context parent for *their*
+    children is ``parent_key`` (the key the list was attached to),
+    matching the dict-recursion handling in ``_walk_pair``.
     """
     if depth > _MAX_DEPTH:
         return data
 
+    next_parent = str(parent_key) if isinstance(parent_key, str) else None
     out: list = []
     for item in data:
         if isinstance(item, dict):
-            out.append(_walk_dict(item, tokenizer, depth=depth + 1))
+            out.append(_walk_dict(item, tokenizer, depth=depth + 1, parent_field_name=next_parent))
         elif isinstance(item, list):
-            out.append(_walk_list(parent_key, item, tokenizer, depth=depth + 1, parent_keys=parent_keys))
+            out.append(
+                _walk_list(
+                    parent_key,
+                    item,
+                    tokenizer,
+                    depth=depth + 1,
+                    parent_keys=parent_keys,
+                    parent_field_name=parent_field_name,
+                )
+            )
         else:
             # Apply the parent key's classification to the list element
             out.append(
@@ -264,6 +296,7 @@ def _walk_list(
                     tokenizer,
                     depth=depth,
                     parent_keys=parent_keys,
+                    parent_field_name=parent_field_name,
                 )
             )
     return out

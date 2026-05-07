@@ -6,7 +6,7 @@ name. The walker (``walker.py``) calls ``classify_field()`` on each
 
 * **SKIP**: leave the value alone (default for unknown fields).
 * **TOKENIZE_SECRET**: this is a credential; tokenize as one of the
-  secret kinds (``PSK``, ``RADSEC``, ``SNMP_COMMUNITY``, etc.).
+  secret kinds (``PSK``, ``RAD``, ``TACACS``, ``SNMP_COMMUNITY``, etc.).
 * **TOKENIZE_IDENTIFIER**: this is a customer-identifying value;
   tokenize as one of the identifier kinds (``HOSTNAME``, ``EMAIL``,
   ``USER``, ``SERIAL``, ``IP``, etc.).
@@ -61,7 +61,8 @@ class TokenKind(StrEnum):
 
     # --- Secrets (Tier 1) ---
     PSK = "PSK"  # WPA2/WPA3/SAE pre-shared keys, passphrases, PPSKs
-    RADSEC = "RADSEC"  # RADIUS / RadSec / TACACS+ shared secrets, EAP passwords
+    RAD = "RAD"  # RADIUS / RadSec shared secrets, EAP-tunneled passwords (issue #277)
+    TACACS = "TACACS"  # TACACS+ shared secrets and TACACS+-tunneled passwords (issue #277)
     SNMP_COMMUNITY = "SNMP"  # SNMPv1/v2c communities, SNMPv3 auth/priv passwords
     ADMIN_PASSWORD = "PASSWORD"  # nosec B105 — token-kind label, not a credential
     VPN_PSK = "VPNPSK"  # IPSec PSK, VPN PSK
@@ -109,6 +110,7 @@ SECRET_FIELD_NAMES: dict[str, TokenKind] = {
     "psk": TokenKind.PSK,
     "passphrase": TokenKind.PSK,
     "wpa_passphrase": TokenKind.PSK,
+    "vrrp_passphrase": TokenKind.PSK,  # AOS 8 cluster_prof.vrrp_info shared key (issue #277)
     "wpa2_passphrase": TokenKind.PSK,
     "wpa3_psk": TokenKind.PSK,
     "sae_password": TokenKind.PSK,
@@ -117,11 +119,11 @@ SECRET_FIELD_NAMES: dict[str, TokenKind] = {
     "wep_key": TokenKind.PSK,
     "wep_passphrase": TokenKind.PSK,
     # RADIUS / RadSec / 802.1X
-    "shared_secret": TokenKind.RADSEC,
-    "radius_secret": TokenKind.RADSEC,
-    "radsec_secret": TokenKind.RADSEC,
-    "eap_password": TokenKind.RADSEC,
-    "inner_password": TokenKind.RADSEC,
+    "shared_secret": TokenKind.RAD,
+    "radius_secret": TokenKind.RAD,
+    "radsec_secret": TokenKind.RAD,
+    "eap_password": TokenKind.RAD,
+    "inner_password": TokenKind.RAD,
     # SNMP
     "community": TokenKind.SNMP_COMMUNITY,
     "community_string": TokenKind.SNMP_COMMUNITY,
@@ -174,7 +176,7 @@ SECRET_FIELD_NAMES: dict[str, TokenKind] = {
 GENERIC_CREDENTIAL_FIELD_NAMES: dict[str, TokenKind] = {
     "password": TokenKind.ADMIN_PASSWORD,
     "pwd": TokenKind.ADMIN_PASSWORD,
-    "secret": TokenKind.RADSEC,  # most commonly a RADIUS/auth secret
+    "secret": TokenKind.RAD,  # most commonly a RADIUS/auth secret
     "token": TokenKind.API_TOKEN,
     "key": TokenKind.API_TOKEN,
 }
@@ -255,6 +257,28 @@ DEVICE_CONTEXT_HINTS: frozenset[str] = frozenset(
         "release_type",  # Aruba-specific (LSR / SSR / UNCLASSIFIED) — strong device-shape signal
     }
 )
+
+
+# ---------------------------------------------------------------------------
+# Tier 1.5 — Structural-context secret rules (parent_field_name + child)
+# ---------------------------------------------------------------------------
+# Some platforms wrap secrets under a parent dict where the *child* field
+# name is too generic to tokenize unconditionally (e.g. ``key`` is also
+# used in template references like ``{"key": "ssid"}``). The shape-check
+# heuristic guards against false positives, but it leaks short single-class
+# values like ``{"rad_key": {"key": "protocol"}}`` — verified live against
+# AOS 8 in issue #277.
+#
+# These rules pair the *wrapping* field name with the child field name so
+# tokenization can fire unconditionally when the wrapping context strongly
+# implies the field is a credential.
+
+STRUCTURAL_SECRET_CONTEXTS: dict[tuple[str, str], TokenKind] = {
+    # AOS 8 RADIUS shared secret (verified live in issue #277).
+    ("rad_key", "key"): TokenKind.RAD,
+    # AOS 8 TACACS+ shared secret — same wrapper shape (Aruba schema family).
+    ("tacacs_key", "key"): TokenKind.TACACS,
+}
 
 
 # ---------------------------------------------------------------------------
@@ -433,6 +457,7 @@ def classify_field(
     value: object,
     *,
     parent_keys: frozenset[str] | None = None,
+    parent_field_name: str | None = None,
 ) -> tuple[FieldClassification, TokenKind | None]:
     """Decide how the walker should handle this (field, value).
 
@@ -447,6 +472,12 @@ def classify_field(
         parent_keys: The set of sibling keys in the same dict, used to
             disambiguate ambiguous fields (``name`` is a hostname only
             when the parent object also has device-shaped fields).
+        parent_field_name: The wrapping key under which this dict was
+            found — e.g. when classifying ``"key": "protocol"`` inside
+            ``{"rad_key": {"key": "protocol"}}``, ``parent_field_name``
+            is ``"rad_key"``. Used by the structural-context rules to
+            tokenize generic field names unconditionally when the
+            wrapping context strongly implies a credential (issue #277).
 
     Returns:
         ``(classification, kind)`` where ``kind`` is None for SKIP/SCAN
@@ -462,6 +493,17 @@ def classify_field(
     # a tokenized real secret; round-trip restores only the placeholder).
     if isinstance(value, str) and is_masked_placeholder(value):
         return FieldClassification.SKIP, None
+
+    # Structural-context rules — when a generic field name (e.g. ``key``) is
+    # nested under a wrapping key that strongly implies a credential
+    # (e.g. ``rad_key``), tokenize unconditionally. Bypasses the shape check
+    # that would otherwise leak short single-class shared secrets like
+    # ``"protocol"`` (issue #277).
+    if parent_field_name is not None:
+        parent_normalized = _normalize_field_name(parent_field_name)
+        struct_kind = STRUCTURAL_SECRET_CONTEXTS.get((parent_normalized, name))
+        if struct_kind is not None:
+            return FieldClassification.TOKENIZE_SECRET, struct_kind
 
     # Exact-match secret fields
     if name in SECRET_FIELD_NAMES:
