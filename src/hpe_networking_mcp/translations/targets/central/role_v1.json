@@ -301,12 +301,6 @@
           "todo":            "Re-enable in v2 if pool migration becomes in-scope."
         },
         {
-          "from":            "session-parameters.disable-cp-gw-translation",
-          "reason":          "Gateway-only Central field discovered via schema review (api-endpoints/central/role.json). The corresponding AOS 8 source field name is unknown (not surfaced in any of the 55 sampled roles). Skipped from key_mappings entirely until a configured tenant surfaces the source-side shape.",
-          "severity_rule":   "non_empty_regression",
-          "todo":            "Find AOS 8 source field name (likely role__cp_gw_translation_disable or similar) and add an optional key_mapping."
-        },
-        {
           "from":            "role__acl",
           "reason":          "AOS 8 access-list session bindings on the role. Central does NOT carry policies/ACLs as a field on the role profile body — instead, Central policies (separate /policies endpoint) reference roles via policy-rule[].condition.source.role, and Central back-fills role.policies[] automatically from those references. The ACL -> role binding is owned by the future central:policy translation (policy POST body carries the role reference). The role translation deliberately drops role__acl from the body to avoid sending a field Central will reject.",
           "severity_rule":   "always_operator_map",
@@ -333,6 +327,7 @@
     "Idempotency: if a role profile with the same name already exists, the SHARED POST returns HTTP 409. Consumer must handle 409 idempotently.",
     "Two AOS 8 flag SHAPES coexist in the source: Pattern A (role__cp_acc / role__openflow have {_present: true, _flags: {default: true}}) and Pattern B (role__enforce_dhcp / role__reg_role / role__dpi_disable / role__disable_webcc / role_disable_ipclassify / role_enable_youtubeedu surface as empty {} when configured, absent when not). Both are handled by the same aos8_field_present_to_true transform — it returns True for any non-None value, relying on the engine's optional-field path to drop the body key when the source path is missing entirely.",
     "Single-underscore prefix gotcha: most role sub-objects use 'role__' (double underscore), but two classification flags use 'role_' (single underscore): 'role_disable_ipclassify' and 'role_enable_youtubeedu'. Verified live; not a typo.",
-    "Consumer responsibility documented: pre-filter source records to drop _flags.default=true sub-objects (and top-level default=true roles) before passing to emit_calls. Otherwise every role POST will explicitly carry AOS 8 system defaults (max-sessions=65535, check-for-accounting=true, etc.) which may overwrite Central's own role-profile defaults."
+    "Consumer responsibility documented: pre-filter source records to drop _flags.default=true sub-objects (and top-level default=true roles) before passing to emit_calls. Otherwise every role POST will explicitly carry AOS 8 system defaults (max-sessions=65535, check-for-accounting=true, etc.) which may overwrite Central's own role-profile defaults.",
+    "Central-side fields with no AOS 8 source equivalent (kept visible here for future translation paths, not migration targets in this AOS 8 -> Central GW path): (1) 'airslice-application-list' (root, GW) and 'monitoring-application-list' (root, GW) — Central-native AppRF / AirSlice features without an AOS 8 counterpart; (2) 'dap-application-uuid' (root, GW) — feeds Central's Dynamic App Prioritization service, configured via that service's UI not via role profile in AOS 8; (3) 'vlan-parameters.trunk-allowed-vlan-names' (GW per schema) and the 'ipfix-flow-monitor' separate sub-schema — both anticipated to surface on a future Classic-Central / switching-role translation path (Classic Central switch -> Central CNX), not on this Gateway translation; (4) 'session-parameters.disable-cp-gw-translation' (GW-only) — labelled an 'Internal flag' in the schema for captive-portal translation behavior on the GW agent, not operator-settable from AOS 8. None of these block AOS 8 -> Central GW migration; they're fields that will need a source mapping when the corresponding non-AOS-8 source platform / use case lands."
   ]
 }
