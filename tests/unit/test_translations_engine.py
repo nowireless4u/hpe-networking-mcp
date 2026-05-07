@@ -31,6 +31,11 @@ def vlan_id(translations: dict):
     return translations["central:vlan_id"]
 
 
+@pytest.fixture
+def role(translations: dict):
+    return translations["central:role"]
+
+
 def _runtime(scope_id: str = "SCOPE", device_functions: list[str] | None = None) -> dict:
     """Helper: build Central-shaped runtime_values for the named-VLAN translation."""
     rv: dict = {"central_scope_id": scope_id}
@@ -323,3 +328,183 @@ def test_vlan_id_missing_required_id_raises(vlan_id) -> None:
     """Without 'id' the engine can't build the path — surface clear error."""
     with pytest.raises(EngineError, match="vlan_id"):
         emit_calls(vlan_id, {}, "aos8", runtime_values=_runtime())
+
+
+# --------------------------------------------------------------------------- #
+# central:role — bare and rich AOS 8 role records
+# --------------------------------------------------------------------------- #
+
+
+def test_role_minimum_record_emits_two_calls(role) -> None:
+    """Source with just rname: step 1 body has only 'name'; nested groups drop entirely."""
+    source = {"rname": "minimal-role"}
+    calls = emit_calls(role, source, "aos8", runtime_values=_runtime("SCOPE-A"))
+    assert len(calls) == 2
+    assert [c.step for c in calls] == [1, 2]
+
+    step1 = calls[0]
+    assert step1.method == "POST"
+    assert step1.endpoint == "/network-config/v1alpha1/roles/minimal-role"
+    # No optional fields → only required 'name' survives; all nested groups drop
+    assert step1.body == {"name": "minimal-role"}
+
+
+def test_role_with_user_acls_only_filters_system_defaults(role) -> None:
+    """Mix of system + user ACLs: only the user-customized ones land in policies[]."""
+    source = {
+        "rname": "guest-postauth-role",
+        "role__acl": [
+            {
+                "acl_type": "session",
+                "pname": "global-sacl",
+                "_flags": {"system": True, "readonly": True, "default": True},
+            },
+            {"acl_type": "session", "pname": "ra-guard"},
+            {"acl_type": "session", "pname": "guest-postauth"},
+        ],
+    }
+    calls = emit_calls(role, source, "aos8", runtime_values=_runtime())
+    step1 = calls[0]
+    assert step1.body == {
+        "name": "guest-postauth-role",
+        "policies": [{"name": "ra-guard"}, {"name": "guest-postauth"}],
+    }
+
+
+def test_role_with_named_vlan_emits_access_vlan_name_and_type(role) -> None:
+    """vlanstr='internal' → access-vlan-name + vlan-type=VLAN_NAME; access-vlan-id absent."""
+    source = {
+        "rname": "camera_role_ubt",
+        "role__vlan": {"vlanstr": "internal"},
+    }
+    calls = emit_calls(role, source, "aos8", runtime_values=_runtime())
+    body = calls[0].body or {}
+    assert body == {
+        "name": "camera_role_ubt",
+        "access-vlan-name": "internal",
+        "vlan-type": "VLAN_NAME",
+    }
+
+
+def test_role_with_numeric_vlan_emits_access_vlan_id_and_type(role) -> None:
+    """vlanstr='100' → access-vlan-id (int) + vlan-type=VLAN_ID; access-vlan-name absent."""
+    source = {
+        "rname": "data-role",
+        "role__vlan": {"vlanstr": "100"},
+    }
+    calls = emit_calls(role, source, "aos8", runtime_values=_runtime())
+    body = calls[0].body or {}
+    assert body == {
+        "name": "data-role",
+        "access-vlan-id": 100,
+        "vlan-type": "VLAN_ID",
+    }
+
+
+def test_role_with_captive_portal_lands_in_session_parameters(role) -> None:
+    source = {
+        "rname": "onguard-role",
+        "role__cp": {"cp_profile_name": "onguard-captive-portal"},
+    }
+    calls = emit_calls(role, source, "aos8", runtime_values=_runtime())
+    body = calls[0].body or {}
+    assert body == {
+        "name": "onguard-role",
+        "session-parameters": {"captive-portal": "onguard-captive-portal"},
+    }
+
+
+def test_role_with_pool_l2tp_lands_in_session_parameters_pool(role) -> None:
+    """pool group is nested inside session-parameters; only the configured sub-key appears."""
+    source = {
+        "rname": "faculty-windows",
+        "role__pool_l2tp": {"poolname": "via-pool"},
+    }
+    calls = emit_calls(role, source, "aos8", runtime_values=_runtime())
+    body = calls[0].body or {}
+    assert body == {
+        "name": "faculty-windows",
+        "session-parameters": {"pool": {"l2tp": "via-pool"}},
+    }
+
+
+def test_role_step2_assigns_role_profile_to_all_device_functions(role) -> None:
+    source = {"rname": "demo"}
+    calls = emit_calls(role, source, "aos8", runtime_values=_runtime("SCOPE-A"))
+    step2 = calls[1]
+    assert step2.endpoint == "/network-config/v1alpha1/config-assignments"
+    items = (step2.body or {})["config-assignment"]
+    assert len(items) == 2
+    assert {item["device-function"] for item in items} == {"MOBILITY_GW", "CAMPUS_AP"}
+    assert all(item["profile-type"] == "role" for item in items)
+    assert all(item["profile-instance"] == "demo" for item in items)
+    assert all(item["scope-id"] == "SCOPE-A" for item in items)
+
+
+def test_role_full_rich_record_renders_all_three_nested_groups(role) -> None:
+    """Source with fields in every group: session, miscellaneous, classification all present."""
+    source = {
+        "rname": "rich-role",
+        "role__acl": [{"acl_type": "session", "pname": "allowall"}],
+        "role__vlan": {"vlanstr": "200"},
+        "role__cp": {"cp_profile_name": "guest-cp"},
+        "role__cp_acc": {"_present": True},
+        "role__max_sess": {"max_sess": 1024},
+        "role__reauth": {"reauthperiod": 30},
+        "role__pool_l2tp": {"poolname": "vpn-pool"},
+        "role__openflow": {"_present": True},
+        "role__enforce_dhcp": {"_present": True},
+    }
+    body = emit_calls(role, source, "aos8", runtime_values=_runtime())[0].body or {}
+    assert body == {
+        "name": "rich-role",
+        "policies": [{"name": "allowall"}],
+        "access-vlan-id": 200,
+        "vlan-type": "VLAN_ID",
+        "session-parameters": {
+            "captive-portal": "guest-cp",
+            "check-for-accounting": True,
+            "max-sessions": 1024,
+            "reauthentication-interval": 30,
+            "pool": {"l2tp": "vpn-pool"},
+        },
+        "miscellaneous-parameters": {
+            "openflow-enable": True,
+            "enforce-dhcp": True,
+        },
+    }
+
+
+def test_role_missing_required_rname_raises(role) -> None:
+    with pytest.raises(EngineError, match="name"):
+        emit_calls(role, {}, "aos8", runtime_values=_runtime())
+
+
+# --------------------------------------------------------------------------- #
+# _drop_none_keys — empty-dict elimination
+# --------------------------------------------------------------------------- #
+
+
+def test_role_empty_pool_dict_is_dropped_from_session_parameters(role) -> None:
+    """All pool sub-fields missing → pool dict is empty → drops; session-parameters keeps the others."""
+    source = {
+        "rname": "no-pool-role",
+        "role__cp_acc": {"_present": True},
+    }
+    body = emit_calls(role, source, "aos8", runtime_values=_runtime())[0].body or {}
+    # session-parameters only carries the one populated field; pool isn't there at all
+    assert body == {
+        "name": "no-pool-role",
+        "session-parameters": {"check-for-accounting": True},
+    }
+    # Explicitly confirm the empty pool dict didn't sneak through
+    assert "pool" not in body["session-parameters"]
+
+
+def test_role_all_nested_groups_drop_when_empty(role) -> None:
+    """Source with only required fields → nested groups all drop entirely."""
+    source = {"rname": "bare", "role__acl": [{"acl_type": "session", "pname": "x"}]}
+    body = emit_calls(role, source, "aos8", runtime_values=_runtime())[0].body or {}
+    assert "session-parameters" not in body
+    assert "miscellaneous-parameters" not in body
+    assert "classification-parameters" not in body

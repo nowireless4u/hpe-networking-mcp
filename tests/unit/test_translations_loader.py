@@ -52,6 +52,49 @@ def test_loads_shipped_vlan_id_translation_cleanly() -> None:
     assert src.key_mappings["wired_aaa_profile"].optional is True
 
 
+def test_loads_shipped_role_translation_cleanly() -> None:
+    """The shipped Central role translation has 2 emits + ~20 key_mappings."""
+    translations = load_translations()
+    assert "central:role" in translations
+    r = translations["central:role"]
+    assert r.target_platform == "central"
+    assert r.target_id == "role"
+    assert len(r.target_emits) == 2
+    src = r.sources["aos8"]
+    assert src.mapping_kind == "simple"
+    # Required: name (from rname)
+    assert src.key_mappings["name"].optional is False
+    # All sub-properties optional
+    optional_keys = {
+        "policies",
+        "access_vlan_id",
+        "access_vlan_name",
+        "vlan_type",
+        "via_connection_profile",
+        "captive_portal",
+        "check_for_accounting",
+        "max_sessions",
+        "reauthentication_interval",
+        "reauthentication_interval_seconds",
+        "pool_l2tp",
+        "pool_pptp",
+        "pool_via_dhcp",
+        "enforce_dhcp",
+        "robust_age_out",
+        "registration_role",
+        "openflow_enable",
+        "ip_classification",
+        "dpi_classification",
+        "dpi_youtubeedu",
+        "web_cc",
+    }
+    for key in optional_keys:
+        assert src.key_mappings[key].optional is True, f"{key} should be optional"
+    # Bandwidth contracts deferred to v2 — listed in unmapped_fields
+    bw_unmapped = [u for u in src.unmapped_fields if "bw_contract" in u.from_]
+    assert len(bw_unmapped) == 1
+
+
 def test_loader_key_is_composite_platform_and_id(tmp_path: Path) -> None:
     """Loader key is '<target_platform>:<target_id>'; same target_id under
     different platforms doesn't collide."""

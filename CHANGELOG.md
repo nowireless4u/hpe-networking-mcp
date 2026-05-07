@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1.2] - 2026-05-07
+
+**Patch release — third translation (`central:role`) + engine empty-dict drop + role-specific transforms.**
+
+Adds the third shipped translation, `central:role`, covering AOS 8 user-role REST object → Central role profile. Live-verified the source shape across 37 user-customized roles in the operator's tenant (top-level fields: `rname`, `role__acl[]`, `role__cp.cp_profile_name`, `role__cp_acc._present`, `role__max_sess.max_sess`, `role__openflow._present`, `role__pool_l2tp.poolname`, `role__reauth.reauthperiod`, `role__vlan.vlanstr`). Twelve additional role sub-properties are mapped from the AOS 8 → CNX LLD reference and marked LLD-INFERRED in their `key_mappings.notes` (none were configured in the sample tenant). Bandwidth contracts (5 sub-shapes) are explicitly deferred to a v2 in `unmapped_fields`.
+
+### Changes
+
+1. **New translation `central:role`.** Two-step Central CNX flow (role SHARED create + multi-DF config-assignments). Body has the role at the root plus three nested groups: `session-parameters`, `miscellaneous-parameters`, `classification-parameters`. AOS 8's combined VLAN field (`role__vlan.vlanstr` carries either ID or name) is disambiguated into Central's two distinct fields (`access-vlan-id` int / `access-vlan-name` string) plus a `vlan-type` discriminator via three companion `key_mappings` that all source from the same path. ACL filtering: the `aos8_role_acl_to_central_policies` transform drops AOS 8 system / default / readonly entries so only operator-customized ACLs land in the Central role's `policies[]` array.
+
+2. **Engine: `_drop_none_keys` now drops empty nested dicts.** When every member of a nested body group (e.g. `session-parameters.pool`) is an optional field whose source value was missing, the post-render pass now drops the now-empty parent key entirely. Top-level empty dicts pass through unchanged. Critical for the role translation since most roles configure only a small subset of the ~20 mappable fields.
+
+3. **Five new transforms in `translations/transforms.py`:**
+   - `aos8_role_acl_to_central_policies` — filters system / default / readonly entries; renames `pname` → `name`; returns `None` for empty / all-filtered input so the engine drops the body key.
+   - `vlanstr_to_id_if_numeric` — int VLAN ID when source is numeric string, else `None`.
+   - `vlanstr_to_name_if_nonnumeric` — string VLAN name when source is non-numeric, else `None`.
+   - `vlanstr_to_vlan_type` — `"VLAN_ID"` / `"VLAN_NAME"` discriminator paired with the two above.
+   - `aos8_present_flag_to_bool` — Python bool wrapper for AOS 8 `{_present: ...}` style flag sub-objects.
+
+### Files
+
+- **New: `src/hpe_networking_mcp/translations/targets/central/role_v1.json`** — third shipped translation
+- **`src/hpe_networking_mcp/translations/transforms.py`** — five new transforms + registry entries
+- **`src/hpe_networking_mcp/translations/engine.py`** — `_drop_none_keys` enhanced to drop empty nested dicts
+- **New: `tests/unit/test_translations_transforms.py`** — 25 tests covering the role-specific transforms + the registry
+- **`tests/unit/test_translations_engine.py`** — 12 new role tests (bare record, ACL filtering, VLAN disambiguation, captive portal, pool, full rich record, empty-dict drop in nested groups)
+- **`tests/unit/test_translations_loader.py`** — 1 new role schema-validation test
+- **`pyproject.toml`** — bump 3.0.1.1 → 3.0.1.2
+
+### Notes
+
+- 1086 tests pass (was 1037; +49 from new transforms + role tests).
+- Consumer responsibility documented: pre-filter `_flags.default=true` sub-objects from source records before passing to `emit_calls`. Otherwise every role POST will explicitly carry AOS 8's system defaults (e.g. `max-sessions: 65535`, `check-for-accounting: true`) which may overwrite Central's own defaults at the role profile.
+- LLD-INFERRED fields (12) are marked clearly in `key_mappings.notes` — verify the AOS 8 source-side field name against a configured tenant before treating as authoritative for that field. The `optional: true` flag means an unconfigured field simply drops, but a wrong source-side name would silently lose data.
+- Bandwidth contracts deferred: the AOS 8 → CNX LLD describes 5 distinct CNX sub-shapes (basic, app, appcategory, web-cc-category, web-cc-reputation) plus exclude variants; without configured live samples the source-side AOS 8 shapes are too speculative to author. Captured in `unmapped_fields` with a `todo` to re-author once samples exist.
+
 ## [3.0.1.1] - 2026-05-07
 
 **Patch release — second translation (`central:vlan_id`) + engine optional-field support + iteration rename.**

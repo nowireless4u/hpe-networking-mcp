@@ -1,0 +1,304 @@
+{
+  "version": 1,
+  "target_platform": "central",
+  "target_id": "role",
+  "target_emits": [
+    {
+      "step":     1,
+      "name":     "create_role_shared",
+      "purpose":  "Create the user-role profile in the Library. Single POST carries the full role body — name + policies + VLAN binding + nested session-parameters / miscellaneous-parameters / classification-parameters groups. Optional sub-properties drop out when the source record lacks them; empty nested groups also drop entirely (e.g. 'pool: {}' won't appear when no pool is configured).",
+      "endpoint": "/network-config/v1alpha1/roles/{name}",
+      "method":   "POST",
+      "query_params": {},
+      "body": {
+        "name":                    "{name}",
+        "policies":                "{policies}",
+        "access-vlan-id":          "{access_vlan_id}",
+        "access-vlan-name":        "{access_vlan_name}",
+        "vlan-type":               "{vlan_type}",
+        "via-connection-profile":  "{via_connection_profile}",
+        "session-parameters": {
+          "captive-portal":                    "{captive_portal}",
+          "check-for-accounting":              "{check_for_accounting}",
+          "max-sessions":                      "{max_sessions}",
+          "reauthentication-interval":         "{reauthentication_interval}",
+          "reauthentication-interval-seconds": "{reauthentication_interval_seconds}",
+          "pool": {
+            "l2tp":     "{pool_l2tp}",
+            "pptp":     "{pool_pptp}",
+            "via-dhcp": "{pool_via_dhcp}"
+          }
+        },
+        "miscellaneous-parameters": {
+          "enforce-dhcp":      "{enforce_dhcp}",
+          "robust-age-out":    "{robust_age_out}",
+          "registration-role": "{registration_role}",
+          "openflow-enable":   "{openflow_enable}"
+        },
+        "classification-parameters": {
+          "ip-classification":    "{ip_classification}",
+          "dpi-classification":   "{dpi_classification}",
+          "dpi-youtube-education":"{dpi_youtubeedu}",
+          "web-cc":               "{web_cc}"
+        }
+      },
+      "iteration": "once",
+      "iteration_notes": "Optional fields drop out of the body when the source record lacks them. Empty nested groups (session-parameters / miscellaneous-parameters / classification-parameters) drop entirely if every member is missing.",
+      "depends_on": []
+    },
+    {
+      "step":     2,
+      "name":     "assign_role",
+      "purpose":  "Assign the role profile to the target scope. Multi-device-function array packed into a single POST.",
+      "endpoint": "/network-config/v1alpha1/config-assignments",
+      "method":   "POST",
+      "query_params": {},
+      "body_template": {
+        "config-assignment": [
+          "{one entry per device_function in target_meta.device_functions: { scope-id, device-function, profile-type='role', profile-instance='{name}' }}"
+        ]
+      },
+      "iteration": "once",
+      "iteration_notes": "One POST; all device-functions share the array.",
+      "depends_on": [1]
+    }
+  ],
+  "target_meta": {
+    "device_functions": ["MOBILITY_GW", "CAMPUS_AP"],
+    "device_function_filtering_rule": "Step 1 is SHARED with no device-function param. Step 2 packs all device-functions into a single config-assignments array. Operator can override device_functions in runtime_values. Many role fields are GW-only per the AOS 8 reference (option-82, bw-contract, pool, dpi, web-cc, enforce-dhcp, etc.); for AP-only target scopes the consumer should drop these from the source record before passing to emit_calls."
+  },
+  "target_scope_id_resolution": {
+    "rule":   "Central scope_id is supplied by the consuming skill at runtime, derived from the AOS 8 role record's scope path.",
+    "input":  "Source binding scope (string path / identifier); skill-specific",
+    "output": "Central scope_id (string), supplied via runtime_values['central_scope_id']"
+  },
+  "required_runtime_values": ["central_scope_id"],
+  "derived": {},
+  "dependencies": [
+    {
+      "depends_on":  "central:acl_sess (one or more entries in policies[] are session ACL names that must exist before the role POST)",
+      "depended_by": [
+        {
+          "target_id": "ssid_prof / virtual_ap",
+          "field":     "aaa.role",
+          "relation":  "role-by-name reference (string)",
+          "notes":     "Wireless WLAN translations reference roles for default-role / aaa-server roles. Sequence: roles before WLANs."
+        }
+      ]
+    }
+  ],
+  "tokenize_kind_per_field": {},
+  "sources": {
+    "aos8": {
+      "kind":         "rest",
+      "mapping_kind": "simple",
+      "objects": [
+        {
+          "object":      "role",
+          "object_path": "/v1/configuration/object/role",
+          "role":        "user_role_profile",
+          "docs": {
+            "get":  "https://developer.arubanetworks.com/aos8/reference/get_object-role",
+            "post": "https://developer.arubanetworks.com/aos8/reference/post_object-role"
+          },
+          "live_shape_example": "[{\"rname\": \"camera_role_ubt\", \"role__acl\": [{\"acl_type\": \"session\", \"pname\": \"camera_role_ubt\"}], \"role__vlan\": {\"vlanstr\": \"internal\"}, \"role__cp_acc\": {\"_present\": true, \"_flags\": {\"default\": true}}, \"role__openflow\": {\"_present\": true, \"_flags\": {\"default\": true}}, \"role__reauth\": {\"_flags\": {\"default\": true}, \"reauthperiod\": 0}, \"role__max_sess\": {\"_flags\": {\"default\": true}, \"max_sess\": 65535}}, {\"rname\": \"onguard-role\", \"role__cp\": {\"cp_profile_name\": \"onguard-captive-portal\"}, \"role__pool_l2tp\": {\"poolname\": \"via-pool\"}}]",
+          "notes": "Live-verified across 37 user-customized roles in the operator's tenant. Top-level fields seen: rname, role__acl[], role__cp, role__cp_acc, role__max_sess, role__openflow, role__pool_l2tp, role__reauth, role__vlan. Sub-objects use the AOS 8 double-underscore convention. ACL entries carry _flags metadata distinguishing user-customized ACLs from system / inherited / default / readonly entries — the aos8_role_acl_to_central_policies transform filters those system entries out. Many AOS 8 role sub-properties (bw-contract, via, dpi, web-cc, enforce-dhcp, etc.) are not represented in this tenant's data; their source-side field names are inferred from the AOS 8 -> CNX LLD reference (CLI form) plus the verified naming convention. Consumer must filter _flags.default=true sub-objects before passing to emit_calls (system defaults do not need to migrate; sending them would overwrite Central's own defaults at the role profile)."
+        }
+      ],
+      "key_mappings": {
+        "name": {
+          "from":      "rname",
+          "to":        "role name (Central path param + body 'name', profile-instance on step 2)",
+          "transform": "direct_str",
+          "notes":     "Required. AOS 8 'rname' → Central role 'name'."
+        },
+        "policies": {
+          "from":      "role__acl",
+          "to":        "Central role body 'policies' (array of {name})",
+          "transform": "aos8_role_acl_to_central_policies",
+          "optional":  true,
+          "notes":     "Filters _flags.system / _flags.default / _flags.readonly entries (system ACLs that operators didn't add) and renames 'pname' to 'name'. eth/mac ACL types are kept alongside session — Central's role.policies array doesn't carry the type discriminator; the actual ACL profiles themselves live in sibling translations (central:acl_sess, central:acl_eth, central:acl_mac, future v2)."
+        },
+        "access_vlan_id": {
+          "from":      "role__vlan.vlanstr",
+          "to":        "Central role body 'access-vlan-id' (integer; only when source value is numeric)",
+          "transform": "vlanstr_to_id_if_numeric",
+          "optional":  true,
+          "notes":     "AOS 8 stores both VLAN IDs and VLAN names as a single 'vlanstr' string. This mapping returns int-or-None; the access-vlan-name and vlan-type mappings handle the disambiguation. Only one of (access-vlan-id, access-vlan-name) ends up in the wire payload because the other resolves to None and gets dropped."
+        },
+        "access_vlan_name": {
+          "from":      "role__vlan.vlanstr",
+          "to":        "Central role body 'access-vlan-name' (string; only when source value is non-numeric)",
+          "transform": "vlanstr_to_name_if_nonnumeric",
+          "optional":  true,
+          "notes":     "Companion to access_vlan_id. Live example: vlanstr='internal' → access-vlan-name='internal' + vlan-type='VLAN_NAME'."
+        },
+        "vlan_type": {
+          "from":      "role__vlan.vlanstr",
+          "to":        "Central role body 'vlan-type' (enum: 'VLAN_ID' or 'VLAN_NAME')",
+          "transform": "vlanstr_to_vlan_type",
+          "optional":  true,
+          "notes":     "Discriminator that pairs with whichever access-vlan-* field was emitted."
+        },
+        "via_connection_profile": {
+          "from":      "role__via.profile_name",
+          "to":        "Central role body 'via-connection-profile' (string, GW-only)",
+          "transform": "direct_str",
+          "optional":  true,
+          "notes":     "LLD-INFERRED source field name. The AOS 8 'via $profile' CLI maps to a sub-object on the role; field name is the projection from the convention (role__<feature>.<field>). Verify against a configured tenant before treating as authoritative."
+        },
+        "captive_portal": {
+          "from":      "role__cp.cp_profile_name",
+          "to":        "Central role body 'session-parameters.captive-portal' (string)",
+          "transform": "direct_str",
+          "optional":  true,
+          "notes":     "Live-verified: 'guest-logon' has role__cp.cp_profile_name='default'. References a captive-portal profile that must exist in Central before this role is created."
+        },
+        "check_for_accounting": {
+          "from":      "role__cp_acc._present",
+          "to":        "Central role body 'session-parameters.check-for-accounting' (bool)",
+          "transform": "aos8_present_flag_to_bool",
+          "optional":  true,
+          "notes":     "Live-verified shape: role__cp_acc = {_present: true, _flags: {default: true}}. Consumer should filter _flags.default=true sub-objects before passing to emit_calls; if not filtered, every role gets check-for-accounting=true on the wire (matching AOS 8's default but possibly overwriting Central's own default)."
+        },
+        "max_sessions": {
+          "from":      "role__max_sess.max_sess",
+          "to":        "Central role body 'session-parameters.max-sessions' (int, range 1-65535, default 64000)",
+          "transform": "direct_int",
+          "optional":  true,
+          "notes":     "Live-verified: every role has max_sess=65535 with _flags.default=true. Consumer should filter."
+        },
+        "reauthentication_interval": {
+          "from":      "role__reauth.reauthperiod",
+          "to":        "Central role body 'session-parameters.reauthentication-interval' (int, minutes; range 0-4096; mutually exclusive with reauthentication-interval-seconds)",
+          "transform": "direct_int",
+          "optional":  true,
+          "notes":     "Live-verified: every role has reauthperiod=0 with _flags.default=true. AOS 8 stores in minutes. Consumer should filter."
+        },
+        "reauthentication_interval_seconds": {
+          "from":      "role__reauth_seconds.reauth_seconds",
+          "to":        "Central role body 'session-parameters.reauthentication-interval-seconds' (int, seconds; range 0-245760; mutually exclusive with reauthentication-interval)",
+          "transform": "direct_int",
+          "optional":  true,
+          "notes":     "LLD-INFERRED source field name. AOS 8 has both 'reauthentication-interval <minutes>' and '... <seconds> seconds' CLI forms; the seconds variant likely surfaces in a separate sub-object (this tenant uses the minutes variant only). Verify before treating as authoritative."
+        },
+        "pool_l2tp": {
+          "from":      "role__pool_l2tp.poolname",
+          "to":        "Central role body 'session-parameters.pool.l2tp' (string)",
+          "transform": "direct_str",
+          "optional":  true,
+          "notes":     "Live-verified: faculty-* roles have role__pool_l2tp.poolname='via-pool'. L2TP and DHCP pools are mutually exclusive."
+        },
+        "pool_pptp": {
+          "from":      "role__pool_pptp.poolname",
+          "to":        "Central role body 'session-parameters.pool.pptp' (string)",
+          "transform": "direct_str",
+          "optional":  true,
+          "notes":     "LLD-INFERRED source field name (mirrors role__pool_l2tp shape). Verify before treating as authoritative."
+        },
+        "pool_via_dhcp": {
+          "from":      "role__pool_via_dhcp.dhcp_server",
+          "to":        "Central role body 'session-parameters.pool.via-dhcp' (string)",
+          "transform": "direct_str",
+          "optional":  true,
+          "notes":     "LLD-INFERRED source field name. AOS 8 CLI 'pool via-dhcp <ip> [<subnet> <netmask>]' likely surfaces in a sub-object with the proxy server address. Verify before treating as authoritative."
+        },
+        "enforce_dhcp": {
+          "from":      "role__enforce_dhcp._present",
+          "to":        "Central role body 'miscellaneous-parameters.enforce-dhcp' (bool, GW-only)",
+          "transform": "aos8_present_flag_to_bool",
+          "optional":  true,
+          "notes":     "LLD-INFERRED source field name (mirrors role__cp_acc / role__openflow shape). Verify before treating as authoritative."
+        },
+        "robust_age_out": {
+          "from":      "role__robust_age_out._present",
+          "to":        "Central role body 'miscellaneous-parameters.robust-age-out' (bool, GW-only)",
+          "transform": "aos8_present_flag_to_bool",
+          "optional":  true,
+          "notes":     "LLD-INFERRED source field name. Verify before treating as authoritative."
+        },
+        "registration_role": {
+          "from":      "role__registration_role._present",
+          "to":        "Central role body 'miscellaneous-parameters.registration-role' (bool, GW-only)",
+          "transform": "aos8_present_flag_to_bool",
+          "optional":  true,
+          "notes":     "LLD-INFERRED source field name. Verify before treating as authoritative."
+        },
+        "openflow_enable": {
+          "from":      "role__openflow._present",
+          "to":        "Central role body 'miscellaneous-parameters.openflow-enable' (bool, GW-only)",
+          "transform": "aos8_present_flag_to_bool",
+          "optional":  true,
+          "notes":     "Live-verified: every role has role__openflow={_present: true, _flags: {default: true}}. Consumer should filter."
+        },
+        "ip_classification": {
+          "from":      "role__ip_classification._present",
+          "to":        "Central role body 'classification-parameters.ip-classification' (bool, GW-only; true means DISABLED per the LLD inverse-flag note)",
+          "transform": "aos8_present_flag_to_bool",
+          "optional":  true,
+          "notes":     "LLD-INFERRED source field name. Caveat: AOS 8 CLI 'ip-classification disable' inverts semantics — _present=true on the source means the operator DISABLED ip-classification. Central's flag matches that inverted semantic per the LLD ('true means disabled'). Pass through unchanged. Verify the source field name before treating as authoritative."
+        },
+        "dpi_classification": {
+          "from":      "role__dpi_classification._present",
+          "to":        "Central role body 'classification-parameters.dpi-classification' (bool, GW-only; true means DISABLED)",
+          "transform": "aos8_present_flag_to_bool",
+          "optional":  true,
+          "notes":     "LLD-INFERRED. Same inverted-flag semantic as ip_classification (CLI 'dpi disable')."
+        },
+        "dpi_youtubeedu": {
+          "from":      "role__dpi_youtubeedu._present",
+          "to":        "Central role body 'classification-parameters.dpi-youtube-education' (bool, GW-only)",
+          "transform": "aos8_present_flag_to_bool",
+          "optional":  true,
+          "notes":     "LLD-INFERRED source field name. Standard (non-inverted) flag. Verify."
+        },
+        "web_cc": {
+          "from":      "role__web_cc._present",
+          "to":        "Central role body 'classification-parameters.web-cc' (bool, GW-only; true means DISABLED)",
+          "transform": "aos8_present_flag_to_bool",
+          "optional":  true,
+          "notes":     "LLD-INFERRED. Same inverted-flag semantic as ip_classification (CLI 'web-cc disable')."
+        }
+      },
+      "unmapped_fields": [
+        {
+          "from":            "role__bw_contract (and per-app / per-appcategory / per-web-cc-category / per-web-cc-reputation / exclude variants)",
+          "reason":          "AAA bandwidth contracts surface through 5 distinct Central CNX schemas (ArubaAaaBandwidthContract_AaaBwc / AppBasedAaaBwc / AppCatBasedAaaBwc / WebCatBasedAaaBwc / WebRepBasedAaaBwc / ExcludeAppBwc). The AOS 8 source-side shape for each is unknown without configured live samples — this tenant has no bw-contract roles. Deferred to a v2 of this translation once we have verified samples; until then a role with bw-contract configured will silently drop the bw-contract fields when migrated.",
+          "severity_rule":   "always_operator_map",
+          "todo":            "Capture configured AOS 8 role with bw-contract and re-author key_mappings + body for each of the 5 sub-shapes."
+        },
+        {
+          "from":            "role__dialer",
+          "reason":          "VPN dialer configuration. Per the AOS 8 -> CNX LLD reference, no direct CNX RESTful API mapping found in the role schema. Skipping is safe.",
+          "severity_rule":   "non_empty_regression"
+        },
+        {
+          "from":            "role__qos_profile",
+          "reason":          "QoS profile applied to the role. CNX qos-parameters group is SW_PVOS only (not GW/AP per the LLD). Skipping is the right behavior for GW/AP migration.",
+          "severity_rule":   "non_empty_regression"
+        },
+        {
+          "from":            "role__sso, role__stateful_kerberos, role__stateful_ntlm, role__voip_profile, role__wispr",
+          "reason":          "Per the AOS 8 -> CNX LLD reference, no CNX RESTful API mapping found in the role schema. These features are not represented on the Central side.",
+          "severity_rule":   "non_empty_regression"
+        }
+      ],
+      "ignored_variants": [
+        {
+          "form":   "role with _flags.default=true at the top level",
+          "reason": "AOS 8 system / built-in roles (logon, guest, ap-role, etc.) appear with _flags.default=true on the role record itself. Migrating these would create user-role profiles in Central that duplicate Central's own built-ins. Consumer must filter top-level _flags.default=true roles before passing to emit_calls."
+        }
+      ]
+    }
+  },
+  "draft_notes": [
+    "v1 translation. Two-step Central CNX flow (role SHARED create + multi-DF config-assignments), structurally similar to central:vlan_id but with a much richer body — roles have ~20 mappable sub-properties spread across the root object plus three nested groups (session-parameters, miscellaneous-parameters, classification-parameters).",
+    "Live-verified source fields (9): rname, role__acl[], role__cp.cp_profile_name, role__cp_acc._present, role__max_sess.max_sess, role__openflow._present, role__pool_l2tp.poolname, role__reauth.reauthperiod, role__vlan.vlanstr. Sample taken across 37 user-customized roles in the operator's tenant.",
+    "LLD-INFERRED source fields (12): via, reauthentication_interval_seconds, pool_pptp, pool_via_dhcp, enforce_dhcp, robust_age_out, registration_role, ip_classification, dpi_classification, dpi_youtubeedu, web_cc. Each carries a 'LLD-INFERRED' note in its key_mapping. None of these were configured in the sample tenant; source field naming is the projection from AOS 8 conventions and may need adjustment when first encountered.",
+    "DEFERRED to v2: bandwidth contracts (5 sub-shapes: aaa, app, appcategory, web-cc-category, web-cc-reputation) and exclude variants. Captured in unmapped_fields. Need verified samples before authoring.",
+    "Consumer responsibility: pre-filter source records to drop _flags.default=true sub-objects before passing to emit_calls — otherwise every role POST will explicitly set system-default values that might overwrite Central's own defaults. Same for top-level _flags.default=true roles (system / built-in roles).",
+    "VLAN binding disambiguation: AOS 8 stores both ID and name in a single role__vlan.vlanstr string. The translation has three companion key_mappings (access_vlan_id / access_vlan_name / vlan_type) all sourcing from the same path with disambiguating transforms — only one access-vlan-* field reaches the wire payload.",
+    "Idempotency: if a role profile with the same name already exists, the SHARED POST returns HTTP 409. Consumer must handle 409 idempotently.",
+    "Role policies reference ACL session profile names that must exist in Central before the role POST. Sequence: central:acl_sess (and central:acl_eth / central:acl_mac when those translations exist) first, then central:role, then any WLAN translation that references the role."
+  ]
+}
