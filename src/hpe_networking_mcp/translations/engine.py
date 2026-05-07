@@ -337,15 +337,34 @@ def _render_body(
 
 
 def _drop_none_keys(value: Any) -> Any:
-    """Recursively drop dict keys whose value is ``None``.
+    """Recursively drop dict keys whose value is ``None`` or an empty dict.
 
-    Used for optional body fields: when a key_mapping is ``optional=True`` and
-    the source record lacks that field, the engine substitutes ``None`` and
-    this pass strips the key from the wire payload entirely (rather than
-    sending ``"description": null``).
+    Two-pass behavior, applied during dict descent:
+
+    1. Drop keys whose direct value is ``None`` (optional fields whose source
+       was missing).
+    2. After cleaning a nested dict value, drop the parent key if the cleaned
+       dict is now empty — keeps the wire payload free of orphaned ``{}``
+       sub-objects when every member of a nested group (e.g. ``"pool": {...}``)
+       came from optional fields that were all missing.
+
+    Empty *top-level* dicts pass through unchanged — the caller can decide
+    whether an empty body is meaningful for a given target API.
+
+    Lists are traversed but list elements are kept even when they cleaned
+    down to an empty dict; translation authors needing list filtering should
+    do it inside a transform.
     """
     if isinstance(value, dict):
-        return {k: _drop_none_keys(v) for k, v in value.items() if v is not None}
+        result: dict[str, Any] = {}
+        for k, v in value.items():
+            if v is None:
+                continue
+            cleaned = _drop_none_keys(v)
+            if isinstance(cleaned, dict) and not cleaned:
+                continue
+            result[k] = cleaned
+        return result
     if isinstance(value, list):
         return [_drop_none_keys(item) for item in value]
     return value

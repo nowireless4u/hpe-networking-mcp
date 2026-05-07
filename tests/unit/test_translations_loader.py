@@ -52,6 +52,82 @@ def test_loads_shipped_vlan_id_translation_cleanly() -> None:
     assert src.key_mappings["wired_aaa_profile"].optional is True
 
 
+def test_loads_shipped_role_translation_cleanly() -> None:
+    """The shipped Central role translation targets MOBILITY_GW only.
+
+    Field set is verified against the live AOS 8 source shape (parent role at
+    /md/Campus/West with full Tier 1 + reauth-seconds) and the Central role
+    schema's x-supportedDeviceType=Gateway annotations.
+    """
+    translations = load_translations()
+    assert "central:role" in translations
+    r = translations["central:role"]
+    assert r.target_platform == "central"
+    assert r.target_id == "role"
+    assert len(r.target_emits) == 2
+    # Gateway-only target (AP roles use a different schema)
+    assert r.target_meta.device_functions == ["MOBILITY_GW"]
+
+    src = r.sources["aos8"]
+    assert src.mapping_kind == "simple"
+    # Required: name (from rname)
+    assert src.key_mappings["name"].optional is False
+    # All sub-properties optional
+    optional_keys = {
+        "access_vlan_id",
+        "access_vlan_name",
+        "vlan_type",
+        "captive_portal",
+        "check_for_accounting",
+        "max_sessions",
+        "reauthentication_interval",
+        "reauthentication_interval_seconds",
+        "openflow_enable",
+        "enforce_dhcp",
+        "robust_age_out",
+        "registration_role",
+        "ip_classification",
+        "dpi_classification",
+        "dpi_youtube_education",
+        "web_cc",
+        "bw_contract_basic",
+        "bw_contract_app",
+        "bw_contract_appcategory",
+        "bw_contract_web_category",
+        "bw_contract_web_reputation",
+        "bw_contract_exclude_app",
+        "bw_contract_exclude_appcategory",
+    }
+    for key in optional_keys:
+        assert src.key_mappings[key].optional is True, f"{key} should be optional"
+
+    # Verify the single-underscore source field names that surprised me on review
+    assert src.key_mappings["ip_classification"].from_ == "role_disable_ipclassify"
+    assert src.key_mappings["dpi_youtube_education"].from_ == "role_enable_youtubeedu"
+    # Verify the corrected naming: reg_role not registration_role on the source side
+    assert src.key_mappings["registration_role"].from_ == "role__reg_role"
+    assert src.key_mappings["dpi_classification"].from_ == "role__dpi_disable"
+    assert src.key_mappings["web_cc"].from_ == "role__disable_webcc"
+
+    # Verify bw-contract source paths route to all 7 Central body fields
+    assert src.key_mappings["bw_contract_basic"].from_ == "role__bwc"
+    assert src.key_mappings["bw_contract_app"].from_ == "role__bwc_app"
+    assert src.key_mappings["bw_contract_appcategory"].from_ == "role__bwc_app"
+    assert src.key_mappings["bw_contract_web_category"].from_ == "role__bwc_web"
+    assert src.key_mappings["bw_contract_web_reputation"].from_ == "role__bwc_web"
+    assert src.key_mappings["bw_contract_exclude_app"].from_ == "role__bwc_ex"
+    assert src.key_mappings["bw_contract_exclude_appcategory"].from_ == "role__bwc_ex"
+
+    # Confirm policies dropped: there is no key_mapping that produces a 'policies' body field
+    body = next(e.body for e in r.target_emits if e.step == 1)
+    assert body is not None
+    assert "policies" not in body
+
+    # role__acl still captured as the explicit deferred entry (handled by future central:policy)
+    deferred_topics = " ".join(u.from_ for u in src.unmapped_fields)
+    assert "role__acl" in deferred_topics
+
+
 def test_loader_key_is_composite_platform_and_id(tmp_path: Path) -> None:
     """Loader key is '<target_platform>:<target_id>'; same target_id under
     different platforms doesn't collide."""
