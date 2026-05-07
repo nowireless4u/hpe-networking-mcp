@@ -48,6 +48,12 @@
         },
         "web-reputation-aaa-contract": {
           "web-reputation": "{bw_contract_web_reputation}"
+        },
+        "exclude-app-contract": {
+          "exclude-app": "{bw_contract_exclude_app}"
+        },
+        "exclude-app-cat-contract": {
+          "exclude-app-category": "{bw_contract_exclude_appcategory}"
         }
       },
       "iteration": "once",
@@ -266,15 +272,23 @@
           "transform": "aos8_role_bwc_web_filter_reputation",
           "optional":  true,
           "notes":     "Per-WebCC-reputation bandwidth contract. Companion to bw_contract_web_category — sources from the same role__bwc_web array but filters to web_opt=='web-cc-reputation'. Transform uppercases (and dash->underscore) the AOS 8 'web_rep' value to match Central's 5-value enum (TRUSTWORTHY / LOW_RISK / MODERATE_RISK / SUSPICIOUS / HIGH_RISK). Live-verified on 'parent' role with web_rep='trustworthy'."
+        },
+        "bw_contract_exclude_app": {
+          "from":      "role__bwc_ex",
+          "to":        "Central role body 'exclude-app-contract.exclude-app[]' (Gateway-only)",
+          "transform": "aos8_role_bwc_excl_filter_app",
+          "optional":  true,
+          "notes":     "Per-app bw-contract exclusion. AOS 8 stores per-app + per-appcategory exclude entries in a single role__bwc_ex array discriminated by 'app_type'; filters to app_type=='app'. The exclude variant carries no traffic direction and no contract reference — listed apps simply bypass bandwidth-contract enforcement. Live-verified on 'parent' role with appname='netflix'. Source AOS 8 app names pass through verbatim; if Central's DPI catalog rejects an unknown app, operators must remap manually."
+        },
+        "bw_contract_exclude_appcategory": {
+          "from":      "role__bwc_ex",
+          "to":        "Central role body 'exclude-app-cat-contract.exclude-app-category[]' (Gateway-only)",
+          "transform": "aos8_role_bwc_excl_filter_appcategory",
+          "optional":  true,
+          "notes":     "Per-app-category bw-contract exclusion. Companion to bw_contract_exclude_app — sources from the same role__bwc_ex array but filters to app_type=='appcategory'. Transform uppercases the AOS 8 'appname' value (which carries the category name in this variant) to match Central's 24-value enum. Live-verified on 'parent' role with appname='collaboration' (-> 'COLLABORATION')."
         }
       },
       "unmapped_fields": [
-        {
-          "from":            "role__bwc_excl (CLI: 'bw-contract exclude {app|appcategory}')",
-          "reason":          "AOS 8 supports excluding specific apps / app-categories from a bw-contract. Central CNX has matching schemas (ArubaAaaBandwidthContract_ExcludeAppBwc + ExcludeAppCatBwc with body keys 'exclude-app-contract' / 'exclude-app-cat-contract'), but the AOS 8 source-side field name for these exclude variants was not surfaced in the configured 'parent' role samples. Deferred until a configured tenant surfaces the exclude variant.",
-          "severity_rule":   "non_empty_regression",
-          "todo":            "Configure 'bw-contract exclude app <appname>' or 'bw-contract exclude appcategory <category>' on a test role and re-pull to discover the AOS 8 source field name."
-        },
         {
           "from":            "role__via, role__pool_pptp, role__pool_via_dhcp",
           "reason":          "VIA connection profile + PPTP / DHCP-proxy IP pools. Operator ruled VIA + the VIA-only pool variants out of scope for v1 (VIA workflows are increasingly handled by alternative products). role__pool_l2tp is captured below as a confirmed-live unused mapping kept for future enablement.",
@@ -313,8 +327,8 @@
   },
   "draft_notes": [
     "v1 translation, Gateway-targeted. Two-step Central CNX flow (role SHARED create + multi-DF config-assignments). Every body field is Gateway-supported per the Central role schema (verified via api-endpoints/central/role.json's x-supportedDeviceType annotations).",
-    "Live-verified source field names across 55 roles in the operator's tenant including a purpose-configured 'parent' role with all Tier 1 flag features + reauthentication-interval-seconds + per-app / per-appcategory / per-web-cc-category / per-web-cc-reputation bandwidth contracts, and the 'blacklisted' role with the basic per-role bandwidth contract. All five core bw-contract sub-shapes are mapped; only the 'exclude app/appcategory' variants remain deferred (their AOS 8 source field name was not surfaced in the available samples).",
-    "Bandwidth-contract source shape: AOS 8 stores per-app + per-appcategory in a single 'role__bwc_app' array discriminated by 'app_type' ('app' or 'appcategory'). Similarly per-web-cc-category + per-web-cc-reputation share a single 'role__bwc_web' array discriminated by 'web_opt'. The Central side has FIVE distinct schemas (one per variant), so each AOS 8 array is fanned out to two Central body fields via paired filter-and-transform key_mappings.",
+    "Live-verified source field names across 55 roles in the operator's tenant including a purpose-configured 'parent' role with all Tier 1 flag features + reauthentication-interval-seconds + per-app / per-appcategory / per-web-cc-category / per-web-cc-reputation bandwidth contracts + bw-contract exclude (app + appcategory), and the 'blacklisted' role with the basic per-role bandwidth contract. All seven bw-contract sub-shapes are mapped (basic per-role + per-app + per-appcategory + per-web-cc-category + per-web-cc-reputation + exclude-app + exclude-appcategory).",
+    "Bandwidth-contract source shape: AOS 8 stores three discriminated source arrays: 'role__bwc_app' carries per-app + per-appcategory entries (discriminator 'app_type'), 'role__bwc_web' carries per-web-cc-category + per-web-cc-reputation entries (discriminator 'web_opt'), and 'role__bwc_ex' carries exclude-app + exclude-appcategory entries (also using 'app_type'). Plus the basic per-role 'role__bwc'. Central has SEVEN distinct body schemas; each AOS 8 array fans out to two Central body fields via paired filter-and-transform key_mappings.",
     "INVERSION CALL-OUT: AOS 8 carries the role->ACL binding inside the role record (role__acl array). Central inverts the relationship — policies reference roles via policy-rule[].condition.source.role, and Central back-fills role.policies[] from those references. This translation does NOT send policies[] in the role body. ACL->role binding is owned by the future central:policy translation.",
     "Idempotency: if a role profile with the same name already exists, the SHARED POST returns HTTP 409. Consumer must handle 409 idempotently.",
     "Two AOS 8 flag SHAPES coexist in the source: Pattern A (role__cp_acc / role__openflow have {_present: true, _flags: {default: true}}) and Pattern B (role__enforce_dhcp / role__reg_role / role__dpi_disable / role__disable_webcc / role_disable_ipclassify / role_enable_youtubeedu surface as empty {} when configured, absent when not). Both are handled by the same aos8_field_present_to_true transform — it returns True for any non-None value, relying on the engine's optional-field path to drop the body key when the source path is missing entirely.",

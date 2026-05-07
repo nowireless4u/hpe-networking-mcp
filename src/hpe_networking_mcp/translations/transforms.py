@@ -393,6 +393,50 @@ def aos8_role_bwc_web_filter_reputation(value: Any) -> list[dict[str, str]] | No
     return out or None
 
 
+def aos8_role_bwc_excl_filter_app(value: Any) -> list[dict[str, str]] | None:
+    """Filter ``role__bwc_ex[]`` to ``app_type == "app"``; rename for Central.
+
+    Source (filtered): ``{"app_type": "app", "appname": "<dpi-app>"}``.
+    Target: ``{"exclude-app-name": "<dpi-app>"}``.
+
+    The exclude variant carries no traffic direction and no contract
+    reference — listed apps simply bypass bandwidth-contract enforcement.
+    """
+    if not isinstance(value, list):
+        return None
+    out: list[dict[str, str]] = []
+    for entry in value:
+        if not isinstance(entry, dict) or entry.get("app_type") != "app":
+            continue
+        appname = entry.get("appname")
+        if appname:
+            out.append({"exclude-app-name": str(appname)})
+    return out or None
+
+
+def aos8_role_bwc_excl_filter_appcategory(value: Any) -> list[dict[str, str]] | None:
+    """Filter ``role__bwc_ex[]`` to ``app_type == "appcategory"``; rename + uppercase.
+
+    Source (filtered): ``{"app_type": "appcategory", "appname": "collaboration"}``.
+    Target: ``{"exclude-app-category-name": "COLLABORATION"}``.
+
+    Companion to ``aos8_role_bwc_excl_filter_app`` — sources from the same
+    ``role__bwc_ex`` array but filters to the appcategory variant. The
+    AOS 8 ``appname`` field carries the category name (a quirk of the
+    source schema reusing the field for both variants).
+    """
+    if not isinstance(value, list):
+        return None
+    out: list[dict[str, str]] = []
+    for entry in value:
+        if not isinstance(entry, dict) or entry.get("app_type") != "appcategory":
+            continue
+        cat = entry.get("appname")
+        if cat:
+            out.append({"exclude-app-category-name": str(cat).upper()})
+    return out or None
+
+
 _REGISTRY: dict[str, TransformFn] = {
     "direct": direct,
     "direct_str": direct_str,
@@ -411,4 +455,6 @@ _REGISTRY: dict[str, TransformFn] = {
     "aos8_role_bwc_app_filter_appcategory": aos8_role_bwc_app_filter_appcategory,
     "aos8_role_bwc_web_filter_category": aos8_role_bwc_web_filter_category,
     "aos8_role_bwc_web_filter_reputation": aos8_role_bwc_web_filter_reputation,
+    "aos8_role_bwc_excl_filter_app": aos8_role_bwc_excl_filter_app,
+    "aos8_role_bwc_excl_filter_appcategory": aos8_role_bwc_excl_filter_appcategory,
 }

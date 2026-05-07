@@ -21,13 +21,14 @@ Adds `central:role`, the third shipped translation, covering AOS 8 user-role RES
 
 2. **Engine: `_drop_none_keys` now drops empty nested dicts.** When every member of a nested body group is an optional field whose source value was missing, the post-render pass now drops the now-empty parent key entirely. Top-level empty dicts pass through unchanged. Critical for the role translation since most roles configure only a small subset of the ~16 mappable fields (and all three nested groups are entirely optional).
 
-3. **Eleven new transforms in `translations/transforms.py`:**
+3. **Thirteen new transforms in `translations/transforms.py`:**
    - `vlanstr_to_id_if_numeric` / `vlanstr_to_name_if_nonnumeric` / `vlanstr_to_vlan_type` — disambiguate AOS 8's combined `role__vlan.vlanstr` field (Central splits it into separate `access-vlan-id` int / `access-vlan-name` string + `vlan-type` enum).
    - `aos8_field_present_to_true` — handles both the older Pattern A flag shape (`{_present: true, _flags: {default: true}}` on `role__cp_acc` / `role__openflow`) and the newer Pattern B shape (empty `{}` when configured on `role__enforce_dhcp` / `role__reg_role` / `role__dpi_disable` / etc.). Returns `True` for any non-`None` input — reaching the transform implies the path resolved.
    - `aos8_reauth_minutes_value` / `aos8_reauth_seconds_value` — paired transforms reading the `role__reauth` dict; one returns the value when `seconds` is falsy/absent (minutes form), the other when `seconds: true` (seconds form). Live-verified on the `parent` role.
    - **`aos8_role_bwc_basic_to_central`** — basic per-role bandwidth contract: `role__bwc[]` → `aaa-bw-contract.bw-contract[]`. Live shape verified on `blacklisted` role.
    - **`aos8_role_bwc_app_filter_app`** / **`aos8_role_bwc_app_filter_appcategory`** — paired transforms that fan out the AOS 8 `role__bwc_app[]` array (which mixes per-app + per-appcategory entries discriminated by `app_type`) into Central's two distinct schemas (`app-aaa-contract.app[]` and `app-category-aaa-contract.app-category[]`). Live-verified on `parent` role with `youtube` (app) and `streaming` (appcategory).
    - **`aos8_role_bwc_web_filter_category`** / **`aos8_role_bwc_web_filter_reputation`** — same fan-out pattern for `role__bwc_web[]` (mixed per-web-cc-category + per-web-cc-reputation discriminated by `web_opt`) → `web-category-aaa-contract.web-category[]` / `web-reputation-aaa-contract.web-reputation[]`. Category names are uppercased + slash-replaced (e.g. `streaming/media` → `STREAMING-MEDIA`); reputations are uppercased + dash-to-underscore-replaced (e.g. `low-risk` → `LOW_RISK`).
+   - **`aos8_role_bwc_excl_filter_app`** / **`aos8_role_bwc_excl_filter_appcategory`** — same pattern for the bw-contract exclude variants (`role__bwc_ex[]` discriminated by `app_type`) → `exclude-app-contract.exclude-app[]` / `exclude-app-cat-contract.exclude-app-category[]`. The exclude variant carries no traffic direction and no contract reference — listed apps/categories simply bypass bandwidth-contract enforcement.
 
 ### Files
 
@@ -41,10 +42,10 @@ Adds `central:role`, the third shipped translation, covering AOS 8 user-role RES
 
 ### Notes
 
-- 1107 tests pass (was 1037; +70 from new transforms + role tests including bw-contract coverage).
-- Cross-referenced the operator's live tenant (55 roles at `/md/Campus/West`, including the test `parent` role with all 5 bw-contract sub-shapes configured) against `api-endpoints/central/role.json`'s `x-supportedDeviceType` annotations. The body shape is now the strict intersection of "AOS 8 carries it" + "Central role schema accepts it for Gateway".
+- 1114 tests pass (was 1037; +77 from new transforms + role tests including all 7 bw-contract sub-shapes).
+- Cross-referenced the operator's live tenant (55 roles at `/md/Campus/West`, including the test `parent` role with all 7 bw-contract sub-shapes configured — basic + per-app + per-appcategory + per-web-cc-category + per-web-cc-reputation + exclude-app + exclude-appcategory) against `api-endpoints/central/role.json`'s `x-supportedDeviceType` annotations. The body shape is now the strict intersection of "AOS 8 carries it" + "Central role schema accepts it for Gateway".
 - Consumer responsibility documented: pre-filter `_flags.default=true` sub-objects (and top-level `_flags.default=true` roles) from source records before passing to `emit_calls`. Otherwise every role POST will explicitly carry AOS 8 system defaults (`max-sessions=65535`, `check-for-accounting=true`, etc.) which may overwrite Central's own role-profile defaults.
-- Deferred (now narrower): `role__bwc_excl` (bw-contract exclude variants — AOS 8 source field name not yet sampled), `role__acl` (handled by future `central:policy` translation), VIA + pool fields (operator scoped them out as rarely used / better handled by alternative products), `disable-cp-gw-translation` (Gateway-only Central field; AOS 8 source name unknown).
+- Remaining deferrals: `role__acl` (handled by future `central:policy` translation), VIA + pool fields (operator scoped them out as rarely used / better handled by alternative products), `disable-cp-gw-translation` (Gateway-only Central field; AOS 8 source name unknown).
 - Earlier draft from PR #282 is gone — the rework is a clean replacement, not a patch.
 
 ## [3.0.1.1] - 2026-05-07

@@ -90,6 +90,13 @@ def test_loads_shipped_role_translation_cleanly() -> None:
         "dpi_classification",
         "dpi_youtube_education",
         "web_cc",
+        "bw_contract_basic",
+        "bw_contract_app",
+        "bw_contract_appcategory",
+        "bw_contract_web_category",
+        "bw_contract_web_reputation",
+        "bw_contract_exclude_app",
+        "bw_contract_exclude_appcategory",
     }
     for key in optional_keys:
         assert src.key_mappings[key].optional is True, f"{key} should be optional"
@@ -102,14 +109,22 @@ def test_loads_shipped_role_translation_cleanly() -> None:
     assert src.key_mappings["dpi_classification"].from_ == "role__dpi_disable"
     assert src.key_mappings["web_cc"].from_ == "role__disable_webcc"
 
+    # Verify bw-contract source paths route to all 7 Central body fields
+    assert src.key_mappings["bw_contract_basic"].from_ == "role__bwc"
+    assert src.key_mappings["bw_contract_app"].from_ == "role__bwc_app"
+    assert src.key_mappings["bw_contract_appcategory"].from_ == "role__bwc_app"
+    assert src.key_mappings["bw_contract_web_category"].from_ == "role__bwc_web"
+    assert src.key_mappings["bw_contract_web_reputation"].from_ == "role__bwc_web"
+    assert src.key_mappings["bw_contract_exclude_app"].from_ == "role__bwc_ex"
+    assert src.key_mappings["bw_contract_exclude_appcategory"].from_ == "role__bwc_ex"
+
     # Confirm policies dropped: there is no key_mapping that produces a 'policies' body field
     body = next(e.body for e in r.target_emits if e.step == 1)
     assert body is not None
     assert "policies" not in body
 
-    # Confirm bw-contract + acl-binding are explicitly captured as deferred
+    # role__acl still captured as the explicit deferred entry (handled by future central:policy)
     deferred_topics = " ".join(u.from_ for u in src.unmapped_fields)
-    assert "role__bwc" in deferred_topics
     assert "role__acl" in deferred_topics
 
 

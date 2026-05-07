@@ -672,5 +672,29 @@ def test_role_no_bwc_configured_drops_all_bw_contract_keys(role) -> None:
         "app-category-aaa-contract",
         "web-category-aaa-contract",
         "web-reputation-aaa-contract",
+        "exclude-app-contract",
+        "exclude-app-cat-contract",
     ):
         assert key not in body
+
+
+def test_role_bwc_exclude_array_fans_out_to_app_and_appcategory_groups(role) -> None:
+    """Live shape: role__bwc_ex=[{app_type, appname}] mixes app + appcategory.
+
+    Source from 'parent' role at /md/Campus/West:
+      [{"app_type": "app", "appname": "netflix"},
+       {"app_type": "appcategory", "appname": "collaboration"}]
+    """
+    source = {
+        "rname": "parent",
+        "role__bwc_ex": [
+            {"app_type": "app", "appname": "netflix"},
+            {"app_type": "appcategory", "appname": "collaboration"},
+        ],
+    }
+    body = emit_calls(role, source, "aos8", runtime_values=_role_runtime())[0].body or {}
+    assert body == {
+        "name": "parent",
+        "exclude-app-contract": {"exclude-app": [{"exclude-app-name": "netflix"}]},
+        "exclude-app-cat-contract": {"exclude-app-category": [{"exclude-app-category-name": "COLLABORATION"}]},
+    }

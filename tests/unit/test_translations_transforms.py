@@ -17,6 +17,8 @@ from hpe_networking_mcp.translations.transforms import (
     aos8_role_bwc_app_filter_app,
     aos8_role_bwc_app_filter_appcategory,
     aos8_role_bwc_basic_to_central,
+    aos8_role_bwc_excl_filter_app,
+    aos8_role_bwc_excl_filter_appcategory,
     aos8_role_bwc_web_filter_category,
     aos8_role_bwc_web_filter_reputation,
     get_transform,
@@ -253,6 +255,38 @@ class TestBwcWebFilters:
         assert aos8_role_bwc_web_filter_reputation(None) is None
 
 
+class TestBwcExcludeFilters:
+    def test_filter_exclude_app_returns_app_only(self) -> None:
+        """Live shape: role__bwc_ex=[{app_type, appname}] (no dir, no name)."""
+        source = [
+            {"app_type": "app", "appname": "netflix"},
+            {"app_type": "appcategory", "appname": "collaboration"},
+        ]
+        assert aos8_role_bwc_excl_filter_app(source) == [{"exclude-app-name": "netflix"}]
+
+    def test_filter_exclude_appcategory_returns_uppercased(self) -> None:
+        source = [
+            {"app_type": "app", "appname": "skip-me"},
+            {"app_type": "appcategory", "appname": "collaboration"},
+            {"app_type": "appcategory", "appname": "streaming"},
+        ]
+        assert aos8_role_bwc_excl_filter_appcategory(source) == [
+            {"exclude-app-category-name": "COLLABORATION"},
+            {"exclude-app-category-name": "STREAMING"},
+        ]
+
+    def test_filters_return_none_when_no_matching_entries(self) -> None:
+        source_only_app = [{"app_type": "app", "appname": "netflix"}]
+        assert aos8_role_bwc_excl_filter_appcategory(source_only_app) is None
+
+        source_only_cat = [{"app_type": "appcategory", "appname": "collaboration"}]
+        assert aos8_role_bwc_excl_filter_app(source_only_cat) is None
+
+    def test_empty_input_returns_none(self) -> None:
+        assert aos8_role_bwc_excl_filter_app([]) is None
+        assert aos8_role_bwc_excl_filter_appcategory(None) is None
+
+
 # --------------------------------------------------------------------------- #
 # Registry
 # --------------------------------------------------------------------------- #
@@ -279,6 +313,8 @@ class TestRegistry:
             "aos8_role_bwc_app_filter_appcategory",
             "aos8_role_bwc_web_filter_category",
             "aos8_role_bwc_web_filter_reputation",
+            "aos8_role_bwc_excl_filter_app",
+            "aos8_role_bwc_excl_filter_appcategory",
         ],
     )
     def test_all_transforms_resolve(self, name: str) -> None:
