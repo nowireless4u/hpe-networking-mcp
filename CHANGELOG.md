@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0.6] - 2026-05-06
+
+**Patch release — PII walker structural-context rules + `RADSEC` → `RAD` / `TACACS` token-kind split.**
+
+The AOS 8 structured config endpoint `/v1/configuration/object/rad_server?type=user` returns RADIUS shared secrets in **cleartext** as `rad_key.key` (verified live with a direct httpx call inside the running MCP container, bypassing the PII tokenization middleware). The PII walker classified the inner `key` field via the `looks_like_credential()` shape heuristic — and short single-class secrets like `"protocol"` failed the shape check, leaking cleartext to the AI.
+
+This was a **pre-existing privacy bug** affecting every operator who reads AOS 8 RADIUS server config through this MCP server, regardless of migration use case.
+
+Closes [#277](https://github.com/nowireless4u/hpe-networking-mcp/issues/277).
+
+### Three changes
+
+1. **Walker plumbing extension.** `_walk_dict` / `_walk_pair` / `_walk_list` now thread a `parent_field_name` argument through recursion — the wrapping key under which the current dict was found. `classify_field` accepts it as a new keyword argument.
+
+2. **Structural-context rules.** New `STRUCTURAL_SECRET_CONTEXTS: dict[(parent, child), TokenKind]` table fires unconditionally (no shape check) when a generic field name is nested under a wrapping key that strongly implies a credential. Shipped entries:
+   - `("rad_key", "key")` → `RAD`
+   - `("tacacs_key", "key")` → `TACACS`
+   The placeholder-skip from v3.0.0.5 still runs first, so a `********` value under `rad_key` stays cleartext (preserves the dangerous-illusion safety net).
+
+3. **`TokenKind.RADSEC` split into `RAD` and `TACACS`.** The old `RADSEC` was a category covering RADIUS / RadSec / TACACS+ shared secrets and EAP passwords — overloaded with the *RadSec* protocol (RADIUS over TLS). Split for clarity:
+   - **`TokenKind.RAD`** — RADIUS / RadSec shared secrets, EAP-tunneled passwords
+   - **`TokenKind.TACACS`** — TACACS+ shared secrets and TACACS+-tunneled passwords
+
+   Existing `SECRET_FIELD_NAMES` entries (`shared_secret`, `radius_secret`, `radsec_secret`, `eap_password`, `inner_password`) and the generic-credential `secret` rule remap to `RAD`. Wire format changes from `[[RADSEC:uuid]]` to `[[RAD:uuid]]` (or `[[TACACS:uuid]]` when fired via the structural rule). Internal-only change; new sessions use the new labels.
+
+4. **`vrrp_passphrase` rule** added to `SECRET_FIELD_NAMES` mapping to `PSK`. Live captures show AOS 8 returns `cluster_prof.vrrp_info.vrrp_passphrase` as the deterministic-encrypted form (~48 hex chars); we tokenize unconditionally rather than relying on the shape-check heuristic incidentally passing.
+
+### Behavior change to flag
+
+Callers / clients that previously hard-coded prefix-detection for `[[RADSEC:` will need to recognize `[[RAD:` and `[[TACACS:` instead. The detokenize round-trip works as before for any token allocated within the same session.
+
+### Files
+
+- `src/hpe_networking_mcp/redaction/rules.py` — `TokenKind.RADSEC` removed; `RAD` + `TACACS` added; existing field-rule entries remapped; `STRUCTURAL_SECRET_CONTEXTS` added; `classify_field` accepts `parent_field_name` and consults the structural rules; `vrrp_passphrase` added to `SECRET_FIELD_NAMES`.
+- `src/hpe_networking_mcp/redaction/walker.py` — `_walk_dict` / `_walk_pair` / `_walk_list` thread `parent_field_name` through recursion.
+- `src/hpe_networking_mcp/INSTRUCTIONS.md` — token-kind list updated for the rename.
+- `tests/unit/test_pii_redaction.py` — existing `RADSEC` assertions updated to `RAD`; new test classes for `TestStructuralSecretContexts`, `TestVrrpPassphraseRule`, and `TestStructuralWalkerEndToEnd` (covers a realistic AOS 8 `rad_server` shape with both short single-class and multi-class secrets).
+- `pyproject.toml` — bump 3.0.0.5 → 3.0.0.6.
+
+### Notes
+
+- 1006 tests pass (was 998; +8 from new structural / vrrp / end-to-end tests).
+- Live evidence captured during issue #277 design discussion: the structured endpoint returns `rad_key.key` values like `"protocol"` and `"nowireless4u"` in cleartext. After this release, both tokenize correctly as `[[RAD:uuid]]` end-to-end.
+
 ## [3.0.0.5] - 2026-05-06
 
 **Patch release — AOS 8 transposed-table tokenization fix.**
