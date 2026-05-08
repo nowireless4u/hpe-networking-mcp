@@ -33,6 +33,11 @@ the BEFORE; this captures the AFTER and shows the delta.
 - The change should actually be complete. If the user is still mid-change,
   ask them to confirm the change landed before continuing — running
   post-check during the change produces a misleading delta.
+- The baseline pins the scope_id (Central) / site_id (Mist) etc. — match
+  the post-check to the SAME identifier. If you only have a name and need
+  to cross-check against the baseline's scope_id, use the
+  `central-scope-walker` skill to resolve the name and confirm it agrees
+  with the baseline before running.
 
 ## Procedure
 

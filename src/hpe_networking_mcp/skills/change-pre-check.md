@@ -35,6 +35,11 @@ this snapshot.
   first and abort with a clear error if any required platform is
   `unavailable` — running pre-check against a flapping platform produces a
   misleading baseline.
+- If the change targets a Central scope and the user supplied a name
+  rather than a scope_id (e.g. "site HQ"), use the `central-scope-walker`
+  skill to resolve the name to a scope_id before snapshotting. Pin the
+  scope_id in the snapshot — names can be ambiguous (HQ in multiple
+  collections); scope_ids are not.
 
 ## Procedure
 

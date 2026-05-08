@@ -41,6 +41,10 @@ appropriate `central_manage_*` tools after reviewing.
   **site collection**, or a specific **site**. Org-wide for a large
   deployment can produce 100+ findings — confirm with the operator
   before running. Offer site-collection scope as the cheaper option.
+- If the operator names the audit scope by name rather than scope_id
+  (e.g. "audit site HQ"), resolve it to a scope_id first via the
+  `central-scope-walker` skill — it's a one-snippet primitive that
+  walks `central_get_scope_tree` and returns bounded matches.
 
 ## Procedure — 14 audit checks across ~25 profile categories with per-setting depth
 

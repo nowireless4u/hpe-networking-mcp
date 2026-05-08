@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1.5] - 2026-05-07
+
+**Patch release — small-local-model code-mode hardening from Zach's continued OpenClaw + Qwen3 4B test report (2026-05-07).**
+
+The continued report showed two repeating failure modes that are skill-and-docs-fixable rather than middleware-fixable:
+
+1. **Tree-recursion authorship in the sandbox.** Qwen3 4B reliably mutates multiline code (inserts spurious leading spaces → `Unexpected indentation at byte range 57..58`), then returns `found:false` as if the traversal had completed. The recurring offender was `central_get_scope_tree` walking — every "find scope by name" path failed.
+2. **Final-answer-space data manipulation.** The model truncates large JSON, fabricates counts, omits records, and wraps code in `async def run()` (returning a coroutine object then fabricating output) when asked to operate on tool results outside `execute()`.
+
+Both fixes ship as docs / skill changes. No engine code changed — the v3 envelope, code-mode sandbox, and `isError:true` plumbing all worked correctly in the test report (Sections 6.x and 9.2 explicitly validate them).
+
+### Three changes
+
+1. **New `central-scope-walker` skill.** Tiny, paste-ready primitive that walks `central_get_scope_tree` output and resolves a name / path / `scope_id` / case-insensitive substring to its Central `scope_id` plus parent path, type, and metadata. Bounded output (caps to 10 matches) so it stays small-model-friendly. Designed deliberately to NOT require the AI to author tree-recursion — every recursion path failed in Zach's test for Qwen.
+
+2. **See-also references in four downstream skills.** `central-scope-audit` (Prerequisites: resolve operator-named audit scope first), `change-pre-check` (Prerequisites: pin scope_id in the snapshot since names can be ambiguous across collections), `change-post-check` (Prerequisites: cross-check post-check name against baseline scope_id), `aos-migration` (Stage 7: resolve operator-confirmed Central names to scope_ids before Stage 9 emits config-assignments). The walker is the canonical resolution primitive; downstream skills don't author their own.
+
+3. **INSTRUCTIONS.md `Code-mode execute() patterns` section.** Two rules with worked-example code for each:
+   - **Don't wrap in `async def run()`.** `execute()` already runs in an async context. Wrapping creates an unawaited coroutine and the model fabricates a final answer because no real data came back.
+   - **Filter / count / project large results inside `execute()`.** Final-answer space breaks on > ~30-item lists; do all reductions in the sandbox and return a small bounded dict.
+
+### What was deliberately NOT done
+
+- **No `central_find_scope_by_name` tool.** Per discussion with the maintainer: code mode is the default forward path, and a skill can do everything a tool would do here without inflating the underlying-tool count or violating the code-mode "compose primitives in `execute`" model. Skills encode workflow over read tools; tools encode policy or new endpoints. Scope-name lookup is the former.
+- **No `hashlib` whitelist** in the sandbox stdlib surface. Qwen retrying with a fabricated hash after `import hashlib` failed is a model-trust issue, not a sandbox-completeness issue. If the operator wants hashing in `execute()`, they ask explicitly.
+
+### Files
+
+- **New: `src/hpe_networking_mcp/skills/central-scope-walker.md`** — 9th bundled skill
+- **`src/hpe_networking_mcp/INSTRUCTIONS.md`** — adds Code-mode `execute()` patterns section after the response envelope section
+- **`src/hpe_networking_mcp/skills/central-scope-audit.md`** — Prerequisites references the walker
+- **`src/hpe_networking_mcp/skills/change-pre-check.md`** — Prerequisites references the walker (pin scope_id in baseline)
+- **`src/hpe_networking_mcp/skills/change-post-check.md`** — Prerequisites references the walker (cross-check vs baseline)
+- **`src/hpe_networking_mcp/skills/aos-migration.md`** — Stage 7 references the walker for resolving Central names to scope_ids
+- **`docs/TOOLS.md`** — adds `central-scope-walker` row to the Bundled skills table
+- **`.gitignore`** — adds the continued test report markdown file
+- **`pyproject.toml`** — bump 3.0.1.4 → 3.0.1.5
+
+### Notes
+
+- 1158 tests pass (was 1157; +1 from skills-discovery tests auto-counting the new `central-scope-walker` skill — no functional change).
+- The first OpenClaw + Qwen3 4B report drove v3.0.0.0 (universal envelope) and v2.5.2.1 (`isError:true` on sandbox failures). This continued report drives v3.0.1.5. Zach's continued report explicitly validates both prior changes — strict-wrapper prompts work because every tool ships the same envelope shape, and direct MCP `tools/call` correctly emits `isError:true` for sandbox indentation failures.
+- The walker snippet uses the documented double-unwrap fallback (`response.get("data", response)` → optional inner `result` unwrap) so it's safe across the inner-wrapper inconsistency between platforms.
+
 ## [3.0.1.4] - 2026-05-07
 
 **Patch release — translation authoring template standardization. Refactor `central:policy` to the standard Paradigm-B shape, add a `preprocessing` engine field for translations whose source needs restructuring, ship lint rules + CI enforcement so future translations follow the template.**

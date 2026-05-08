@@ -139,6 +139,58 @@ When tokenization is off, tool responses contain plaintext values — your behav
 
   Tools known to use the inner wrapper as of v3.0.0.0: most `central_*` and `aos8_*` reads (e.g. `central_get_sites`, `aos8_get_ap_database`, `aos8_get_effective_config`). Tools that return the payload directly (no inner wrapper): `health`, the 4 cross-platform tools, most `mist_*` reads. When in doubt, use the fallback pattern above — it's safe for both shapes.
 
+## Code-mode `execute()` patterns
+
+Two rules — both are responses to live small-local-model failure modes (Zach's OpenClaw + Qwen3 4B test report, 2026-05-07).
+
+### 1. Do NOT wrap your code in `async def run()` (or any other async function)
+
+`execute()` already runs your code inside an async context, with `call_tool` / `await call_tool(...)` available at the top level. Wrapping creates a coroutine object that's never awaited, and the sandbox returns the un-awaited coroutine — typically followed by the model fabricating a final answer because no real data came back.
+
+```python
+# ✅ Correct — paste-and-go inside execute().
+response = await call_tool("central_get_sites", {})
+sites = response.get("data", response)
+result = {"site_count": len(sites)}
+result
+```
+
+```python
+# ❌ Wrong — `run()` is never awaited; `result` is a coroutine object.
+async def run():
+    response = await call_tool("central_get_sites", {})
+    return {"site_count": len(response.get("data", response))}
+result = run()   # coroutine, not a dict
+result
+```
+
+### 2. Filter, count, and project large results INSIDE `execute()` — not in the final-answer
+
+Small models reliably break when asked to re-serialize, count, or extract from large payloads in their final-answer space (truncated JSON, fabricated counts, omitted records). Do all reductions in the sandbox and return only a small bounded dict.
+
+```python
+# ✅ Correct — filter + count inside execute(), return ~5 keys.
+response = await call_tool("central_get_devices", {"limit": 1000})
+data = response.get("data", response)
+devices = data.get("result", data) if isinstance(data, dict) and "result" in data else data
+aps = [d for d in devices if d.get("device_type") == "ap"]
+result = {
+    "ap_count": len(aps),
+    "first_5": [{"name": d.get("name"), "site": d.get("site")} for d in aps[:5]],
+}
+result
+```
+
+```python
+# ❌ Wrong — returns the whole list; the model then tries to count/filter
+# in final-answer space and produces wrong totals or truncates the JSON.
+response = await call_tool("central_get_devices", {"limit": 1000})
+result = response   # entire envelope including all devices
+result
+```
+
+This applies even to "small" lists — anything > ~30 items is risky for small models in final-answer space. When in doubt, reduce in the sandbox.
+
 ---
 
 # JUNIPER MIST (mist_* tools)
