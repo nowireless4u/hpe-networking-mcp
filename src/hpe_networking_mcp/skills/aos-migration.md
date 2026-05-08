@@ -568,6 +568,8 @@ Do NOT run Stages 7-10 silently or pre-emptively.
 
 Promote the readiness-stage hierarchy mapping table (Stage 6 inventory section) into a translation stage with explicit rules. Reuse the Stage 1 COLLECT-01 effective-config or pasted `show configuration node-hierarchy` output already in context — do NOT re-fetch.
 
+**Resolving Stage 7 mapping rows to Central `scope_id`s:** when Stage 9's API call sequence needs a `scope_id` (e.g. for `central_manage_config_assignment`), use the `central-scope-walker` skill — paste the operator-confirmed Central name (`USE`, `dallas-hq`, etc.) into its snippet to get the `scope_id` plus parent path. Don't author tree-recursion in `execute()`; the walker is a one-shot primitive that handles exact name / path / scope_id / substring matches uniformly.
+
 **Rules** (anchor: VSG §1529-§1535 *"Mapping AOS-8 Hierarchy to AOS-10 Configuration Model"* + §1834-§1835; Central scope semantics per the Aruba Central VSG *Configuration Model* section).
 
 AOS 10 / Central has **5 scopes**: `Global` (implicit root), `Site Collection`, `Site`, `Device`, and `Device Group`. The first four form a top-down hierarchy (`Global → Site Collection → Site → Device`); `Device Group` is parallel and lets administrators logically group devices outside the hierarchy. **Personas are NOT a scope** — they are filtered via a separate dimension called **Device Functions** (Campus Access Point, Mobility Gateway, VPNC, Microbranch, Core Switch, Aggregation Switch, Access Switch, etc.) that limit which device types receive a profile within a given scope. Earlier revisions of this skill incorrectly described "device persona scope" as a fifth placement; that was wrong, and Stage 7 now uses Device Functions to filter rather than as a target placement.
