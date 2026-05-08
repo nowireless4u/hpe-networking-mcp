@@ -72,6 +72,14 @@ Use the cross-platform tools directly when they apply — they replace several p
 1. **Never assume IDs or MAC addresses.** Always retrieve them with the appropriate tools before using them. This especially applies to org_id — ALWAYS call `mist_get_self(action_type=account_info)` first to get the correct org_id. Do NOT use an org_id from memory, a previous conversation, or any other source.
 2. **Only send parameters that are needed.** Do not pass empty, null, or irrelevant parameters.
 3. **Only answer based on data returned by tools.** Never infer, estimate, or fabricate network state.
+
+   **Tool-call-first idiom for identifier queries.** Before answering any question that names a specific identifier — site name, device serial, MAC, IP, scope name, AP name, WLAN/SSID name, ACL name, role name, alias, server group, policy name, etc. — you MUST first call the matching read tool. Do NOT answer from conversation context, training-data memory, or recall of similar setups in other tenants.
+
+   ✅ Correct: user asks *"what's the channel on AP `corp-ap-01`?"* → call `central_get_ap_details(ap_name="corp-ap-01")` first → report the channel from the response.
+
+   ❌ Wrong: user asks *"what's the channel on AP `corp-ap-01`?"* → answer from a previous session's context or guess based on a similar AP. Even if `corp-ap-01` came up earlier in the conversation, channel state changes; re-fetch.
+
+   Cost of the tool call is ~one round-trip. Cost of an answer based on stale memory is the operator acts on bad data — in maintenance windows that means deployment decisions made on wrong assumptions.
 4. If a tool returns no data or an error, say so explicitly. Do not guess.
 5. **MANDATORY: use the information you already have from `<platform>_list_tools` before invoking.** Every tool entry from `list_tools` includes a `params` map showing parameter names + types (and `?` suffix for optional) — always check it before calling `invoke_tool`. Never invoke with `params={}` or guessed names when the `list_tools` output already told you what's required.
 6. **Call `<platform>_get_tool_schema(name=...)` when the `list_tools` params map isn't sufficient.** Specifically: when a param's type is an enum class name (e.g. `"Action_type"`) and you don't yet know its valid values, when you need field descriptions to understand parameter semantics, or when a `dict`/`payload` param needs a nested schema. You do NOT need to re-read a schema you've already fetched in the same conversation; cache it mentally.
@@ -190,6 +198,33 @@ result
 ```
 
 This applies even to "small" lists — anything > ~30 items is risky for small models in final-answer space. When in doubt, reduce in the sandbox.
+
+### 3. Sandbox-stdlib reference — what works, what's blocked
+
+The `execute()` sandbox uses `pydantic-monty` for its Python parser. It supports a subset of Python 3 — most data manipulation works, but several common modules and constructs are blocked. Authoring code that runs first try means staying inside the supported surface.
+
+**Known-working** (verified in shipped skills + tests):
+- Built-in types: `str`, `int`, `float`, `bool`, `list`, `dict`, `set`, `tuple`, `None`
+- Comprehensions: list / dict / set / generator (the LATTER is fine when consumed eagerly via `list(...)`; bare generators that need `yield` syntax are NOT — see below)
+- Control flow: `if` / `elif` / `else`, `for`, `while`, `break`, `continue`, `try`/`except`/`finally`
+- Operators, slicing, f-strings, basic string methods
+- `json` (verified — Stage 9b uses it for body inspection)
+- `re` (verified — used by Stage 9b filtering helpers)
+- The injected `await call_tool(name, params)` for platform tool dispatch
+
+**Known-blocked** — using any of these returns a sandbox error:
+
+| Construct / module | Error | Substitute |
+|---|---|---|
+| `yield` / `yield from` | `NotImplementedError: monty syntax parser does not yet support yield expressions` | Use an explicit stack/list loop and `return` |
+| `async def` (any function) | unawaited-coroutine footgun (sandbox already runs in async context) | Inline the code at the top level inside `execute()` |
+| `import hashlib` | `ModuleNotFoundError` | Accept a pre-computed digest as an input parameter |
+| `import hpe_networking_mcp.*` | `ModuleNotFoundError` | Use platform tools via `await call_tool(name, params)` |
+| `datetime.now()`, `time.time()` | `RuntimeError: OS access blocked` | Accept ISO-8601 timestamps as parameters; or hardcode literal ISO strings |
+| `os.environ`, `subprocess`, file I/O | `RuntimeError: OS access blocked` | Accept config values as parameters |
+| `asyncio.gather()` | unavailable | Use sequential `await` calls — same wall-clock cost matters less here than in production async code |
+
+**This list grows as more failures surface.** If you hit a sandbox error not listed here, file an issue with the exact error message — both the documented blocklist and the `tests/unit/test_skill_snippet_sandbox_compat.py` lint update from the same evidence.
 
 ---
 
