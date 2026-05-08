@@ -5,6 +5,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1.8] - 2026-05-08
+
+**Patch release — fixes #289: walker structural-identifier rule for AOS 8 list-of-dicts identifier shapes. Production VLAN names that were leaking through cleartext now tokenize correctly.**
+
+### Bug
+
+The PII walker's field-name rule for `vlan_name → NAME` (in `redaction/rules.py:208`) only fires when a string value sits *directly* at a `vlan_name` key. AOS 8's actual response shape is:
+
+```json
+{"_data": {"vlan_name": [{"name": "guest"}, {"name": "local"}]}}
+```
+
+The walker walks the list with `parent_field_name="vlan_name"`, then walks each `{"name": "guest"}` dict — at this point the inner key is `"name"`, which isn't in the field-rule dict. No structural-context rule paired `(vlan_name, name)` either; the existing `STRUCTURAL_SECRET_CONTEXTS` only covered RADIUS/TACACS shared secrets per #277. Result: VLAN names slipped through cleartext on production data. Verified empirically against a live tenant during v3.0.1.6 Stage 9b runs (`guest`, `local`, `vlan20` all unredacted).
+
+### Fix
+
+1. **New `STRUCTURAL_IDENTIFIER_CONTEXTS` table in `redaction/rules.py`** — parallel to the existing `STRUCTURAL_SECRET_CONTEXTS`. Same `(parent_field_name, child_field_name) → TokenKind` shape; classifies as `TOKENIZE_IDENTIFIER` instead of `TOKENIZE_SECRET`.
+
+2. **Wired into `classify_field()`** after the existing structural-secret check and before the field-name lookup. The masked-placeholder skip still runs first so AOS 8's `"********"` placeholders aren't tokenized into the dangerous-illusion shape (#275).
+
+3. **Added the AOS 8 vlan_name patterns:**
+   - `(vlan_name, name): TokenKind.NAME`
+   - `(vlan_name_id, name): TokenKind.NAME`
+
+4. **Six new tests** (parallel to `TestStructuralSecretContexts`):
+   - 4 isolation tests: rule fires for `(vlan_name, name)` and `(vlan_name_id, name)`; bare `name` outside known wrappers still skipped; `name` under unrelated wrapper still skipped.
+   - 2 end-to-end walker tests against the realistic AOS 8 response shape verifying the inner names get tokenized AND non-name fields (`vlan-ids`) survive cleartext.
+
+### Files
+
+- **`src/hpe_networking_mcp/redaction/rules.py`** — adds `STRUCTURAL_IDENTIFIER_CONTEXTS` + `(vlan_name, name)` + `(vlan_name_id, name)` rules; extends `classify_field` to consult the new table.
+- **`tests/unit/test_pii_redaction.py`** — adds `TestStructuralIdentifierContexts` (4 isolation tests) + `TestStructuralIdentifierContextsEndToEnd` (2 walker e2e tests).
+- **`pyproject.toml`** — bump 3.0.1.7 → 3.0.1.8.
+
+### Notes
+
+- 1180 tests pass (was 1174; +6 from the new structural-identifier tests).
+- **Closes #289.**
+- **Live verification recommended after deploying.** Re-run Stage 9b against the tenant; confirm VLAN names appear as `[[NAME:uuid]]` tokens in tool output. The unit tests prove the rule wires correctly against the documented AOS 8 shape; live verification confirms the actual production response matches.
+
+### Out of scope (still open)
+
+- Role / ACL name tokenization. AOS 8 uses `rname` (roles) and `accname` (ACLs), not `name`. Those fields aren't in any rule today. Separate scope decision; not this release.
+- Mist / Central site list audit (`org_sites`, `sites`). Different wrapping field names; needs its own audit. File separately if needed.
+- The diagnostic-dict over-fire (cosmetic) where a literal `"dict"` string at a `vlan_name` key gets tokenized — harmless and rare. Not addressed; would require redesigning the field-name rule to be shape-aware, which is a much bigger change.
+
 ## [3.0.1.7] - 2026-05-08
 
 **Patch release — `aos-migration` Stage 9b prose tightening from a live-run review against Jon's tenant. Five skill-prose fixes; no Python / engine / tool changes.**
