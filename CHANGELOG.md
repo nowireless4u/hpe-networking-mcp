@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1.7] - 2026-05-08
+
+**Patch release — `aos-migration` Stage 9b prose tightening from a live-run review against Jon's tenant. Five skill-prose fixes; no Python / engine / tool changes.**
+
+First real run of Stage 9b (added in v3.0.1.6) surfaced a handful of skill-prose issues. The bridge tool fired correctly and produced deterministic engine output for all four translations, but the AI's report missed things the skill should have explicitly directed:
+
+1. **Walker is now optional with placeholder fallback.** Stage 9b previously read as if walker resolution was a hard prerequisite. In practice, the target Central hierarchy doesn't need to exist yet — Stage 9 builds it as the first cutover step; Stage 9b just previews what gets POSTed afterward. When walker returns no match for a Stage-7 Central scope name, the skill now substitutes `<TBD:<name>>` as the scope_id and continues. The engine accepts any string for `central_scope_id` (it just substitutes), so the resulting body's `scope-id` field reads `<TBD:USE/West>` — exactly the right "this scope must be created before execution" signal. Output report flags placeholder vs resolved scope status loudly. Stage 7 is also softened from required to recommended; if the operator skips Act I and runs straight to Stage 9b, Global is the documented fallback.
+
+2. **Empty-rule-list filter for `central:policy`.** Five AppRF system-companion ACLs (`apprf-*-sacl`) plus two non-AppRF ACLs (`transition`, `blacklisted`) leaked through to the engine on the live run because the previous filter caught only `_flags.inherited == True` and `_flags.system == True`. The translation JSON's `ignored_variants` already declares "Empty ACL will NOT be migrated"; the skill now pre-filters records where both `acl_sess__v4policy` and `acl_sess__v6policy` are missing/empty AND surfaces them in a `Skipped per LLD` subsection so the operator sees what was excluded and why.
+
+3. **Composite-source merge for `central:named_vlan` codified.** The AI on the live run correctly inferred to merge `vlan_name` ⨝ `vlan_name_id` on `name` before passing records to the engine, but that step wasn't spelled out in the skill prose anywhere. Now explicit: required pre-merge, drop `_flags.inherited` from both source arrays, surface "name registered without binding" as a `Skipped per LLD` finding (per the translation's `unmapped_fields` declaration that names without bindings are non-functional in Central).
+
+4. **`acl_eth` (Ethertype ACL) out-of-scope note.** AOS 8 roles can bind both session ACLs (`role__acl[]` with `acl_type="session"`) and Ethernet ACLs (`acl_type="eth"`). The shipped `central:policy` translation only handles session ACLs. On the live run the `blacklisted` role bound an Ethertype ACL (`deny_all_ethertype`) which the AI surfaced correctly as OPERATOR-MAP, but the skill prose now spells it out: while iterating roles, collect any binding an `acl_eth` and surface as a Translation gap finding so future AIs don't have to figure this out from first principles.
+
+5. **Output report now emits sample bodies + drill-down prose, not just summary tables.** Stage 9b previously instructed *"Do NOT dump full target_calls bodies in the consolidated output"* (a small-model defense). For capable models running the skill, this stripped exactly the data operators need — the actual JSON wire payload — and made the engine output indistinguishable from a narrative summary. The new Step 3 emits THREE parts: summary table, per-record detail tables, AND at least one representative `target_calls[0].body` JSON code block per translation. Drill-down prose explicitly invites *"show me the body for ACL X"* / *"dump all bodies for X"* follow-ups.
+
+### Files
+
+- **`src/hpe_networking_mcp/skills/aos-migration.md`** — Stage 9b prose: preconditions softened, Step 1 walker-optional with placeholder fallback, 2a/2b/2c/2d filters tightened (composite merge codified, empty-rule-list filter added, `acl_eth` collection added), Step 3 rewritten to emit sample bodies + drill-down. Net ~+90 lines of prose.
+- **`.gitignore`** — adds `docs/engine_test.md` (private session log used to drive these fixes).
+- **`pyproject.toml`** — bump 3.0.1.6 → 3.0.1.7.
+
+### Notes
+
+- 1174 tests pass (no test-count change — pure docs/skill release).
+- **No engine, tool, or translation JSON changes.** All five fixes are in skill prose so the AI handles the workflow correctly without needing to re-derive logic per run.
+- **The PII tokenization quirk surfaced during diagnosis (walker tokenized the literal string `"dict"` because it appeared as the value for a `vlan_name` key in an AI diagnostic dict) is a real bug but unrelated to Stage 9b's correctness.** Tracking separately; no action this release.
+- **Real engine output validated against live data.** All four shipped translations (`central:vlan_id`, `central:named_vlan`, `central:role`, `central:policy`) ran cleanly against Jon's tenant on the first attempt. The fixes here are about how the *skill* presents the output, not about the engine producing wrong output.
+
 ## [3.0.1.6] - 2026-05-08
 
 **Patch release — `central_translation_preview` tool + `aos-migration` Stage 9b engine-driven preview. Phase-3-lite read-only path so the translations engine sees daylight on real data before #240's actual writes land.**
