@@ -5,6 +5,61 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1.4] - 2026-05-07
+
+**Patch release — translation authoring template standardization. Refactor `central:policy` to the standard Paradigm-B shape, add a `preprocessing` engine field for translations whose source needs restructuring, ship lint rules + CI enforcement so future translations follow the template.**
+
+After shipping four translations following three different authoring paradigms (named_vlan: engine-driven iteration; vlan_id + role: per-field key_mappings; policy: single big 2-arg transform), this release converges on **one standard template** and adds CI lint to keep new translations from drifting. The user-facing engine API is unchanged; translation JSON authoring rules are now uniform.
+
+### Three changes
+
+1. **Engine: `preprocessing` field as a structured escape hatch.** Translations whose source shape doesn't fit per-field `key_mapping` (parallel arrays, cross-record lookups, fan-out expansion) declare a dotted import path to a preprocessing function:
+
+   ```json
+   {
+     "preprocessing": "hpe_networking_mcp.translations.preprocessing.aos8_policy.preprocess_acl_for_policy",
+     ...
+   }
+   ```
+
+   The function signature is `(source_data, runtime_values) -> dict`. The engine invokes it before `key_mappings` (after the source-platform check + `required_runtime_values` validation), with the function returning an augmented `source_data` dict that the standard per-field key_mappings then operate on. Translations without `preprocessing` declared skip this step entirely — the simple pattern that fits most translations.
+
+   The 2-arg transform support added in v3.0.1.3 stays in place (still useful for per-field transforms that need narrow context), but the preprocessing field is the preferred home for source-shape restructuring — it's declarative, the body in the JSON stays structurally complete, and reviewers can find all the complex logic in one named module rather than chasing it across `transforms.py`.
+
+2. **`central:policy` refactored to the standard Paradigm-B template.** The 2-arg `aos8_acl_sess_to_central_policy_rules` transform (~515 lines) is removed from `transforms.py`; all its logic moved verbatim into `src/hpe_networking_mcp/translations/preprocessing/aos8_policy.py` as `preprocess_acl_for_policy`. The translation JSON now has thin `key_mappings` (just `name` ← `accname` via `direct_str` and `policy_rules` ← `_central_rules` via `direct`), with the body structurally complete and `policy-rule: "{policy_rules}"` as the only computed substitution. Wire output is identical (asserted by 30+ engine tests).
+
+   Also: the preprocessing function now computes `role_attribution` internally from `runtime_values["role_records"]` (the full list of role records, supplied once per migration run) rather than relying on the consumer to pre-compute it. Cleaner consumer contract — the consumer pre-fetches roles once, and every ACL's preprocessing reverse-indexes them into per-ACL role_attribution. The translation's `required_runtime_values` changed from `["central_scope_id", "role_attribution"]` to `["central_scope_id", "role_records"]`.
+
+3. **Lint module + CI enforcement.** New `src/hpe_networking_mcp/translations/lint.py` with four rules:
+   - `check_no_fat_transforms` — every transform in the registry has < 50 source lines. Composite logic must live in `preprocessing/`.
+   - `check_body_or_body_template` — each emit has exactly one of `body` / `body_template`; POST/PUT/PATCH emits must declare one.
+   - `check_required_runtime_values_referenced` — every key in `required_runtime_values` is referenced somewhere (placeholder, preprocessing module source, narrative). Catches refactor leftover.
+   - `check_preprocessing_path_resolves` — when `preprocessing` is set, the dotted path resolves to a callable with the right `(source_data, runtime_values)` signature.
+
+   The rules are enforced both by `tests/unit/test_translations_lint.py` (auto-runs in CI via the existing `pytest tests/unit` step — fails CI on any violation against the shipped translations) and by a CLI entry point: `python -m hpe_networking_mcp.translations.lint`.
+
+### Files
+
+- **New: `src/hpe_networking_mcp/translations/AUTHORING.md`** — standard template + decision tree + per-translation examples + lint rules table
+- **New: `src/hpe_networking_mcp/translations/preprocessing/__init__.py`** — module docs explaining when to use preprocessing (and when not to)
+- **New: `src/hpe_networking_mcp/translations/preprocessing/aos8_policy.py`** — `preprocess_acl_for_policy` (the migrated central:policy logic, ~480 lines)
+- **New: `src/hpe_networking_mcp/translations/lint.py`** — four lint rules + CLI entry point
+- **New: `tests/unit/test_translations_lint.py`** — 16 tests (smoke + per-rule synthetic violations)
+- **`src/hpe_networking_mcp/translations/loader.py`** — adds optional `preprocessing` field to `Translation`
+- **`src/hpe_networking_mcp/translations/engine.py`** — preprocessing dispatch + `_run_preprocessing` helper
+- **`src/hpe_networking_mcp/translations/targets/central/policy_v1.json`** — refactored to thin Paradigm-B + `preprocessing` field; `required_runtime_values` updated to `role_records`
+- **`src/hpe_networking_mcp/translations/transforms.py`** — removes `aos8_acl_sess_to_central_policy_rules` + 9 helper functions (~515 lines) and unused imports
+- **`tests/unit/test_translations_engine.py`** — adds 5 preprocessing engine tests; updates 14 policy tests for the `role_records` runtime shape
+- **`tests/unit/test_translations_loader.py`** — updates policy schema-validation test for the new `preprocessing` field + `role_records` requirement
+- **`pyproject.toml`** — bump 3.0.1.3 → 3.0.1.4
+
+### Notes
+
+- 1157 tests pass (was 1136; +21 from new lint tests + new preprocessing engine tests).
+- **No behavior change visible to consumer skills.** `central:policy`'s wire output is identical pre/post refactor — the only consumer-visible API delta is `runtime_values["role_attribution"]` → `runtime_values["role_records"]` (cleaner: pre-fetch roles once, let preprocessing reverse-index per-ACL).
+- **Adding a new translation now follows AUTHORING.md.** Decision tree: simple 1:1 source → per-field key_mappings only. Source needs restructuring (parallel arrays, cross-record lookups, fan-out) → author a preprocessing module under `translations/preprocessing/` and declare its dotted path in JSON. Run `python -m hpe_networking_mcp.translations.lint` locally before opening a PR.
+- **CI integration** is automatic via the existing `pytest tests/unit` step — `test_shipped_translations_pass_all_rules` exercises every rule against every shipped translation. Drift surfaces immediately rather than at runtime.
+
 ## [3.0.1.3] - 2026-05-07
 
 **Patch release — fourth translation (`central:policy`, AOS 8 acl_sess → Central /policies) + engine 2-arg transform support + ~120 KB of inline enum lookup tables.**

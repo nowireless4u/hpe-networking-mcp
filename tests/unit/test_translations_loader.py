@@ -313,7 +313,12 @@ def test_loads_shipped_policy_translation_cleanly() -> None:
     assert len(p.target_emits) == 2
     assert p.target_meta.device_functions == ["MOBILITY_GW"]
     assert "central_scope_id" in p.required_runtime_values
-    assert "role_attribution" in p.required_runtime_values
+    assert "role_records" in p.required_runtime_values
+
+    # Standardized template compliance: declares preprocessing, uses thin
+    # per-field key_mappings, body is structurally complete (security-policy.
+    # policy-rule[] supplied as a pre-computed array via {policy_rules}).
+    assert p.preprocessing == ("hpe_networking_mcp.translations.preprocessing.aos8_policy.preprocess_acl_for_policy")
 
     src = p.sources["aos8"]
     assert src.mapping_kind == "composite"
@@ -322,10 +327,11 @@ def test_loads_shipped_policy_translation_cleanly() -> None:
     object_names = {obj.object for obj in src.objects}
     assert object_names == {"acl_sess", "role"}
 
-    # Required mapping for the policy name; transform mapping for rules
+    # Required mapping for the policy name; thin transforms for rules
     assert src.key_mappings["name"].optional is False
-    assert src.key_mappings["policy_rules"].transform == "aos8_acl_sess_to_central_policy_rules"
+    assert src.key_mappings["policy_rules"].transform == "direct"
     assert src.key_mappings["policy_rules"].optional is True
+    assert src.key_mappings["policy_rules"].from_ == "_central_rules"
 
     # Body shape sanity-checks
     body = next(e.body for e in p.target_emits if e.step == 1)

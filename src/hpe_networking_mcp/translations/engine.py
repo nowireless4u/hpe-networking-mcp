@@ -117,6 +117,16 @@ def emit_calls(
             f"runtime_values keys {missing} (got {sorted(runtime_values.keys())})"
         )
 
+    # Optional preprocessing — translations with complex source shapes (parallel
+    # arrays, cross-record lookups, fan-out expansion) declare a preprocessing
+    # function that augments ``source_data`` before key_mappings run. The
+    # function signature is ``(source_data, runtime_values) -> source_data``;
+    # it returns a NEW dict (the engine doesn't enforce immutability but
+    # convention is non-mutating). Translations without ``preprocessing``
+    # declared skip this step entirely.
+    if translation.preprocessing:
+        source_data = _run_preprocessing(translation, source_data, runtime_values)
+
     source = translation.sources[source_platform_id]
 
     # device_functions: either supplied via runtime_values (operator override)
@@ -139,6 +149,63 @@ def emit_calls(
     for emit in emits_in_order:
         out.extend(_render_emit(emit=emit, base_ctx=base_ctx, device_functions=device_functions))
     return out
+
+
+# --------------------------------------------------------------------------- #
+# Internal: preprocessing dispatch
+# --------------------------------------------------------------------------- #
+
+
+def _run_preprocessing(
+    translation: Translation,
+    source_data: dict[str, Any],
+    runtime_values: dict[str, Any],
+) -> dict[str, Any]:
+    """Resolve and invoke a translation's preprocessing function.
+
+    The translation's ``preprocessing`` field is a dotted import path of the
+    form ``module.path.func_name``. The function must accept
+    ``(source_data, runtime_values)`` and return an augmented source_data
+    dict. The engine validates the import + signature at call time and
+    surfaces any failure as ``EngineError`` with translation context.
+    """
+    import importlib
+
+    path = translation.preprocessing
+    if not path:
+        return source_data
+    if "." not in path:
+        raise EngineError(
+            f"Translation {translation.target_platform}:{translation.target_id} "
+            f"declares preprocessing={path!r} but the value isn't a dotted import path "
+            f"(expected 'module.path.func_name')"
+        )
+    module_path, func_name = path.rsplit(".", 1)
+    try:
+        module = importlib.import_module(module_path)
+    except ImportError as exc:
+        raise EngineError(
+            f"Translation {translation.target_platform}:{translation.target_id} "
+            f"preprocessing={path!r} couldn't import module {module_path!r}: {exc}"
+        ) from exc
+    func = getattr(module, func_name, None)
+    if func is None or not callable(func):
+        raise EngineError(
+            f"Translation {translation.target_platform}:{translation.target_id} "
+            f"preprocessing={path!r} resolved to {func!r} (not a callable)"
+        )
+    try:
+        result = func(source_data, runtime_values)
+    except Exception as exc:  # noqa: BLE001 — surface to caller with context
+        raise EngineError(
+            f"Translation {translation.target_platform}:{translation.target_id} preprocessing {path!r} raised: {exc}"
+        ) from exc
+    if not isinstance(result, dict):
+        raise EngineError(
+            f"Translation {translation.target_platform}:{translation.target_id} "
+            f"preprocessing {path!r} returned {type(result).__name__} (expected dict)"
+        )
+    return result
 
 
 # --------------------------------------------------------------------------- #

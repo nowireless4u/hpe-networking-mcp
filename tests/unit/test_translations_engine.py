@@ -705,6 +705,181 @@ def test_role_bwc_exclude_array_fans_out_to_app_and_appcategory_groups(role) -> 
 # --------------------------------------------------------------------------- #
 
 
+# --------------------------------------------------------------------------- #
+# Engine preprocessing dispatch
+# --------------------------------------------------------------------------- #
+
+
+def test_engine_invokes_preprocessing_before_key_mappings() -> None:
+    """Translation declares preprocessing → engine resolves the dotted path,
+    invokes the function with (source_data, runtime_values), and uses the
+    returned augmented source for key_mappings.
+    """
+    import sys
+    import types
+
+    # Register a synthetic preprocessing function
+    mod = types.ModuleType("__test_preproc_mod")
+
+    def _preproc(source_data: dict, runtime_values: dict) -> dict:
+        return {**source_data, "_augmented": f"hello-{runtime_values.get('multiplier', 1)}"}
+
+    mod.preproc = _preproc  # type: ignore[attr-defined]
+    sys.modules["__test_preproc_mod"] = mod
+
+    try:
+        from hpe_networking_mcp.translations.loader import Translation
+
+        spec = {
+            "version": 1,
+            "target_platform": "central",
+            "target_id": "preproc",
+            "preprocessing": "__test_preproc_mod.preproc",
+            "target_emits": [
+                {
+                    "step": 1,
+                    "name": "test",
+                    "purpose": "test",
+                    "endpoint": "/test/{out}",
+                    "method": "POST",
+                    "iteration": "once",
+                }
+            ],
+            "target_meta": {},
+            "target_scope_id_resolution": {"rule": "x", "input": "x", "output": "x"},
+            "sources": {
+                "aos8": {
+                    "kind": "rest",
+                    "mapping_kind": "simple",
+                    "objects": [{"object": "x"}],
+                    "key_mappings": {
+                        "out": {"from": "_augmented", "to": "test", "transform": "direct"},
+                    },
+                }
+            },
+        }
+        t = Translation.model_validate(spec)
+        calls = emit_calls(t, {"input": "raw"}, "aos8", runtime_values={"multiplier": 42})
+        # Preprocessing wrote {_augmented: "hello-42"}; key_mappings picked it up
+        assert calls[0].endpoint == "/test/hello-42"
+    finally:
+        del sys.modules["__test_preproc_mod"]
+
+
+def test_engine_preprocessing_is_optional() -> None:
+    """Translations without preprocessing declared work as before — no engine change.
+
+    All existing translations (named_vlan, vlan_id, role) don't declare
+    preprocessing and should keep working. This is a smoke test.
+    """
+    translations = load_translations()
+    # vlan_id has no preprocessing
+    vid = translations["central:vlan_id"]
+    assert vid.preprocessing is None
+    # And it still emits cleanly
+    calls = emit_calls(vid, {"id": 100}, "aos8", runtime_values={"central_scope_id": "S"})
+    assert len(calls) == 2
+    assert calls[0].body == {"vlan": "100"}
+
+
+def test_engine_preprocessing_bad_path_raises_clear_error() -> None:
+    """Malformed dotted path → EngineError with translation context."""
+    from hpe_networking_mcp.translations.loader import Translation
+
+    spec = {
+        "version": 1,
+        "target_platform": "central",
+        "target_id": "bad_preproc",
+        "preprocessing": "nonexistent",  # no dot — invalid path
+        "target_emits": [
+            {
+                "step": 1,
+                "name": "x",
+                "purpose": "x",
+                "endpoint": "/x",
+                "method": "POST",
+                "iteration": "once",
+            }
+        ],
+        "target_meta": {},
+        "target_scope_id_resolution": {"rule": "x", "input": "x", "output": "x"},
+        "sources": {"aos8": {"kind": "rest", "objects": [{"object": "x"}]}},
+    }
+    t = Translation.model_validate(spec)
+    with pytest.raises(EngineError, match="dotted import path"):
+        emit_calls(t, {}, "aos8")
+
+
+def test_engine_preprocessing_missing_module_raises() -> None:
+    """Preprocessing path points at a module that doesn't exist → EngineError."""
+    from hpe_networking_mcp.translations.loader import Translation
+
+    spec = {
+        "version": 1,
+        "target_platform": "central",
+        "target_id": "missing_module",
+        "preprocessing": "definitely.not.a.real.module.preproc",
+        "target_emits": [
+            {
+                "step": 1,
+                "name": "x",
+                "purpose": "x",
+                "endpoint": "/x",
+                "method": "POST",
+                "iteration": "once",
+            }
+        ],
+        "target_meta": {},
+        "target_scope_id_resolution": {"rule": "x", "input": "x", "output": "x"},
+        "sources": {"aos8": {"kind": "rest", "objects": [{"object": "x"}]}},
+    }
+    t = Translation.model_validate(spec)
+    with pytest.raises(EngineError, match="couldn't import module"):
+        emit_calls(t, {}, "aos8")
+
+
+def test_engine_preprocessing_non_dict_return_raises() -> None:
+    """Preprocessing function must return a dict; anything else is a clear error."""
+    import sys
+    import types
+
+    mod = types.ModuleType("__test_bad_preproc")
+
+    def _bad_preproc(source_data: dict, runtime_values: dict) -> list:
+        return []  # type: ignore[return-value]
+
+    mod.bad = _bad_preproc  # type: ignore[attr-defined]
+    sys.modules["__test_bad_preproc"] = mod
+
+    try:
+        from hpe_networking_mcp.translations.loader import Translation
+
+        spec = {
+            "version": 1,
+            "target_platform": "central",
+            "target_id": "bad_return",
+            "preprocessing": "__test_bad_preproc.bad",
+            "target_emits": [
+                {
+                    "step": 1,
+                    "name": "x",
+                    "purpose": "x",
+                    "endpoint": "/x",
+                    "method": "POST",
+                    "iteration": "once",
+                }
+            ],
+            "target_meta": {},
+            "target_scope_id_resolution": {"rule": "x", "input": "x", "output": "x"},
+            "sources": {"aos8": {"kind": "rest", "objects": [{"object": "x"}]}},
+        }
+        t = Translation.model_validate(spec)
+        with pytest.raises(EngineError, match="returned list.*expected dict"):
+            emit_calls(t, {}, "aos8")
+    finally:
+        del sys.modules["__test_bad_preproc"]
+
+
 def test_engine_dispatches_2arg_transforms_with_ctx() -> None:
     """A registered transform with a 2-arg signature receives the engine's ctx
     (source_data + runtime_values) as its second positional argument.
@@ -828,12 +1003,31 @@ def policy(translations: dict):
     return translations["central:policy"]
 
 
-def _policy_runtime(scope_id: str = "SCOPE", role_attribution: list[str] | None = None) -> dict:
-    rv: dict = {
-        "central_scope_id": scope_id,
-        "role_attribution": role_attribution or ["parent"],
-    }
-    return rv
+def _policy_runtime(
+    source: dict | None = None,
+    scope_id: str = "SCOPE",
+    role_attribution: list[str] | None = None,
+) -> dict:
+    """Build runtime_values for the central:policy translation.
+
+    Constructs ``role_records`` containing one role per name in
+    ``role_attribution`` (defaulting to ``['parent']``) where each role's
+    ``role__acl[]`` references the ACL via ``source['accname']``. The
+    preprocessing function will then compute role_attribution by reverse-
+    indexing — so this helper exercises the full preprocessing path.
+
+    If ``source`` is None the role_records list is empty (test the
+    fallback where preprocessing finds no role attribution).
+    """
+    if role_attribution is None:
+        role_attribution = ["parent"]
+    accname = (source or {}).get("accname")
+    role_records: list[dict] = []
+    if accname:
+        role_records = [
+            {"rname": r, "role__acl": [{"acl_type": "session", "pname": accname}]} for r in role_attribution
+        ]
+    return {"central_scope_id": scope_id, "role_records": role_records}
 
 
 def test_policy_minimum_acl_emits_two_calls(policy) -> None:
@@ -861,7 +1055,7 @@ def test_policy_minimum_acl_emits_two_calls(policy) -> None:
         ],
         "acl_sess__v6policy": [],
     }
-    calls = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime("SCOPE-A"))
+    calls = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source, "SCOPE-A"))
     assert len(calls) == 2
     assert [c.step for c in calls] == [1, 2]
 
@@ -918,7 +1112,7 @@ def test_policy_suser_dst_uses_role_attribution(policy) -> None:
             }
         ],
     }
-    rt = _policy_runtime(role_attribution=["parent", "guest"])
+    rt = _policy_runtime(source, role_attribution=["parent", "guest"])
     body = emit_calls(policy, source, "aos8", runtime_values=rt)[0].body or {}
     rule = body["security-policy"]["policy-rule"][0]
     assert rule["condition"]["source"] == {"type": "ADDRESS_ROLE", "role-list": ["parent", "guest"]}
@@ -943,7 +1137,7 @@ def test_policy_dst_host_with_ip(policy) -> None:
             }
         ],
     }
-    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
     rule = body["security-policy"]["policy-rule"][0]
     assert rule["condition"]["destination"] == {
         "type": "ADDRESS_HOST",
@@ -969,7 +1163,7 @@ def test_policy_dst_userrole_with_durname(policy) -> None:
             }
         ],
     }
-    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
     rule = body["security-policy"]["policy-rule"][0]
     assert rule["condition"]["destination"] == {"type": "ADDRESS_ROLE", "role": "parent"}
     assert rule["condition"]["services"] == {"application": "youtube"}
@@ -994,7 +1188,7 @@ def test_policy_dst_localip(policy) -> None:
             }
         ],
     }
-    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
     rule = body["security-policy"]["policy-rule"][0]
     assert rule["condition"]["destination"] == {"type": "ADDRESS_LOCAL"}
 
@@ -1024,7 +1218,7 @@ def test_policy_named_service_svc_http_uses_central_net_service(policy) -> None:
             }
         ],
     }
-    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
     rule = body["security-policy"]["policy-rule"][0]
     assert rule["condition"]["rule-type"] == "RULE_NET_SERVICE"
     assert rule["condition"]["services"] == {"net-service": "svc-http"}
@@ -1053,7 +1247,7 @@ def test_policy_icmp_echo_rule(policy) -> None:
             }
         ],
     }
-    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
     rule = body["security-policy"]["policy-rule"][0]
     assert rule["condition"]["rule-type"] == "RULE_PROTOCOL"
     assert rule["condition"]["ip-header"] == {"protocol": "IP_ICMP", "icmp": {"icmp-type": "echo"}}
@@ -1077,7 +1271,7 @@ def test_policy_dst_nat_action(policy) -> None:
             }
         ],
     }
-    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
     rule = body["security-policy"]["policy-rule"][0]
     assert rule["action"] == {
         "type": "ACTION_DESTINATION_NAT",
@@ -1104,7 +1298,7 @@ def test_policy_redirect_tunnel_group(policy) -> None:
             }
         ],
     }
-    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
     rule = body["security-policy"]["policy-rule"][0]
     assert rule["action"] == {
         "type": "ACTION_REDIRECT",
@@ -1130,7 +1324,7 @@ def test_policy_time_range_reference_lands_in_condition(policy) -> None:
             }
         ],
     }
-    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
     rule = body["security-policy"]["policy-rule"][0]
     assert rule["condition"]["time-range-name"] == "business-hours"
 
@@ -1171,7 +1365,7 @@ def test_policy_v6policy_tagged_address_family_ipv6(policy) -> None:
             },
         ],
     }
-    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
     rules = body["security-policy"]["policy-rule"]
     # 1 v4 any-any (expands to 2) + 1 v6 any-any (expands to 2) = 4 rules
     assert len(rules) == 4
@@ -1220,7 +1414,7 @@ def test_policy_inherited_rules_skipped(policy) -> None:
             },  # should land
         ],
     }
-    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
     rules = body["security-policy"]["policy-rule"]
     assert len(rules) == 1
     assert rules[0]["condition"]["source"] == {"type": "ADDRESS_ROLE", "role-list": ["parent"]}
@@ -1243,7 +1437,7 @@ def test_policy_step2_assigns_to_mobility_gw(policy) -> None:
             },
         ],
     }
-    step2 = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime("SCOPE-X"))[1]
+    step2 = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source, "SCOPE-X"))[1]
     items = (step2.body or {})["config-assignment"]
     assert len(items) == 1
     assert items[0] == {
@@ -1254,20 +1448,28 @@ def test_policy_step2_assigns_to_mobility_gw(policy) -> None:
     }
 
 
-def test_policy_missing_role_attribution_raises(policy) -> None:
-    """role_attribution is required — engine should raise on missing."""
-    with pytest.raises(EngineError, match="role_attribution"):
+def test_policy_missing_role_records_raises(policy) -> None:
+    """role_records is required — engine should raise on missing.
+
+    Per the standardized template, the consumer pre-fetches all role records
+    once per migration run and passes via runtime_values. The preprocessing
+    function reverse-indexes to compute role_attribution per ACL.
+    """
+    with pytest.raises(EngineError, match="role_records"):
         emit_calls(
             policy, {"accname": "test"}, "aos8", runtime_values={"central_scope_id": "SCOPE"}
-        )  # missing role_attribution
+        )  # missing role_records
 
 
-def test_policy_empty_acl_drops_policy_rule_key(policy) -> None:
-    """ACL with empty rule arrays: transform returns None; engine drops policy-rule key."""
+def test_policy_empty_acl_emits_empty_policy_rule_list(policy) -> None:
+    """ACL with empty rule arrays: preprocessing returns _central_rules=[];
+    body lands as policy-rule: []. Per the LLD ('empty ACL not migrated'),
+    consumer should typically filter empty ACLs from migration before
+    calling emit_calls — this test exercises the defensive path.
+    """
     source = {"accname": "empty", "acl_sess__v4policy": [], "acl_sess__v6policy": []}
-    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
-    # security-policy now has only 'type' (policy-rule was None and got dropped)
-    assert body["security-policy"] == {"type": "SECURITY_POLICY_TYPE_DEFAULT"}
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
+    assert body["security-policy"] == {"type": "SECURITY_POLICY_TYPE_DEFAULT", "policy-rule": []}
 
 
 # --------------------------------------------------------------------------- #
@@ -1298,7 +1500,7 @@ def test_policy_any_any_rule_replaces_source_with_role_attribution(policy) -> No
             }
         ],
     }
-    rt = _policy_runtime(role_attribution=["faculty", "staff"])
+    rt = _policy_runtime(source, role_attribution=["faculty", "staff"])
     body = emit_calls(policy, source, "aos8", runtime_values=rt)[0].body or {}
     rule = body["security-policy"]["policy-rule"][0]
     assert rule["condition"]["source"] == {"type": "ADDRESS_ROLE", "role-list": ["faculty", "staff"]}
@@ -1328,7 +1530,7 @@ def test_policy_any_specific_keeps_source_as_address_any(policy) -> None:
             }
         ],
     }
-    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
     rule = body["security-policy"]["policy-rule"][0]
     assert rule["condition"]["source"] == {"type": "ADDRESS_ANY"}
     assert rule["condition"]["destination"] == {
@@ -1362,7 +1564,7 @@ def test_policy_any_to_network_keeps_source_as_address_any(policy) -> None:
             }
         ],
     }
-    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime())[0].body or {}
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
     rule = body["security-policy"]["policy-rule"][0]
     assert rule["condition"]["source"] == {"type": "ADDRESS_ANY"}
     assert rule["condition"]["destination"] == {
@@ -1396,7 +1598,8 @@ def test_policy_any_any_with_empty_role_attribution_falls_back_to_address_any(po
             }
         ],
     }
-    rt = {"central_scope_id": "SCOPE", "role_attribution": []}
+    # role_records is empty — preprocessing finds no role attribution for this ACL
+    rt = {"central_scope_id": "SCOPE", "role_records": []}
     body = emit_calls(policy, source, "aos8", runtime_values=rt)[0].body or {}
     rule = body["security-policy"]["policy-rule"][0]
     assert rule["condition"]["source"] == {"type": "ADDRESS_ANY"}

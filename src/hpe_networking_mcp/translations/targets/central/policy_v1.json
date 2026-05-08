@@ -2,11 +2,12 @@
   "version": 1,
   "target_platform": "central",
   "target_id": "policy",
+  "preprocessing": "hpe_networking_mcp.translations.preprocessing.aos8_policy.preprocess_acl_for_policy",
   "target_emits": [
     {
       "step":     1,
       "name":     "create_policy_shared",
-      "purpose":  "Create the policy profile in the Library. The big aos8_acl_sess_to_central_policy_rules transform builds the policy-rule[] array from the AOS 8 acl_sess record (both v4 + v6 rules) plus role_attribution from runtime_values.",
+      "purpose":  "Create the policy profile in the Library. The body is structurally complete; security-policy.policy-rule[] is supplied by the preprocessing function as `_central_rules` (which it computes from acl_sess__v4policy + acl_sess__v6policy + role_records via the documented merge rule).",
       "endpoint": "/network-config/v1alpha1/policies/{name}",
       "method":   "POST",
       "query_params": {},
@@ -20,7 +21,7 @@
         }
       },
       "iteration": "once",
-      "iteration_notes": "One POST per ACL. The whole policy-rule[] array is computed by the 2-arg transform via ctx (source_data + runtime_values).",
+      "iteration_notes": "One POST per ACL. The policy-rule[] array is pre-computed by the preprocessing function before key_mappings run.",
       "depends_on": []
     },
     {
@@ -42,18 +43,18 @@
   ],
   "target_meta": {
     "device_functions": ["MOBILITY_GW"],
-    "device_function_filtering_rule": "Per the operator's 'x-supportedDeviceType is field-honored, not body-gated' clarification: a single policy body works across all device-functions. Each device honors only the fields applicable to it (e.g. RULE_TCP / transport-fields are honored on Switch CX / AP / Switch PVOS; RULE_PROTOCOL with ip-header.protocol is live-verified to be honored on Gateway despite schema marking it AP-only). For AOS 8 -> Central GW migration we target MOBILITY_GW; the body shape is permissive and other device-functions could be added if AP / Switch use cases land later."
+    "device_function_filtering_rule": "Per the operator's 'x-supportedDeviceType is field-honored, not body-gated' clarification: a single policy body works across all device-functions. Each device honors only the fields applicable to it. For AOS 8 -> Central GW migration we target MOBILITY_GW; the body shape is permissive and other device-functions could be added if AP / Switch use cases land later."
   },
   "target_scope_id_resolution": {
     "rule":   "Central scope_id is supplied by the consuming skill at runtime, derived from the AOS 8 acl_sess record's binding scope.",
     "input":  "Source binding scope (string path / identifier); skill-specific",
     "output": "Central scope_id (string), supplied via runtime_values['central_scope_id']"
   },
-  "required_runtime_values": ["central_scope_id", "role_attribution"],
+  "required_runtime_values": ["central_scope_id", "role_records"],
   "derived": {},
   "dependencies": [
     {
-      "depends_on":  "central:role (the roles in role_attribution must already exist in Central before policies referencing them are POSTed)",
+      "depends_on":  "central:role (the roles referenced by the ACL must already exist in Central before policies referencing them are POSTed)",
       "depended_by": [
         {
           "target_id": "role.policies[]",
@@ -79,7 +80,7 @@
             "post": "https://developer.arubanetworks.com/aos8/reference/post_object-acl-sess"
           },
           "live_shape_example": "[{\"accname\": \"missing-policies\", \"acl_sess__v4policy\": [{\"sany\": true, \"src\": \"sany\", \"dany\": true, \"dst\": \"dany\", \"echo\": true, \"icmp_type\": \"echo\", \"svc\": \"icmp\", \"service_app\": \"service\", \"permit\": true, \"action\": \"permit\"}, {\"suser\": true, \"src\": \"suser\", \"dipaddr\": \"10.1.1.1\", \"dst\": \"dhost\", \"service-name\": \"svc-http\", \"svc\": \"service-name\", \"service_app\": \"service\", \"dnatport\": 8080, \"action\": \"dst-nat\"}, {\"suser\": true, \"src\": \"suser\", \"dany\": true, \"dst\": \"dany\", \"tungrpname\": \"test\", \"re_dir\": \"tunnel-group\", \"action\": \"redir_opt\"}], \"acl_sess__v6policy\": []}]",
-          "notes": "Live-verified across 88 user-customized ACLs in the operator's tenant + a purpose-configured 'missing-policies' ACL exercising the variants not present elsewhere (host destination, ICMP-echo, time-range reference, standalone dst-nat, redirect-tunnel + redirect-tunnel-group, destination user-role, destination local-IP, app-deny). Each ACL has parallel acl_sess__v4policy and acl_sess__v6policy rule arrays; the translation's transform merges both into a single Central policy-rule[] array tagged with address-family. Inheritance: filter _flags.inherited / _flags.system entries before passing — the transform also defensively skips inherited/system rules so a stray inherited entry doesn't break the build."
+          "notes": "Live-verified across 88 user-customized ACLs in the operator's tenant + a purpose-configured 'missing-policies' ACL exercising the variants not present elsewhere. Each ACL has parallel acl_sess__v4policy and acl_sess__v6policy rule arrays; the preprocessing function merges them into a single tagged Central policy-rule[] array (each entry tagged with address-family per its source array)."
         },
         {
           "object":      "role",
@@ -89,14 +90,14 @@
             "get":  "https://developer.arubanetworks.com/aos8/reference/get_object-role"
           },
           "live_shape_example": "[{\"rname\": \"parent\", \"role__acl\": [{\"acl_type\": \"session\", \"pname\": \"missing-policies\"}]}]",
-          "notes": "Used ONLY for the role_attribution lookup — for each ACL being translated, scan all role records and collect rname values where role__acl[] contains an entry with acl_type='session' and pname matching the ACL's accname. The collected list is passed to emit_calls via runtime_values['role_attribution']. The translation does NOT walk role records itself; the consumer pre-computes role_attribution before calling emit_calls. Filter _flags.system / _flags.default / _flags.readonly ACL entries on the role side too (system role-ACL bindings shouldn't migrate)."
+          "notes": "Used ONLY for the role_attribution reverse-index. The preprocessing function scans role records to find which roles reference each ACL (role__acl[].pname == acl.accname AND acl_type='session'). The full role list is supplied to emit_calls via runtime_values['role_records']; the preprocessing function does the per-ACL filtering. Consumer pre-fetches roles ONCE per migration run, not per-ACL."
         }
       ],
       "merge_rule": {
         "join_key":     "(reverse-index lookup)",
         "scope_policy": "all_referencing_user_roles_attributed",
-        "description":  "For each acl_sess record, build role_attribution by reverse-indexing across all role records: collect rname values where role.role__acl[].pname == acl.accname AND role.role__acl[].acl_type == 'session'. Filter system / default / readonly entries on the role side. The result is the list of roles for which Central will need source.role-list to point when an AOS 8 rule has src='suser' or dst='duser' (the implicit 'user-of-this-role' semantic). Passed to emit_calls via runtime_values['role_attribution']; consumer responsibility.",
-        "inheritance_handling": "Drop role records with top-level _flags.default=true (system roles like 'logon', 'guest', 'voice', etc. — Central has its own copies). Drop individual role__acl[] entries with _flags.system / _flags.readonly / _flags.default."
+        "description":  "Engine auto-invokes hpe_networking_mcp.translations.preprocessing.aos8_policy.preprocess_acl_for_policy before key_mappings. The preprocessing function reads runtime_values['role_records'], scans for entries whose role__acl[].pname matches the current ACL's accname (with acl_type='session'), and collects the matching rname values into role_attribution. That role_attribution is then used to populate ADDRESS_ROLE.role-list when AOS 8 rules have src='suser' or dst='duser' (the implicit 'user-of-this-role' semantic) or for the any-any bidirectional expansion (role->any AND any->role).",
+        "inheritance_handling": "Drop role records with top-level _flags.default=true (system roles like 'logon', 'guest', 'voice', etc.). Drop individual role__acl[] entries with _flags.system / _flags.readonly / _flags.default. Both filterings happen inside preprocess_acl_for_policy."
       },
       "key_mappings": {
         "name": {
@@ -106,23 +107,23 @@
           "notes":     "Required. AOS 8 'accname' -> Central policy 'name'."
         },
         "policy_rules": {
-          "from":      "accname",
+          "from":      "_central_rules",
           "to":        "Central policy body 'security-policy.policy-rule[]' array",
-          "transform": "aos8_acl_sess_to_central_policy_rules",
+          "transform": "direct",
           "optional":  true,
-          "notes":     "2-arg transform: the engine inspects the signature and passes ctx (source_data + runtime_values) as the second arg. The transform ignores the 'from' value (using accname only as a stable lookup target) and reads acl_sess__v4policy + acl_sess__v6policy directly from ctx['source_data'], plus role_attribution from ctx['runtime_values']. Returns the full Central policy-rule[] array; engine substitutes it into the body wherever {policy_rules} appears. Empty / no-rules ACLs return None (per LLD 'empty ACL not migrated' rule); engine drops the body key, leaving security-policy.policy-rule absent — operator should filter ACLs with empty rule lists from migration before calling emit_calls."
+          "notes":     "Pre-computed by the preprocessing function (declared in the top-level preprocessing field). Result is the full Central policy-rule[] array — engine substitutes verbatim into the body wherever {policy_rules} appears. Empty / no-rules ACLs return [] which the body keeps as an empty array; consumer should typically filter ACLs with empty rule lists from migration before calling emit_calls."
         }
       },
       "unmapped_fields": [
         {
           "from":            "AOS 8 rules with apptosstr / appprio8021p / queue / queue_type (QoS marking)",
-          "reason":          "Central's QoS / packet-marking action sub-shapes (action.packet-marking, action.policing, action.qos) exist but the AOS 8 source-side mapping is not yet authored. AOS 8 carries TOS strings, 802.1p priorities, and queue selectors on rules; Central uses DSCP / dot1p enums via separate action sub-objects. Deferred to a v2 of this translation; the transform currently drops these fields silently.",
+          "reason":          "Central's QoS / packet-marking action sub-shapes (action.packet-marking, action.policing, action.qos) exist but the AOS 8 source-side mapping is not yet authored. Deferred to a v2 of this translation; the preprocessing function currently drops these fields silently.",
           "severity_rule":   "non_empty_regression",
           "todo":            "Configure AOS 8 ACLs with QoS marking + capture; add packet-marking / policing builders to _build_action."
         },
         {
           "from":            "AOS 8 rules with src-nat / route actions",
-          "reason":          "src-nat (ACTION_SOURCE_NAT) and route (ACTION_ROUTE / PBR) actions are mapped to Central enum values but the action sub-config (source-nat.{ip,pool}, routing-action.{tunnel-group, dscp}) is not yet built by the transform. Less common than dst-nat/dual-nat/redirect; deferred to v2.",
+          "reason":          "src-nat (ACTION_SOURCE_NAT) and route (ACTION_ROUTE / PBR) actions are mapped to Central enum values but the action sub-config (source-nat.{ip,pool}, routing-action.{tunnel-group, dscp}) is not yet built by the preprocessing function. Less common than dst-nat/dual-nat/redirect; deferred to v2.",
           "severity_rule":   "non_empty_regression"
         },
         {
@@ -131,48 +132,46 @@
           "severity_rule":   "non_empty_regression"
         },
         {
-          "from":            "AOS 8 ADDRESS_GROUP / ADDRESS_DOMAIN_NAME / ADDRESS_AP_* / ADDRESS_MASTER_IP / ADDRESS_USER source/destination types",
-          "reason":          "Central enum has 14 source/destination address types; the translation maps the 7 most common (ANY, HOST, NETWORK, ALIAS, ROLE, LOCAL, USER). The remaining 7 (DOMAIN_NAME, GROUP, AP_IP, AP_IP_ALL, AP_NETWORK, MASTER_IP, SUBNET_MASK) have no direct AOS 8 source-side discriminator we've verified. Add per discriminator as configured samples surface.",
+          "from":            "AOS 8 ADDRESS_GROUP / ADDRESS_DOMAIN_NAME / ADDRESS_AP_* / ADDRESS_MASTER_IP source/destination types",
+          "reason":          "Central enum has 14 source/destination address types; preprocessing maps the 7 most common (ANY, HOST, NETWORK, ALIAS, ROLE, LOCAL, USER). The remaining 7 (DOMAIN_NAME, GROUP, AP_IP, AP_IP_ALL, AP_NETWORK, MASTER_IP, SUBNET_MASK) have no direct AOS 8 source-side discriminator we've verified. Add per discriminator as configured samples surface.",
           "severity_rule":   "non_empty_regression"
         },
         {
           "from":            "redirect esi-group + redirect datapath variants",
-          "reason":          "Operator scoped these out at translation authoring time (rarely used; better handled by alternative products). Translation handles redirect tunnel + redirect tunnel-group only. AOS 8 source field names for esi-group (re_dir='esi-group' + name + direction) and datapath (re_dir='datapath' + ID) are inferred from operator description; not live-verified.",
+          "reason":          "Operator scoped these out at translation authoring time (rarely used; better handled by alternative products). Preprocessing handles redirect tunnel + redirect tunnel-group only.",
           "severity_rule":   "non_empty_regression"
         },
         {
           "from":            "Central role-options (composite role + host/network/alias/local refinement)",
-          "reason":          "AOS 8 CLI grammar treats source-spec / destination-spec as a single token (one of: user, user-role <name>, host <ip>, network <addr> <mask>, alias <name>, any) — no composition. Central's ArubaPolicyCondition_SourceRoleOptions / DestinationRoleOptions sub-schemas allow composing role-based matching with additional address constraints; this is a Central-native enhancement with no AOS 8 source path. Verified live: across 88 ACLs in the operator's tenant, zero rules combine a role discriminator with an additional address constraint on the same side.",
+          "reason":          "AOS 8 CLI grammar treats source-spec / destination-spec as a single token (one of: user, user-role, host, network, alias, any) — no composition. Central's ArubaPolicyCondition_SourceRoleOptions / DestinationRoleOptions is a Central-native enhancement with no AOS 8 source path. Verified live: across 88 ACLs in the operator's tenant, zero rules combine a role discriminator with an additional address constraint on the same side.",
           "severity_rule":   "non_empty_regression"
         }
       ],
       "ignored_variants": [
         {
           "form":   "ACL with role__acl entries flagged _flags.system / _flags.default / _flags.readonly",
-          "reason": "AOS 8 system / built-in ACLs (global-sacl, apprf-*-sacl, etc.) appear with system flags. Migrating them creates duplicate policies in Central that shadow Central's own built-ins. Consumer must filter these from the role-attribution lookup."
+          "reason": "AOS 8 system / built-in ACLs (global-sacl, apprf-*-sacl, etc.) appear with system flags. Migrating them creates duplicate policies in Central that shadow Central's own built-ins. Preprocessing filters these from the role-attribution lookup."
         },
         {
           "form":   "Empty acl_sess record (rule list empty after filtering)",
-          "reason": "Per the AOS 8 -> CNX LLD: 'Empty ACL will NOT be migrated.' The transform returns None for empty rule arrays; the engine drops policy-rule from the body. Consumer should typically filter empty ACLs from the migration set rather than POSTing a rule-less policy."
+          "reason": "Per the AOS 8 -> CNX LLD: 'Empty ACL will NOT be migrated.' Preprocessing returns an empty list for ACLs with no rules; consumer should typically filter empty ACLs from the migration set rather than POSTing a rule-less policy."
         },
         {
           "form":   "ACL not attached to any role (role_attribution = empty list)",
-          "reason": "Per the LLD: 'ACL by itself will NOT be migrated.' The transform builds rules with ADDRESS_ANY for suser/duser when role_attribution is empty (rather than producing an invalid empty role-list). Consumer should typically skip ACLs with no role attribution rather than POSTing them with degraded source/destination semantics."
+          "reason": "Per the LLD: 'ACL by itself will NOT be migrated.' Preprocessing falls back to ADDRESS_ANY for suser/duser rules when role_attribution is empty (rather than producing an invalid empty role-list); consumer should typically skip ACLs with no role attribution."
         }
       ]
     }
   },
   "draft_notes": [
-    "v1 translation, Gateway-targeted. POST /policies/{name} with security-policy.policy-rule[] computed by the aos8_acl_sess_to_central_policy_rules 2-arg transform.",
-    "INVERSION CALL-OUT (the central:role translation deferred role__acl to here): AOS 8 binds ACL->role via role.role__acl[] (role-side reference). Central inverts — policies reference roles via policy-rule[].condition.source.role-list (policy-side reference) and Central back-fills role.policies[] automatically. The translation receives role_attribution: list[str] (roles that reference this ACL) via runtime_values; consumer pre-computes by scanning role records.",
-    "Live-verified across 88 user-customized ACLs at /md/Campus/West + a purpose-configured 'missing-policies' ACL exercising 7 variant shapes (host destination, ICMP echo, time-range, dst-nat standalone, redirect-tunnel, redirect-tunnel-group, dst=duserrole, dst=dlocalip).",
-    "ANY-ANY EXPANSION (operator-confirmed): Central can express 'any -> user/host/network' or 'user -> any' for a role-bound policy, but NOT 'any -> any'. AOS 8 'any any' semantics are bidirectional (allow both directions). The translation expands one AOS 8 'any any' rule into TWO Central rules — 'role -> any' AND 'any -> role' — so return traffic is matched. Live-verified pattern in the operator's PD-allowall policy. Rules where AOS 8 source is any but destination is specific (any -> host, any -> network, any -> role) keep source: ADDRESS_ANY since Central does support those patterns; only the literal any-any pattern triggers expansion. When role_attribution is empty, no expansion happens — single-rule any-any is emitted (defensive; consumer should typically filter such ACLs per the LLD).",
-    "NAMED svc-* services use Central's authoritative net-service catalog. The translation passes AOS 8 service-name (svc-http, svc-https, svc-dns, svc-icmp, etc.) into Central's services.net-service field with rule-type RULE_NET_SERVICE. Central ships 73 net-services (verified via central_get_net_services) including 64 svc-* names mirroring AOS 8's convention. Unknown names produce a clean Central error instead of silent mistranslation to wrong protocol+port. Known structural mismatches (if any surface) are aliased via _AOS8_TO_CENTRAL_SVC_NAME_ALIASES in transforms.py.",
-    "Schema annotations on Central /policies are unreliable for Gateway support: many fields (rule-type, ip-header.protocol, transport-fields, source.type) are tagged 'Switch CX / AP / Switch PVOS' or 'AP only', yet the live tenant's GW-bound policies clearly USE them (RULE_PROTOCOL with ip-header.protocol=80 verified in amazon-device policy on a mobility gateway). Per operator clarification: 'fields tagged for specific devices apply only to those devices and are ignored by others' — the body itself is universal across device-types and the consumer's config-assignments POST is what binds it. Trust live data over schema device-type annotations.",
+    "v1 translation, Gateway-targeted. POST /policies/{name} with security-policy.policy-rule[] computed by the aos8_policy preprocessing function (engine auto-invokes via the top-level preprocessing field).",
+    "TEMPLATE COMPLIANCE: this translation follows the standard Paradigm-B template (per-field key_mappings + structurally complete body). The v4policy/v6policy merge + role_attribution lookup + any-any bidirectional expansion all live in the preprocessing function (translations/preprocessing/aos8_policy.py); the JSON is thin and reviewable. See translations/AUTHORING.md for the template + decision tree.",
+    "INVERSION CALL-OUT: AOS 8 binds ACL->role via role.role__acl[] (role-side reference). Central inverts — policies reference roles via policy-rule[].condition.source.role-list (policy-side reference) and Central back-fills role.policies[] automatically. Preprocessing scans role_records (caller-supplied via runtime_values) to compute role_attribution per ACL.",
+    "Live-verified across 88 user-customized ACLs at /md/Campus/West + a purpose-configured 'missing-policies' ACL. amazon-device live Central GW policy verified RULE_PROTOCOL + ip-header.protocol works on Gateway despite schema marking it AP-only. Schema annotations on Central /policies are unreliable for Gateway support; trust live data.",
+    "ANY-ANY EXPANSION: AOS 8 'any any' is bidirectional and Central can't represent it for a role-bound policy. Preprocessing expands one AOS 8 'any any' rule into TWO Central rules (role->any AND any->role) so return traffic matches. Live-verified pattern from PD-allowall policy.",
+    "NAMED svc-* uses Central's authoritative net-service catalog: AOS 8 service-name passes verbatim into Central's services.net-service field with rule-type RULE_NET_SERVICE. Central ships ~73 net-services including 64 svc-* matching AOS 8 conventions. Unknown names produce a clean Central error rather than silent mistranslation.",
     "Enum mappings (services.application / app-category / web-category / web-reputation) come from policy.json's x-enumDescriptions table — extracted at authoring time into translations/policy_enum_tables.py. 21/85 web-category entries insert connective words ('AND') between slash-separated AOS 8 forms (e.g. entertainment/arts -> ENTERTAINMENT-AND-ARTS) — a naive uppercase + slash-to-dash transform produces wrong values for those. Always use the explicit lookup table.",
-    "AOS 8 named-service -> Central protocol+port lookup: AOS 8's svc-* names (svc-icmp, svc-dns, svc-dhcp, svc-http, svc-https, etc.) have no Central CNX named-service enum equivalent. Each maps to a (protocol, optional port range) tuple via the _AOS8_NAMED_SERVICE_TO_CENTRAL table in transforms.py. Common services covered; uncommon svc-* names fall through to RULE_ANY semantics — consumer should surface a finding.",
-    "TCP/UDP+port shape inferred from schema, not live-verified: live-verification confirms RULE_PROTOCOL + ip-header.protocol works on GW (amazon-device policy). RULE_TCP / RULE_UDP with transport-fields.destination-port follow the schema's parallel structure — the translation produces this shape but it should be verified against the operator's tenant before treating as authoritative for production migration. RULE_PROTOCOL fallback is honored regardless.",
-    "Dual-stack (acl_sess__v4policy + acl_sess__v6policy) is collapsed into one Central policy-rule[] array with each rule's condition.address-family set to IPV4 or IPV6 accordingly. Position numbers are sequential across the merged array.",
+    "TCP/UDP+port shape inferred from schema, not live-verified: live-verification confirms RULE_PROTOCOL + ip-header.protocol works on GW. RULE_TCP / RULE_UDP with transport-fields.destination-port follow the schema's parallel structure — should be verified against the operator's tenant before treating as authoritative for production migration.",
     "Idempotency: if a policy with the same name already exists, the SHARED POST returns HTTP 409. Consumer must handle 409 idempotently."
   ]
 }

@@ -259,6 +259,19 @@ class Translation(BaseModel):
     dependencies: list[Dependency] = Field(default_factory=list)
     tokenize_kind_per_field: dict[str, str] = Field(default_factory=dict)
     sources: dict[str, SourceBlock] = Field(min_length=1)
+    preprocessing: str | None = Field(
+        default=None,
+        description=(
+            "Optional dotted import path to a preprocessing function. The function "
+            "must accept ``(source_data: dict, runtime_values: dict) -> dict`` and "
+            "return an augmented source_data dict (don't mutate the input). The "
+            "engine invokes it before key_mappings, after the source platform check "
+            "and required_runtime_values validation. Used by translations whose "
+            "source shape doesn't fit per-field key_mapping (parallel arrays, "
+            "cross-record lookups, fan-out expansion). Empty / null means no "
+            "preprocessing — the simple pattern that fits most translations."
+        ),
+    )
     draft_notes: list[str] = Field(default_factory=list)
 
 
