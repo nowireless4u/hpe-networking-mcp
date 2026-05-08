@@ -45,7 +45,7 @@ class TokenEntry:
 class SessionKeymap:
     """The bidirectional token map for one MCP session.
 
-    Two indices for O(1) lookup in both directions:
+    Three indices for O(1) lookup in every direction we need:
 
     * ``by_plaintext[(kind, plaintext)]`` -> entry, used during
       tokenization so the same plaintext value gets the same token
@@ -53,10 +53,21 @@ class SessionKeymap:
       requirement from the v2.3.0.10 design).
     * ``by_token[token_string]`` -> entry, used during detokenization
       when the AI passes a token back into a write tool.
+    * ``by_plaintext_value[plaintext]`` -> entry, used by the walker's
+      keymap-replay pass to restore previously-issued tokens for
+      cleartext values that have lost their structural context (e.g.
+      the round-trip through a tool that detokenizes inputs, processes
+      cleartext internally, and re-emits values whose output field
+      name matches no rule). Issue #291. Kind-agnostic — if the same
+      plaintext appears under multiple kinds in this session, the
+      most-recently-allocated entry wins; this is safe because in
+      practice a given plaintext rarely re-appears under a different
+      kind within one session.
     """
 
     by_plaintext: dict[tuple[TokenKind, str], TokenEntry] = field(default_factory=dict)
     by_token: dict[str, TokenEntry] = field(default_factory=dict)
+    by_plaintext_value: dict[str, TokenEntry] = field(default_factory=dict)
 
     # An asyncio lock per session — defensive against future code paths
     # that introduce an ``await`` mid-allocation. Today the operations

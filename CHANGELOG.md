@@ -5,6 +5,63 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1.9] - 2026-05-08
+
+**Patch release — fixes #291: walker keymap-replay on outbound SKIP path. Closes the round-trip leak that v3.0.1.8 surfaced — values tokenized once in a session now stay tokenized across every tool's outbound, even when the output field name carries no rule.**
+
+### Bug
+
+After fixing #289 in v3.0.1.8, AOS 8 read responses correctly tokenize VLAN names via the new `(vlan_name, name)` structural rule. The AI receives tokens. **But** the round-trip through any downstream tool re-leaks them — verified live against tenant on v3.0.1.8 (image label confirmed v3.0.1.8).
+
+Concretely, the `aos-migration` Stage 9b flow:
+
+1. `aos8_get_effective_config(object_name="vlan_name")` → middleware tokenizes outbound → AI receives `[[NAME:1]]` ✓
+2. AI calls `central_translation_preview(source_records=[{"name": "[[NAME:1]]"}, ...])`
+3. Middleware **detokenizes inbound** so the tool sees cleartext `"guest"` (this is by design — tools always see cleartext)
+4. Tool returns `{"results": [{"record_id": "guest", "sample_body": {"name": "guest"}, ...}]}`
+5. Middleware outbound: walker checks rules. `record_id` has no rule. `name` under `sample_body` parent has no rule. **Both pass through cleartext.**
+6. AI's summary uses cleartext.
+
+The session keymap already mapped `"guest" → [[NAME:1]]` from step 1. The walker just didn't consult it on subsequent outbounds.
+
+### Fix
+
+**Walker keymap-replay on SKIP path.** When the walker classifies a string value as `FieldClassification.SKIP` (no field rule, no structural-context rule), it now asks the session tokenizer: "have you seen this exact cleartext before?" If yes, restore the existing token. Properties:
+
+- **Keymap-driven, not heuristic.** Only values that have been tokenized via field rules (and recorded in the keymap) get restored. Cleartext values that were never tokenized in this session stay cleartext — no false positives.
+- **Bounded.** O(1) keymap lookup per string value walked.
+- **Fixes every tool automatically.** Not specific to `central_translation_preview`.
+- **Round-trip-safe.** A token issued for `"guest"` in session N gets the SAME token restored anywhere `"guest"` appears in session N's outputs, regardless of which field it lands at.
+- **Idempotent.** Existing `[[KIND:uuid]]` token-shaped strings pass through; we never tokenize a token.
+
+### Implementation
+
+1. **`SessionKeymap` gains a third index:** `by_plaintext_value: dict[str, TokenEntry]` alongside the existing `by_plaintext[(kind, plaintext)]` and `by_token[token]`. Kind-agnostic — last writer wins on the rare case where the same plaintext is allocated under multiple kinds in one session.
+2. **Tokenizer.tokenize populates the new index** alongside the existing two.
+3. **New `Tokenizer.token_for_existing_cleartext(value: str) -> str | None`** method does the reverse lookup. Returns None for empty strings, non-strings, and values that look like existing tokens.
+4. **Walker `_walk_pair` SKIP path** consults the tokenizer's keymap-replay BEFORE running the universal scan. If a token is restored, return it; otherwise fall through to universal scan (which still handles embedded patterns like emails / AWS-signed URLs).
+
+### Files
+
+- **`src/hpe_networking_mcp/redaction/token_store.py`** — adds `by_plaintext_value` index to `SessionKeymap`
+- **`src/hpe_networking_mcp/redaction/tokenizer.py`** — populates the new index in `tokenize`; adds `token_for_existing_cleartext` method
+- **`src/hpe_networking_mcp/redaction/walker.py`** — wires keymap-replay into `_walk_pair`'s SKIP path
+- **`tests/unit/test_pii_redaction.py`** — adds `TestKeymapReplayOnSkipPath` with 6 tests (round-trip, nested-structure round-trip, negative case, idempotency, direct API check, and the realistic `central_translation_preview` shape end-to-end)
+- **`pyproject.toml`** — bump 3.0.1.8 → 3.0.1.9
+
+### Notes
+
+- 1186 tests pass (was 1180; +6 new).
+- **Closes #291.**
+- **Live verification recommended after the new image rolls.** Re-run Stage 9b against the tenant; the VLAN names that came through cleartext on v3.0.1.8 should now appear as `[[NAME:uuid]]` tokens — both in the summary table's `name`/`record_id` column AND in the sample TargetCall body fields.
+- **The fix benefits every tool, not just `central_translation_preview`.** Any tool that emits a previously-tokenized value at a SKIP-classified field now restores the original token. Examples: `aos-migration` Stage 9b's `summary` dict; `change-pre-check` baseline snapshots that re-serialize names without their original wrappers; future translation-execute tools that emit POSTed-body confirmations.
+- **No new tokenization happens via this path.** Replay only restores tokens that were already issued by the existing field-rule path. Untokenized cleartext stays cleartext.
+
+### Out of scope
+
+- Adding new field rules for role/ACL names (`rname`, `accname` aren't in any rule today). Separate scope decision; tracked elsewhere.
+- Mist / Central site list audit. Different wrappers; same shape pattern; needs its own audit.
+
 ## [3.0.1.8] - 2026-05-08
 
 **Patch release — fixes #289: walker structural-identifier rule for AOS 8 list-of-dicts identifier shapes. Production VLAN names that were leaking through cleartext now tokenize correctly.**

@@ -119,6 +119,11 @@ class Tokenizer:
         entry = TokenEntry(kind=kind, token=token, plaintext=plaintext)
         self._keymap.by_plaintext[key] = entry
         self._keymap.by_token[token] = entry
+        # Kind-agnostic reverse index for keymap-replay on the walker's
+        # SKIP path (issue #291). Last writer wins on the rare case where
+        # the same plaintext is allocated under multiple kinds in one
+        # session.
+        self._keymap.by_plaintext_value[plaintext] = entry
 
         logger.info(
             "pii.tokenize session={} kind={} token={} value_hash={} entries={}",
@@ -146,6 +151,26 @@ class Tokenizer:
             )
             return None
         return entry.plaintext
+
+    def token_for_existing_cleartext(self, value: str) -> str | None:
+        """Return the existing token for a known cleartext, or None.
+
+        Used by the walker's keymap-replay pass on the SKIP path to
+        restore round-trip stability for values that were tokenized
+        earlier in the session but whose output field name carries no
+        rule (issue #291). Kind-agnostic — looks up by plaintext alone.
+
+        Returns None when:
+        * The value has never been tokenized in this session.
+        * The value is empty / not a string.
+        * The value is already a token (no double-tokenization).
+        """
+        if not isinstance(value, str) or not value:
+            return None
+        if TOKEN_RE.fullmatch(value):
+            return None
+        entry = self._keymap.by_plaintext_value.get(value)
+        return entry.token if entry is not None else None
 
 
 def tokenize_value(

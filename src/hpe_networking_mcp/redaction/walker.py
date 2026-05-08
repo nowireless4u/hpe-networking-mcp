@@ -234,11 +234,21 @@ def _walk_pair(
     classification, kind = classify_field(key, value, parent_keys=parent_keys, parent_field_name=parent_field_name)
 
     if classification == FieldClassification.SKIP:
-        # Universal scan still runs on un-classified string values so
-        # emails embedded in arbitrary fields (e.g. PSK ``name`` =
-        # ``user@example.com``) and AWS-signed URLs in arbitrary fields
-        # (e.g. ``portal_template_url``) still get tokenized.
+        # Keymap-replay pass first (issue #291): if this exact string was
+        # previously tokenized in this session under any kind, restore the
+        # existing token. Closes the round-trip leak where a tool detokenizes
+        # inputs, processes cleartext internally, and re-emits values whose
+        # output field name carries no rule (e.g. central_translation_preview
+        # returns ``record_id`` and ``sample_body.name`` cleartext even though
+        # the underlying values were tokenized on AOS 8 read).
         if isinstance(value, str):
+            replayed = tokenizer.token_for_existing_cleartext(value)
+            if replayed is not None:
+                return replayed
+            # Universal scan still runs on un-classified string values so
+            # emails embedded in arbitrary fields (e.g. PSK ``name`` =
+            # ``user@example.com``) and AWS-signed URLs in arbitrary fields
+            # (e.g. ``portal_template_url``) still get tokenized.
             return _universal_scan(value, tokenizer)
         return value
     if classification == FieldClassification.TOKENIZE_SECRET and kind is not None:

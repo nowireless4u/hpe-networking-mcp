@@ -588,6 +588,155 @@ class TestStructuralIdentifierContextsEndToEnd:
         assert bindings[1]["vlan-ids"] == "108-110"
 
 
+class TestKeymapReplayOnSkipPath:
+    """Issue #291 — walker keymap-replay on SKIP path. When a tool emits
+    a previously-tokenized cleartext value at a field that carries no
+    rule (e.g. ``central_translation_preview``'s ``record_id``), the
+    walker should consult the session keymap and restore the existing
+    token. Closes the round-trip leak where tools detokenize inputs,
+    process cleartext internally, and re-emit values that have lost
+    their original structural context.
+    """
+
+    def _new_tokenizer(self):
+        from hpe_networking_mcp.redaction.token_store import SessionKeymap
+        from hpe_networking_mcp.redaction.tokenizer import Tokenizer
+
+        return Tokenizer(SessionKeymap(), session_id="test-session-291", max_entries=100)
+
+    def test_value_tokenized_then_replayed_at_unrelated_field(self) -> None:
+        """The classic round-trip: AOS 8 read tokenizes "guest" via the
+        ``(vlan_name, name)`` structural rule; later, an unrelated tool
+        emits "guest" at a generic ``record_id`` field with no rule. The
+        replay should restore the original token.
+        """
+        from hpe_networking_mcp.redaction.walker import tokenize_response
+
+        tokenizer = self._new_tokenizer()
+
+        # First call: AOS 8 read shape — tokenizes "guest" via structural rule.
+        first = tokenize_response({"_data": {"vlan_name": [{"name": "guest"}]}}, tokenizer)
+        original_token = first["_data"]["vlan_name"][0]["name"]
+        assert TOKEN_RE.fullmatch(original_token) is not None
+        assert original_token.startswith("[[NAME:")
+
+        # Second call: a tool's response carries "guest" at a generic field
+        # (record_id) with no rule. Walker should keymap-replay.
+        second = tokenize_response(
+            {"results": [{"record_id": "guest", "call_count": 7}]},
+            tokenizer,
+        )
+        assert second["results"][0]["record_id"] == original_token
+
+    def test_value_replayed_inside_nested_unrelated_structure(self) -> None:
+        """Round-trip survives when the same cleartext appears inside a
+        nested dict with no structural context (e.g. inside a TargetCall
+        body emitted by ``central_translation_preview``).
+        """
+        from hpe_networking_mcp.redaction.walker import tokenize_response
+
+        tokenizer = self._new_tokenizer()
+        tokenize_response({"_data": {"vlan_name": [{"name": "guest"}]}}, tokenizer)
+
+        nested = tokenize_response(
+            {"sample_body": {"name": "guest", "vlan": {"vlan-alias": "guest"}}},
+            tokenizer,
+        )
+        # Both "guest" values restored to the same token.
+        body = nested["sample_body"]
+        assert body["name"].startswith("[[NAME:")
+        assert body["vlan"]["vlan-alias"] == body["name"]
+
+    def test_value_never_tokenized_stays_cleartext(self) -> None:
+        """Negative: a string that was never tokenized in this session must
+        not be touched by the replay pass. No false positives from random
+        keymap collisions.
+        """
+        from hpe_networking_mcp.redaction.walker import tokenize_response
+
+        tokenizer = self._new_tokenizer()
+        result = tokenize_response({"results": [{"record_id": "never-seen-before"}]}, tokenizer)
+        assert result["results"][0]["record_id"] == "never-seen-before"
+
+    def test_existing_token_not_double_tokenized(self) -> None:
+        """Idempotency: a value that's already a ``[[KIND:uuid]]`` token
+        passes through the replay pass unchanged.
+        """
+        from hpe_networking_mcp.redaction.walker import tokenize_response
+
+        tokenizer = self._new_tokenizer()
+        tokenize_response({"_data": {"vlan_name": [{"name": "guest"}]}}, tokenizer)
+        original_token = tokenizer.token_for_existing_cleartext("guest")
+        assert original_token is not None
+
+        # Walking a response that already contains a token: should pass through.
+        result = tokenize_response({"results": [{"record_id": original_token}]}, tokenizer)
+        assert result["results"][0]["record_id"] == original_token
+
+    def test_token_for_existing_cleartext_lookup_method(self) -> None:
+        """Direct API check on the new method."""
+        tokenizer = self._new_tokenizer()
+        # Empty / non-string / not-yet-tokenized: None.
+        assert tokenizer.token_for_existing_cleartext("") is None
+        assert tokenizer.token_for_existing_cleartext("never-seen") is None
+        # After tokenizing, returns the same token.
+        from hpe_networking_mcp.redaction.rules import TokenKind
+        from hpe_networking_mcp.redaction.tokenizer import tokenize_value
+
+        token = tokenize_value(tokenizer, TokenKind.NAME, "guest")
+        assert tokenizer.token_for_existing_cleartext("guest") == token
+        # Idempotency: passing a token through the lookup returns None
+        # (we never want to "tokenize" a token-shaped value).
+        assert tokenizer.token_for_existing_cleartext(token) is None
+
+    def test_central_translation_preview_record_id_round_trip(self) -> None:
+        """End-to-end shape that mirrors the actual leak from issue #291:
+        AOS 8 read tokenizes the inner ``name`` field; then the
+        ``central_translation_preview`` response shape carries the same
+        cleartext at ``results[].record_id`` (a SKIP-classified field)
+        AND at ``sample_body.name`` (also SKIP). Both must restore the
+        original token via replay.
+        """
+        from hpe_networking_mcp.redaction.walker import tokenize_response
+
+        tokenizer = self._new_tokenizer()
+
+        # 1. AOS 8 read tokenizes via (vlan_name, name) structural rule.
+        tokenize_response(
+            {"_data": {"vlan_name": [{"name": "guest"}, {"name": "local"}]}},
+            tokenizer,
+        )
+        guest_token = tokenizer.token_for_existing_cleartext("guest")
+        local_token = tokenizer.token_for_existing_cleartext("local")
+        assert guest_token is not None
+        assert local_token is not None
+
+        # 2. central_translation_preview-shaped response with cleartext fields.
+        preview_response = {
+            "translation_id": "central:named_vlan",
+            "results": [
+                {
+                    "record_id": "guest",
+                    "call_count": 7,
+                    "target_calls": [
+                        {
+                            "endpoint": "/network-config/v1alpha1/named-vlan/guest",
+                            "body": {"name": "guest", "vlan": {"vlan-alias": "guest"}},
+                        }
+                    ],
+                },
+                {"record_id": "local", "call_count": 9, "target_calls": []},
+            ],
+        }
+        out = tokenize_response(preview_response, tokenizer)
+
+        assert out["results"][0]["record_id"] == guest_token
+        assert out["results"][1]["record_id"] == local_token
+        body = out["results"][0]["target_calls"][0]["body"]
+        assert body["name"] == guest_token
+        assert body["vlan"]["vlan-alias"] == guest_token
+
+
 class TestVrrpPassphraseRule:
     """Issue #277 — AOS 8 cluster_prof.vrrp_info.vrrp_passphrase is a shared
     key between cluster members. Live captures show it as the deterministic-
