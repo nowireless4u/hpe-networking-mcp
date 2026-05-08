@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1.11] - 2026-05-08
+
+**Patch release — INSTRUCTIONS.md additions targeting the small-local-model orchestration issues from Zach's continued OpenClaw + Qwen3 4B test report. Two prose changes; no code, no skills, no tools.**
+
+The continued report surfaced several model-side failure modes that don't have direct server-side fixes — they're mitigated by clearer prompt language. Two specific gaps the existing instructions didn't cover:
+
+1. **Sandbox-stdlib reference.** The `execute_description` in `server.py` documents some blocked items (`asyncio.gather`, `datetime.now`, `time.time`, file I/O, `os.environ`, `subprocess`) but doesn't name `hashlib` (verified blocked by Zach's continued report) or `yield` / `yield from` (verified blocked in v3.0.1.9 regression testing). Operators authoring skill snippets had no single place to look up "what's allowed in `execute()`?". Added a Sandbox-stdlib reference section under the existing `Code-mode execute() patterns` section in INSTRUCTIONS.md with a known-working / known-blocked table and substitute guidance per blocked item. Note that the table will grow as more failures surface — and the corresponding `tests/unit/test_skill_snippet_sandbox_compat.py` lint (added v3.0.1.10) is the enforcement side of the same evidence.
+
+2. **Tool-call-first idiom for identifier queries.** Existing `CRITICAL RULES` rule #3 (*"Only answer based on data returned by tools"*) is generic. The continued report showed Qwen reliably skipping tool calls and answering from training-data memory or earlier-session context — even when the user's question named a specific identifier (AP name, scope name, ACL name, etc.). Tightened rule #3 with an explicit "you MUST first call the matching read tool" obligation when a question names any specific identifier, plus a worked good/bad example showing the difference between calling `central_get_ap_details(ap_name="corp-ap-01")` first vs. answering from stale memory.
+
+### Files
+
+- **`src/hpe_networking_mcp/INSTRUCTIONS.md`** — new Sandbox-stdlib reference section under `Code-mode execute() patterns`; expanded `CRITICAL RULES` rule #3 with the tool-call-first idiom + worked example.
+- **`pyproject.toml`** — bump 3.0.1.10 → 3.0.1.11.
+
+### Notes
+
+- 1196 tests pass (no test-count change — pure docs release).
+- These are the two model-side issues from Zach's continued report that the existing instructions didn't already cover. Other model behaviors (`async def run()` wrapping, large-payload final-answer truncation, fabricated counts, bounded-output patterns) were already addressed by v3.0.1.5 / v3.0.1.7 INSTRUCTIONS.md additions and Stage 9b prose. The aos-migration skill carries explicit anti-fabrication language ("Use the engine's deterministic counts — never hand-fabricate").
+- The new Sandbox-stdlib reference table is intentionally living documentation. Issue templates around skill-snippet bugs should reference it; `test_skill_snippet_sandbox_compat.py` enforces the blocklist mechanically.
+
 ## [3.0.1.10] - 2026-05-08
 
 **Patch release — `central-scope-walker` skill snippet rewritten to stack-based iteration. The shipped recursive-generator form was rejected by the MCP code-mode sandbox (`NotImplementedError: The monty syntax parser does not yet support yield expressions`), making the skill non-functional. Reported by Zach via ChatGPT regression testing of v3.0.1.9.**
