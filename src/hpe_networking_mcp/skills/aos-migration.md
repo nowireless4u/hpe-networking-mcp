@@ -870,13 +870,20 @@ scope_tree_resp = await call_tool("central_get_scope_tree", {"view": "committed"
 envelope = scope_tree_resp.get("data", scope_tree_resp)
 root = envelope.get("result", envelope) if isinstance(envelope, dict) and "result" in envelope else envelope
 
-def walk(node, path):
+# Iterative DFS via stack — sandbox parser rejects `yield`/`yield from`.
+all_nodes = []
+stack = [(root, [])]
+while stack:
+    node, path = stack.pop()
     here = path + [node.get("scope_name") or node.get("scope_id") or "?"]
-    yield {"scope_id": node.get("scope_id"), "scope_name": node.get("scope_name"),
-           "type": node.get("type"), "path": "/".join(here)}
-    for child in node.get("children") or []:
-        yield from walk(child, here)
-all_nodes = list(walk(root, []))
+    all_nodes.append({
+        "scope_id": node.get("scope_id"),
+        "scope_name": node.get("scope_name"),
+        "type": node.get("type"),
+        "path": "/".join(here),
+    })
+    for child in (node.get("children") or []):
+        stack.append((child, here))
 
 def resolve(central_scope_name: str) -> tuple[str, str]:
     """Return (scope_id, status) — status is 'resolved' or 'placeholder'."""
