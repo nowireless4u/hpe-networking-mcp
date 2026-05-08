@@ -118,6 +118,7 @@ TOOLS = {
         "central_manage_gateway_cluster",
     ],
     "firmware": ["central_recommend_firmware"],
+    "translation_preview": ["central_translation_preview"],
 }
 
 

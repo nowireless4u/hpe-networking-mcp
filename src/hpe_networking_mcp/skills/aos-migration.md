@@ -46,7 +46,7 @@ description: |
   process and partner-tool guidance.
 platforms: [central, aos8]
 tags: [central, migration, aos8, aos10, readiness, audit, vsg, translation]
-tools: [health, central_get_scope_tree, central_get_devices, central_get_aps, central_get_sites, central_get_site_name_id_mapping, central_recommend_firmware, central_get_config_assignments, central_get_server_groups, central_get_wlan_profiles, central_get_roles, central_get_role_acls, central_get_net_groups, central_get_net_services, central_get_named_vlans, central_get_aliases, central_get_gateway_cluster_intent_profiles, central_get_gateway_clusters, central_manage_site, central_manage_site_collection, central_manage_device_group, central_manage_role, central_manage_role_acl, central_manage_net_group, central_manage_net_service, central_manage_wlan_profile, central_manage_config_assignment, central_manage_gateway_cluster_intent_profile, central_manage_gateway_cluster, clearpass_get_network_devices, clearpass_get_device_groups, clearpass_get_server_certificates, clearpass_get_local_users, greenlake_get_subscriptions, greenlake_get_workspace, greenlake_get_devices, aos8_get_md_hierarchy, aos8_get_effective_config, aos8_get_ap_database, aos8_get_cluster_state, aos8_show_command, aos8_get_clients, aos8_get_bss_table, aos8_get_active_aps, aos8_get_ap_wired_ports]
+tools: [health, central_get_scope_tree, central_get_devices, central_get_aps, central_get_sites, central_get_site_name_id_mapping, central_recommend_firmware, central_get_config_assignments, central_get_server_groups, central_get_wlan_profiles, central_get_roles, central_get_role_acls, central_get_net_groups, central_get_net_services, central_get_named_vlans, central_get_aliases, central_get_gateway_cluster_intent_profiles, central_get_gateway_clusters, central_translation_preview, central_manage_site, central_manage_site_collection, central_manage_device_group, central_manage_role, central_manage_role_acl, central_manage_net_group, central_manage_net_service, central_manage_wlan_profile, central_manage_config_assignment, central_manage_gateway_cluster_intent_profile, central_manage_gateway_cluster, clearpass_get_network_devices, clearpass_get_device_groups, clearpass_get_server_certificates, clearpass_get_local_users, greenlake_get_subscriptions, greenlake_get_workspace, greenlake_get_devices, aos8_get_md_hierarchy, aos8_get_effective_config, aos8_get_ap_database, aos8_get_cluster_state, aos8_show_command, aos8_get_clients, aos8_get_bss_table, aos8_get_active_aps, aos8_get_ap_wired_ports]
 ---
 
 # AOS 8 → AOS 10 migration (PoC) — readiness + config translation plan
@@ -837,7 +837,242 @@ For every row of the Stage 8 disposition matrix where Disposition is `direct-tra
 
 ---
 
-### Stage 10 — Validation checklist (TRANSLATE-04)
+### Stage 9b — Engine-driven translation preview (TRANSLATE-03b, read-only)
+
+**Run this stage when the operator asks for a deterministic, engine-produced preview of what the migration will emit per object — e.g. "give me a breakdown of what the policies will look like in Central and where they'll land."** Stage 9 (above) is the *narrative* AI-authored API call sequence; Stage 9b is the *deterministic* engine output. Operators reviewing migration impact should read both — Stage 9 for the ordered cutover plan, Stage 9b for the actual JSON bodies and rule-by-rule per-object detail.
+
+**This stage uses the `central_translation_preview` tool** — a read-only bridge to the translations engine that runs server-side and returns deterministic `TargetCall` descriptors. **Read-only — no API writes.** Real execution lands in #240's Phase 3.
+
+**Preconditions:**
+
+- Stage 1 has collected the AOS 8 inventory (effective-config dump). Reuse those records — do NOT re-fetch.
+- Stage 7 has produced the operator-confirmed AOS 8 → Central hierarchy mapping. For each AOS 8 binding scope (`/md/Campus/West`, etc.), Stage 7 names a Central scope (e.g. `Global/USE/HQ`).
+- Resolve each Central scope NAME from Stage 7's mapping to a Central scope_id via the `central-scope-walker` skill (call once per distinct Central scope name; cache the result; the walker handles name → scope_id lookup deterministically).
+
+**Translations shipped today (v3.0.1.6):**
+
+| translation_id | AOS 8 source | Central target | Notes |
+|---|---|---|---|
+| `central:vlan_id` | `vlan_id` (bare or rich) | layer2-vlan profile | Per-record. Optional sub-fields drop when absent. |
+| `central:named_vlan` | composite: `vlan_name` ⨝ `vlan_name_id` on `name` | named-VLAN + alias chain (6 emits) | Composite source — pre-merge before passing one record per name. |
+| `central:role` | `role` (Gateway-targeted) | role profile + config-assignment | ~25 fields. Skip `_flags.default=true` system roles. |
+| `central:policy` | `acl_sess` | /policies POST + config-assignment | Engine pre-processes via reverse-index lookup against role records (consumer pre-fetches once). |
+
+#### Step 1 — Scope resolution (run once)
+
+Use `central-scope-walker` to resolve each distinct Central scope name from Stage 7 mapping into its scope_id. Build a small dict the next steps will reuse:
+
+```python
+# Inside execute(): one walker call per distinct Central scope name from Stage 7.
+scope_lookup = {}
+for central_scope_name in {"Global/USE/HQ", "Global"}:  # operator-confirmed Stage 7 names
+    response = await call_tool("central_get_scope_tree", {"view": "committed"})
+    envelope = response.get("data", response)
+    root = envelope.get("result", envelope) if isinstance(envelope, dict) and "result" in envelope else envelope
+    # ... walker snippet from central-scope-walker skill ...
+    # scope_lookup[central_scope_name] = matches[0]["scope_id"]
+```
+
+(See the `central-scope-walker` skill for the complete walker snippet — paste it verbatim, don't re-author the recursion.)
+
+#### Step 2 — Run the engine-driven preview per translation
+
+For each translation, invoke `central_translation_preview` with the relevant Stage 1 records + scope_id. The tool returns deterministic per-record `TargetCall` descriptors.
+
+##### 2a — VLANs (`central:vlan_id`)
+
+```python
+# Stage 1 collected aos8_get_effective_config(object_name="vlan_id") records.
+# Filter inherited copies (consumer responsibility per the translation JSON).
+vlan_records = [r for r in stage1_vlan_id_records if not (r.get("_flags") or {}).get("inherited")]
+
+response = await call_tool(
+    "central_translation_preview",
+    {
+        "translation_id": "central:vlan_id",
+        "source_records": vlan_records,
+        "runtime_values": {"central_scope_id": scope_lookup["Global/USE/HQ"]},
+    },
+)
+preview = response.get("data", response)
+result = {
+    "kind": "central:vlan_id",
+    "record_count": preview["record_count"],
+    "translatable": preview["translatable_count"],
+    "skipped": preview["skipped_count"],
+    "summary": [
+        {"id": r["record_id"], "calls": r["call_count"], "skip": r["skip_reason"]}
+        for r in preview["results"]
+    ][:30],   # cap for small models
+}
+result
+```
+
+##### 2b — Named VLANs (`central:named_vlan`)
+
+Composite source — merge `vlan_name` ⨝ `vlan_name_id` on `name` BEFORE the call.
+
+```python
+# Stage 1 collected both objects. Filter inherited copies on each side
+# (consumer responsibility per named_vlan_v1.json's merge_rule).
+vlan_names = [r for r in stage1_vlan_name_records if not (r.get("_flags") or {}).get("inherited")]
+vlan_id_bindings = [r for r in stage1_vlan_name_id_records if not (r.get("_flags") or {}).get("inherited")]
+
+# Merge: one record per name with name + vlan-ids combined.
+binding_by_name = {b["name"]: b for b in vlan_id_bindings}
+merged = []
+for vn in vlan_names:
+    nm = vn.get("name")
+    if nm and nm in binding_by_name:
+        merged.append({**vn, **binding_by_name[nm]})  # carries 'name' + 'vlan-ids'
+
+response = await call_tool(
+    "central_translation_preview",
+    {
+        "translation_id": "central:named_vlan",
+        "source_records": merged,
+        "runtime_values": {"central_scope_id": scope_lookup["Global/USE/HQ"]},
+    },
+)
+preview = response.get("data", response)
+result = {
+    "kind": "central:named_vlan",
+    "record_count": preview["record_count"],
+    "translatable": preview["translatable_count"],
+    "skipped": preview["skipped_count"],
+    "summary": [
+        {"name": r["record_id"], "calls": r["call_count"], "skip": r["skip_reason"]}
+        for r in preview["results"]
+    ][:30],
+}
+result
+```
+
+##### 2c — Roles (`central:role`)
+
+```python
+# Filter system / default roles (consumer responsibility per role_v1.json).
+role_records = [
+    r for r in stage1_role_records
+    if not (r.get("_flags") or {}).get("default")
+    and not (r.get("_flags") or {}).get("inherited")
+]
+
+response = await call_tool(
+    "central_translation_preview",
+    {
+        "translation_id": "central:role",
+        "source_records": role_records,
+        "runtime_values": {"central_scope_id": scope_lookup["Global/USE/HQ"]},
+    },
+)
+preview = response.get("data", response)
+result = {
+    "kind": "central:role",
+    "record_count": preview["record_count"],
+    "translatable": preview["translatable_count"],
+    "skipped": preview["skipped_count"],
+    "summary": [
+        {"name": r["record_id"], "calls": r["call_count"], "skip": r["skip_reason"]}
+        for r in preview["results"]
+    ][:30],
+}
+result
+```
+
+##### 2d — Policies (`central:policy`)
+
+Policy preprocessing reverse-indexes role records — pass the FULL role list (post system-default filtering) via `runtime_values["role_records"]`. The engine does the per-ACL lookup internally.
+
+```python
+# Same role_records as 2c (already system-default-filtered).
+acl_records = [
+    r for r in stage1_acl_sess_records
+    if not (r.get("_flags") or {}).get("inherited")
+    and not (r.get("_flags") or {}).get("system")
+]
+
+response = await call_tool(
+    "central_translation_preview",
+    {
+        "translation_id": "central:policy",
+        "source_records": acl_records,
+        "runtime_values": {
+            "central_scope_id": scope_lookup["Global/USE/HQ"],
+            "role_records": role_records,
+        },
+    },
+)
+preview = response.get("data", response)
+result = {
+    "kind": "central:policy",
+    "record_count": preview["record_count"],
+    "translatable": preview["translatable_count"],
+    "skipped": preview["skipped_count"],
+    "summary": [
+        {
+            "acl": r["record_id"],
+            "calls": r["call_count"],
+            "rules": (
+                len(r["target_calls"][0]["body"]["security-policy"]["policy-rule"])
+                if r["target_calls"] else 0
+            ),
+            "skip": r["skip_reason"],
+        }
+        for r in preview["results"]
+    ][:30],
+}
+result
+```
+
+#### Step 3 — Render the consolidated preview report
+
+Combine the four `result` dicts from Step 2 into a single operator-facing table:
+
+```
+## Engine-driven translation preview (read-only)
+
+**Source scope:** /md/Campus/West (AOS 8) → Global/USE/HQ (Central, scope_id `<...>`)
+**Translations run:** central:vlan_id, central:named_vlan, central:role, central:policy
+**Tool:** central_translation_preview (read-only; no API writes)
+
+### Summary
+
+| Translation | Records | Translatable | Skipped | Calls (sum) |
+|---|---|---|---|---|
+| central:vlan_id | 8 | 8 | 0 | 16 |
+| central:named_vlan | 4 | 4 | 0 | 24 |
+| central:role | 12 | 12 | 0 | 24 |
+| central:policy | 14 | 13 | 1 | 26 |
+
+### Per-record detail
+
+#### Policies (14 records, 1 skipped)
+| ACL | Rules | Calls | Skip |
+|---|---|---|---|
+| parent | 14 (incl. 2 from any-any expansion) | 2 | — |
+| blacklisted | 8 | 2 | — |
+| empty-test | 0 | 0 | empty rule list — per LLD, empty ACLs are not migrated |
+...
+
+#### Roles (12 records)
+| Role | Calls |
+|---|---|
+| faculty-staff | 2 |
+| corp-employee | 2 |
+...
+```
+
+**Output rules:**
+
+- **Use the engine's deterministic counts** — never hand-fabricate. If the tool returns `translatable_count=8`, that's the number; do not narrate "approximately 8" or "8 or 9".
+- **Surface every skip_reason verbatim** — these are the operator's signals about what won't migrate (empty ACLs, missing role attribution, etc.).
+- **Cap the per-record detail table at ~30 rows per translation.** If the operator asks "show me detail for ACL X" specifically, re-run with that single record and dump its full `target_calls[0].body` for inspection.
+- **Do NOT dump full `target_calls` bodies in the consolidated output** — they're large and break small-model serialization. The summary table is enough; the body is reachable on operator request.
+
+**Findings produced:** if `skipped_count > 0` for any translation, surface the skip reasons as a finding under Act II's "Translation gaps" subsection. These typically map to operator-confirmable decisions (rename / merge / drop / handle in alternative product).
+
+---
 
 For every Stage 9 step that creates a Central object (i.e. excludes `[Central API gap]` placeholder steps), emit one row of a validation checklist mapping the create call to its corresponding read-back call.
 

@@ -16,7 +16,7 @@ Tools are namespaced by platform:
 
 Two modes are supported (the `static` mode was removed in v3.0.0.0):
 
-- **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 367 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. The smallest initial surface; best for orchestrators driving small / local LLMs.
+- **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 368 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. The smallest initial surface; best for orchestrators driving small / local LLMs.
 - **`MCP_TOOL_MODE=dynamic`** (opt-in since v3.0.0.0; was the v2.x default) — 24 tools visible:
     - **4 cross-platform tools**: `health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`
     - **3 meta-tools per platform × 7 platforms** = 21: `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`
@@ -346,6 +346,12 @@ When asked to create a new site based on an existing site:
   - Filter with `device_type`, `site_id`, `site_name`, or `serial_number`. Default behavior omits devices already on Central's recommended version; pass `include_up_to_date=True` to see them too.
   - The `release_type` field reflects the API's `firmwareClassification` directly — values are `LSR`, `SSR`, or `UNCLASSIFIED` (AOS 8 and other builds the API doesn't classify fall into the last bucket and pass Central's recommendation through).
   - Narrowing `device_type` restricts the pool used to mine the newest LSR target for SSR devices — leave it unset when you want the tool to make SSR→LSR recommendations.
+- **Translation Preview (read-only)**: central_translation_preview
+  - Read-only bridge to the translations engine. Runs server-side and returns deterministic `TargetCall` descriptors per source-platform record (e.g. AOS 8 → Central). **Never writes** — the engine is pure data; this tool wraps it.
+  - Use for "show me what migrating these AOS 8 policies / roles / VLANs would produce in Central" workflows. The `aos-migration` skill's Stage 9b uses it as the engine-driven preview path.
+  - Required `runtime_values` are translation-specific: `central_scope_id` always; `role_records` (full AOS 8 role list) for `central:policy` so the engine's preprocessing can compute role_attribution per ACL.
+  - Returns a per-record results list including `skip_reason` for records the engine couldn't translate (empty ACLs, missing required fields, etc.) — surface these to the operator verbatim; they're migration findings.
+  - Real *execution* of the translation (write path) is a separate future tool tracked under #240; this one is preview-only.
 
 ## Aruba Central Best Practices
 

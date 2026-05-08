@@ -76,6 +76,13 @@ _GLOBAL_ALLOWLIST: frozenset[str] = frozenset(
         "central_manage_ap_system_profile",
         "central_manage_server",
         "central_manage_server_group",
+        # `aos-migration.md` Stage 9b uses these as runtime_value keys / variable
+        # names inside the engine-driven preview snippets — NOT tools. The regex
+        # picks them up because they look like `central_<word>` but they're
+        # parameter names in `runtime_values={"central_scope_id": ...}` and a
+        # local variable iterating Stage 7 mappings (`central_scope_name`).
+        "central_scope_id",
+        "central_scope_name",
     }
 )
 

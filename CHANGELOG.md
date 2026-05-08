@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1.6] - 2026-05-08
+
+**Patch release — `central_translation_preview` tool + `aos-migration` Stage 9b engine-driven preview. Phase-3-lite read-only path so the translations engine sees daylight on real data before #240's actual writes land.**
+
+The translations engine (4 shipped translations, validated lint, ~480-line preprocessing module for policy) has been infrastructure-only since v3.0.1.0 — no consumer skill actually invokes it; `aos-migration` Act II describes translation outcomes narratively but doesn't call `emit_calls`. Code-mode `execute()` blocks imports of internal modules (verified by Zach's report: `import hashlib` failed), so an AI client running the skill cannot reach the engine directly.
+
+This release ships the bridge: a read-only tool that wraps `emit_calls`, plus an aos-migration skill stage that uses it. When an operator asks "what policies will be migrated and where will they land," the skill now produces deterministic engine output rather than the AI's interpretation.
+
+### Three changes
+
+1. **New `central_translation_preview` tool.** Accepts `translation_id` + `source_records` (list of source-platform dicts) + `runtime_values` and returns the deterministic per-record `TargetCall` list. Read-only by construction — the engine is pure data; the tool wraps it; no `central_*` API call is made. Per-record `EngineError` surfaces as `skip_reason` so a partial preview is still useful (empty ACLs, missing required runtime values, etc. don't crash the batch). Module-level cache loads translations once per process. Not gated by `ENABLE_CENTRAL_WRITE_TOOLS` because it cannot write.
+
+2. **`aos-migration` Stage 9b — engine-driven translation preview.** New stage between Stage 9 (narrative AI-authored API call sequence) and Stage 10 (validation checklist). For each of the four shipped translations (`central:vlan_id`, `central:named_vlan`, `central:role`, `central:policy`), Stage 9b provides a paste-ready `execute()` block that:
+   - Resolves Stage 7's operator-confirmed Central scope names to scope_ids via `central-scope-walker`.
+   - Filters Stage 1's collected records (system / inherited entries dropped per the translation's consumer responsibilities).
+   - Pre-merges composite sources (`central:named_vlan` joins `vlan_name` ⨝ `vlan_name_id`).
+   - Calls `central_translation_preview` with the right runtime_values (including `role_records` for policy preprocessing).
+   - Renders a bounded summary table (~30 rows max per translation; full bodies reachable on operator drill-down).
+
+   Stage 9 stays — it's the high-level cutover plan. Stage 9b is the deterministic per-object engine output. Both compose; operators read Stage 9 for the order of operations and Stage 9b for "show me the actual JSON bodies and rule counts."
+
+3. **INSTRUCTIONS.md** — adds `central_translation_preview` to the Aruba Central tool index with the per-translation `runtime_values` requirements (especially `role_records` for policy reverse-index lookup).
+
+### Files
+
+- **New: `src/hpe_networking_mcp/platforms/central/tools/translation_preview.py`** — the bridge tool (~210 lines)
+- **`src/hpe_networking_mcp/platforms/central/__init__.py`** — registers the new `translation_preview` category
+- **New: `tests/unit/test_central_translation_preview.py`** — 16 tests (per-translation happy paths, per-record EngineError surfacing, fatal-error contract, caching)
+- **`src/hpe_networking_mcp/skills/aos-migration.md`** — Stage 9b section + adds `central_translation_preview` to `tools` frontmatter
+- **`src/hpe_networking_mcp/INSTRUCTIONS.md`** — adds the tool to the Central section
+- **`README.md`** — Central count 87 → 88, total underlying 367 → 368
+- **`docs/TOOLS.md`** — Central count 87 → 88, total underlying 367 → 368
+- **`pyproject.toml`** — bump 3.0.1.5 → 3.0.1.6
+
+### Notes
+
+- 1174 tests pass (was 1158; +16 from the new tool's tests).
+- **Tool is read-only by construction.** The engine never calls `central_*` APIs; it only manipulates dicts. Returning `TargetCall` descriptors as JSON-serializable dicts cannot accidentally mutate Central state. Real execution lands as a separate `central_manage_*` tool with elicitation gating per #240.
+- **Why a tool when the policy is "skill, not tool"?** The `central-scope-walker` skill works because `central_get_scope_tree` is already a tool — the data is fetchable, the skill just composes it. The translations engine isn't reachable from `execute()` (sandbox blocks internal imports), so no skill can invoke it. The "no tool when a skill works" rule applies when the data is fetchable; here it isn't.
+- **Phase 3 boundary stays clean.** This tool is `_preview` (read-only). Future execution is a separate `central_manage_*` tool — different name, write-tool gating, elicitation. Operators inspecting the tool list can tell preview from execute at a glance.
+
 ## [3.0.1.5] - 2026-05-07
 
 **Patch release — small-local-model code-mode hardening from Zach's continued OpenClaw + Qwen3 4B test report (2026-05-07).**
