@@ -63,20 +63,24 @@ response = await call_tool("central_get_scope_tree", {"view": "committed"})
 envelope = response.get("data", response)
 root = envelope.get("result", envelope) if isinstance(envelope, dict) and "result" in envelope else envelope
 
-def walk(node, path):
+# Iterative depth-first walk via an explicit stack. The MCP sandbox's
+# Python parser does NOT support `yield` / `yield from` — generators are
+# rejected with NotImplementedError. Use a stack/list loop instead.
+all_nodes = []
+stack = [(root, [])]   # each frame is (node, path-from-root)
+while stack:
+    node, path = stack.pop()
     here = path + [node.get("scope_name") or node.get("scope_id") or "?"]
-    yield {
+    all_nodes.append({
         "scope_id":     node.get("scope_id"),
         "scope_name":   node.get("scope_name"),
         "type":         node.get("type"),
         "path":         "/".join(here),
         "device_count": node.get("device_count"),
         "child_scope_count": node.get("child_scope_count"),
-    }
-    for child in node.get("children") or []:
-        yield from walk(child, here)
-
-all_nodes = list(walk(root, []))
+    })
+    for child in (node.get("children") or []):
+        stack.append((child, here))
 
 # Match policy: exact (case-insensitive) name OR exact (case-insensitive) path
 # OR exact scope_id OR case-insensitive substring on name/path. Listed in

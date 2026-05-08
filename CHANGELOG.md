@@ -5,6 +5,54 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1.10] - 2026-05-08
+
+**Patch release — `central-scope-walker` skill snippet rewritten to stack-based iteration. The shipped recursive-generator form was rejected by the MCP code-mode sandbox (`NotImplementedError: The monty syntax parser does not yet support yield expressions`), making the skill non-functional. Reported by Zach via ChatGPT regression testing of v3.0.1.9.**
+
+Plus a regression-prevention test that catches sandbox-incompatible Python in any shipped skill snippet at CI time.
+
+### Bug
+
+`central-scope-walker.md` (and the matching walker snippet in `aos-migration.md` Stage 9b's Step 1) used:
+
+```python
+def walk(node, path):
+    here = path + [...]
+    yield {...}
+    for child in node.get("children") or []:
+        yield from walk(child, here)
+```
+
+The MCP sandbox uses `pydantic-monty` for its Python parser, which currently rejects `yield` / `yield from`. The skill loaded fine via `skills_load`, but the moment the AI pasted the snippet into `execute()`, the sandbox returned `NotImplementedError: The monty syntax parser does not yet support yield expressions` — the operator's actual `central-scope-walker` query failed despite the skill being advertised as paste-and-go.
+
+Verified by Zach's regression run: a stack-based rewrite of the same logic resolved the same scope query (`Owls Nest New Central` → scope_id `46237598667`, type `SITE`, path `<root>/Owls Nest Collection/Owls Nest New Central`, 7 devices, 38 scopes walked).
+
+### Fix
+
+1. **Rewrote both walker snippets to iterative depth-first traversal via an explicit stack.** Same data shape produced, no generators. The traversal is now pure list/loop ops — exactly the kind of idiom small models can paste reliably.
+
+2. **Added `tests/unit/test_skill_snippet_sandbox_compat.py`** — a regression test that scans every shipped skill markdown for sandbox-incompatible Python in fenced `python` code blocks. Catches:
+   - `yield` / `yield from` (this incident)
+   - `async def` (the v3.0.1.5 `async def run()` rule — already in INSTRUCTIONS.md, now enforced for skills)
+   - `import hashlib` (Zach's continued report — sandbox-blocked)
+   - Internal-module imports (`import hpe_networking_mcp.*`)
+   - Other documented sandbox limits: `datetime.now()`, `time.time()`, `os.environ`, `subprocess`, `asyncio.gather()`
+
+   Comments are stripped before scanning so rationale-comments like `# sandbox parser rejects yield` don't false-positive. Per-rule violation messages reference the upstream sandbox limitation so future authors know what to substitute.
+
+### Files
+
+- **`src/hpe_networking_mcp/skills/central-scope-walker.md`** — walker snippet rewritten to stack-based iteration
+- **`src/hpe_networking_mcp/skills/aos-migration.md`** — Stage 9b Step 1's walker snippet rewritten the same way
+- **New: `tests/unit/test_skill_snippet_sandbox_compat.py`** — 10 tests (9 parameterized per-skill + 1 sanity check)
+- **`pyproject.toml`** — bump 3.0.1.9 → 3.0.1.10
+
+### Notes
+
+- 1196 tests pass (was 1186; +10 new sandbox-compat tests).
+- The sandbox-compat test runs on **every** shipped skill, not just the two with walker snippets. Caught nothing else this round but will catch the next instance of any author pasting Python that the sandbox rejects.
+- A separate issue (#293) is filed for an unrelated sandbox-adjacent bug Zach reported: the `search` discovery tool returns `Output validation error: 'result' is a required property` for some queries. Investigation deferred — non-blocking; AI clients can fall back to `tags` or per-platform `<platform>_list_tools`.
+
 ## [3.0.1.9] - 2026-05-08
 
 **Patch release — fixes #291: walker keymap-replay on outbound SKIP path. Closes the round-trip leak that v3.0.1.8 surfaced — values tokenized once in a session now stay tokenized across every tool's outbound, even when the output field name carries no rule.**
