@@ -494,6 +494,100 @@ class TestStructuralSecretContexts:
         assert cls == FieldClassification.SKIP
 
 
+class TestStructuralIdentifierContexts:
+    """Issue #289 — AOS 8 returns identifier records as
+    ``{"vlan_name": [{"name": "guest"}, {"name": "local"}]}``. The
+    field-name rule for ``vlan_name`` only fires on a string value
+    directly at ``vlan_name``, never on ``name`` inside the list elements.
+    Without a structural-context rule pairing ``(vlan_name, name)``, the
+    inner names slip through cleartext (verified live during v3.0.1.6
+    Stage 9b runs).
+    """
+
+    def test_vlan_name_name_tokenizes_as_name_kind(self) -> None:
+        cls, kind = classify_field("name", "guest", parent_field_name="vlan_name")
+        assert cls == FieldClassification.TOKENIZE_IDENTIFIER
+        assert kind == TokenKind.NAME
+
+    def test_vlan_name_id_name_tokenizes_as_name_kind(self) -> None:
+        cls, kind = classify_field("name", "local", parent_field_name="vlan_name_id")
+        assert cls == FieldClassification.TOKENIZE_IDENTIFIER
+        assert kind == TokenKind.NAME
+
+    def test_bare_name_outside_known_wrapper_still_skipped(self) -> None:
+        # A free-floating ``name`` field with no wrapper context — must still
+        # skip, otherwise we'd over-tokenize template references and
+        # configuration-key names.
+        cls, _ = classify_field("name", "guest")
+        assert cls == FieldClassification.SKIP
+
+    def test_name_under_unrelated_wrapper_still_skipped(self) -> None:
+        cls, _ = classify_field("name", "guest", parent_field_name="some_unrelated_object")
+        assert cls == FieldClassification.SKIP
+
+
+class TestStructuralIdentifierContextsEndToEnd:
+    """Walker end-to-end test for issue #289 — verifies the AOS 8
+    list-of-dicts response shape actually plugs the leak when run through
+    the full ``tokenize_response`` pipeline (not just ``classify_field``
+    in isolation).
+    """
+
+    def test_aos8_vlan_name_response_shape_tokenizes_inner_names(self) -> None:
+        from hpe_networking_mcp.redaction.token_store import SessionKeymap
+        from hpe_networking_mcp.redaction.tokenizer import Tokenizer
+        from hpe_networking_mcp.redaction.walker import tokenize_response
+
+        keymap = SessionKeymap()
+        tokenizer = Tokenizer(keymap, session_id="test-session-289", max_entries=100)
+
+        # Realistic AOS 8 vlan_name response shape — verified live.
+        response = {
+            "_data": {
+                "vlan_name": [
+                    {"name": "guest"},
+                    {"name": "local"},
+                    {"name": "vlan20"},
+                ]
+            }
+        }
+        out = tokenize_response(response, tokenizer)
+        records = out["_data"]["vlan_name"]
+        for record in records:
+            assert TOKEN_RE.fullmatch(record["name"]) is not None
+            assert TOKEN_RE.fullmatch(record["name"]).group(1) == "NAME"
+        # Sanity: distinct source values produce distinct tokens.
+        assert len({r["name"] for r in records}) == 3
+
+    def test_aos8_vlan_name_id_binding_shape_tokenizes_name_only(self) -> None:
+        from hpe_networking_mcp.redaction.token_store import SessionKeymap
+        from hpe_networking_mcp.redaction.tokenizer import Tokenizer
+        from hpe_networking_mcp.redaction.walker import tokenize_response
+
+        keymap = SessionKeymap()
+        tokenizer = Tokenizer(keymap, session_id="test-session-289", max_entries=100)
+
+        # AOS 8 vlan_name_id binding shape: name + vlan-ids field.
+        response = {
+            "_data": {
+                "vlan_name_id": [
+                    {"name": "user", "vlan-ids": "107"},
+                    {"name": "iot", "vlan-ids": "108-110"},
+                ]
+            }
+        }
+        out = tokenize_response(response, tokenizer)
+        bindings = out["_data"]["vlan_name_id"]
+        # ``name`` field tokenized as NAME via the structural rule.
+        for b in bindings:
+            assert TOKEN_RE.fullmatch(b["name"]) is not None
+            assert TOKEN_RE.fullmatch(b["name"]).group(1) == "NAME"
+        # ``vlan-ids`` is plain VLAN-ID data, not an identifier we tokenize —
+        # passes through cleartext.
+        assert bindings[0]["vlan-ids"] == "107"
+        assert bindings[1]["vlan-ids"] == "108-110"
+
+
 class TestVrrpPassphraseRule:
     """Issue #277 — AOS 8 cluster_prof.vrrp_info.vrrp_passphrase is a shared
     key between cluster members. Live captures show it as the deterministic-

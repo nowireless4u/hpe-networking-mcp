@@ -282,6 +282,32 @@ STRUCTURAL_SECRET_CONTEXTS: dict[tuple[str, str], TokenKind] = {
 
 
 # ---------------------------------------------------------------------------
+# Tier 1.6 — Structural-context identifier rules (parent_field_name + child)
+# ---------------------------------------------------------------------------
+# Same idea as STRUCTURAL_SECRET_CONTEXTS, but for non-credential identifiers.
+# Some platforms wrap identifiers under a parent dict + list shape where the
+# *child* field name is too generic to tokenize unconditionally (e.g. ``name``
+# is also used for endpoint paths, configuration keys, etc.). The wrapping
+# context strongly implies the child holds a sensitive identifier — so pair
+# them and tokenize unconditionally.
+#
+# Concrete motivation (issue #289): AOS 8 returns
+#   ``{"_data": {"vlan_name": [{"name": "guest"}, {"name": "local"}]}}``
+# The field-name rule for ``vlan_name`` only fires on a string value directly
+# at ``vlan_name`` — when the value is a list-of-dicts the rule never fires
+# and ``"guest"``/``"local"`` slip through cleartext. Verified live against
+# a real tenant during v3.0.1.6 Stage 9b runs.
+
+STRUCTURAL_IDENTIFIER_CONTEXTS: dict[tuple[str, str], TokenKind] = {
+    # AOS 8 vlan_name records: list under "vlan_name" with each element {"name": "<vlan-name>", ...}.
+    ("vlan_name", "name"): TokenKind.NAME,
+    # AOS 8 vlan_name_id binding: list under "vlan_name_id" with each element
+    # {"name": "<vlan-name>", "vlan-ids": "..."} — same name we want tokenized.
+    ("vlan_name_id", "name"): TokenKind.NAME,
+}
+
+
+# ---------------------------------------------------------------------------
 # Tier 3 — Free-text fields scanned for embedded secrets/identifiers
 # ---------------------------------------------------------------------------
 
@@ -498,12 +524,19 @@ def classify_field(
     # nested under a wrapping key that strongly implies a credential
     # (e.g. ``rad_key``), tokenize unconditionally. Bypasses the shape check
     # that would otherwise leak short single-class shared secrets like
-    # ``"protocol"`` (issue #277).
+    # ``"protocol"`` (issue #277). Same pattern for identifiers — when an
+    # identifier-class field-name rule (e.g. ``vlan_name``) wraps a list of
+    # dicts each carrying ``{"name": "..."}``, the identifier rule never
+    # fires on the wrapper but the child ``name`` field needs tokenizing
+    # (issue #289).
     if parent_field_name is not None:
         parent_normalized = _normalize_field_name(parent_field_name)
-        struct_kind = STRUCTURAL_SECRET_CONTEXTS.get((parent_normalized, name))
-        if struct_kind is not None:
-            return FieldClassification.TOKENIZE_SECRET, struct_kind
+        struct_secret_kind = STRUCTURAL_SECRET_CONTEXTS.get((parent_normalized, name))
+        if struct_secret_kind is not None:
+            return FieldClassification.TOKENIZE_SECRET, struct_secret_kind
+        struct_identifier_kind = STRUCTURAL_IDENTIFIER_CONTEXTS.get((parent_normalized, name))
+        if struct_identifier_kind is not None:
+            return FieldClassification.TOKENIZE_IDENTIFIER, struct_identifier_kind
 
     # Exact-match secret fields
     if name in SECRET_FIELD_NAMES:
