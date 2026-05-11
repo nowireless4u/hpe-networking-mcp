@@ -63,6 +63,7 @@ class TokenKind(StrEnum):
     PSK = "PSK"  # WPA2/WPA3/SAE pre-shared keys, passphrases, PPSKs
     RAD = "RAD"  # RADIUS / RadSec shared secrets, EAP-tunneled passwords (issue #277)
     TACACS = "TACACS"  # TACACS+ shared secrets and TACACS+-tunneled passwords (issue #277)
+    COA = "COA"  # CoA / RFC-3576 dynamic-authorization endpoints + shared secrets
     SNMP_COMMUNITY = "SNMP"  # SNMPv1/v2c communities, SNMPv3 auth/priv passwords
     ADMIN_PASSWORD = "PASSWORD"  # nosec B105 — token-kind label, not a credential
     VPN_PSK = "VPNPSK"  # IPSec PSK, VPN PSK
@@ -84,7 +85,6 @@ class TokenKind(StrEnum):
     IMEI = "IMEI"
     IMSI = "IMSI"
     ICCID = "ICCID"
-    NAME = "NAME"  # generic operator-assigned name (vlan_name, subnet_name, etc.)
 
 
 class FieldClassification(StrEnum):
@@ -203,10 +203,15 @@ TOKENIZED_IDENTIFIER_FIELDS: dict[str, TokenKind] = {
     "controller_name": TokenKind.HOSTNAME,  # AOS 8 controller / MM identifier
     "switch_name": TokenKind.HOSTNAME,  # AOS 8 / Central switch identifier
     "fqdn": TokenKind.HOSTNAME,
-    "site_name": TokenKind.NAME,
-    "org_name": TokenKind.NAME,
-    "vlan_name": TokenKind.NAME,
-    "subnet_name": TokenKind.NAME,
+    # NOTE: ``site_name``, ``org_name``, ``vlan_name``, and ``subnet_name``
+    # are intentionally absent (v3.0.1.12 privacy-model refinement).
+    # ``org_name`` and ``site_name`` are typically findable on the company's
+    # public website or partner directories — tokenizing them buys little
+    # privacy while costing audit utility. ``vlan_name`` and ``subnet_name``
+    # are schema labels describing network architecture, not people; they
+    # rarely encode customer-identifying information beyond what
+    # ``scope_name``/``device_group_name`` already carry, both of which we
+    # also pass through cleartext per the v2.3.1.3 design.
     # User-identifying
     "username": TokenKind.USER,
     "user": TokenKind.USER,
@@ -278,6 +283,11 @@ STRUCTURAL_SECRET_CONTEXTS: dict[tuple[str, str], TokenKind] = {
     ("rad_key", "key"): TokenKind.RAD,
     # AOS 8 TACACS+ shared secret — same wrapper shape (Aruba schema family).
     ("tacacs_key", "key"): TokenKind.TACACS,
+    # Mist coa_servers: list under "coa_servers" with each element
+    # {"ip": "...", "port": 3799, "secret": "...", "enabled": True}. The
+    # CoA shared secret is auth-fabric-critical — tokenize unconditionally.
+    # See schemas_data.py "coa_servers" entry (v3.0.1.12).
+    ("coa_servers", "secret"): TokenKind.COA,
 }
 
 
@@ -291,19 +301,23 @@ STRUCTURAL_SECRET_CONTEXTS: dict[tuple[str, str], TokenKind] = {
 # context strongly implies the child holds a sensitive identifier — so pair
 # them and tokenize unconditionally.
 #
-# Concrete motivation (issue #289): AOS 8 returns
-#   ``{"_data": {"vlan_name": [{"name": "guest"}, {"name": "local"}]}}``
-# The field-name rule for ``vlan_name`` only fires on a string value directly
-# at ``vlan_name`` — when the value is a list-of-dicts the rule never fires
-# and ``"guest"``/``"local"`` slip through cleartext. Verified live against
-# a real tenant during v3.0.1.6 Stage 9b runs.
+# Concrete motivation (v3.0.1.12): CoA / RFC-3576 dynamic-authorization
+# servers carry the auth-fabric secret + endpoint IP/FQDN under generic
+# field names (``Name``, ``ip``, ``secret``) inside a parent list. They
+# would otherwise slip through cleartext because we explicitly *don't*
+# tokenize bare IPs and there's no top-level ``ip`` / ``name`` rule.
 
 STRUCTURAL_IDENTIFIER_CONTEXTS: dict[tuple[str, str], TokenKind] = {
-    # AOS 8 vlan_name records: list under "vlan_name" with each element {"name": "<vlan-name>", ...}.
-    ("vlan_name", "name"): TokenKind.NAME,
-    # AOS 8 vlan_name_id binding: list under "vlan_name_id" with each element
-    # {"name": "<vlan-name>", "vlan-ids": "..."} — same name we want tokenized.
-    ("vlan_name_id", "name"): TokenKind.NAME,
+    # AOS 8 RFC-3576 / CoA server list. Live verified via
+    # ``show aaa rfc-3576-server``:
+    #   {"RFC 3576 Server List": [{"Name": "192.168.20.70", ...}, ...]}
+    # Walker normalizes "RFC 3576 Server List" → "rfc_3576_server_list"
+    # and "Name" → "name", so the pair below matches.
+    ("rfc_3576_server_list", "name"): TokenKind.COA,
+    # Mist coa_servers: list under "coa_servers" with each element
+    # {"ip": "...", "port": 3799, "secret": "...", "enabled": True}.
+    # Tokenize the endpoint IP so CoA infrastructure topology doesn't leak.
+    ("coa_servers", "ip"): TokenKind.COA,
 }
 
 

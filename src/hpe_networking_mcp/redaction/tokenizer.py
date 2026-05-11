@@ -78,6 +78,19 @@ class Tokenizer:
         ``"[[PSK:550e8400-...]]"`` back in returns it unchanged (the
         regex match short-circuits).
 
+        Kind-agnostic dedup (v3.0.1.12): if the same plaintext was
+        previously allocated under *any* kind in this session, the
+        existing token is returned regardless of the requested ``kind``.
+        Concrete motivation — a CoA shared secret is conventionally the
+        same string as the RADIUS shared secret on the same auth fabric.
+        The RADIUS rule fires first (different field name), so by the
+        time the CoA structural rule sees the same plaintext we already
+        have a ``[[RAD:uuid]]`` token. Allocating a second
+        ``[[COA:uuid]]`` for the identical plaintext would (a) consume
+        two keymap entries instead of one and (b) emit two distinct
+        token strings for the same downstream secret, confusing the AI's
+        round-trip when it tries to reuse the secret across servers.
+
         Raises ``KeymapFullError`` when the session has hit the soft cap
         on a *new* allocation. Existing tokens still round-trip even
         post-cap.
@@ -93,6 +106,16 @@ class Tokenizer:
         existing = self._keymap.by_plaintext.get(key)
         if existing is not None:
             return existing.token
+
+        # Kind-agnostic dedup: same plaintext under any kind reuses the
+        # existing token. Without this, CoA secrets shared with RADIUS
+        # would render as two different tokens within one session.
+        cross_kind = self._keymap.by_plaintext_value.get(plaintext)
+        if cross_kind is not None:
+            # Also stash under the (kind, plaintext) key so subsequent
+            # lookups via the kind-specific index hit the cache directly.
+            self._keymap.by_plaintext[key] = cross_kind
+            return cross_kind.token
 
         # Need to allocate. Soft-cap check.
         if len(self._keymap) >= self._max_entries:
@@ -119,10 +142,14 @@ class Tokenizer:
         entry = TokenEntry(kind=kind, token=token, plaintext=plaintext)
         self._keymap.by_plaintext[key] = entry
         self._keymap.by_token[token] = entry
-        # Kind-agnostic reverse index for keymap-replay on the walker's
-        # SKIP path (issue #291). Last writer wins on the rare case where
-        # the same plaintext is allocated under multiple kinds in one
-        # session.
+        # Kind-agnostic reverse index. Powers two behaviors:
+        #   1. Walker keymap-replay on the SKIP path (issue #291): a
+        #      previously-tokenized cleartext value that re-appears at
+        #      a SKIP-classified field gets its original token restored.
+        #   2. Kind-agnostic dedup at allocation time (v3.0.1.12): the
+        #      branch above (``cross_kind = ...``) consults this index
+        #      *before* we reach this allocation path, so the index
+        #      always has a single entry per plaintext per session.
         self._keymap.by_plaintext_value[plaintext] = entry
 
         logger.info(

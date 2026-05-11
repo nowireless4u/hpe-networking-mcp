@@ -5,6 +5,64 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1.12] - 2026-05-11
+
+**Patch release — PII privacy-model refinement. Two related changes: (a) drop tokenization of network-architecture schema labels that aren't personally-identifying (`vlan_name`, `subnet_name`, `org_name`, `site_name`), (b) add the missing CoA / RFC-3576 dynamic-authorization rules so dynamic-authorization endpoint IPs + shared secrets — which are auth-fabric-critical — actually get tokenized.**
+
+The trigger was the live tenant work that produced v3.0.1.6–v3.0.1.10. Walking the live config surfaced two categories of mismatch between what the ruleset tokenized and what was actually sensitive:
+
+1. **Over-coverage of schema labels.** `vlan_name`, `subnet_name`, `org_name`, `site_name` were all tokenizing to `[[NAME:uuid]]`. None of these are personally-identifying — `vlan_name` and `subnet_name` describe network architecture (and `scope_name` / `device_group_name` already pass through cleartext per the v2.3.1.3 design); `org_name` / `site_name` are typically findable on the company's public website or partner directory. Tokenizing them cost audit utility (operators couldn't refer to "the Corporate VLAN" by name in chat) without buying privacy.
+2. **Under-coverage of critical-infrastructure CoA endpoints.** AOS 8's `show aaa rfc-3576-server` returns `{"RFC 3576 Server List": [{"Name": "192.168.20.70", ...}]}`. The bare `Name` child had no rule, and IPs aren't tokenized in general (v2.3.1.2 carve-out). Same story for Mist's `coa_servers` schema entries (`ip`, `secret`). Result: dynamic-authorization server IPs and shared secrets were leaking through cleartext. Per the operator's call-out: *"You left out radius server address, dynamic authorization server address, tacacs server address, and tacacs secret. I know we said IP addresses would be fine to display but these are critical infrastructure related items."*
+
+### Privacy-model changes
+
+| Field / wrapper shape | Before v3.0.1.12 | After v3.0.1.12 |
+| --- | --- | --- |
+| `vlan_name: "Corporate"` | `[[NAME:uuid]]` | cleartext (schema label) |
+| `subnet_name: "Guest-Subnet"` | `[[NAME:uuid]]` | cleartext (schema label) |
+| `org_name: "Acme Networks"` | `[[NAME:uuid]]` | cleartext (publicly findable) |
+| `site_name: "HQ"` | `[[NAME:uuid]]` | cleartext (publicly findable) |
+| AOS 8 `{"vlan_name": [{"name": "guest"}]}` | `[[NAME:uuid]]` (issue #289) | cleartext |
+| AOS 8 `{"vlan_name_id": [{"name": "user", ...}]}` | `[[NAME:uuid]]` (issue #289) | cleartext |
+| AOS 8 `{"RFC 3576 Server List": [{"Name": "192.168.20.70"}]}` | cleartext (leak) | `[[COA:uuid]]` |
+| Mist `coa_servers[].ip` | cleartext (leak) | `[[COA:uuid]]` |
+| Mist `coa_servers[].secret` | cleartext (leak) | `[[COA:uuid]]` |
+
+`TokenKind.NAME` is removed from the enum; `TokenKind.COA` replaces it.
+
+### Kind-agnostic plaintext dedup (Tokenizer.tokenize)
+
+A CoA shared secret is conventionally the same string as the RADIUS shared secret on the same auth fabric. Per the operator: *"That server would use the same secret as the radius servers since they are typically the same."* Without dedup, the response payload `{"radius_servers": [{"shared_secret": "X"}], "coa_servers": [{"secret": "X"}]}` would emit two distinct tokens for the same plaintext, breaking round-trip reuse.
+
+`Tokenizer.tokenize()` now consults the kind-agnostic `by_plaintext_value` reverse index *before* allocating a fresh token. If the plaintext was previously tokenized under any other kind in the same session, the existing token is returned (and stashed under the new `(kind, plaintext)` key so subsequent same-kind lookups hit the cache directly). Walker traversal order determines which kind label "wins" — the dict's natural insertion order, which for the typical RADIUS-then-CoA payload means RAD allocates first and CoA inherits.
+
+### Files
+
+- **`src/hpe_networking_mcp/redaction/rules.py`** —
+  - Removed `TokenKind.NAME`.
+  - Added `TokenKind.COA`.
+  - Removed `site_name`, `org_name`, `vlan_name`, `subnet_name` from `TOKENIZED_IDENTIFIER_FIELDS` (replaced with a NOTE explaining the v3.0.1.12 design).
+  - Removed `(vlan_name, name)` and `(vlan_name_id, name)` from `STRUCTURAL_IDENTIFIER_CONTEXTS`.
+  - Added `(rfc_3576_server_list, name)` and `(coa_servers, ip)` to `STRUCTURAL_IDENTIFIER_CONTEXTS`.
+  - Added `(coa_servers, secret)` to `STRUCTURAL_SECRET_CONTEXTS`.
+- **`src/hpe_networking_mcp/redaction/tokenizer.py`** — `tokenize()` consults `by_plaintext_value` before allocation for kind-agnostic dedup. Comment block on the reverse index updated to reflect that the index is now single-writer per plaintext.
+- **`src/hpe_networking_mcp/redaction/token_store.py`** — `SessionKeymap.by_plaintext_value` docstring updated to describe the dedup behavior.
+- **`src/hpe_networking_mcp/INSTRUCTIONS.md`** — token-kinds list updated: removed `NAME`, added `COA`. Carve-out section now explicitly lists schema labels (`vlan_name`, `subnet_name`, `org_name`, `site_name`, `scope_name`, `device_group_name`) as cleartext.
+- **`tests/unit/test_pii_redaction.py`** —
+  - Replaced `TestStructuralIdentifierContexts` (vlan_name) with `TestSchemaLabelPassthrough` (parameterized cleartext assertion for all four removed fields + companion check for the removed `(vlan_name, name)` structural rule).
+  - Replaced `TestStructuralIdentifierContextsEndToEnd` with `TestStructuralCoaContexts` + `TestStructuralCoaContextsEndToEnd` (AOS 8 + Mist response-shape coverage).
+  - Rewrote `TestKeymapReplayOnSkipPath` to use the new CoA structural rule for setup (the old vlan_name rule is gone).
+  - Added `TestKindAgnosticDedup` (4 unit + 1 walker e2e test).
+  - Updated `test_wlan_profile_walk` to assert `vlan_name` passes through cleartext.
+- **`pyproject.toml`** — bump 3.0.1.11 → 3.0.1.12.
+
+### Notes
+
+- **Coverage scope of this release.** AOS 8 CoA (verified live via `show aaa rfc-3576-server`) + Mist CoA (verified against `schemas_data.py`'s `coa_servers` entry). **Central CoA tokenization is deferred** — the modern `network-config/v1alpha1` Central tenant we probed against does not currently expose CoA / dynamic-authorization endpoint detail through any MCP-wrapped tool. `central_get_server_groups` returns name-only references (`server-name`, `position`), `central_get_wlan_profiles` doesn't expose CoA fields, and `central_get_effective_config` at the root scope didn't surface the detail. The Central `auth-servers` detail endpoint isn't wrapped today. A follow-up release will add a Central auth-servers read tool and the corresponding structural rule.
+- **Round-trip behavior with shared RADIUS / CoA secrets.** Both the `shared_secret` (under `radius_servers`) and `secret` (under `coa_servers`) fields now produce the *same* `[[RAD:uuid]]` token within a session when the operator has configured them as the same value. Detokenization round-trips correctly to the original plaintext via either tool.
+- **Backwards-compatible.** No removed-tool surface or breaking config changes. Operators do not need to re-cache anything; the keymap is per-session and lives in memory only.
+- **Live verification recommended after deploy.** Walk an AOS 8 controller config that contains `aaa server-group authentication-server <name>` with a CoA server reference (or a Mist WLAN with a populated `coa_servers` list). Confirm `[[COA:uuid]]` appears for the endpoint + secret. Confirm `vlan_name` / `site_name` come back as cleartext.
+
 ## [3.0.1.11] - 2026-05-08
 
 **Patch release — INSTRUCTIONS.md additions targeting the small-local-model orchestration issues from Zach's continued OpenClaw + Qwen3 4B test report. Two prose changes; no code, no skills, no tools.**

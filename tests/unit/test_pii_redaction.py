@@ -494,98 +494,120 @@ class TestStructuralSecretContexts:
         assert cls == FieldClassification.SKIP
 
 
-class TestStructuralIdentifierContexts:
-    """Issue #289 — AOS 8 returns identifier records as
-    ``{"vlan_name": [{"name": "guest"}, {"name": "local"}]}``. The
-    field-name rule for ``vlan_name`` only fires on a string value
-    directly at ``vlan_name``, never on ``name`` inside the list elements.
-    Without a structural-context rule pairing ``(vlan_name, name)``, the
-    inner names slip through cleartext (verified live during v3.0.1.6
-    Stage 9b runs).
+class TestSchemaLabelPassthrough:
+    """v3.0.1.12 privacy-model refinement — ``vlan_name``, ``subnet_name``,
+    ``org_name``, ``site_name`` are no longer tokenized. They are schema
+    labels describing network architecture (or publicly-findable corporate
+    identifiers) and audit utility benefits from cleartext. Companion
+    fixture-level test in ``TestRealisticCentralFixture.test_wlan_profile_walk``
+    asserts the same for the Central profile shape.
     """
 
-    def test_vlan_name_name_tokenizes_as_name_kind(self) -> None:
-        cls, kind = classify_field("name", "guest", parent_field_name="vlan_name")
-        assert cls == FieldClassification.TOKENIZE_IDENTIFIER
-        assert kind == TokenKind.NAME
+    @pytest.mark.parametrize(
+        "field_name,value",
+        [
+            ("vlan_name", "Corporate"),
+            ("subnet_name", "Guest-Subnet"),
+            ("org_name", "Acme Networks"),
+            ("site_name", "HQ"),
+        ],
+    )
+    def test_schema_label_fields_pass_through(self, field_name: str, value: str) -> None:
+        cls, kind = classify_field(field_name, value)
+        assert cls == FieldClassification.SKIP
+        assert kind is None
 
-    def test_vlan_name_id_name_tokenizes_as_name_kind(self) -> None:
-        cls, kind = classify_field("name", "local", parent_field_name="vlan_name_id")
-        assert cls == FieldClassification.TOKENIZE_IDENTIFIER
-        assert kind == TokenKind.NAME
-
-    def test_bare_name_outside_known_wrapper_still_skipped(self) -> None:
-        # A free-floating ``name`` field with no wrapper context — must still
-        # skip, otherwise we'd over-tokenize template references and
-        # configuration-key names.
-        cls, _ = classify_field("name", "guest")
+    def test_inner_name_under_vlan_name_wrapper_no_longer_tokenized(self) -> None:
+        # Companion to the removed ``(vlan_name, name)`` structural rule —
+        # the AOS 8 list shape ``{"vlan_name": [{"name": "guest"}]}``
+        # now passes through cleartext, matching the policy.
+        cls, _ = classify_field("name", "guest", parent_field_name="vlan_name")
         assert cls == FieldClassification.SKIP
 
-    def test_name_under_unrelated_wrapper_still_skipped(self) -> None:
-        cls, _ = classify_field("name", "guest", parent_field_name="some_unrelated_object")
-        assert cls == FieldClassification.SKIP
 
+class TestStructuralCoaContexts:
+    """v3.0.1.12 — CoA / RFC-3576 dynamic-authorization endpoints and
+    shared secrets are auth-fabric-critical, so we tokenize them under
+    ``TokenKind.COA``. Two structural rules cover the two known wrapper
+    shapes:
 
-class TestStructuralIdentifierContextsEndToEnd:
-    """Walker end-to-end test for issue #289 — verifies the AOS 8
-    list-of-dicts response shape actually plugs the leak when run through
-    the full ``tokenize_response`` pipeline (not just ``classify_field``
-    in isolation).
+    * AOS 8 ``rfc_3576_server_list`` carries the endpoint IP under
+      ``Name``. Verified live via ``show aaa rfc-3576-server``.
+    * Mist ``coa_servers`` carries the endpoint under ``ip`` and the
+      shared secret under ``secret``. Documented in
+      ``schemas_data.py``.
     """
 
-    def test_aos8_vlan_name_response_shape_tokenizes_inner_names(self) -> None:
-        from hpe_networking_mcp.redaction.token_store import SessionKeymap
-        from hpe_networking_mcp.redaction.tokenizer import Tokenizer
-        from hpe_networking_mcp.redaction.walker import tokenize_response
+    def test_rfc_3576_name_classifies_as_coa(self) -> None:
+        cls, kind = classify_field("name", "192.168.20.70", parent_field_name="rfc_3576_server_list")
+        assert cls == FieldClassification.TOKENIZE_IDENTIFIER
+        assert kind == TokenKind.COA
 
+    def test_coa_servers_ip_classifies_as_coa(self) -> None:
+        cls, kind = classify_field("ip", "10.50.10.20", parent_field_name="coa_servers")
+        assert cls == FieldClassification.TOKENIZE_IDENTIFIER
+        assert kind == TokenKind.COA
+
+    def test_coa_servers_secret_classifies_as_coa_secret(self) -> None:
+        cls, kind = classify_field("secret", "MyCoaSecret123!", parent_field_name="coa_servers")
+        assert cls == FieldClassification.TOKENIZE_SECRET
+        assert kind == TokenKind.COA
+
+    def test_bare_ip_outside_coa_wrapper_still_passes_through(self) -> None:
+        # Per v2.3.1.2: plain ``ip`` is not a tokenized field. Only the
+        # structural rule under ``coa_servers`` fires.
+        cls, _ = classify_field("ip", "10.50.10.20")
+        assert cls == FieldClassification.SKIP
+
+
+class TestStructuralCoaContextsEndToEnd:
+    """Walker end-to-end tests for v3.0.1.12 CoA rules — verify the actual
+    AOS 8 + Mist response shapes plug their leaks through the full
+    ``tokenize_response`` pipeline.
+    """
+
+    def test_aos8_rfc_3576_server_list_response_shape_tokenizes_name(self) -> None:
         keymap = SessionKeymap()
-        tokenizer = Tokenizer(keymap, session_id="test-session-289", max_entries=100)
+        tokenizer = Tokenizer(keymap, session_id="test-session-coa-aos8", max_entries=100)
 
-        # Realistic AOS 8 vlan_name response shape — verified live.
+        # Live-captured AOS 8 response shape from ``show aaa rfc-3576-server``.
+        # Walker normalizes "RFC 3576 Server List" → "rfc_3576_server_list"
+        # and "Name" → "name" before the structural rule consults the table.
         response = {
-            "_data": {
-                "vlan_name": [
-                    {"name": "guest"},
-                    {"name": "local"},
-                    {"name": "vlan20"},
-                ]
-            }
+            "RFC 3576 Server List": [
+                {"Name": "192.168.20.70", "Profile Status": None, "References": "0"},
+                {"Name": "192.168.20.75", "Profile Status": None, "References": "0"},
+            ],
+            "_data": ["2"],
         }
         out = tokenize_response(response, tokenizer)
-        records = out["_data"]["vlan_name"]
+        records = out["RFC 3576 Server List"]
         for record in records:
-            assert TOKEN_RE.fullmatch(record["name"]) is not None
-            assert TOKEN_RE.fullmatch(record["name"]).group(1) == "NAME"
-        # Sanity: distinct source values produce distinct tokens.
-        assert len({r["name"] for r in records}) == 3
+            assert TOKEN_RE.fullmatch(record["Name"]) is not None
+            assert TOKEN_RE.fullmatch(record["Name"]).group(1) == "COA"
+        assert len({r["Name"] for r in records}) == 2
 
-    def test_aos8_vlan_name_id_binding_shape_tokenizes_name_only(self) -> None:
-        from hpe_networking_mcp.redaction.token_store import SessionKeymap
-        from hpe_networking_mcp.redaction.tokenizer import Tokenizer
-        from hpe_networking_mcp.redaction.walker import tokenize_response
-
+    def test_mist_coa_servers_shape_tokenizes_ip_and_secret(self) -> None:
         keymap = SessionKeymap()
-        tokenizer = Tokenizer(keymap, session_id="test-session-289", max_entries=100)
+        tokenizer = Tokenizer(keymap, session_id="test-session-coa-mist", max_entries=100)
 
-        # AOS 8 vlan_name_id binding shape: name + vlan-ids field.
+        # Mist WLAN coa_servers shape from schemas_data.py.
         response = {
-            "_data": {
-                "vlan_name_id": [
-                    {"name": "user", "vlan-ids": "107"},
-                    {"name": "iot", "vlan-ids": "108-110"},
-                ]
-            }
+            "coa_servers": [
+                {"ip": "10.50.10.20", "port": 3799, "enabled": True, "secret": "CoaSharedSecret!"},
+                {"ip": "10.50.10.21", "port": 3799, "enabled": True, "secret": "AnotherCoaSecret!"},
+            ]
         }
         out = tokenize_response(response, tokenizer)
-        bindings = out["_data"]["vlan_name_id"]
-        # ``name`` field tokenized as NAME via the structural rule.
-        for b in bindings:
-            assert TOKEN_RE.fullmatch(b["name"]) is not None
-            assert TOKEN_RE.fullmatch(b["name"]).group(1) == "NAME"
-        # ``vlan-ids`` is plain VLAN-ID data, not an identifier we tokenize —
-        # passes through cleartext.
-        assert bindings[0]["vlan-ids"] == "107"
-        assert bindings[1]["vlan-ids"] == "108-110"
+        servers = out["coa_servers"]
+        for server in servers:
+            assert TOKEN_RE.fullmatch(server["ip"]) is not None
+            assert TOKEN_RE.fullmatch(server["ip"]).group(1) == "COA"
+            assert TOKEN_RE.fullmatch(server["secret"]) is not None
+            assert TOKEN_RE.fullmatch(server["secret"]).group(1) == "COA"
+        # Operational metadata passes through.
+        assert servers[0]["port"] == 3799
+        assert servers[0]["enabled"] is True
 
 
 class TestKeymapReplayOnSkipPath:
@@ -596,6 +618,10 @@ class TestKeymapReplayOnSkipPath:
     token. Closes the round-trip leak where tools detokenize inputs,
     process cleartext internally, and re-emit values that have lost
     their original structural context.
+
+    (Rewritten in v3.0.1.12 to use the AOS 8 ``rfc_3576_server_list``
+    structural rule as setup — the previous ``(vlan_name, name)`` rule
+    was removed as part of the privacy-model refinement.)
     """
 
     def _new_tokenizer(self):
@@ -604,26 +630,32 @@ class TestKeymapReplayOnSkipPath:
 
         return Tokenizer(SessionKeymap(), session_id="test-session-291", max_entries=100)
 
+    def _seed_coa_token(self, tokenizer, value: str) -> str:
+        """Helper: tokenize ``value`` via the AOS 8 CoA structural rule
+        and return the issued token.
+        """
+        from hpe_networking_mcp.redaction.walker import tokenize_response
+
+        out = tokenize_response(
+            {"RFC 3576 Server List": [{"Name": value}]},
+            tokenizer,
+        )
+        return out["RFC 3576 Server List"][0]["Name"]
+
     def test_value_tokenized_then_replayed_at_unrelated_field(self) -> None:
-        """The classic round-trip: AOS 8 read tokenizes "guest" via the
-        ``(vlan_name, name)`` structural rule; later, an unrelated tool
-        emits "guest" at a generic ``record_id`` field with no rule. The
-        replay should restore the original token.
+        """The classic round-trip: a structural rule tokenizes an IP; later,
+        an unrelated tool emits the same IP at a generic ``record_id`` field
+        with no rule. The replay should restore the original token.
         """
         from hpe_networking_mcp.redaction.walker import tokenize_response
 
         tokenizer = self._new_tokenizer()
-
-        # First call: AOS 8 read shape — tokenizes "guest" via structural rule.
-        first = tokenize_response({"_data": {"vlan_name": [{"name": "guest"}]}}, tokenizer)
-        original_token = first["_data"]["vlan_name"][0]["name"]
+        original_token = self._seed_coa_token(tokenizer, "192.168.20.70")
         assert TOKEN_RE.fullmatch(original_token) is not None
-        assert original_token.startswith("[[NAME:")
+        assert original_token.startswith("[[COA:")
 
-        # Second call: a tool's response carries "guest" at a generic field
-        # (record_id) with no rule. Walker should keymap-replay.
         second = tokenize_response(
-            {"results": [{"record_id": "guest", "call_count": 7}]},
+            {"results": [{"record_id": "192.168.20.70", "call_count": 7}]},
             tokenizer,
         )
         assert second["results"][0]["record_id"] == original_token
@@ -636,16 +668,19 @@ class TestKeymapReplayOnSkipPath:
         from hpe_networking_mcp.redaction.walker import tokenize_response
 
         tokenizer = self._new_tokenizer()
-        tokenize_response({"_data": {"vlan_name": [{"name": "guest"}]}}, tokenizer)
+        seeded = self._seed_coa_token(tokenizer, "192.168.20.70")
 
         nested = tokenize_response(
-            {"sample_body": {"name": "guest", "vlan": {"vlan-alias": "guest"}}},
+            {"sample_body": {"host": "192.168.20.70", "auth": {"target-host": "192.168.20.70"}}},
             tokenizer,
         )
-        # Both "guest" values restored to the same token.
         body = nested["sample_body"]
-        assert body["name"].startswith("[[NAME:")
-        assert body["vlan"]["vlan-alias"] == body["name"]
+        # ``host`` has its own HOSTNAME rule, so it tokenizes there; the
+        # kind-agnostic dedup returns the *existing* COA token rather than
+        # allocating a fresh HOSTNAME entry for the same plaintext.
+        assert body["host"] == seeded
+        # ``target-host`` carries no rule — replay restores the same token.
+        assert body["auth"]["target-host"] == seeded
 
     def test_value_never_tokenized_stays_cleartext(self) -> None:
         """Negative: a string that was never tokenized in this session must
@@ -665,76 +700,150 @@ class TestKeymapReplayOnSkipPath:
         from hpe_networking_mcp.redaction.walker import tokenize_response
 
         tokenizer = self._new_tokenizer()
-        tokenize_response({"_data": {"vlan_name": [{"name": "guest"}]}}, tokenizer)
-        original_token = tokenizer.token_for_existing_cleartext("guest")
-        assert original_token is not None
+        original_token = self._seed_coa_token(tokenizer, "192.168.20.70")
 
-        # Walking a response that already contains a token: should pass through.
         result = tokenize_response({"results": [{"record_id": original_token}]}, tokenizer)
         assert result["results"][0]["record_id"] == original_token
 
     def test_token_for_existing_cleartext_lookup_method(self) -> None:
-        """Direct API check on the new method."""
+        """Direct API check on the lookup method."""
         tokenizer = self._new_tokenizer()
         # Empty / non-string / not-yet-tokenized: None.
         assert tokenizer.token_for_existing_cleartext("") is None
         assert tokenizer.token_for_existing_cleartext("never-seen") is None
         # After tokenizing, returns the same token.
-        from hpe_networking_mcp.redaction.rules import TokenKind
         from hpe_networking_mcp.redaction.tokenizer import tokenize_value
 
-        token = tokenize_value(tokenizer, TokenKind.NAME, "guest")
-        assert tokenizer.token_for_existing_cleartext("guest") == token
+        token = tokenize_value(tokenizer, TokenKind.PSK, "MySharedKey123!")
+        assert tokenizer.token_for_existing_cleartext("MySharedKey123!") == token
         # Idempotency: passing a token through the lookup returns None
         # (we never want to "tokenize" a token-shaped value).
         assert tokenizer.token_for_existing_cleartext(token) is None
 
-    def test_central_translation_preview_record_id_round_trip(self) -> None:
+    def test_translation_preview_record_id_round_trip(self) -> None:
         """End-to-end shape that mirrors the actual leak from issue #291:
-        AOS 8 read tokenizes the inner ``name`` field; then the
+        a structural rule tokenizes a value at read; then the
         ``central_translation_preview`` response shape carries the same
         cleartext at ``results[].record_id`` (a SKIP-classified field)
-        AND at ``sample_body.name`` (also SKIP). Both must restore the
+        AND inside a nested TargetCall body. Both must restore the
         original token via replay.
         """
         from hpe_networking_mcp.redaction.walker import tokenize_response
 
         tokenizer = self._new_tokenizer()
-
-        # 1. AOS 8 read tokenizes via (vlan_name, name) structural rule.
-        tokenize_response(
-            {"_data": {"vlan_name": [{"name": "guest"}, {"name": "local"}]}},
+        # Seed two CoA endpoints via the AOS 8 structural rule.
+        out = tokenize_response(
+            {
+                "RFC 3576 Server List": [
+                    {"Name": "192.168.20.70"},
+                    {"Name": "192.168.20.75"},
+                ]
+            },
             tokenizer,
         )
-        guest_token = tokenizer.token_for_existing_cleartext("guest")
-        local_token = tokenizer.token_for_existing_cleartext("local")
-        assert guest_token is not None
-        assert local_token is not None
+        token_a = out["RFC 3576 Server List"][0]["Name"]
+        token_b = out["RFC 3576 Server List"][1]["Name"]
+        assert token_a.startswith("[[COA:")
+        assert token_b.startswith("[[COA:")
 
-        # 2. central_translation_preview-shaped response with cleartext fields.
         preview_response = {
-            "translation_id": "central:named_vlan",
+            "translation_id": "central:auth_server",
             "results": [
                 {
-                    "record_id": "guest",
+                    "record_id": "192.168.20.70",
                     "call_count": 7,
                     "target_calls": [
                         {
-                            "endpoint": "/network-config/v1alpha1/named-vlan/guest",
-                            "body": {"name": "guest", "vlan": {"vlan-alias": "guest"}},
+                            "endpoint": "/network-config/v1alpha1/auth-server/192.168.20.70",
+                            "body": {"target-host": "192.168.20.70"},
                         }
                     ],
                 },
-                {"record_id": "local", "call_count": 9, "target_calls": []},
+                {"record_id": "192.168.20.75", "call_count": 9, "target_calls": []},
             ],
         }
-        out = tokenize_response(preview_response, tokenizer)
+        result = tokenize_response(preview_response, tokenizer)
+        assert result["results"][0]["record_id"] == token_a
+        assert result["results"][1]["record_id"] == token_b
+        body = result["results"][0]["target_calls"][0]["body"]
+        assert body["target-host"] == token_a
 
-        assert out["results"][0]["record_id"] == guest_token
-        assert out["results"][1]["record_id"] == local_token
-        body = out["results"][0]["target_calls"][0]["body"]
-        assert body["name"] == guest_token
-        assert body["vlan"]["vlan-alias"] == guest_token
+
+class TestKindAgnosticDedup:
+    """v3.0.1.12 — ``Tokenizer.tokenize`` deduplicates by plaintext across
+    kinds. Concrete motivation: a CoA shared secret typically reuses the
+    RADIUS shared secret on the same auth fabric. Once one rule has
+    issued a token for that plaintext, the other rule must return the
+    same token, not allocate a parallel one.
+    """
+
+    def _new_tokenizer(self):
+        return Tokenizer(SessionKeymap(), session_id="test-session-dedup", max_entries=100)
+
+    def test_same_plaintext_under_different_kinds_returns_same_token(self) -> None:
+        tokenizer = self._new_tokenizer()
+        rad_token = tokenizer.tokenize(TokenKind.RAD, "SharedSecret123!")
+        coa_token = tokenizer.tokenize(TokenKind.COA, "SharedSecret123!")
+        assert rad_token == coa_token
+        # And one keymap entry, not two.
+        assert len(tokenizer.keymap) == 1
+
+    def test_dedup_preserves_original_kind_label(self) -> None:
+        """The first kind to allocate wins — subsequent same-plaintext
+        requests inherit the original kind prefix in the token string.
+        That's intentional: the AI sees a stable, single token regardless
+        of which rule encountered the value first.
+        """
+        tokenizer = self._new_tokenizer()
+        rad_token = tokenizer.tokenize(TokenKind.RAD, "SharedSecret123!")
+        coa_token = tokenizer.tokenize(TokenKind.COA, "SharedSecret123!")
+        assert rad_token.startswith("[[RAD:")
+        assert coa_token == rad_token  # not [[COA:...]]
+
+    def test_dedup_then_detokenize_returns_original_plaintext(self) -> None:
+        tokenizer = self._new_tokenizer()
+        plaintext = "SharedSecret123!"
+        coa_token = tokenizer.tokenize(TokenKind.COA, plaintext)
+        # Tokenize again via different kind to exercise the dedup path.
+        rad_token = tokenizer.tokenize(TokenKind.RAD, plaintext)
+        assert rad_token == coa_token
+        # Round-trip works on the single shared token.
+        assert tokenizer.detokenize(coa_token) == plaintext
+
+    def test_dedup_walker_e2e_radius_and_coa_share_one_token(self) -> None:
+        """End-to-end: a tool response that contains the same shared
+        secret under both ``shared_secret`` (RAD rule) and inside a
+        ``coa_servers`` element (COA structural rule) produces a single
+        consistent token across both fields. Mirrors the live scenario
+        Jon described: "That server would use the same secret as the
+        radius servers since they are typically the same."
+        """
+        from hpe_networking_mcp.redaction.walker import tokenize_response
+
+        tokenizer = self._new_tokenizer()
+        plaintext = "OurFabricRadSecret!"
+        response = {
+            "radius_servers": [{"host": "10.50.10.10", "shared_secret": plaintext}],
+            "coa_servers": [{"ip": "10.50.10.10", "secret": plaintext, "port": 3799}],
+        }
+        out = tokenize_response(response, tokenizer)
+
+        rad_secret_token = out["radius_servers"][0]["shared_secret"]
+        coa_secret_token = out["coa_servers"][0]["secret"]
+        assert rad_secret_token == coa_secret_token
+        assert TOKEN_RE.fullmatch(rad_secret_token) is not None
+        # Walker traversal order: top-level keys in insertion order, so
+        # radius_servers fires first and the RAD kind wins the allocation.
+        assert rad_secret_token.startswith("[[RAD:")
+
+    def test_different_plaintexts_still_get_different_tokens(self) -> None:
+        """Negative: dedup only fires for identical plaintext. Different
+        secrets must still get different tokens even under the same kind.
+        """
+        tokenizer = self._new_tokenizer()
+        a = tokenizer.tokenize(TokenKind.RAD, "SecretA")
+        b = tokenizer.tokenize(TokenKind.RAD, "SecretB")
+        assert a != b
 
 
 class TestVrrpPassphraseRule:
@@ -813,13 +922,15 @@ class TestTokenizer:
         b = tk.tokenize(TokenKind.PSK, "Second!")
         assert a != b
 
-    def test_different_kinds_different_tokens_for_same_value(self) -> None:
+    def test_same_value_different_kinds_dedups_to_one_token(self) -> None:
+        # v3.0.1.12 — kind-agnostic dedup: same plaintext under any kind
+        # returns the same token. The first kind to allocate wins the
+        # label. Detailed coverage in ``TestKindAgnosticDedup``.
         tk = self._make()
         psk = tk.tokenize(TokenKind.PSK, "shared-value-12345")
         api = tk.tokenize(TokenKind.API_TOKEN, "shared-value-12345")
-        assert psk != api
+        assert psk == api
         assert TOKEN_RE.fullmatch(psk).group(1) == "PSK"
-        assert TOKEN_RE.fullmatch(api).group(1) == "APITOKEN"
 
     def test_idempotent_on_existing_token(self) -> None:
         tk = self._make()
@@ -1353,9 +1464,11 @@ class TestRealisticCentralFixture:
         assert result["profile_data"]["wlan_name"] == "Corp-Wifi"
         assert result["profile_data"]["essid"] == "Corp-Wifi"
 
-        # vlan_name — still tokenized as NAME
-        assert result["profile_data"]["vlan_name"] != "Corporate"
-        assert TOKEN_RE.fullmatch(result["profile_data"]["vlan_name"]).group(1) == "NAME"
+        # vlan_name — passes through cleartext (v3.0.1.12 privacy-model
+        # refinement: schema labels describing network architecture are
+        # not personally-identifying and audit utility benefits from
+        # cleartext, matching scope_name / device_group_name policy).
+        assert result["profile_data"]["vlan_name"] == "Corporate"
 
     def test_audit_log_user_fields_tokenized(self, tokenizer: Tokenizer, central_audit_log_entry: dict) -> None:
         result = tokenize_response(central_audit_log_entry, tokenizer)

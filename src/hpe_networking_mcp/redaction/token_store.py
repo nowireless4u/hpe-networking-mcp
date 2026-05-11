@@ -54,15 +54,15 @@ class SessionKeymap:
     * ``by_token[token_string]`` -> entry, used during detokenization
       when the AI passes a token back into a write tool.
     * ``by_plaintext_value[plaintext]`` -> entry, used by the walker's
-      keymap-replay pass to restore previously-issued tokens for
-      cleartext values that have lost their structural context (e.g.
-      the round-trip through a tool that detokenizes inputs, processes
-      cleartext internally, and re-emits values whose output field
-      name matches no rule). Issue #291. Kind-agnostic — if the same
-      plaintext appears under multiple kinds in this session, the
-      most-recently-allocated entry wins; this is safe because in
-      practice a given plaintext rarely re-appears under a different
-      kind within one session.
+      keymap-replay pass (issue #291) AND by ``Tokenizer.tokenize``
+      kind-agnostic dedup (v3.0.1.12). When a plaintext that was
+      previously allocated under one kind is later seen under a
+      different kind (e.g. CoA secret reusing the RADIUS secret), the
+      tokenizer returns the existing token rather than allocating a
+      second one. Because tokenize() consults this index *before*
+      allocating, the index is effectively single-writer per plaintext
+      within a session; the "multiple kinds for the same plaintext"
+      race condition is impossible in practice.
     """
 
     by_plaintext: dict[tuple[TokenKind, str], TokenEntry] = field(default_factory=dict)
