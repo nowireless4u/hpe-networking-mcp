@@ -764,7 +764,7 @@ For AOS 8 reachability call `health(platform="aos8")`.
 - `entry_type="inherited"` — only entries resolved from parent scopes.
 - (omitted) — returns everything (defaults + user + inherited).
 
-The canonical REST schema names (e.g. `role` not `user_role`, `cluster_prof` not `lc_cluster_profile`, `acl_sess` / `acl_eth` / `acl_mac` not `ip_access_list`) are documented at https://developer.arubanetworks.com/aos8/reference. CLI command nouns are NOT a reliable mapping to REST object names.
+The canonical REST schema names (e.g. `role` not `user_role`, `cluster_prof` not `lc_cluster_profile`, `acl_sess` not `ip_access_list`) are documented at https://developer.arubanetworks.com/aos8/reference. CLI command nouns are NOT a reliable mapping to REST object names.
 
 ## Pending-Changes Workflow
 AOS 8 buffers configuration writes on MM until they are committed and pushed to MDs.

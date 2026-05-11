@@ -190,8 +190,9 @@ OBJECT_TYPES = [
     "aaa_prof", "rad_server", "tacacs_server", "ldap_server",
     "server_group_prof", "dot1x_auth_profile", "mac_auth_profile",
     "cp_auth_profile",
-    # RBAC / ACLs
-    "role", "acl_sess", "acl_eth", "acl_mac",
+    # RBAC / ACLs (acl_eth / acl_mac excluded — unique-use cases not encountered
+    # in real migrations; see issue #298)
+    "role", "acl_sess",
     # Cluster (paired — cluster_prof defines the profile, group_membership
     # binds devices to it)
     "cluster_prof", "group_membership",
@@ -322,7 +323,7 @@ inventory = {
     "ap_groups": [...],                             # virtual_ap and ap_sys_prof
     "ssid_profiles": [...],                                        # ssid_prof rows
     "user_roles": [...],                                            # role rows
-    "session_acls": [...],                                          # acl_sess rows (acl_eth and acl_mac collected separately if present)
+    "session_acls": [...],                                          # acl_sess rows
     "aaa_servers": {radius: [...], tacacs: [...], ldap: [...]},   # internal_db dropped — Central replaces internal-DB auth entirely
     "aaa_server_groups": [...],                                    # server_group_prof rows
     "auth_profiles": {dot1x: [...], mac_auth: [...], captive_portal: [...]},  # dot1x_auth_profile / mac_auth_profile / cp_auth_profile
@@ -688,11 +689,11 @@ The mapping table above shows *where* each AOS 8 node lands in Central. The oper
 Iterate `inventory["scopes"]` (Stage 2 normalization output, with `_flags.inherited == True` rows already filtered) and for each scope emit one row counting the **definition-scope** instances of every object class collected in COLLECT-01. **Inherited copies do not count** — they live at their definition scope and travel with it.
 
 ```
-| Source scope | AOS 10 target | cluster_prof | ssid_prof | virtual_ap | role | acl_sess | acl_eth | acl_mac | server_group_prof | rad/tacacs/ldap | dot1x | mac_auth | cp_auth | ap_sys_prof | rf_prof family (arm/ht_radio/reg_domain) |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `/md` | (drop — root implicit) | 0 | … | … | … | … | … | … | … | … | … | … | … | (definitions present here, e.g. `ACX_apsys_ui`) | … |
-| `/md/<region>` | `<region>` (Site Collection) | … | … | … | … | … | … | … | … | … | … | … | … | … | … |
-| `/md/<region>/<site>` | `<site>` (Site, CM_SITE) | (definition rows only — e.g. `site-cluster`) | … | … | … | … | … | … | … | … | … | … | … | … | … |
+| Source scope | AOS 10 target | cluster_prof | ssid_prof | virtual_ap | role | acl_sess | server_group_prof | rad/tacacs/ldap | dot1x | mac_auth | cp_auth | ap_sys_prof | rf_prof family (arm/ht_radio/reg_domain) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `/md` | (drop — root implicit) | 0 | … | … | … | … | … | … | … | … | … | (definitions present here, e.g. `ACX_apsys_ui`) | … |
+| `/md/<region>` | `<region>` (Site Collection) | … | … | … | … | … | … | … | … | … | … | … | … |
+| `/md/<region>/<site>` | `<site>` (Site, CM_SITE) | (definition rows only — e.g. `site-cluster`) | … | … | … | … | … | … | … | … | … | … | … |
 ```
 
 For each non-zero cell, emit a follow-up bullet listing the object **names** (not just counts) so the operator can spot which scope owns which named profile. Example:
@@ -757,7 +758,7 @@ The VSG **does not** contain per-object translation tables for most object types
 | **MAC-auth profile** (`mac_auth_profile`) | (none) | `operator-driven` — VSG silent. Emit `OPERATOR-MAP`. Target tool: `central_manage_wlan_profile` (mac-auth opmodes are flags inside it). |
 | **Captive portal profile** (`cp_auth_profile`) | (none, passing mention only) | `operator-driven` — assigned through a role's `captive-portal` field on `central_manage_role`. Emit `OPERATOR-MAP`. Target tool: `central_manage_role` (captive-portal field). |
 | **User role** (`role`) | §1173-§1176 (AOS 8 supported-features list) | `transform` — role name + VLAN + ACL + bandwidth-contract + qos + captive-portal + session-timeout map directly. Per-attribute mapping is operator-driven; VSG only confirms roles "are supported." Emit `OPERATOR-MAP` per role. Target tool: `central_manage_role`. |
-| **Session / Eth / MAC ACL** (`acl_sess`, `acl_eth`, `acl_mac`) | (none — implied via role for `acl_sess`; VSG silent on `acl_eth` / `acl_mac`) | `transform` — split into Central primitives: `central_manage_net_group` (network-destination aliases referenced by ACL rules) + `central_manage_net_service` (port/protocol service aliases) + `central_manage_role_acl` (the ACL rule list itself). Per-rule mapping is operator-driven; emit `OPERATOR-MAP`. The bulk of ACLs are `acl_sess`; `acl_eth` and `acl_mac` are rarer and use the same translation primitives. Target tools: `central_manage_net_group`, `central_manage_net_service`, `central_manage_role_acl`. |
+| **Session ACL** (`acl_sess`) | (none — implied via role) | `transform` — the `central:policy` translation (engine-driven) emits `/policies` POSTs with rule bodies that reference Central `net-group` and `net-service` aliases. The aliases themselves come from the `central:net_group` / `central:net_service` translations (sourced from AOS 8 `netdestination` / `netservice`). Per-rule mapping is engine-handled; operator decisions only when LLD-skip reasons surface. (Note: `acl_eth` and `acl_mac` are intentionally out of scope — issue #298.) Target tool: `central_manage_policy`. |
 | **AP system profile** (`ap_sys_prof`) | §1651-§1657 (LMS prerequisite), §412-§415 (regulatory domain replaced) | Mixed: LMS-IP `transform` (must be VRRP VIP, not individual controller IP — already enforced as Act I REGRESSION rule); `reg_domain_prof` `deprecated`; `arm_prof` / `ht_radio_prof` `deprecated` (replaced by RF Profiles in AOS 10); syslog targets `operator-driven` (mapped to Central UI). **Central API gap — no `central_manage_ap_system_profile` tool today.** Target tool: `[Central API gap — manual UI]`. |
 | **WLAN SSID profile** (`ssid_prof`) | §2127-§2219 (CorpNet 802.1X), §2222-§2308 (OpsNet WPA3-Personal) | `direct-translate` — ESSID, opmode, VLAN, forwarding-mode, key-management, RADIUS pointers map to the `central_manage_wlan_profile` payload schema. The two VSG worked examples are the gold-standard reference for field-by-field mapping; emit per-WLAN-profile rows that cite them. Target tool: `central_manage_wlan_profile`. |
 | **VAP profile** (`virtual_ap`) | §2169-§2192 (Allowed bands "in the VAP", VLAN ID "in the VAP") | `transform` — AOS 8 VAP fields collapse INTO the WLAN profile in AOS 10; VAP is not a standalone object. Mark as `transform → folded into WLAN profile`. Target tool: `central_manage_wlan_profile` (collapsed). |
@@ -774,7 +775,7 @@ Emit a **single master table** with one row per legacy object discovered, **incl
 |---|---|---|---|---|---|---|---|---|---|
 
 - **Source name** — name as it appears in the source config (`corp-radius-1`, `corp-employee-role`, `corp-ssid-prof`).
-- **Source type** — AOS 8 REST schema name (verified against developer.arubanetworks.com/aos8/reference). One of: `rad_server`, `tacacs_server`, `ldap_server`, `server_group_prof`, `dot1x_auth_profile`, `mac_auth_profile`, `cp_auth_profile`, `role`, `acl_sess`, `acl_eth`, `acl_mac`, `ap_sys_prof`, `ssid_prof`, `virtual_ap`, `arm_prof`, `ht_radio_prof`, `reg_domain_prof`, `cluster_prof`, `group_membership`. (Note: `internal_db_server` is intentionally absent — Central replaces internal-DB auth entirely; the F2 REGRESSION finding flags local-user migration via the `local-userdb` text dump, not via a REST-object lookup.)
+- **Source type** — AOS 8 REST schema name (verified against developer.arubanetworks.com/aos8/reference). One of: `rad_server`, `tacacs_server`, `ldap_server`, `server_group_prof`, `dot1x_auth_profile`, `mac_auth_profile`, `cp_auth_profile`, `role`, `acl_sess`, `ap_sys_prof`, `ssid_prof`, `virtual_ap`, `arm_prof`, `ht_radio_prof`, `reg_domain_prof`, `cluster_prof`, `group_membership`. (Notes: `internal_db_server` is intentionally absent — Central replaces internal-DB auth entirely; the F2 REGRESSION finding flags local-user migration via the `local-userdb` text dump, not via a REST-object lookup. `acl_eth` and `acl_mac` are also intentionally absent — see issue #298.)
 - **Source scope** — the `/md/...` node where the object is defined (e.g. `/md`, `/md/ACX`, `/md/ACX/dallas-hq/floor-3`). Captured during the Stage 1 hierarchy walk; **never assume an object lives at `/md` root**.
 - **Usage state** — one of: `assigned-and-active` (referenced by an ap-group or other object that's currently bound to active devices), `assigned-but-inactive` (referenced but the binding scope has no active devices), `configured-but-unassigned` (defined but not referenced by any other object), `orphaned` (referenced only by objects that are themselves unused). **This is metadata only — never a basis for excluding the row from migration.** Customers regularly migrate unused config because *"unused right now"* is a different statement from *"won't be needed after migration."*
 - **Disposition** — one of: `direct-translate` / `transform` / `drop` / `deprecated` / `operator-driven` / `inconclusive`.
@@ -1088,7 +1089,7 @@ result = {
 result
 ```
 
-**`acl_eth` (Ethertype ACLs) are out of scope for `central:policy`.** AOS 8 roles can bind both session ACLs (`role__acl[]` with `acl_type="session"`) and Ethernet ACLs (`acl_type="eth"`, e.g. `deny_all_ethertype` on the `blacklisted` role). The `central:policy` translation only handles session ACLs. Ethernet ACLs need a separate translation (not yet shipped) or operator-driven mapping. When you encounter a role binding an `acl_eth`, surface it as an OPERATOR-MAP finding under Act II's "Translation gaps" — *"Role 'X' binds Ethertype ACL 'Y' (`acl_eth`); central:policy translates session ACLs only — operator must map Ethertype ACLs manually."*
+**Note on Ethernet/MAC ACL bindings.** AOS 8 roles can technically reference `acl_eth` or `acl_mac` entries via `role__acl[]` with `acl_type="eth"` / `acl_type="mac"`. Those ACL types are out of scope for this skill (issue #298 — unique-use cases). If you encounter a role binding one, leave the binding noted in the disposition matrix row's notes column but do NOT attempt to translate it; Stage 1 collection no longer enumerates these ACL types.
 
 #### Step 3 — Render the consolidated preview report
 
@@ -1181,7 +1182,7 @@ For at least the FIRST record of each translation, emit the engine's `target_cal
 - **For runs with `record_count == 0` for a given translation,** emit a one-line note (e.g. *"central:vlan_id: 0 records at this scope"*) instead of an empty section.
 - **Mark every placeholder scope_id loudly.** A body that contains `"scope-id": "<TBD:..."` is NOT executable — say so in the report header so the operator knows the migration plan needs the target hierarchy created first.
 
-**Findings produced:** if `skipped_count > 0` (engine-skipped) OR `skipped_per_lld` is non-empty (pre-filtered) for any translation, surface the skip reasons as a finding under Act II's "Translation gaps" subsection. Roles binding `acl_eth` (Ethertype ACLs) also surface here — `central:policy` only translates session ACLs, so any Ethernet ACL binding needs an OPERATOR-MAP entry.
+**Findings produced:** if `skipped_count > 0` (engine-skipped) OR `skipped_per_lld` is non-empty (pre-filtered) for any translation, surface the skip reasons as a finding under Act II's "Translation gaps" subsection.
 
 ---
 

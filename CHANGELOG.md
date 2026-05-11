@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1.13] - 2026-05-11
+
+**Patch release — `aos-migration` skill drops `acl_eth` (Ethertype ACL) and `acl_mac` (MAC ACL) from Stage 1 collection. Closes #298.**
+
+Live probe against the maintainer's tenant via `aos8_get_effective_config` returned:
+
+- **`acl_eth`** — three records total: one platform default (`validuserethacl` with `_flags.default=true`) plus two operator-authored test ACLs (`test_ethertype` at `/md/Campus`, `deny_all_ethertype` at `/md/Campus/West`). None carried an auto-generated marker; none followed a role-pair naming pattern.
+- **`acl_mac`** — zero records anywhere; the schema is recognized but unused.
+
+The decision was operator-driven (no automated migration path even when present). The maintainer confirmed these are unique-use cases unlikely to be encountered in real migrations; the cost of carrying them through Stage 1 collection + Stage 2 normalization + Stage 7 per-scope inventory + Stage 8 disposition + Stage 9 translation gap handling exceeds the value.
+
+### Files
+
+- **`src/hpe_networking_mcp/skills/aos-migration.md`** —
+  - COLLECT-01 `OBJECT_TYPES` list: removed `acl_eth`, `acl_mac` (replaced with a comment noting the issue-#298 scope decision).
+  - Stage 2 normalization: removed the parenthetical about collecting Ethernet/MAC ACLs separately from `session_acls`.
+  - Stage 7 per-scope inventory table header: removed `acl_eth` and `acl_mac` columns (and the corresponding `…` cells in the sample rows).
+  - Stage 8 disposition matrix row for ACLs: narrowed to `acl_sess` only; updated the disposition prose to reflect the engine-driven `central:policy` translation that supersedes the obsolete `net_group + net_service + role_acl` framing. Added an explicit out-of-scope note pointing at issue #298.
+  - Stage 8 source-type enumeration: removed `acl_eth`, `acl_mac` from the schema-name list; added a parenthetical Notes block.
+  - Stage 9b "Ethertype ACL out of scope for central:policy" paragraph: replaced with a narrower note advising operators to leave the binding noted in the disposition row but NOT attempt to translate it, since Stage 1 no longer enumerates these ACL types.
+  - Stage 9b "Findings produced" clause: removed the now-redundant Ethernet ACL OPERATOR-MAP clause.
+- **`src/hpe_networking_mcp/INSTRUCTIONS.md`** — REST-schema-names example narrowed to `acl_sess` only (no longer cites `acl_eth` / `acl_mac`).
+- **`pyproject.toml`** — bump 3.0.1.12 → 3.0.1.13.
+
+### Notes
+
+- **Translations engine checklist (issue #279):** the previously-listed `central:acl_eth` and `central:acl_mac` translations are now formally out of scope for v1. They were never authored.
+- **Forward path:** if a future tenant configures non-trivial Ethernet ACLs that need migration, we'll revisit (re-add to COLLECT-01 and scope a `central:acl_eth` translation). The captured fixtures above demonstrate this is rare enough to defer indefinitely.
+- 1206 tests pass; no test changes were required (existing skill-discovery tests verify shape, not content).
+
 ## [3.0.1.12] - 2026-05-11
 
 **Patch release — PII privacy-model refinement. Two related changes: (a) drop tokenization of network-architecture schema labels that aren't personally-identifying (`vlan_name`, `subnet_name`, `org_name`, `site_name`), (b) add the missing CoA / RFC-3576 dynamic-authorization rules so dynamic-authorization endpoint IPs + shared secrets — which are auth-fabric-critical — actually get tokenized.**
