@@ -5,6 +5,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1.14] - 2026-05-11
+
+**Translations engine — `central:net_group` (AOS 8 `netdst` + `netdst6` → Central `/net-groups`).** Closes #300; references #279.
+
+This is the fifth shipped translation and the **missing dependency for `central:policy`**. Before v3.0.1.14, `central:policy`'s rule bodies referenced `net-group` aliases by name (via `host-address-alias`) — but no current translation created those alias objects, so policy POSTs would fail at Central with an unknown-alias error unless the operator had pre-populated matching names in the target tenant. The Stage 8 disposition prose in v3.0.1.13 also misdescribed the architecture as if both `net_group` and `net_service` already shipped; corrected here.
+
+### What ships
+
+- **`translations/targets/central/net_group_v1.json`** — multi-source translation handling both `netdst` (IPv4) and `netdst6` (IPv6) AOS 8 source schemas. Two emits per source record: `POST /net-groups/{name}` + `POST /config-assignments`. The address-family discriminator (`netdestination-type` enum: `IPV4_ONLY` / `IPV6_ONLY` — Central explicitly doesn't support `IPV4_IPV6_MIXED`) is inferred by preprocessing from which `__entry` key the source record carries.
+- **`translations/preprocessing/aos8_net_group.py`** — preprocessing module that:
+  - Routes records to the right address family based on `netdst__entry` vs `netdst6__entry` presence.
+  - Maps each per-entry `_objname` discriminator to a Central items[] element: `netdst__host` → `HOST` + `address`; `netdst__network` → `NETWORK` + computed `prefix` (CIDR); `netdst__name` → `FQDN` + `fqdn`.
+  - Converts AOS 8 dotted-quad netmasks (e.g. `255.255.255.0`) to CIDR prefix lengths (`/24`) via `_netmask_to_prefix`. Non-contiguous masks (e.g. `255.0.255.0`) raise rather than silently corrupting the prefix.
+  - Skips per-entry `_flags.default=true` / `_flags.system=true` markers. Record-level filtering (`inherited` / `default` / empty entries) is consumer responsibility, matching the convention in `central:role` and `central:policy`.
+
+### Skill updates
+
+- **`aos-migration.md` COLLECT-01** — `OBJECT_TYPES` extended with `netdst` and `netdst6` (CLI nouns `netdestination` / `netdestination6` differ from REST schema names — surfaced in the comment block).
+- **`aos-migration.md` Stage 8 disposition matrix** —
+  - `acl_sess` row corrected: describes the actual shipped architecture (`central:policy` references `net-group` aliases that ship via `central:net_group`; `net-service` aliases pending).
+  - New row for `netdst` / `netdst6`: documents the `central:net_group` translation, the must-run-before-`central:policy` dependency, and per-entry mapping rules.
+  - Source-type enumeration includes `netdst` and `netdst6`; clarifies CLI-vs-REST naming discrepancy and the `netsvc` deferral.
+- **`aos-migration.md` Stage 9b** — adds preview block 2e for `central:net_group`. Block intentionally placed after policies in display order with a *"despite appearing last in the preview, this translation runs FIRST in execution"* call-out. Step 3 prose now says "five `result` dicts."
+
+### Coverage scope
+
+Live-verified against the maintainer's tenant: 8 operator-authored `netdst` aliases (mix of host, network, FQDN entries; one alias holds ~100 CIDR rows). `netdst6` schema is recognized but the tenant has zero records — first tenant with IPv6 aliases configured will validate the assumed sibling-naming shape; the preprocessing function detects v4 vs v6 by which `__entry` key is present so a `netdst6` record matching the documented shape works without code change.
+
+### `central:net_service` deferred
+
+Per the real-captured-fixtures-only convention (memory: `feedback_real_captured_fixtures.md`), the `central:net_service` translation is **not authored** in this release. The maintainer's tenant has zero `netsvc` records — the schema is recognized but unused. AOS 8 `acl_sess` rules in this tenant reference only Central's built-in `svc-*` catalog (which `central:policy` already passes through verbatim via `services.net-service` + `RULE_NET_SERVICE`). Will revisit once a tenant with custom `netsvc` records becomes available.
+
+### Files
+
+- **`src/hpe_networking_mcp/translations/targets/central/net_group_v1.json`** — new translation file.
+- **`src/hpe_networking_mcp/translations/preprocessing/aos8_net_group.py`** — new preprocessing module.
+- **`src/hpe_networking_mcp/skills/aos-migration.md`** — COLLECT-01, Stage 8 (disposition matrix + source-type enum), Stage 9b (preview block + counts).
+- **`tests/unit/test_translations_preprocessing_aos8_net_group.py`** — new preprocessing unit tests (24 tests covering address-family detection, all three entry-type mappings, mixed-entry order preservation, per-entry flag filtering, IPv6 path including the `/128` fallback for prefix-less network entries, netmask → CIDR parametrized over 6 contiguous + 4 non-contiguous cases).
+- **`tests/unit/test_translations_engine.py`** — appends 9 new engine-level tests covering the net_group translation end-to-end (host / network / FQDN / mixed / v6 / device-function override / missing-source / preprocessing error propagation).
+- **`pyproject.toml`** — bump 3.0.1.13 → 3.0.1.14.
+
+### Notes
+
+- **Dependency order at execution time:** `central:net_group` must run BEFORE `central:policy` in any consumer-orchestrated migration. The Stage 9b preview reflects this in prose; Phase 3 execution (issue #240) will enforce it via the translation file's `dependencies` block.
+- **Idempotency:** if a `net-group` profile with the same name already exists, the POST returns HTTP 409. Consumer must handle 409 idempotently.
+- **Tests:** 1206 → 1243 passing (+37 net new). Lint + format + mypy clean.
+
 ## [3.0.1.13] - 2026-05-11
 
 **Patch release — `aos-migration` skill drops `acl_eth` (Ethertype ACL) and `acl_mac` (MAC ACL) from Stage 1 collection. Closes #298.**

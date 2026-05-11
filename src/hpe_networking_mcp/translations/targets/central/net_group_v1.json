@@ -1,0 +1,149 @@
+{
+  "version": 1,
+  "target_platform": "central",
+  "target_id": "net_group",
+  "preprocessing": "hpe_networking_mcp.translations.preprocessing.aos8_net_group.preprocess_net_group",
+  "target_emits": [
+    {
+      "step":     1,
+      "name":     "create_net_group",
+      "purpose":  "Create the net-group (netdestination) profile in the Library. The address-family discriminator and per-entry items[] are pre-computed by the preprocessing function from the source record's __entry sub-list (mapping AOS 8 host/network/name entries to Central HOST/NETWORK/FQDN entries).",
+      "endpoint": "/network-config/v1alpha1/net-groups/{name}",
+      "method":   "POST",
+      "query_params": {},
+      "body": {
+        "name":                "{name}",
+        "netdestination-type": "{netdestination_type}",
+        "items":               "{items}"
+      },
+      "iteration": "once",
+      "iteration_notes": "One POST per source netdst / netdst6 record.",
+      "depends_on": []
+    },
+    {
+      "step":     2,
+      "name":     "assign_net_group",
+      "purpose":  "Assign the net-group profile to the target scope. Multi-device-function array packed into a single POST.",
+      "endpoint": "/network-config/v1alpha1/config-assignments",
+      "method":   "POST",
+      "query_params": {},
+      "body_template": {
+        "config-assignment": [
+          "{one entry per device_function in target_meta.device_functions: { scope-id, device-function, profile-type='net-group', profile-instance='{name}' }}"
+        ]
+      },
+      "iteration": "once",
+      "iteration_notes": "One POST; all device-functions share the array.",
+      "depends_on": [1]
+    }
+  ],
+  "target_meta": {
+    "device_functions": ["MOBILITY_GW"],
+    "device_function_filtering_rule": "Net-group profiles are referenced by session ACL rules on Mobility Gateways. The Central net-group schema marks the items[] address list as supported on Gateway + Switch PVOS only (Access Points read the alias indirectly via pushed policies). For AOS 8 -> Central GW migration we target MOBILITY_GW; operators with AP-direct or switch use cases can override device_functions in runtime_values."
+  },
+  "target_scope_id_resolution": {
+    "rule":   "Central scope_id is supplied by the consuming skill at runtime, derived from the AOS 8 netdst / netdst6 record's binding scope.",
+    "input":  "Source binding scope (string path / identifier); skill-specific",
+    "output": "Central scope_id (string), supplied via runtime_values['central_scope_id']"
+  },
+  "required_runtime_values": ["central_scope_id"],
+  "derived": {},
+  "dependencies": [
+    {
+      "depends_on":  "(none — this is a foundational translation; runs before central:policy)",
+      "depended_by": [
+        {
+          "target_id": "central:policy",
+          "field":     "security-policy.policy-rule[].condition.{source,destination}.host-address.host-address-alias",
+          "relation":  "policy rules reference net-group profiles by name",
+          "notes":     "When an AOS 8 acl_sess rule uses the salias/dalias discriminator (named netdestination reference), the central:policy translation emits a policy-rule body that references the alias by name via host-address-alias. The referenced alias must exist in the Central tenant before the policy POST or Central returns an unknown-alias error. This translation creates the prerequisite alias objects."
+        }
+      ]
+    }
+  ],
+  "tokenize_kind_per_field": {},
+  "sources": {
+    "aos8": {
+      "kind":         "rest",
+      "mapping_kind": "simple",
+      "objects": [
+        {
+          "object":      "netdst",
+          "object_path": "/v1/configuration/object/netdst",
+          "role":        "ipv4_netdestination_alias",
+          "docs": {
+            "get":  "https://developer.arubanetworks.com/aos8/reference/get_object-netdst",
+            "post": "https://developer.arubanetworks.com/aos8/reference/post_object-netdst"
+          },
+          "live_shape_example": "[{\"dstname\": \"cppm\", \"netdst__entry\": [{\"address\": \"192.0.2.10\", \"hosttag\": \"address\", \"_objname\": \"netdst__host\"}, {\"host_name\": \"cppm.example.com\", \"_objname\": \"netdst__name\"}]}, {\"dstname\": \"foreign-badnetworks\", \"netdst__entry\": [{\"address\": \"14.0.0.0\", \"networktag\": \"network_opts\", \"netmask\": \"255.0.0.0\", \"_objname\": \"netdst__network\"}]}]",
+          "notes": "Live-verified across 8 operator-authored aliases in the maintainer's tenant (mix of host / network / FQDN entries; ~100-entry alias for blacklist-range lists). REST schema name is 'netdst' (CLI noun: netdestination). Per-entry discriminator is '_objname' on each netdst__entry element: 'netdst__host' = single IP (fields: address, hosttag); 'netdst__network' = CIDR (fields: address, networktag, netmask); 'netdst__name' = FQDN (field: host_name). Inheritance: copies appear at descendant scopes with _flags.inherited=true; consumer must filter those out before iterating."
+        },
+        {
+          "object":      "netdst6",
+          "object_path": "/v1/configuration/object/netdst6",
+          "role":        "ipv6_netdestination_alias",
+          "docs": {
+            "get":  "https://developer.arubanetworks.com/aos8/reference/get_object-netdst6"
+          },
+          "live_shape_example": "(zero records in maintainer's tenant; schema recognized, structural symmetry with netdst assumed)",
+          "notes": "REST schema name is 'netdst6' (CLI noun: netdestination6). Schema recognized in maintainer's tenant but zero records configured — the assumed wrapper-and-entry shape (netdst6 with netdst6__entry children carrying _objname='netdst6__host' / 'netdst6__network' / 'netdst6__name') follows the netdst schema convention. First live-verification of the netdst6 record shape MUST happen after v3.0.1.14 deploys to a tenant with IPv6 aliases configured. The preprocessing function falls back to scanning either netdst__entry or netdst6__entry on the source record so a netdst6 record with the documented sibling-name shape works without changes."
+        }
+      ],
+      "key_mappings": {
+        "name": {
+          "from":      "dstname",
+          "to":        "Central net-group 'name' (path param on step 1, profile-instance on step 2, body 'name')",
+          "transform": "direct_str",
+          "notes":     "Required. AOS 8 'dstname' -> Central net-group 'name'. 1-63 char limit per the Central schema; consumer should validate length before dispatch."
+        },
+        "netdestination_type": {
+          "from":      "_address_family",
+          "to":        "Central net-group body 'netdestination-type' (enum: IPV4_ONLY / IPV6_ONLY)",
+          "transform": "direct_str",
+          "notes":     "Pre-computed by the preprocessing function based on which __entry key the source record carries ('netdst__entry' -> IPV4_ONLY; 'netdst6__entry' -> IPV6_ONLY). Central schema explicitly notes the enum value IPV4_IPV6_MIXED is not supported on any devices, so a single source record always maps to one address family."
+        },
+        "items": {
+          "from":      "_central_items",
+          "to":        "Central net-group body 'items[]' array",
+          "transform": "direct",
+          "notes":     "Pre-computed by the preprocessing function. Each AOS 8 __entry maps to one Central items[] element with the discriminator-appropriate fields: netdst__host -> {type: HOST, address}; netdst__network -> {type: NETWORK, prefix=address/netmask_to_prefix(netmask)}; netdst__name -> {type: FQDN, fqdn}. Engine substitutes the array verbatim."
+        }
+      },
+      "unmapped_fields": [
+        {
+          "from":            "AOS 8 netdst-level _flags (inherited / default / readonly / system)",
+          "reason":          "Inheritance and system markers are AOS 8-internal metadata, not body content. Consumer must filter inherited copies (_flags.inherited == True) at definition scope before iterating; default / system / readonly entries (e.g. AOS 8's built-in alias families) should be skipped entirely rather than POSTed to Central where they may collide with Central's own built-ins.",
+          "severity_rule":   "always_operator_map"
+        },
+        {
+          "from":            "AOS 8 ADDRESS_RANGE / VLAN / PORT / INTERFACE entries",
+          "reason":          "Central's net-group items[] type enum supports ADDRESS_RANGE, VLAN, PORT, INTERFACE but AOS 8 netdst entries don't surface these forms — verified live across the maintainer's tenant (only netdst__host, netdst__network, netdst__name appear). Add per discriminator when configured samples surface.",
+          "severity_rule":   "non_empty_regression"
+        },
+        {
+          "from":            "Central net-group 'description' / 'invert' / 'exclude' / 'preemptive-failover'",
+          "reason":          "Optional Central body fields with no AOS 8 source-side counterpart in netdst / netdst6 records. Leaving body keys unset = Central defaults apply (invert=false, no exclude, etc.). Operator can override via overrides post-translation.",
+          "severity_rule":   "always_operator_map"
+        }
+      ],
+      "ignored_variants": [
+        {
+          "form":   "netdst record with _flags.default=true (system / built-in alias)",
+          "reason": "AOS 8 ships built-in netdestinations (e.g. 'localip', 'controller', 'mswitch'). These are virtual aliases generated by the controller and shouldn't be migrated as user-defined net-groups in Central — Central provides equivalent semantics via type=ADDRESS_LOCAL on the policy-rule side, not via a net-group lookup. **Consumer responsibility**: filter records with _flags.default=true / _flags.system=true / _flags.inherited=true (at definition scope) BEFORE calling emit_calls. Preprocessing only filters per-entry _flags; record-level filtering matches the same convention as central:role and central:policy."
+        },
+        {
+          "form":   "netdst record with empty netdst__entry list (no addresses)",
+          "reason": "An alias with no entries is a placeholder; Central rejects POSTs with empty items[]. Preprocessing returns the empty items array unchanged; consumer should filter these from the migration set."
+        }
+      ]
+    }
+  },
+  "draft_notes": [
+    "v1 translation, Gateway-targeted. POST /net-groups/{name} with the pre-computed items[] array supplied by the aos8_net_group preprocessing function (engine auto-invokes via the top-level preprocessing field).",
+    "TEMPLATE COMPLIANCE: standard Paradigm-B (per-field key_mappings + structurally complete body). The discriminator-based items[] build lives in the preprocessing function (translations/preprocessing/aos8_net_group.py); the JSON is thin and reviewable.",
+    "DEPENDENCY: central:policy references net-group profiles by name on the policy-side via host-address-alias. Run this translation BEFORE central:policy. Without it, AOS 8 acl_sess rules that reference netdestinations via salias / dalias produce Central policy bodies whose alias references fail at Central with an unknown-alias error.",
+    "v6 SHAPE: the netdst6 source record shape is structurally assumed (sibling-naming convention against the live-verified netdst schema). First tenant with netdst6 records configured will validate; the preprocessing function detects v4 vs v6 by which __entry key is present so a netdst6 record matching the assumed shape works without code change.",
+    "NETMASK -> CIDR PREFIX: AOS 8 netdst__network entries carry a dotted-quad netmask (e.g. '255.255.255.0'); Central NETWORK entries carry a CIDR-prefix string (e.g. '192.168.1.0/24'). Preprocessing converts via a contiguous-bitmask helper; non-contiguous masks (e.g. '255.0.255.0', rare but legal AOS 8 syntax) raise EngineError on the offending record rather than corrupting the prefix.",
+    "Idempotency: if a net-group profile with the same name already exists, the SHARED POST returns HTTP 409. Consumer must handle 409 idempotently."
+  ]
+}

@@ -191,8 +191,11 @@ OBJECT_TYPES = [
     "server_group_prof", "dot1x_auth_profile", "mac_auth_profile",
     "cp_auth_profile",
     # RBAC / ACLs (acl_eth / acl_mac excluded — unique-use cases not encountered
-    # in real migrations; see issue #298)
-    "role", "acl_sess",
+    # in real migrations; see issue #298). netdst / netdst6 are the IPv4 / IPv6
+    # netdestination aliases referenced by acl_sess rules via salias / dalias
+    # discriminators; central:net_group translation creates them in Central
+    # before central:policy POSTs the rules that reference them by name.
+    "role", "acl_sess", "netdst", "netdst6",
     # Cluster (paired — cluster_prof defines the profile, group_membership
     # binds devices to it)
     "cluster_prof", "group_membership",
@@ -758,7 +761,8 @@ The VSG **does not** contain per-object translation tables for most object types
 | **MAC-auth profile** (`mac_auth_profile`) | (none) | `operator-driven` — VSG silent. Emit `OPERATOR-MAP`. Target tool: `central_manage_wlan_profile` (mac-auth opmodes are flags inside it). |
 | **Captive portal profile** (`cp_auth_profile`) | (none, passing mention only) | `operator-driven` — assigned through a role's `captive-portal` field on `central_manage_role`. Emit `OPERATOR-MAP`. Target tool: `central_manage_role` (captive-portal field). |
 | **User role** (`role`) | §1173-§1176 (AOS 8 supported-features list) | `transform` — role name + VLAN + ACL + bandwidth-contract + qos + captive-portal + session-timeout map directly. Per-attribute mapping is operator-driven; VSG only confirms roles "are supported." Emit `OPERATOR-MAP` per role. Target tool: `central_manage_role`. |
-| **Session ACL** (`acl_sess`) | (none — implied via role) | `transform` — the `central:policy` translation (engine-driven) emits `/policies` POSTs with rule bodies that reference Central `net-group` and `net-service` aliases. The aliases themselves come from the `central:net_group` / `central:net_service` translations (sourced from AOS 8 `netdestination` / `netservice`). Per-rule mapping is engine-handled; operator decisions only when LLD-skip reasons surface. (Note: `acl_eth` and `acl_mac` are intentionally out of scope — issue #298.) Target tool: `central_manage_policy`. |
+| **Session ACL** (`acl_sess`) | (none — implied via role) | `transform` — the `central:policy` translation (engine-driven) emits `/policies` POSTs with rule bodies that reference Central `net-group` and `net-service` aliases. `net-group` aliases ship via the `central:net_group` translation (see the row below — sourced from AOS 8 `netdst` / `netdst6`). `net-service` aliases (sourced from AOS 8 `netsvc`) are **deferred** pending live shape verification; `central:policy` rules that reference a `netsvc` name today will fail at Central with an unknown-service error unless the operator has pre-populated matching service names. Per-rule mapping is engine-handled; operator decisions only when LLD-skip reasons surface. (Note: `acl_eth` and `acl_mac` are intentionally out of scope — issue #298.) Target tool: `central_manage_policy`. |
+| **Network destination alias** (`netdst`, `netdst6`) | (none) | `transform` — the `central:net_group` translation emits one `POST /net-groups/{name}` + config-assignment per source record. Per-entry mapping is engine-handled (host / network / FQDN → Central `HOST` / `NETWORK` / `FQDN` items). Must run BEFORE `central:policy` because policy rule bodies reference these aliases by name. AOS 8 system defaults (`_flags.default=true` — e.g. `localip`, `controller`, `mswitch`) are filtered by preprocessing; inherited copies must be filtered by the consumer at definition scope. (Note: AOS 8 `netsvc` — service aliases — is deferred to a future release; see the `acl_sess` row.) Target tool: `central_manage_net_group` (when the wrapper tool lands — preview today via `central_translation_preview`). |
 | **AP system profile** (`ap_sys_prof`) | §1651-§1657 (LMS prerequisite), §412-§415 (regulatory domain replaced) | Mixed: LMS-IP `transform` (must be VRRP VIP, not individual controller IP — already enforced as Act I REGRESSION rule); `reg_domain_prof` `deprecated`; `arm_prof` / `ht_radio_prof` `deprecated` (replaced by RF Profiles in AOS 10); syslog targets `operator-driven` (mapped to Central UI). **Central API gap — no `central_manage_ap_system_profile` tool today.** Target tool: `[Central API gap — manual UI]`. |
 | **WLAN SSID profile** (`ssid_prof`) | §2127-§2219 (CorpNet 802.1X), §2222-§2308 (OpsNet WPA3-Personal) | `direct-translate` — ESSID, opmode, VLAN, forwarding-mode, key-management, RADIUS pointers map to the `central_manage_wlan_profile` payload schema. The two VSG worked examples are the gold-standard reference for field-by-field mapping; emit per-WLAN-profile rows that cite them. Target tool: `central_manage_wlan_profile`. |
 | **VAP profile** (`virtual_ap`) | §2169-§2192 (Allowed bands "in the VAP", VLAN ID "in the VAP") | `transform` — AOS 8 VAP fields collapse INTO the WLAN profile in AOS 10; VAP is not a standalone object. Mark as `transform → folded into WLAN profile`. Target tool: `central_manage_wlan_profile` (collapsed). |
@@ -775,7 +779,7 @@ Emit a **single master table** with one row per legacy object discovered, **incl
 |---|---|---|---|---|---|---|---|---|---|
 
 - **Source name** — name as it appears in the source config (`corp-radius-1`, `corp-employee-role`, `corp-ssid-prof`).
-- **Source type** — AOS 8 REST schema name (verified against developer.arubanetworks.com/aos8/reference). One of: `rad_server`, `tacacs_server`, `ldap_server`, `server_group_prof`, `dot1x_auth_profile`, `mac_auth_profile`, `cp_auth_profile`, `role`, `acl_sess`, `ap_sys_prof`, `ssid_prof`, `virtual_ap`, `arm_prof`, `ht_radio_prof`, `reg_domain_prof`, `cluster_prof`, `group_membership`. (Notes: `internal_db_server` is intentionally absent — Central replaces internal-DB auth entirely; the F2 REGRESSION finding flags local-user migration via the `local-userdb` text dump, not via a REST-object lookup. `acl_eth` and `acl_mac` are also intentionally absent — see issue #298.)
+- **Source type** — AOS 8 REST schema name (verified against developer.arubanetworks.com/aos8/reference). One of: `rad_server`, `tacacs_server`, `ldap_server`, `server_group_prof`, `dot1x_auth_profile`, `mac_auth_profile`, `cp_auth_profile`, `role`, `acl_sess`, `netdst`, `netdst6`, `ap_sys_prof`, `ssid_prof`, `virtual_ap`, `arm_prof`, `ht_radio_prof`, `reg_domain_prof`, `cluster_prof`, `group_membership`. (Notes: REST schema names differ from CLI nouns — e.g. CLI `netdestination` is REST `netdst`. `internal_db_server` is intentionally absent — Central replaces internal-DB auth entirely; the F2 REGRESSION finding flags local-user migration via the `local-userdb` text dump, not via a REST-object lookup. `acl_eth` and `acl_mac` are also intentionally absent — see issue #298. `netsvc` — AOS 8 service aliases — is also absent pending live-shape verification; once captured, will be added with the corresponding `central:net_service` translation.)
 - **Source scope** — the `/md/...` node where the object is defined (e.g. `/md`, `/md/ACX`, `/md/ACX/dallas-hq/floor-3`). Captured during the Stage 1 hierarchy walk; **never assume an object lives at `/md` root**.
 - **Usage state** — one of: `assigned-and-active` (referenced by an ap-group or other object that's currently bound to active devices), `assigned-but-inactive` (referenced but the binding scope has no active devices), `configured-but-unassigned` (defined but not referenced by any other object), `orphaned` (referenced only by objects that are themselves unused). **This is metadata only — never a basis for excluding the row from migration.** Customers regularly migrate unused config because *"unused right now"* is a different statement from *"won't be needed after migration."*
 - **Disposition** — one of: `direct-translate` / `transform` / `drop` / `deprecated` / `operator-driven` / `inconclusive`.
@@ -846,18 +850,19 @@ For every row of the Stage 8 disposition matrix where Disposition is `direct-tra
 
 **Preconditions (soft — Stage 9b runs against partial inputs):**
 
-- Stage 1 has collected the AOS 8 inventory (effective-config dump). If the operator jumps straight to Stage 9b without Act I, run a **minimal Stage 1 collection** first — pull `role`, `acl_sess`, `vlan_id`, `vlan_name`, `vlan_name_id` from the AOS 8 path the operator named (e.g. `/md/Campus/West`). Do NOT do the full Act I hierarchy walk — that's overkill for a preview.
+- Stage 1 has collected the AOS 8 inventory (effective-config dump). If the operator jumps straight to Stage 9b without Act I, run a **minimal Stage 1 collection** first — pull `role`, `acl_sess`, `vlan_id`, `vlan_name`, `vlan_name_id`, `netdst`, `netdst6` from the AOS 8 path the operator named (e.g. `/md/Campus/West`). Do NOT do the full Act I hierarchy walk — that's overkill for a preview.
 - Stage 7 has produced the operator-confirmed AOS 8 → Central hierarchy mapping. **If Stage 7 was not run, target Global as a fallback** with a clearly-marked placeholder note in the output (see Step 1 below). The preview is engine output regardless of where the operator plans to land it; making Stage 9b strict on Stage 7 would defeat its purpose.
 - The target Central hierarchy does NOT need to exist in Central yet. Stage 9 builds the hierarchy as the FIRST cutover step; Stage 9b previews the per-object work that follows. Walker may legitimately return no match for a Stage-7 Central scope name — in that case use a placeholder scope_id (see Step 1).
 
-**Translations shipped today (v3.0.1.7):**
+**Translations shipped today (v3.0.1.14):**
 
 | translation_id | AOS 8 source | Central target | Notes |
 |---|---|---|---|
 | `central:vlan_id` | `vlan_id` (bare or rich) | layer2-vlan profile | Per-record. Optional sub-fields drop when absent. |
 | `central:named_vlan` | composite: `vlan_name` ⨝ `vlan_name_id` on `name` | named-VLAN + alias chain (6 emits) | Composite source — pre-merge before passing one record per name. |
 | `central:role` | `role` (Gateway-targeted) | role profile + config-assignment | ~25 fields. Skip `_flags.default=true` system roles. |
-| `central:policy` | `acl_sess` | /policies POST + config-assignment | Engine pre-processes via reverse-index lookup against role records (consumer pre-fetches once). |
+| `central:net_group` | `netdst` (IPv4) or `netdst6` (IPv6) | net-group profile + config-assignment | Address family inferred from source record. Per-entry host/network/FQDN mapped to Central HOST/NETWORK/FQDN items. Must run BEFORE `central:policy`. |
+| `central:policy` | `acl_sess` | /policies POST + config-assignment | Engine pre-processes via reverse-index lookup against role records (consumer pre-fetches once). References `net-group` aliases by name (created by `central:net_group`); `net-service` aliases pending. |
 
 #### Step 1 — Scope resolution (walker-optional, fall back to placeholder)
 
@@ -1089,11 +1094,71 @@ result = {
 result
 ```
 
+##### 2e — Net groups (`central:net_group`)
+
+Aliases referenced by `acl_sess` rules via the `salias` / `dalias` discriminator. **Despite appearing last in the preview, this translation runs FIRST in execution** — `central:policy` rule bodies reference these aliases by name and Central rejects the policy POST if the alias doesn't exist.
+
+```python
+# Stage 1 collected both netdst (IPv4) and netdst6 (IPv6) records.
+# Filter inherited / system / default aliases — consumer responsibility per
+# net_group_v1.json's ignored_variants.
+def _is_translatable(r: dict) -> bool:
+    flags = r.get("_flags") or {}
+    if flags.get("inherited") or flags.get("system") or flags.get("default"):
+        return False
+    # Skip empty aliases (no entries — Central rejects empty items[]).
+    entries = r.get("netdst__entry") or r.get("netdst6__entry") or []
+    return bool(entries)
+
+netdst_records = [r for r in (stage1_netdst_records + stage1_netdst6_records) if _is_translatable(r)]
+empty_or_system = [
+    r.get("dstname", "<unknown>")
+    for r in (stage1_netdst_records + stage1_netdst6_records)
+    if not _is_translatable(r)
+]
+
+response = await call_tool(
+    "central_translation_preview",
+    {
+        "translation_id": "central:net_group",
+        "source_records": netdst_records,
+        "runtime_values": {"central_scope_id": scope_lookup["Global"]},  # or your Stage-7 Central name
+    },
+)
+preview = response.get("data", response)
+result = {
+    "kind": "central:net_group",
+    "record_count": preview["record_count"],
+    "translatable": preview["translatable_count"],
+    "skipped": preview["skipped_count"],
+    "skipped_per_lld": empty_or_system,   # surface in Translation gaps
+    "summary": [
+        {
+            "alias": r["record_id"],
+            "calls": r["call_count"],
+            "items": (
+                len(r["target_calls"][0]["body"]["items"])
+                if r["target_calls"] else 0
+            ),
+            "family": (
+                r["target_calls"][0]["body"]["netdestination-type"]
+                if r["target_calls"] else None
+            ),
+            "skip": r["skip_reason"],
+        }
+        for r in preview["results"]
+    ][:30],
+}
+result
+```
+
 **Note on Ethernet/MAC ACL bindings.** AOS 8 roles can technically reference `acl_eth` or `acl_mac` entries via `role__acl[]` with `acl_type="eth"` / `acl_type="mac"`. Those ACL types are out of scope for this skill (issue #298 — unique-use cases). If you encounter a role binding one, leave the binding noted in the disposition matrix row's notes column but do NOT attempt to translate it; Stage 1 collection no longer enumerates these ACL types.
+
+**Note on `netsvc` (AOS 8 service aliases).** AOS 8 `acl_sess` rules may reference custom service aliases via `service-name` plus the AOS 8 `netsvc` schema. `central:net_service` is **deferred** to a future release pending live shape verification — Central rejects policy POSTs that reference unknown service aliases. If preview surfaces policy rules using non-`svc-*` service names (`svc-http` / `svc-https` / etc. come from Central's built-in catalog and work today), surface those in Translation gaps under "Service aliases pending translation" so the operator knows to pre-populate Central or wait for the translation to ship.
 
 #### Step 3 — Render the consolidated preview report
 
-Combine the four `result` dicts from Step 2 into a single operator-facing report. The report has THREE parts: (a) summary table, (b) per-record detail tables, (c) **sample TargetCall bodies** as JSON code blocks. Operators reviewing the migration need (c) — the actual JSON the migration will POST — not just counts.
+Combine the five `result` dicts from Step 2 into a single operator-facing report. The report has THREE parts: (a) summary table, (b) per-record detail tables, (c) **sample TargetCall bodies** as JSON code blocks. Operators reviewing the migration need (c) — the actual JSON the migration will POST — not just counts.
 
 ```
 ## Engine-driven translation preview (read-only)

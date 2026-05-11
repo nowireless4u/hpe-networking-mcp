@@ -1604,3 +1604,154 @@ def test_policy_any_any_with_empty_role_attribution_falls_back_to_address_any(po
     rule = body["security-policy"]["policy-rule"][0]
     assert rule["condition"]["source"] == {"type": "ADDRESS_ANY"}
     assert rule["condition"]["destination"] == {"type": "ADDRESS_ANY"}
+
+
+# --------------------------------------------------------------------------- #
+# central:net_group — netdst / netdst6 → Central /net-groups
+# --------------------------------------------------------------------------- #
+
+
+@pytest.fixture
+def net_group(translations: dict):
+    return translations["central:net_group"]
+
+
+def _ng_runtime(scope_id: str = "SCOPE", device_functions: list[str] | None = None) -> dict:
+    rv: dict = {"central_scope_id": scope_id}
+    if device_functions is not None:
+        rv["device_functions"] = device_functions
+    return rv
+
+
+def test_net_group_host_only_record_emits_two_calls(net_group) -> None:
+    """Simple host alias — step 1 creates the net-group with items[]; step 2 assigns."""
+    source = {
+        "dstname": "cppm",
+        "netdst__entry": [
+            {"_objname": "netdst__host", "address": "192.168.20.70", "hosttag": "address"},
+        ],
+    }
+    calls = emit_calls(net_group, source, "aos8", runtime_values=_ng_runtime("SCOPE-A"))
+    assert len(calls) == 2
+    assert [c.step for c in calls] == [1, 2]
+
+    step1 = calls[0]
+    assert step1.method == "POST"
+    assert step1.endpoint == "/network-config/v1alpha1/net-groups/cppm"
+    assert step1.body == {
+        "name": "cppm",
+        "netdestination-type": "IPV4_ONLY",
+        "items": [{"type": "HOST", "address": "192.168.20.70"}],
+    }
+
+
+def test_net_group_mixed_entries_render_in_source_order(net_group) -> None:
+    """Host + network + FQDN entries on one record all land in items[] in order."""
+    source = {
+        "dstname": "cppm",
+        "netdst__entry": [
+            {"_objname": "netdst__host", "address": "192.168.20.70"},
+            {"_objname": "netdst__network", "address": "10.10.0.0", "netmask": "255.255.0.0"},
+            {"_objname": "netdst__name", "host_name": "cppm.example.com"},
+        ],
+    }
+    body = emit_calls(net_group, source, "aos8", runtime_values=_ng_runtime())[0].body or {}
+    assert body["items"] == [
+        {"type": "HOST", "address": "192.168.20.70"},
+        {"type": "NETWORK", "prefix": "10.10.0.0/16"},
+        {"type": "FQDN", "fqdn": "cppm.example.com"},
+    ]
+
+
+def test_net_group_netmask_conversion_handles_common_prefixes(net_group) -> None:
+    """Spot-check the netmask -> CIDR conversion through emit_calls."""
+    source = {
+        "dstname": "lan",
+        "netdst__entry": [
+            {"_objname": "netdst__network", "address": "10.0.0.0", "netmask": "255.0.0.0"},
+            {"_objname": "netdst__network", "address": "172.16.0.0", "netmask": "255.240.0.0"},
+            {"_objname": "netdst__network", "address": "192.168.1.0", "netmask": "255.255.255.0"},
+        ],
+    }
+    body = emit_calls(net_group, source, "aos8", runtime_values=_ng_runtime())[0].body or {}
+    assert body["items"] == [
+        {"type": "NETWORK", "prefix": "10.0.0.0/8"},
+        {"type": "NETWORK", "prefix": "172.16.0.0/12"},
+        {"type": "NETWORK", "prefix": "192.168.1.0/24"},
+    ]
+
+
+def test_net_group_v6_record_sets_ipv6_only_family(net_group) -> None:
+    """netdst6__entry source → IPV6_ONLY netdestination-type."""
+    source = {
+        "dstname": "ipv6-block",
+        "netdst6__entry": [
+            {"_objname": "netdst6__network", "address": "2001:db8::/32"},
+        ],
+    }
+    body = emit_calls(net_group, source, "aos8", runtime_values=_ng_runtime())[0].body or {}
+    assert body["netdestination-type"] == "IPV6_ONLY"
+    assert body["items"] == [{"type": "NETWORK", "prefix": "2001:db8::/32"}]
+
+
+def test_net_group_step2_assigns_to_mobility_gw_by_default(net_group) -> None:
+    source = {
+        "dstname": "x",
+        "netdst__entry": [{"_objname": "netdst__host", "address": "10.0.0.1"}],
+    }
+    calls = emit_calls(net_group, source, "aos8", runtime_values=_ng_runtime("SCOPE-X"))
+    step2 = calls[1]
+    assert step2.endpoint == "/network-config/v1alpha1/config-assignments"
+    items = (step2.body or {})["config-assignment"]
+    assert len(items) == 1
+    assert items[0] == {
+        "scope-id": "SCOPE-X",
+        "device-function": "MOBILITY_GW",
+        "profile-type": "net-group",
+        "profile-instance": "x",
+    }
+
+
+def test_net_group_runtime_device_functions_override(net_group) -> None:
+    """Operator-supplied device_functions overrides target_meta default."""
+    source = {
+        "dstname": "x",
+        "netdst__entry": [{"_objname": "netdst__host", "address": "10.0.0.1"}],
+    }
+    calls = emit_calls(
+        net_group,
+        source,
+        "aos8",
+        runtime_values=_ng_runtime(device_functions=["MOBILITY_GW", "CAMPUS_AP"]),
+    )
+    items = (calls[1].body or {})["config-assignment"]
+    assert {i["device-function"] for i in items} == {"MOBILITY_GW", "CAMPUS_AP"}
+    assert all(i["profile-type"] == "net-group" for i in items)
+    assert all(i["profile-instance"] == "x" for i in items)
+
+
+def test_net_group_missing_dstname_raises(net_group) -> None:
+    """Missing required 'dstname' source field — engine raises rather than emit
+    a malformed call with an unsubstituted placeholder.
+    """
+    source = {"netdst__entry": [{"_objname": "netdst__host", "address": "10.0.0.1"}]}
+    with pytest.raises(EngineError, match=r"\{name\}"):
+        emit_calls(net_group, source, "aos8", runtime_values=_ng_runtime())
+
+
+def test_net_group_record_without_entry_key_raises(net_group) -> None:
+    """Preprocessing failure propagates as EngineError."""
+    source = {"dstname": "broken"}
+    with pytest.raises(EngineError, match="neither 'netdst__entry' nor 'netdst6__entry'"):
+        emit_calls(net_group, source, "aos8", runtime_values=_ng_runtime())
+
+
+def test_net_group_non_contiguous_netmask_raises(net_group) -> None:
+    source = {
+        "dstname": "x",
+        "netdst__entry": [
+            {"_objname": "netdst__network", "address": "10.0.0.0", "netmask": "255.0.255.0"},
+        ],
+    }
+    with pytest.raises(EngineError, match="non-contiguous"):
+        emit_calls(net_group, source, "aos8", runtime_values=_ng_runtime())
