@@ -155,13 +155,14 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
     except Exception as e:
         logger.warning("Central: failed to load prompts -- {}", e)
 
-    if config.tool_mode == "dynamic":
-        build_meta_tools("central", mcp)
-        logger.info(
-            "Central: {} underlying tools + 3 meta-tools registered (dynamic mode)",
-            len(loaded),
-        )
-    else:
-        logger.info("Central: {} underlying tools registered (code mode)", len(loaded))
+    # Meta-tools are always registered (issue #302). In code mode they're
+    # reachable via ``await call_tool("central_list_tools", ...)`` from inside
+    # ``execute()`` even though they're hidden from the top-level catalog.
+    build_meta_tools("central", mcp)
+    logger.info(
+        "Central: {} underlying tools + 3 meta-tools registered ({} mode)",
+        len(loaded),
+        config.tool_mode,
+    )
 
     return len(loaded)

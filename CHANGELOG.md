@@ -5,6 +5,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1.15] - 2026-05-12
+
+**Tool-discovery hardening — three layered fixes targeting the "Mist intermittent" report from Mike Gallagher (2026-05-12, Sonnet 4.6). Closes #293 and #302.**
+
+The reported symptom — *"Mist sometimes works, sometimes doesn't; Central works fine"* — turned out NOT to be a Mist platform bug. Live triage reproduced three layered tool-discovery failures that surface together. Central happens to work despite them because its tool names follow our `<platform>_<action>_<resource>` convention and the AI guesses correctly; Mist's names diverge (ported from Thomas Munzer's upstream mistmcp) so the AI can't guess and falls back on discovery, which was broken in three different ways.
+
+### Layer A — Discovery tool descriptions rewritten
+
+The top-level discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) had generic descriptions like *"Search for available tools by query"* that lost client semantic ranking against more keyword-rich tools from other MCP servers attached to the same client (e.g. the Home Assistant MCP's tools ranked higher when the AI searched for "list mist sites"). Result: the client never surfaced our discovery tools, leaving the AI with only `execute` and no way to find platform tool names except by guessing.
+
+`server.py` now subclasses FastMCP's `Search` / `GetTags` / `GetSchemas` with HPE-Networking-specific descriptions that name the seven platforms (`mist`, `central`, `aos8`, `clearpass`, `apstra`, `axis`, `greenlake`) and describe what they're for — listing sites, getting devices, searching events, managing config, checking health. The skill discovery descriptions in `skills/_engine.py` got the same keyword treatment.
+
+### Layer B — Universal envelope no longer wraps discovery tools (closes #293)
+
+The discovery tools ship with `x-fastmcp-wrap-result: true` output schemas that require a top-level `result` field (FastMCP convention: primitive returns get auto-wrapped as `{"result": <value>}`). When the universal envelope middleware (v3.0.0.0) wrapped them again as `{"ok": ..., "data": {"result": ...}, ...}`, output validation failed because the OUTER envelope has no top-level `result`. Result: when the AI *did* manage to call a discovery tool, it got `Output validation error: 'result' is a required property`.
+
+`ResponseEnvelopeMiddleware` now passes through the five discovery tool names unchanged. They speak their own uniform shape that clients understand.
+
+### Layer C1 — Per-platform meta-tools always registered
+
+Each platform's `register_tools` had `if config.tool_mode == "dynamic":` gating the call to `build_meta_tools`. In code mode the meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`) were NOT registered at all. Yet `INSTRUCTIONS.md:25` told the AI to call them inside `execute()` as the code-mode discovery path. Verified live 2026-05-12: `mist_list_tools` and `central_list_tools` both returned `Unknown tool` when invoked via `call_tool` inside `execute()`.
+
+The gate is removed — meta-tools register unconditionally now. In dynamic mode they remain visible at the top level (current behavior unchanged); in code mode they're hidden by `CodeMode.transform_tools`'s catalog replacement but **remain callable via `call_tool` from inside `execute()`**. This gives the AI a foolproof in-sandbox discovery fallback that doesn't depend on the client surfacing the outer discovery tools.
+
+Also: `execute_description` in `server.py` now teaches the in-sandbox discovery path explicitly, and `INSTRUCTIONS.md` describes both discovery paths (outer when the client surfaces them, in-sandbox as fallback).
+
+### Files
+
+- **`src/hpe_networking_mcp/middleware/response_envelope.py`** — added `_NO_ENVELOPE_TOOLS` skip set; early-return for the five discovery tool names.
+- **`src/hpe_networking_mcp/server.py`** — added `_SEARCH_DESCRIPTION` / `_TAGS_DESCRIPTION` / `_GET_SCHEMA_DESCRIPTION` constants; subclassed `Search` / `GetTags` / `GetSchemas` to inject those descriptions; updated `execute_description` to teach the in-sandbox `<platform>_list_tools` discovery path.
+- **`src/hpe_networking_mcp/skills/_engine.py`** — `_SKILLS_LIST_DESC` / `_SKILLS_LOAD_DESC` updated with platform keyword hooks.
+- **`src/hpe_networking_mcp/platforms/<each>/__init__.py`** — removed the `if config.tool_mode == "dynamic":` gate on `build_meta_tools`. 7 platforms + 1 template.
+- **`src/hpe_networking_mcp/INSTRUCTIONS.md`** — line 25 rewritten to describe both code-mode discovery paths accurately.
+- **`tests/unit/test_response_envelope_middleware.py`** — added `TestDiscoveryToolBypass` with 5 parameterized passthrough tests + 1 non-discovery-sanity test.
+- **`tests/unit/test_server_code_mode.py`** — added 3 tests: `test_execute_description_mentions_in_sandbox_discovery_path`, `test_discovery_tool_descriptions_carry_platform_keywords`, and `test_platform_init_registers_meta_tools_unconditionally` (parameterized across the 7 platform `__init__.py` files).
+- **`pyproject.toml`** — bump 3.0.1.14 → 3.0.1.15.
+
+### Test changes
+
+1243 → 1258 passing (+15 net new). Lint + format + mypy clean.
+
+### Notes
+
+- **What this fix does NOT do.** It does not rename Mist tools to follow our `<platform>_<action>_<resource>` convention — that's a separate larger conversation with back-compat implications. The fix here gives the AI a reliable discovery path so the convention divergence doesn't matter.
+- **Backwards-compatible.** No public tool removed. The 21 meta-tools that were code-mode-hidden now exist in code mode too, but as hidden registrations reachable only through `call_tool` inside `execute()` — they don't add to the visible surface count.
+- **Live verification recommended after deploy.** From a Claude client with the MCP attached, ask *"list mist sites"* — the client should surface `hpe-networking:search` for semantic ranking (description hooks now help), and if it doesn't, the AI can fall back to `await call_tool("mist_list_tools", {"filter": "site"})` inside `execute()` and get a useful catalog.
+
 ## [3.0.1.14] - 2026-05-11
 
 **Translations engine — `central:net_group` (AOS 8 `netdst` + `netdst6` → Central `/net-groups`).** Closes #300; references #279.

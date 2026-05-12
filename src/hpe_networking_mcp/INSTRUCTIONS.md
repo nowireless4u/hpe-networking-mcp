@@ -22,7 +22,12 @@ Two modes are supported (the `static` mode was removed in v3.0.0.0):
     - **3 meta-tools per platform × 7 platforms** = 21: `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`
     - **2 skills tools** (since v2.3.0.0): `skills_list`, `skills_load`
 
-The discovery patterns below describe **dynamic mode** (the v2.x default). In code mode, the AI calls `await call_tool("<platform>_list_tools", {"filter": "..."})` (or any other tool name) inside `execute()`, gets back the wrapped envelope `{"ok": ..., "data": [...], ...}`, and acts on `result["data"]`.
+The discovery patterns below describe **dynamic mode** (the v2.x default). In **code mode**, two discovery paths work — pick whichever your client surfaced:
+
+* **Top-level discovery tools** (when your client loaded them): call `search(query="...")` / `tags()` / `get_schema(tools=[...])` directly at the outer surface. These are the recommended primary path when available.
+* **In-sandbox discovery** (works regardless of what the client loaded): from inside `execute()`, call `await call_tool("<platform>_list_tools", {"filter": "..."})` to get a name+params catalog, then `await call_tool("<platform>_get_tool_schema", {"name": "..."})` for full schemas, then dispatch via `await call_tool("<tool_name>", {...})`. Useful as a fallback when the client's semantic tool_search didn't surface `search` / `tags` / `get_schema` (verified to happen on Claude Desktop / CoWork for queries like "list mist sites" — see issue #302).
+
+In both code-mode paths the response comes back as the universal envelope `{"ok": ..., "data": [...], ...}` for platform tools (act on `result["data"]`); top-level discovery tools return their own native shape directly.
 
 Every per-platform tool listed below this section is reachable through the meta-tools. **Use this discovery pattern:**
 

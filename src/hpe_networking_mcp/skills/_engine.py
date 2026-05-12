@@ -216,17 +216,24 @@ class SkillRegistry:
 # Tool descriptions — shared between the @mcp.tool path (dynamic / static)
 # and the discovery-tool factory path (code mode).
 _SKILLS_LIST_DESC = (
-    "List available skills (markdown-defined multi-step procedures). "
-    "Returns metadata only; call `skills_load(name)` for the full runbook. "
+    "List available HPE networking skills — markdown-defined multi-step "
+    "procedures for AOS 8 to Central migration, infrastructure health "
+    "check, change pre-check / post-check, WLAN sync validation, scope "
+    "audits (mist / central), and morning network reports. Returns "
+    "skill metadata only; call `skills_load(name)` for the full runbook. "
     "Optional `platform` / `tag` filters each accept a string or list of "
-    "strings and narrow the result to skills tagged accordingly."
+    "strings and narrow the result to skills tagged accordingly. Use "
+    "this when an operator asks to run an audit, migration, change "
+    "validation, or daily report across mist / central / aos8 / "
+    "clearpass / apstra / axis / greenlake platforms."
 )
 
 _SKILLS_LOAD_DESC = (
     "Load a skill's full markdown body — a step-by-step runbook for a "
-    "multi-step network operations procedure. Pass the skill `name` "
-    "(from `skills_list`); a case-insensitive substring match is tried "
-    "if there's no exact match."
+    "multi-step network operations procedure (migration, audit, change "
+    "validation, etc.) across the HPE networking platforms. Pass the "
+    "skill `name` (from `skills_list`); a case-insensitive substring "
+    "match is tried if there's no exact match."
 )
 
 

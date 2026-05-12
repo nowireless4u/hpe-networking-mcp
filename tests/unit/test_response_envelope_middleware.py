@@ -284,3 +284,60 @@ class TestResponseEnvelopeMiddleware:
         assert envelope["platform"] == "aos8"
         assert envelope["data"] == raw
         assert envelope["ok"] is True
+
+
+@pytest.mark.unit
+class TestDiscoveryToolBypass:
+    """v3.0.1.15: discovery tools (`tags`, `search`, `get_schema`,
+    `skills_list`, `skills_load`) ship with their own ``x-fastmcp-wrap-result``
+    output schemas requiring a top-level ``result`` field. Wrapping them in
+    the envelope as ``{"ok": ..., "data": {"result": ...}}`` produces a
+    validation error because the outer envelope has no top-level ``result``.
+    The middleware must pass these tools through unchanged (closes #293,
+    root cause of the "Mist intermittent" report — issue #302).
+    """
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "tool_name",
+        ["tags", "search", "get_schema", "skills_list", "skills_load"],
+    )
+    async def test_discovery_tool_response_passes_through_unchanged(self, tool_name: str):
+        """Each of the 5 discovery tools' responses must pass through verbatim,
+        retaining the ``{"result": ...}`` shape rather than being wrapped.
+        """
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context(tool_name)
+        # FastMCP's auto-wrap convention: discovery tools that return strings
+        # get serialized as {"result": "<rendered>"}.
+        native = {"result": f"<rendered output from {tool_name}>"}
+        original = _make_tool_result(structured=native)
+        call_next = AsyncMock(return_value=original)
+
+        result = await middleware.on_call_tool(ctx, call_next)
+
+        # The exact ToolResult must come back — no rewrapping.
+        assert result is original
+        assert result.structured_content == native
+        # Specifically: it must NOT be wrapped in the envelope shape.
+        assert "ok" not in result.structured_content
+        assert "data" not in result.structured_content
+        assert "tool" not in result.structured_content
+
+    @pytest.mark.asyncio
+    async def test_non_discovery_tool_still_gets_wrapped(self):
+        """Sanity: a tool with a name similar to a discovery tool but not in
+        the bypass set (e.g. an `mcp__hpe-networking__search`-prefixed tool
+        if one ever existed) still gets wrapped normally.
+        """
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context("central_search_clients")
+        raw = {"clients": [{"mac": "aa:bb:cc:dd:ee:ff"}]}
+        call_next = AsyncMock(return_value=_make_tool_result(structured=raw))
+
+        result = await middleware.on_call_tool(ctx, call_next)
+
+        assert result.structured_content["ok"] is True
+        assert result.structured_content["data"] == raw
+        assert result.structured_content["tool"] == "central_search_clients"
+        assert result.structured_content["platform"] == "central"

@@ -360,6 +360,42 @@ def create_server(config: ServerConfig) -> FastMCP:
     return mcp
 
 
+# Discovery tool descriptions — keyword-rich so client-side semantic
+# tool_search (Claude Desktop / web / IDE / CoWork etc.) surfaces them on
+# queries like "list mist sites" / "search central tools". The default
+# fastmcp descriptions ("Search for available tools by query") are too
+# generic and lose the relevance ranking against other MCP servers'
+# more descriptive tools. See issue #302 — Mike Gallagher's
+# "Mist intermittent" report 2026-05-12.
+_SEARCH_DESCRIPTION = (
+    "Find or list available HPE networking tools by name, function, or "
+    "description across mist, central, aos8, clearpass, apstra, axis, "
+    "and greenlake platforms. Use this to discover the exact tool name "
+    "for any networking task — listing sites, getting devices, searching "
+    "events, managing config, checking health, etc. Returns matching tools "
+    "ranked by relevance. Prefer this over guessing tool names: each "
+    "platform has its own naming convention and discovery is faster than "
+    "trial and error."
+)
+
+_TAGS_DESCRIPTION = (
+    "Browse the HPE networking tool catalog grouped by category tag — "
+    "platform name (mist / central / aos8 / clearpass / apstra / axis / "
+    "greenlake), read/write classification, or feature area. Use to scope "
+    "the tool catalog by category before drilling in with `search` or "
+    "`get_schema`. Returns tag names and the tools registered under each."
+)
+
+_GET_SCHEMA_DESCRIPTION = (
+    "Get full parameter schemas, enum values, types, and descriptions for "
+    "one or more HPE networking tools (mist, central, aos8, clearpass, "
+    "apstra, axis, greenlake). Use after `search` or `tags` to confirm a "
+    "tool's exact input shape before invoking it. Each schema returned "
+    "includes the parameter list, defaults, optional/required markers, "
+    "and any nested object or enum types."
+)
+
+
 def _register_code_mode(mcp: FastMCP) -> None:
     """Install the FastMCP CodeMode transform for ``MCP_TOOL_MODE=code``.
 
@@ -384,29 +420,62 @@ def _register_code_mode(mcp: FastMCP) -> None:
         )
         return
 
+    # Subclasses that override the description on the produced Tool so
+    # client semantic tool_search surfaces our discovery tools on queries
+    # like "list mist sites" / "search central tools" (issue #302). The
+    # parent classes' __init__ doesn't accept a description argument, so we
+    # mutate the returned Tool object before it goes upstream.
+
+    class _HpeSearch(Search):
+        def __call__(self, get_catalog):
+            tool = super().__call__(get_catalog)
+            tool.description = _SEARCH_DESCRIPTION
+            return tool
+
+    class _HpeGetTags(GetTags):
+        def __call__(self, get_catalog):
+            tool = super().__call__(get_catalog)
+            tool.description = _TAGS_DESCRIPTION
+            return tool
+
+    class _HpeGetSchemas(GetSchemas):
+        def __call__(self, get_catalog):
+            tool = super().__call__(get_catalog)
+            tool.description = _GET_SCHEMA_DESCRIPTION
+            return tool
+
     limits = ResourceLimits(
         max_duration_secs=30.0,
         max_memory=128 * 1024 * 1024,
         max_recursion_depth=50,
     )
     # Override the default `execute` description with one that lists the
-    # callable platform-tool prefixes AND explicitly notes that the
-    # discovery tools (tags/search/get_schema) are NOT callable from
-    # inside the sandbox. The default fastmcp string only says
-    # "call_tool(name, params) is in scope" without telling the LLM what
-    # `call_tool` can dispatch to — both gemma-4eb and Claude have hit
+    # callable platform-tool prefixes AND notes that the top-level
+    # discovery tools (tags/search/get_schema) are NOT callable from inside
+    # the sandbox — but the per-platform meta-tools (`<platform>_list_tools`
+    # / `_get_tool_schema` / `_invoke_tool`) ARE callable, providing an
+    # in-sandbox discovery fallback when the AI client didn't surface the
+    # outer discovery tools (issue #302). The default fastmcp string only
+    # says "call_tool(name, params) is in scope" without telling the LLM
+    # what `call_tool` can dispatch to — both gemma-4eb and Claude have hit
     # the same `Unknown tool: search` failure as a result. See #208.
     execute_description = (
         "Run Python in a sandbox to compose multiple platform tool calls. "
         "Use `return` to produce output.\n\n"
         "In scope: `await call_tool(name: str, params: dict) -> Any`.\n\n"
-        "`call_tool` ONLY dispatches to platform tools — names start with one "
+        "`call_tool` dispatches to platform tools — names start with one "
         "of: `mist_`, `central_`, `greenlake_`, `clearpass_`, `apstra_`, "
         "`axis_`, `aos8_` — plus the cross-platform `health` tool.\n\n"
-        "The discovery tools `tags`, `search`, `get_schema`, `skills_list`, and "
-        "`skills_load` are NOT callable from inside execute(). They live at the "
-        "outer MCP surface for planning. Call them BEFORE writing your code "
-        "block, then chain platform tools inside execute().\n\n"
+        "Discovery from inside execute(): if you don't know a platform's "
+        'tool names, call `<platform>_list_tools(filter="...")` (e.g. '
+        "`await call_tool('mist_list_tools', {'filter': 'site'})`) to get "
+        "a name+params catalog, then `<platform>_get_tool_schema(name=...)` "
+        "for full schemas, then dispatch.\n\n"
+        "The TOP-LEVEL discovery tools `tags`, `search`, `get_schema`, "
+        "`skills_list`, and `skills_load` are NOT callable from inside "
+        "execute() — they live at the outer MCP surface for planning. "
+        "Use them BEFORE writing your code block when the client surfaces "
+        "them; otherwise use the `<platform>_list_tools` path above.\n\n"
         "Known sandbox limits: `asyncio.gather()` is unavailable — use "
         "sequential `await` calls. OS-access functions are blocked, "
         "including `datetime.now()`, `time.time()`, file I/O, `os.environ`, "
@@ -433,9 +502,9 @@ def _register_code_mode(mcp: FastMCP) -> None:
         CodeMode(
             sandbox_provider=MontySandboxProvider(limits=limits),
             discovery_tools=[
-                GetTags(default_detail="brief"),
-                Search(default_detail="brief"),
-                GetSchemas(default_detail="detailed"),
+                _HpeGetTags(default_detail="brief"),
+                _HpeSearch(default_detail="brief"),
+                _HpeGetSchemas(default_detail="detailed"),
                 SkillsListDiscoveryTool(skill_registry),
                 SkillsLoadDiscoveryTool(skill_registry),
             ],

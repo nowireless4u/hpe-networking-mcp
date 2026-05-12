@@ -107,9 +107,15 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
     except Exception as e:
         logger.warning("AOS8: failed to load prompts -- {}", e)
 
-    if config.tool_mode == "dynamic":
-        build_meta_tools("aos8", mcp)
-        logger.info("AOS8: registered {} underlying tools + 3 meta-tools (dynamic mode)", total)
-    else:
-        logger.info("AOS8: registered {} underlying tools (code mode)", total)
+    # Meta-tools are always registered. In dynamic mode they're visible at the
+    # top level (per-platform discovery); in code mode they're hidden by
+    # CodeMode's catalog replacement but remain callable via
+    # ``await call_tool("aos8_list_tools", ...)`` from inside ``execute()``.
+    # See issue #302 / "Mist intermittent" triage 2026-05-12.
+    build_meta_tools("aos8", mcp)
+    logger.info(
+        "AOS8: registered {} underlying tools + 3 meta-tools ({} mode)",
+        total,
+        config.tool_mode,
+    )
     return total

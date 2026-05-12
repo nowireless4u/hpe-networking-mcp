@@ -98,13 +98,17 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
     except Exception as e:
         logger.warning("Mist: failed to load prompts -- {}", e)
 
-    if config.tool_mode == "dynamic":
-        build_meta_tools("mist", mcp)
-        logger.info(
-            "Mist: {} underlying tools + 3 meta-tools registered (dynamic mode)",
-            len(loaded),
-        )
-    else:
-        logger.info("Mist: {} underlying tools registered (code mode)", len(loaded))
+    # Meta-tools are always registered (issue #302). In code mode they're
+    # reachable via ``await call_tool("mist_list_tools", ...)`` from inside
+    # ``execute()`` even though they're hidden from the top-level catalog.
+    # This was the root cause of the "Mist intermittent" report from Mike
+    # Gallagher 2026-05-12 — INSTRUCTIONS.md told the AI to call
+    # mist_list_tools from inside execute() but the gate above blocked it.
+    build_meta_tools("mist", mcp)
+    logger.info(
+        "Mist: {} underlying tools + 3 meta-tools registered ({} mode)",
+        len(loaded),
+        config.tool_mode,
+    )
 
     return len(loaded)

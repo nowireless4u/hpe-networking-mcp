@@ -49,6 +49,23 @@ _PLATFORM_PREFIXES: tuple[str, ...] = (
     "aos8_",
 )
 
+# Discovery tools that ship with their own ``x-fastmcp-wrap-result`` output
+# schema requiring a top-level ``result`` field. The envelope would wrap them
+# as ``{"ok": ..., "data": {"result": ...}}`` which fails output validation
+# because the OUTER envelope has no top-level ``result``. Bypass these tools
+# entirely — they already return a uniform shape the client expects.
+# (Fixes #293, root cause of the "Mist intermittent" report from Mike
+# Gallagher 2026-05-12 / issue #302.)
+_NO_ENVELOPE_TOOLS: frozenset[str] = frozenset(
+    {
+        "tags",
+        "search",
+        "get_schema",
+        "skills_list",
+        "skills_load",
+    }
+)
+
 # Keys an existing envelope-shaped dict must contain (idempotency check).
 _ENVELOPE_REQUIRED_KEYS: frozenset[str] = frozenset({"ok", "data", "tool"})
 
@@ -129,6 +146,17 @@ class ResponseEnvelopeMiddleware(Middleware):
         tool_name = context.message.name
         platform = _infer_platform(tool_name)
         result = await call_next(context)
+
+        # Discovery tools (``tags`` / ``search`` / ``get_schema`` / ``skills_list``
+        # / ``skills_load``) ship with their own ``x-fastmcp-wrap-result`` schema
+        # requiring a top-level ``result`` field. Wrapping them in the envelope
+        # produces ``{"ok": ..., "data": {"result": ...}}``, which fails the
+        # discovery tool's output validation. Pass them through unmodified —
+        # they already speak a uniform shape that AI clients understand.
+        # See issue #293 + #302 for the root-cause history.
+        if tool_name in _NO_ENVELOPE_TOOLS:
+            logger.debug("response_envelope: {} is a discovery tool, pass-through", tool_name)
+            return result  # type: ignore[return-value]
 
         # Determine the raw structured payload, if any.
         raw = getattr(result, "structured_content", None)

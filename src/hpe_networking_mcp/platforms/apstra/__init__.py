@@ -69,16 +69,15 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
         except Exception as e:
             logger.warning("Apstra: failed to load module {} -- {}", category, e)
 
-    if config.tool_mode == "dynamic":
-        # Register the three meta-tools on top of the now-populated registry.
-        # Individual tools remain registered with FastMCP but get hidden by
-        # the Visibility(dynamic_managed) transform in server.py.
-        build_meta_tools("apstra", mcp)
-        logger.info(
-            "Apstra: {} underlying tools + 3 meta-tools registered (dynamic mode)",
-            len(loaded),
-        )
-    else:
-        logger.info("Apstra: {} underlying tools registered (code mode)", len(loaded))
+    # Meta-tools are always registered (issue #302). In dynamic mode they're
+    # visible at the top level; in code mode they're hidden by CodeMode's
+    # catalog replacement but remain callable via
+    # ``await call_tool("apstra_list_tools", ...)`` from inside ``execute()``.
+    build_meta_tools("apstra", mcp)
+    logger.info(
+        "Apstra: {} underlying tools + 3 meta-tools registered ({} mode)",
+        len(loaded),
+        config.tool_mode,
+    )
 
     return len(loaded)

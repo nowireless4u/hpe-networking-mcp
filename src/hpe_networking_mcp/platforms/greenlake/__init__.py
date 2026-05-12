@@ -41,13 +41,14 @@ def register_tools(mcp_instance: FastMCP, config: ServerConfig) -> int:
         except Exception as e:
             logger.warning("GreenLake: failed to load module {} -- {}", category, e)
 
-    if config.tool_mode == "dynamic":
-        build_meta_tools("greenlake", mcp_instance)
-        logger.info(
-            "GreenLake: {} underlying tools + 3 meta-tools registered (dynamic mode)",
-            len(loaded),
-        )
-    else:
-        logger.info("GreenLake: {} underlying tools registered (code mode)", len(loaded))
+    # Meta-tools are always registered (issue #302). In code mode they're
+    # reachable via ``await call_tool("greenlake_list_tools", ...)`` from inside
+    # ``execute()`` even though they're hidden from the top-level catalog.
+    build_meta_tools("greenlake", mcp_instance)
+    logger.info(
+        "GreenLake: {} underlying tools + 3 meta-tools registered ({} mode)",
+        len(loaded),
+        config.tool_mode,
+    )
 
     return len(loaded)
