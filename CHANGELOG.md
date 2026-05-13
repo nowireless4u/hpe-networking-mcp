@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0.2] - 2026-05-13
+
+**Patch — `ValidationCatchMiddleware` now returns a properly-shaped envelope on Pydantic validation rejections. Closes #309.**
+
+Before this fix, the middleware returned `ToolResult(content=error_text)` — text content only, no `structured_content`. Code-mode callers using `await call_tool(...)` received a bare string instead of the universal `{ok, status, data, message, tool, platform}` envelope, and any attempt to branch on `response.get("ok")` failed with `AttributeError: 'str' object has no attribute 'get'`.
+
+Surfaced during a GPT troubleshooting session that called `central_get_clients(status="ACTIVE")` and `("CONNECTED")` against the Pydantic `Literal["Connected", "Failed"]` enum. Each rejection crashed the sandbox before the AI could recover with the correctly-cased value.
+
+### What changed
+
+- **`middleware/validation_catch.py`** — when catching `pydantic.ValidationError`, the middleware now builds an envelope via the same helpers `ResponseEnvelopeMiddleware` uses (`_build_envelope`, `_infer_platform` from `middleware/response_envelope.py`) and returns `ToolResult(content=error_text, structured_content=envelope)`. The envelope carries `ok=False, status=422, data=None, message=<readable error>, tool=<name>, platform=<inferred>`.
+- **Idempotency preserved**: `ResponseEnvelopeMiddleware._is_envelope_shape` recognizes the structured payload by `{ok, data, tool}` key presence and passes it through unchanged. No double-wrap.
+- **Existing behavior preserved**: text content is still set so clients that read the text channel see the same readable error.
+
+### Test changes
+
+- **New: `tests/unit/test_validation_catch.py`** — 6 unit tests covering: envelope shape contract (`ok=False`, `status=422`, `data=None`), readable message content, content / message parity, platform inference across all 7 platform prefixes + cross-platform tools (`health`, `execute`), pass-through for non-`ValidationError` exceptions, pass-through for normal results.
+
+### Files
+
+- **Modified**: `src/hpe_networking_mcp/middleware/validation_catch.py`, `pyproject.toml` (version)
+- **New**: `tests/unit/test_validation_catch.py`
+
+### Notes
+
+- AI client code that does the standard `response = await call_tool(...); if response.get("ok"): ...` now branches cleanly through validation rejections — same code path as any other tool's error case.
+
 ## [3.1.0.1] - 2026-05-13
 
 **Patch — adds two Central config-health diagnostic tools for the "device not achieving config sync" troubleshooting flow.**
