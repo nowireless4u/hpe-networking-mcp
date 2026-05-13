@@ -28,7 +28,7 @@ Managing HPE networking infrastructure with AI assistants today means juggling m
 | **Troubleshooting (Ping/Traceroute/Bounce)** | ✅ | ✅ | — | — | — | — | ✅ |
 | **Session Control / Client Disconnect** | ✅ | ✅ | — | ✅ | — | — | ✅ |
 | **Configuration Management** | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ |
-| **Configuration Write (CRUD)** | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ (gated) |
+| **Configuration Write (CRUD)** | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ |
 | **Radio Resource Management** | ✅ | — | — | — | — | — | ✅ |
 | **Rogue AP Detection** | ✅ | — | — | — | — | — | ✅ |
 | **Firmware Management** | ✅ | ✅ | — | — | — | — | ✅ |
