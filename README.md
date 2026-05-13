@@ -52,7 +52,7 @@ Managing HPE networking infrastructure with AI assistants today means juggling m
 | **Staged Writes + Commit Workflow** | — | — | — | — | ✅ | ✅ | — |
 | **Guided Prompts** | ✅ | ✅ | — | — | — | — | ✅ |
 | **Dynamic Tool Discovery** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Underlying tools** | **35 + 2 prompts** | **88 + 12 prompts** | **10** | **140** | **19** | **25** | **47 + 9 prompts** |
+| **Underlying tools** | **516 + 2 prompts** | **90 + 12 prompts** | **10** | **140** | **19** | **25** | **47 + 9 prompts** |
 | **Exposed meta-tools (dynamic mode)** | **3** | **3** | **3** | **3** | **3** | **3** | **3** |
 | **Cross-Platform** | **3 tools + 3 prompts** | **3 tools + 3 prompts** | — | **1 tool** | — | — | — |
 
@@ -451,7 +451,7 @@ Set `ENABLE_AOS8_WRITE_TOOLS=true` to expose the 12 AOS8 write tools (gated by e
 │ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐           │
 │ │  Mist  │ │Central │ │GreenLk │ │ClrPass │ │ Apstra │ │  Axis  │ │  AOS8  │           │
 │ │ mist_* │ │centrl_*│ │grnlake │ │clrpass │ │apstra_*│ │ axis_* │ │ aos8_* │           │
-│ │35 tools│ │87 tools│ │10 tools│ │140 tool│ │19 tools│ │25 tools│ │47 tools│           │
+│ │516 tool│ │90 tools│ │10 tools│ │140 tool│ │19 tools│ │25 tools│ │47 tools│           │
 │ │+2 prmt │ │+12prmt │ │        │ │        │ │        │ │        │ │+9 prmt │           │
 │                                                                                         │
 │  All 847 underlying tools reachable via call_tool() in code mode or via                 │
