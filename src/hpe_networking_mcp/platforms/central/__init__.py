@@ -109,6 +109,10 @@ TOOLS = {
         "central_manage_site_collection",
         "central_manage_device_group",
     ],
+    "config_health": [
+        "central_get_device_config_issues",
+        "central_get_devices_config_health",
+    ],
     "gateway_cluster_intent": [
         "central_get_gateway_cluster_intent_profiles",
         "central_manage_gateway_cluster_intent_profile",

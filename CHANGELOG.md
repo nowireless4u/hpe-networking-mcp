@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0.1] - 2026-05-13
+
+**Patch — adds two Central config-health diagnostic tools for the "device not achieving config sync" troubleshooting flow.**
+
+These wrap the New Central Configuration API at `/network-config/v1alpha1/config-health/*` — endpoints we hadn't surfaced before. Operator-reported gap: an AI client troubleshooting a stuck-out-of-sync device couldn't query the config-health surface because the tools didn't exist.
+
+### What's new
+
+- **`central_get_device_config_issues(serial)`** — returns active configuration issues blocking config sync for a single device, plus recommended actions. Read-only.
+- **`central_get_devices_config_health(limit, offset, sort, filter, search)`** — fleet-wide summary of configuration health. Pageable, sortable on every meaningful field (`activeIssues desc` for worst-offenders-first), OData-filterable, and free-text-searchable. Read-only.
+
+### Files
+
+- **New**: `src/hpe_networking_mcp/platforms/central/tools/config_health.py`, `tests/unit/test_central_config_health.py`
+- **Modified**: `src/hpe_networking_mcp/platforms/central/__init__.py` (adds `config_health` category), `pyproject.toml` (version bump), `docs/TOOLS.md` (new tool entries).
+
+### Notes
+
+- README aggregate tool counts remain stale post-v3.1.0.0 (tracked in #307). The follow-up docs sync after the MemPalace experimentation period will refresh them.
+
 ## [3.1.0.0] - 2026-05-12
 
 **Minor release (substantial new subsystem) — Mist platform rewritten as spec-driven tool generation. Drops the `mistapi` SDK dependency. Closes #304.**
@@ -43,7 +63,7 @@ v3.1.0.0 replaces all of this. The vendored Mist OpenAPI spec at `vendor/mist_op
 
 ### Known gaps shipping with v3.1.0.0
 
-- **Skills + INSTRUCTIONS.md still reference old Mist tool names.** Tracked in #305. The v3.1.0.0-historical names are explicitly allowlisted in `tests/unit/test_skill_tool_references.py` so CI passes, but AI orchestrators following the old names will get "Unknown tool" errors at runtime. The follow-up PR (v3.1.0.1) rewires each call site to the new spec-driven name. Until then, the AI's path is: invoke `mist_list_tools(filter="<keyword>")` from inside `execute()` to discover the current tool name, then dispatch.
+- **Skills + INSTRUCTIONS.md still reference old Mist tool names.** Tracked in #305. The v3.1.0.0-historical names are explicitly allowlisted in `tests/unit/test_skill_tool_references.py` so CI passes, but AI orchestrators following the old names will get "Unknown tool" errors at runtime. A follow-up PR rewires each call site to the new spec-driven name. Until then, the AI's path is: invoke `mist_list_tools(filter="<keyword>")` from inside `execute()` to discover the current tool name, then dispatch.
 - **`mist_get_constants`** (the AOS-specific reference / enum catalog) has no spec-driven equivalent — Mist's constants endpoints are split per-category in the spec. Tools like `mist_list_const_alarm_defs`, `mist_list_const_applications` etc. cover the equivalent surface.
 
 ### Test changes

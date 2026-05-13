@@ -670,7 +670,7 @@ logged and skipped; the rest of the catalog still loads. See
 
 ---
 
-## Aruba Central (88 tools + 12 prompts)
+## Aruba Central (90 tools + 12 prompts)
 
 ### Sites
 
@@ -1469,6 +1469,30 @@ LLM through a recommended sequence of tool calls for common network operations.
 | `compare_site_health` | site_names (list) | Compare health metrics across multiple sites. |
 | `scope_configuration_overview` | scope_name | View committed configuration resources at a scope with category grouping. |
 | `scope_effective_config` | scope_name | View effective (inherited + committed) configuration as a layered inheritance view. |
+
+### Config Health
+
+Diagnostics for the New Central Configuration API config-health surface (`/network-config/v1alpha1/config-health/*`). Use when troubleshooting "device not achieving config sync" workflows.
+
+#### `central_get_device_config_issues`
+
+> Returns active configuration issues blocking config sync for a single device, plus recommended actions.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| serial | str | Yes | Device serial number. |
+
+#### `central_get_devices_config_health`
+
+> Fleet-wide summary of configuration health across devices. Pageable + sortable + filterable; use to spot which devices have non-zero `activeIssues` before drilling in per-serial with `central_get_device_config_issues`.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| limit | int | No | Page size (default 100). |
+| offset | int | No | Page offset (default 0). |
+| sort | str | No | Sort by one of `name`, `serial`, `type`, `siteName`, `configStatus`, `deviceFunction`, `lastConfigTimestamp`, `model`, `deviceGroupName`, `topPriorityIssue`, `recommendedAction`, `role`, `deployment`, `activeIssues`. Append `asc` or `desc` (e.g. `"activeIssues desc"`). |
+| filter | str | No | OData 4.0 filter on `name`, `deviceFunction`, `configStatus`, `type`, `model`, `serial`, `deviceGroupName`, or `activeIssues`. |
+| search | str | No | Free-text search across `name`, `serial`, `siteName`, `topPriorityIssue`, and `recommendedAction` (3-128 chars when supplied). |
 
 ---
 
