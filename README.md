@@ -15,7 +15,7 @@ Managing HPE networking infrastructure with AI assistants today means juggling m
 
 | Category | Mist | Central | GreenLake | ClearPass | Apstra | Axis | AOS8 |
 |----------|:----:|:-------:|:---------:|:---------:|:------:|:----:|:----:|
-| **Sites / Health Overview** | ✅ | ✅ | — | — | — | — | ✅ |
+| **Site Health & Performance Metrics** | ✅ | ✅ | — | — | — | — | ✅ |
 | **WLANs / SSIDs** | ✅ | ✅ | — | — | — | — | ✅ |
 | **Device Inventory** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Device Details (AP/Switch/GW)** | ✅ | ✅ | — | — | — | — | ✅ |
@@ -25,21 +25,20 @@ Managing HPE networking infrastructure with AI assistants today means juggling m
 | **Alerts / Alarms** | ✅ | ✅ | — | ✅ | ✅ | — | ✅ |
 | **Audit Logs** | ✅ | ✅ | ✅ | ✅ | — | — | ✅ |
 | **Application Visibility** | — | ✅ | — | — | — | ✅ | — |
-| **SLE / Performance Metrics** | ✅ | — | — | — | — | — | — |
 | **Troubleshooting (Ping/Traceroute/Bounce)** | ✅ | ✅ | — | — | — | — | ✅ |
-| **Session Control / Client Disconnect** | — | ✅ | — | ✅ | — | — | ✅ |
-| **Configuration Management** | ✅ | — | — | ✅ | ✅ | ✅ | ✅ |
-| **Configuration Write (CRUD)** | ✅ | — | — | ✅ | ✅ | ✅ | ✅ (gated) |
+| **Session Control / Client Disconnect** | ✅ | ✅ | — | ✅ | — | — | ✅ |
+| **Configuration Management** | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ |
+| **Configuration Write (CRUD)** | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ (gated) |
 | **Radio Resource Management** | ✅ | — | — | — | — | — | ✅ |
 | **Rogue AP Detection** | ✅ | — | — | — | — | — | ✅ |
-| **Firmware Management** | ✅ | — | — | — | — | — | ✅ |
+| **Firmware Management** | ✅ | ✅ | — | — | — | — | ✅ |
 | **Subscriptions / Licensing** | — | — | ✅ | ✅ | — | — | ✅ |
 | **User Management** | — | — | ✅ | ✅ | — | ✅ | — |
 | **Workspaces** | — | — | ✅ | — | — | — | — |
-| **Scope & Configuration Hierarchy** | — | ✅ | — | — | — | ✅ | ✅ |
+| **Scope & Configuration Hierarchy** | ✅ | ✅ | — | — | — | ✅ | ✅ |
 | **Guest Management** | — | — | — | ✅ | — | — | — |
-| **NAC / Policy Management** | — | — | — | ✅ | — | — | — |
-| **Endpoint Profiling** | — | — | — | ✅ | — | — | — |
+| **NAC / Policy Management** | ✅ | ✅ | — | ✅ | — | — | — |
+| **Endpoint Profiling** | ✅ | — | — | ✅ | — | — | — |
 | **Certificates** | — | — | — | ✅ | — | — | — |
 | **Datacenter Blueprints / Templates** | — | — | — | — | ✅ | — | — |
 | **Virtual Networks / EVPN / Routing Zones** | — | — | — | — | ✅ | — | — |
