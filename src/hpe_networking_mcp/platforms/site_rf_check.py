@@ -200,25 +200,24 @@ async def _collect_mist(
     ctx: Context,
     site_name: str,
 ) -> tuple[MistRF, list[APSummary]]:
-    try:
-        import mistapi
-    except ImportError as e:
-        return MistRF(error=f"mistapi not available: {e}"), []
-
-    session = ctx.lifespan_context.get("mist_session")
+    client = ctx.lifespan_context.get("mist_client")
     org_id = ctx.lifespan_context.get("mist_org_id")
-    if not session or not org_id:
+    if not client or not org_id:
         return MistRF(error="Mist not initialized"), []
 
     summary = MistRF()
 
     try:
-        sites_resp = mistapi.api.v1.orgs.sites.listOrgSites(session, org_id=org_id)
-        if sites_resp.status_code != 200 or not isinstance(sites_resp.data, list):
+        sites_resp = await client.get(f"/api/v1/orgs/{org_id}/sites")
+        if sites_resp.status_code != 200:
             summary.error = f"Mist listOrgSites HTTP {sites_resp.status_code}"
             return summary, []
+        sites = sites_resp.json()
+        if not isinstance(sites, list):
+            summary.error = "Mist listOrgSites returned non-list"
+            return summary, []
         site_id = next(
-            (s["id"] for s in sites_resp.data if s.get("name") == site_name),
+            (s["id"] for s in sites if s.get("name") == site_name),
             None,
         )
         if not site_id:
@@ -237,16 +236,11 @@ async def _collect_mist(
     template_resp: Any = None
     try:
         stats_resp, template_resp = await asyncio.gather(
-            asyncio.to_thread(
-                session.mist_get,
-                uri=f"/api/v1/sites/{site_id}/stats/devices",
-                query={"type": "ap", "limit": 100},
+            client.get(
+                f"/api/v1/sites/{site_id}/stats/devices",
+                params={"type": "ap", "limit": 100},
             ),
-            asyncio.to_thread(
-                mistapi.api.v1.sites.rrm.getSiteCurrentChannelPlanning,
-                session,
-                site_id=site_id,
-            ),
+            client.get(f"/api/v1/sites/{site_id}/rrm/current"),
             return_exceptions=True,
         )
     except Exception as e:
@@ -254,9 +248,10 @@ async def _collect_mist(
         return summary, []
 
     aps: list[APSummary] = []
-    if not isinstance(stats_resp, Exception):
-        data = getattr(stats_resp, "data", None) or {}
-        results = data.get("results", []) if isinstance(data, dict) else []
+    if not isinstance(stats_resp, Exception) and getattr(stats_resp, "status_code", 0) == 200:
+        body = stats_resp.json()
+        data = body if isinstance(body, dict) else {}
+        results = data.get("results", body if isinstance(body, list) else [])
         summary.ap_count = data.get("total", len(results)) if isinstance(data, dict) else len(results)
         for dev in results:
             connected = dev.get("status") == "connected"
@@ -295,8 +290,9 @@ async def _collect_mist(
             )
 
     if not isinstance(template_resp, Exception) and getattr(template_resp, "status_code", 0) == 200:
-        tpl = (getattr(template_resp, "data", None) or {}).get("rftemplate") or {}
-        summary.rf_template_name = (getattr(template_resp, "data", None) or {}).get("rftemplate_name")
+        body = template_resp.json() or {}
+        tpl = body.get("rftemplate") or {}
+        summary.rf_template_name = body.get("rftemplate_name")
         for raw_band, tpl_band in ("24", "band_24"), ("5", "band_5"), ("6", "band_6"):
             cfg = tpl.get(tpl_band) or {}
             channels = cfg.get("channels")
@@ -529,25 +525,19 @@ async def _list_mist_site_options(ctx: Context) -> list[SiteOption]:
     searchOrgDevices(type=ap) for the AP counts — then group AP count by
     site_id client-side. Total: 2 Mist calls regardless of site count.
     """
-    try:
-        import mistapi
-    except ImportError:
-        return []
-
-    session = ctx.lifespan_context.get("mist_session")
+    client = ctx.lifespan_context.get("mist_client")
     org_id = ctx.lifespan_context.get("mist_org_id")
-    if not session or not org_id:
+    if not client or not org_id:
         return []
 
     sites_resp: Any = None
     devices_resp: Any = None
     try:
         sites_resp, devices_resp = await asyncio.gather(
-            asyncio.to_thread(mistapi.api.v1.orgs.sites.listOrgSites, session, org_id=org_id),
-            asyncio.to_thread(
-                session.mist_get,
-                uri=f"/api/v1/orgs/{org_id}/inventory",
-                query={"type": "ap", "limit": 1000},
+            client.get(f"/api/v1/orgs/{org_id}/sites"),
+            client.get(
+                f"/api/v1/orgs/{org_id}/inventory",
+                params={"type": "ap", "limit": 1000},
             ),
             return_exceptions=True,
         )
@@ -558,12 +548,13 @@ async def _list_mist_site_options(ctx: Context) -> list[SiteOption]:
     if isinstance(sites_resp, Exception) or getattr(sites_resp, "status_code", 0) != 200:
         return []
 
-    sites = sites_resp.data if isinstance(sites_resp.data, list) else []
+    sites_body = sites_resp.json()
+    sites = sites_body if isinstance(sites_body, list) else []
     ap_counts: dict[str, int] = {}
     online_counts: dict[str, int] = {}
-    if not isinstance(devices_resp, Exception):
-        data = getattr(devices_resp, "data", None)
-        items = data if isinstance(data, list) else []
+    if not isinstance(devices_resp, Exception) and getattr(devices_resp, "status_code", 0) == 200:
+        devices_body = devices_resp.json()
+        items = devices_body if isinstance(devices_body, list) else []
         for dev in items:
             sid = dev.get("site_id")
             if not sid:

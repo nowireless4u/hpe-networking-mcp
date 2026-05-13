@@ -69,15 +69,14 @@ def _normalize_platform_filter(
 
 
 async def _probe_mist(ctx: Context) -> dict[str, Any]:
-    import mistapi
-
-    session = ctx.lifespan_context.get("mist_session")
-    if session is None:
+    client = ctx.lifespan_context.get("mist_client")
+    if client is None:
         return {"status": "unavailable", "message": "Mist is not configured or failed to initialize"}
     try:
-        resp = mistapi.api.v1.self.self.getSelf(session)
-        if resp.status_code == 200 and resp.data:
-            privileges = resp.data.get("privileges", [])
+        resp = await client.get("/api/v1/self")
+        if resp.status_code == 200:
+            body = resp.json()
+            privileges = body.get("privileges", [])
             org_count = sum(1 for p in privileges if p.get("scope") == "org")
             return {"status": "ok", "message": "Mist API session active", "org_count": org_count}
         return {

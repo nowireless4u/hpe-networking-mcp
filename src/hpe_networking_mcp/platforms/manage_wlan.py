@@ -7,7 +7,8 @@ returns the appropriate sync workflow when needed.
 
 from typing import Annotated
 
-import mistapi
+# Note (v3.1.0.0, issue #304): Mist access goes through the httpx client on
+# ctx.lifespan_context["mist_client"]. The mistapi SDK was removed in v3.1.0.0.
 from fastmcp import Context
 from loguru import logger
 from pydantic import Field
@@ -369,20 +370,19 @@ def register(mcp):
 
 async def _find_mist_wlan(ctx: Context, ssid: str) -> dict | None:
     """Check if an SSID exists in Mist. Returns WLAN dict or None."""
-    session = ctx.lifespan_context.get("mist_session")
+    client = ctx.lifespan_context.get("mist_client")
     org_id = ctx.lifespan_context.get("mist_org_id")
-    if not session or not org_id:
+    if not client or not org_id:
         return None
 
     try:
-        response = mistapi.api.v1.orgs.wlans.listOrgWlans(
-            session,
-            org_id=org_id,
-        )
-        if response.status_code == 200 and isinstance(response.data, list):
-            for wlan in response.data:
-                if wlan.get("ssid") == ssid:
-                    return wlan
+        response = await client.get(f"/api/v1/orgs/{org_id}/wlans")
+        if response.status_code == 200:
+            payload = response.json()
+            if isinstance(payload, list):
+                for wlan in payload:
+                    if wlan.get("ssid") == ssid:
+                        return wlan
     except Exception as e:
         logger.warning("manage_wlan: failed to check Mist for '{}' — {}", ssid, e)
     return None

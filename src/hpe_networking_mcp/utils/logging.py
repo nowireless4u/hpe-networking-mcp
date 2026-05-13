@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 logger.remove()
 
 # Noisy third-party libraries to suppress at DEBUG/INFO level
-_NOISY_LIBS = frozenset(("httpx", "httpcore", "urllib3", "asyncio", "mistapi"))
+_NOISY_LIBS = frozenset(("httpx", "httpcore", "urllib3", "asyncio"))
 
 
 def _log_filter(record: Record) -> bool:

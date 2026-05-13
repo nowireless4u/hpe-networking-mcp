@@ -113,25 +113,24 @@ def _normalize_site_platform_filter(
 
 
 async def _collect_mist(ctx: Context, site_name: str, window_hours: int) -> MistSummary:
-    try:
-        import mistapi
-    except ImportError as e:
-        return MistSummary(error=f"mistapi not available: {e}")
-
-    session = ctx.lifespan_context.get("mist_session")
+    client = ctx.lifespan_context.get("mist_client")
     org_id = ctx.lifespan_context.get("mist_org_id")
-    if not session or not org_id:
+    if not client or not org_id:
         return MistSummary(error="Mist not initialized")
 
     summary = MistSummary()
 
     try:
-        sites_resp = mistapi.api.v1.orgs.sites.listOrgSites(session, org_id=org_id)
-        if sites_resp.status_code != 200 or not isinstance(sites_resp.data, list):
+        sites_resp = await client.get(f"/api/v1/orgs/{org_id}/sites")
+        if sites_resp.status_code != 200:
             summary.error = f"Mist listOrgSites HTTP {sites_resp.status_code}"
             return summary
+        sites = sites_resp.json()
+        if not isinstance(sites, list):
+            summary.error = "Mist listOrgSites returned non-list"
+            return summary
         site_id = next(
-            (s["id"] for s in sites_resp.data if s.get("name") == site_name),
+            (s["id"] for s in sites if s.get("name") == site_name),
             None,
         )
         if not site_id:
@@ -150,14 +149,10 @@ async def _collect_mist(ctx: Context, site_name: str, window_hours: int) -> Mist
     alarms_resp: Any = None
     try:
         stats_resp, alarms_resp = await asyncio.gather(
-            asyncio.to_thread(mistapi.api.v1.sites.stats.getSiteStats, session, site_id=site_id),
-            asyncio.to_thread(
-                mistapi.api.v1.sites.alarms.searchSiteAlarms,
-                session,
-                site_id=site_id,
-                start=str(start),
-                end=str(end),
-                limit=100,
+            client.get(f"/api/v1/sites/{site_id}/stats"),
+            client.get(
+                f"/api/v1/sites/{site_id}/alarms/search",
+                params={"start": start, "end": end, "limit": 100},
             ),
             return_exceptions=True,
         )
@@ -166,13 +161,14 @@ async def _collect_mist(ctx: Context, site_name: str, window_hours: int) -> Mist
         return summary
 
     if not isinstance(stats_resp, Exception) and getattr(stats_resp, "status_code", 0) == 200:
-        data = stats_resp.data or {}
+        data = stats_resp.json() or {}
         summary.num_devices = data.get("num_devices")
         summary.num_devices_connected = data.get("num_devices_connected")
         summary.num_clients = data.get("num_clients")
 
     if not isinstance(alarms_resp, Exception) and getattr(alarms_resp, "status_code", 0) == 200:
-        alarms = (alarms_resp.data or {}).get("results", [])
+        body = alarms_resp.json() or {}
+        alarms = body.get("results", [])
         summary.alarms_total = len(alarms)
         summary.alarms_critical = sum(1 for a in alarms if a.get("severity") == "critical")
         summary.alarms_top = [
@@ -284,23 +280,24 @@ def _extract_central_device_ips(ctx: Context, site_id: str) -> list[str]:
     return ips
 
 
-def _extract_mist_device_ips(ctx: Context, site_id: str) -> list[str]:
+async def _extract_mist_device_ips(ctx: Context, site_id: str) -> list[str]:
     """Fetch devices at a Mist site and return their management IPs."""
-    import mistapi
-
-    session = ctx.lifespan_context.get("mist_session")
-    if not session:
+    client = ctx.lifespan_context.get("mist_client")
+    if not client:
         return []
     try:
-        resp = mistapi.api.v1.sites.devices.listSiteDevices(session, site_id=site_id)
-        if resp.status_code != 200 or not isinstance(resp.data, list):
+        resp = await client.get(f"/api/v1/sites/{site_id}/devices")
+        if resp.status_code != 200:
+            return []
+        devices = resp.json()
+        if not isinstance(devices, list):
             return []
     except Exception as e:
         logger.warning("site_health_check: Mist device list failed — {}", e)
         return []
 
     ips: list[str] = []
-    for d in resp.data:
+    for d in devices:
         ip = d.get("ip") or d.get("ip_config", {}).get("ip")
         if ip:
             ips.append(ip)
@@ -707,7 +704,7 @@ def register(mcp: Any, config: Any) -> None:
         if central_summary and central_summary.found and central_summary.site_id:
             device_ips.extend(await asyncio.to_thread(_extract_central_device_ips, ctx, central_summary.site_id))
         if mist_summary and mist_summary.found and mist_summary.site_id:
-            device_ips.extend(await asyncio.to_thread(_extract_mist_device_ips, ctx, mist_summary.site_id))
+            device_ips.extend(await _extract_mist_device_ips(ctx, mist_summary.site_id))
         device_ips = list(dict.fromkeys(device_ips))  # de-dupe preserving order
 
         clearpass_summary: ClearPassSummary | None = None

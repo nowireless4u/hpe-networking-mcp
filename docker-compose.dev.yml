@@ -8,3 +8,6 @@ services:
       - ./src:/app/src
       - ./tests:/app/tests
       - ./pyproject.toml:/app/pyproject.toml:ro
+      # Vendored OpenAPI specs (read-only — sync happens via GitHub Actions
+      # on the host, not in-container).
+      - ./vendor:/app/vendor:ro

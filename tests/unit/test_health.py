@@ -119,12 +119,12 @@ class TestRunProbes:
         apstra_client.server = "x:443"
         apstra_client.health_check = AsyncMock(return_value=True)
 
-        mist_session = MagicMock()  # would fail the probe if it ran
+        mist_client = MagicMock()  # would fail the probe if it ran
 
         ctx = MagicMock()
         ctx.lifespan_context = {
             "apstra_client": apstra_client,
-            "mist_session": mist_session,
+            "mist_client": mist_client,
         }
 
         results = await run_probes(ctx, ["apstra"])

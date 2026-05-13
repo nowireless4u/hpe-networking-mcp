@@ -1,0 +1,34 @@
+# gitleaks repo-level configuration.
+#
+# By default we extend the upstream default ruleset (covers AWS keys, Azure
+# AD secrets, Twilio SIDs, generic API keys, JWTs, etc.). We then carve out
+# path-based allowlists for the vendored upstream OpenAPI specs + the tool
+# files generated from them, because those carry example payloads from the
+# upstream documentation that match credential-shaped regexes but are not
+# real credentials.
+
+[extend]
+useDefault = true
+
+# ---------------------------------------------------------------------------
+# Vendored upstream OpenAPI specs
+# ---------------------------------------------------------------------------
+# vendor/mist_openapi.json (MIT-licensed, from mistsys/mist_openapi) carries
+# illustrative example payloads inside endpoint documentation — Twilio Auth
+# Tokens, Azure AD client secrets, root passwords, JWTs, recaptcha site keys,
+# referer-invite tokens, etc. These are documented sample values, not real
+# credentials. We auto-sync this file daily via
+# .github/workflows/sync-mist-openapi.yml; per-finding fingerprint allowlisting
+# would balloon with every upstream change.
+[allowlist]
+description = "Vendored upstream specs + tool files generated from them"
+paths = [
+    '''vendor/.*\.json$''',
+    '''vendor/.*\.yaml$''',
+    # Generated Mist tool files — descriptions embed example values pulled
+    # verbatim from the OpenAPI spec, so they trip the same rules as the
+    # source spec.  These files are auto-emitted by
+    # hpe_networking_mcp.platforms.mist._generator; regenerating from a
+    # current spec produces fresh examples.  See vendor/mist_openapi.SOURCE.md.
+    '''src/hpe_networking_mcp/platforms/mist/tools/.*\.py$''',
+]

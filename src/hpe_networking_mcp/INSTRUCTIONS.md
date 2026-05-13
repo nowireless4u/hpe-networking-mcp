@@ -245,25 +245,26 @@ The `execute()` sandbox uses `pydantic-monty` for its Python parser. It supports
 | config object ID | mist_get_configuration_objects | object_type=<type>, name=<name> |
 
 ## Starting a Mist Session
-1. `mist_get_self(action_type=account_info)` → get org_id
-2. `mist_get_configuration_objects(object_type=org_sites, org_id=<org_id>, name=<site_name>)` → get site_id
+1. `mist_get_self()` → returns the token's identity + ``privileges[]``; extract ``org_id`` from the first privilege whose ``scope == "org"``.
+2. `mist_list_org_sites(org_id=<org_id>)` → list sites; filter for the one you want by ``name``.
 
-## Tool Categories
-- **Account & Organization**: mist_get_self, mist_get_org_or_site_info, mist_get_org_licenses
-- **Configuration Objects (Read)**: mist_get_configuration_objects, mist_get_configuration_object_schema
-- **Configuration Objects (Write)**: mist_change_org/site_configuration_objects, mist_update_org/site_configuration_objects
-- **WLANs**: mist_get_wlans
-- **Device Management**: mist_search_device, mist_get_stats, mist_get_ap_details, mist_get_switch_details, mist_get_gateway_details, mist_bounce_switch_port
-- **Site Health**: mist_get_site_health
-- **Client Management**: mist_search_client, mist_search_nac_user_macs, mist_search_guest_authorization
-- **Events & Alarms**: mist_search_events, mist_search_alarms, mist_search_audit_logs
-- **Performance & SLE**: mist_get_insight_metrics, mist_get_site_sle, mist_get_org_sle, mist_get_org_sites_sle, mist_list_site_sle_info
-- **Infrastructure**: mist_get_site_rrm_info, mist_list_rogue_devices, mist_list_upgrades
-- **Reference**: mist_get_constants, mist_get_next_page
-- **Troubleshooting**: mist_troubleshoot (requires Marvis license)
+## Tool Catalog (v3.1.0.0 spec-driven)
+
+**Mist tooling is now generated from the upstream Juniper Mist OpenAPI spec** (~1000 tools, one per REST endpoint). Tools follow the `mist_<snake_case_operationId>` convention:
+
+- GET on a collection → `mist_list_<resource>` (e.g. `mist_list_org_sites`)
+- GET on an item → `mist_get_<resource>` (e.g. `mist_get_self`)
+- POST/PUT/PATCH → `mist_create_<resource>` / `mist_update_<resource>`
+- DELETE → `mist_delete_<resource>`
+- Search-style endpoints → `mist_search_<resource>` / `mist_count_<resource>`
+- Operational verbs → `mist_<verb>_<resource>` (e.g. `mist_bounce_device_port`, `mist_upgrade_device`, `mist_troubleshoot_site_call`)
+
+**Discover the exact tool name for any task** with `mist_list_tools(filter="<keyword>")` from inside `execute()`, or `search(query="mist <keyword>")` at the discovery layer. The list-tools meta-tool returns name + parameter schema for every match; use that to compose the right call without guessing.
+
+**v3.1.0.0 migration note (issue #304):** The previous Mist tool surface (hand-curated wrappers like `mist_get_configuration_objects(object_type=...)`, `mist_get_self(action_type=...)`, `mist_search_alarms`) was deleted. Skills that still reference those names will fail at runtime until the v3.1.0.1 follow-up migrates them. When in doubt, call `mist_list_tools(filter="<keyword>")` to find the current tool.
 
 ## Pagination
-When a Mist tool response includes a `_next` field, use `mist_get_next_page(url=<_next>)` for more results.
+Mist endpoints that support pagination return `X-Next-Page` / `X-Page-Total` headers. Our httpx client surfaces these as `{"next": "<url>", "has_more": true, "total": N, "results": [...]}` in the response body when more pages exist. Re-call the same tool with `page` / `limit` parameters to walk additional pages.
 
 ## Mist Best Practices
 

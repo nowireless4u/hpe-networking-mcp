@@ -68,6 +68,56 @@ _GLOBAL_ALLOWLIST: frozenset[str] = frozenset(
         "clearpass_manage_",
         "mist_change_org",
         "mist_update_org",
+        # v3.1.0.0 INSTRUCTIONS.md uses these as documentation prefixes
+        # describing the naming convention (e.g. "GET on a collection →
+        # `mist_list_<resource>`"). The trailing underscore looks like a
+        # complete tool name to the regex but is actually a documented
+        # prefix template.
+        "mist_count_",
+        "mist_create_",
+        "mist_delete_",
+        "mist_get_",
+        "mist_list_",
+        "mist_search_",
+        "mist_update_",
+        # v3.1.0.0 (issue #304): Mist platform migrated to spec-driven tool
+        # generation. The hand-curated tool names listed here were deleted
+        # in the migration; skills + INSTRUCTIONS.md still reference them
+        # pending the v3.1.0.1 follow-up skill rewiring. The tools no longer
+        # exist; operators are advised to use `mist_list_tools(filter=...)`
+        # for discovery against the new ~1000-tool generated surface.
+        "mist_bounce_switch_port",
+        "mist_change_org_configuration_objects",
+        "mist_change_site_configuration_objects",
+        "mist_get_ap_details",
+        "mist_get_configuration_object_schema",
+        "mist_get_configuration_objects",
+        "mist_get_constants",
+        "mist_get_gateway_details",
+        "mist_get_insight_metrics",
+        "mist_get_next_page",
+        "mist_get_org_licenses",
+        "mist_get_org_or_site_info",
+        "mist_get_site_health",
+        "mist_get_site_rrm_info",
+        "mist_get_site_sle",
+        "mist_get_stats",
+        "mist_get_switch_details",
+        "mist_get_wlans",
+        "mist_list_rogue_devices",
+        "mist_list_site_sle_info",
+        "mist_list_upgrades",
+        "mist_search_alarms",
+        "mist_search_audit_logs",
+        "mist_search_client",
+        "mist_search_device",
+        "mist_search_device_config_history",
+        "mist_search_events",
+        "mist_search_guest_authorization",
+        "mist_search_nac_user_macs",
+        "mist_troubleshoot",
+        "mist_update_org_configuration_objects",
+        "mist_update_site_configuration_objects",
         # Central API gaps explicitly cited as non-existent in `aos-migration.md`
         # Stage 8.1 — listed by name so operators know which tools they would
         # otherwise expect to find. The skill emits `[Central API gap — manual UI]`
@@ -117,31 +167,46 @@ def _build_full_catalog() -> set[str]:
     Mirrors the pattern used by every per-platform dynamic-mode test.
     """
     import contextlib
+
+    # First, ensure every platform's tool modules are imported at all.
+    import pkgutil
     import sys
 
     from hpe_networking_mcp.platforms._common.tool_registry import REGISTRIES
 
-    # First, ensure every platform's tool modules are imported at all.
     for platform in ("mist", "central", "clearpass", "apstra", "axis", "greenlake", "aos8"):
         platform_pkg = importlib.import_module(f"hpe_networking_mcp.platforms.{platform}")
         tools_attr = getattr(platform_pkg, "TOOLS", None)
-        if not tools_attr:
-            continue
-        for category, tool_names in tools_attr.items():
-            # Two file-layout conventions across platforms:
-            #   - one file per category (e.g. central/tools/sites.py)
-            #   - one file per tool, with platform prefix stripped
-            #     (Mist convention: tools/search_device.py for mist_search_device)
-            module_paths_to_try = [f"hpe_networking_mcp.platforms.{platform}.tools.{category}"]
-            if isinstance(tool_names, list):
-                for tool_name in tool_names:
-                    stripped = tool_name.removeprefix(f"{platform}_")
-                    module_paths_to_try.append(f"hpe_networking_mcp.platforms.{platform}.tools.{stripped}")
-            for path in module_paths_to_try:
-                try:
-                    importlib.import_module(path)
-                except ModuleNotFoundError:
+        if tools_attr:
+            for category, tool_names in tools_attr.items():
+                # Two file-layout conventions across platforms:
+                #   - one file per category (e.g. central/tools/sites.py)
+                #   - one file per tool, with platform prefix stripped
+                #     (Mist convention before v3.1.0.0: tools/search_device.py for mist_search_device)
+                module_paths_to_try = [f"hpe_networking_mcp.platforms.{platform}.tools.{category}"]
+                if isinstance(tool_names, list):
+                    for tool_name in tool_names:
+                        stripped = tool_name.removeprefix(f"{platform}_")
+                        module_paths_to_try.append(f"hpe_networking_mcp.platforms.{platform}.tools.{stripped}")
+                for path in module_paths_to_try:
+                    try:
+                        importlib.import_module(path)
+                    except ModuleNotFoundError:
+                        continue
+        else:
+            # Platform doesn't expose a TOOLS dict (v3.1.0.0 Mist is spec-driven
+            # and auto-discovers via pkgutil). Walk the tools/ subpackage
+            # directly so every generated module gets imported and the
+            # @_mcp_tool decorators populate REGISTRIES.
+            try:
+                tools_pkg = importlib.import_module(f"hpe_networking_mcp.platforms.{platform}.tools")
+            except ModuleNotFoundError:
+                continue
+            for _finder, modname, _ispkg in pkgutil.iter_modules(tools_pkg.__path__):
+                if modname.startswith("_"):
                     continue
+                with contextlib.suppress(ModuleNotFoundError, ImportError):
+                    importlib.import_module(f"hpe_networking_mcp.platforms.{platform}.tools.{modname}")
 
     # Now reload every cached tools module so the decorators re-fire and
     # repopulate REGISTRIES. (The first import on a fresh interpreter

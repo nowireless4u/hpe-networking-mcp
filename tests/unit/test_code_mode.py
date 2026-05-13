@@ -309,56 +309,12 @@ class TestCodeModeErrorReturns:
         with pytest.raises(ValueError):
             _coerce_int("abc", "limit")
 
-    def test_mist_mac_to_device_id_returns_none_on_invalid(self):
-        """``_mac_to_device_id`` was changed from raising to returning ``None``
-        so the calling tool can surface a string error instead of letting a
-        ValueError propagate through ``handle_network_error`` → ``ToolError``
-        → ``MontyRuntimeError``.
-        """
-        from hpe_networking_mcp.platforms.mist.tools.get_insight_metrics import (
-            _mac_to_device_id,
-        )
-
-        assert _mac_to_device_id("not-a-mac") is None
-        assert _mac_to_device_id("") is None
-        assert _mac_to_device_id("zz:zz:zz:zz:zz:zz") is None
-        # Sanity: a real MAC still works and returns the Mist UUID convention.
-        assert _mac_to_device_id("aa:bb:cc:dd:ee:ff") == "00000000-0000-0000-1000-aabbccddeeff"
-
-    def test_mist_get_configuration_object_schema_uses_return_not_raise(self):
-        """Static check: the schema-not-found and empty-resolved paths
-        ``return f"Error: ..."`` instead of ``raise ValueError(...)``.
-
-        Going for an AST-based check rather than triggering the path live
-        because ``SchemaName`` is built dynamically from ``_SCHEMAS_DATA``
-        contents at import time, making it awkward to monkey-patch in a
-        unit test.
-        """
-        import ast
-        from pathlib import Path
-
-        src = (
-            Path(__file__).parent.parent.parent
-            / "src"
-            / "hpe_networking_mcp"
-            / "platforms"
-            / "mist"
-            / "tools"
-            / "get_configuration_object_schema.py"
-        ).read_text()
-        tree = ast.parse(src)
-        for node in ast.walk(tree):
-            if (
-                isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-                and node.name == "get_configuration_object_schema"
-            ):
-                raises = [n for n in ast.walk(node) if isinstance(n, ast.Raise)]
-                assert not raises, (
-                    f"get_configuration_object_schema must not raise — "
-                    f"found raise at lines {[r.lineno for r in raises]}"
-                )
-                return
-        raise AssertionError("get_configuration_object_schema function not found in source")
+    # NOTE (v3.1.0.0, issue #304): the original ``test_mist_mac_to_device_id_*``
+    # and ``test_mist_get_configuration_object_schema_*`` test methods were
+    # removed alongside the Mist tools they tested. The spec-driven Mist
+    # tool generation no longer has those hand-coded modules — coverage
+    # for generator output sits in ``test_mist_spec_driven.py`` (added in
+    # v3.1.0.0) instead of per-tool unit assertions.
 
     def test_no_raise_in_greenlake_tool_files(self):
         """Static guard: every public tool function in ``greenlake/tools/*.py``

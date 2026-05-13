@@ -1,0 +1,160 @@
+name: Sync Mist OpenAPI
+
+# Pulls the upstream Mist OpenAPI spec from mistsys/mist_openapi daily,
+# validates it parses cleanly, and auto-commits the updated vendored copy
+# to `main` if it changed. **Tool regeneration does NOT happen here** —
+# the maintainer runs the generator manually at release time so the
+# tool surface changes are reviewed before tagging.
+#
+# See `vendor/mist_openapi.SOURCE.md` for the broader sync design.
+
+on:
+  schedule:
+    # Daily at 06:00 UTC.
+    - cron: "0 6 * * *"
+  workflow_dispatch: # manual run via the Actions UI
+
+permissions:
+  contents: write # to push spec updates to main
+  issues: write # to file a regression issue if the spec fails to parse
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fetch upstream spec
+        id: fetch
+        run: |
+          set -euo pipefail
+          mkdir -p vendor
+          curl -fsSL \
+            "https://raw.githubusercontent.com/mistsys/mist_openapi/master/mist.openapi.json" \
+            -o /tmp/mist.openapi.json
+          if [ ! -s /tmp/mist.openapi.json ]; then
+            echo "Upstream returned empty file" >&2
+            exit 1
+          fi
+          echo "size=$(stat -c %s /tmp/mist.openapi.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Validate spec parses cleanly
+        id: validate
+        run: |
+          set -euo pipefail
+          python3 -c "
+          import json, sys
+          with open('/tmp/mist.openapi.json') as f:
+              spec = json.load(f)
+          if 'openapi' not in spec or 'paths' not in spec or 'info' not in spec:
+              print('ERROR: missing required OpenAPI top-level keys', file=sys.stderr)
+              sys.exit(1)
+          path_count = len(spec['paths'])
+          op_count = sum(
+              1
+              for methods in spec['paths'].values()
+              if isinstance(methods, dict)
+              for m in methods
+              if m in ('get', 'post', 'put', 'patch', 'delete')
+          )
+          if path_count == 0 or op_count == 0:
+              print('ERROR: spec has zero paths or operations', file=sys.stderr)
+              sys.exit(1)
+          print(f'OK: {path_count} paths, {op_count} operations, version {spec[\"info\"].get(\"version\", \"?\")}')
+          "
+          echo "version=$(python3 -c "import json; print(json.load(open('/tmp/mist.openapi.json'))['info'].get('version','?'))")" >> "$GITHUB_OUTPUT"
+
+      - name: Detect changes against vendored copy
+        id: diff
+        run: |
+          set -euo pipefail
+          if [ ! -f vendor/mist_openapi.json ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "First-time vendor; will commit"
+            exit 0
+          fi
+          if cmp -s /tmp/mist.openapi.json vendor/mist_openapi.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes; exit silently"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "Spec changed since last sync"
+          fi
+
+      - name: Fetch upstream commit SHA for SOURCE.md
+        if: steps.diff.outputs.changed == 'true'
+        id: sha
+        run: |
+          set -euo pipefail
+          SHA=$(gh api repos/mistsys/mist_openapi/contents/mist.openapi.json --jq .sha)
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update vendored spec + SOURCE.md
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          cp /tmp/mist.openapi.json vendor/mist_openapi.json
+
+          # Refresh the "Current sync" block in SOURCE.md.
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          src = Path("vendor/mist_openapi.SOURCE.md").read_text(encoding="utf-8")
+          version = "${{ steps.validate.outputs.version }}"
+          sha = "${{ steps.sha.outputs.sha }}"
+          today = "$(date -u +%Y-%m-%d)"
+          import subprocess
+          today = subprocess.check_output(["date", "-u", "+%Y-%m-%d"]).decode().strip()
+          new_block = (
+              f"## Current sync\n\n"
+              f"- **Spec API version**: `{version}` (per the spec's `info.version` field)\n"
+              f"- **Upstream blob SHA**: `{sha}`\n"
+              f"- **Vendored at**: {today}\n"
+          )
+          new_text = re.sub(
+              r"## Current sync\n\n(?:- \*\*[^\n]+\n)+",
+              new_block,
+              src,
+              count=1,
+          )
+          Path("vendor/mist_openapi.SOURCE.md").write_text(new_text, encoding="utf-8")
+          PY
+
+      - name: Commit and push
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add vendor/mist_openapi.json vendor/mist_openapi.SOURCE.md
+          git commit -m "chore(vendor): sync Mist OpenAPI to ${{ steps.validate.outputs.version }} (auto)
+
+          Upstream: https://github.com/mistsys/mist_openapi
+          Blob SHA: ${{ steps.sha.outputs.sha }}
+
+          Tool regeneration not run by this workflow — maintainer runs
+          \`uv run python -m hpe_networking_mcp.platforms.mist.regenerate\`
+          at release time before tagging."
+          git push origin main
+
+      - name: File issue on validation failure
+        if: failure() && steps.validate.outcome == 'failure'
+        run: |
+          gh issue create \
+            --title "Mist OpenAPI sync: spec failed validation on $(date -u +%Y-%m-%d)" \
+            --body "The scheduled Mist OpenAPI sync detected that the upstream spec at https://github.com/mistsys/mist_openapi failed our OpenAPI 3.x validation check today. Vendored copy was NOT updated.
+
+          Possible causes:
+          - Upstream shipped a malformed spec (rare; their CI normally catches this)
+          - Network failure mid-download
+          - Schema structure changed in a way our validator doesn't recognize
+
+          Action: re-run the workflow once upstream stabilizes, or investigate the validator if upstream is intact. See \`vendor/mist_openapi.SOURCE.md\` for sync design notes." \
+            --label "mist,openapi-sync"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

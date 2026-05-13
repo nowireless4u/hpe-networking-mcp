@@ -5,6 +5,65 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0.0] - 2026-05-12
+
+**Minor release (substantial new subsystem) — Mist platform rewritten as spec-driven tool generation. Drops the `mistapi` SDK dependency. Closes #304.**
+
+Versioning note: this turns over the Mist tool surface wholesale, but the other six platforms (Central, ClearPass, Apstra, Axis, GreenLake, AOS 8) are unchanged. Consumers who don't use Mist see zero difference. Consumers who hardcoded specific old Mist tool names break — but most code-mode AI flows that discover via `mist_list_tools` don't.
+
+The 35 hand-curated Mist tools that shipped through v3.0.1.15 carried recurring friction: non-conventional names (the `mist_get_configuration_objects(object_type="org_sites")` composite pattern wasn't guessable), narrow API coverage (35 of Mist's ~1000 endpoints), a three-way version coupling (Mist API → `mistapi` → our wrappers), and Mist-specific testing on every cross-cutting feature (PII, envelope, MAC normalization).
+
+v3.1.0.0 replaces all of this. The vendored Mist OpenAPI spec at `vendor/mist_openapi.json` drives a generator that emits one tool per REST endpoint. The `mistapi` SDK is gone; a thin httpx client takes its place.
+
+### What's new
+
+- **`vendor/mist_openapi.json`** — vendored from upstream `mistsys/mist_openapi` (commit-pinned in `vendor/mist_openapi.SOURCE.md`). MIT-licensed. The upstream README disclaims the spec for code-generation use; risk mitigated by the spec driving Mist's own UI (catastrophic spec bugs would break the UI itself).
+- **`platforms/mist/_generator.py`** — OpenAPI 3.x → Python tool functions. Parses paths × methods, resolves `$ref` parameters, maps OpenAPI types to Python type hints (string / int / bool / enum → `Literal[...]` / list / dict). Stable ordering across regenerations for clean PR diffs.
+- **`platforms/mist/_client.py`** — direct httpx client. Replaces `mistapi.APISession` with ~270 lines. Auth header injection, org_id validation, pagination-header detection (`X-Next-Page` / `X-Page-Total`), structured error mapping.
+- **`platforms/mist/regenerate.py`** — release-time CLI: `uv run python -m hpe_networking_mcp.platforms.mist.regenerate`. Cleans `tools/`, regenerates from spec, runs ruff format on output. Maintainer reviews the diff before tagging.
+- **`platforms/mist/tools/` (regenerated)** — 210 per-tag modules, ~1000 generated tools following `mist_<snake_case_operationId>` convention (`mist_list_org_sites`, `mist_get_self`, `mist_create_org_wlan`, `mist_search_org_devices`, `mist_bounce_device_port`, etc.).
+- **`.github/workflows/sync-mist-openapi.yml`** — daily auto-sync. Fetches upstream `mistsys/mist_openapi:master`, validates it parses cleanly as OpenAPI 3.x, auto-commits the updated spec + SOURCE.md to `main` (no PR, no tool regeneration). Tool regeneration stays a deliberate release-time step; this workflow only keeps the vendored spec current. If validation fails, files a tracking issue.
+
+### Removed
+
+- **`mistapi>=0.60.4`** dependency. Drops the SDK, its 45K-line `schemas_data.py` enum dump, and the three-way version coupling. The 10 lines of work `mistapi` did for us (auth header, `getSelf` helper) are reimplemented in `_client.py`.
+- **`src/hpe_networking_mcp/platforms/mist/tools/*.py`** (the 35 hand-curated files) — replaced by the regenerated 210 per-tag modules.
+- **`src/hpe_networking_mcp/platforms/mist/client.py`** (old SDK wrapper).
+- **`src/hpe_networking_mcp/platforms/mist/tools/guardrails.py`** — the write-tool anti-pattern warnings (no place to inject them with auto-generated tools; revisit if specific anti-patterns become essential).
+- **Lint exemptions** in `pyproject.toml`: `mist/tools/*.py = ["N801"]` and `mist/tools/schemas_data.py = ["E501", "E711"]` are gone. Generated tools follow our conventions cleanly (replaced with a single `["E501"]` carve-out for long auto-emitted parameter descriptions).
+- **`tests/unit/test_mist_client.py`**, **`tests/unit/test_mist_dynamic_mode.py`**, **`tests/unit/test_guardrails.py`** — tested the removed surface.
+
+### Cross-platform tools updated
+
+- **`platforms/health.py`** — Mist probe rewritten to httpx (`client.get("/api/v1/self")`)
+- **`platforms/manage_wlan.py`** — `_find_mist_wlan` rewritten to httpx
+- **`platforms/site_health_check.py`** — `_collect_mist` + `_extract_mist_device_ips` rewritten to httpx (the latter became async)
+- **`platforms/site_rf_check.py`** — `_collect_mist` + `_summarize_mist_sites` rewritten to httpx
+- **`server.py:lifespan`** — replaces `mistapi.APISession` construction with `build_mist_client` + `resolve_org_id_from_self`. Cleanup-on-shutdown closes the httpx client.
+
+### Known gaps shipping with v3.1.0.0
+
+- **Skills + INSTRUCTIONS.md still reference old Mist tool names.** Tracked in #305. The v3.1.0.0-historical names are explicitly allowlisted in `tests/unit/test_skill_tool_references.py` so CI passes, but AI orchestrators following the old names will get "Unknown tool" errors at runtime. The follow-up PR (v3.1.0.1) rewires each call site to the new spec-driven name. Until then, the AI's path is: invoke `mist_list_tools(filter="<keyword>")` from inside `execute()` to discover the current tool name, then dispatch.
+- **`mist_get_constants`** (the AOS-specific reference / enum catalog) has no spec-driven equivalent — Mist's constants endpoints are split per-category in the spec. Tools like `mist_list_const_alarm_defs`, `mist_list_const_applications` etc. cover the equivalent surface.
+
+### Test changes
+
+1202 passed (was 1258 in v3.0.1.15). The drop is from removing tests of the deleted surface (`test_mist_dynamic_mode.py`, `test_mist_client.py`, `test_guardrails.py`, two `test_code_mode.py` cases). The skill-references test still passes via the historical allowlist. Lint / format / mypy clean.
+
+### Files
+
+- **New**: `vendor/mist_openapi.json`, `vendor/mist_openapi.SOURCE.md`, `platforms/mist/_client.py`, `platforms/mist/_generator.py`, `platforms/mist/regenerate.py`, `.github/workflows/sync-mist-openapi.yml`
+- **Regenerated**: `platforms/mist/tools/*.py` (210 files)
+- **Modified**: `server.py`, `platforms/mist/__init__.py`, `platforms/mist/utils.py`, `platforms/health.py`, `platforms/manage_wlan.py`, `platforms/site_health_check.py`, `platforms/site_rf_check.py`, `utils/logging.py`, `INSTRUCTIONS.md`, `pyproject.toml`, `docker-compose.dev.yml` (vendor mount), `tests/unit/test_health.py`, `tests/unit/test_code_mode.py`, `tests/unit/test_skill_tool_references.py`
+- **Removed**: `platforms/mist/client.py`, `platforms/mist/tools/*.py` (35 old hand-curated files), `tests/unit/test_mist_client.py`, `tests/unit/test_mist_dynamic_mode.py`, `tests/unit/test_guardrails.py`
+
+### Notes
+
+- **Backward-incompatibility**: Mist tool names changed wholesale. Operator-side scripts referencing specific old names will break.
+- **Code mode AI experience**: `mist_list_tools` (in-sandbox meta-tool from v3.0.1.15) remains the canonical discovery path. The new generator produces ~30× more tools, so naive top-level catalog enumeration isn't useful; filtered queries are.
+- **Live verification recommended after deploy**: from inside `execute()`, call `await call_tool("mist_get_self")` (should return privileges); call `await call_tool("mist_list_org_sites", {"org_id": "..."})` (should return the operator's sites).
+- **Stale memory cleanup**: `project_mist_upstream_origin.md` (the "Mist tools ported from upstream mistmcp; conventions diverge" note) can be retired post-v3.1.0.0 — divergence ends with this release.
+
 ## [3.0.1.15] - 2026-05-12
 
 **Tool-discovery hardening — three layered fixes targeting the "Mist intermittent" report from Mike Gallagher (2026-05-12, Sonnet 4.6). Closes #293 and #302.**

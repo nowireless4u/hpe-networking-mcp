@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hpe-networking-mcp"
-version = "3.0.1.15"
+version = "3.1.0.0"
 description = "Unofficial, community-driven MCP server for Juniper Mist, Aruba Central, HPE GreenLake, and ClearPass. Not affiliated with HPE, Aruba, or Juniper."
 readme = "README.md"
 license = "MIT"
@@ -17,13 +17,12 @@ dependencies = [
     # (was opt-in via the fastmcp[code-mode] extra in v2.x); the extra is
     # now a hard requirement.
     "fastmcp[code-mode]>=3.1.1",
-    # MCP protocol — GreenLake requires >=1.20.0, Mist requires >=1.9.2
+    # MCP protocol — GreenLake requires >=1.20.0
     "mcp[cli]>=1.20.0",
-    # Juniper Mist API client
-    "mistapi>=0.60.4",
     # HPE Aruba Central API client
     "pycentral==2.0a17",
-    # Async HTTP client for GreenLake
+    # Async HTTP client — used by Mist (v3.1.0.0 spec-driven, replaced mistapi),
+    # GreenLake, Apstra, Axis, AOS 8
     "httpx>=0.28.0",
     # Data validation — GreenLake explicit, others via FastMCP
     "pydantic>=2.12.0",
@@ -78,10 +77,11 @@ target-version = "py312"
 select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]
 
 [tool.ruff.lint.per-file-ignores]
-# Auto-generated schema data — exempt from all style rules
-"src/hpe_networking_mcp/platforms/mist/tools/schemas_data.py" = ["E501", "E711"]
-# Ported tool files — class names follow original API conventions
-"src/hpe_networking_mcp/platforms/mist/tools/*.py" = ["N801"]
+# Generated Mist tools — long auto-emitted parameter annotations exceed
+# the 120-char line limit. Generator emits self-explanatory descriptions
+# verbatim from the OpenAPI spec; reformatting them at lint time would
+# corrupt embedded JSON examples / quoted enum lists.
+"src/hpe_networking_mcp/platforms/mist/tools/*.py" = ["E501"]
 # Central models ported from upstream — naming conventions preserved
 "src/hpe_networking_mcp/platforms/central/models.py" = ["N815"]
 
@@ -94,7 +94,6 @@ disallow_untyped_defs = false
 
 [[tool.mypy.overrides]]
 module = [
-    "mistapi.*",
     "pycentral.*",
     "pyclearpass.*",
 ]

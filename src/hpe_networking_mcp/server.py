@@ -2,6 +2,7 @@
 
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Any
 
 from fastmcp import FastMCP
 from loguru import logger
@@ -33,34 +34,34 @@ async def lifespan(server: FastMCP):
     context: dict = {"config": config}
 
     # --- Mist ---
-    # Construct the session and resolve org_id; the shared probe in
-    # platforms/health.py re-verifies via the same getSelf() call at tool time.
+    # v3.1.0.0 (issue #304): the ``mistapi`` SDK is gone; we go direct via
+    # httpx. Build the client from host + token and resolve org_id at
+    # startup via a single ``GET /api/v1/self``. The shared probe in
+    # platforms/health.py re-verifies at tool time.
     if config.mist:
         try:
-            import mistapi
-
-            mist_session = mistapi.APISession(
-                host=config.mist.host,
-                apitoken=config.mist.api_token,
+            from hpe_networking_mcp.platforms.mist._client import (
+                build_mist_client,
+                resolve_org_id_from_self,
             )
-            if hasattr(mist_session, "set_verbose"):
-                mist_session.set_verbose(False)
-            context["mist_session"] = mist_session
+
+            mist_client = build_mist_client(
+                host=config.mist.host,
+                api_token=config.mist.api_token,
+            )
+            context["mist_client"] = mist_client
             try:
-                self_resp = mistapi.api.v1.self.self.getSelf(mist_session)
-                if self_resp.status_code == 200 and self_resp.data:
-                    privileges = self_resp.data.get("privileges", [])
-                    org_privs = [p for p in privileges if p.get("scope") == "org"]
-                    if org_privs:
-                        context["mist_org_id"] = org_privs[0]["org_id"]
-                        logger.info("Mist: resolved org_id={}", context["mist_org_id"])
+                org_id = await resolve_org_id_from_self(mist_client)
+                if org_id:
+                    context["mist_org_id"] = org_id
+                    logger.info("Mist: resolved org_id={}", org_id)
             except Exception as e:
                 logger.warning("Mist: failed to resolve org_id at startup — {}", e)
         except Exception as e:
             logger.warning("Mist: failed to initialize — {}", e)
-            context["mist_session"] = None
+            context["mist_client"] = None
     else:
-        context["mist_session"] = None
+        context["mist_client"] = None
 
     # --- Central ---
     if config.central:
@@ -192,6 +193,12 @@ async def lifespan(server: FastMCP):
         gl_tm = context.get("greenlake_token_manager")
         if gl_tm and hasattr(gl_tm, "close"):
             await gl_tm.close()
+        mist_client_cleanup: Any = context.get("mist_client")
+        if mist_client_cleanup is not None:
+            try:
+                await mist_client_cleanup.aclose()
+            except Exception as e:  # noqa: BLE001 — shutdown must not raise
+                logger.warning("Mist: aclose failed during shutdown — {}", e)
         apstra = context.get("apstra_client")
         if apstra is not None:
             await apstra.aclose()
