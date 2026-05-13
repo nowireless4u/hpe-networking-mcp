@@ -80,44 +80,19 @@ _GLOBAL_ALLOWLIST: frozenset[str] = frozenset(
         "mist_list_",
         "mist_search_",
         "mist_update_",
-        # v3.1.0.0 (issue #304): Mist platform migrated to spec-driven tool
-        # generation. The hand-curated tool names listed here were deleted
-        # in the migration; skills + INSTRUCTIONS.md still reference them
-        # pending the v3.1.0.1 follow-up skill rewiring. The tools no longer
-        # exist; operators are advised to use `mist_list_tools(filter=...)`
-        # for discovery against the new ~1000-tool generated surface.
-        "mist_bounce_switch_port",
+        # v3.1.0.0 (issue #304) deletions: the v3.1.0.3 rewire (issue #305)
+        # replaced every active reference to these deleted Mist tools with
+        # the spec-driven equivalent. The names below remain only as
+        # historical mentions in prose that explains what was deprecated
+        # ("the v3.1.0.0-deleted `mist_get_site_health` composite now lives
+        # behind ..."). Keep them allowlisted so the regex enforcer doesn't
+        # flag the documentation prose; remove from the allowlist if the
+        # historical mention is dropped from a future doc rewrite.
         "mist_change_org_configuration_objects",
-        "mist_change_site_configuration_objects",
-        "mist_get_ap_details",
-        "mist_get_configuration_object_schema",
         "mist_get_configuration_objects",
-        "mist_get_constants",
-        "mist_get_gateway_details",
-        "mist_get_insight_metrics",
-        "mist_get_next_page",
-        "mist_get_org_licenses",
-        "mist_get_org_or_site_info",
         "mist_get_site_health",
-        "mist_get_site_rrm_info",
-        "mist_get_site_sle",
-        "mist_get_stats",
-        "mist_get_switch_details",
         "mist_get_wlans",
-        "mist_list_rogue_devices",
-        "mist_list_site_sle_info",
-        "mist_list_upgrades",
         "mist_search_alarms",
-        "mist_search_audit_logs",
-        "mist_search_client",
-        "mist_search_device",
-        "mist_search_device_config_history",
-        "mist_search_events",
-        "mist_search_guest_authorization",
-        "mist_search_nac_user_macs",
-        "mist_troubleshoot",
-        "mist_update_org_configuration_objects",
-        "mist_update_site_configuration_objects",
         # Central API gaps explicitly cited as non-existent in `aos-migration.md`
         # Stage 8.1 — listed by name so operators know which tools they would
         # otherwise expect to find. The skill emits `[Central API gap — manual UI]`

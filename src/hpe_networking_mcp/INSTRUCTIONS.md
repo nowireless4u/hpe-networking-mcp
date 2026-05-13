@@ -238,11 +238,12 @@ The `execute()` sandbox uses `pydantic-monty` for its Python parser. It supports
 ## ID Resolution
 | Need | Tool | Key Parameters |
 | - | - | - |
-| org_id | mist_get_self | action_type=account_info |
-| site_id | mist_get_configuration_objects | object_type=org_sites, name=<site_name> |
-| device MAC / device_id | mist_search_device | text=<name*>, serial, model, device_type |
-| client MAC | mist_search_client | hostname=<name*>, ip=<ip*>, mac=<mac*> |
-| config object ID | mist_get_configuration_objects | object_type=<type>, name=<name> |
+| org_id | mist_get_self | (no params; extract `privileges[].org_id` where `scope == "org"`) |
+| site_id | mist_list_org_sites | org_id, optional name filter (filter results client-side by name) |
+| device MAC / device_id | mist_search_org_devices | org_id, text=<name*>, serial, model, type=<ap\|switch\|gateway> |
+| wireless client MAC | mist_search_org_wireless_clients | org_id, hostname=<name*>, ip=<ip*>, mac=<mac*> |
+| wired client MAC | mist_search_org_wired_clients | org_id, hostname=<name*>, ip=<ip*>, mac=<mac*> |
+| specific config object | `mist_list_tools(filter="list_org_<resource>")` then call the matching spec-driven list/get tool | Each resource has its own spec-driven tool now (e.g. `mist_list_org_wlans`, `mist_list_org_rf_templates`, `mist_list_org_psks`). |
 
 ## Starting a Mist Session
 1. `mist_get_self()` → returns the token's identity + ``privileges[]``; extract ``org_id`` from the first privilege whose ``scope == "org"``.
@@ -261,7 +262,7 @@ The `execute()` sandbox uses `pydantic-monty` for its Python parser. It supports
 
 **Discover the exact tool name for any task** with `mist_list_tools(filter="<keyword>")` from inside `execute()`, or `search(query="mist <keyword>")` at the discovery layer. The list-tools meta-tool returns name + parameter schema for every match; use that to compose the right call without guessing.
 
-**v3.1.0.0 migration note (issue #304):** The previous Mist tool surface (hand-curated wrappers like `mist_get_configuration_objects(object_type=...)`, `mist_get_self(action_type=...)`, `mist_search_alarms`) was deleted. Skills that still reference those names will fail at runtime until the v3.1.0.1 follow-up migrates them. When in doubt, call `mist_list_tools(filter="<keyword>")` to find the current tool.
+**v3.1.0.0 migration note (issue #304; rewire completed by #305 in v3.1.0.3):** The previous Mist tool surface (hand-curated wrappers like `mist_get_configuration_objects(object_type=...)`, `mist_get_self(action_type=...)`, `mist_search_alarms`) was deleted in v3.1.0.0 and the bundled skills + this document were rewired to spec-driven names in v3.1.0.3. If you find any lingering reference to a deleted name, call `mist_list_tools(filter="<keyword>")` from inside `execute()` to find the current tool — the rewire was comprehensive but external runbooks may still cite the old names.
 
 ## Pagination
 Mist endpoints that support pagination return `X-Next-Page` / `X-Page-Total` headers. Our httpx client surfaces these as `{"next": "<url>", "has_more": true, "total": N, "results": [...]}` in the response body when more pages exist. Re-call the same tool with `page` / `limit` parameters to walk additional pages.
@@ -425,7 +426,7 @@ These two platforms have similar concepts with different names. Do NOT generaliz
 
 ## Cross-Platform WLAN Management
 
-**MANDATORY**: When the user asks to add, copy, sync, port, migrate, or create a WLAN — regardless of whether it involves one or both platforms — ALWAYS call `manage_wlan_profile` first. This tool checks both Mist and Central for the SSID and returns the correct workflow. Do NOT call `central_manage_wlan_profile` or `mist_change_org_configuration_objects` directly for WLAN create operations. Doing so will produce incorrect configurations because:
+**MANDATORY**: When the user asks to add, copy, sync, port, migrate, or create a WLAN — regardless of whether it involves one or both platforms — ALWAYS call `manage_wlan_profile` first. This tool checks both Mist and Central for the SSID and returns the correct workflow. Do NOT call `central_manage_wlan_profile`, `mist_create_org_wlan`, or `mist_create_site_wlan` directly for WLAN create operations. Doing so will produce incorrect configurations because:
 1. Opmode values differ between platforms and require translation
 2. RADIUS server groups, aliases, and template variables need resolution
 3. VLAN names vs IDs need mapping
@@ -448,14 +449,14 @@ The sync prompts handle these resolution steps automatically:
 - **Central aliases**: SSID aliases (`essid.use-alias`), PSK aliases (`wpa-passphrase-alias`), and server host aliases are resolved via `central_get_aliases`. Aliases can have per-site values.
 - **Central server groups**: `auth-server-group` and `acct-server-group` are resolved via `central_get_server_groups` to get actual RADIUS server FQDN/IP addresses.
 - **Central named VLANs**: `vlan-name` is resolved via `central_get_named_vlans` to get actual VLAN IDs.
-- **Mist template variables**: RADIUS server hosts using `{{variable}}` patterns are resolved from site settings `vars` via `mist_get_org_or_site_info(info_type=setting)`.
+- **Mist template variables**: RADIUS server hosts using `{{variable}}` patterns are resolved from site settings `vars` via `mist_get_site_setting(site_id=...)`.
 - **Central → Mist RADIUS**: use template variables (`{{auth_srv1}}`) in Mist WLANs — never hardcode IPs. Define resolved addresses in each site's `vars` dict.
 - **Mist → Central RADIUS**: match or create server groups. For per-site variation, create Central aliases matching Mist variable names.
 
 ## Cross-Platform Site Groups / Site Collections
 Mist **site groups** and Central **site collections** serve the same purpose: grouping sites for bulk template/policy assignment. When the user asks to create, update, or delete a site group or site collection **without specifying a platform**, perform the operation on **both** platforms:
 
-- **Create**: create a Mist site group (`mist_change_org_configuration_objects(object_type=sitegroups, action_type=create)`) AND a Central site collection (`central_manage_site_collection(action_type=create)`) with the same name.
+- **Create**: create a Mist site group (`mist_create_org_site_group(org_id=...)`) AND a Central site collection (`central_manage_site_collection(action_type=create)`) with the same name.
 - **Add/remove sites**: update both the Mist site group's `site_ids` list AND use `central_manage_site_collection(action_type=add_sites/remove_sites)`.
 - **Delete**: delete on both platforms.
 - **Sync**: when asked to sync site groups/collections, compare by name across platforms. Create missing ones on the other platform and reconcile site membership.
@@ -555,7 +556,7 @@ When asked to bounce a port or cycle PoE on any switch or gateway:
 
 ### Switch Safety
 1. **Only use on edge/access layer switches** — switches with end-user devices, APs, cameras, or phones directly connected. **NEVER bounce ports on core or aggregation switches** — these have downstream switches connected and bouncing a port will disconnect an entire switch and all of its clients.
-2. **Always look up the device first** using the appropriate detail tool (`central_get_switch_details`, `mist_search_device`) and determine if it is an edge/access switch by checking:
+2. **Always look up the device first** using the appropriate detail tool (`central_get_switch_details`, `mist_search_org_devices` then `mist_get_site_device`) and determine if it is an edge/access switch by checking:
    - **Device name** — names containing "access", "edge", "closet", or floor/room identifiers are typically edge switches
    - **Connected devices on ports** — if ports show APs, phones, cameras, or workstations connected, it is an edge switch. If ports show other switches connected, it is a core/aggregation switch
    - **Switch model** — smaller form factor switches (e.g., CX 6100, 6200, 6300, EX2300, EX4100) are typically edge; larger chassis switches (e.g., CX 8360, 8400, EX4650, QFX) are typically core/aggregation
@@ -570,7 +571,7 @@ When asked to bounce a port or cycle PoE on any switch or gateway:
    - For port bounce: verify a client or AP is connected to the port — if nothing is connected, skip it
    - This prevents bouncing empty ports and avoids accidentally bouncing uplinks that don't draw PoE
    - **Central**: Use `central_get_switch_details` to check port PoE and client status
-   - **Mist**: Use `mist_get_stats` or `mist_get_switch_details` to check port PoE and client status
+   - **Mist**: Use `mist_get_site_stats(site_id=...)` for site-level rollups or `mist_get_site_device(site_id=..., device_id=...)` for per-port PoE and client status
 
 ### Unified Port Translation
 6. **Users refer to ports by simple number** (e.g., "port 1", "the first port", "bounce port 3"). The AI must translate this to the correct platform-specific format for each switch. Treat "port 1", "the 1st port", and "the first port" identically — they all mean the first access port on the switch.

@@ -22,7 +22,7 @@ description: |
   reader can decide in two seconds whether to read further.
 platforms: [mist, central]
 tags: [morning, daily-digest, audit, alerts, top-talkers, sle, baseline]
-tools: [health, mist_get_self, mist_search_audit_logs, mist_search_events, mist_search_alarms, mist_search_client, mist_search_device, mist_get_org_sle, mist_get_org_sites_sle, mist_get_site_sle, mist_get_insight_metrics, central_get_audit_logs, central_get_audit_log_detail, central_get_alerts, central_get_alert_classification, central_get_clients, central_get_aps, central_get_sites, central_get_site_health]
+tools: [health, mist_get_self, mist_list_org_audit_logs, mist_search_org_alarms, mist_search_org_wireless_clients, mist_search_org_devices, mist_get_org_sle, mist_get_org_sites_sle, mist_get_site_sle_summary, mist_get_site_insight_metrics, central_get_audit_logs, central_get_audit_log_detail, central_get_alerts, central_get_alert_classification, central_get_clients, central_get_aps, central_get_sites, central_get_site_health]
 ---
 
 # Morning coffee report — daily ops digest
@@ -121,7 +121,7 @@ produce useful output for whichever platform IS reachable.
 
 **Tools:**
 - `central_get_audit_logs(start_time=<now-24h>, end_time=<now>, limit=100)`
-- `mist_search_audit_logs(org_id=<from step 1>, start=<now-24h>, end=<now>, limit=200)`
+- `mist_list_org_audit_logs(org_id=<from step 1>, start=<now-24h>, end=<now>, limit=200)`
 
 **Why:** Audit logs capture who logged in, who took write actions, and
 what they targeted. This is the "who's been in" answer.
@@ -154,7 +154,7 @@ the full payload of a specific Central event.
 - For severity-ordered detail: `central_get_alerts(site_id=<each site>, status="Active", sort="severity desc", limit=20)` — note this requires a `site_id`, so loop over sites if needed (only if the user wants per-site detail)
 
 **Tools (Mist):**
-- `mist_search_alarms(org_id=<from step 1>, duration="1d", limit=100)` — last-24h alarm search
+- `mist_search_org_alarms(org_id=<from step 1>, duration="1d", limit=100)` — last-24h alarm search
 
 **Why:** Lead with what needs attention TODAY. Severity-ordered, deduplicated.
 
@@ -185,10 +185,12 @@ Minor / Info totals); a list of alarms from Mist with `type` + `severity` +
 - `central_get_aps(...)` — sort by client count or load; pull the top 10.
 
 **Tools (Mist):**
-- `mist_search_client(org_id=<from step 1>, duration="1d", limit=20)` —
-  search clients in the last 24h; pull tx/rx if available.
-- `mist_search_device(org_id=<from step 1>, device_type="ap", duration="1d", limit=20)` —
-  for AP-side load.
+- `mist_search_org_wireless_clients(org_id=<from step 1>, duration="1d", limit=20)` —
+  search wireless clients in the last 24h; pull tx/rx if available.
+  For wired top-talkers run `mist_search_org_wired_clients` with the same shape.
+- `mist_search_org_devices(org_id=<from step 1>, type="ap", duration="1d", limit=20)` —
+  for AP-side load. Note: the v3.1.0.0 refactor renamed the filter from
+  `device_type` to `type`.
 
 **Why:** Top talkers tell you which clients/devices are doing real work
 right now. Useful to spot the one device gobbling all the bandwidth or
@@ -213,10 +215,12 @@ callout (likely capacity issue).
 - `mist_get_org_sle(org_id=<from step 1>)` — overall SLE rollup for the org
 - `mist_get_org_sites_sle(org_id=<from step 1>)` — per-site SLE summary
   (lets you see which site is dragging the org-wide number)
-- `mist_get_site_sle(site_id=<each>)` — only for the worst-performing
-  site (don't fan out to all sites)
-- `mist_get_insight_metrics(...)` — when the user asks for a specific
-  metric drill-down
+- `mist_get_site_sle_summary(site_id=<each>)` — only for the worst-performing
+  site (don't fan out to all sites). Per-classifier detail (e.g.
+  Time-to-Connect breakdown) is in `mist_get_site_sle_classifier_summary_trend`.
+- `mist_get_site_insight_metrics(site_id=..., metric=...)` — when the user
+  asks for a specific metric drill-down. For org-wide insight enumeration
+  use `mist_list_insight_metrics` first.
 
 **Tools (Central):**
 - Central doesn't expose a single "AI insights" tool; surface
@@ -288,7 +292,7 @@ mismatch on aggregation link"* for red).
 | Both Mist and Central are `unavailable` | Stop. Report the unavailability and ask the user to check connectivity. |
 | Mist is `unavailable` | Skip steps 2 (Mist half), 3 (Mist half), 4 (Mist half), 5 (Mist half). Run Central-only sections. |
 | Central is `unavailable` | Skip Central halves of steps 2–5. Run Mist-only sections. |
-| User asks for a single site only | Pass `site_id` filters to every tool that supports one (`central_get_alerts(site_id=)`, `central_get_site_health`, `mist_get_site_sle`). Skip the org-wide SLE rollup. |
+| User asks for a single site only | Pass `site_id` filters to every tool that supports one (`central_get_alerts(site_id=)`, `central_get_site_health`, `mist_get_site_sle_summary`). Skip the org-wide SLE rollup. |
 | Audit log returns 0 events in 24h | Surface as INFO ("no audit activity") — don't omit the section. |
 | All alert lists are empty | Headline says "no critical or major alerts overnight." Don't omit the section. |
 | Top-talker call returns no clients | Likely an off-hours window — note it in the section but don't expand to "top X over the last 7 days" (out of scope). |
@@ -380,7 +384,7 @@ One sentence describing why this color was chosen. Examples:
 
 1–3 bullets, each pointing at a tool/skill to drill in:
 - Run `central-scope-audit` on BRANCH-1 to investigate the MTU and VSX issues
-- Run `mist_get_site_sle(site_id=<BRANCH-1 id>)` for the SLE breakdown
+- Run `mist_get_site_sle_summary(site_id=<BRANCH-1 id>)` for the SLE breakdown
 ```
 
 ### Executive-mode template

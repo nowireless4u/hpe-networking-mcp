@@ -9,7 +9,7 @@ description: |
   running `manage_wlan_profile` to verify the result.
 platforms: [mist, central]
 tags: [wlan, sync, drift-detection, audit]
-tools: [health, mist_get_wlans, central_get_wlans, manage_wlan_profile]
+tools: [health, mist_list_org_wlans, mist_list_site_wlans, central_get_wlans, manage_wlan_profile]
 ---
 
 # Mist ↔ Central WLAN consistency check
@@ -45,8 +45,11 @@ the comparison can't run.
 
 ### Step 2 — Pull Mist WLANs
 
-**Tool:** `mist_get_wlans()` — accepts `org_id` (org-wide) or `site_id`
-(site-scoped). One tool, both scopes via parameter choice.
+**Tool:** `mist_list_org_wlans(org_id=...)` for the org-wide catalog, or
+`mist_list_site_wlans(site_id=...)` for a site's effective WLANs. The
+v3.1.0.0 Mist refactor split the old `mist_get_wlans` composite into one
+tool per scope — pick the call that matches the comparison the user asked
+for.
 **Why:** Mist's WLAN catalog is the source-of-truth for the comparison.
 **Expected result:** A list of WLANs with `ssid`, `enabled`, `auth.type`,
 `auth.psk` (presence only — never log the actual key), `vlan_ids`,

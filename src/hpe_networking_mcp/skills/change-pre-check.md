@@ -10,7 +10,7 @@ description: |
   config push, firmware upgrade, WLAN modification, or NAC policy edit.
 platforms: [mist, central, clearpass, apstra]
 tags: [change-management, maintenance, baseline, pre-flight]
-tools: [health, mist_search_alarms, mist_search_audit_logs, central_get_alerts, central_get_audit_logs, clearpass_get_system_events, clearpass_get_sessions, clearpass_get_enforcement_policies, mist_get_wlans, central_get_wlans, mist_get_switch_details, central_get_switch_details, mist_search_device, central_get_devices, mist_get_configuration_objects, apstra_get_blueprints]
+tools: [health, mist_search_org_alarms, mist_search_site_alarms, mist_list_org_audit_logs, central_get_alerts, central_get_audit_logs, clearpass_get_system_events, clearpass_get_sessions, clearpass_get_enforcement_policies, mist_list_org_wlans, mist_list_site_wlans, mist_get_org_wlan, mist_get_site_wlan, central_get_wlans, mist_get_site_device, central_get_switch_details, mist_search_org_devices, central_get_devices, mist_get_site_sle_summary, central_get_site_health, apstra_get_blueprints, apstra_get_diff_status]
 ---
 
 # Pre-change baseline snapshot
@@ -69,7 +69,7 @@ not silently continue with a bad baseline.
 ### Step 3 — Pre-existing alarms / alerts on the affected target
 
 **Mist (if affected):**
-`mist_search_alarms(org_id=..., site_id=<target>, duration="1d", limit=20)`
+`mist_search_site_alarms(site_id=<target>, duration="1d", limit=20)`
 Filter the response down to alarms whose `device_id` or `site_id` overlap
 with the change target.
 
@@ -85,7 +85,7 @@ alarms.
 
 ### Step 4 — Recent admin activity (last 24h)
 
-**Mist:** `mist_search_audit_logs(org_id=..., duration="1d", limit=50)`
+**Mist:** `mist_list_org_audit_logs(org_id=..., duration="1d", limit=50)`
 **Central:** `central_get_audit_logs` (filter to last 24h client-side)
 **ClearPass (if affected):** `clearpass_get_system_events(limit=50)`
 
@@ -104,9 +104,9 @@ include it for post-change diffing.
 
 | Change type | Tool to call |
 |---|---|
-| WLAN | `mist_get_configuration_objects(object_type="wlans", object_id=...)` (Mist) or `central_get_wlans(site_id=...)` (Central) |
-| Switch port | `mist_get_switch_details(device_id=...)` (Mist — port config is part of switch detail) or `central_get_switch_details(serial=...)` (Central) |
-| AP firmware target | `mist_search_device(text=<name>, device_type="ap")` to find the device, then `mist_get_ap_details(device_id=...)` to read `version` + `target_version` (Mist); `central_get_devices(serial_number=...)` for Central APs |
+| WLAN | `mist_get_org_wlan(org_id=..., wlan_id=...)` for an org-template WLAN, or `mist_get_site_wlan(site_id=..., wlan_id=...)` for a site-scoped one (Mist); `central_get_wlans(site_id=...)` (Central) |
+| Switch port | `mist_get_site_device(site_id=..., device_id=...)` (Mist — port config is part of the device record; resolve `site_id` first via `mist_search_org_devices` if you only have the device_id/MAC) or `central_get_switch_details(serial=...)` (Central) |
+| AP firmware target | `mist_search_org_devices(org_id=..., text=<name>, type="ap")` to find the device + its `site_id`, then `mist_get_site_device(site_id=..., device_id=...)` to read `version` + `target_version` (Mist); `central_get_devices(serial_number=...)` for Central APs |
 | NAC enforcement policy | `clearpass_get_enforcement_policies(policy_id=...)` |
 | Apstra blueprint baseline | `apstra_get_blueprints(blueprint_id=...)` to record the current `version` field; pair with `apstra_get_diff_status(blueprint_id=...)` to confirm there are no pending uncommitted changes before yours |
 
@@ -115,8 +115,10 @@ straightforward to answer. Without this you're guessing.
 
 ### Step 6 — Active impact metrics
 
-**Wi-Fi changes:** `mist_get_site_health(site_id=<target>)` — record
-`num_clients`, `num_aps_up`, `num_devices_disconnected`.
+**Wi-Fi changes:** `mist_get_site_sle_summary(site_id=<target>)` — record
+`num_clients`, `num_aps_up`, `num_devices_disconnected` from the SLE rollup
+(the v3.1.0.0-deleted `mist_get_site_health` composite now lives behind
+the SLE summary endpoint).
 **Switch changes:** `central_get_site_health(site_name=<target>)` — record
 device counts and active client count.
 **NAC changes:** `clearpass_get_sessions(limit=...)` — record total

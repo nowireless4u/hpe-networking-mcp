@@ -9,7 +9,7 @@ description: |
   finishes a maintenance window. Pairs with `change-pre-check`.
 platforms: [mist, central, clearpass, apstra]
 tags: [change-management, maintenance, verification, post-flight]
-tools: [health, mist_search_alarms, mist_search_audit_logs, central_get_alerts, central_get_audit_logs, clearpass_get_system_events]
+tools: [health, mist_search_org_alarms, mist_search_site_alarms, mist_list_org_audit_logs, central_get_alerts, central_get_audit_logs, clearpass_get_system_events]
 ---
 
 # Post-change verification + diff
@@ -77,7 +77,7 @@ involved platforms. A platform that was `ok` in pre-check and is now
 
 ### Step 3 — New alarms / alerts since baseline
 
-**Mist:** `mist_search_alarms(org_id=..., site_id=<target>, duration="<delta>")`
+**Mist:** `mist_search_site_alarms(site_id=<target>, duration="<delta>")`
 where `<delta>` is approximately the time elapsed since the pre-check
 `Captured:` timestamp (round up to nearest hour and add 30 minutes of
 buffer). Filter to alarms matching the change target.
@@ -96,7 +96,7 @@ should NOT be re-flagged here — they were already broken.
 
 ### Step 4 — Audit log confirmation
 
-**Mist:** `mist_search_audit_logs(org_id=..., duration="<delta>", limit=50)`
+**Mist:** `mist_list_org_audit_logs(org_id=..., duration="<delta>", limit=50)`
 **Central:** `central_get_audit_logs` (filter to the change window)
 **ClearPass (if affected):** `clearpass_get_system_events(limit=50)`
 

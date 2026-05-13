@@ -20,7 +20,7 @@ description: |
   Wired & Wireless Network Deployment Guide.
 platforms: [mist]
 tags: [mist, audit, configuration, scope, drift-detection, vsg]
-tools: [health, mist_get_self, mist_get_configuration_objects, mist_get_wlans, mist_get_org_or_site_info, mist_get_org_licenses, mist_list_upgrades, mist_get_site_health, mist_get_constants]
+tools: [health, mist_get_self, mist_list_org_templates, mist_list_org_wlans, mist_list_site_wlans, mist_list_org_rf_templates, mist_list_org_network_templates, mist_list_org_site_templates, mist_list_org_site_groups, mist_list_org_sites, mist_list_org_device_profiles, mist_list_org_psks, mist_list_org_device_upgrades, mist_get_site_setting, mist_get_org_settings]
 ---
 
 # Juniper Mist comprehensive configuration scope audit
@@ -48,9 +48,12 @@ The audit calls out *"Mist recommends X, found at Y"* drift explicitly,
 AND checks **per-setting values** within each profile against
 recommended defaults.
 
-**Read-only.** Identifies issues; does not correct them. Use the
-appropriate `mist_change_org_configuration_objects` /
-`mist_change_site_configuration_objects` tools after reviewing.
+**Read-only.** Identifies issues; does not correct them. To remediate,
+use the per-resource spec-driven write tools the v3.1.0.0 refactor
+replaced the old composite `mist_change_org/site_configuration_objects`
+tools with. Find the right write tool for the resource via
+`mist_list_tools(filter="<resource>")` from inside `execute()` — the
+catalog returns name + parameter schema for every match.
 
 ## Prerequisites
 
@@ -70,14 +73,14 @@ adds findings to the running report.
 
 **Tools (in order):**
 - `health(platform="mist")` — confirm reachable.
-- `mist_get_self(action_type="account_info")` — get `org_id`.
+- `mist_get_self()` — get `org_id` from the returned `privileges[].org_id` field. (The v3.1.0.0 refactor dropped the old `action_type=` polyglot parameter — `mist_get_self()` is now a single-shape call.)
 
 **Why:** every later call needs `org_id`. If the user has access to
 multiple orgs, ask which one to audit.
 
 ### Step 1 — WLAN templates + assignment scope
 
-**Tool:** `mist_get_configuration_objects(org_id=..., object_type="wlantemplates")`
+**Tool:** `mist_list_org_templates(org_id=...)`
 
 **Mist best practice:** WLAN templates are assigned at the appropriate scope:
 - `applies.org_id` set → org-wide
@@ -145,7 +148,7 @@ For each WLAN inside each template, check Mist's recommended per-SSID settings (
 
 ### Step 3 — Bare site-level WLANs (primary drift source)
 
-**Tool:** for each site, `mist_get_wlans(site_id=<site_id>)` — check each returned WLAN's `template_id` field.
+**Tool:** for each site, `mist_list_site_wlans(site_id=<site_id>)` — check each returned WLAN's `template_id` field.
 
 **Mist best practice:** every WLAN should be in a template; bare site-level WLANs (i.e. WLANs created without going through a template) are explicitly discouraged because they cannot be centrally managed and create drift.
 
@@ -156,7 +159,7 @@ For each WLAN inside each template, check Mist's recommended per-SSID settings (
 
 ### Step 4 — Org-level WLAN reconciliation
 
-**Tool:** `mist_get_configuration_objects(org_id=..., object_type="wlans")`
+**Tool:** `mist_list_org_wlans(org_id=...)`
 
 Cross-reference org-level WLANs with templates from step 1. Every org-level WLAN should have a `template_id` matching one of those templates.
 
@@ -165,7 +168,7 @@ Cross-reference org-level WLANs with templates from step 1. Every org-level WLAN
 
 ### Step 5 — RF templates + per-band settings
 
-**Tool:** `mist_get_configuration_objects(org_id=..., object_type="rftemplates")`
+**Tool:** `mist_list_org_rf_templates(org_id=...)`
 
 **Mist best practice (§3 of best-practices doc + Mist Wireless guide):**
 - Start with Mist AI RRM. Don't lock channels or fix TX power without specific justification.
@@ -205,7 +208,7 @@ Cross-reference org-level WLANs with templates from step 1. Every org-level WLAN
 
 ### Step 6 — Switch configuration templates (Mist Wired)
 
-**Tool:** `mist_get_configuration_objects(org_id=..., object_type="networktemplates")` (or "switchtemplates" depending on API).
+**Tool:** `mist_list_org_network_templates(org_id=...)`. (The v3.1.0.0 refactor consolidated "switchtemplates" under network templates — there is no separate switchtemplates tool.)
 
 **Mist Wired guide (§Configure Switches Using Templates):** explicitly documents the hierarchy:
 
@@ -236,7 +239,7 @@ Cross-reference org-level WLANs with templates from step 1. Every org-level WLAN
 
 ### Step 7 — Site Variables (Mist's alias-equivalent)
 
-**Tool:** site variables live in site settings; `mist_get_org_or_site_info(info_type="setting", site_id=<site_id>)` returns the `vars` dict per site.
+**Tool:** site variables live in site settings; `mist_get_site_setting(site_id=<site_id>)` returns the `vars` dict per site.
 
 **Mist Wired guide (§1279-§1292):**
 
@@ -269,7 +272,7 @@ Cross-reference org-level WLANs with templates from step 1. Every org-level WLAN
 
 ### Step 8 — Site templates + new-site provisioning
 
-**Tool:** `mist_get_configuration_objects(org_id=..., object_type="sitetemplates")`
+**Tool:** `mist_list_org_site_templates(org_id=...)`
 
 **Mist best practice (§4.3):** create at least one site template that represents the standard deployment baseline. Apply at site creation time so defaults are set automatically.
 
@@ -289,8 +292,8 @@ Cross-reference org-level WLANs with templates from step 1. Every org-level WLAN
 ### Step 9 — Site groups + site membership
 
 **Tools:**
-- `mist_get_configuration_objects(org_id=..., object_type="sitegroups")` — site groups.
-- `mist_get_org_or_site_info(info_type="site")` — site list.
+- `mist_list_org_site_groups(org_id=...)` — site groups.
+- `mist_list_org_sites(org_id=...)` — site list.
 
 **Mist best practice (§4.4):** site groups reflect operational topology (region, site type, security zone). Templates are assigned to site groups whenever possible.
 
@@ -302,7 +305,7 @@ Cross-reference org-level WLANs with templates from step 1. Every org-level WLAN
 
 ### Step 10 — Site-level overrides audit (only specific overrides are valid)
 
-For each site, check `mist_get_org_or_site_info(info_type="site")` and the site's `setting` info.
+For each site, check `mist_list_org_sites(org_id=...)` for the site catalog and `mist_get_site_setting(site_id=...)` for the per-site `setting` payload.
 
 **Mist best practice (§4.2 of best-practices doc):** site-level config should be **site-specific overrides only**:
 - Local gateway IP
@@ -329,7 +332,7 @@ For each site, check `mist_get_org_or_site_info(info_type="site")` and the site'
 
 ### Step 11 — Device profiles + per-device-type settings
 
-**Tool:** `mist_get_configuration_objects(org_id=..., object_type="deviceprofiles")` (or per-device-type variants if available).
+**Tool:** `mist_list_org_device_profiles(org_id=...)`
 
 **Mist best practice (§4.2):** device profiles handle per-device-type settings (radio power overrides for specific AP models, switch port profiles, PoE settings). Device-level config is the **last resort**.
 
@@ -358,7 +361,11 @@ These are not "config that breaks the template model" — they're below the temp
 
 ### Step 12 — Port profiles (static + dynamic) + AP-port best practices
 
-**Tool:** `mist_get_configuration_objects(org_id=..., object_type="portprofiles")` (or per-template variants).
+**Tool:** port profiles live inside the network template payload —
+inspect the `port_usages` field on the templates returned by
+`mist_list_org_network_templates(org_id=...)` (the v3.1.0.0 refactor
+removed the old standalone `portprofiles` object; port profiles
+are nested in network templates per the Mist API).
 
 **Mist Wired guide (§3666 onwards):** port profiles can be **static** (manually assigned to a port) or **dynamic** (auto-assigned via LLDP / RADIUS / MAC matching).
 
@@ -405,9 +412,8 @@ These are not "config that breaks the template model" — they're below the temp
 ### Step 13 — Firmware policy (auto-upgrade + version tags)
 
 **Tools:**
-- `mist_get_configuration_objects(org_id=..., object_type="upgrades")` if available, OR
-- `mist_list_upgrades()` (general)
-- `mist_get_org_or_site_info(info_type="org")` for org-level firmware policy
+- `mist_list_org_device_upgrades(org_id=...)` — current org-level upgrade records / status
+- `mist_get_org_settings(org_id=...)` — for the org-level auto-upgrade policy (lives in org settings)
 
 **Mist best practice (§4.5):**
 - Auto-upgrade enabled at **org level** with a defined maintenance window
@@ -435,7 +441,7 @@ These are not "config that breaks the template model" — they're below the temp
 
 ### Step 14 — PSK / MPSK strategy
 
-**Tool:** `mist_get_configuration_objects(org_id=..., object_type="psks")` for org-level PSK store.
+**Tool:** `mist_list_org_psks(org_id=...)` for org-level PSK store. (For site-scoped PSKs use `mist_list_site_psks(site_id=...)`.)
 
 **Mist best practice (§4.6):**
 - Use **Cloud PSK** / **MPSK** (per-user / per-device unique passphrase with VLAN assignment) over static shared PSK

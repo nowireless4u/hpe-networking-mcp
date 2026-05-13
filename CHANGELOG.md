@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0.3] - 2026-05-13
+
+**Patch — rewires skills + INSTRUCTIONS.md to the v3.1.0.0 spec-driven Mist tool names. Closes #305.**
+
+The v3.1.0.0 Mist refactor deleted 30+ hand-curated composite tools and replaced them with ~1000 spec-driven tools. The bundled skills and INSTRUCTIONS.md still referenced the deleted names, which made AI orchestrators hit "Unknown tool" errors at runtime when they followed skill guidance — observed organically during a 2026-05-13 test session where Claude walked into `mist_get_self`, `mist_get_configuration_objects`, `mist_list_upgrades` failures one after another.
+
+This release rewires every active reference to its current spec-driven equivalent. The CHANGELOG entry for v3.1.0.0 had called this out as a known gap; #305 closes it.
+
+### What changed
+
+Per-skill rewires (8 files, ~20 distinct deleted-tool references):
+
+- **`skills/mist-scope-audit.md`** — heaviest hit. `mist_get_configuration_objects(object_type=X)` composite calls fanned out to per-resource list/get tools: `mist_list_org_templates` (WLAN templates — the API endpoint is `/templates/` so the tool name lacks the "wlan" qualifier), `mist_list_org_rf_templates`, `mist_list_org_network_templates`, `mist_list_org_site_templates`, `mist_list_org_site_groups`, `mist_list_org_device_profiles`, `mist_list_org_psks`, `mist_list_org_device_upgrades`. `mist_get_org_or_site_info(info_type="setting")` → `mist_get_site_setting` / `mist_get_org_settings`. The step describing port profiles now points at `mist_list_org_network_templates` and the `port_usages` field nested within (port profiles aren't a standalone resource in the spec).
+- **`skills/morning-coffee-report.md`** — `mist_search_audit_logs` → `mist_list_org_audit_logs`. `mist_search_alarms` → `mist_search_org_alarms`. `mist_search_client` → `mist_search_org_wireless_clients`. `mist_search_device(device_type=X)` → `mist_search_org_devices(type=X)` (parameter renamed). `mist_get_site_sle` → `mist_get_site_sle_summary`. `mist_get_insight_metrics` → `mist_get_site_insight_metrics`.
+- **`skills/change-pre-check.md`** — `mist_search_alarms(org_id, site_id)` → `mist_search_site_alarms(site_id)`. `mist_search_audit_logs` → `mist_list_org_audit_logs`. `mist_get_configuration_objects(object_type="wlans", object_id=...)` → `mist_get_org_wlan` / `mist_get_site_wlan`. `mist_get_switch_details` and `mist_get_ap_details` both consolidate into `mist_get_site_device(site_id, device_id)` (resolve `site_id` first via `mist_search_org_devices`). `mist_search_device(device_type)` → `mist_search_org_devices(type)`. `mist_get_site_health` → `mist_get_site_sle_summary`.
+- **`skills/change-post-check.md`** — `mist_search_alarms` and `mist_search_audit_logs` migrated to `mist_search_site_alarms` / `mist_list_org_audit_logs`.
+- **`skills/infrastructure-health-check.md`** — `mist_search_alarms` → `mist_search_org_alarms`.
+- **`skills/wlan-sync-validation.md`** — `mist_get_wlans()` (which used to accept either org or site scope) split into `mist_list_org_wlans` / `mist_list_site_wlans`; the prose now picks per scope.
+- **`INSTRUCTIONS.md`** — `ID Resolution` table rewritten end-to-end. `mist_get_self` no longer takes `action_type=`. `mist_search_device` → `mist_search_org_devices`. `mist_search_client` split into `mist_search_org_wireless_clients` + `mist_search_org_wired_clients`. The `Port Bounce and PoE Bounce Safety Rules` device-lookup section now points at `mist_search_org_devices` → `mist_get_site_device` for the per-port detail. The v3.1.0.0 migration note text updated to reflect "rewire completed by #305 in v3.1.0.3" so future readers don't think the gap is still open.
+
+### Test allowlist pruning
+
+- `tests/unit/test_skill_tool_references.py` — dropped 28 of the 34 v3.1.0.0 Mist allowlist entries (no longer referenced anywhere after the rewire). The 6 names that remain (`mist_change_org_configuration_objects`, `mist_get_configuration_objects`, `mist_get_site_health`, `mist_get_wlans`, `mist_search_alarms`) appear only in historical-mention prose ("the v3.1.0.0-deleted `mist_get_site_health` composite now lives behind …"). The allowlist comment block updated to record this.
+
+### Verified
+
+- 10/10 `test_skill_tool_references.py` parametrized cases pass after rewire. The regex enforcer is now satisfied without the bulk allowlist.
+- No skill or INSTRUCTIONS.md reference resolves to a deleted Mist tool name in active prose.
+
+### Files
+
+- **Modified**: `INSTRUCTIONS.md`, `skills/{mist-scope-audit,morning-coffee-report,change-pre-check,change-post-check,infrastructure-health-check,wlan-sync-validation}.md`, `tests/unit/test_skill_tool_references.py`, `pyproject.toml`
+
+### Notes
+
+- A handful of composite-tool semantics changed: e.g., `mist_search_device(device_type="ap")` becomes `mist_search_org_devices(type="ap")` — same intent, renamed parameter. Operators following the skill body get the right call shape; those who memorized the old names need to re-discover via `mist_list_tools(filter="<keyword>")`.
+- Port profiles no longer exist as a standalone Mist resource per the spec — they live inside network template `port_usages`. The audit step now describes how to inspect them inline rather than calling a separate list tool.
+
 ## [3.1.0.2] - 2026-05-13
 
 **Patch — `ValidationCatchMiddleware` now returns a properly-shaped envelope on Pydantic validation rejections. Closes #309.**

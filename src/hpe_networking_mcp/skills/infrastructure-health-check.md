@@ -8,7 +8,7 @@ description: |
   starts a session and wants a baseline before drilling in.
 platforms: [mist, central, clearpass, apstra, greenlake, axis]
 tags: [health, monitoring, daily-standup, baseline]
-tools: [health, mist_search_alarms, central_get_alerts, clearpass_get_system_events, apstra_get_anomalies, axis_get_connectors, axis_get_status]
+tools: [health, mist_search_org_alarms, central_get_alerts, clearpass_get_system_events, apstra_get_anomalies, axis_get_connectors, axis_get_status]
 ---
 
 # Cross-platform infrastructure health snapshot
@@ -41,7 +41,7 @@ wrong, the upstream API is down, or networking is broken — surface the
 
 ### Step 2 — Mist alarms (last 24h)
 
-**Tool:** `mist_search_alarms(org_id=<from health>, duration="1d", limit=50)`
+**Tool:** `mist_search_org_alarms(org_id=<from health>, duration="1d", limit=50)`
 **Why:** Active alarms are Mist's primary signal for "something is wrong."
 **Expected result:** Empty list, or a list of alarms with `type` + `severity` + `count`.
 **If anomaly:** Group by `type`, surface the top 5 by count. Don't list every
