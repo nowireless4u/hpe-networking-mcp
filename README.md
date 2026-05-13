@@ -343,7 +343,46 @@ Tool responses are walked before reaching the AI:
 
 **Round-trip works for every kind.** Same plaintext → same token within a session. WLAN sync, AOS 8 → AOS 10 migration, and mass PSK rotation all work because tokenization is round-trippable.
 
-**What the AI never sees in its context window:** WPA / SAE / WEP keys; RADIUS / RadSec / SNMP / admin / VPN secrets; API tokens (including AWS-signed URLs); certificates and private keys; hostnames / FQDNs / device names; **email addresses (anywhere they appear)**; usernames and personal names; phone numbers; hardware serial numbers / IMEI / IMSI / ICCID; embedded secrets in description/notes fields. **What it does see:** tokens for those values, MACs (normalized), SSIDs, platform UUIDs, geographic data, **all IP addresses (internal + public)**, and unchanged metric/enum/timestamp fields.
+### Tokenization reference
+
+**Secrets** — tokenized unconditionally when the field name matches (case-insensitive; hyphens and spaces normalized to underscores):
+
+| Category | Field names | Token form |
+|---|---|---|
+| WPA / SAE / WEP keys | `psk`, `passphrase`, `wpa_passphrase`, `wpa2_passphrase`, `wpa3_psk`, `sae_password`, `sae_pwd`, `ppsk`, `wep_key`, `wep_passphrase`, `vrrp_passphrase` | `[[PSK:uuid]]` |
+| RADIUS / RadSec / 802.1X | `shared_secret`, `radius_secret`, `radsec_secret`, `eap_password`, `inner_password`; structural pair `rad_key.key` | `[[RAD:uuid]]` |
+| TACACS+ | structural pair `tacacs_key.key` | `[[TACACS:uuid]]` |
+| CoA / RFC-3576 dynamic authorization | `coa_servers[].secret`, `coa_servers[].ip`, `rfc_3576_server_list[].name` | `[[COA:uuid]]` |
+| SNMP v1/v2c/v3 | `community`, `community_string`, `auth_password`, `priv_password`, `snmp_v3_auth_pass`, `snmp_v3_priv_pass` | `[[SNMP:uuid]]` |
+| Admin / management passwords | `admin_password`, `manager_password`, `support_user_password`, `enable_password`, `enable_secret`, `cli_password` | `[[PASSWORD:uuid]]` |
+| VPN / IPSec PSKs | `pre_shared_key`, `ipsec_psk`, `vpn_psk` | `[[VPNPSK:uuid]]` |
+| API tokens / OAuth | `api_token`, `apitoken`, `api_key`, `apikey`, `client_secret`, `bearer_token`, `access_token`, `refresh_token`, `webhook_secret`, `webhook_token`; any string containing `X-Amz-Security-Token`/`Credential`/`Signature` (AWS-signed URL detection by value shape) | `[[APITOKEN:uuid]]` |
+| Certificates | `cert`, `certificate`, `client_cert`, `server_cert`, `ca_cert`, `chain`, `pkcs12`, `p12_data`, `pem`; PEM blocks in free-text fields | `[[CERT:uuid]]` |
+| Private keys | `private_key`, `privkey`, `kerberos_keytab`, `keytab`; PEM key blocks in free-text fields | `[[KEY:uuid]]` |
+| Generic credential field names (shape-checked) | `password`, `pwd`, `secret`, `token`, `key` — tokenized only when value passes length ≥ 8 + character-class diversity check (suppresses false positives like `{"key": "ssid"}`) | varies (PASSWORD / RAD / APITOKEN depending on field) |
+
+**Identifiers** — tokenized when the field name matches:
+
+| Category | Field names | Token form |
+|---|---|---|
+| Hostnames / device names | `hostname`, `host_name`, `host` (AOS 8 AAA-server IP/FQDN carve-out), `device_name`, `ap_name`, `controller_name`, `switch_name`, `fqdn`; bare `name` when parent dict has ≥ 2 device-shape siblings (`mac`, `model`, `serial`, `device_type`, `hw_rev`, `firmware`, `version`, `release_type`) | `[[HOSTNAME:uuid]]` |
+| Usernames / display names | `username`, `user`, `user_name`, `login`, `first_name`, `last_name`, `full_name`, `display_name`, `updated_by`, `created_by` | `[[USER:uuid]]` |
+| Email addresses | `email` field; also matched by value-shape regex in any string field (catches emails embedded in PSK `name`, `username`, etc.) | `[[EMAIL:uuid]]` |
+| Phone numbers | `phone`, `phone_number`, `mobile` | `[[PHONE:uuid]]` |
+| Hardware serials | `serial`, `serial_number`, `sn` | `[[SERIAL:uuid]]` |
+| Cellular identifiers | `imei`, `imsi`, `iccid` | `[[IMEI:uuid]]` / `[[IMSI:uuid]]` / `[[ICCID:uuid]]` |
+
+**Cleartext** — deliberately NOT tokenized:
+
+| Field family | Why cleartext |
+|---|---|
+| MAC addresses | Observable to anyone in radio range (BSSID broadcast, client probe requests). Normalized to canonical `aa:bb:cc:dd:ee:ff` form regardless of `ENABLE_PII_TOKENIZATION`. |
+| IP addresses (generic) | On-network topology is generally known; CIDR/route analysis is core audit utility. **Carve-outs:** CoA endpoint IPs (`coa_servers[].ip`) and RADIUS/TACACS server addresses in the `host` field (AOS 8 AAA-server detail) ARE tokenized — auth-fabric is critical. |
+| SSIDs / ESSIDs | Broadcast in beacon frames |
+| Platform UUIDs (`org_id`, `site_id`, `device_id`, `template_id`, `scope_id`, etc.) | Already opaque random IDs — substituting one UUID for another adds no privacy |
+| Geographic data (`address`, `city`, `state`, `zip`, `latitude`, `longitude`, `room`, `building`) | Typically published on the company's website |
+| Organizational labels (`org_name`, `site_name`, `vlan_name`, `subnet_name`, `scope_name`, `device_group_name`) | Architectural labels rather than people; audit utility benefits from cleartext |
+| Source-masked placeholders (e.g. AOS 8 `********`) | Tokenizing a masked placeholder creates a dangerous illusion — the AI thinks it has a real tokenized secret, but the round-trip restores only the placeholder, silently breaking downstream writes |
 
 Audit logging fires on every tokenize/detokenize event in `docker compose logs` — kind, token ID, value-hash (SHA-256 truncated), but never the plaintext.
 
