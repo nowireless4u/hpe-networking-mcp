@@ -16,7 +16,7 @@ Tools are namespaced by platform:
 
 Two modes are supported (the `static` mode was removed in v3.0.0.0):
 
-- **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 1368 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. The smallest initial surface; best for orchestrators driving small / local LLMs.
+- **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 1368 underlying tools are reachable from inside a sandboxed Python `execute()` block via `await call_tool("<platform>_invoke_tool", {"name": "<tool>", "params": {...}})` — see the in-sandbox dispatch note below; the ~1000 spec-driven Mist tools are reachable **only** through `mist_invoke_tool`, not by direct name. The smallest initial surface; best for orchestrators driving small / local LLMs.
 - **`MCP_TOOL_MODE=dynamic`** (opt-in since v3.0.0.0; was the v2.x default) — 24 tools visible:
     - **4 cross-platform tools**: `health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`
     - **3 meta-tools per platform × 7 platforms** = 21: `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`
@@ -25,7 +25,9 @@ Two modes are supported (the `static` mode was removed in v3.0.0.0):
 The discovery patterns below describe **dynamic mode** (the v2.x default). In **code mode**, two discovery paths work — pick whichever your client surfaced:
 
 * **Top-level discovery tools** (when your client loaded them): call `search(query="...")` / `tags()` / `get_schema(tools=[...])` directly at the outer surface. These are the recommended primary path when available.
-* **In-sandbox discovery** (works regardless of what the client loaded): from inside `execute()`, call `await call_tool("<platform>_list_tools", {"filter": "..."})` to get a name+params catalog, then `await call_tool("<platform>_get_tool_schema", {"name": "..."})` for full schemas, then dispatch via `await call_tool("<tool_name>", {...})`. Useful as a fallback when the client's semantic tool_search didn't surface `search` / `tags` / `get_schema` (verified to happen on Claude Desktop / CoWork for queries like "list mist sites" — see issue #302).
+* **In-sandbox discovery** (works regardless of what the client loaded): from inside `execute()`, call `await call_tool("<platform>_list_tools", {"filter": "..."})` to get a name+params catalog, then `await call_tool("<platform>_get_tool_schema", {"name": "..."})` for full schemas, then dispatch via `await call_tool("<platform>_invoke_tool", {"name": "<tool_name>", "params": {...}})`. Useful as a fallback when the client's semantic tool_search didn't surface `search` / `tags` / `get_schema` (verified to happen on Claude Desktop / CoWork for queries like "list mist sites" — see issue #302).
+
+  **Always dispatch per-platform tools via `<platform>_invoke_tool`** — NOT by their bare name. `await call_tool("mist_get_self", {})` raises `Unknown tool` because the ~1000 spec-driven Mist tools are registered but not in the sandbox's resolvable catalog; only `mist_invoke_tool` reaches them. Hand-curated platform tools happen to also be directly callable, but `<platform>_invoke_tool` is the one pattern that works for every platform (issue #328).
 
 In both code-mode paths the response comes back as the universal envelope `{"ok": ..., "data": [...], ...}` for platform tools (act on `result["data"]`); top-level discovery tools return their own native shape directly.
 

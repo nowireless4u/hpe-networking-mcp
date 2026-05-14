@@ -456,28 +456,39 @@ def _register_code_mode(mcp: FastMCP) -> None:
         max_memory=128 * 1024 * 1024,
         max_recursion_depth=50,
     )
-    # Override the default `execute` description with one that lists the
-    # callable platform-tool prefixes AND notes that the top-level
-    # discovery tools (tags/search/get_schema) are NOT callable from inside
-    # the sandbox — but the per-platform meta-tools (`<platform>_list_tools`
-    # / `_get_tool_schema` / `_invoke_tool`) ARE callable, providing an
-    # in-sandbox discovery fallback when the AI client didn't surface the
-    # outer discovery tools (issue #302). The default fastmcp string only
-    # says "call_tool(name, params) is in scope" without telling the LLM
-    # what `call_tool` can dispatch to — both gemma-4eb and Claude have hit
-    # the same `Unknown tool: search` failure as a result. See #208.
+    # Override the default `execute` description. It must steer the LLM to
+    # the ONE dispatch pattern that works for every platform tool:
+    # `<platform>_invoke_tool`. The spec-driven Mist tools (~1000 of them)
+    # are registered with FastMCP but deliberately not *listed* in the
+    # catalog — so CodeMode's sandbox `call_tool`, which resolves names
+    # against the listed catalog, raises `Unknown tool` for a direct
+    # `call_tool('mist_get_self', ...)`. Hand-curated platform tools
+    # (central_/aos8_/etc.) happen to be directly callable, but telling the
+    # LLM "names start with mist_/central_/..." over-promises and produces
+    # `Unknown tool` failures on Mist (issue #328). The default fastmcp
+    # string is even thinner — it doesn't say what `call_tool` reaches at
+    # all, which caused the `Unknown tool: search` failures in #208/#302.
     execute_description = (
         "Run Python in a sandbox to compose multiple platform tool calls. "
         "Use `return` to produce output.\n\n"
         "In scope: `await call_tool(name: str, params: dict) -> Any`.\n\n"
-        "`call_tool` dispatches to platform tools — names start with one "
-        "of: `mist_`, `central_`, `greenlake_`, `clearpass_`, `apstra_`, "
-        "`axis_`, `aos8_` — plus the cross-platform `health` tool.\n\n"
+        "`call_tool` reaches three things:\n"
+        "  - `<platform>_invoke_tool(name=<tool>, params=<dict>)` — the "
+        "universal way to call ANY per-platform tool (mist / central / "
+        "greenlake / clearpass / apstra / axis / aos8). The ~1000 "
+        "spec-driven Mist tools are reachable ONLY this way — a direct "
+        "`call_tool('mist_get_self', ...)` raises `Unknown tool`. Prefer "
+        "`<platform>_invoke_tool` for every per-platform tool.\n"
+        "  - `<platform>_list_tools` / `<platform>_get_tool_schema` — "
+        "per-platform discovery meta-tools.\n"
+        "  - `health` — cross-platform reachability.\n\n"
         "Discovery from inside execute(): if you don't know a platform's "
         'tool names, call `<platform>_list_tools(filter="...")` (e.g. '
         "`await call_tool('mist_list_tools', {'filter': 'site'})`) to get "
-        "a name+params catalog, then `<platform>_get_tool_schema(name=...)` "
-        "for full schemas, then dispatch.\n\n"
+        "a name+params catalog, then "
+        "`await call_tool('<platform>_get_tool_schema', {'name': ...})` for "
+        "full schemas, then dispatch via "
+        "`await call_tool('<platform>_invoke_tool', {'name': ..., 'params': ...})`.\n\n"
         "The TOP-LEVEL discovery tools `tags`, `search`, `get_schema`, "
         "`skills_list`, and `skills_load` are NOT callable from inside "
         "execute() — they live at the outer MCP surface for planning. "

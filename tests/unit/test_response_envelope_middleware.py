@@ -10,16 +10,19 @@ inference) all behave correctly.
 
 from __future__ import annotations
 
+import json
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastmcp.tools.tool import ToolResult
+from mcp.types import TextContent
 
 from hpe_networking_mcp.middleware.response_envelope import (
     ResponseEnvelopeMiddleware,
     _extract_status,
     _infer_platform,
     _is_envelope_shape,
+    _payload_from_content,
 )
 
 # ---------------------------------------------------------------------------
@@ -284,6 +287,139 @@ class TestResponseEnvelopeMiddleware:
         assert envelope["platform"] == "aos8"
         assert envelope["data"] == raw
         assert envelope["ok"] is True
+
+
+def _text(payload: object) -> list[TextContent]:
+    """One JSON TextContent block, the way FastMCP serializes a tool return."""
+    return [TextContent(type="text", text=json.dumps(payload))]
+
+
+@pytest.mark.unit
+class TestPayloadFromContent:
+    """Issue #327 — `_payload_from_content` recovers a tool's JSON payload
+    from its content blocks when `structured_content` is None."""
+
+    def test_recovers_bare_array(self):
+        payload = [{"id": "site-1"}, {"id": "site-2"}]
+        assert _payload_from_content(_text(payload)) == payload
+
+    def test_recovers_dict(self):
+        payload = {"name": "mcp", "privileges": []}
+        assert _payload_from_content(_text(payload)) == payload
+
+    def test_non_json_text_returns_none(self):
+        assert _payload_from_content([TextContent(type="text", text="not json")]) is None
+
+    def test_empty_or_none_content_returns_none(self):
+        assert _payload_from_content([]) is None
+        assert _payload_from_content(None) is None
+
+    def test_first_json_parseable_block_wins(self):
+        blocks = [
+            TextContent(type="text", text="not json"),
+            TextContent(type="text", text=json.dumps({"recovered": True})),
+        ]
+        assert _payload_from_content(blocks) == {"recovered": True}
+
+
+@pytest.mark.unit
+class TestContentFallbackRecovery:
+    """Issue #327 — FastMCP leaves `structured_content` None for a tool
+    annotated `-> Any` that returns a non-dict (a bare JSON array — the
+    shape every `mist_list_*` tool and every `<platform>_invoke_tool`
+    dispatch to one produces). The payload survives only in the content
+    TextContent block. The middleware must recover it so the envelope's
+    `data` carries the real result, not `null`.
+    """
+
+    @pytest.mark.asyncio
+    async def test_bare_array_recovered_from_content(self):
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context("mist_list_org_sites")
+        payload = [{"id": "site-1", "name": "HQ"}, {"id": "site-2", "name": "BRANCH-1"}]
+        original = _make_tool_result(structured=None, content=_text(payload))
+        call_next = AsyncMock(return_value=original)
+
+        result = await middleware.on_call_tool(ctx, call_next)
+
+        assert result.structured_content["data"] == payload
+        assert result.structured_content["ok"] is True
+        assert result.structured_content["tool"] == "mist_list_org_sites"
+        assert result.structured_content["platform"] == "mist"
+
+    @pytest.mark.asyncio
+    async def test_meta_tool_dispatch_to_bare_array_recovered(self):
+        """`mist_invoke_tool` dispatching to a list-returning underlying tool:
+        the meta-tool is `-> Any`, structured_content is None, payload lives
+        in content. This is the exact path the operator transcript hit."""
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context("mist_invoke_tool")
+        payload = [{"mac": "aa:bb:cc:dd:ee:ff", "radio_stat": {"band_5": {}}}]
+        original = _make_tool_result(structured=None, content=_text(payload))
+        call_next = AsyncMock(return_value=original)
+
+        result = await middleware.on_call_tool(ctx, call_next)
+
+        assert result.structured_content["data"] == payload
+
+    @pytest.mark.asyncio
+    async def test_dict_in_content_recovered_when_structured_none(self):
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context("mist_get_self")
+        payload = {"name": "mcp", "privileges": [{"org_id": "abc"}]}
+        original = _make_tool_result(structured=None, content=_text(payload))
+        call_next = AsyncMock(return_value=original)
+
+        result = await middleware.on_call_tool(ctx, call_next)
+
+        assert result.structured_content["data"] == payload
+
+    @pytest.mark.asyncio
+    async def test_already_enveloped_in_content_passes_through(self):
+        """If the recovered payload is itself envelope-shaped, the idempotency
+        check still fires — no double-wrap."""
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context("mist_invoke_tool")
+        envelope = {
+            "ok": True,
+            "data": [1, 2],
+            "status": None,
+            "message": None,
+            "tool": "x",
+            "platform": "mist",
+        }
+        original = _make_tool_result(structured=None, content=_text(envelope))
+        call_next = AsyncMock(return_value=original)
+
+        result = await middleware.on_call_tool(ctx, call_next)
+
+        assert result is original
+
+    @pytest.mark.asyncio
+    async def test_non_json_content_still_yields_null_data(self):
+        """No regression: non-JSON text content → data: None (pre-fix behaviour)."""
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context("health")
+        original = _make_tool_result(structured=None, content=[TextContent(type="text", text="plain text, not json")])
+        call_next = AsyncMock(return_value=original)
+
+        result = await middleware.on_call_tool(ctx, call_next)
+
+        assert result.structured_content["data"] is None
+        assert result.structured_content["ok"] is True
+
+    @pytest.mark.asyncio
+    async def test_structured_content_takes_precedence_over_content(self):
+        """When structured_content IS populated, content is not consulted."""
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context("central_get_sites")
+        structured = {"sites": ["from_structured_content"]}
+        original = _make_tool_result(structured=structured, content=_text({"sites": ["from_content_block"]}))
+        call_next = AsyncMock(return_value=original)
+
+        result = await middleware.on_call_tool(ctx, call_next)
+
+        assert result.structured_content["data"] == structured
 
 
 @pytest.mark.unit
