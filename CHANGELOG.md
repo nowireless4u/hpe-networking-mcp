@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0.9] - 2026-05-14
+
+**Patch — harden `cross-platform-rf-check` skill: response-shape guidance + RF-planner-style coverage-map visualization. Two fixes from operator transcripts.**
+
+### Response-shapes table (crash fix)
+
+An operator transcript showed a code-mode session crash with `AttributeError: 'list' object has no attribute 'get'` — the AI called `.get("items", ...)` on `mist_list_org_sites`'s `data`, which is a bare JSON array (post-#327 it correctly carries the payload). The skill never told the AI what shape `data` is per tool, so it guessed wrong.
+
+Added a **Response shapes** section: a table mapping each of the skill's six tools to its `data` shape (bare array / plain dict / inner-`result`-wrapped) with the correct iteration pattern, plus the snake_case-vs-camelCase note (Mist `radio_stat` / `serial` vs Central `radioStats` / `serialNumber`). All shapes verified live against the maintainer's tenant.
+
+### Step 9 — RF-planner-style coverage map (visualization rework)
+
+The v3.1.0.8 Step 9 produced a channel-spectrum bar chart. Operator feedback: "ok for a first attempt but didn't come out how I'd like" — the target is what a real RF planner shows. Reworked the preferred HTML artifact spec to a **coverage map**: SVG floor-plan canvas with APs placed by Mist map coordinates (`x`/`y`/`map_id`) when present or a logical name-derived layout otherwise; concentric signal-strength coverage rings scaled by band + transmit power; 2.4/5/6 GHz band selector with an EM-spectrum colour ramp (amber/teal/purple); click-an-AP detail panel; per-band site-stats strip; co-channel flagging. No gradients/glows — solid fills with opacity. The ASCII spectrum diagram remains the fallback for non-artifact clients.
+
+Skill-only + version + CHANGELOG; no Python touched. `test_skill_tool_references.py` still green (no new tools).
+
 ## [3.1.0.8] - 2026-05-14
 
 **Patch — `cross-platform-rf-check` skill gains an interactive RF visualization step.**

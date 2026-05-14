@@ -23,7 +23,7 @@ Pull per-AP, per-band radio state (channel, bandwidth, power, channel
 utilization, noise floor) for one site from **both** Mist and Central,
 aggregate per-band channel distribution and airtime pressure, flag
 co-channel clusters and elevated noise, present a unified RF report, and
-finish with an interactive channel-spectrum visualization the operator
+finish with an interactive RF-planner-style coverage map the operator
 can explore.
 
 This is the code-mode runbook equivalent of the `site_rf_check`
@@ -42,7 +42,35 @@ does NOT change channels, power, or RF templates.
 - The user has supplied a `site_name`. If they have not, list candidate
   sites (Step 2 / Step 3 enumerate them) and ask which one.
 
+## Response shapes
+
+Every tool response is the universal envelope `{ok, status, data, ...}` —
+but the **shape of `data` differs by tool**. Guessing wrong (calling
+`.get()` on a value that is actually a list, or indexing `["result"]` on a
+value that has no such key) crashes the run. Check this table before
+iterating any response:
+
+| Tool | `data` shape | Iterate via |
+|---|---|---|
+| `mist_list_org_sites` | bare JSON array of site dicts | `for site in resp["data"]` |
+| `mist_list_site_devices_stats` | bare JSON array of device-stat dicts | `for ap in resp["data"]` |
+| `mist_get_site_current_channel_planning` | dict | `resp["data"]["rftemplate"]`, `["band_5"]`, … |
+| `central_get_site_name_id_mapping` | dict keyed by site name | `resp["data"][site_name]["site_id"]` |
+| `central_get_aps` | dict with an inner `result` **list** | `for ap in resp["data"]["result"]` |
+| `central_get_ap_details` | dict with an inner `result` **dict** | `resp["data"]["result"]["radios"]` |
+
+Rule of thumb: Mist `*_list_*` tools return `data` as a **bare array**; the
+Central monitoring tools wrap their payload under `data["result"]`; the
+`*_get_*` / mapping tools return `data` as a **dict**. When unsure,
+`isinstance(...)` before you index — never call `.get()` on a value that
+might be a list. Central records are camelCase (`deviceName`,
+`serialNumber`, `radioStats`); Mist records are snake_case (`name`,
+`serial`, `radio_stat`).
+
 ## Procedure
+
+Before iterating any tool response, consult the *Response shapes* table
+above.
 
 ### Step 1 — Confirm platform reachability
 
@@ -143,27 +171,43 @@ See *Output formatting* below.
 
 ### Step 9 — Render the interactive RF visualization
 
-After the text report, produce a channel-spectrum visualization so the
-operator can *explore* the RF picture, not just read it. This always comes
-AFTER the Step 8 text report — never instead of it.
+After the text report, produce a visualization so the operator can
+*explore* the RF picture, not just read it. This always comes AFTER the
+Step 8 text report — never instead of it.
 
 **Preferred — self-contained HTML artifact** (when the client renders HTML
 artifacts, e.g. Claude.ai / Claude Desktop): emit a single self-contained
 HTML document — inline CSS + vanilla JS, no external assets, no network
-calls. It must show:
+calls, **no gradients or glows** (use solid fills with opacity — it reads
+cleaner and renders consistently). Build an **RF-planner-style coverage
+map**, not a bare chart:
 
-- One panel per band that has data (2.4 / 5 / 6 GHz) — tabs or stacked.
-- A channel axis; each reporting radio drawn as a block on its primary
-  channel, block **width proportional to channel bandwidth**
-  (20 / 40 / 80 / 160 MHz) so channel overlaps are visible at a glance.
-- Block fill color mapped to channel utilization: green < 40 %, amber
-  40–70 %, red ≥ 70 %.
-- Hover or click a block reveals AP detail: name, platform, model, band,
-  channel, bandwidth, power (dBm), utilization %, noise floor, client count.
-- Co-channel clusters (3+ radios sharing a primary channel on 5 / 6 GHz)
-  visually flagged.
-- If a Mist RF template is present, allowed-but-unused channels marked on
-  the axis.
+- **Floor-plan canvas (SVG).** Place each AP as a marker on a floor plan.
+  Use Mist map coordinates (`x`, `y`, `map_id` on the device-stat record)
+  when present; otherwise derive a sensible *logical* layout from the AP
+  **names** (e.g. `HOME-GARAGE-AP` → garage area, `HOME-LOFT-AP` → upper
+  centre, `HOME-GIRLSRM-AP` → a room) and label the canvas
+  "logical layout — no map coordinates". Include a faint coordinate grid
+  and a site label.
+- **Coverage rings.** Around each AP draw concentric signal-strength rings
+  (excellent / good / fair / marginal) as solid strokes with decreasing
+  opacity — not gradients. Scale ring radius by **band and transmit
+  power**: 2.4 GHz rings largest (propagates furthest), 5 GHz medium,
+  6 GHz smallest; within a band, scale by the radio's `power` dBm.
+- **Band selector.** Toggle buttons for 2.4 / 5 / 6 GHz at the top — only
+  the active band's rings + channel labels render. Colour each band on an
+  EM-spectrum ramp: amber 2.4 GHz, teal 5 GHz, purple 6 GHz.
+- **AP detail panel.** Clicking an AP marker shows its full per-band
+  detail: name, platform, model, channel, bandwidth, power (dBm), channel
+  utilization %, noise floor, client count. If the client's artifact
+  runtime supports emitting a follow-up prompt (e.g. Claude artifacts),
+  wire the marker click to also emit one with the AP name so the operator
+  can drill in conversationally.
+- **Site stats strip.** Per-band aggregate utilization + noise, plus a
+  one-line read ("2.4 GHz running hot, 6 GHz mostly idle").
+- **Co-channel flag.** Where 2+ APs share a primary channel — or
+  overlapping 80/160 MHz blocks — on 5/6 GHz, mark it visibly. That is the
+  single most actionable thing an RF planner surfaces.
 
 Keep it dependency-free and compact. If PII tokenization is on, tokenized
 values display verbatim — the artifact is a view, it does not detokenize.
@@ -171,7 +215,7 @@ values display verbatim — the artifact is a view, it does not detokenize.
 **Fallback — rich ASCII spectrum diagram** (when the client does NOT render
 HTML artifacts): emit the spatial channel-allocation diagram described
 under *Interactive RF visualization* in *Output formatting* below. Same
-information, laid out spatially in monospace text.
+RF picture, laid out spatially in monospace text.
 
 When unsure whether the client renders artifacts, pick the ASCII fallback —
 a raw HTML code block is worse than a clean ASCII diagram.
