@@ -1,11 +1,16 @@
 """Regression tests for the code-mode `execute_description` literal.
 
-The string is hand-coded in `server.py` and lists which platform prefixes
-the sandboxed `execute()` LLM may dispatch via `call_tool`. When a new
-platform is added but this literal is not updated, the in-sandbox LLM
-produces `Unknown tool` errors despite the tool being registered.
+The string is hand-coded in `server.py` and tells the sandboxed `execute()`
+LLM how to reach platform tools via `call_tool`. The contract (corrected
+in #328): every per-platform tool is dispatched via
+`<platform>_invoke_tool` — NOT by bare tool name. The ~1000 spec-driven
+Mist tools are registered but not listed in the sandbox's resolvable
+catalog, so `call_tool("mist_get_self", ...)` raises `Unknown tool`; only
+`mist_invoke_tool` reaches them. The description must steer the LLM to the
+`<platform>_invoke_tool` pattern and must name every platform so the LLM
+knows the full set.
 
-These tests guard the contract so the drift cannot recur silently.
+These tests guard that contract so the drift cannot recur silently.
 """
 
 from __future__ import annotations
@@ -17,14 +22,14 @@ import pytest
 
 import hpe_networking_mcp.server as srv
 
-PLATFORM_PREFIXES = (
-    "mist_",
-    "central_",
-    "greenlake_",
-    "clearpass_",
-    "apstra_",
-    "axis_",
-    "aos8_",
+PLATFORM_NAMES = (
+    "mist",
+    "central",
+    "greenlake",
+    "clearpass",
+    "apstra",
+    "axis",
+    "aos8",
 )
 
 
@@ -42,23 +47,31 @@ def _read_execute_description_block() -> str:
 
 
 @pytest.mark.unit
-def test_execute_description_lists_all_platform_prefixes() -> None:
-    """Every registered platform prefix must appear as a backticked token."""
+def test_execute_description_names_all_platforms() -> None:
+    """Every platform must be named in the description so the in-sandbox LLM
+    knows the full set it can dispatch to via `<platform>_invoke_tool`."""
     body = _read_execute_description_block()
-    missing = [p for p in PLATFORM_PREFIXES if f"`{p}`" not in body]
+    missing = [p for p in PLATFORM_NAMES if p not in body]
     assert not missing, (
-        f"execute_description is missing platform prefix(es): {missing}. "
-        f"Update the literal in server.py to include all 7 platforms."
+        f"execute_description is missing platform name(s): {missing}. "
+        f"Update the literal in server.py to name all 7 platforms."
     )
 
 
 @pytest.mark.unit
-def test_execute_description_lists_aos8_prefix() -> None:
-    """Specific guard for the AOS8 prefix (Phase 9 fix)."""
+def test_execute_description_steers_to_invoke_tool() -> None:
+    """#328: the description must steer the LLM to `<platform>_invoke_tool`
+    as the dispatch path — NOT bare-name `call_tool("mist_get_self", ...)`,
+    which raises `Unknown tool` for the unlisted spec-driven Mist tools."""
     body = _read_execute_description_block()
-    assert "`aos8_`" in body, (
-        "execute_description must include `aos8_` so the code-mode sandbox "
-        "knows AOS8 tools are dispatchable via call_tool()."
+    assert "_invoke_tool" in body, (
+        "execute_description must direct the LLM to `<platform>_invoke_tool` "
+        "as the universal per-platform dispatch path (issue #328)."
+    )
+    # And it must explicitly warn that direct Mist dispatch fails — that is
+    # the concrete footgun the operator transcript hit.
+    assert "Unknown tool" in body and "mist" in body.lower(), (
+        "execute_description must warn that a direct call_tool('mist_...') raises `Unknown tool` (issue #328)."
     )
 
 

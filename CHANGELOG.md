@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0.7] - 2026-05-14
+
+**Patch — fix code-mode payload loss + correct sandbox dispatch guidance. Closes #327 + #328.**
+
+Both bugs surfaced from one operator transcript: a code-mode Claude session testing the `cross-platform-rf-check` skill reported `mist_list_site_devices_stats` "consistently returns null data."
+
+### #327 — response envelope dropped bare-JSON-array payloads
+
+Any tool whose endpoint returns a **bare top-level JSON array** came back as `{"ok": true, "data": null, ...}` — the payload silently discarded before the AI ever saw it.
+
+**Root cause** (verified live in the dev container): FastMCP populates `structured_content` for a `-> Any` tool only when it returns a **dict**. A bare-list return under `-> Any` leaves `structured_content` as `None`, with the payload stranded in the `content` blocks as JSON text. The response envelope read only `structured_content`, so it wrapped `None` → `data: null`. Both the ~1000 generated Mist tools and every `<platform>_invoke_tool` meta-tool are `-> Any`, so this hit every `mist_list_*` call and every meta-tool dispatch to one. Confirmed live: `mist_list_org_sites` and `mist_list_site_devices_stats` both returned `data: null` against an org/site with real data.
+
+**Fix** — `middleware/response_envelope.py`: new `_payload_from_content()` helper recovers the payload from the `content` TextContent JSON block when `structured_content` is `None`. Middleware-layer fix, so it covers every bare-array-returning tool on every platform, present and future. Dict-returning tools, already-enveloped responses, and non-JSON content are all unaffected (no regression). 13 new tests in `TestPayloadFromContent` + `TestContentFallbackRecovery`.
+
+### #328 — `execute` description over-promised direct platform-tool dispatch
+
+The `execute` tool description and INSTRUCTIONS.md told the AI that `call_tool` dispatches to platform tools "by names starting with `mist_`, `central_`, ...". True for hand-curated platforms, **false for Mist**: `call_tool("mist_get_self", {})` inside the sandbox raises `Unknown tool`. The ~1000 spec-driven Mist tools are registered with FastMCP but deliberately **not listed** in the catalog (keeps the surface small); CodeMode's sandbox `call_tool` resolves names against the *listed* catalog, so Mist tools are unreachable by bare name — only via `mist_invoke_tool`.
+
+**Fix** — doc/guidance only:
+- `server.py` — rewrote the `execute` description to steer the AI to `<platform>_invoke_tool(name=..., params=...)` as the universal dispatch path, explicitly noting the Mist tools are reachable *only* that way.
+- `INSTRUCTIONS.md` — same correction in the code-mode discovery section: dispatch via `<platform>_invoke_tool`, not by bare tool name.
+
+### Verified
+
+- All 1249 unit tests + 1 skip pass; ruff + format + mypy clean.
+- FastMCP `-> Any` vs `-> list` structured-content behaviour confirmed by direct dev-container probe before writing the fix.
+
 ## [3.1.0.6] - 2026-05-14
 
 **Patch — new `cross-platform-rf-check` skill: a code-mode runbook equivalent of the `site_rf_check` tool.**

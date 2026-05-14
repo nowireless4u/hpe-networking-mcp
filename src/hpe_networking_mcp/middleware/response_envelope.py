@@ -30,12 +30,14 @@ passes through without re-wrapping (idempotency check via ``_is_envelope_shape``
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 import mcp.types
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from fastmcp.tools.tool import ToolResult
 from loguru import logger
+from mcp.types import TextContent
 
 # Platform prefixes used to derive the ``platform`` envelope field. Cross-platform
 # tools (those without one of these prefixes) end up with ``platform: null``.
@@ -107,6 +109,31 @@ def _is_envelope_shape(value: Any) -> bool:
     return isinstance(value, dict) and _ENVELOPE_REQUIRED_KEYS.issubset(value.keys())
 
 
+def _payload_from_content(content: list | None) -> Any:
+    """Recover a tool's JSON payload from its content blocks.
+
+    FastMCP leaves ``structured_content`` as ``None`` for a tool annotated
+    ``-> Any`` that returns a **non-dict** value — most importantly a bare
+    JSON array, the shape ~189 generated ``mist_list_*`` tools and every
+    ``<platform>_invoke_tool`` meta-tool produce. (A dict return *does*
+    populate ``structured_content``; a list return under ``-> Any`` does
+    not.) The payload is still serialized into the content blocks as JSON
+    text, so recover it here — otherwise the envelope's ``data`` is
+    ``null`` and the AI never sees the result. See issue #327.
+
+    Returns the parsed JSON of the first JSON-parseable ``TextContent``
+    block, or ``None`` when no block parses (the envelope then falls back
+    to ``data: null`` — the pre-fix behaviour, no regression).
+    """
+    for block in content or []:
+        if isinstance(block, TextContent) and block.text:
+            try:
+                return json.loads(block.text)
+            except (ValueError, TypeError):
+                continue
+    return None
+
+
 def _build_envelope(
     *,
     ok: bool,
@@ -160,6 +187,15 @@ class ResponseEnvelopeMiddleware(Middleware):
 
         # Determine the raw structured payload, if any.
         raw = getattr(result, "structured_content", None)
+
+        # FastMCP only populates ``structured_content`` for dict-shaped
+        # returns from ``-> Any`` tools; a bare JSON array (every
+        # ``mist_list_*`` tool, every ``<platform>_invoke_tool`` dispatch
+        # to one) leaves it ``None`` with the payload stranded in the
+        # content blocks. Recover it so ``data`` carries the real result
+        # instead of ``null``. See issue #327.
+        if raw is None:
+            raw = _payload_from_content(result.content)
 
         if raw is not None and _is_envelope_shape(raw):
             # Tool already returned an envelope — respect it.
