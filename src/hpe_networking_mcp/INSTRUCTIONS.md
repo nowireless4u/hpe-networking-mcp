@@ -66,10 +66,14 @@ mist_invoke_tool(name="mist_get_self", params={"action_type":"account_info"})  #
 The server's Pydantic validator rejects `invalid_params` responses with actionable detail, but the AI still has to re-read the schema and retry. **Always check `list_tools` params first, use `get_tool_schema` only when that isn't enough.**
 
 Use the cross-platform tools directly when they apply — they replace several per-platform calls:
-- `health(platform=...)` — platform reachability / status
-- `site_health_check(site_name=...)` — unified site health across Mist + Central + ClearPass
-- `site_rf_check(site_name=...)` — unified per-AP, per-band RF state (channels, power, utilization, noise floor) across Mist + Central; includes a pre-rendered ASCII RF dashboard. **Use for any channel-planning / spectrum / RF-health / "how are my 5/6 GHz channels" question** — do NOT fall back to Mist-only or Central-only RF tools without a reason.
-- `manage_wlan_profile(...)` — the mandatory entry point for any WLAN create/copy/sync request
+- `health(platform=...)` — platform reachability / status. **Registered in every mode.**
+- `site_health_check(site_name=...)` — unified site health across Mist + Central + ClearPass. **Dynamic mode only.**
+- `site_rf_check(site_name=...)` — unified per-AP, per-band RF state (channels, power, utilization, noise floor) across Mist + Central; includes a pre-rendered ASCII RF dashboard. **Dynamic mode only.** **Use for any channel-planning / spectrum / RF-health / "how are my 5/6 GHz channels" question** — do NOT fall back to Mist-only or Central-only RF tools without a reason.
+- `manage_wlan_profile(...)` — the mandatory entry point for any WLAN create/copy/sync request. **Dynamic mode only.**
+
+> **Code mode caveat:** of the four cross-platform tools above, only `health` is registered in `code` mode — `site_health_check`, `site_rf_check`, and `manage_wlan_profile` are deliberately NOT (code mode's premise is that the AI composes per-platform tools itself). In code mode:
+> - **RF / channel-planning check** → load the `cross-platform-rf-check` skill (`skills_load(name="cross-platform-rf-check")`) — it is the runbook equivalent of `site_rf_check`, walking the per-platform Mist + Central RF tools in the right order.
+> - **Site health / WLAN management** → compose the per-platform tools directly (use `search` / `tags` to find them).
 
 **Static mode was removed in v3.0.0.0.** Setting `MCP_TOOL_MODE=static` now raises `ValueError` at startup; switch to `dynamic` (per-platform meta-tools) or `code` (sandboxed Python `execute`) per the discovery section above.
 
@@ -101,6 +105,7 @@ Use the cross-platform tools directly when they apply — they replace several p
 | *"about to push a change"*, *"give me a baseline before X"*, *"pre-flight for change window"*, *"snapshot before maintenance"* | `change-pre-check` |
 | *"the change is done — verify"*, *"post-change check"*, *"is it still healthy after the change?"* | `change-post-check` |
 | *"are WLANs in sync?"*, *"WLAN drift audit"*, *"compare WLANs across Mist and Central"* | `wlan-sync-validation` |
+| *"RF check"*, *"channel-planning audit"*, *"how are my 5/6 GHz channels"*, *"spectrum / RF health"*, *"co-channel interference"*, *"is my airtime saturated"* — especially in **code mode** where `site_rf_check` is not registered | `cross-platform-rf-check` |
 | *"audit Central scope / config"*, *"do a config audit"* / *"audit this site"* / *"check the config"* (in Central context), *"does this site follow best practices"*, *"is this configured correctly"*, *"possible improvements"*, *"review this site"*, *"is my Central config drifting"*, *"where are my Central WLAN profiles assigned"*, *"Central scope hierarchy"* | `central-scope-audit` |
 | *"audit Mist scope / config"*, *"do a config audit"* / *"audit this site"* / *"check the config"* (in Mist context), *"check the Wi-Fi configuration"*, *"does this site follow best practices"*, *"is this configured correctly"*, *"possible improvements"*, *"review this site"*, *"is my Mist config drifting"*, *"where are my Mist WLAN templates assigned"*, *"find bare site-level WLANs"* | `mist-scope-audit` |
 | *"AOS 8 → AOS 10 migration"*, *"AOS 8 to 10 migration"*, *"AOS 8 migration to Central"*, *"migration readiness"*, *"validate my migration plan"*, *"campus migrate audit"*, *"are we ready for AOS 10"*, *"translate AOS 8 config to AOS 10"*, *"AOS 10 config mapping"*, *"AOS 8 to Central object mapping"*, *"build me an AOS 10 migration plan"*, *"generate Central API call sequence for migration"*. Note: this skill is **AOS 8 → AOS 10 only**. AOS 6 and Instant AP (IAP) are out of scope; redirect those operators to engage their Aruba SE. | `aos-migration` |

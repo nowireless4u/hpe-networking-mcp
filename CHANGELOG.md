@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0.6] - 2026-05-14
+
+**Patch — new `cross-platform-rf-check` skill: a code-mode runbook equivalent of the `site_rf_check` tool.**
+
+`site_rf_check` (and `site_health_check`, `manage_wlan_profile`, the WLAN sync tools) are registered **only in dynamic mode** — code mode deliberately omits the cross-platform aggregators on the premise that the AI composes per-platform tools itself. But operators on the default code-mode deployment hit "the AI can't find `site_rf_check`" with no guidance on what to do instead. This release closes that gap.
+
+### New skill — `cross-platform-rf-check`
+
+A bundled markdown runbook that walks the AI through the same RF / channel-planning check `site_rf_check` performs, but via individual per-platform tools so it works in code mode:
+
+- **Mist** — `mist_list_org_sites` (resolve site), `mist_list_site_devices_stats` (per-AP `radio_stat`), `mist_get_site_current_channel_planning` (RF-template allowed channels)
+- **Central** — `central_get_site_name_id_mapping` (resolve site), `central_get_aps` (list APs), `central_get_ap_details` (per-AP `radios` array)
+- Aggregates per-band channel distribution + util + noise; flags co-channel clusters (3+ APs same channel on 5/6 GHz), airtime pressure (peak util ≥ 70%), elevated noise (> −70 dBm).
+- Output structure matches `site_rf_check`'s ASCII RF dashboard for consistency.
+
+Brings the bundled-skill count to **10**.
+
+### Documentation fix
+
+`INSTRUCTIONS.md` previously described all four cross-platform tools (`health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`) as if always available. It now explicitly flags that only `health` is registered in code mode, and points to the new skill for RF checks. The skill-mapping table gains a `cross-platform-rf-check` row.
+
+### Verified
+
+- `tests/unit/test_skill_tool_references.py` — all six per-platform tool names referenced by the new skill resolve to real registered tools.
+- All unit tests + ruff + format + mypy clean.
+
 ## [3.1.0.5] - 2026-05-14
 
 **Patch — rewrite source-masked secrets to `REPLACE_ME` during migration reads. Closes #276.**
