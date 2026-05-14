@@ -7,7 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.1.0.4] - 2026-05-13
 
-**Patch — plug AOS 8 rfc-3576 detail-form wrapper-key IP leak. Closes #319.**
+**Patch — plug AOS 8 rfc-3576 detail-form wrapper-key IP leak + align CoA secrets to the RAD token family. Closes #319 + #321.**
+
+### CoA secret realignment (#321)
+
+CoA secrets joined the RAD token family because RFC-3576 ("Dynamic Authorization Extensions to RADIUS") is a RADIUS extension and the shared secret is reused on the same physical server. Operator decision: TACACS+ stays its own kind (different service); CoA endpoint identifiers (IPs / server names) stay `[[COA:uuid]]` (identifiers stay distinct per kind).
+
+| Field | Before | After |
+|---|---|---|
+| `coa_servers[].secret` (Mist) | `[[COA:uuid]]` | `[[RAD:uuid]]` |
+| `coa_secret` flat field (combined-tool output) | (no rule — cleartext) | `[[RAD:uuid]]` |
+| `coa_servers[].ip` | `[[COA:uuid]]` | unchanged |
+| `rfc_3576_server_list[].name` | `[[COA:uuid]]` | unchanged |
+
+The realignment lets the forthcoming combined CoA + RADIUS migration tool (#322) emit the same plaintext in both `radius_secret` and `coa_secret` fields and have the keymap return a single `[[RAD:uuid]]` token across the entire structure — no walker-side cross-kind dedup or association map required.
+
+---
+
+### AOS 8 rfc-3576 wrapper-key IP leak (#319)
 
 Live audit of the AOS 8 `show aaa rfc-3576-server <ip>` response shape surfaced a leak the structural-context rules didn't catch:
 

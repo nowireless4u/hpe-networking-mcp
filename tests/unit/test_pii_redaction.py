@@ -548,10 +548,21 @@ class TestStructuralCoaContexts:
         assert cls == FieldClassification.TOKENIZE_IDENTIFIER
         assert kind == TokenKind.COA
 
-    def test_coa_servers_secret_classifies_as_coa_secret(self) -> None:
+    def test_coa_servers_secret_classifies_as_rad_secret(self) -> None:
+        # Issue #321: CoA secrets joined the RAD family so the combined
+        # CoA + RADIUS migration tool (#322) can emit the same plaintext
+        # in radius_secret + coa_secret + coa_servers[].secret and have
+        # the keymap return a single [[RAD:uuid]] for all three.
         cls, kind = classify_field("secret", "MyCoaSecret123!", parent_field_name="coa_servers")
         assert cls == FieldClassification.TOKENIZE_SECRET
-        assert kind == TokenKind.COA
+        assert kind == TokenKind.RAD
+
+    def test_coa_secret_flat_field_classifies_as_rad(self) -> None:
+        # Issue #321: the flat ``coa_secret`` field name is what the
+        # combined migration tool emits in its output structure.
+        cls, kind = classify_field("coa_secret", "MyCoaSecret123!")
+        assert cls == FieldClassification.TOKENIZE_SECRET
+        assert kind == TokenKind.RAD
 
     def test_bare_ip_outside_coa_wrapper_still_passes_through(self) -> None:
         # Per v2.3.1.2: plain ``ip`` is not a tokenized field. Only the
@@ -587,7 +598,9 @@ class TestStructuralCoaContextsEndToEnd:
             assert TOKEN_RE.fullmatch(record["Name"]).group(1) == "COA"
         assert len({r["Name"] for r in records}) == 2
 
-    def test_mist_coa_servers_shape_tokenizes_ip_and_secret(self) -> None:
+    def test_mist_coa_servers_shape_tokenizes_ip_as_coa_and_secret_as_rad(self) -> None:
+        # Issue #321: split CoA endpoint identifier (COA prefix) from
+        # CoA shared secret (RAD prefix, joining the RADIUS family).
         keymap = SessionKeymap()
         tokenizer = Tokenizer(keymap, session_id="test-session-coa-mist", max_entries=100)
 
@@ -601,13 +614,38 @@ class TestStructuralCoaContextsEndToEnd:
         out = tokenize_response(response, tokenizer)
         servers = out["coa_servers"]
         for server in servers:
+            # IP — identifier — keeps COA prefix.
             assert TOKEN_RE.fullmatch(server["ip"]) is not None
             assert TOKEN_RE.fullmatch(server["ip"]).group(1) == "COA"
+            # Secret — joined to RAD family for combined-tool dedup (#321 / #322).
             assert TOKEN_RE.fullmatch(server["secret"]) is not None
-            assert TOKEN_RE.fullmatch(server["secret"]).group(1) == "COA"
+            assert TOKEN_RE.fullmatch(server["secret"]).group(1) == "RAD"
         # Operational metadata passes through.
         assert servers[0]["port"] == 3799
         assert servers[0]["enabled"] is True
+
+    def test_radius_secret_and_coa_secret_share_token_when_same_plaintext(self) -> None:
+        """Issue #321 / #322 — the combined CoA + RADIUS migration tool
+        emits the same plaintext in both ``radius_secret`` and ``coa_secret``
+        fields when servers are co-located. Both fields now classify as
+        ``TokenKind.RAD``, so the keymap returns a single token for both,
+        and the AI sees the secret reused literally across the structure.
+        """
+        keymap = SessionKeymap()
+        tokenizer = Tokenizer(keymap, session_id="test-session-321-shared", max_entries=100)
+
+        response = {
+            "radius_server": "192.168.20.70",
+            "radius_secret": "aruba123!",
+            "coa_endpoint": "192.168.20.70",
+            "coa_secret": "aruba123!",
+            "co_located": True,
+        }
+        out = tokenize_response(response, tokenizer)
+
+        # Same plaintext + same TokenKind → same token via keymap.
+        assert out["radius_secret"] == out["coa_secret"]
+        assert TOKEN_RE.fullmatch(out["radius_secret"]).group(1) == "RAD"
 
 
 class TestWrapperKeyRewrite:

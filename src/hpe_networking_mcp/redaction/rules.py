@@ -118,12 +118,20 @@ SECRET_FIELD_NAMES: dict[str, TokenKind] = {
     "ppsk": TokenKind.PSK,
     "wep_key": TokenKind.PSK,
     "wep_passphrase": TokenKind.PSK,
-    # RADIUS / RadSec / 802.1X
+    # RADIUS / RadSec / 802.1X / CoA (RFC-3576).
+    # CoA is a RADIUS extension — RFC-3576 / RFC-5176 dynamic-authorization
+    # reuses the RADIUS shared secret on the same server. Joining ``coa_secret``
+    # to the RAD family means the combined CoA + RADIUS migration tool (#322)
+    # can emit the same plaintext in ``radius_secret`` and ``coa_secret``
+    # fields and the keymap will hand back a single ``[[RAD:uuid]]`` token
+    # for both (#321). CoA endpoint IPs / server names stay TokenKind.COA
+    # (identifiers stay distinct per kind).
     "shared_secret": TokenKind.RAD,
     "radius_secret": TokenKind.RAD,
     "radsec_secret": TokenKind.RAD,
     "eap_password": TokenKind.RAD,
     "inner_password": TokenKind.RAD,
+    "coa_secret": TokenKind.RAD,  # combined CoA+RADIUS tool field (#321 / #322)
     # SNMP
     "community": TokenKind.SNMP_COMMUNITY,
     "community_string": TokenKind.SNMP_COMMUNITY,
@@ -287,7 +295,14 @@ STRUCTURAL_SECRET_CONTEXTS: dict[tuple[str, str], TokenKind] = {
     # {"ip": "...", "port": 3799, "secret": "...", "enabled": True}. The
     # CoA shared secret is auth-fabric-critical — tokenize unconditionally.
     # See schemas_data.py "coa_servers" entry (v3.0.1.12).
-    ("coa_servers", "secret"): TokenKind.COA,
+    #
+    # Issue #321: realigned from TokenKind.COA → TokenKind.RAD so that
+    # plaintexts coming through ``radius_secret`` / ``coa_secret`` /
+    # ``coa_servers[].secret`` all dedupe to a single ``[[RAD:uuid]]`` token
+    # via the existing keymap. CoA is a RADIUS extension and the secret is
+    # frequently reused on co-located RADIUS/CoA servers; one token across
+    # forms is what the migration tooling needs.
+    ("coa_servers", "secret"): TokenKind.RAD,
 }
 
 

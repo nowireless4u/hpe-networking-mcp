@@ -352,10 +352,10 @@ Tool responses are walked before reaching the AI:
 | **WPA2 / WPA3 keys** | `psk`, `passphrase`, `wpa_passphrase`, `wpa2_passphrase`, `wpa3_psk`, `ppsk` | `[[PSK:uuid]]` |
 | **SAE / Personal-Plus** | `sae_password`, `sae_pwd` | `[[PSK:uuid]]` |
 | **VRRP cluster key** | `vrrp_passphrase` | `[[PSK:uuid]]` |
-| **RADIUS shared secret** | `shared_secret`, `radius_secret`, `radsec_secret`; structural pair `rad_key.key` | `[[RAD:uuid]]` |
+| **RADIUS shared secret** | `shared_secret`, `radius_secret`, `radsec_secret`, `coa_secret` (v3.1.0.4 / #321); structural pairs `rad_key.key`, `coa_servers[].secret` | `[[RAD:uuid]]` |
 | **EAP / inner password** | `eap_password`, `inner_password` | `[[RAD:uuid]]` |
 | **TACACS+** | structural pair `tacacs_key.key` | `[[TACACS:uuid]]` |
-| **CoA / RFC-3576** | `coa_servers[].secret`, `coa_servers[].ip`, `rfc_3576_server_list[].name`; AOS 8 single-server detail-form wrapper key `"RFC 3576 Server <ip>"` rewritten in place (v3.1.0.4 / #319) | `[[COA:uuid]]` |
+| **CoA / RFC-3576 endpoint identifiers** | `coa_servers[].ip`, `rfc_3576_server_list[].name`; AOS 8 single-server detail-form wrapper key `"RFC 3576 Server <ip>"` rewritten in place (v3.1.0.4 / #319) | `[[COA:uuid]]` |
 | **SNMP community** | `community`, `community_string` | `[[SNMP:uuid]]` |
 | **SNMP v3 passwords** | `auth_password`, `priv_password`, `snmp_v3_auth_pass`, `snmp_v3_priv_pass` | `[[SNMP:uuid]]` |
 | **Admin / enable passwords** | `admin_password`, `manager_password`, `support_user_password`, `enable_password`, `enable_secret`, `cli_password` | `[[PASSWORD:uuid]]` |
