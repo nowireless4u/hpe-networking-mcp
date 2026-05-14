@@ -12,6 +12,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from fastmcp import Context as FastMCPContext
 from fastmcp import FastMCP
+from fastmcp.exceptions import ToolError
 from mcp.types import ToolAnnotations
 
 from hpe_networking_mcp.config import ServerConfig
@@ -258,6 +259,33 @@ class TestInvokeTool:
         )
         assert result["status"] == "invalid_params"
         assert "bogus" in result["message"]
+
+    async def test_tool_error_dict_payload_returned_as_data(self, mcp_with_meta_tools, stub_apstra_registry):
+        """#333: a tool raising ToolError with a structured dict payload — the
+        shape mist_request uses for every Mist 4xx/5xx — must come back as a
+        {"status": "tool_error", ...} dict, never propagate as an exception
+        that would kill the whole code-mode execute() block."""
+        tool = await mcp_with_meta_tools.get_tool("apstra_invoke_tool")
+        config = ServerConfig()
+
+        stub_apstra_registry["get_blueprints"].side_effect = ToolError(
+            {"status_code": 400, "message": '{"detail": "data temporary unavailable"}'}
+        )
+        result = await tool.fn(_fake_ctx(config), name="apstra_get_blueprints")
+        assert result["status"] == "tool_error"
+        assert result["status_code"] == 400
+        assert "data temporary unavailable" in result["message"]
+
+    async def test_tool_error_string_payload_returned_as_data(self, mcp_with_meta_tools, stub_apstra_registry):
+        """#333: a ToolError raised with a plain string still comes back as a
+        structured dict, not an exception."""
+        tool = await mcp_with_meta_tools.get_tool("apstra_invoke_tool")
+        config = ServerConfig()
+
+        stub_apstra_registry["get_blueprints"].side_effect = ToolError("upstream exploded")
+        result = await tool.fn(_fake_ctx(config), name="apstra_get_blueprints")
+        assert result["status"] == "tool_error"
+        assert "upstream exploded" in result["message"]
 
 
 # ---- Fixtures for coercion tests -----------------------------------------

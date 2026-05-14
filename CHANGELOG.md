@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0.10] - 2026-05-14
+
+**Patch — a tool's `ToolError` no longer crashes the entire code-mode `execute()` block. Closes #333.**
+
+When a platform tool dispatched via `<platform>_invoke_tool` raised `ToolError` — which `mist_request` does for **every** Mist 4xx/5xx — the exception propagated through the code-mode sandbox's `call_tool` and aborted the whole `execute()` block, taking every successful call in that block down with it. The AI saw `Sandbox error: Exception: {'status_code': 400, ...}` instead of an inspectable error.
+
+Surfaced in an operator transcript: a code-mode RF-check session lost a successful `mist_get_site_current_channel_planning` result because a *later* `mist_get_site_channel_scores` call in the same block returned a 400.
+
+### Fix
+
+`platforms/_common/meta_tools.py::_invoke_tool` now catches `ToolError` and returns it as a structured error dict — matching its existing `not_found` / `forbidden` / `invalid_params` convention:
+
+```python
+except ToolError as exc:
+    payload = exc.args[0] if exc.args else str(exc)
+    if isinstance(payload, dict):
+        return {"status": "tool_error", **payload}   # preserves status_code + message
+    return {"status": "tool_error", "message": str(payload)}
+```
+
+`_invoke_tool` is the universal dispatch path `build_meta_tools` installs for all 7 platforms, so the one fix covers every platform. A Mist 400 now comes back as `{"status": "tool_error", "status_code": 400, "message": ...}` — the AI can inspect it and continue the block, or self-correct (e.g. the `mist_list_site_rrm_events` "valid band is required" 400 becomes a retryable error rather than a fatal crash).
+
+### Verified
+
+- 2 new tests in `test_meta_tools.py::TestInvokeTool` — dict-payload and string-payload `ToolError` both return `{"status": "tool_error", ...}` with no exception.
+- All unit tests + ruff + format + mypy clean.
+
 ## [3.1.0.9] - 2026-05-14
 
 **Patch — harden `cross-platform-rf-check` skill: response-shape guidance + RF-planner-style coverage-map visualization. Two fixes from operator transcripts.**

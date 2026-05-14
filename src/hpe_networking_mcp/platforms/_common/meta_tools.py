@@ -18,6 +18,7 @@ import inspect
 from typing import Any, get_args, get_origin, get_type_hints
 
 from fastmcp import Context, FastMCP
+from fastmcp.exceptions import ToolError
 from loguru import logger
 from mcp.types import ToolAnnotations
 from pydantic import ConfigDict, ValidationError, create_model
@@ -444,6 +445,21 @@ def build_meta_tools(platform: str, mcp: FastMCP) -> None:
 
         try:
             return await spec.func(ctx, **coerced)
+        except ToolError as exc:
+            # A platform tool raised ToolError — e.g. mist_request converts
+            # every Mist 4xx/5xx into ToolError({"status_code": ..., "message": ...}).
+            # In normal MCP dispatch FastMCP turns ToolError into an error
+            # response, but a ToolError propagating through the code-mode
+            # sandbox's call_tool kills the WHOLE execute() block — every
+            # successful call in the block dies with it. Return it as a
+            # structured error dict (matching the not_found / forbidden /
+            # invalid_params convention) so the caller can inspect and
+            # continue (issue #333). exc.args[0] is the structured payload
+            # when the raiser passed a dict — mist_request always does.
+            payload = exc.args[0] if exc.args else str(exc)
+            if isinstance(payload, dict):
+                return {"status": "tool_error", **payload}
+            return {"status": "tool_error", "message": str(payload)}
         except TypeError as exc:
             # Residual TypeError after validation — typically a signature
             # issue (missing ctx param on the tool, or a mismatch between
