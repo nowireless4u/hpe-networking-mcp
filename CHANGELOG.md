@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0.13] - 2026-05-14
+
+**Patch — enforce "skills first" at the tool layer instead of just implying it. Closes #338.**
+
+Operator: *"Do an RF check for HOME in Central"* → the AI went straight to `search` / `execute` and improvised; it never called `skills_list`, so it never found `cross-platform-rf-check`. Its own diagnosis: the `skills_list` description was a soft, conditional trigger ("Use this when the user asks to run an audit, migration…") that an RF check "didn't feel like," and `search` / `execute` — the tools it actually used — had **no gate** pointing back to skills. "The root issue is that 'check skills first' is *implied* rather than *enforced* at the tool layer."
+
+v3.1.0.12 (#336) fixed the `skills_list` *output* to push toward `skills_load` — but that only helps once `skills_list` is called. This release makes sure it gets called.
+
+### What changed
+
+- **`skills/_engine.py` — `_SKILLS_LIST_DESC`** reframed from conditional ("List available skills… Use this when…") to unconditional: "ALWAYS call this FIRST — before `search` / `tags` / `get_schema` / `execute` / any platform tool — on ANY networking request." Now also names "RF / channel-planning checks" explicitly in the covered-procedures list.
+- **`server.py`** — new shared `_SKILLS_FIRST_GATE` prepended to `_SEARCH_DESCRIPTION`, `_TAGS_DESCRIPTION`, and `_GET_SCHEMA_DESCRIPTION`: "Call `skills_list` FIRST… only fall through to this tool when `skills_list` returns no applicable skill."
+- **`server.py` — `execute_description`** gains a hard `PREREQUISITE` line near the top: call `skills_list` at the outer surface before using `execute`.
+- **`INSTRUCTIONS.md`** — universal skill-trigger word list gains `rf check`, `rf`, `check the rf`, `channel planning`, `spectrum`, `co-channel` (a known gap — "RF check" matched none of the MUST-fire triggers).
+
+### Verified
+
+- New `test_server_code_mode.py` tests assert the skills-first gate leads `_SEARCH_/_TAGS_/_GET_SCHEMA_DESCRIPTION` and that `execute_description` carries the `PREREQUISITE`; new `test_skills.py` test asserts `_SKILLS_LIST_DESC` opens with the unconditional "ALWAYS … FIRST" directive.
+- All unit tests + ruff + format + mypy clean.
+
 ## [3.1.0.12] - 2026-05-14
 
 **Patch — `skills_list` output now pushes the AI to `skills_load`. Closes #336.**
