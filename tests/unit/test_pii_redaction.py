@@ -13,11 +13,13 @@ from hpe_networking_mcp.redaction.mac_normalizer import (
     normalize_macs_in_value,
 )
 from hpe_networking_mcp.redaction.rules import (
+    MASKED_SECRET_PLACEHOLDER,
     TOKEN_RE,
     FieldClassification,
     TokenKind,
     classify_field,
     is_known_enum_value,
+    is_known_placeholder,
     is_masked_placeholder,
     looks_like_credential,
 )
@@ -401,10 +403,12 @@ class TestTokenStoreLifecycle:
 
 
 class TestIsMaskedPlaceholder:
-    """is_masked_placeholder() recognizes source-platform-masked values
-    that must not be tokenized (they would create the illusion of a
-    tokenized real secret while the round-trip restores only the
-    placeholder). See issue #235."""
+    """is_masked_placeholder() recognizes source-platform-masked values.
+
+    These must never be tokenized — a tokenized placeholder is a dangerous
+    illusion (issue #235). Since issue #276 the walker goes further: it
+    rewrites the masked value to the literal ``REPLACE_ME`` directive so the
+    operator gets a loud, actionable marker in migration output."""
 
     def test_eight_asterisks_is_placeholder(self) -> None:
         assert is_masked_placeholder("********")
@@ -429,25 +433,106 @@ class TestIsMaskedPlaceholder:
         assert not is_masked_placeholder(None)
         assert not is_masked_placeholder(42)
 
-    def test_classify_field_skips_masked_secret_field(self) -> None:
+    def test_classify_field_masked_secret_field_returns_masked_secret(self) -> None:
         # ``shared_secret`` is in SECRET_FIELD_NAMES — would normally
-        # tokenize unconditionally. Masked placeholder must short-circuit
-        # to SKIP.
+        # tokenize unconditionally. A masked placeholder must short-circuit
+        # to MASKED_SECRET (walker rewrites to REPLACE_ME), not tokenize.
         cls, _ = classify_field("shared_secret", "********")
-        assert cls == FieldClassification.SKIP
+        assert cls == FieldClassification.MASKED_SECRET
 
-    def test_classify_field_skips_masked_generic_credential_field(self) -> None:
+    def test_classify_field_masked_generic_credential_field_returns_masked_secret(self) -> None:
         # ``key`` is in GENERIC_CREDENTIAL_FIELD_NAMES with shape-check.
         # Even though ``********`` passes looks_like_credential, the
-        # placeholder check fires first.
+        # placeholder check fires first → MASKED_SECRET.
         cls, _ = classify_field("key", "********")
-        assert cls == FieldClassification.SKIP
+        assert cls == FieldClassification.MASKED_SECRET
 
     def test_classify_field_still_tokenizes_real_credential(self) -> None:
-        # Sanity: the placeholder skip must not affect real values.
+        # Sanity: the placeholder path must not affect real values.
         cls, kind = classify_field("shared_secret", "MyRealSecret123!")
         assert cls == FieldClassification.TOKENIZE_SECRET
         assert kind == TokenKind.RAD
+
+
+class TestMaskedSecretRewrite:
+    """Issue #276 — source-masked ``********`` values are rewritten to the
+    literal ``REPLACE_ME`` directive by the walker (never tokenized), giving
+    the operator a loud, actionable marker in migration output. The walk is
+    idempotent and ``REPLACE_ME`` is never tokenized even in an exact-match
+    secret field."""
+
+    def _tokenizer(self, label: str) -> Tokenizer:
+        return Tokenizer(SessionKeymap(), session_id=f"test-session-276-{label}", max_entries=100)
+
+    def test_is_known_placeholder_recognizes_replace_me(self) -> None:
+        assert is_known_placeholder("REPLACE_ME")
+        assert is_known_placeholder(MASKED_SECRET_PLACEHOLDER)
+
+    def test_is_known_placeholder_rejects_other_values(self) -> None:
+        assert not is_known_placeholder("********")
+        assert not is_known_placeholder("replace_me")  # case-sensitive
+        assert not is_known_placeholder("MyRealSecret123!")
+        assert not is_known_placeholder(None)
+
+    def test_classify_field_replace_me_is_skipped(self) -> None:
+        # REPLACE_ME landing in an exact-match secret field must NOT
+        # tokenize — the is_known_placeholder guard returns SKIP.
+        cls, kind = classify_field("shared_secret", "REPLACE_ME")
+        assert cls == FieldClassification.SKIP
+        assert kind is None
+
+    def test_walker_rewrites_masked_secret_to_replace_me(self) -> None:
+        tokenizer = self._tokenizer("rewrite")
+        response = {"shared_secret": "********", "auth_port": "1812"}
+        out = tokenize_response(response, tokenizer)
+        assert out["shared_secret"] == "REPLACE_ME"
+        # Non-masked siblings untouched.
+        assert out["auth_port"] == "1812"
+
+    def test_walker_rewrites_masked_secret_in_any_field(self) -> None:
+        # The masked check fires regardless of field name — a transposed
+        # AOS 8 row carries the masked secret in a generic ``Value`` field.
+        tokenizer = self._tokenizer("anyfield")
+        response = {"Parameter": "Key", "Value": "********"}
+        out = tokenize_response(response, tokenizer)
+        assert out["Value"] == "REPLACE_ME"
+
+    def test_walk_is_idempotent_on_replace_me(self) -> None:
+        # A second walk sees REPLACE_ME (not ********) and leaves it alone.
+        tokenizer = self._tokenizer("idempotent")
+        response = {"shared_secret": "********"}
+        first = tokenize_response(response, tokenizer)
+        second = tokenize_response(first, tokenizer)
+        assert first["shared_secret"] == "REPLACE_ME"
+        assert second["shared_secret"] == "REPLACE_ME"
+
+    def test_replace_me_not_tokenized_in_exact_match_secret_field(self) -> None:
+        # A tool emitting REPLACE_ME directly into coa_secret (an exact-match
+        # SECRET_FIELD_NAMES entry) must not have it tokenized — that would
+        # bury the operator signal behind an opaque token.
+        tokenizer = self._tokenizer("guard")
+        response = {"coa_secret": "REPLACE_ME"}
+        out = tokenize_response(response, tokenizer)
+        assert out["coa_secret"] == "REPLACE_ME"
+        assert TOKEN_RE.fullmatch(out["coa_secret"]) is None
+
+    def test_real_secret_still_tokenizes_alongside_masked_one(self) -> None:
+        # Mixed response: one masked secret, one cleartext secret. The
+        # masked one becomes REPLACE_ME; the real one still tokenizes.
+        tokenizer = self._tokenizer("mixed")
+        response = {"radius_secret": "********", "coa_secret": "RealCoaSecret123!"}
+        out = tokenize_response(response, tokenizer)
+        assert out["radius_secret"] == "REPLACE_ME"
+        assert TOKEN_RE.fullmatch(out["coa_secret"]).group(1) == "RAD"
+
+    def test_detokenize_arguments_leaves_replace_me_untouched(self) -> None:
+        # REPLACE_ME is a literal, not a token — the inbound walker leaves
+        # it alone and does not flag it as an unknown token.
+        tokenizer = self._tokenizer("inbound")
+        args = {"payload": {"coa_secret": "REPLACE_ME"}}
+        restored, unknown = detokenize_arguments(args, tokenizer)
+        assert restored["payload"]["coa_secret"] == "REPLACE_ME"
+        assert unknown == []
 
 
 class TestStructuralSecretContexts:
@@ -486,12 +571,13 @@ class TestStructuralSecretContexts:
         cls, _ = classify_field("key", "ssid", parent_field_name="some_unknown_wrapper")
         assert cls == FieldClassification.SKIP
 
-    def test_masked_placeholder_under_rad_key_still_skipped(self) -> None:
-        # The placeholder skip runs BEFORE the structural rule so an AOS-8
-        # masked secret nested under rad_key doesn't get tokenized
-        # (would create the dangerous-illusion problem from PR #275).
+    def test_masked_placeholder_under_rad_key_returns_masked_secret(self) -> None:
+        # The masked-placeholder check runs BEFORE the structural rule so an
+        # AOS-8 masked secret nested under rad_key doesn't get tokenized.
+        # Since issue #276 it classifies MASKED_SECRET (walker rewrites to
+        # REPLACE_ME) rather than the bare SKIP from PR #275.
         cls, _ = classify_field("key", "********", parent_field_name="rad_key")
-        assert cls == FieldClassification.SKIP
+        assert cls == FieldClassification.MASKED_SECRET
 
 
 class TestSchemaLabelPassthrough:
@@ -1240,12 +1326,12 @@ class TestTokenizeResponse:
         # value never leaves the controller. The walker MUST NOT tokenize
         # it: a tokenized placeholder creates the dangerous illusion that
         # the AI has a real tokenized secret it can pass to a write tool.
-        # The detokenize round-trip would restore only ``"********"``,
-        # which Central / AOS 10 would accept as a literal RADIUS shared
-        # secret — RADIUS auth then fails silently in production. Skipping
-        # the tokenization makes the AI see ``"********"`` directly and
-        # know it has to ask the operator for the real secret.
-        assert record["Key"] == "********"
+        # Since issue #276 the walker rewrites the masked value to the
+        # literal ``REPLACE_ME`` directive — an unambiguous "operator must
+        # set this" marker, never a token. Central / AOS 10 would still
+        # reject ``REPLACE_ME`` loudly if it were ever committed, and the
+        # aos-migration skill is preview-first so it surfaces in the plan.
+        assert record["Key"] == "REPLACE_ME"
 
         # Non-PII config values stay cleartext.
         assert record["Auth Port"] == "1812"

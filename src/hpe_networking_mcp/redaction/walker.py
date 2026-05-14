@@ -33,6 +33,7 @@ from hpe_networking_mcp.redaction.mac_normalizer import (
 from hpe_networking_mcp.redaction.rules import (
     AWS_SIGNED_URL_RE,
     EMAIL_RE,
+    MASKED_SECRET_PLACEHOLDER,
     PEM_BLOCK_RE,
     WRAPPER_KEY_PATTERNS,
     FieldClassification,
@@ -262,6 +263,14 @@ def _walk_pair(
         return value
 
     classification, kind = classify_field(key, value, parent_keys=parent_keys, parent_field_name=parent_field_name)
+
+    if classification == FieldClassification.MASKED_SECRET:
+        # Source platform masked this secret (e.g. AOS 8's ``"********"``).
+        # Rewrite to the ``REPLACE_ME`` directive — never a token — so the
+        # operator gets a loud, actionable marker in migration output rather
+        # than an ambiguous mask. Idempotent: a re-walk sees ``REPLACE_ME``,
+        # which classifies SKIP via ``is_known_placeholder`` (issue #276).
+        return MASKED_SECRET_PLACEHOLDER
 
     if classification == FieldClassification.SKIP:
         # Keymap-replay pass first (issue #291): if this exact string was

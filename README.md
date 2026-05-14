@@ -370,6 +370,12 @@ Tool responses are walked before reaching the AI:
 | **Private-key PEM in free-text** | PEM key blocks in `description` / `notes` / `comment` | `[[KEY:uuid]]` |
 | **Generic (shape-checked)** | `password`, `pwd` → PASSWORD; `secret` → RAD; `token`, `key` → APITOKEN. Only when value passes length ≥ 8 + character-class diversity check (suppresses `{"key": "ssid"}`). | varies |
 
+**Source-masked secrets** — when the source platform itself masks the value (v3.1.0.4 / #276):
+
+| Source value | Rewritten to | Notes |
+|--------------|:------------:|-------|
+| `********` (any field — AOS 8 masks RADIUS / TACACS / RFC-3576 shared secrets server-side) | `REPLACE_ME` | Literal directive, **not a token**. An unambiguous "operator must set this" marker for migration output — `********` reads as "redacted/hidden", `REPLACE_ME` reads as an instruction. The walk is idempotent and `REPLACE_ME` is never tokenized even in an exact-match secret field. |
+
 **Identifiers** — tokenized when the field name matches:
 
 | Category | Field names | Token form |

@@ -94,6 +94,10 @@ class FieldClassification(StrEnum):
     TOKENIZE_SECRET = "tokenize_secret"  # nosec B105 — enum classification label, not a credential
     TOKENIZE_IDENTIFIER = "tokenize_identifier"
     SCAN_FREE_TEXT = "scan_free_text"
+    # Source-platform-masked secret (e.g. AOS 8's "********"). The walker
+    # rewrites these to the MASKED_SECRET_PLACEHOLDER directive — never a
+    # token. See issue #276.
+    MASKED_SECRET = "masked_secret"  # nosec B105 — enum classification label, not a credential
 
 
 # ---------------------------------------------------------------------------
@@ -493,11 +497,37 @@ def is_masked_placeholder(value: str) -> bool:
     added as they surface.
 
     See [issue #235](https://github.com/nowireless4u/hpe-networking-mcp/issues/235)
-    for the AOS 8 ``Key: "********"`` case.
+    for the AOS 8 ``Key: "********"`` case, and
+    [issue #276](https://github.com/nowireless4u/hpe-networking-mcp/issues/276)
+    for the rewrite-to-``REPLACE_ME`` behaviour the walker applies on top.
     """
     if not isinstance(value, str) or not value:
         return False
     return len(value) >= 4 and all(c == "*" for c in value)
+
+
+# The literal directive the walker substitutes for a source-masked secret
+# (e.g. AOS 8's "********"). It is NOT a token — it is an unambiguous
+# "operator must set this" marker that flows through to migration output.
+# "********" reads as "redacted/hidden" (ambiguous — is there a recoverable
+# value behind it?); "REPLACE_ME" is an explicit directive. See issue #276.
+MASKED_SECRET_PLACEHOLDER = "REPLACE_ME"  # nosec B105 — directive string, not a credential
+
+
+def is_known_placeholder(value: str) -> bool:
+    """Return True if ``value`` is the walker-emitted ``REPLACE_ME`` directive.
+
+    Once the walker rewrites a source-masked ``********`` to ``REPLACE_ME``,
+    that literal must never be tokenized — even when it lands in an
+    exact-match secret field like ``coa_secret`` or ``shared_secret``.
+    Tokenizing it would bury the "operator must set this" signal behind an
+    opaque token. This guard also keeps the walk idempotent: a second walk
+    sees ``REPLACE_ME`` (not ``********``), classifies it ``SKIP``, and
+    leaves it alone.
+
+    See [issue #276](https://github.com/nowireless4u/hpe-networking-mcp/issues/276).
+    """
+    return isinstance(value, str) and value == MASKED_SECRET_PLACEHOLDER
 
 
 _COMMON_ENUM_VALUES: frozenset[str] = frozenset(
@@ -578,12 +608,20 @@ def classify_field(
         return FieldClassification.SKIP, None
     name = _normalize_field_name(field_name)
 
-    # Source-platform-masked placeholders (e.g. AOS 8's ``"********"``) must
-    # never be tokenized regardless of which rule path matches the field name.
-    # See ``is_masked_placeholder`` for the rationale (dangerous illusion of
-    # a tokenized real secret; round-trip restores only the placeholder).
-    if isinstance(value, str) and is_masked_placeholder(value):
+    # The walker-emitted ``REPLACE_ME`` directive must never be re-classified
+    # — not tokenized (even in an exact-match secret field), not re-rewritten.
+    # Checked before everything else so it survives a second walk intact and
+    # the loud operator signal is preserved (issue #276).
+    if isinstance(value, str) and is_known_placeholder(value):
         return FieldClassification.SKIP, None
+
+    # Source-platform-masked placeholders (e.g. AOS 8's ``"********"``) are
+    # rewritten by the walker to the ``REPLACE_ME`` directive — never a token,
+    # regardless of which rule path matches the field name. See
+    # ``is_masked_placeholder`` for the rationale (a tokenized placeholder is
+    # a dangerous illusion; the round-trip restores only the mask).
+    if isinstance(value, str) and is_masked_placeholder(value):
+        return FieldClassification.MASKED_SECRET, None
 
     # Structural-context rules — when a generic field name (e.g. ``key``) is
     # nested under a wrapping key that strongly implies a credential

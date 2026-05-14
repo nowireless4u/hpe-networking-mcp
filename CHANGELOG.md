@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0.5] - 2026-05-14
+
+**Patch — rewrite source-masked secrets to `REPLACE_ME` during migration reads. Closes #276.**
+
+Source platforms like AOS 8 mask shared secrets server-side: `show aaa rfc-3576-server <ip>` and `show aaa authentication-server radius <name>` both return `Key: "********"` rather than the cleartext value — the real secret never leaves the controller, even in a full flash backup.
+
+Until now the redaction walker *skipped* masked placeholders — `********` flowed through unchanged. `********` reads as "redacted/hidden", which is ambiguous: an AI orchestrator can't tell whether there's a recoverable value behind it. This release rewrites the masked value to the literal directive `REPLACE_ME` — an unambiguous "operator must set this" marker. During an AOS 8 → Central migration the operator gets a clear to-do marker in the output instead of a vague mask.
+
+### What changed
+
+- **`redaction/rules.py`**:
+  - New `FieldClassification.MASKED_SECRET` — `classify_field` returns this (instead of the bare `SKIP`) when `is_masked_placeholder(value)` is true.
+  - New `MASKED_SECRET_PLACEHOLDER = "REPLACE_ME"` constant + `is_known_placeholder(value)` helper.
+  - `classify_field` now checks `is_known_placeholder` first → `SKIP`. Critical guard: `REPLACE_ME` landing in an exact-match secret field like `coa_secret` / `shared_secret` would otherwise be tokenized, burying the operator signal behind an opaque token. This guard also keeps the walk idempotent.
+- **`redaction/walker.py`** — `_walk_pair` handles the `MASKED_SECRET` classification by returning the literal `REPLACE_ME`.
+
+### Scope
+
+The descope from the originally-filed #276 is deliberate and confirmed with the maintainer: **no secrets vault, no synthesis, no ClearPass propagation.** The entire mechanism is the single `********` → `REPLACE_ME` walker rewrite. The operator sets the real value in Central themselves.
+
+Gated on `ENABLE_PII_TOKENIZATION` — the rewrite happens via `classify_field`, which only runs when the tokenizer is active. Deployments with PII tokenization off still see `********` (unchanged behavior).
+
+### Verified
+
+- `TestMaskedSecretRewrite` (8 new tests): the rewrite, the `is_known_placeholder` guard, idempotency, `REPLACE_ME` not tokenized in an exact-match secret field, real secrets still tokenizing alongside masked ones, `detokenize_arguments` leaving `REPLACE_ME` untouched.
+- Existing `TestIsMaskedPlaceholder` + `test_aos8_aaa_radius_detail_after_flatten_tokenizes_host` updated for the new `MASKED_SECRET` classification and `REPLACE_ME` output.
+- All 1236 unit tests + 1 skip pass; ruff + format + mypy clean.
+
+### Unblocks
+
+- **#322** — the combined CoA + RADIUS migration tool. Its masked secrets become `REPLACE_ME` automatically via the walker; the tool needs no secret-handling logic of its own.
+
 ## [3.1.0.4] - 2026-05-13
 
 **Patch — plug AOS 8 rfc-3576 detail-form wrapper-key IP leak + align CoA secrets to the RAD token family. Closes #319 + #321.**
