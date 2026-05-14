@@ -319,6 +319,27 @@ class TestDiscoveryToolFactories:
         assert result["count"] == 2
         names = {s["name"] for s in result["skills"]}
         assert names == {"alpha", "beta"}
+        # Issue #336: the response itself must push the AI to skills_load —
+        # a next_step directive plus a per-entry literal load call.
+        assert "skills_load" in result["next_step"]
+        assert "MUST" in result["next_step"]
+        for entry in result["skills"]:
+            assert entry["load_with"] == f"skills_load(name={entry['name']!r})"
+
+    @pytest.mark.asyncio
+    async def test_skills_list_factory_empty_result_has_fallback_next_step(self):
+        """Issue #336: with no matches, next_step tells the AI to fall back
+        to per-platform tools rather than (wrongly) pushing skills_load."""
+        from hpe_networking_mcp.skills._engine import SkillsListDiscoveryTool
+
+        reg = SkillRegistry([_skill("alpha", platforms=("mist",))])
+        tool = SkillsListDiscoveryTool(reg)(get_catalog=None)
+        result = await tool.fn(platform="central")  # no match
+
+        assert result["count"] == 0
+        assert result["skills"] == []
+        assert "per-platform tools" in result["next_step"]
+        assert "skills_load" not in result["next_step"]
 
     @pytest.mark.asyncio
     async def test_skills_list_factory_filters_by_platform(self):

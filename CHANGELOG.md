@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0.12] - 2026-05-14
+
+**Patch — `skills_list` output now pushes the AI to `skills_load`. Closes #336.**
+
+An AI client recognized a skill trigger, called `skills_list()` three times, saw the metadata (description + tool list), and **never called `skills_load(name=...)`** to fetch the actual runbook body — it improvised the procedure (and the visualization) from the metadata hint instead. Its own post-mortem: *"the metadata gives enough of a hint that a visualization is involved, but not how — that detail only exists in the body."*
+
+Root cause: `skills_list` returned `{"count", "skills"}` with nothing in the **response** telling the AI this is metadata-only and `skills_load` is the required next step. The tool *description* says so, but the AI reads the description once and the output every call — the output is the high-signal surface and carried no directive.
+
+### Fix
+
+`_engine.py::_make_skills_list_fn` — the `skills_list` response now carries:
+- a top-level **`next_step`** directive — when there are matches: "this is metadata only, NOT the runbook; you MUST `skills_load(name=...)` and follow every step including its output format; do NOT improvise." When there are no matches: "no skills matched — proceed with per-platform tools."
+- a per-entry **`load_with`** field — the literal `skills_load(name='<skill>')` call, so the AI has the exact next call in front of it for each matched skill.
+
+One change covers both the code-mode discovery-tool path and the dynamic-mode `@mcp.tool` path (shared body).
+
+### Verified
+
+- 2 updated/new tests in `test_skills.py::TestDiscoveryToolFactories` — the matched-result `next_step` + `load_with` fields, and the empty-result fallback directive.
+- All unit tests + ruff + format + mypy clean.
+
 ## [3.1.0.11] - 2026-05-14
 
 **Patch — rewrite the `cross-platform-rf-check` skill's Step 9 to a precise RF-planner widget layout.**

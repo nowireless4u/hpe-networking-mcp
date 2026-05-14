@@ -237,6 +237,22 @@ _SKILLS_LOAD_DESC = (
 )
 
 
+# Directives carried in the ``skills_list`` *response* (not just the tool
+# description) so the AI sees them on every call. Issue #336: an AI client
+# called ``skills_list`` three times, saw the metadata, and improvised a
+# procedure instead of ever calling ``skills_load`` — because nothing in
+# the *output* pushed it to the next step.
+_SKILLS_LIST_NEXT_STEP_MATCHED = (
+    "This is skill METADATA only — NOT the runbook. If any skill above "
+    "matches the request, you MUST call `skills_load(name=...)` (see each "
+    "entry's `load_with`) to get its full step-by-step body, then follow "
+    "every step — including its output / visualization format. Do NOT "
+    "improvise a procedure from this metadata: the metadata names the "
+    "skill, but the body is where the actual procedure lives."
+)
+_SKILLS_LIST_NEXT_STEP_EMPTY = "No skills matched these filters. Proceed with per-platform tools."
+
+
 def _make_skills_list_fn(registry: SkillRegistry):
     """Build the async ``skills_list`` body that closes over a registry."""
 
@@ -246,9 +262,16 @@ def _make_skills_list_fn(registry: SkillRegistry):
         tag: str | list[str] | None = None,
     ) -> dict[str, Any]:
         results = registry.filter(platform=platform, tag=tag)
+        skills: list[dict[str, Any]] = []
+        for s in results:
+            entry = s.to_metadata()
+            # The literal next call to make for this skill — issue #336.
+            entry["load_with"] = f"skills_load(name={s.name!r})"
+            skills.append(entry)
         return {
             "count": len(results),
-            "skills": [s.to_metadata() for s in results],
+            "skills": skills,
+            "next_step": (_SKILLS_LIST_NEXT_STEP_MATCHED if results else _SKILLS_LIST_NEXT_STEP_EMPTY),
         }
 
     return skills_list
