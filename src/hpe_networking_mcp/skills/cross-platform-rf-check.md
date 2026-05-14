@@ -178,39 +178,68 @@ Step 8 text report — never instead of it.
 **Preferred — self-contained HTML artifact** (when the client renders HTML
 artifacts, e.g. Claude.ai / Claude Desktop): emit a single self-contained
 HTML document — inline CSS + vanilla JS, no external assets, no network
-calls, **no gradients or glows** (use solid fills with opacity — it reads
-cleaner and renders consistently). Build an **RF-planner-style coverage
-map**, not a bare chart:
+calls, **no gradients or glows** (solid fills with opacity only — it reads
+cleaner and renders consistently). Build a proper **RF-planner widget**
+that renders **one band at a time**, laid out exactly like this, top to
+bottom:
 
-- **Floor-plan canvas (SVG).** Place each AP as a marker on a floor plan.
-  Use Mist map coordinates (`x`, `y`, `map_id` on the device-stat record)
-  when present; otherwise derive a sensible *logical* layout from the AP
-  **names** (e.g. `HOME-GARAGE-AP` → garage area, `HOME-LOFT-AP` → upper
-  centre, `HOME-GIRLSRM-AP` → a room) and label the canvas
-  "logical layout — no map coordinates". Include a faint coordinate grid
-  and a site label.
-- **Coverage rings.** Around each AP draw concentric signal-strength rings
-  (excellent / good / fair / marginal) as solid strokes with decreasing
-  opacity — not gradients. Scale ring radius by **band and transmit
-  power**: 2.4 GHz rings largest (propagates furthest), 5 GHz medium,
-  6 GHz smallest; within a band, scale by the radio's `power` dBm.
-- **Band selector.** Toggle buttons for 2.4 / 5 / 6 GHz at the top — only
-  the active band's rings + channel labels render. Colour each band on an
-  EM-spectrum ramp: amber 2.4 GHz, teal 5 GHz, purple 6 GHz.
-- **AP detail panel.** Clicking an AP marker shows its full per-band
-  detail: name, platform, model, channel, bandwidth, power (dBm), channel
-  utilization %, noise floor, client count. If the client's artifact
-  runtime supports emitting a follow-up prompt (e.g. Claude artifacts),
-  wire the marker click to also emit one with the AP name so the operator
-  can drill in conversationally.
-- **Site stats strip.** Per-band aggregate utilization + noise, plus a
-  one-line read ("2.4 GHz running hot, 6 GHz mostly idle").
-- **Co-channel flag.** Where 2+ APs share a primary channel — or
-  overlapping 80/160 MHz blocks — on 5/6 GHz, mark it visibly. That is the
-  single most actionable thing an RF planner surfaces.
+1. **Header.** An eyebrow line `SITE <site_id> · <N> APs · <model(s)>`, the
+   title `<site_name> · RF planner`, and — top-right — a band-toggle button
+   group (`2.4 GHz` / `5 GHz` / `6 GHz`). Render a button only for a band
+   that has reporting radios. Clicking a band sets it active and re-renders
+   the whole widget. Colour the active band's accents on an EM-spectrum
+   ramp — amber 2.4 GHz, teal 5 GHz, purple 6 GHz.
+
+2. **Stats strip.** Four cards, all for the **active band only**: Active
+   band · Avg utilization (colour amber→red as it climbs) · Avg noise
+   floor (dBm) · Connected clients (sum).
+
+3. **Floor-plan canvas (SVG, the main panel).** Place each AP in a room on
+   a floor plan:
+   - If Mist map coordinates are present (`x`, `y`, `map_id` on the
+     device-stat record), use them.
+   - Otherwise **synthesize a floor plan from the AP names** — do not just
+     scatter dots on a blank canvas. Parse a room/area hint from each AP
+     name (the segment between the site/platform prefix and the `-AP`
+     suffix — e.g. `…-LOBBY-AP` → "Lobby", `…-FLOOR2-AP` → "Floor 2",
+     `…-WAREHOUSE-AP` → "Warehouse") and draw labelled room rectangles:
+     group plausibly-indoor rooms inside one "Main level" building box and
+     place outbuilding-style names (garage, warehouse, annex, shed) as
+     their own separate rectangles. Label the canvas "logical layout —
+     synthesized from AP names" when there are no real coordinates.
+   - A faint coordinate grid sits behind everything.
+   - Each AP renders as a marker dot in its room with the room label, the
+     transmit power (`12 dBm`), and a channel pill (`Ch 6`).
+   - Around each AP draw concentric coverage contours — 3–4 nested
+     translucent rings, solid fill with decreasing opacity (NOT gradients),
+     radius scaled by band + the radio's `power` dBm (2.4 GHz widest,
+     6 GHz tightest). Include a small "Signal contour … far" legend.
+
+4. **AP cards (right sidebar).** One card per AP, **active band only**:
+   coloured dot + AP name; a `Ch <n> · <bw> MHz · <power> dBm` row; a
+   "Channel busy <util>%" horizontal bar (amber, turning red as it climbs
+   past ~60 %); a `Noise <n> dBm · <n> clients` footer.
+
+5. **Channel-plan strip (bottom).** Heading `<active band> channel plan`,
+   then one compact pill per AP: `<ap> · ch <n> · <bw> MHz · <power> dBm`.
+   Flag any co-channel collision (2+ APs sharing a primary channel, or
+   overlapping 80/160 MHz blocks) right here — it is the single most
+   actionable thing an RF planner surfaces.
+
+**Interaction rules:**
+
+- **One band at a time** — never expose all three bands' channels at once.
+  The header toggle is the only way to switch; the stats strip, canvas, AP
+  cards, and channel-plan strip all reflect just the active band.
+- Clicking an AP marker (or its card) highlights that AP; if the client's
+  artifact runtime supports emitting a follow-up prompt (e.g. Claude
+  artifacts), also emit one with the AP name so the operator can drill in
+  conversationally.
 
 Keep it dependency-free and compact. If PII tokenization is on, tokenized
 values display verbatim — the artifact is a view, it does not detokenize.
+Every `<…>` and room name above is a **format placeholder** — render the
+operator's real site, AP, and room names from the live data.
 
 **Fallback — rich ASCII spectrum diagram** (when the client does NOT render
 HTML artifacts): emit the spatial channel-allocation diagram described

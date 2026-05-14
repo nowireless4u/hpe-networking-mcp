@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0.11] - 2026-05-14
+
+**Patch — rewrite the `cross-platform-rf-check` skill's Step 9 to a precise RF-planner widget layout.**
+
+The v3.1.0.8 / v3.1.0.9 Step 9 described the *ingredients* of the visualization (floor plan, coverage rings, band toggle) but not the *layout*, so AI clients produced inconsistent, sub-par results. Operator feedback supplied a target screenshot of an excellent RF-planner widget; Step 9 now specs that layout prescriptively, top to bottom:
+
+1. **Header** — `SITE <id> · <N> APs · <model>` eyebrow, `<site> · RF planner` title, band-toggle button group (EM-spectrum accent ramp: amber 2.4 / teal 5 / purple 6).
+2. **Stats strip** — four cards (Active band · Avg utilization · Avg noise floor · Connected clients), active-band-only.
+3. **Floor-plan canvas** — when no Mist map coordinates exist, **synthesize labelled room rectangles from AP names** (group indoor rooms in a "Main level" box, outbuildings as separate rectangles) rather than scattering dots on a blank canvas. Faint grid, AP markers with channel pills, concentric power-scaled coverage contours.
+4. **AP cards sidebar** — per-AP `Ch · BW · dBm`, "Channel busy %" bar, noise/clients footer.
+5. **Channel-plan strip** — active-band pills, co-channel collisions flagged.
+
+Hard rule reinforced: **one band at a time** — the header toggle is the only switch; stats, canvas, cards, and channel strip all reflect just the active band. All names in the spec are generic format placeholders, with an explicit instruction to render the operator's real site/AP/room names from live data. The ASCII spectrum diagram remains the non-artifact fallback.
+
+Skill-only + version + CHANGELOG; no Python touched. `test_skill_tool_references.py` still green (no tool changes).
+
 ## [3.1.0.10] - 2026-05-14
 
 **Patch — a tool's `ToolError` no longer crashes the entire code-mode `execute()` block. Closes #333.**
