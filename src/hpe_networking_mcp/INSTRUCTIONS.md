@@ -16,7 +16,7 @@ Tools are namespaced by platform:
 
 Two modes are supported (the `static` mode was removed in v3.0.0.0):
 
-- **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 368 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. The smallest initial surface; best for orchestrators driving small / local LLMs.
+- **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 1368 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. The smallest initial surface; best for orchestrators driving small / local LLMs.
 - **`MCP_TOOL_MODE=dynamic`** (opt-in since v3.0.0.0; was the v2.x default) — 24 tools visible:
     - **4 cross-platform tools**: `health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`
     - **3 meta-tools per platform × 7 platforms** = 21: `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`
@@ -256,7 +256,7 @@ The `execute()` sandbox uses `pydantic-monty` for its Python parser. It supports
 
 ## Tool Catalog (v3.1.0.0 spec-driven)
 
-**Mist tooling is now generated from the upstream Juniper Mist OpenAPI spec** (~1000 tools, one per REST endpoint). Tools follow the `mist_<snake_case_operationId>` convention:
+**Mist tooling is now generated from the upstream Juniper Mist OpenAPI spec** (1037 tools, one per REST endpoint). Tools follow the `mist_<snake_case_operationId>` convention:
 
 - GET on a collection → `mist_list_<resource>` (e.g. `mist_list_org_sites`)
 - GET on an item → `mist_get_<resource>` (e.g. `mist_get_self`)
