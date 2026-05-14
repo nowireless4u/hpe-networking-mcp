@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0.4] - 2026-05-13
+
+**Patch — plug AOS 8 rfc-3576 detail-form wrapper-key IP leak. Closes #319.**
+
+Live audit of the AOS 8 `show aaa rfc-3576-server <ip>` response shape surfaced a leak the structural-context rules didn't catch:
+
+```json
+{"RFC 3576 Server 192.168.20.70": [
+    {"Parameter": "Key", "Value": "********"},
+    ...
+]}
+```
+
+The walker classifies fields by their *normalized* names — `rfc_3576_server_192.168.20.70` doesn't match any rule, so the IP-bearing wrapper key passed through to the AI cleartext. The list-form companion shape (`{"RFC 3576 Server List": [{"Name": "192.168.20.70", ...}]}`) was already covered by the v3.0.1.12 structural rule (#296); the detail-form wrapper was the remaining gap.
+
+### What changed
+
+- **`redaction/rules.py`** — added `WRAPPER_KEY_PATTERNS`, a list of `(regex, TokenKind)` pairs. The walker rewrites any matching dict key by tokenizing the captured substring in place. First entry: `re.compile(r"^RFC 3576 Server (?!List$)(\S+)$")` → `TokenKind.COA`. The negative lookahead excludes the list-form wrapper (`"RFC 3576 Server List"`), which is handled by the existing `rfc_3576_server_list[].name` structural rule on the list elements.
+- **`redaction/walker.py`** — `_walk_dict` now calls `_rewrite_wrapper_key()` on each key before placing it in the output dict. Same token kind as the list-form rule (`COA`), so the same IP appearing in both the list and detail forms within one session resolves to a single `[[COA:uuid]]` token via the keymap — required for migration tooling that fans out across shapes.
+- **`redaction/walker.py::_detokenize_walk`** — extended to detokenize dict KEYS, not just values. If the AI ever passes the rewritten wrapper-key dict back as an argument, the inbound walker restores the cleartext IP before the call hits the platform.
+
+### Verified
+
+- New test class `TestWrapperKeyRewrite` in `tests/unit/test_pii_redaction.py` covers four cases:
+  - Rewrite: the IP-bearing wrapper key is replaced with the tokenized form
+  - Same-token correlation: list-form and detail-form responses tokenizing the same IP share the same `[[COA:uuid]]` token within a session
+  - Round-trip: `detokenize_arguments` on a dict carrying the rewritten key restores the cleartext IP
+  - No-op: dicts whose keys don't match any wrapper pattern pass through unchanged
+- All 1225 unit tests + 1 skip pass; ruff + format + mypy clean.
+
+### Operator-facing detail
+
+The AOS 8 single-server detail also returns the shared secret under `Parameter: "Key"` / `Value: "********"`. The `is_masked_placeholder` check skips tokenization on that placeholder — the real secret never leaves the controller, so there's nothing useful to tokenize. (Per the verified-live note in `feedback_aos8_secret_visibility.md`: AOS 8 server-side masks RADIUS / TACACS / RFC-3576 shared secrets but ships PSKs cleartext.)
+
 ## [3.1.0.3] - 2026-05-13
 
 **Patch — rewires skills + INSTRUCTIONS.md to the v3.1.0.0 spec-driven Mist tool names. Closes #305.**

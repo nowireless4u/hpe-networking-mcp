@@ -34,6 +34,7 @@ from hpe_networking_mcp.redaction.rules import (
     AWS_SIGNED_URL_RE,
     EMAIL_RE,
     PEM_BLOCK_RE,
+    WRAPPER_KEY_PATTERNS,
     FieldClassification,
     TokenKind,
     _normalize_field_name,
@@ -157,6 +158,32 @@ def _scan_free_text(text: str, tokenizer: Tokenizer) -> str:
     return result
 
 
+def _rewrite_wrapper_key(key: str, tokenizer: Tokenizer) -> str:
+    """Rewrite a wrapper dict key by tokenizing any embedded sensitive
+    substring matching one of ``WRAPPER_KEY_PATTERNS``.
+
+    Plug for the leak where a platform surfaces a single-record detail
+    block under a wrapper key embedding the record identifier (e.g. AOS
+    8's ``"RFC 3576 Server 192.168.20.70"`` wrapper). The structural
+    rules only look at NORMALIZED field names, so the raw key still
+    surfaces the IP to the AI unless we rewrite it (issue #319).
+
+    Returns the key unchanged when no pattern matches. Tokenization is
+    keymap-deduplicated, so the same captured value gets the same token
+    across this wrapper-key rewrite and any list-form structural rule
+    using the same ``TokenKind`` (e.g. ``rfc_3576_server_list[].name``).
+    """
+    for pattern, kind in WRAPPER_KEY_PATTERNS:
+        match = pattern.match(key)
+        if not match:
+            continue
+        captured = match.group(1)
+        replacement = tokenize_value(tokenizer, kind, captured)
+        if isinstance(replacement, str) and replacement != captured:
+            return key[: match.start(1)] + replacement + key[match.end(1) :]
+    return key
+
+
 def _walk_dict(
     data: dict,
     tokenizer: Tokenizer | None,
@@ -189,7 +216,10 @@ def _walk_dict(
             parent_keys=parent_keys,
             parent_field_name=parent_field_name,
         )
-        out[key] = new_value
+        new_key = key
+        if tokenizer is not None and isinstance(key, str):
+            new_key = _rewrite_wrapper_key(key, tokenizer)
+        out[new_key] = new_value
     return out
 
 
@@ -344,7 +374,20 @@ def _detokenize_walk(
         return data
 
     if isinstance(data, dict):
-        return {key: _detokenize_walk(value, tokenizer, unknown, depth=depth + 1) for key, value in data.items()}
+        # Detokenize KEYS too, not just values. The outbound walker
+        # rewrites wrapper keys like ``"RFC 3576 Server 192.168.20.70"``
+        # to ``"RFC 3576 Server [[COA:uuid]]"``; if the AI passes one of
+        # those keys back, we need to restore the cleartext IP before the
+        # downstream platform sees it (issue #319).
+        out_dict: dict = {}
+        for key, value in data.items():
+            new_key = key
+            if isinstance(key, str):
+                replaced, missing = detokenize_string(tokenizer, key)
+                unknown.extend(missing)
+                new_key = replaced
+            out_dict[new_key] = _detokenize_walk(value, tokenizer, unknown, depth=depth + 1)
+        return out_dict
     if isinstance(data, list):
         return [_detokenize_walk(item, tokenizer, unknown, depth=depth + 1) for item in data]
     if isinstance(data, str):

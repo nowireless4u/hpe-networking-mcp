@@ -610,6 +610,109 @@ class TestStructuralCoaContextsEndToEnd:
         assert servers[0]["enabled"] is True
 
 
+class TestWrapperKeyRewrite:
+    """Issue #319 — when a platform surfaces a single-record detail block
+    under a wrapper key embedding the record identifier (e.g. AOS 8's
+    ``show aaa rfc-3576-server <ip>`` returns ``{"RFC 3576 Server <ip>":
+    [...]}``), the walker must rewrite the key so the embedded value is
+    tokenized.
+
+    The structural rules only consult NORMALIZED field names, so the raw
+    key string carrying the IP would otherwise surface verbatim. The fix
+    is keyed off ``WRAPPER_KEY_PATTERNS`` in ``rules.py`` and applies
+    in ``_walk_dict``; round-trip detokenization is extended to dict
+    keys in ``_detokenize_walk``.
+    """
+
+    def test_aos8_rfc_3576_detail_wrapper_key_gets_rewritten(self) -> None:
+        keymap = SessionKeymap()
+        tokenizer = Tokenizer(keymap, session_id="test-session-319-detail", max_entries=100)
+
+        # Live-captured AOS 8 shape from ``show aaa rfc-3576-server 192.168.20.70``.
+        response = {
+            "RFC 3576 Server 192.168.20.70": [
+                {"Parameter": "Key", "Value": "********"},
+                {"Parameter": "RadSec", "Value": "Disabled"},
+                {"Parameter": "Window Duration", "Value": "300"},
+            ],
+        }
+        out = tokenize_response(response, tokenizer)
+
+        # The original IP-bearing key is gone.
+        assert "RFC 3576 Server 192.168.20.70" not in out
+        # A rewritten key with a COA token is present.
+        rewritten_keys = list(out.keys())
+        assert len(rewritten_keys) == 1
+        rewritten_key = rewritten_keys[0]
+        assert rewritten_key.startswith("RFC 3576 Server ")
+        token_part = rewritten_key[len("RFC 3576 Server ") :]
+        match = TOKEN_RE.fullmatch(token_part)
+        assert match is not None, f"expected COA token, got {token_part!r}"
+        assert match.group(1) == "COA"
+
+    def test_same_ip_in_list_and_detail_forms_share_a_token(self) -> None:
+        """Migration tooling depends on the same IP across list-form and
+        detail-form wrappers getting the same token — fans out correctly
+        when the AI references the server by either shape.
+        """
+        keymap = SessionKeymap()
+        tokenizer = Tokenizer(keymap, session_id="test-session-319-correlate", max_entries=100)
+
+        # List form first (matches the existing ``rfc_3576_server_list[].name``
+        # structural rule → COA).
+        list_resp = {
+            "RFC 3576 Server List": [
+                {"Name": "192.168.20.70", "Profile Status": None, "References": "0"},
+            ],
+        }
+        list_out = tokenize_response(list_resp, tokenizer)
+        list_token = list_out["RFC 3576 Server List"][0]["Name"]
+        assert TOKEN_RE.fullmatch(list_token).group(1) == "COA"
+
+        # Detail form second — same IP. New wrapper-key rewrite must use
+        # the SAME token via the keymap (same kind, same plaintext).
+        detail_resp = {
+            "RFC 3576 Server 192.168.20.70": [{"Parameter": "Key", "Value": "********"}],
+        }
+        detail_out = tokenize_response(detail_resp, tokenizer)
+        detail_key = next(iter(detail_out.keys()))
+        detail_token = detail_key[len("RFC 3576 Server ") :]
+        assert detail_token == list_token, "list-form and detail-form must share the COA token"
+
+    def test_wrapper_key_round_trips_via_detokenize_arguments(self) -> None:
+        """If the AI passes the rewritten wrapper-key dict back as an
+        argument, the inbound walker must restore the cleartext IP before
+        the call hits the downstream platform.
+        """
+        keymap = SessionKeymap()
+        tokenizer = Tokenizer(keymap, session_id="test-session-319-roundtrip", max_entries=100)
+
+        response = {
+            "RFC 3576 Server 192.168.20.70": [{"Parameter": "Key", "Value": "********"}],
+        }
+        tokenized = tokenize_response(response, tokenizer)
+        rewritten_key = next(iter(tokenized.keys()))
+
+        # AI hands the dict back as an argument.
+        arguments = {"payload": tokenized}
+        restored_args, unknown = detokenize_arguments(arguments, tokenizer)
+
+        assert unknown == []
+        restored_payload = restored_args["payload"]
+        assert "RFC 3576 Server 192.168.20.70" in restored_payload
+        assert rewritten_key not in restored_payload
+
+    def test_wrapper_pattern_no_match_is_noop(self) -> None:
+        """A dict whose keys don't match any wrapper pattern is unchanged."""
+        keymap = SessionKeymap()
+        tokenizer = Tokenizer(keymap, session_id="test-session-319-noop", max_entries=100)
+
+        response = {"some_unrelated_key": {"inner": "value"}}
+        out = tokenize_response(response, tokenizer)
+        assert "some_unrelated_key" in out
+        assert out["some_unrelated_key"] == {"inner": "value"}
+
+
 class TestKeymapReplayOnSkipPath:
     """Issue #291 — walker keymap-replay on SKIP path. When a tool emits
     a previously-tokenized cleartext value at a field that carries no

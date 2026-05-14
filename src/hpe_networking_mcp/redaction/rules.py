@@ -322,6 +322,42 @@ STRUCTURAL_IDENTIFIER_CONTEXTS: dict[tuple[str, str], TokenKind] = {
 
 
 # ---------------------------------------------------------------------------
+# Tier 1.7 — Wrapper-key patterns (dict keys with embedded sensitive values)
+# ---------------------------------------------------------------------------
+# Some platforms surface single-record detail blocks under a wrapper dict
+# key that embeds the record identifier (e.g. AOS 8's
+# ``show aaa rfc-3576-server <ip>`` returns ``{"RFC 3576 Server <ip>": [...]}``).
+# The structural-context rules only consult NORMALIZED field names, so the
+# original key string carrying the IP still surfaces to the AI verbatim.
+#
+# Each pattern has ONE regex capture group identifying the variable suffix
+# to tokenize. The walker rewrites the key by tokenizing the captured
+# substring in place; the rewritten key form is ``"<prefix> [[KIND:uuid]]"``.
+# Round-trippable via the keymap on inbound arguments (the detokenize walk
+# is extended to walk keys, not just values).
+#
+# Token-kind alignment matters: when the same IP/identifier also appears
+# under a list-form structural rule (e.g. ``rfc_3576_server_list[].name``
+# tokenizes as COA), the pattern here MUST use the same kind so the
+# keymap deduplicates to a single token across both shapes (issue #319).
+
+WRAPPER_KEY_PATTERNS: list[tuple[re.Pattern[str], TokenKind]] = [
+    # AOS 8 single rfc-3576-server detail wrapper (issue #319).
+    # ``show aaa rfc-3576-server <name>`` → ``{"RFC 3576 Server <name>": [...]}``
+    # where ``<name>`` is typically the server IP (matches the ``Name`` field
+    # in the list form). Same TokenKind.COA as the list-form rule so both
+    # shapes deduplicate to a single token per server.
+    #
+    # Negative lookahead ``(?!List$)`` excludes the list-form wrapper
+    # (``"RFC 3576 Server List"`` itself) — that wrapper is handled by the
+    # ``rfc_3576_server_list`` structural rule on the list ELEMENTS, not
+    # the wrapper key. ``\S+`` keeps server names to a single token (AOS 8
+    # rejects names with spaces at config time).
+    (re.compile(r"^RFC 3576 Server (?!List$)(\S+)$"), TokenKind.COA),
+]
+
+
+# ---------------------------------------------------------------------------
 # Tier 3 — Free-text fields scanned for embedded secrets/identifiers
 # ---------------------------------------------------------------------------
 
