@@ -115,6 +115,32 @@ def test_discovery_tool_descriptions_carry_platform_keywords() -> None:
         assert "tool" in desc.lower(), f"server.{name} must contain the word 'tool'"
 
 
+@pytest.mark.unit
+def test_discovery_tool_descriptions_gate_on_skills_list() -> None:
+    """#338: every catalog-discovery tool description must open with the
+    skills-first gate — `skills_list` is a tool-layer prerequisite, not an
+    implication the AI can rationalize past (it jumped straight to `search`
+    on an "RF check" request because `search`'s own description never said
+    to check skills first).
+    """
+    for name in ("_SEARCH_DESCRIPTION", "_TAGS_DESCRIPTION", "_GET_SCHEMA_DESCRIPTION"):
+        desc: str = getattr(srv, name)
+        # The gate must lead — within the first ~200 chars, not buried.
+        head = desc[:200]
+        assert "skills_list" in head, f"server.{name} must open with the skills_list-first gate (#338)"
+        assert "FIRST" in head, f"server.{name}'s skills-first gate must be emphatic ('FIRST') (#338)"
+
+
+@pytest.mark.unit
+def test_execute_description_gates_on_skills_list() -> None:
+    """#338: execute_description must carry a hard `skills_list`-first
+    prerequisite near the top — `execute` is one of the two tools the AI
+    reached for instead of checking skills."""
+    body = _read_execute_description_block()
+    assert "skills_list" in body, "execute_description must reference skills_list as a prerequisite (#338)"
+    assert "PREREQUISITE" in body, "execute_description's skills-first gate must be flagged PREREQUISITE (#338)"
+
+
 PLATFORM_INIT_FILES = (
     "src/hpe_networking_mcp/platforms/aos8/__init__.py",
     "src/hpe_networking_mcp/platforms/apstra/__init__.py",

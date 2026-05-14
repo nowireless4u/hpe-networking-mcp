@@ -341,6 +341,22 @@ class TestDiscoveryToolFactories:
         assert "per-platform tools" in result["next_step"]
         assert "skills_load" not in result["next_step"]
 
+    def test_skills_list_description_is_mandatory_first(self):
+        """#338: the skills_list description must read as an unconditional
+        "call first" directive, not a soft "use this when…" trigger an AI
+        can rationalize skipping (it skipped it on an "RF check" because
+        that didn't lexically match "audit / migration / report")."""
+        from hpe_networking_mcp.skills._engine import _SKILLS_LIST_DESC
+
+        head = _SKILLS_LIST_DESC[:160]
+        assert "ALWAYS" in head and "FIRST" in head, (
+            "_SKILLS_LIST_DESC must open with an unconditional call-first directive (#338)."
+        )
+        # Must NOT lead with the old soft conditional framing.
+        assert not _SKILLS_LIST_DESC.startswith("List available"), (
+            "_SKILLS_LIST_DESC still leads with the soft 'List available…' framing (#338)."
+        )
+
     @pytest.mark.asyncio
     async def test_skills_list_factory_filters_by_platform(self):
         from hpe_networking_mcp.skills._engine import SkillsListDiscoveryTool

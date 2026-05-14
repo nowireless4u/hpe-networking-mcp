@@ -374,7 +374,20 @@ def create_server(config: ServerConfig) -> FastMCP:
 # generic and lose the relevance ranking against other MCP servers'
 # more descriptive tools. See issue #302 — Mike Gallagher's
 # "Mist intermittent" report 2026-05-12.
-_SEARCH_DESCRIPTION = (
+# Prepended to every catalog-discovery tool description so "skills first"
+# is a tool-layer gate, not an implication an AI can rationalize past.
+# See issue #338 — an "RF check" request jumped straight to `search`
+# because nothing in `search`'s own description said to check skills first.
+_SKILLS_FIRST_GATE = (
+    "Call `skills_list` FIRST. If a bundled skill covers the request — "
+    "audits, migrations, health / RF / channel-planning checks, change "
+    "validation, or any multi-step or cross-platform procedure — then "
+    "`skills_load` it and follow that runbook instead of improvising. "
+    "Only fall through to this tool when `skills_list` returns no "
+    "applicable skill.\n\n"
+)
+
+_SEARCH_DESCRIPTION = _SKILLS_FIRST_GATE + (
     "Find or list available HPE networking tools by name, function, or "
     "description across mist, central, aos8, clearpass, apstra, axis, "
     "and greenlake platforms. Use this to discover the exact tool name "
@@ -385,7 +398,7 @@ _SEARCH_DESCRIPTION = (
     "trial and error."
 )
 
-_TAGS_DESCRIPTION = (
+_TAGS_DESCRIPTION = _SKILLS_FIRST_GATE + (
     "Browse the HPE networking tool catalog grouped by category tag — "
     "platform name (mist / central / aos8 / clearpass / apstra / axis / "
     "greenlake), read/write classification, or feature area. Use to scope "
@@ -393,7 +406,7 @@ _TAGS_DESCRIPTION = (
     "`get_schema`. Returns tag names and the tools registered under each."
 )
 
-_GET_SCHEMA_DESCRIPTION = (
+_GET_SCHEMA_DESCRIPTION = _SKILLS_FIRST_GATE + (
     "Get full parameter schemas, enum values, types, and descriptions for "
     "one or more HPE networking tools (mist, central, aos8, clearpass, "
     "apstra, axis, greenlake). Use after `search` or `tags` to confirm a "
@@ -471,6 +484,11 @@ def _register_code_mode(mcp: FastMCP) -> None:
     execute_description = (
         "Run Python in a sandbox to compose multiple platform tool calls. "
         "Use `return` to produce output.\n\n"
+        "PREREQUISITE — call `skills_list` at the outer surface BEFORE "
+        "using `execute`. If a bundled skill covers the request, "
+        "`skills_load` it and follow that runbook; only write your own "
+        "code block when `skills_list` returns no applicable skill "
+        "(issue #338).\n\n"
         "In scope: `await call_tool(name: str, params: dict) -> Any`.\n\n"
         "`call_tool` reaches three things:\n"
         "  - `<platform>_invoke_tool(name=<tool>, params=<dict>)` — the "
