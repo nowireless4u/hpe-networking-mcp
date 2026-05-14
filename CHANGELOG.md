@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0.8] - 2026-05-14
+
+**Patch — `cross-platform-rf-check` skill gains an interactive RF visualization step.**
+
+The skill previously ended with the ASCII text report. It now has a **Step 9** that produces a channel-spectrum visualization the operator can explore, after the text report (never instead of it):
+
+- **Preferred — self-contained HTML artifact** (when the client renders HTML artifacts, e.g. Claude.ai / Claude Desktop): inline CSS + vanilla JS, no external assets. One panel per band; each radio drawn as a block on its primary channel with width proportional to bandwidth (so channel overlaps are visible); fill color mapped to utilization; hover/click reveals per-AP detail; co-channel clusters flagged; Mist allowed-but-unused channels marked on the axis.
+- **Fallback — rich ASCII spectrum diagram** (when the client can't render artifacts): the same information laid out spatially in monospace text, documented under *Interactive RF visualization* in the skill's output-formatting section.
+
+No new tools referenced — the visualization renders from data the skill already collects in Steps 4–7. `test_skill_tool_references.py` still green.
+
 ## [3.1.0.7] - 2026-05-14
 
 **Patch — fix code-mode payload loss + correct sandbox dispatch guidance. Closes #327 + #328.**

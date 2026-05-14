@@ -22,7 +22,9 @@ tools: [health, mist_list_org_sites, mist_list_site_devices_stats, mist_get_site
 Pull per-AP, per-band radio state (channel, bandwidth, power, channel
 utilization, noise floor) for one site from **both** Mist and Central,
 aggregate per-band channel distribution and airtime pressure, flag
-co-channel clusters and elevated noise, and present a unified RF report.
+co-channel clusters and elevated noise, present a unified RF report, and
+finish with an interactive channel-spectrum visualization the operator
+can explore.
 
 This is the code-mode runbook equivalent of the `site_rf_check`
 cross-platform tool. That tool is only registered in `dynamic` mode; in
@@ -139,6 +141,41 @@ Then flag:
 
 See *Output formatting* below.
 
+### Step 9 — Render the interactive RF visualization
+
+After the text report, produce a channel-spectrum visualization so the
+operator can *explore* the RF picture, not just read it. This always comes
+AFTER the Step 8 text report — never instead of it.
+
+**Preferred — self-contained HTML artifact** (when the client renders HTML
+artifacts, e.g. Claude.ai / Claude Desktop): emit a single self-contained
+HTML document — inline CSS + vanilla JS, no external assets, no network
+calls. It must show:
+
+- One panel per band that has data (2.4 / 5 / 6 GHz) — tabs or stacked.
+- A channel axis; each reporting radio drawn as a block on its primary
+  channel, block **width proportional to channel bandwidth**
+  (20 / 40 / 80 / 160 MHz) so channel overlaps are visible at a glance.
+- Block fill color mapped to channel utilization: green < 40 %, amber
+  40–70 %, red ≥ 70 %.
+- Hover or click a block reveals AP detail: name, platform, model, band,
+  channel, bandwidth, power (dBm), utilization %, noise floor, client count.
+- Co-channel clusters (3+ radios sharing a primary channel on 5 / 6 GHz)
+  visually flagged.
+- If a Mist RF template is present, allowed-but-unused channels marked on
+  the axis.
+
+Keep it dependency-free and compact. If PII tokenization is on, tokenized
+values display verbatim — the artifact is a view, it does not detokenize.
+
+**Fallback — rich ASCII spectrum diagram** (when the client does NOT render
+HTML artifacts): emit the spatial channel-allocation diagram described
+under *Interactive RF visualization* in *Output formatting* below. Same
+information, laid out spatially in monospace text.
+
+When unsure whether the client renders artifacts, pick the ASCII fallback —
+a raw HTML code block is worse than a clean ASCII diagram.
+
 ## Decision matrix
 
 | Condition | Action |
@@ -193,6 +230,44 @@ util avg <n>% / peak <n>% · noise <n> dBm
 
 Keep it scannable — the operator should read the headline + recommendations
 in a few seconds and drill into the band sections only if needed.
+
+## Interactive RF visualization
+
+This is Step 9's output — it comes AFTER the text report above, never
+instead of it. Prefer the self-contained HTML artifact (see Step 9); use
+this ASCII spectrum diagram as the fallback when the client can't render
+artifacts.
+
+The ASCII fallback lays radios out spatially on a channel axis per band —
+block width proportional to bandwidth so channel overlaps are visible:
+
+```
+RF spectrum — <site name>
+
+5 GHz
+  ch:   36         40    44    48    …   149        153   157
+        [HQ-LOBBY-AP  80MHz ]                [HQ-FL2-AP  80MHz ]
+              [HQ-FL1-AP  80MHz ]
+        └─ 3 radios on ch36  ⚠ co-channel
+  util: ▇ 74%   ▃ 52%        …   ▁ 18%
+  allowed-but-unused: 60, 64, 100, 104
+
+6 GHz
+  ch:   37    53    69    …
+        [HQ-LOBBY-AP 80MHz]
+  util: ▃ 41%
+
+2.4 GHz
+  ch:   1              6              11
+        [AP1 20][AP4 20]       [AP2 20]
+  util: ▃ 48%          ▁ 22%          ▃ 55%
+
+util key:  ▁ <40%    ▃ 40–70%    ▇ ≥70%
+```
+
+The block label carries AP name + bandwidth; stacked rows show co-channel
+overlap; the util sparkline under each band conveys the airtime picture.
+Order the bands 5 → 6 → 2.4 — operators triage 5 / 6 GHz first.
 
 ## Example
 
