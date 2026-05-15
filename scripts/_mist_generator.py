@@ -2,13 +2,15 @@
 
 Reads ``vendor/mist_openapi.json`` (the upstream Juniper Mist OpenAPI 3.1
 spec) and emits one Python file per OpenAPI tag under
-``platforms/mist/tools/``. Each emitted module is a list of decorated
-async functions that proxy to ``mist_request`` in ``_client.py``.
+``src/hpe_networking_mcp/platforms/mist/tools/``. Each emitted module is
+a list of decorated async functions that proxy to ``mist_request`` in
+``_client.py``.
 
 The generator is invoked at release time via
-``uv run python -m hpe_networking_mcp.platforms.mist.regenerate``. The
-generated files are committed to the repo so PR diffs show what changed
-when the upstream spec ships new endpoints.
+``uv run python scripts/regenerate_mist_tools.py``. It lives outside
+``src/`` so it never ships in the runtime Docker image. The generated
+files **are** committed to the repo so PR diffs show what changed when
+the upstream spec ships new endpoints.
 
 Naming convention: ``mist_<snake_case_operationId>``. Per-operationId
 uniqueness in the upstream spec (verified at sync time) makes tool
@@ -302,10 +304,10 @@ def resolve_operation(
 
 _FILE_HEADER_BASE = '''"""Generated Mist tools — DO NOT EDIT BY HAND.
 
-This file was emitted by ``hpe_networking_mcp.platforms.mist._generator``
-from ``vendor/mist_openapi.json``. Regenerate via:
+This file was emitted by ``scripts/_mist_generator.py`` from
+``vendor/mist_openapi.json``. Regenerate via:
 
-    uv run python -m hpe_networking_mcp.platforms.mist.regenerate
+    uv run python scripts/regenerate_mist_tools.py
 
 Tag: ``{tag}``
 Operations in this file: {n_ops}

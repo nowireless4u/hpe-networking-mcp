@@ -43,7 +43,7 @@ The GitHub Actions workflow at `.github/workflows/sync-mist-openapi.yml` runs da
 **Tool regeneration does NOT happen on auto-sync.** Regeneration runs at release time, manually by the maintainer:
 
 ```bash
-uv run python -m hpe_networking_mcp.platforms.mist.regenerate
+uv run python scripts/regenerate_mist_tools.py
 ```
 
 This decouples spec freshness from release cadence — the vendored spec is always current, but the live Mist tool surface only changes when the maintainer deliberately ships.

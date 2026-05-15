@@ -2,7 +2,7 @@
 
 Run from the repo root as:
 
-    uv run python -m hpe_networking_mcp.platforms.mist.regenerate
+    uv run python scripts/regenerate_mist_tools.py
 
 This is intended to run **at release time** by the maintainer. The
 vendored spec (``vendor/mist_openapi.json``) is auto-synced daily by
@@ -11,7 +11,8 @@ deliberately so the maintainer can review the tool diff before tagging.
 
 The CLI:
 
-1. Deletes every ``.py`` file under ``platforms/mist/tools/`` (clean slate).
+1. Deletes every ``.py`` file under
+   ``src/hpe_networking_mcp/platforms/mist/tools/`` (clean slate).
 2. Re-generates one ``.py`` file per OpenAPI tag from the vendored spec.
 3. Emits the barrel ``__init__.py`` that imports every generated module.
 4. Reports a per-tag summary so the maintainer can spot drift.
@@ -24,6 +25,10 @@ passes shake out any drift from the canonical form.
 
 Exit code is 0 on success, non-zero on failure. Generated files should
 be committed with the release.
+
+This script lives outside ``src/`` so it never ships in the runtime
+Docker image. The sibling ``_mist_generator.py`` (the actual code
+emitter) is imported via a ``sys.path`` insert at the top of this file.
 """
 
 from __future__ import annotations
@@ -32,7 +37,12 @@ import shutil
 import sys
 from pathlib import Path
 
-from hpe_networking_mcp.platforms.mist._generator import generate_tool_files
+# Make sibling ``_mist_generator.py`` importable without making
+# ``scripts/`` a package. Insert this script's directory at the front of
+# ``sys.path`` so ``import _mist_generator`` resolves locally.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from _mist_generator import generate_tool_files  # noqa: E402  (sys.path tweak above)
 
 
 def _repo_root() -> Path:
@@ -45,7 +55,7 @@ def _repo_root() -> Path:
 
 
 def main() -> int:
-    """Entry point for ``python -m hpe_networking_mcp.platforms.mist.regenerate``."""
+    """Entry point for ``uv run python scripts/regenerate_mist_tools.py``."""
     root = _repo_root()
     spec_path = root / "vendor" / "mist_openapi.json"
     tools_dir = root / "src" / "hpe_networking_mcp" / "platforms" / "mist" / "tools"

@@ -5,6 +5,58 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0.15] - 2026-05-15
+
+**Patch — relocate the Mist tool generator out of `src/` into `scripts/` so it no longer ships dead in the runtime Docker image.**
+
+The Mist generator (`_generator.py`) and its CLI (`regenerate.py`) lived inside the runtime package but were never invoked at server startup — they only run at release time, manually by the maintainer. Shipping ~640 LOC of dead code in every Docker image was a quirk from when Mist was first ported to spec-driven generation (v3.1.0.0), never reconsidered. Moving them outside `src/` keeps the regen workflow functionally identical while removing the dead bytes from production builds. Sets up the same `scripts/`-based home for the next PR's Central one-shot import script.
+
+### What moved
+
+- `src/hpe_networking_mcp/platforms/mist/_generator.py` → `scripts/_mist_generator.py`
+- `src/hpe_networking_mcp/platforms/mist/regenerate.py` → `scripts/regenerate_mist_tools.py`
+
+The CLI imports its sibling generator via a `sys.path.insert(0, ...)` at the top so `scripts/` doesn't need to be a Python package.
+
+### What stayed (intentionally)
+
+- Generator logic itself — verbatim port, no behavior change.
+- Vendored spec at `vendor/mist_openapi.json`.
+- Daily sync workflow at `.github/workflows/sync-mist-openapi.yml` (still runs, still commits to `main`).
+- Auto-emitted Mist tool files at `src/.../mist/tools/` — only their docstring headers (the `emitted by` and `Regenerate via:` lines) were mechanically updated to point at the new path. Function bodies untouched.
+
+### Workflow change
+
+The release-time regen command changes from:
+
+```bash
+uv run python -m hpe_networking_mcp.platforms.mist.regenerate
+```
+
+to:
+
+```bash
+uv run python scripts/regenerate_mist_tools.py
+```
+
+`docker-compose.dev.yml` now mounts `./scripts:/app/scripts` so the regen runs in Python 3.12 with the project's deps, same as before. The production `docker-compose.yml` is unaffected; the production `Dockerfile` already copies only `src/` (plus `pyproject.toml` and `README.md`), so excluding the generator from the image is structurally enforced by the Dockerfile, not just by `.dockerignore`.
+
+### Reference updates
+
+- `.github/workflows/sync-mist-openapi.yml` — the commit-message hint now quotes the new path.
+- `vendor/mist_openapi.SOURCE.md` — the "Regeneration runs at release time" block now quotes the new path.
+- `.gitleaks.toml` — the comment over the `mist/tools/` allow-path now names `scripts/_mist_generator.py`.
+- `src/.../mist/__init__.py` — module docstring's regen instruction quotes the new path.
+
+### Verified
+
+- AST parse of both relocated `scripts/*.py` files.
+- Container import: `_mist_generator` loads cleanly under Python 3.12 inside the dev image with the sibling `sys.path` tweak; `generate_tool_files` symbol is exposed as before.
+
+### Follow-up
+
+Next PR brings in the 197 net-new Central config tools as hand-curated-style wrappers via a new one-shot import script at `scripts/import_central_config_tools.py`. The bigger "should Central also be spec-driven via a maintained generator" decision is deferred and tracked separately.
+
 ## [3.1.0.14] - 2026-05-15
 
 **Patch — harden `cross-platform-rf-check` against three operator-transcript failure modes. Closes #340 and #342.**

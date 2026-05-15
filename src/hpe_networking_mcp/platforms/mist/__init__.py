@@ -8,7 +8,7 @@ naming convention and calls into ``_client.mist_request`` for transport.
 
 Regenerate the tool surface from the current vendored spec via:
 
-    uv run python -m hpe_networking_mcp.platforms.mist.regenerate
+    uv run python scripts/regenerate_mist_tools.py
 
 The vendored spec auto-syncs daily via
 ``.github/workflows/sync-mist-openapi.yml``. Tool regeneration is a

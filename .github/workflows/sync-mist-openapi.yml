@@ -138,7 +138,7 @@ jobs:
           Blob SHA: ${{ steps.sha.outputs.sha }}
 
           Tool regeneration not run by this workflow — maintainer runs
-          \`uv run python -m hpe_networking_mcp.platforms.mist.regenerate\`
+          \`uv run python scripts/regenerate_mist_tools.py\`
           at release time before tagging."
           git push origin main
 
