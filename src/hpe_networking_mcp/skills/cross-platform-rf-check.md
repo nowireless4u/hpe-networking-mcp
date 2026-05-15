@@ -12,7 +12,7 @@ description: |
   RF tools and stopping — the whole point is one site, both platforms.
 platforms: [mist, central]
 tags: [rf, channel-planning, spectrum, wireless, audit]
-tools: [health, mist_list_org_sites, mist_list_site_devices_stats, mist_get_site_current_channel_planning, central_get_site_name_id_mapping, central_get_aps, central_get_ap_details]
+tools: [health, mist_invoke_tool, mist_get_self, mist_list_org_sites, mist_list_site_devices_stats, mist_get_site_current_channel_planning, central_get_site_name_id_mapping, central_get_aps, central_get_ap_details]
 ---
 
 # Cross-platform site RF / channel-planning check
@@ -42,6 +42,27 @@ does NOT change channels, power, or RF templates.
 - The user has supplied a `site_name`. If they have not, list candidate
   sites (Step 2 / Step 3 enumerate them) and ask which one.
 
+## Mist dispatch — CRITICAL
+
+**Mist tools are spec-driven (~1000 tools) and are NOT listed in the
+sandbox's resolvable catalog by bare name.** Calling a Mist tool by name
+through `call_tool("mist_get_self", ...)` raises `Unknown tool: mist_get_self`
+and aborts the whole `execute()` block. Every Mist tool MUST be dispatched
+through `mist_invoke_tool`:
+
+```python
+# WRONG — raises "Unknown tool: mist_get_self"
+resp = await call_tool("mist_get_self", {})
+
+# RIGHT
+resp = await call_tool("mist_invoke_tool", {"name": "mist_get_self", "params": {}})
+```
+
+This applies to every Mist tool used in this runbook: `mist_get_self`,
+`mist_list_org_sites`, `mist_list_site_devices_stats`,
+`mist_get_site_current_channel_planning`. Central tools (`central_get_*`)
+are top-level registered and CAN be called by bare name via `call_tool`.
+
 ## Response shapes
 
 Every tool response is the universal envelope `{ok, status, data, ...}` —
@@ -52,12 +73,27 @@ iterating any response:
 
 | Tool | `data` shape | Iterate via |
 |---|---|---|
-| `mist_list_org_sites` | bare JSON array of site dicts | `for site in resp["data"]` |
-| `mist_list_site_devices_stats` | bare JSON array of device-stat dicts | `for ap in resp["data"]` |
-| `mist_get_site_current_channel_planning` | dict | `resp["data"]["rftemplate"]`, `["band_5"]`, … |
+| `mist_get_self` (via `mist_invoke_tool`) | dict with `privileges` list | `for p in resp["data"]["privileges"]` — pick `p["scope"] == "org"` for `p["org_id"]` |
+| `mist_list_org_sites` (via `mist_invoke_tool`) | bare JSON array of site dicts | `for site in resp["data"]` |
+| `mist_list_site_devices_stats` (via `mist_invoke_tool`) | bare JSON array of device-stat dicts | `for ap in resp["data"]` |
+| `mist_get_site_current_channel_planning` (via `mist_invoke_tool`) | dict | `resp["data"]["rftemplate"]`, `["band_5"]`, … |
 | `central_get_site_name_id_mapping` | dict keyed by site name | `resp["data"][site_name]["site_id"]` |
 | `central_get_aps` | dict with an inner `result` **list** | `for ap in resp["data"]["result"]` |
-| `central_get_ap_details` | dict with an inner `result` **dict** | `resp["data"]["result"]["radios"]` |
+| `central_get_ap_details` | dict with an inner `result` **dict** | `resp["data"]["result"]["radios"]` (see nested-shape note below) |
+
+**Central `radios[].radioStats` is a LIST, not a dict.** Each radio in
+`radios` carries `radioStats` as a single-element list of stat dicts —
+calling `.get()` on it raises `'list' object has no attribute 'get'`. Take
+`radio["radioStats"][0]` first to reach `channelUtilization` / `noiseFloor`:
+
+```python
+# WRONG — 'list' object has no attribute 'get'
+util = radio["radioStats"].get("channelUtilization")
+
+# RIGHT — radioStats is a [{...}] list; index [0] first
+stats = radio["radioStats"][0] if radio.get("radioStats") else {}
+util = stats.get("channelUtilization")
+```
 
 Rule of thumb: Mist `*_list_*` tools return `data` as a **bare array**; the
 Central monitoring tools wrap their payload under `data["result"]`; the
@@ -83,15 +119,40 @@ steps. If BOTH are unavailable, stop and surface the errors.
 
 ### Step 2 — Resolve the site on Mist
 
-**Tool:** `mist_list_org_sites(org_id=...)`
+**Tools (BOTH dispatched via `mist_invoke_tool` — see Mist dispatch above):**
+
+1. `mist_invoke_tool(name="mist_get_self", params={})` →
+   `resp["data"]["privileges"]` is a list; pick the entry where
+   `scope == "org"` to read `org_id`.
+2. `mist_invoke_tool(name="mist_list_org_sites", params={"org_id": <org_id>})`
+   → `resp["data"]` is a bare list of site dicts.
+
+```python
+# Step 2 — Mist site resolution (note the dispatch pattern on every call)
+self_resp = await call_tool("mist_invoke_tool", {"name": "mist_get_self", "params": {}})
+privileges = self_resp.get("data", {}).get("privileges", [])
+org_id = next((p["org_id"] for p in privileges if p.get("scope") == "org"), None)
+
+sites_resp = await call_tool(
+    "mist_invoke_tool",
+    {"name": "mist_list_org_sites", "params": {"org_id": org_id}},
+)
+site_match = next(
+    (s for s in sites_resp.get("data", []) if s.get("name", "").lower() == site_name.lower()),
+    None,
+)
+```
+
 **Why:** Mist tools are site-scoped by `site_id`; the user gives a name,
-so resolve name → id first. The org_id comes from `health` or the Mist
-session context.
+so resolve name → id first. The Mist session has an API token but the AI
+must read `org_id` out of `mist_get_self`'s `privileges` — it is not in
+the `health` response.
 **Expected result:** A list of sites; find the one whose `name` matches
 the user's `site_name` (case-insensitive) and capture its `id`.
 **If anomaly:** No match → Mist has no such site; note it and continue
 with Central only. If the user gave no site_name, surface the site list
-and ask.
+and ask. If `privileges` carries multiple `scope == "org"` entries, take
+the first (single-tenant case is dominant).
 **Skip if:** Mist is not enabled or returned `unavailable` in Step 1.
 
 ### Step 3 — Resolve the site on Central
@@ -107,7 +168,8 @@ with Mist only.
 
 ### Step 4 — Pull Mist per-AP radio stats
 
-**Tool:** `mist_list_site_devices_stats(site_id=..., type="ap")`
+**Tool (dispatched via `mist_invoke_tool`):**
+`mist_invoke_tool(name="mist_list_site_devices_stats", params={"site_id": ..., "type": "ap"})`
 **Why:** This is the live per-AP radio snapshot. Each connected AP carries
 a `radio_stat` object keyed `band_24` / `band_5` / `band_6`; each band
 entry has `channel`, `bandwidth`, `power`, `usage` (channel utilization
@@ -120,7 +182,8 @@ in the report. Empty list — no APs at the site or none online.
 
 ### Step 5 — Pull the Mist channel-planning template
 
-**Tool:** `mist_get_site_current_channel_planning(site_id=...)`
+**Tool (dispatched via `mist_invoke_tool`):**
+`mist_invoke_tool(name="mist_get_site_current_channel_planning", params={"site_id": ...})`
 **Why:** Gives the RF template's *allowed* channels per band, so the
 report can flag "allowed but unused" channels even when few APs are
 online. Look for `rftemplate.band_24/band_5/band_6.channels` and
@@ -134,11 +197,16 @@ allowed-channel comparison; channel distribution still works.
 ### Step 6 — Pull Central APs, then per-AP RF detail
 
 **Tool:** `central_get_aps(site_id=...)` to list the site's APs, then
-`central_get_ap_details(serial_number=...)` for each ONLINE AP.
+`central_get_ap_details(serial_number=...)` for each ONLINE AP. Both are
+top-level Central tools — call by bare name through `call_tool`, no
+`central_invoke_tool` wrapper needed.
 **Why:** Central has no bulk per-AP radio-stats endpoint — you must list
 the APs, then fan out one detail call per AP. `central_get_ap_details`
 returns a `radios` array; each radio has `band`, `channel`, `bandwidth`,
-`power`, and `radioStats` with `channelUtilization` and `noiseFloor`.
+`power`, and a `radioStats` **list** (single-element). Pull stats via
+`radio["radioStats"][0]["channelUtilization"]` and
+`["noiseFloor"]` — see *Response shapes* above for the list-vs-dict
+footgun.
 **Expected result:** An AP list filtered to the site; per-AP detail
 records with a populated `radios` array on ONLINE APs.
 **If anomaly:** Many APs — cap the per-AP fan-out at ~30 ONLINE APs to

@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0.14] - 2026-05-15
+
+**Patch — harden `cross-platform-rf-check` against two operator-transcript crashes.**
+
+Operator ran *"Do an RF check at HOME in Central"* on GitHub Copilot (Sonnet 4.6); the skill loaded but the in-sandbox AI hit two errors:
+
+1. `Sandbox error: Exception: Unknown tool: mist_get_self` — the AI dispatched the Mist tool by bare name through `call_tool("mist_get_self", {})`. That's the #328 footgun: the ~1000 spec-driven Mist tools are registered but not in the sandbox's resolvable catalog by bare name; they must go through `mist_invoke_tool`. The skill had Step 2 worded as a direct call (`mist_list_org_sites(org_id=...)`) with no dispatch warning — and said `org_id` "comes from `health` or the Mist session context" without a concrete tool, so the AI extrapolated `mist_get_self` and used the wrong dispatch pattern.
+2. `AttributeError: 'list' object has no attribute 'get'` — the AI called `radio["radioStats"].get("channelUtilization")`. Central's `central_get_ap_details` returns `radioStats` as a single-element **list** (`[{"channelUtilization": ..., "noiseFloor": ...}]`), not a dict. The skill's Step 6 wording (*"`radioStats` **with** `channelUtilization` and `noiseFloor`"*) implied a dict.
+
+### What changed
+
+- **`skills/cross-platform-rf-check.md`** — new "Mist dispatch — CRITICAL" subsection right before *Response shapes*: shows the WRONG (`call_tool("mist_get_self", {})`) and RIGHT (`call_tool("mist_invoke_tool", {"name": ..., "params": ...})`) patterns side-by-side, and names every Mist tool in the runbook (`mist_get_self`, `mist_list_org_sites`, `mist_list_site_devices_stats`, `mist_get_site_current_channel_planning`). Step 2 rewritten with a concrete two-call snippet: `mist_invoke_tool(name="mist_get_self", params={})` → pick `privileges[i]["scope"] == "org"` for `org_id` → `mist_invoke_tool(name="mist_list_org_sites", params={"org_id": ...})`. Steps 4 and 5 updated to the same dispatch shape.
+- **Response shapes table** gains a `mist_get_self` row; **Step 6 + a follow-up callout** spell out that `radioStats` is a list and show `radio["radioStats"][0]["channelUtilization"]` — including the exact `'list' object has no attribute 'get'` error string so the AI can recognize the symptom.
+- **Frontmatter `tools:` allowlist** now includes `mist_invoke_tool` and `mist_get_self`.
+
+### Verified
+
+- New `tests/unit/test_skill_cross_platform_rf_check.py` (5 tests) asserts: the Mist-dispatch warning carries both `mist_invoke_tool` and the `Unknown tool` error string; Step 2 names `mist_get_self` and dispatches via `mist_invoke_tool`; Steps 4/5 dispatch via `mist_invoke_tool`; `radioStats` is documented as a list with the `[0]` indexing pattern and the exact AttributeError quoted; frontmatter includes the new tool names.
+- `test_skill_tool_references.py` still clean — verified the new Python snippet doesn't introduce variable names that look like tool refs to the regex (`mist_site` → `site_match`).
+
 ## [3.1.0.13] - 2026-05-14
 
 **Patch — enforce "skills first" at the tool layer instead of just implying it. Closes #338.**
