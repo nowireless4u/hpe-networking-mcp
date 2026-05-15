@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.1.1] - 2026-05-15
+
+**Patch — add `central_get_wids_monitored_aps`, wrapping the `network-services/v1alpha1/wids-monitored-aps` undocumented-but-in-policy endpoint. Surfaces neighbor / rogue / suspect / interfering APs detected by the caller's APs, plus the fabric's containment status for each.**
+
+The endpoint is undocumented in Central's public API reference but lives under the in-policy `network-*/v1alpha1` path family (per the 2026-05-15 build-rule), is tenant-scoped (no cross-tenant exposure), and was already live-probed during the undocumented-endpoint catalog work. No secrets in the response — BSSIDs ride existing MAC normalization rules; everything else is normal tenant data.
+
+### Tool surface
+
+- **`central_get_wids_monitored_aps(classification=..., contained_only=False, site_id=..., odata_filter=..., limit=100, offset=0)`** — GET wrapper with structured args that compose into an OData filter, plus an `odata_filter` raw pass-through escape hatch. Validates that the two paths are mutually exclusive (raw filter OR structured args, not both) and returns a clear error string if mixed.
+
+Each record carries: `id`, `bssid`, `ssid`, `classification` (`ROGUE` / `SUSPECT_ROGUE` / `INTERFERING` / `VALID`), `classificationMethod`, `classificationRule`, `containmentStatus` (e.g. `CONTAINED`), `encryption`, `signal`, `macVendor`, `type`, `portData`, `firstSeen` / `lastSeen` timestamps, the detecting-device names + serials (first / most-recent), plus `siteId` / `siteName` of the detecting AP.
+
+### Tool surface delta
+
+- **Mist**: 1037 (unchanged)
+- **Central**: 479 → **480** (+1)
+- **GreenLake**: 10 (unchanged)
+- **ClearPass**: 140 (unchanged)
+- **Apstra**: 19 (unchanged)
+- **Axis**: 25 (unchanged)
+- **AOS8**: 47 (unchanged)
+- **Server-wide total**: 1757 → **1758**
+
+### Verified
+
+- `ruff check .` ✓
+- `ruff format --check .` ✓
+- `mypy src/ --ignore-missing-imports` ✓
+- Live registration smoke test: `register_tools(mcp, ...)` returns 480 underlying Central tools
+- Endpoint was already live-probed during the undocumented-endpoint catalog work — shape is stable; PII review pre-done
+
 ## [3.1.1.0] - 2026-05-15
 
 **Minor — bulk-import the Aruba Central config-model OpenAPI surface as 197 new typed config-object types (389 net-new tools across 19 new modules). Unlocks AAA, AOS-CX interface/routing/services/system, certificates, AirGroup, NAC (CDA), telemetry, and the wider device-level config-model so design work no longer blocks on per-type tool authoring.**

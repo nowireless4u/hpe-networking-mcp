@@ -16,7 +16,7 @@ Tools are namespaced by platform:
 
 Two modes are supported (the `static` mode was removed in v3.0.0.0):
 
-- **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 1757 underlying tools are reachable from inside a sandboxed Python `execute()` block via `await call_tool("<platform>_invoke_tool", {"name": "<tool>", "params": {...}})` — see the in-sandbox dispatch note below; the ~1000 spec-driven Mist tools are reachable **only** through `mist_invoke_tool`, not by direct name. The smallest initial surface; best for orchestrators driving small / local LLMs.
+- **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 1758 underlying tools are reachable from inside a sandboxed Python `execute()` block via `await call_tool("<platform>_invoke_tool", {"name": "<tool>", "params": {...}})` — see the in-sandbox dispatch note below; the ~1000 spec-driven Mist tools are reachable **only** through `mist_invoke_tool`, not by direct name. The smallest initial surface; best for orchestrators driving small / local LLMs.
 - **`MCP_TOOL_MODE=dynamic`** (opt-in since v3.0.0.0; was the v2.x default) — 24 tools visible:
     - **4 cross-platform tools**: `health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`
     - **3 meta-tools per platform × 7 platforms** = 21: `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`
@@ -397,6 +397,12 @@ When asked to create a new site based on an existing site:
   - Filter with `device_type`, `site_id`, `site_name`, or `serial_number`. Default behavior omits devices already on Central's recommended version; pass `include_up_to_date=True` to see them too.
   - The `release_type` field reflects the API's `firmwareClassification` directly — values are `LSR`, `SSR`, or `UNCLASSIFIED` (AOS 8 and other builds the API doesn't classify fall into the last bucket and pass Central's recommendation through).
   - Narrowing `device_type` restricts the pool used to mine the newest LSR target for SSR devices — leave it unset when you want the tool to make SSR→LSR recommendations.
+- **WIDS (Wireless Intrusion Detection)**: central_get_wids_monitored_aps
+  - Reads neighbor / rogue / suspect / interfering APs detected by the caller's APs at `network-services/v1alpha1/wids-monitored-aps`. Tenant-scoped.
+  - Use `classification="ROGUE" | "SUSPECT_ROGUE" | "INTERFERING" | "VALID"` to narrow; `contained_only=True` for APs the fabric is actively de-authing; `site_id` to scope by site.
+  - For filters not covered by the structured args, pass `odata_filter` (raw OData 4.0). Mutually exclusive with the structured args — pick one or the other.
+  - Page through via `limit` + `offset`; envelope returns `total` for pagination accounting.
+  - Each record: `bssid`, `ssid`, `classification`, `classificationMethod`, `classificationRule`, `containmentStatus`, `encryption`, `signal`, `macVendor`, `type`, `portData`, `firstSeen` / `lastSeen`, detecting-device `firstDetDeviceName/Serial` + `lastDetDeviceName/Serial`, plus `siteId` / `siteName`.
 - **Translation Preview (read-only)**: central_translation_preview
   - Read-only bridge to the translations engine. Runs server-side and returns deterministic `TargetCall` descriptors per source-platform record (e.g. AOS 8 → Central). **Never writes** — the engine is pure data; this tool wraps it.
   - Use for "show me what migrating these AOS 8 policies / roles / VLANs would produce in Central" workflows. The `aos-migration` skill's Stage 9b uses it as the engine-driven preview path.

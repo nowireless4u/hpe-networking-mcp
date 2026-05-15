@@ -9,18 +9,18 @@ Tools are namespaced by platform: `mist_*` (Juniper Mist), `central_*` (Aruba Ce
 
 The server ships with `MCP_TOOL_MODE=code` by default since v3.0.0.0. At session start the AI sees **6 tools**:
 
-- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 1757 underlying tools
+- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 1758 underlying tools
 - **`tags(detail="brief")`** — browse the catalog by platform / module
 - **`search(query, tags=[...], detail)`** — BM25 search the catalog
 - **`get_schema(tools=[...], detail)`** — fetch parameter shape for named tools
 - **`skills_list(filter=...)`** — list bundled multi-step runbooks (since v2.3.0.0)
 - **`skills_load(name=...)`** — load a runbook to execute
 
-All 1757 per-platform tools documented below still exist and are reachable via `await call_tool(name, params)` inside `execute()`. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the discovery tools (`tags`, `search`, `get_schema`).
+All 1758 per-platform tools documented below still exist and are reachable via `await call_tool(name, params)` inside `execute()`. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the discovery tools (`tags`, `search`, `get_schema`).
 
 **Why code mode is the default since v3.0.0.0**: smallest initial token cost, single-round-trip multi-step orchestration, and validated against small local LLMs (Qwen3 4B Q4_K_M; see [#246](https://github.com/nowireless4u/hpe-networking-mcp/issues/246) reassessment).
 
-Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface (per-platform discovery — see next section). The `static` mode was REMOVED in v3.0.0.0 — at 1757 tools / ~64K tokens it was no longer practical.
+Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface (per-platform discovery — see next section). The `static` mode was REMOVED in v3.0.0.0 — at 1758 tools / ~64K tokens it was no longer practical.
 
 ## Dynamic mode (opt-in since v3.0.0.0; was the v2.x default)
 
@@ -39,7 +39,7 @@ With `MCP_TOOL_MODE=dynamic` the AI sees **24 tools**:
   - `skills_list(filter=...)` — list bundled multi-step runbooks
   - `skills_load(name=...)` — load a runbook to execute
 
-The 1757 per-platform tools are reachable via `<platform>_invoke_tool(name=..., arguments={...})`. Best when an orchestrator wants explicit per-tool dispatch rather than the sandboxed Python composition that code mode provides.
+The 1758 per-platform tools are reachable via `<platform>_invoke_tool(name=..., arguments={...})`. Best when an orchestrator wants explicit per-tool dispatch rather than the sandboxed Python composition that code mode provides.
 
 ## Code mode details (the default — see above for surface summary)
 
@@ -96,7 +96,7 @@ If you do try to dispatch to a discovery tool by mistake, `SandboxErrorCatchMidd
 - **`code` (default since v3.0.0.0)** — best for orchestrators driving small / local LLMs, multi-step aggregations, cross-platform joins, filter/map/reduce workflows. Smallest initial token cost. Validated against Qwen3 4B Q4_K_M via OpenClaw (see #246 reassessment).
 - **`dynamic` (opt-in since v3.0.0.0; was the v2.x default)** — best when the orchestrator wants explicit per-tool dispatch via `<platform>_invoke_tool` rather than sandboxed Python composition. Stable, production-tested for lookup-style questions.
 
-The `static` mode was REMOVED in v3.0.0.0 — at 1757 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` raises ValueError at startup.
+The `static` mode was REMOVED in v3.0.0.0 — at 1758 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` raises ValueError at startup.
 
 ## Overview
 
@@ -671,7 +671,7 @@ logged and skipped; the rest of the catalog still loads. See
 
 ---
 
-## Aruba Central (479 tools + 12 prompts)
+## Aruba Central (480 tools + 12 prompts)
 
 > **v3.1.1.0**: bulk-imported 197 net-new config-model object types (389 net-new tools across 19 new modules) from the gitignored local snapshot at `api-endpoints/central/config/`. See the **Config-Model Tools** section at the end of the Central section for the new module inventory and the `central_get_<type>` / `central_manage_<type>` naming convention. The 15 hand-curated tool pairs documented in detail below (sites, devices, alerts, security_policy, wlan_profiles, gateway_clusters, named_vlans, aliases, server_groups, config_assignments, scope, gateway_cluster_intent) keep their tuned docstrings and edge-case handling.
 
@@ -1496,6 +1496,29 @@ Diagnostics for the New Central Configuration API config-health surface (`/netwo
 | sort | str | No | Sort by one of `name`, `serial`, `type`, `siteName`, `configStatus`, `deviceFunction`, `lastConfigTimestamp`, `model`, `deviceGroupName`, `topPriorityIssue`, `recommendedAction`, `role`, `deployment`, `activeIssues`. Append `asc` or `desc` (e.g. `"activeIssues desc"`). |
 | filter | str | No | OData 4.0 filter on `name`, `deviceFunction`, `configStatus`, `type`, `model`, `serial`, `deviceGroupName`, or `activeIssues`. |
 | search | str | No | Free-text search across `name`, `serial`, `siteName`, `topPriorityIssue`, and `recommendedAction` (3-128 chars when supplied). |
+
+---
+
+### WIDS (Wireless Intrusion Detection) (v3.1.1.1)
+
+Wraps the `network-services/v1alpha1/wids-monitored-aps` endpoint — undocumented in the public Central API reference but tenant-scoped (no cross-tenant exposure) and in-policy under the `network-*/v1alpha1` rule. Returns the caller's APs' reports of neighbor / rogue / suspect / interfering APs they've detected.
+
+#### `central_get_wids_monitored_aps`
+
+> Returns WIDS monitored-AP records (neighbor / rogue / suspect / interfering) detected by the caller's APs. Tenant-scoped. Supports structured filtering by classification / containment / site, or raw OData passthrough.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| classification | `Literal["ROGUE","SUSPECT_ROGUE","INTERFERING","VALID"]` | No | Narrow to one WIDS classification. Omit for all. |
+| contained_only | bool | No | If True, narrow to APs where `containmentStatus == 'CONTAINED'` (fabric is actively de-authing / jamming them). Composable with `classification`. |
+| site_id | str | No | Narrow to a specific Central site. Get site IDs from `central_get_site_name_id_mapping`. |
+| odata_filter | str | No | Raw OData 4.0 filter (e.g. `encryption eq 'OPEN' and signal gt -70`). Mutually exclusive with the structured args. |
+| limit | int | No | Results per page (1-1000, default 100). |
+| offset | int | No | Pagination offset (default 0). Page through via `offset += count` until `offset + count >= total`. |
+
+Each record carries: `id`, `bssid`, `ssid`, `classification`, `classificationMethod`, `classificationRule`, `containmentStatus`, `encryption`, `signal`, `macVendor`, `type`, `portData`, `firstSeen`, `lastSeen`, `firstDetDeviceName`, `firstDetDeviceSerial`, `lastDetDeviceName`, `lastDetDeviceSerial`, `siteId`, `siteName`.
+
+Classification semantics: **ROGUE** (confirmed unauthorized), **SUSPECT_ROGUE** (suspected unauthorized), **INTERFERING** (non-rogue but contributing to RF interference), **VALID** (neighboring authorized AP).
 
 ---
 
