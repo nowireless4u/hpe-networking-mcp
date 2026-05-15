@@ -28,7 +28,7 @@ paths = [
     # Generated Mist tool files — descriptions embed example values pulled
     # verbatim from the OpenAPI spec, so they trip the same rules as the
     # source spec.  These files are auto-emitted by
-    # hpe_networking_mcp.platforms.mist._generator; regenerating from a
-    # current spec produces fresh examples.  See vendor/mist_openapi.SOURCE.md.
+    # scripts/_mist_generator.py; regenerating from a current spec produces
+    # fresh examples.  See vendor/mist_openapi.SOURCE.md.
     '''src/hpe_networking_mcp/platforms/mist/tools/.*\.py$''',
 ]

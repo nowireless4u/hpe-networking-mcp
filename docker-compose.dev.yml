@@ -11,3 +11,8 @@ services:
       # Vendored OpenAPI specs (read-only — sync happens via GitHub Actions
       # on the host, not in-container).
       - ./vendor:/app/vendor:ro
+      # Dev-only generator / import scripts (Mist regen + Central import).
+      # Read-write so the scripts can write generated tool files back into
+      # ./src under their own mount. Never copied into the production image
+      # by the Dockerfile (only ./src is COPYed).
+      - ./scripts:/app/scripts
