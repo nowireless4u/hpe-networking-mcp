@@ -46,28 +46,34 @@ async def _manage_resource(
     ctx: Context,
     api_base: str,
     resource_label: str,
-    name: str,
+    name: str | None,
     action_type: str,
     payload: dict,
     scope_id: str | None,
     device_function: str | None,
     confirmed: bool,
 ) -> dict | str:
-    """Generic POST/PATCH/DELETE for /network-config/v1alpha1/{api_base}/{name}."""
+    """Generic POST/PATCH/DELETE for /network-config/v1alpha1/{api_base}[/{name}].
+
+    When ``name`` is ``None`` or empty, the URL omits the trailing
+    ``/{name}`` segment so singleton config objects (e.g. ``system-info``,
+    ``firmware-compliance``) can use the same helper.
+    """
     if action_type not in ("create", "update", "delete"):
         raise ToolError(f"Invalid action_type: {action_type}. Must be 'create', 'update', or 'delete'.")
 
     method_map = {"create": "POST", "update": "PATCH", "delete": "DELETE"}
     api_method = method_map[action_type]
-    api_path = f"network-config/v1alpha1/{api_base}/{name}"
+    api_path = f"network-config/v1alpha1/{api_base}/{name}" if name else f"network-config/v1alpha1/{api_base}"
 
     action_wording = {"create": "create a new", "update": "update an existing", "delete": "delete an existing"}[
         action_type
     ]
 
+    target_phrase = f"{resource_label} '{name}'" if name else f"singleton {resource_label}"
     if action_type != "create" and not confirmed:
         elicitation_response = await elicitation_handler(
-            message=f"The LLM wants to {action_wording} {resource_label} '{name}'. Do you accept?",
+            message=f"The LLM wants to {action_wording} {target_phrase}. Do you accept?",
             ctx=ctx,
         )
         if elicitation_response.action == "decline":
@@ -75,7 +81,7 @@ async def _manage_resource(
                 return {
                     "status": "confirmation_required",
                     "message": (
-                        f"This operation will {action_wording} {resource_label} '{name}'. "
+                        f"This operation will {action_wording} {target_phrase}. "
                         "Please confirm with the user before proceeding. "
                         "Call this tool again with confirmed=true after the user confirms."
                     ),

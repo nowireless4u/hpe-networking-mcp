@@ -9,18 +9,18 @@ Tools are namespaced by platform: `mist_*` (Juniper Mist), `central_*` (Aruba Ce
 
 The server ships with `MCP_TOOL_MODE=code` by default since v3.0.0.0. At session start the AI sees **6 tools**:
 
-- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 1368 underlying tools
+- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 1757 underlying tools
 - **`tags(detail="brief")`** — browse the catalog by platform / module
 - **`search(query, tags=[...], detail)`** — BM25 search the catalog
 - **`get_schema(tools=[...], detail)`** — fetch parameter shape for named tools
 - **`skills_list(filter=...)`** — list bundled multi-step runbooks (since v2.3.0.0)
 - **`skills_load(name=...)`** — load a runbook to execute
 
-All 1368 per-platform tools documented below still exist and are reachable via `await call_tool(name, params)` inside `execute()`. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the discovery tools (`tags`, `search`, `get_schema`).
+All 1757 per-platform tools documented below still exist and are reachable via `await call_tool(name, params)` inside `execute()`. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the discovery tools (`tags`, `search`, `get_schema`).
 
 **Why code mode is the default since v3.0.0.0**: smallest initial token cost, single-round-trip multi-step orchestration, and validated against small local LLMs (Qwen3 4B Q4_K_M; see [#246](https://github.com/nowireless4u/hpe-networking-mcp/issues/246) reassessment).
 
-Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface (per-platform discovery — see next section). The `static` mode was REMOVED in v3.0.0.0 — at 1368 tools / ~64K tokens it was no longer practical.
+Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface (per-platform discovery — see next section). The `static` mode was REMOVED in v3.0.0.0 — at 1757 tools / ~64K tokens it was no longer practical.
 
 ## Dynamic mode (opt-in since v3.0.0.0; was the v2.x default)
 
@@ -39,7 +39,7 @@ With `MCP_TOOL_MODE=dynamic` the AI sees **24 tools**:
   - `skills_list(filter=...)` — list bundled multi-step runbooks
   - `skills_load(name=...)` — load a runbook to execute
 
-The 1368 per-platform tools are reachable via `<platform>_invoke_tool(name=..., arguments={...})`. Best when an orchestrator wants explicit per-tool dispatch rather than the sandboxed Python composition that code mode provides.
+The 1757 per-platform tools are reachable via `<platform>_invoke_tool(name=..., arguments={...})`. Best when an orchestrator wants explicit per-tool dispatch rather than the sandboxed Python composition that code mode provides.
 
 ## Code mode details (the default — see above for surface summary)
 
@@ -96,7 +96,7 @@ If you do try to dispatch to a discovery tool by mistake, `SandboxErrorCatchMidd
 - **`code` (default since v3.0.0.0)** — best for orchestrators driving small / local LLMs, multi-step aggregations, cross-platform joins, filter/map/reduce workflows. Smallest initial token cost. Validated against Qwen3 4B Q4_K_M via OpenClaw (see #246 reassessment).
 - **`dynamic` (opt-in since v3.0.0.0; was the v2.x default)** — best when the orchestrator wants explicit per-tool dispatch via `<platform>_invoke_tool` rather than sandboxed Python composition. Stable, production-tested for lookup-style questions.
 
-The `static` mode was REMOVED in v3.0.0.0 — at 1368 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` raises ValueError at startup.
+The `static` mode was REMOVED in v3.0.0.0 — at 1757 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` raises ValueError at startup.
 
 ## Overview
 
@@ -671,7 +671,9 @@ logged and skipped; the rest of the catalog still loads. See
 
 ---
 
-## Aruba Central (90 tools + 12 prompts)
+## Aruba Central (479 tools + 12 prompts)
+
+> **v3.1.1.0**: bulk-imported 197 net-new config-model object types (389 net-new tools across 19 new modules) from the gitignored local snapshot at `api-endpoints/central/config/`. See the **Config-Model Tools** section at the end of the Central section for the new module inventory and the `central_get_<type>` / `central_manage_<type>` naming convention. The 15 hand-curated tool pairs documented in detail below (sites, devices, alerts, security_policy, wlan_profiles, gateway_clusters, named_vlans, aliases, server_groups, config_assignments, scope, gateway_cluster_intent) keep their tuned docstrings and edge-case handling.
 
 ### Sites
 
@@ -1494,6 +1496,47 @@ Diagnostics for the New Central Configuration API config-health surface (`/netwo
 | sort | str | No | Sort by one of `name`, `serial`, `type`, `siteName`, `configStatus`, `deviceFunction`, `lastConfigTimestamp`, `model`, `deviceGroupName`, `topPriorityIssue`, `recommendedAction`, `role`, `deployment`, `activeIssues`. Append `asc` or `desc` (e.g. `"activeIssues desc"`). |
 | filter | str | No | OData 4.0 filter on `name`, `deviceFunction`, `configStatus`, `type`, `model`, `serial`, `deviceGroupName`, or `activeIssues`. |
 | search | str | No | Free-text search across `name`, `serial`, `siteName`, `topPriorityIssue`, and `recommendedAction` (3-128 chars when supplied). |
+
+---
+
+### Config-Model Tools (v3.1.1.0)
+
+Bulk-imported in v3.1.1.0 from the local `api-endpoints/central/config/` snapshot of the Aruba Central config-model OpenAPI surface. **389 tools across 19 new modules**, covering 197 net-new device-level config-object types. The 15 already-hand-curated types (aliases, roles, net-groups, net-services, object-groups, role-acls, policies, policy-groups, role-gpids, named-vlan, server-groups, wlan-ssids, gateway-clusters, gw-cluster-intent, config-assignments) are documented in their own sections above and skipped by the importer.
+
+Every imported type emits one or both of:
+
+- `central_get_<type>(ctx, <id>=None)` — returns one (when `<id>` is given) or all instances; for singleton types (`system-info`, `firmware-compliance`, etc.) takes no identifier
+- `central_manage_<type>(ctx, <id>, action_type, payload, scope_id=None, device_function=None, confirmed=False)` — create / update / delete; same singleton handling; gated by `ENABLE_CENTRAL_WRITE_TOOLS=true` + chat confirmation for non-create actions
+
+Five asymmetric specs emit only one of the pair (GET-only or POST-only — `custom-get-api`, `persona-mapping`, `vlan-range`, `persona-assignment`, etc.).
+
+| Module file | Tool count | x-tag-group | Object types covered |
+|---|---|---|---|
+| `application_experience.py` | 4 | Application Experience | app-bandwidth-contract, app-recog-control |
+| `central_nac.py` | 21 | Central NAC (full CDA surface) | cda-airpass-approval, cda-auth-profile, cda-authz-policy, cda-identity-store, cda-message-provider, cda-portal-{custom-message, default-custom-message, overrides-profile, profile, skin-profile}, cda-static-tag |
+| `config_management.py` | 4 | Config Management | config-checkpoint, persona-assignment, persona-mapping |
+| `extensions.py` | 6 | Extensions | extension-splunk, extension-vsphere, psm |
+| `firmware_policy.py` | 2 | Firmware Policy | firmware-compliance |
+| `high_availability.py` | 6 | High Availability | switch-stack, vsf-template, vsx |
+| `interfaces.py` | 44 | Interfaces | ap-port-profile, ap-uplink, cdp, device-profile, dhcp-client, fault-monitor, gw-port-profile, interface-{ethernet, loopback, management, portchannel, profile, subinterface, vlan}, lacp, lldp, mirror, mirror-endpoint, sflow, static-mac, sw-port-profile, ufd |
+| `iot.py` | 2 | IoT | usb |
+| `named_object.py` | 2 | Named Object | named-condition |
+| `network_services.py` | 44 | Network Services | dhcp-{pool, relay, server, snooping, snooping-interface}, dynamic-arp-inspection-interface, external-storage, ip-{binding, lockdown, lockdown-interface}, ipsla, mgmd, multicast-dns, nae-lite, nd-snooping{-interface}, ptp, qos-{global, queue, schedule, threshold-profile}, udp-broadcast-forwarder |
+| `routing_overlays.py` | 44 | Routing & Overlays | advanced-intelligent-forwarding, aspath-list, bfd, bgp, community-list, evpn, ip-routing, l3-route, mpls, msdp, multicast{-static-route}, nexthop-group, ospfv{2,3}, pim, prefix-list, rip, routemap, static-route, track-object, vrf |
+| `security.py` | 60 | Security | 802dot11k{-bcn-rpt-req, -rrm-ie}, aaa-{captive-portal, dot1xauth, dot1xsupp, macauth, profile, stateful-dot1x}, ap-certificate-usage, auth-{server, server-global, survivability}, certificate{-rcp, -store}, copp, device-certificate, est, firewall, gw-certificate-usage, internal-user, keychain, mac-lockout, macsec, mka, passpoint-identity, port-security, radius-modifiers, ubt |
+| `services.py` | 10 | Services | airgroup-{policy, servers, service-definition, system}, location |
+| `system.py` | 71 | System | ap-system, container{-network}, countermon, custom-get-api, db-observer, ddns, dns, dump-server, feature-pack, gw-system, hardware-module-profile, http-proxy, ip-source-interface, ipm, job-scheduler, local-management, logging, management-user{-group}, nae-{agent, script}, ntp, packet-capture, remote-management, rmon-alarm, snmp{-trap}, speed-test, switch-{chassis, profiles, system}, sysmon, system-info, telemetry, timerange |
+| `telemetry.py` | 18 | Telemetry | client-{insight, iptracker, iptracker-interface}, devicefingerprinting{-interface, -profile}, flow-tracking, ipfix-flow-exporter, traffic-insight |
+| `tunnels.py` | 4 | Tunnels | interface-tunnel{-group} |
+| `uncategorized.py` | 14 | Uncategorized | db-data-migration, dsm, feature-property, firmware-management, interface-vxlan, overlay-wlan, vsx-pair |
+| `vlans_networks.py` | 21 | VLANs & Networks | erps, gw-stp, loop-protect, mvrp, smartlink, static-neighbor, stp, vlan, vlan-range, vrrp{-interface} |
+| `wireless.py` | 12 | Wireless | alg, ids, mesh, mpsk-local, passpoint, radio |
+
+**Source for full per-tool docstrings**: each module's `.py` file in `src/hpe_networking_mcp/platforms/central/tools/`. The Aruba Central config-model OpenAPI spec is the canonical reference for payload schemas — `payload: dict` in each `central_manage_*` accepts arbitrary keys per the underlying YANG model.
+
+**Regenerating**: the import script lives at `scripts/import_central_config_tools.py`. Drop refreshed specs into `api-endpoints/central/config/` (gitignored) and run `uv run python scripts/import_central_config_tools.py` from the repo root. Re-running overwrites the generated modules, so hand-edits to them get clobbered on regen — treat them as one-shot output, not as living generator output.
+
+**Sensitive payloads**: several types carry secrets (auth-server shared-secrets, internal-user passwords, certificate private keys, mpsk-local PSKs). PII tokenization rules in `src/hpe_networking_mcp/redaction/rules.py` cover Mist + Central WLAN/RADIUS but **do not** cover the full AOS-CX surface as of v3.1.1.0. Audit + extend rules before turning on `ENABLE_CENTRAL_WRITE_TOOLS=true` on tenants where AI clients are untrusted.
 
 ---
 

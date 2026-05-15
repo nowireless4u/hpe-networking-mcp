@@ -16,3 +16,7 @@ services:
       # ./src under their own mount. Never copied into the production image
       # by the Dockerfile (only ./src is COPYed).
       - ./scripts:/app/scripts
+      # Local-only Central OpenAPI snapshot (gitignored) — the Central
+      # import script reads from here. Read-only mount; never copied into
+      # the production image. Refresh this directory manually on the host.
+      - ./api-endpoints:/app/api-endpoints:ro

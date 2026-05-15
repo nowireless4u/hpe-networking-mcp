@@ -5,6 +5,91 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.1.0] - 2026-05-15
+
+**Minor — bulk-import the Aruba Central config-model OpenAPI surface as 197 new typed config-object types (389 net-new tools across 19 new modules). Unlocks AAA, AOS-CX interface/routing/services/system, certificates, AirGroup, NAC (CDA), telemetry, and the wider device-level config-model so design work no longer blocks on per-type tool authoring.**
+
+Central went from 90 underlying tools → **479**. Server-wide tool count: **1368 → 1757**.
+
+### Why this PR
+
+Previous workflow was hand-curating one Central config-model tool at a time as design work required it. The 212 OpenAPI specs under the local-only `api-endpoints/central/config/` directory captured the full configurable surface; only 15 had hand-curated tool pairs. Multi-step design conversations (AAA, RF, security policy modelling) kept stalling on "this type doesn't have tools yet — let me add them first." Bulk-importing the remaining 197 types into the codebase removes that bottleneck so design conversations can focus on mappings instead of tool authoring.
+
+Per the project's no-partial-implementations guidance, the import covers every spec we can map cleanly — three OpenAPI path shapes are handled:
+
+1. Collection + item (the common case): emits `central_get_<type>(ctx, <id>=None)` + `central_manage_<type>(ctx, <id>, action_type, payload, ...)`.
+2. Singleton (no item path — e.g. `system-info`, `firmware-compliance`): emits the same pair without an identifier parameter.
+3. Item-only with parameterised path (e.g. `persona-assignment/{device-function}`): emits the pair with the path param as the identifier.
+
+### Approach — one-shot import, hand-curated going forward
+
+This is **not** a maintained spec-driven generator. The bigger "should Central be spec-driven like Mist" decision is deferred. What we shipped instead:
+
+- A one-shot import script at `scripts/import_central_config_tools.py` that reads `api-endpoints/central/config/` (gitignored — your local-only snapshot) and emits hand-curated-style wrappers under `src/hpe_networking_mcp/platforms/central/tools/`.
+- Each generated file leads with `Initial import emitted by ... — safe to edit afterward` and refers operators to the import script for regeneration. Re-running overwrites local edits, so treat the output as ordinary hand-curated Python from here on.
+- 15 types already covered by tuned hand-curated wrappers (`alias`, `auth-server-group`, `config-assignment`, `gw-cluster`, `gw-cluster-intent`, `named-vlan`, `net-group`, `net-service`, `object-group`, `policy`, `policy-group`, `role`, `role-acl`, `role-gpid`, `wlan`) are on an explicit skip list so their rich docstrings, edge-case handling, and LOCAL filters stay intact.
+
+### What got generated (19 new modules)
+
+| Module | Objects | x-tag-group |
+|---|---|---|
+| `application_experience.py` | 2 | Application Experience |
+| `central_nac.py` | 11 | Central NAC (full CDA surface) |
+| `config_management.py` | 3 | Config Management |
+| `extensions.py` | 3 | Extensions |
+| `firmware_policy.py` | 1 | Firmware Policy |
+| `high_availability.py` | 3 | High Availability |
+| `interfaces.py` | 22 | Interfaces |
+| `iot.py` | 1 | IoT |
+| `named_object.py` | 1 | Named Object |
+| `network_services.py` | 22 | Network Services |
+| `routing_overlays.py` | 22 | Routing & Overlays |
+| `security.py` | 30 | Security (AAA, auth servers, certificates, firewall, MAC-sec, port-security, …) |
+| `services.py` | 5 | Services (AirGroup, location, …) |
+| `system.py` | 36 | System (system-info, snmp, ntp, logging, management users, …) |
+| `telemetry.py` | 9 | Telemetry |
+| `tunnels.py` | 2 | Tunnels |
+| `uncategorized.py` | 7 | Uncategorized (overlay-wlan, vxlan, vsx-pair, …) |
+| `vlans_networks.py` | 11 | VLANs & Networks |
+| `wireless.py` | 6 | Wireless |
+
+Each module emits `central_get_<title>` + `central_manage_<title>` per type (with asymmetric specs emitting only what's supported — five types are GET-only or POST-only, hence 389 net-new tools rather than the 197×2 = 394 ceiling).
+
+### Naming conventions
+
+- **Function names use OpenAPI `info.title` directly (singular)**: `central_get_aaa_profile` / `central_manage_aaa_profile`. Discoverable as a pair; no irregular-plural edge cases. Hand-curated tools (skip-list) keep their existing plural-GET / singular-MANAGE convention; the two conventions coexist by name without collision.
+- **Path-param identifiers snake-cased, original spelling preserved in docstring**: e.g. the spec's `{mac-address}` becomes Python `mac_address`, with the docstring noting `OpenAPI path param: mac-address` for traceability.
+- **Reserved-name collision avoidance**: when an OpenAPI path param snake-cases to a name reserved by the manage-tool signature (`ctx`, `action_type`, `payload`, `scope_id`, `device_function`, `confirmed`), the emitter prefixes the path param with `target_` (real-world offender: `persona-assignment/{device-function}` → `target_device_function`).
+
+### Shared helper extension
+
+`_manage_resource` in `src/.../central/tools/security_policy.py` learnt to handle the singleton URL shape: when `name` is `None`/empty the URL omits the trailing `/{name}` segment. Existing callers always pass a real string, so behaviour is unchanged for the 15 hand-curated types.
+
+### Tool surface delta
+
+- **Mist**: 1037 (unchanged)
+- **Central**: 90 → **479** (+389)
+- **GreenLake**: 10 (unchanged)
+- **ClearPass**: 140 (unchanged)
+- **Apstra**: 19 (unchanged)
+- **Axis**: 25 (unchanged)
+- **AOS8**: 47 (unchanged)
+- **Server-wide total**: 1368 → **1757**
+
+### Known limitations / follow-ups
+
+- **PII tokenization**: several net-new types carry sensitive payloads (RADIUS shared secrets in `auth-server`, passwords in `internal-user`, certificate/key material in `certificate*`, MPSK PSKs in `mpsk-local`, etc.). The existing tokenization rules in `redaction/rules.py` cover Mist + Central WLAN/RADIUS but not the wider AOS-CX surface. This PR ships the tools without extending tokenization rules — file an issue and extend rules before turning on `ENABLE_CENTRAL_WRITE_TOOLS=true` on a tenant where AI clients are untrusted.
+- **Payload schemas remain `dict`**: matches the existing hand-curated pattern. Per-type Pydantic models could be added by hand-editing the generated files (the headers explicitly invite this).
+- **9 specs needed singleton / item-only support** that the original parser rejected; the import script grew the two shapes to cover them. Future genuinely-non-standard specs may need further parser work.
+
+### Verified
+
+- `ruff check .` ✓
+- `ruff format --check .` ✓
+- `mypy src/ --ignore-missing-imports` ✓ (416 source files, no issues)
+- `pytest tests/ -q` ✓ (1266 passed, 1 skipped — same baseline as v3.1.0.15)
+- Live registration smoke test: `register_tools(mcp, ...)` returns 479 underlying Central tools
+
 ## [3.1.0.15] - 2026-05-15
 
 **Patch — relocate the Mist tool generator out of `src/` into `scripts/` so it no longer ships dead in the runtime Docker image.**
