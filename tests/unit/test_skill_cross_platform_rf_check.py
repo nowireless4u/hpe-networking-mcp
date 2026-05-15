@@ -134,3 +134,113 @@ def test_frontmatter_tools_list_includes_dispatch_and_get_self(skill_body: str) 
     frontmatter = skill_body[: end + 5]
     for required in ("mist_invoke_tool", "mist_get_self"):
         assert required in frontmatter, f"frontmatter `tools:` allowlist must include `{required}`"
+
+
+# --- Issue #342: user-stated platform scope must override the runbook default ---
+
+
+@pytest.mark.unit
+def test_step0_user_scope_exists(skill_body: str) -> None:
+    """Step 0 (platform scope detection from the user's request) must
+    exist at the top of the Procedure section. INSTRUCTIONS.md guidance
+    cannot enforce this (untrusted in AI-client view); only the loaded
+    skill body can. The transcript showed the AI saying "I'll still check
+    both platforms per the runbook" after the user named one — the runbook
+    must remove that out by establishing scope as Step 0 (#342).
+    """
+    # Step 0 must precede Step 1 in the Procedure.
+    step0_idx = skill_body.find("### Step 0 ")
+    step1_idx = skill_body.find("### Step 1 ")
+    assert step0_idx != -1, "Step 0 (platform scope) missing — required for #342"
+    assert step1_idx != -1, "Step 1 missing"
+    assert step0_idx < step1_idx, "Step 0 must come before Step 1 in the Procedure"
+
+
+@pytest.mark.unit
+def test_step0_captures_user_scope_with_keywords(skill_body: str) -> None:
+    """Step 0 must explicitly name the scope keywords ("in Mist", "in
+    Central") so the AI knows what user language to recognize, and it
+    must capture a `user_scope` list for downstream gating.
+    """
+    start = skill_body.find("### Step 0 ")
+    end = skill_body.find("### Step 1 ", start)
+    assert start != -1 and end != -1, "Step 0 / Step 1 headings missing"
+    step0 = skill_body[start:end]
+
+    assert "user_scope" in step0, "Step 0 must capture a `user_scope` variable"
+    # The scope keywords the AI has to recognize.
+    for keyword in ('"in Mist"', '"in Central"'):
+        assert keyword in step0, f"Step 0 must name the {keyword} scope keyword"
+    # The override directive — explicit, since the transcript showed the AI
+    # deferring to the runbook over the user's constraint.
+    assert "authoritative" in step0.lower() or "override" in step0.lower(), (
+        "Step 0 must state that user scope is authoritative / overrides the runbook default (#342)"
+    )
+    # And the specific anti-pattern the operator's AI hit, quoted so it's recognizable.
+    assert "still check both per the runbook" in step0, (
+        "Step 0 must explicitly call out the 'still check both per the runbook' anti-pattern from the transcript (#342)"
+    )
+
+
+@pytest.mark.unit
+def test_mist_steps_gate_on_user_scope(skill_body: str) -> None:
+    """Step 2 (the Mist entry point) must gate its `Skip if` on
+    `"mist" not in user_scope` so the Mist branch skips when the user
+    scoped to Central. Steps 4 and 5 cascade off Step 2 and inherit the
+    skip naturally — they don't need to repeat the gate.
+    """
+    start = skill_body.find("### Step 2 ")
+    end = skill_body.find("### Step 3 ", start)
+    assert start != -1 and end != -1, "Step 2 / Step 3 headings missing"
+    step2 = skill_body[start:end]
+    assert '"mist" not in user_scope' in step2, (
+        'Step 2 must skip when `"mist" not in user_scope` — gate the Mist branch on user_scope (#342)'
+    )
+
+
+@pytest.mark.unit
+def test_central_steps_gate_on_user_scope(skill_body: str) -> None:
+    """Step 3 (the Central entry point) must gate its `Skip if` on
+    `"central" not in user_scope` so the Central branch skips when the
+    user scoped to Mist. Step 6 cascades off Step 3 and inherits the skip.
+    """
+    start = skill_body.find("### Step 3 ")
+    end = skill_body.find("### Step 4 ", start)
+    assert start != -1 and end != -1, "Step 3 / Step 4 headings missing"
+    step3 = skill_body[start:end]
+    assert '"central" not in user_scope' in step3, (
+        'Step 3 must skip when `"central" not in user_scope` — gate the Central branch on user_scope (#342)'
+    )
+
+
+@pytest.mark.unit
+def test_decision_matrix_has_user_scoped_rows(skill_body: str) -> None:
+    """The Decision matrix must include explicit rows for user-scoped
+    runs so the AI sees that single-platform-by-user-request is a
+    supported, first-class shape — not a deviation from the runbook.
+    """
+    start = skill_body.find("## Decision matrix")
+    assert start != -1, "Decision matrix section missing"
+    end = skill_body.find("\n## ", start + 1)
+    matrix = skill_body[start : end if end != -1 else len(skill_body)]
+    # Each scope-to-one-platform row must appear.
+    assert "User scoped to Mist only" in matrix, "Decision matrix must carry a 'User scoped to Mist only' row (#342)"
+    assert "User scoped to Central only" in matrix, (
+        "Decision matrix must carry a 'User scoped to Central only' row (#342)"
+    )
+
+
+@pytest.mark.unit
+def test_output_format_surfaces_user_scope_in_headline(skill_body: str) -> None:
+    """Step 8 / Output formatting must instruct the AI to surface the
+    user-requested scope in the report headline so the operator can see
+    the run honored their constraint.
+    """
+    fmt_start = skill_body.find("## Output formatting")
+    assert fmt_start != -1, "Output formatting section missing"
+    fmt_end = skill_body.find("\n## ", fmt_start + 1)
+    fmt = skill_body[fmt_start : fmt_end if fmt_end != -1 else len(skill_body)]
+    assert "scope: user-requested" in fmt, (
+        "Output formatting must instruct the AI to print `(scope: user-requested <platform>)` "
+        "in the report headline when user_scope covered one platform (#342)"
+    )

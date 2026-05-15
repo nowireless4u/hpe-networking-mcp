@@ -108,6 +108,30 @@ might be a list. Central records are camelCase (`deviceName`,
 Before iterating any tool response, consult the *Response shapes* table
 above.
 
+### Step 0 — Determine platform scope from the user's request
+
+**The user's request is the authoritative scope** and overrides this
+runbook's default of fan-out across both platforms. Before running any
+platform step, parse the user's request for explicit platform language and
+capture `user_scope` as a list of platform names:
+
+| User language in the request | `user_scope` |
+|---|---|
+| "in Mist" / "on Mist" / "from Mist" / "Mist site X" | `["mist"]` |
+| "in Central" / "on Central" / "in Aruba Central" / "Aruba" (Central context) | `["central"]` |
+| No platform named, OR "across both" / "everywhere" / "Mist and Central" / "all platforms" | `["mist", "central"]` |
+
+`user_scope` gates every subsequent step. If `"mist" not in user_scope`,
+the Mist collection steps (2, 4, 5) are skipped entirely. If
+`"central" not in user_scope`, the Central collection steps (3, 6) are
+skipped entirely.
+
+**Do NOT "still check both per the runbook" when the user named one
+platform.** The runbook fans out across platforms only when the user has
+not constrained the scope. When they have, this becomes a single-platform
+run (the Decision matrix has rows for it). Honor the user's scope; do not
+override it with the runbook's default.
+
 ### Step 1 — Confirm platform reachability
 
 **Tool:** `health(platform=["mist", "central"])`
@@ -153,7 +177,8 @@ the user's `site_name` (case-insensitive) and capture its `id`.
 with Central only. If the user gave no site_name, surface the site list
 and ask. If `privileges` carries multiple `scope == "org"` entries, take
 the first (single-tenant case is dominant).
-**Skip if:** Mist is not enabled or returned `unavailable` in Step 1.
+**Skip if:** Mist is not enabled or returned `unavailable` in Step 1, OR
+`"mist" not in user_scope` (the user scoped to Central only — see Step 0).
 
 ### Step 3 — Resolve the site on Central
 
@@ -164,7 +189,9 @@ tool returns a name → id mapping for every site.
 its site id.
 **If anomaly:** No match → Central has no such site; note it and continue
 with Mist only.
-**Skip if:** Central is not enabled or returned `unavailable` in Step 1.
+**Skip if:** Central is not enabled or returned `unavailable` in Step 1,
+OR `"central" not in user_scope` (the user scoped to Mist only — see
+Step 0).
 
 ### Step 4 — Pull Mist per-AP radio stats
 
@@ -321,6 +348,8 @@ a raw HTML code block is worse than a clean ASCII diagram.
 
 | Condition | Action |
 |---|---|
+| User scoped to Mist only (`user_scope == ["mist"]`) | Run Steps 0–2, 4, 5; skip 3, 6. Report Mist-only; the headline states scope was user-requested. |
+| User scoped to Central only (`user_scope == ["central"]`) | Run Steps 0–1, 3, 6; skip 2, 4, 5. Report Central-only; the headline states scope was user-requested; note RF-template comparison is unavailable (Central has no RF-template concept). |
 | Only Mist enabled | Run Steps 2, 4, 5; skip 3, 6. Report Mist-only. |
 | Only Central enabled | Run Steps 3, 6; skip 2, 4, 5. Report Central-only; note RF-template comparison is unavailable (Central has no RF-template concept). |
 | Site found on one platform only | Report that platform; state explicitly the site was not found on the other. |
@@ -332,14 +361,17 @@ a raw HTML code block is worse than a clean ASCII diagram.
 
 Lead with a one-line headline (`<site>: <connected>/<total> APs online |
 2.4GHz: <channels> | 5GHz: ... | 6GHz: ...`), then a per-band section,
-then a per-AP table, then recommendations. Match this structure:
+then a per-AP table, then recommendations. When `user_scope` covered only
+one platform, the `Platforms:` line MUST include `(scope: user-requested
+<platform>)` so the operator can see the run honored their constraint.
+Match this structure:
 
 ```
 # RF Check — <site name>
 
 <headline line>
 
-Platforms: queried=<n>, matched=<n>
+Platforms: queried=<n>, matched=<n>   (scope: user-requested central)
 Mist RF template: <name>   (omit if Central-only)
 
 ### 2.4 GHz — <radios_active> radio(s) across <ap_count> AP(s)
@@ -412,6 +444,8 @@ Order the bands 5 → 6 → 2.4 — operators triage 5 / 6 GHz first.
 
 ## Example
 
-> "how are my 5 and 6 GHz channels operating at HQ?"
-> "run an RF check on site BRANCH-1"
-> "any co-channel interference across Mist and Central at the main office?"
+> "how are my 5 and 6 GHz channels operating at HQ?" → `user_scope=["mist","central"]` (no platform named)
+> "run an RF check on site BRANCH-1" → `user_scope=["mist","central"]`
+> "any co-channel interference across Mist and Central at the main office?" → `user_scope=["mist","central"]` (both named)
+> "Do an RF check at HQ in Central" → `user_scope=["central"]` (Mist steps skip)
+> "RF check on Mist site BRANCH-1" → `user_scope=["mist"]` (Central steps skip)
