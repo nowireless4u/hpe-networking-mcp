@@ -30,7 +30,7 @@ Managing HPE networking infrastructure with AI assistants today means juggling m
 | **Configuration Management** | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ |
 | **Configuration Write (CRUD)** | ✅ | ✅ | — | ✅ | ✅ | ✅ | ✅ |
 | **Radio Resource Management** | ✅ | — | — | — | — | — | ✅ |
-| **Rogue AP Detection** | ✅ | — | — | — | — | — | ✅ |
+| **Rogue AP Detection** | ✅ | ✅ | — | — | — | — | ✅ |
 | **Firmware Management** | ✅ | ✅ | — | — | — | — | ✅ |
 | **Subscriptions / Licensing** | — | — | ✅ | ✅ | — | — | ✅ |
 | **User Management** | — | — | ✅ | ✅ | — | ✅ | — |
@@ -38,7 +38,7 @@ Managing HPE networking infrastructure with AI assistants today means juggling m
 | **Scope & Configuration Hierarchy** | ✅ | ✅ | — | — | — | ✅ | ✅ |
 | **Guest Management** | — | — | — | ✅ | — | — | — |
 | **NAC / Policy Management** | ✅ | ✅ | — | ✅ | — | — | — |
-| **Endpoint Profiling** | ✅ | — | — | ✅ | — | — | — |
+| **Endpoint Profiling** | ✅ | ✅ | — | ✅ | — | — | — |
 | **Certificates** | — | — | — | ✅ | — | — | — |
 | **Datacenter Blueprints / Templates** | — | — | — | — | ✅ | — | — |
 | **Virtual Networks / EVPN / Routing Zones** | — | — | — | — | ✅ | — | — |
