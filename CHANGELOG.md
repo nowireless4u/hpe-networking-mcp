@@ -5,6 +5,63 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.2.0] - 2026-05-15
+
+**Minor — bulk-import the Aruba Central MRT API surface (Monitoring / Reporting / Troubleshooting / Notifications / Services / MSP / Sitemaps) as 133 net-new typed tools across 13 new modules. Central: 480 → 613; server-wide: 1758 → 1891.**
+
+Closes the long-standing gap between Central's published config-model surface (the `network-config/v1alpha1/*` tools we shipped in v3.1.1.0) and its live observability + operations surface. After this release the platform is reachable for the full read-write loop: configure → monitor → troubleshoot → react, all from the AI.
+
+### What got added (by section)
+
+| Module | Tools | Covers |
+|---|---|---|
+| `mrt_msp.py` | 1 | MSP tenant listing |
+| `mrt_insights.py` | 1 | `network-notifications/v1/insights` (recommendation-style observations distinct from `central_get_alerts`) |
+| `mrt_reporting.py` | 3 | Reports list / update / report-runs |
+| `mrt_webhooks.py` | 4 | Webhooks CRUD + HMAC key rotation |
+| `mrt_services.py` | 14 | FCO response info, asset tags, AP ranging scans, device locations, WiFi-client locations, location analytics |
+| `mrt_sitemaps.py` | 17 | Floors, buildings, walls, zones, device placement (deploy/assign/plan), wall-types, sitemap import, scale + image |
+| `mrt_health.py` | 4 | Per-site / tenant-wide device + client health rollups beyond the existing `central_get_site_health` dashboard view |
+| `mrt_clients.py` | 9 | Clients trend, top-N by usage, mobility trail, per-client detail, onboarding-stage diagnostics (score / export / reasons / count), firewall sessions (3 perspectives) |
+| `mrt_topology.py` | 7 | Topology graph, LLDP/CDP neighbours, unmanaged-device detection, isolated-devices, device inventory, device PATCH + DELETE |
+| `mrt_switch.py` | 8 | Switches list, LAG, runtime VLANs, hardware categories, per-interface trends, top-N interface trends, VSX, stack members |
+| `mrt_ap.py` | 17 | AP top-level trends (cpu/memory/power/throughput), per-radio trends, per-port trends, per-tunnel trends, per-WLAN throughput, tenant-wide radios/BSSIDs/WLANs/swarms lists, top-N APs by usage |
+| `mrt_gateway.py` | 18 | Gateway list + top-level trends, ports, tunnels, runtime VLANs, uplinks + probes + probe performance, DHCP pools/clients, cluster members + summaries + capacity trends |
+| `mrt_troubleshooting.py` | 25 | pingSweep, getArpTable, nslookup, AAA test, iperf, HTTP/HTTPS/TCP probes, speedtest, locate, reboot, halt, rebootSwarm, list-tasks, list supported show commands, event-extra-attributes, gateway / AP disconnect-extras, shared async-status poller |
+
+### Conventions
+
+- **Hand-curated style** — matches the existing 480-tool Central surface (Annotated + Field descriptions, `retry_central_command` for transport, `READ_ONLY` / `WRITE_DELETE` / `OPERATIONAL` annotations gating elicitation + write-tool toggle).
+- **Trend endpoints consolidated** — per-entity time-series endpoints fold into one tool per sub-resource taking a `dimension` Literal (e.g. `central_get_ap_radio_trend(serial, radio_number, dimension)` covers throughput / channel-utilization / channel-quality / noise-floor / frames). Matches the existing `central_get_switch_hardware_trends` pattern.
+- **Async-pollers shared** — every troubleshooting POST returns a `task_id`; one `central_get_troubleshooting_task_status(device_family, serial, action, task_id)` polls them all.
+- **Device-family routing** — actions offered on multiple device families (`aos-s` / `aps` / `cx` / `gateways`) take a `device_family` Literal arg and route internally, matching the existing `central_ping(device_type=...)` pattern.
+- **Operational vs write** — destructive operations (reboot, halt, locate, disconnect) use `OPERATIONAL` annotation (fires elicitation, no toggle); config-write operations (manage_webhook, update_report, update_device, manage_sitemap_devices, manage_floor, manage_floor_walls, etc.) use `WRITE_DELETE` + `central_write_delete` tag (toggle-gated AND elicitation).
+
+### Tool surface delta
+
+- **Mist**: 1037 (unchanged)
+- **Central**: 480 → **613** (+133)
+- **GreenLake**: 10 (unchanged)
+- **ClearPass**: 140 (unchanged)
+- **Apstra**: 19 (unchanged)
+- **Axis**: 25 (unchanged)
+- **AOS8**: 47 (unchanged)
+- **Server-wide total**: 1758 → **1891**
+
+### Known limitations / follow-ups
+
+- **PII tokenization**: webhook HMAC keys, AAA-test credentials, asset-tag metadata, mobility-trail records, location analytics, and firewall sessions carry sensitive data. Existing rules cover MACs + WLAN/RADIUS surfaces but not these new shapes. File a follow-up tokenization extension PR before turning on `ENABLE_CENTRAL_WRITE_TOOLS=true` on tenants with untrusted AI clients (same caveat as v3.1.1.0).
+- **Overlap with pycentral library wrappers**: a small number of MRT endpoints have existing hand-curated tools that route through `pycentral.new_monitoring.*` library calls (e.g. `central_get_aps`, `central_get_clients`, `central_get_gateway_details`). Those are left untouched; the new MRT tools cover everything *not* already wrapped via pycentral. No collisions.
+- **Async polling is operator-driven** — `central_get_troubleshooting_task_status` is a separate call; the POST tools don't auto-poll. Matches the existing async-status pattern.
+
+### Verified
+
+- `ruff check .` ✓
+- `ruff format --check .` ✓
+- `mypy src/ --ignore-missing-imports` ✓ (430 source files, no issues)
+- `pytest tests/ -q` ✓ (1266 passed, 1 skipped)
+- Live registration smoke test: `register_tools(mcp, ...)` returns 613 underlying Central tools
+
 ## [3.1.1.1] - 2026-05-15
 
 **Patch — add `central_get_wids_monitored_aps`, wrapping the `network-services/v1alpha1/wids-monitored-aps` undocumented-but-in-policy endpoint. Surfaces neighbor / rogue / suspect / interfering APs detected by the caller's APs, plus the fabric's containment status for each.**
