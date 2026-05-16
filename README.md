@@ -43,7 +43,7 @@ Managing HPE networking infrastructure with AI assistants today means juggling m
 | **Webhooks** | ✅ | ✅ | — | — | — | — | — |
 | **Reports / Scheduled Reports** | ✅ | ✅ | — | ✅ | — | — | — |
 | **Floor Plans / Sitemaps** | ✅ | ✅ | — | — | — | — | — |
-| **BLE Asset Tracking / IoT Beacons** | ✅ | — | — | — | — | — | — |
+| **BLE Asset Tracking / IoT Beacons** | ✅ | ✅ | — | — | — | — | — |
 | **Marvis / AI Assistant** | ✅ | — | — | — | — | — | — |
 | **Datacenter Blueprints / Templates** | — | — | — | — | ✅ | — | — |
 | **Virtual Networks / EVPN / Routing Zones** | — | — | — | — | ✅ | — | — |

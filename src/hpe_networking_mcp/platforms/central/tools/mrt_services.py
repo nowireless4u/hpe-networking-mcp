@@ -85,10 +85,21 @@ async def central_get_asset_tags(
     limit: int = 100,
     offset: int = 0,
 ) -> dict | str:
-    """List asset tags configured in Central.
+    """List BLE asset tags detected by the tenant's APs.
 
-    Asset tags are user-defined metadata you attach to devices for
-    grouping / filtering in reports, alerts, and policies.
+    Asset tags are physical BLE beacons (e.g. ArubaAssetTag, Blyott)
+    attached to assets you want to track — laptops, medical equipment,
+    inventory, etc. APs detect the BLE broadcasts and report the tags
+    along with their last-known location. Each record carries the tag's
+    BLE ``macAddress``, ``deviceClassifications`` (vendor / type),
+    ``firstSeen`` / lastSeen timestamps, and the ``metadata`` block —
+    user-attached descriptive fields (name, owner, asset category, etc.)
+    populated via ``central_manage_asset_tag_metadata``.
+
+    Use ``central_start_ap_ranging_scan`` to calibrate AP-to-AP
+    distances on a floor for accurate location, and the device-location
+    / wifi-clients-locations endpoints alongside this for the full
+    location-services picture.
     """
     conn = ctx.lifespan_context["central_conn"]
     params: dict = {"limit": limit, "offset": offset}
@@ -100,9 +111,16 @@ async def central_get_asset_tags(
 @tool(annotations=READ_ONLY)
 async def central_get_asset_tag(
     ctx: Context,
-    asset_tag_id: Annotated[str, Field(description="Asset-tag identifier.")],
+    asset_tag_id: Annotated[
+        str,
+        Field(description="Asset-tag identifier (assigned by Central on first detection)."),
+    ],
 ) -> dict | str:
-    """Get one asset tag by ID."""
+    """Get one BLE asset tag's full record.
+
+    Returns classifications, BLE MAC, first/last seen, attached metadata,
+    and the last-known location for the tracked tag.
+    """
     conn = ctx.lifespan_context["central_conn"]
     return _get(conn, f"network-services/v1/asset-tags/{asset_tag_id}")
 
@@ -113,16 +131,32 @@ async def central_manage_asset_tag_metadata(
     asset_tag_id: Annotated[str, Field(description="Asset-tag identifier.")],
     action_type: Annotated[
         Literal["create", "update", "delete"],
-        Field(description="``'create'`` (POST), ``'update'`` (PUT), or ``'delete'``."),
+        Field(
+            description=(
+                "``'create'`` (POST), ``'update'`` (PUT — replaces wholesale), "
+                "or ``'delete'`` (clears all metadata fields)."
+            ),
+        ),
     ],
     payload: Annotated[
         dict | None,
-        Field(description="Metadata key/value pairs. Ignored for delete."),
+        Field(
+            description=(
+                "Descriptive fields to attach to the BLE asset tag — typically "
+                "``{name, description, ownership info, asset category, ...}``. "
+                "These are inventory-style attributes; they don't change what's "
+                "detected, they let you label what each detected tag *is*. "
+                "Ignored for delete."
+            ),
+        ),
     ] = None,
 ) -> dict | str:
-    """Manage the metadata attached to an asset tag.
+    """Create / update / delete the descriptive metadata attached to a BLE asset tag.
 
-    Requires ``ENABLE_CENTRAL_WRITE_TOOLS=true``.
+    The metadata is the inventory record for a tracked asset — name,
+    owner, asset class, etc. It doesn't affect detection; APs detect the
+    BLE broadcast regardless. PUT (``update``) replaces the metadata
+    wholesale. Requires ``ENABLE_CENTRAL_WRITE_TOOLS=true``.
     """
     conn = ctx.lifespan_context["central_conn"]
     method_map = {"create": "POST", "update": "PUT", "delete": "DELETE"}

@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.2.1] - 2026-05-16
+
+**Patch — correct the feature-comparison matrix in README.md (12-row audit) + fix the `central_get_asset_tags` / `central_get_asset_tag` / `central_manage_asset_tag_metadata` docstrings to describe what they actually wrap.**
+
+### README feature-matrix audit
+
+Full audit of the README feature-comparison table against actual tool inventory across all 7 platforms. **7 rows corrected, 5 new rows added.**
+
+| Row | Change | Why |
+|---|---|---|
+| **Rogue AP Detection** | Central — → ✅ | `central_get_wids_monitored_aps` shipped v3.1.1.1 |
+| **Endpoint Profiling** | Central — → ✅ | `central_get_devicefingerprinting*` + `central_get_client_insight` (config) + fingerprinted attrs on `central_get_clients` (data) — shipped v3.1.1.0 |
+| **Application Visibility** | Mist — → ✅ | `orgs_applications` + `orgs_linked_applications` |
+| **Subscriptions / Licensing** | Mist — → ✅ | `orgs_licenses` / `msps_licenses` / `sites_licenses` |
+| **User Management** | Mist + Central — → ✅ | Mist: `orgs_admins` / `orgs_sso*` / `msps_admins` / `msps_sso*`. Central: `central_get_management_user` / `_management_user_group` from v3.1.1.0 |
+| **Guest Management** | Mist + Central — → ✅ | Mist: `orgs_guests` / `sites_guests`. Central: `central_get_aaa_captive_portal` + `central_get_cda_portal_*` |
+| **Certificates** | Mist + Central — → ✅ | Mist: `orgs_cert` / `orgs_crl` / `orgs_scep` / `orgs_nac_crl`. Central: `central_get_certificate*` family from v3.1.1.0 |
+
+New rows added (5):
+
+- **Webhooks** — Mist + Central
+- **Reports / Scheduled Reports** — Mist + Central + ClearPass
+- **Floor Plans / Sitemaps** — Mist + Central
+- **BLE Asset Tracking / IoT Beacons** — Mist + Central (see asset-tag docstring fix below)
+- **Marvis / AI Assistant** — Mist only
+
+### Asset-tag docstring fix (the row that nearly went wrong)
+
+The v3.1.2.0 import described Central's `network-services/v1/asset-tags` endpoints as "user-defined metadata you attach to devices for grouping / filtering" — which was wrong. The Postman example response confirmed: each record carries a BLE `macAddress`, `deviceClassifications` like `"ArubaAssetTag"` / `"Blyott"` (Blyott is a BLE beacon vendor), `firstSeen` timestamps from AP detection, and "last known location." These ARE BLE asset tags — physical beacons attached to tracked assets (laptops, medical equipment, inventory) that APs detect and locate. The `/metadata` sub-resource is the inventory annotation layer (name, owner, asset class, etc.) you attach to each detected tag.
+
+Docstrings on `central_get_asset_tags` / `central_get_asset_tag` / `central_manage_asset_tag_metadata` rewritten to reflect that. The `BLE Asset Tracking / IoT Beacons` matrix row gained Central ✅ as part of the audit.
+
+### Deliberate non-changes
+
+- **Radio Resource Management — Central**: stayed —. Central has `central_get_radio` (config-model radio profile) but the actual auto-tuning RRM engine is AirMatch, which lives under `airmatch/v1/` and is out-of-policy per the 2026-05-15 build rule.
+- **Workspaces — Central**: stayed —. Workspaces are a GreenLake-specific construct.
+
+### Verified
+
+- `ruff check .` ✓
+- `ruff format --check .` ✓
+- `mypy src/ --ignore-missing-imports` ✓
+- `pytest tests/ -q` ✓ (1266 passed, 1 skipped)
+
 ## [3.1.2.0] - 2026-05-15
 
 **Minor — bulk-import the Aruba Central MRT API surface (Monitoring / Reporting / Troubleshooting / Notifications / Services / MSP / Sitemaps) as 133 net-new typed tools across 13 new modules. Central: 480 → 613; server-wide: 1758 → 1891.**
