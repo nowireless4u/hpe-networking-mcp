@@ -47,13 +47,15 @@ _NODE_SHAPE: dict[str, tuple[str, str]] = {
 
 # Edge label → Mermaid arrow syntax. CONTINUE uses a dotted line to
 # visually distinguish evaluate-all chaining from first-applicable
-# fall-through.
+# fall-through. The "PASS" key is the auth → role-mapping edge label
+# (authentication passed) — bandit B105 misreads it as a hardcoded
+# credential, suppress on the offending line.
 _EDGE_FORMAT: dict[str, str] = {
     "": "{f} --> {t}",
     "YES": "{f} -->|YES| {t}",
     "NO": "{f} -->|NO| {t}",
     "FAIL": "{f} -->|FAIL| {t}",
-    "PASS": "{f} -->|PASS| {t}",
+    "PASS": "{f} -->|PASS| {t}",  # nosec B105 — Mermaid edge label, not a credential
     "CONTINUE": "{f} -. CONTINUE .-> {t}",
 }
 
