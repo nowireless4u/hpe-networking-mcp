@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.3.1] - 2026-05-18
+
+**Patch — version-aligns the trigger-coverage fix that landed in #351.**
+
+PR #351 hardened the `clearpass-policy-walker` skill triggering (see commit `add2747`) but was merged as "docs-only" with no version bump. That was a misclassification — `src/hpe_networking_mcp/INSTRUCTIONS.md` and the skill `.md` files under `src/hpe_networking_mcp/skills/` are **shipped runtime artifacts**: the server reads INSTRUCTIONS.md at startup (see `server.py:12`, `server.py:255`) and surfaces it as the MCP `serverInstructions` field. Skill files are read by `skills_list` / `skills_load` at runtime. Operators who consume the Docker image have no way to receive trigger fixes without a tagged release.
+
+This patch bumps `pyproject.toml` so the v3.1.3.1 git tag aligns with the package version + triggers the `Docker Publish` workflow against a release event, making the fix actually reachable for image consumers.
+
+### Versioning rule clarification
+
+Going forward: a version bump is required for any change to a file the server loads at runtime — including INSTRUCTIONS.md, every skill markdown under `src/.../skills/`, and any other content shipped inside `src/`. Pure documentation files (`README.md`, `CHANGELOG.md`, `docs/TOOLS.md`, source comments) that don't affect runtime behavior still don't need a version bump.
+
+### What changed in #351 (re-summarized for the release notes)
+
+- Extended the `clearpass-policy-walker` skill's `description` frontmatter (what `skills_list` returns) to cover ClearPass-native phrasings — *"auth service"*, *"authentication service"*, *"policy service"*, *"ClearPass service"* — and casual-name handling (e.g. *"No Wireless For You"*).
+- Added *visualize*, *render*, *diagram*, *flowchart*, *draw*, *walk the flow*, *show me how X decides* to the universal-trigger-words list in INSTRUCTIONS.md so any pairing with a ClearPass service name forces a `skills_list()` call before the model answers.
+- Added an explicit CRITICAL clause in the skill description: never guess at a named service; always call the tools first.
+
 ## [3.1.3.0] - 2026-05-18
 
 **Minor — ClearPass policy visualizer: render a service's full decision flow (service match → authentication → role mapping → enforcement) as a Mermaid flowchart. Ships as 2 new tools + 1 new skill, backed by an internal compilation engine ported (and adapted for REST) from an existing standalone project. Closes #349.**
