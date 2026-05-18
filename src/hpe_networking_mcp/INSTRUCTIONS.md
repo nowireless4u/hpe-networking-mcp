@@ -11,6 +11,7 @@ Tools are namespaced by platform:
 - `apstra_*` — Juniper Apstra (Datacenter fabric, blueprints, virtual networks, EVPN)
 - `axis_*` — Axis Atmos Cloud (SASE / cloud-edge, connectors, tunnels)
 - `aos8_*` — Aruba OS 8 / Mobility Conductor (legacy controller-based wireless, AOS 8.x)
+- `uxi_*` — Aruba UXI (digital twin / synthetic testing, sensors, agents, groups)
 
 # TOOL DISCOVERY
 
@@ -112,6 +113,7 @@ Use the cross-platform tools directly when they apply — they replace several p
 | *"audit Mist scope / config"*, *"do a config audit"* / *"audit this site"* / *"check the config"* (in Mist context), *"check the Wi-Fi configuration"*, *"does this site follow best practices"*, *"is this configured correctly"*, *"possible improvements"*, *"review this site"*, *"is my Mist config drifting"*, *"where are my Mist WLAN templates assigned"*, *"find bare site-level WLANs"* | `mist-scope-audit` |
 | *"AOS 8 → AOS 10 migration"*, *"AOS 8 to 10 migration"*, *"AOS 8 migration to Central"*, *"migration readiness"*, *"validate my migration plan"*, *"campus migrate audit"*, *"are we ready for AOS 10"*, *"translate AOS 8 config to AOS 10"*, *"AOS 10 config mapping"*, *"AOS 8 to Central object mapping"*, *"build me an AOS 10 migration plan"*, *"generate Central API call sequence for migration"*. Note: this skill is **AOS 8 → AOS 10 only**. AOS 6 and Instant AP (IAP) are out of scope; redirect those operators to engage their Aruba SE. | `aos-migration` |
 | **Engineer view (default):** *"morning coffee report"*, *"morning coffee"*, *"morning digest"*, *"morning rundown"*, *"give me the rundown"*, *"what happened overnight"*, *"who's been in Central / Mist over the last day"*. **Executive view:** *"executive summary"*, *"exec briefing"*, *"exec summary"*, *"summary for the boss"*, *"summary for leadership"*, *"high-level summary"*, *"30-second summary"*, *"non-technical morning report"*, *"what do I tell my manager"*. The skill detects intent from phrasing and outputs the matching template. | `morning-coffee-report` |
+| *"uxi sensors failing"*, *"why are my synthetic tests failing"*, *"correlate uxi failures"*, *"are my sensors healthy"*, *"uxi sensor offline"*, *"uxi service test failing"*, *"diagnose uxi"*, *"correlate uxi to central / mist / aos8"* | `uxi-cross-platform-diagnostics` |
 
    After `skills_list()`, call `skills_load(name=...)` to get the runbook, then follow its steps — including its output format. **If a skill matches the user's request and the platform context, you MUST `skills_load()` and follow it. Do NOT synthesize your own custom audit narrative when a bundled runbook exists.** The runbook output is what the user expects (consistent shape, severity ordering, anchored on vendor docs); a freelanced audit produces inconsistent results across sessions and may miss what the runbook is designed to catch. Only fall back to manual tool calls if `skills_list()` returns no relevant match.
 
@@ -836,6 +838,57 @@ When a user makes a sequence of changes, prefer batching, then prompt for the de
 - `aos8_disconnect_client` and `aos8_reboot_ap` are operational — they ride alongside reads but still fire elicitation. Never call without explicit user intent on a specific MAC / AP name.
 - `aos8_show_command` is a generic passthrough — verify the command before calling it; some `show` commands on a busy MM can be slow.
 - The UIDARUBA cookie is session-scoped and never logged. If a tool returns auth errors, re-authentication happens automatically; persistent 401s usually indicate the configured credentials lost permission.
+
+---
+
+# ARUBA UXI (uxi_* tools)
+
+Aruba UXI (User Experience Insight) is a digital twin / synthetic testing platform. UXI sensors and agents continuously run tests across your wireless and wired networks, providing real-time visibility into network performance from the end-user perspective. Tools wrap the UXI REST API at `https://api.capenetworks.com/networking-uxi/v1alpha1` using OAuth2 client credentials (HPE GreenLake SSO).
+
+## Authentication
+UXI is enabled when both `uxi_client_id` and `uxi_client_secret` Docker secrets are present. The server authenticates via `POST https://sso.common.cloud.hpe.com/as/token.oauth2` with client credentials grant type. Tokens are cached and automatically refreshed when within 60 seconds of expiry.
+
+## Starting a UXI Session
+No special ID resolution needed. Tools connect directly using the configured `uxi_client_id` and `uxi_client_secret`. For UXI reachability call `health(platform="uxi")`.
+
+## Tool Categories
+
+### Sensors
+- **uxi_list_sensors** — List all UXI sensors with serial number, name, model, MAC address, coordinates, and type. Supports cursor pagination.
+- **uxi_get_sensor_status** — Get online/testing status and active issues for a specific sensor. Returns `{isOnline, isTesting, issues[].{code, severity, status, timestamp, id}}`.
+
+### Agents
+- **uxi_list_agents** — List all UXI software agents (virtual sensors running on laptops, VMs, or servers). Supports cursor pagination.
+
+### Groups
+- **uxi_list_groups** — List all UXI sensor/agent groups. Groups are used to organize sensors and agents for test targeting. Supports cursor pagination.
+
+### Networks
+- **uxi_list_wired_networks** — List all wired network configurations monitored by UXI. Supports cursor pagination.
+- **uxi_list_wireless_networks** — List all wireless network (SSID) configurations monitored by UXI. Supports cursor pagination.
+
+### Service Tests
+- **uxi_list_service_tests** — List all configured synthetic service tests (DNS, HTTP, RADIUS, etc.) that UXI sensors and agents run. Supports cursor pagination.
+
+### Assignments
+- **uxi_list_agent_group_assignments** — List which agents are assigned to which groups.
+- **uxi_list_sensor_group_assignments** — List which sensors are assigned to which groups.
+- **uxi_list_network_group_assignments** — List which networks are assigned to which groups (targets for service tests).
+- **uxi_list_service_test_group_assignments** — List which service tests are assigned to which groups.
+
+## Pagination
+UXI list endpoints use cursor-based pagination. All list tools accept:
+- `next_cursor` — Opaque cursor string from a prior response's `next` field. Omit for first page.
+- `page_size` — Maximum items per page (default 50, max 100).
+
+When the response's `next` field is `null`, all pages have been retrieved. The UXI API uses `limit` (not `page_size`) and `next` (not `cursor`) as query parameters — this translation is handled internally.
+
+## Write Tools
+Write tools (create/update/delete for sensors, agents, tests, etc.) are planned for Phase 16. Write tools will require `ENABLE_UXI_WRITE_TOOLS=true` and will carry `uxi_write` or `uxi_write_delete` tags. These tools are hidden by default even after Phase 16 ships unless the environment variable is set.
+
+## Safety Notes
+- All current UXI tools are read-only; no write operations are available yet.
+- UXI sensor and agent IDs are UXI-internal resource IDs (not MAC addresses or hostnames) — always retrieve them via the list tools before using them.
 
 ---
 

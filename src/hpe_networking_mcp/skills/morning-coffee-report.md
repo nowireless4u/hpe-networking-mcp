@@ -20,9 +20,9 @@ description: |
 
   Both modes lead with a 🟢/🟡/🔴 gas-gauge status indicator so the
   reader can decide in two seconds whether to read further.
-platforms: [mist, central]
-tags: [morning, daily-digest, audit, alerts, top-talkers, sle, baseline]
-tools: [health, mist_get_self, mist_list_org_audit_logs, mist_search_org_alarms, mist_search_org_wireless_clients, mist_search_org_devices, mist_get_org_sle, mist_get_org_sites_sle, mist_get_site_sle_summary, mist_get_site_insight_metrics, central_get_audit_logs, central_get_audit_log_detail, central_get_alerts, central_get_alert_classification, central_get_clients, central_get_aps, central_get_sites, central_get_site_health]
+platforms: [mist, central, uxi]
+tags: [morning, daily-digest, audit, alerts, top-talkers, sle, baseline, uxi]
+tools: [health, mist_get_self, mist_list_org_audit_logs, mist_search_org_alarms, mist_search_org_wireless_clients, mist_search_org_devices, mist_get_org_sle, mist_get_org_sites_sle, mist_get_site_sle_summary, mist_get_site_insight_metrics, central_get_audit_logs, central_get_audit_log_detail, central_get_alerts, central_get_alert_classification, central_get_clients, central_get_aps, central_get_sites, central_get_site_health, uxi_list_sensors, uxi_get_sensor_status]
 ---
 
 # Morning coffee report — daily ops digest
@@ -76,7 +76,7 @@ phase 2** (separate skill iteration). Phase 1 produces the last-24h view.
 
 ## Prerequisites
 
-- At least one of Mist or Central enabled. The runbook adapts — if a
+- At least one of Mist, Central, or UXI enabled. The runbook adapts — if a
   platform is `unavailable`, that platform's sections are skipped with a
   one-line note.
 - Run `health()` first — confirms reachability and gives you the
@@ -86,6 +86,11 @@ phase 2** (separate skill iteration). Phase 1 produces the last-24h view.
 - For Central: most of its read tools are tenant-scoped via the configured
   workspace; no extra context needed. For per-site rollups you may need
   site IDs from `central_get_sites()`.
+- For UXI: no extra context needed beyond reachability — the OAuth2 token
+  is managed by the client. `uxi_list_sensors()` is the inventory source;
+  `uxi_get_sensor_status(sensor_id)` is called per sensor. At 5 req/sec,
+  a 20-sensor fleet takes ~4 seconds to fan out; factor this into expected
+  report generation time for large deployments.
 
 ## Time window
 
@@ -101,13 +106,16 @@ the timestamp as a skill input parameter.
 ### Step 1 — Reachability + org context
 
 **Tools:**
-- `health(platform="mist")` and `health(platform="central")` (call both
-  in parallel where possible; in code-mode sandbox they're sequential)
+- `health(platform="mist")`, `health(platform="central")`, and
+  `health(platform="uxi")` (call all three in parallel where possible;
+  in code-mode sandbox they're sequential)
 - `mist_get_self(action_type="account_info")` — extract `org_id` from
   the returned `privileges` array (look for `scope: "org"`)
 
 **Why:** Confirms each platform is reachable before spending time on
 drill-downs. Gives you the Mist org_id every later Mist call needs.
+UXI reachability is checked here so Steps 3.5 and 5 can be skipped
+cleanly if UXI is not configured or unavailable.
 
 **Expected result:** Each enabled platform reports `status: ok`. The
 self-info call returns at least one org-scoped privilege.
@@ -175,6 +183,59 @@ Minor / Info totals); a list of alarms from Mist with `type` + `severity` +
   is one line, not 12.
 - Flag anything `Critical` with a 🔴 prefix in the rendered output (or
   `[CRITICAL]` if rendering plain text).
+
+### Step 3.5 — UXI end-user perspective: sensor status
+
+**Skip this step if** `health(platform="uxi")` returned `unavailable` or
+`degraded`. Note the skip in the headline with one line: *"UXI: unavailable
+— end-user perspective skipped."*
+
+**Tools:**
+- `uxi_list_sensors()` — full sensor inventory (name, serial, model, MAC,
+  location). Paginate with `next_cursor` until exhausted.
+- `uxi_get_sensor_status(sensor_id=<id>)` — per sensor: `isOnline`,
+  `isTesting`, `issues[]` (each issue: `severity`, `networkName`,
+  `macAddress`, `serviceTestName`, `groupPath`).
+
+**Why:** UXI synthetic tests validate end-to-end application reachability
+from the user's perspective — a layer the AP-centric Mist SLE and
+infrastructure alerts do not cover. A sensor reporting a critical DNS
+failure means users at that location cannot resolve names, even if every
+AP shows green. This step catches infrastructure-invisible outages.
+
+**Procedure:**
+1. Call `uxi_list_sensors()` (paginate). Build a list of `{id, name,
+   serial, model}` tuples.
+2. Fan out `uxi_get_sensor_status(sensor_id)` for every sensor. Respect
+   the 5 req/sec rate limit — the existing retry middleware handles 429s,
+   but batch the calls rather than firing all at once if the fleet is large.
+3. Classify each sensor:
+   - **offline** — `isOnline: false`
+   - **not-testing** — `isOnline: true` but `isTesting: false`
+   - **critical-issues** — `issues[]` contains any entry with `severity:
+     critical`
+   - **warning-issues** — `issues[]` non-empty, no critical entries
+   - **healthy** — online, testing, no issues
+4. For sensors with issues, extract the `serviceTestName` (what failed),
+   `networkName` (which network it ran on), and `groupPath` (location).
+
+**Aggregation:**
+- Lead with fleet summary: "N sensors total — M healthy, P offline, Q with
+  issues (R critical)."
+- List only sensors in the **critical-issues**, **offline**, and
+  **not-testing** buckets — don't enumerate healthy sensors.
+- Per affected sensor: name, group path (location), and the failing
+  `serviceTestName` with severity. Example: *"HQ-Lobby sensor — Corp-Wifi
+  — RADIUS auth: critical, HTTP: warning."*
+- If `networkName` from a UXI issue matches an SSID or network name seen
+  in Mist alarms or Central alerts in Step 3, flag it as a correlated
+  incident with a 🔗 prefix: *"🔗 Correlated: RADIUS failure on Corp-Wifi
+  aligns with Mist RADIUS alarm on the same SSID."* This is the Phase 17
+  correlation signal surfaced inline.
+
+**If anomaly:** If every sensor is healthy, render one line: *"All N UXI
+sensors online and testing — no service test failures."* Don't omit the
+section; a clean bill of health from UXI is meaningful signal.
 
 ### Step 4 — Top talkers
 
@@ -259,6 +320,8 @@ rules in order; the first match wins.
   operator wouldn't recognize as a member of the team — surface this
   as a flag, don't decide for them, but if the AI sees writes from
   `system` or known team members only, that's not a flag)
+- Any UXI sensor with a `severity: critical` issue (service test failure)
+- More than 2 UXI sensors offline (`isOnline: false`)
 - Either platform reporting `unavailable` from `health()`
 
 🟡 **YELLOW** — read the headline + scan the sections. Any of:
@@ -269,6 +332,8 @@ rules in order; the first match wins.
 - An AP with 50+ concurrent clients (capacity warning)
 - A single client consuming >40% of total traffic
 - Any platform reporting `degraded` from `health()`
+- Any UXI sensor with warning-severity issues (no critical)
+- 1–2 UXI sensors offline or not-testing
 
 🟢 **GREEN** — all of the following are true:
 
@@ -278,6 +343,7 @@ rules in order; the first match wins.
 - No platform `unavailable` or `degraded`
 - No anomalous traffic patterns (no client >40%, no AP >50 clients)
 - Audit log activity, if any, is from expected users only
+- All UXI sensors online, testing, and issue-free (or UXI not configured)
 
 Show the rubric color at the very top of the report on its own line,
 followed by a single sentence summarizing why that color was chosen
@@ -292,7 +358,11 @@ mismatch on aggregation link"* for red).
 | Both Mist and Central are `unavailable` | Stop. Report the unavailability and ask the user to check connectivity. |
 | Mist is `unavailable` | Skip steps 2 (Mist half), 3 (Mist half), 4 (Mist half), 5 (Mist half). Run Central-only sections. |
 | Central is `unavailable` | Skip Central halves of steps 2–5. Run Mist-only sections. |
-| User asks for a single site only | Pass `site_id` filters to every tool that supports one (`central_get_alerts(site_id=)`, `central_get_site_health`, `mist_get_site_sle_summary`). Skip the org-wide SLE rollup. |
+| UXI is `unavailable` | Skip step 3.5 entirely. Note it in the headline as one line. Do not let UXI unavailability alone trigger a RED/YELLOW gas gauge. |
+| UXI is not configured | Same as unavailable — skip step 3.5 silently. GREEN condition "or UXI not configured" applies. |
+| UXI sensor fleet is large (>20 sensors) | Fan out `uxi_get_sensor_status` calls respecting 5 req/sec. Expect ~4s per 20 sensors. Note in the report if the UXI section took a moment. |
+| All UXI sensors are healthy | Render one summary line ("All N sensors online, testing, no issues") — don't omit the section. |
+| User asks for a single site only | Pass `site_id` filters to every tool that supports one (`central_get_alerts(site_id=)`, `central_get_site_health`, `mist_get_site_sle_summary`). Filter UXI sensor status to sensors whose `groupPath` matches the site. Skip the org-wide SLE rollup. |
 | Audit log returns 0 events in 24h | Surface as INFO ("no audit activity") — don't omit the section. |
 | All alert lists are empty | Headline says "no critical or major alerts overnight." Don't omit the section. |
 | Top-talker call returns no clients | Likely an off-hours window — note it in the section but don't expand to "top X over the last 7 days" (out of scope). |
@@ -354,6 +424,16 @@ One sentence describing why this color was chosen. Examples:
 - AP unreachable — AP-Floor-3 (4 events in 18h)
 - ... (top 5)
 
+## UXI — end-user perspective
+
+**Fleet:** N sensors total — M healthy, P offline, Q with issues (R critical)
+
+(List only offline, not-testing, or issue-bearing sensors. Omit healthy ones.)
+- 🔴 HQ-Lobby sensor — HQ / Corp-Wifi — RADIUS auth: critical
+- 🔗 Correlated: RADIUS failure on Corp-Wifi aligns with Mist RADIUS alarm on the same SSID
+- ⚠ BRANCH-1-Desk sensor — BRANCH-1 / Corp-Wifi — HTTP: warning, DNS: warning
+- (If all healthy:) All N UXI sensors online and testing — no service test failures.
+
 ## Top talkers
 
 **Central — top clients:**
@@ -380,11 +460,18 @@ One sentence describing why this color was chosen. Examples:
 **Central:**
 - Alert category trending up: "Client" alerts +40% vs the 7-day average
 
+**UXI synthetic tests:**
+- Fleet: 12 sensors — 11 healthy, 1 with critical issue (HQ-Lobby: RADIUS auth)
+- Correlated finding: RADIUS failure on Corp-Wifi → also alarmed in Mist (🔗)
+- (If all healthy:) All sensors online and testing — no service test failures.
+- (If UXI unavailable:) UXI end-user perspective unavailable — skipped.
+
 ## Suggested next steps
 
 1–3 bullets, each pointing at a tool/skill to drill in:
 - Run `central-scope-audit` on BRANCH-1 to investigate the MTU and VSX issues
 - Run `mist_get_site_sle_summary(site_id=<BRANCH-1 id>)` for the SLE breakdown
+- Run `uxi-cross-platform-diagnostics` to get the full correlated root-cause report for the RADIUS failure
 ```
 
 ### Executive-mode template
@@ -448,6 +535,12 @@ When producing the executive output, the AI MUST:
   engineer mode.
 - **No "next steps" pointing at tools.** Either recommend a business
   decision (*"approve a maintenance window"*) or omit the section.
+- **UXI failures translate to user-impact language.** A UXI critical
+  service-test failure becomes *"automated monitoring detected that users
+  at one location could not reach [the internet / the authentication
+  service] for a period overnight."* Do not mention "UXI", "sensor",
+  "service test", MAC addresses, or `groupPath` values. Name the location
+  only if the leader would recognise it (e.g. a building name they know).
 
 If status is GREEN: just the gas gauge + the one-sentence bottom line.
 Skip "What matters today" and "Recommended action" entirely. The whole
@@ -459,13 +552,21 @@ report becomes 3 lines.
   is deferred. Don't fabricate it; if the user explicitly asks, say it's
   not in the phase 1 runbook and offer to run a manual comparison via a
   one-shot tool query against a 24-48h-ago window.
-- **ClearPass / Apstra / Axis are out of scope for phase 1.** When those
-  platforms are configured, skip them silently — don't say "ClearPass
-  has nothing to report" because we haven't surveyed it.
+- **ClearPass / Apstra / Axis are out of scope for this skill.** When
+  those platforms are configured, skip them silently — don't say
+  "ClearPass has nothing to report" because we haven't surveyed it.
+- **UXI is now in scope** (Phase 15+). Step 3.5 covers it. If UXI is
+  not configured or returns `unavailable`, skip step 3.5 silently with
+  one headline note. UXI write tools are not used in this skill —
+  the morning report is read-only.
+- **UXI correlation is inline only.** A full correlated root-cause
+  analysis belongs in the `uxi-cross-platform-diagnostics` skill. The
+  morning report surfaces the 🔗 signal as a pointer to that skill, not
+  a substitute for it.
 - **No anomaly inference beyond what tools already surface.** SLE
-  numbers and alert classifications are tool-provided signals; don't
-  invent "this looks suspicious" analysis on top of raw data the user
-  can verify independently.
+  numbers, alert classifications, and UXI issue severities are
+  tool-provided signals; don't invent "this looks suspicious" analysis
+  on top of raw data the user can verify independently.
 
 ## Example queries
 

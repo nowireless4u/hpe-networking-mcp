@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0.0] - 2026-05-18
+
+**Minor — add HPE UXI (User Experience Insight) as the eighth platform. 21 tools (11 read + 10 write), OAuth2 client-credentials auth, cursor pagination, path-traversal ID guard, and a new cross-platform diagnostics skill.**
+
+### Added — HPE UXI platform
+
+- **`UXIClient`** (`platforms/uxi/client.py`) — OAuth2 client-credentials token management with a 60-second refresh buffer, cursor-based pagination helpers, and passive 429 handling via `RetryMiddleware`. Non-HTTP errors are sanitized in `format_http_error` to avoid leaking hostnames or TLS details to callers.
+- **Read tools (11)**:
+  - `uxi_list_sensors`, `uxi_get_sensor_status`
+  - `uxi_list_agents`
+  - `uxi_list_groups`
+  - `uxi_list_wired_networks`, `uxi_list_wireless_networks`
+  - `uxi_list_service_tests`
+  - `uxi_list_agent_group_assignments`, `uxi_list_sensor_group_assignments`, `uxi_list_network_group_assignments`, `uxi_list_service_test_group_assignments`
+- **Write tools (10)** gated behind `ENABLE_UXI_WRITE_TOOLS=true` (elicitation-guarded, path-traversal ID guard on every call):
+  - `uxi_update_sensor`, `uxi_update_agent`, `uxi_delete_agent`
+  - `uxi_create_group`, `uxi_update_group`, `uxi_delete_group`
+  - `uxi_assign_agent_to_group`, `uxi_remove_agent_from_group`
+  - `uxi_assign_sensor_to_group`, `uxi_remove_sensor_from_group`
+- **Health probe** — `_probe_uxi` added; UXI now appears in `health()` output.
+- **Skill** `uxi-cross-platform-diagnostics` — correlates UXI sensor / service-test failures to root causes in Aruba Central, Mist, or AOS 8 with a GO / DEGRADED / CRITICAL verdict engine. Platform-aware (skips unreachable platforms gracefully); supports paste-mode input when the UXI API itself is unreachable.
+- **`morning-coffee-report` skill** updated with a UXI end-user experience section.
+- Credentials: `uxi_client_id`, `uxi_client_secret` Docker secrets (HPE SSO OAuth2). Platform auto-disables if either is absent.
+- `elicitation.py` `any_write` guard extended to cover `uxi_write` / `uxi_write_delete` tag sets.
+
+### Changed
+
+- Server-wide tool count: 1891 → 1912.
+- `README.md`: UXI column added to feature matrix; intro, architecture diagram, startup log example, env-var tables, and platform auto-disable section updated.
+- `docs/TOOLS.md`: HPE UXI section added; overview table and bundled-skills table updated.
+- `pyproject.toml` version: `3.1.2.1` → `3.2.0.0`.
+
+### Verified
+
+- `ruff check .` ✓
+- `ruff format --check .` ✓
+- `bandit -r src/ -c pyproject.toml` ✓
+- `pytest tests/ -q` ✓
+
 ## [3.1.2.1] - 2026-05-16
 
 **Patch — correct the feature-comparison matrix in README.md (12-row audit) + fix the `central_get_asset_tags` / `central_get_asset_tag` / `central_manage_asset_tag_metadata` docstrings to describe what they actually wrap.**

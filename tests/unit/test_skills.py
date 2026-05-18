@@ -266,8 +266,53 @@ class TestBundledSkills:
             "infrastructure-health-check",
             "change-pre-check",
             "wlan-sync-validation",
+            "uxi-cross-platform-diagnostics",  # Phase 17
         }
         assert expected.issubset(names), f"Missing bundled skill(s): {expected - names}"
+
+    def test_uxi_correlation_skill_frontmatter_platforms(self):
+        """SKILL-05 (Phase 17): the uxi-cross-platform-diagnostics skill must
+        load with `platforms: [uxi, central, mist, aos8]` exactly (order-
+        sensitive — `_as_str_tuple` in `_engine.py` preserves YAML list
+        order). Defense-in-depth beyond the subset-check above: catches a
+        regression where the YAML still parses but the platforms tuple has
+        been reordered, truncated, or extended.
+
+        Also asserts the skill's tools tuple contains the three names
+        required to satisfy SKILL-01/SKILL-02 entry points: the cross-
+        platform `health` aggregator (UXI reachability flows through
+        `_probe_uxi` in `platforms/health.py`; there is NO standalone
+        `uxi_health` tool), `uxi_list_sensors`, and `uxi_get_sensor_status`.
+        """
+        registry = SkillRegistry.from_directory()
+        skill = next(
+            (s for s in registry.all() if s.name == "uxi-cross-platform-diagnostics"),
+            None,
+        )
+        assert skill is not None, (
+            "uxi-cross-platform-diagnostics skill did not load from "
+            "src/hpe_networking_mcp/skills/ — check frontmatter YAML for "
+            "parse errors; SkillRegistry silently drops malformed files."
+        )
+        assert skill.platforms == ("uxi", "central", "mist", "aos8"), (
+            f"uxi-cross-platform-diagnostics platforms tuple is "
+            f"{skill.platforms!r}; SKILL-05 requires exactly "
+            f"('uxi', 'central', 'mist', 'aos8') in that order."
+        )
+        assert "health" in skill.tools, (
+            "uxi-cross-platform-diagnostics must declare the cross-platform "
+            "`health` aggregator in its tools list — UXI reachability is "
+            "surfaced through `_probe_uxi` in the unified `health()` tool, "
+            "not a standalone `uxi_health` tool."
+        )
+        assert "uxi_list_sensors" in skill.tools, (
+            "uxi-cross-platform-diagnostics must declare `uxi_list_sensors` "
+            "(SKILL-01 entry point — sensor enumeration)."
+        )
+        assert "uxi_get_sensor_status" in skill.tools, (
+            "uxi-cross-platform-diagnostics must declare `uxi_get_sensor_status` "
+            "(SKILL-02 core data tool — per-sensor isOnline/isTesting/issues)."
+        )
 
     def test_bundled_skills_have_nonempty_bodies(self):
         registry = SkillRegistry.from_directory()

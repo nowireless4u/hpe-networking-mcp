@@ -109,11 +109,13 @@ The `static` mode was REMOVED in v3.0.0.0 — at 1891 tools / ~64K tokens it was
 | HPE GreenLake | 10 | -- | -- | 10 |
 | Axis Atmos Cloud | 12 | 13 | -- | 25 |
 | Aruba OS 8 | 26 | 12 | 9 | 47 |
+| HPE UXI | 11 | 10 | -- | 21 |
 | Cross-Platform | 3 | 1 | 3 | 7 |
 
 Write tools are disabled by default per platform. Enable them with environment variables:
 `ENABLE_MIST_WRITE_TOOLS=true`, `ENABLE_CENTRAL_WRITE_TOOLS=true`,
-`ENABLE_CLEARPASS_WRITE_TOOLS=true`, `ENABLE_APSTRA_WRITE_TOOLS=true`, or `ENABLE_AXIS_WRITE_TOOLS=true`. Elicitation applies in both tool modes — the AI still gets a confirmation prompt before a destructive call, whether it invoked the tool inside `execute()` (code mode, default) or via `<platform>_invoke_tool` (dynamic mode).
+`ENABLE_CLEARPASS_WRITE_TOOLS=true`, `ENABLE_APSTRA_WRITE_TOOLS=true`,
+`ENABLE_AXIS_WRITE_TOOLS=true`, or `ENABLE_UXI_WRITE_TOOLS=true`. Elicitation applies in both tool modes — the AI still gets a confirmation prompt before a destructive call, whether it invoked the tool inside `execute()` (code mode, default) or via `<platform>_invoke_tool` (dynamic mode).
 
 ## Cross-platform static tools
 
@@ -171,6 +173,7 @@ skills register in every mode without violating the code-mode design.
 | `morning-coffee-report` | Daily ops digest covering the last 24h: who's been in (audit logs), what's broken (active alerts), top talkers (clients/APs by load), AI insights (Mist SLE). Day-over-day delta deferred to phase 2 | v2.3.1.8 |
 | `central-scope-walker` | Aruba Central scope-tree walker — resolves a scope name / path / scope_id to its Central `scope_id` plus parent path, type, and metadata. Tiny utility skill (one paste-ready `execute` snippet) referenced by `central-scope-audit`, `change-pre-check`, `change-post-check`, `aos-migration`. Authored in response to small-local-model failures at authoring tree-recursion in the sandbox (Qwen3 4B / OpenClaw test report 2026-05-07) | v3.0.1.5 |
 | `cross-platform-rf-check` | Cross-platform site RF / channel-planning check — code-mode runbook equivalent of the `site_rf_check` tool (which is registered in `dynamic` mode only). Resolves a site on Mist + Central, pulls per-AP per-band radio state (channel, power, utilization, noise floor), aggregates channel distribution, and flags co-channel clusters / airtime pressure / elevated noise. Authored after operators hit "AI can't find site_rf_check" in code mode | v3.1.0.6 |
+| `uxi-cross-platform-diagnostics` | Correlate UXI sensor / service-test failures to root causes in Aruba Central, Mist, or AOS 8 with a GO / DEGRADED / CRITICAL verdict engine. Platform-aware: probes reachability before running correlation queries; unreachable platforms emit INFO findings rather than false-positive CRITICALs. Supports paste-mode when the UXI platform itself is unreachable. | v3.2.0.0 |
 
 The `TEMPLATE.md` file in the skills directory is a starting point if you
 want to author a new skill — it's filtered out of the registry by name.
@@ -2275,3 +2278,67 @@ All write tools require an explicit `config_path` parameter (no default) and ret
 
 See [INSTRUCTIONS.md](../INSTRUCTIONS.md) for `config_path` semantics and the
 `write_memory` contract.
+
+## HPE UXI / Aruba User Experience Insight (21 tools)
+
+Tools are reachable via `await call_tool("uxi_<tool>", {...})` inside `execute()` in code mode (default since v3.0.0.0), or via the per-platform meta-tools (`uxi_list_tools`, `uxi_get_tool_schema`, `uxi_invoke_tool`) in dynamic mode. Write tools require `ENABLE_UXI_WRITE_TOOLS=true`.
+
+**Credentials**: `uxi_client_id`, `uxi_client_secret` (HPE SSO OAuth2 client credentials — token endpoint `https://sso.common.cloud.hpe.com/as/token.oauth2`). Platform auto-disables if either secret is absent or empty.
+
+### Sensors (2 read)
+
+| Tool | Description |
+|---|---|
+| `uxi_list_sensors` | List all UXI sensors with cursor pagination |
+| `uxi_get_sensor_status` | Get current online/offline status for a sensor by ID |
+
+### Agents (1 read)
+
+| Tool | Description |
+|---|---|
+| `uxi_list_agents` | List all UXI software agents with cursor pagination |
+
+### Groups (1 read)
+
+| Tool | Description |
+|---|---|
+| `uxi_list_groups` | List all sensor/agent groups with cursor pagination |
+
+### Networks (2 read)
+
+| Tool | Description |
+|---|---|
+| `uxi_list_wired_networks` | List all wired network definitions |
+| `uxi_list_wireless_networks` | List all wireless network definitions |
+
+### Service Tests (1 read)
+
+| Tool | Description |
+|---|---|
+| `uxi_list_service_tests` | List all service tests (HTTP / DNS / IPERF / SPEED) configured on sensors |
+
+### Group Assignments (4 read)
+
+| Tool | Description |
+|---|---|
+| `uxi_list_agent_group_assignments` | List agent-to-group membership |
+| `uxi_list_sensor_group_assignments` | List sensor-to-group membership |
+| `uxi_list_network_group_assignments` | List network-to-group membership |
+| `uxi_list_service_test_group_assignments` | List service-test-to-group membership |
+
+### Write Tools (10) — gated behind `ENABLE_UXI_WRITE_TOOLS=true`
+
+| Tool | Tags | Description |
+|---|---|---|
+| `uxi_update_sensor` | `uxi_write` | Update a sensor's display name |
+| `uxi_update_agent` | `uxi_write` | Update an agent's name or notes |
+| `uxi_delete_agent` | `uxi_write_delete` | Delete a software agent |
+| `uxi_create_group` | `uxi_write` | Create a new sensor/agent group |
+| `uxi_update_group` | `uxi_write` | Rename an existing group |
+| `uxi_delete_group` | `uxi_write_delete` | Delete a group |
+| `uxi_assign_agent_to_group` | `uxi_write` | Assign an agent to a group |
+| `uxi_remove_agent_from_group` | `uxi_write_delete` | Remove an agent from a group |
+| `uxi_assign_sensor_to_group` | `uxi_write` | Assign a sensor to a group |
+| `uxi_remove_sensor_from_group` | `uxi_write_delete` | Remove a sensor from a group |
+
+All write-tool IDs are validated against a path-traversal guard (`_validate_id`) before any API call is made.

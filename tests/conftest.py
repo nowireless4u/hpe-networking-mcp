@@ -24,10 +24,12 @@ def _install_registry_stubs() -> None:
     platform_registries = (
         "hpe_networking_mcp.platforms.aos8._registry",
         "hpe_networking_mcp.platforms.apstra._registry",
+        "hpe_networking_mcp.platforms.axis._registry",
         "hpe_networking_mcp.platforms.central._registry",
         "hpe_networking_mcp.platforms.clearpass._registry",
         "hpe_networking_mcp.platforms.greenlake._registry",
         "hpe_networking_mcp.platforms.mist._registry",
+        "hpe_networking_mcp.platforms.uxi._registry",
     )
 
     mock_mcp = MagicMock()

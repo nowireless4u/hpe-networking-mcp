@@ -29,7 +29,7 @@ _PROBE_ANNOTATIONS = ToolAnnotations(
     openWorldHint=True,
 )
 
-_ALL_PLATFORMS: tuple[str, ...] = ("mist", "central", "greenlake", "clearpass", "apstra", "axis", "aos8")
+_ALL_PLATFORMS: tuple[str, ...] = ("mist", "central", "greenlake", "clearpass", "apstra", "axis", "aos8", "uxi")
 
 
 def _normalize_platform_filter(
@@ -211,6 +211,22 @@ async def _probe_aos8(ctx: Context) -> dict[str, Any]:
         return {"status": "degraded", "message": f"AOS8 probe failed: {e}"}
 
 
+async def _probe_uxi(ctx: Context) -> dict[str, Any]:
+    """Probe the Aruba UXI platform.
+
+    Returns status dict with ok/degraded/unavailable per the cross-platform contract.
+    Probes via GET /sensors?limit=1 (D-08).
+    """
+    client = ctx.lifespan_context.get("uxi_client")
+    if client is None:
+        return {"status": "unavailable", "message": "UXI is not configured or failed to initialize"}
+    try:
+        await client.health_check()
+        return {"status": "ok", "message": "UXI API reachable"}
+    except Exception as e:
+        return {"status": "degraded", "message": f"UXI probe failed: {e}"}
+
+
 _PROBES = {
     "mist": _probe_mist,
     "central": _probe_central,
@@ -219,6 +235,7 @@ _PROBES = {
     "apstra": _probe_apstra,
     "axis": _probe_axis,
     "aos8": _probe_aos8,
+    "uxi": _probe_uxi,
 }
 
 

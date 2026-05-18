@@ -27,6 +27,8 @@ Secret file mapping:
     /run/secrets/apstra_username
     /run/secrets/apstra_password
     /run/secrets/apstra_verify_ssl (optional, default true)
+    /run/secrets/uxi_client_id
+    /run/secrets/uxi_client_secret
 """
 
 import os
@@ -104,6 +106,14 @@ class AOS8Secrets:
 
 
 @dataclass
+class UXISecrets:
+    """Aruba UXI credentials. Two secrets required; platform auto-disables if either missing."""
+
+    client_id: str
+    client_secret: str
+
+
+@dataclass
 class ServerConfig:
     """Global server configuration."""
 
@@ -116,6 +126,7 @@ class ServerConfig:
     enable_apstra_write_tools: bool = False
     enable_axis_write_tools: bool = False
     enable_aos8_write_tools: bool = False
+    enable_uxi_write_tools: bool = False
     disable_elicitation: bool = False
     debug: bool = False
     log_file: str | None = None
@@ -161,6 +172,7 @@ class ServerConfig:
     apstra: ApstraSecrets | None = None
     axis: AxisSecrets | None = None
     aos8: AOS8Secrets | None = None
+    uxi: UXISecrets | None = None
 
     @property
     def enabled_platforms(self) -> list[str]:
@@ -179,6 +191,8 @@ class ServerConfig:
             platforms.append("axis")
         if self.aos8:
             platforms.append("aos8")
+        if self.uxi:
+            platforms.append("uxi")
         return platforms
 
 
@@ -428,6 +442,24 @@ def _load_aos8() -> AOS8Secrets | None:
     )
 
 
+def _load_uxi() -> UXISecrets | None:
+    """Load UXI credentials from Docker secrets (/run/secrets/uxi_client_id, /run/secrets/uxi_client_secret)."""
+    client_id = _read_secret("uxi_client_id")
+    client_secret = _read_secret("uxi_client_secret")
+    missing = []
+    if not client_id:
+        missing.append("uxi_client_id")
+    if not client_secret:
+        missing.append("uxi_client_secret")
+    if missing:
+        logger.info("UXI: disabled (missing secrets: {})", ", ".join(missing))
+        return None
+    assert client_id is not None
+    assert client_secret is not None
+    logger.info("UXI: credentials loaded (client_id: {})", mask_secret(client_id))
+    return UXISecrets(client_id=client_id, client_secret=client_secret)
+
+
 def load_config() -> ServerConfig:
     """Load server configuration from Docker secrets and environment variables.
 
@@ -455,6 +487,7 @@ def load_config() -> ServerConfig:
     enable_apstra_write = os.getenv("ENABLE_APSTRA_WRITE_TOOLS", "false").lower() in _truthy
     enable_axis_write = os.getenv("ENABLE_AXIS_WRITE_TOOLS", "false").lower() in _truthy
     enable_aos8_write = os.getenv("ENABLE_AOS8_WRITE_TOOLS", "false").lower() in _truthy
+    enable_uxi_write = os.getenv("ENABLE_UXI_WRITE_TOOLS", "false").lower() in _truthy
     disable_elicit = os.getenv("DISABLE_ELICITATION", "false").lower() in _truthy
     debug = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
     log_file = os.getenv("LOG_FILE") or None
@@ -512,6 +545,7 @@ def load_config() -> ServerConfig:
     apstra = _load_apstra()
     axis = _load_axis()
     aos8 = _load_aos8()
+    uxi = _load_uxi()
 
     config = ServerConfig(
         port=port,
@@ -523,6 +557,7 @@ def load_config() -> ServerConfig:
         enable_apstra_write_tools=enable_apstra_write,
         enable_axis_write_tools=enable_axis_write,
         enable_aos8_write_tools=enable_aos8_write,
+        enable_uxi_write_tools=enable_uxi_write,
         disable_elicitation=disable_elicit,
         debug=debug,
         log_file=log_file,
@@ -537,6 +572,7 @@ def load_config() -> ServerConfig:
         apstra=apstra,
         axis=axis,
         aos8=aos8,
+        uxi=uxi,
     )
 
     if not config.enabled_platforms:

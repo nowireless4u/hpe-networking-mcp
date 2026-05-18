@@ -44,6 +44,7 @@ REGISTRIES: dict[str, dict[str, ToolSpec]] = {
     "clearpass": {},
     "greenlake": {},
     "mist": {},
+    "uxi": {},
     # Template platform — never registered at runtime, but the registry
     # entry has to exist so test_platform_template can import without
     # ValueError when the example tools are loaded.
@@ -69,6 +70,7 @@ _WRITE_TAG_BY_PLATFORM: dict[str, set[str]] = {
     "clearpass": {"clearpass_write_delete"},
     "greenlake": set(),  # GreenLake is read-only today.
     "mist": {"mist_write", "mist_write_delete"},
+    "uxi": {"uxi_write", "uxi_write_delete"},
     "_template": {"_template_write", "_template_write_delete"},
 }
 
@@ -80,6 +82,7 @@ _GATE_CONFIG_ATTR: dict[str, str | None] = {
     "clearpass": "enable_clearpass_write_tools",
     "greenlake": None,
     "mist": "enable_mist_write_tools",
+    "uxi": "enable_uxi_write_tools",
     "_template": None,  # Never instantiated at runtime; gating attr unused.
 }
 

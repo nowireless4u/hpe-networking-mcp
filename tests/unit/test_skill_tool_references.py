@@ -36,7 +36,7 @@ import pytest
 
 # A platform-prefixed identifier — broad enough to catch every form an
 # author might write (`tool_name(`, `` `tool_name` ``, in tables, in code blocks).
-_TOOL_REF_PATTERN = re.compile(r"\b(mist|central|greenlake|clearpass|apstra|axis|aos8)_[a-z_][a-z_0-9]+\b")
+_TOOL_REF_PATTERN = re.compile(r"\b(mist|central|greenlake|clearpass|apstra|axis|aos8|uxi)_[a-z_][a-z_0-9]+\b")
 
 # Names that LOOK like tool references to the regex but aren't ones we want
 # the test to enforce — historical mentions ("X was removed in v2.0"),
@@ -56,11 +56,25 @@ _GLOBAL_ALLOWLIST: frozenset[str] = frozenset(
         "aos8_username",
         "aos8_password",
         "aos8_port",
+        # UXI secret names (Docker secret files, not tools) — referenced in INSTRUCTIONS.md
+        "uxi_client_id",
+        "uxi_client_secret",
+        # UXI write-tool tag names (referenced in INSTRUCTIONS.md "Write Tools" section)
+        "uxi_write",
+        "uxi_write_delete",
+        # UXI paste-bundle field labels used in `uxi-cross-platform-diagnostics.md`
+        # Stage 1' template — these are data field names embedded in the paste
+        # block format, not tool names. Regex picks them up because they share
+        # the `uxi_` prefix.
+        "uxi_severity",
         # Regex artifacts: incomplete platform-prefix mentions like
         # "use the apstra_get_* family". These end with an underscore
         # but the regex eats the trailing wildcard. Add as encountered.
         "apstra_get_",
         "aos8_manage_",
+        # `uxi-cross-platform-diagnostics.md` Scope boundaries — documents
+        # `aos8_send_reset_*` as a forbidden write-tool prefix; not a tool.
+        "aos8_send_reset_",
         "axis_get_",
         "axis_manage_",
         "central_get_",  # `aos-migration.md` Stage 10 — "every central_manage_* has a corresponding central_get_*"
@@ -149,7 +163,7 @@ def _build_full_catalog() -> set[str]:
 
     from hpe_networking_mcp.platforms._common.tool_registry import REGISTRIES
 
-    for platform in ("mist", "central", "clearpass", "apstra", "axis", "greenlake", "aos8"):
+    for platform in ("mist", "central", "clearpass", "apstra", "axis", "greenlake", "aos8", "uxi"):
         platform_pkg = importlib.import_module(f"hpe_networking_mcp.platforms.{platform}")
         tools_attr = getattr(platform_pkg, "TOOLS", None)
         if tools_attr:
@@ -188,7 +202,7 @@ def _build_full_catalog() -> set[str]:
     # would have populated it; this handles the cleared-mid-suite case.)
     tool_module_prefixes = tuple(
         f"hpe_networking_mcp.platforms.{p}.tools."
-        for p in ("mist", "central", "clearpass", "apstra", "axis", "greenlake", "aos8")
+        for p in ("mist", "central", "clearpass", "apstra", "axis", "greenlake", "aos8", "uxi")
     )
     for name in list(sys.modules):
         if name.startswith(tool_module_prefixes):
@@ -204,7 +218,7 @@ def _build_full_catalog() -> set[str]:
 
     # Dynamic-mode meta-tools — only registered when tool_mode="dynamic", but
     # legitimate names skills can reference for runtime dispatch.
-    for platform in ("mist", "central", "greenlake", "clearpass", "apstra", "axis", "aos8"):
+    for platform in ("mist", "central", "greenlake", "clearpass", "apstra", "axis", "aos8", "uxi"):
         for suffix in ("_list_tools", "_get_tool_schema", "_invoke_tool"):
             catalog.add(platform + suffix)
 

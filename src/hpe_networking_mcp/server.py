@@ -160,6 +160,21 @@ async def lifespan(server: FastMCP):
         context["aos8_client"] = None
         context["aos8_config"] = None
 
+    # --- UXI ---
+    if config.uxi:
+        try:
+            from hpe_networking_mcp.platforms.uxi.client import UXIClient
+
+            context["uxi_client"] = UXIClient(config.uxi)
+            context["uxi_config"] = config.uxi
+        except Exception as e:
+            logger.warning("UXI: failed to initialize — {}", e)
+            context["uxi_client"] = None
+            context["uxi_config"] = None
+    else:
+        context["uxi_client"] = None
+        context["uxi_config"] = None
+
     # --- Verify every enabled platform via the shared probe helpers from
     # platforms/health.py. One source of truth: startup log output and the
     # runtime ``health`` tool report the same status. Probes that fail do
@@ -211,6 +226,12 @@ async def lifespan(server: FastMCP):
                 await aos8.aclose()
             except Exception as e:  # noqa: BLE001 — shutdown must not raise
                 logger.warning("AOS8: aclose failed during shutdown — {}", e)
+        uxi = context.get("uxi_client")
+        if uxi is not None:
+            try:
+                await uxi.aclose()
+            except Exception as e:  # noqa: BLE001
+                logger.warning("UXI: aclose failed during shutdown — {}", e)
         logger.info("Server shutdown complete")
 
 
@@ -290,6 +311,8 @@ def create_server(config: ServerConfig) -> FastMCP:
         _register_axis_tools(mcp, config)
     if config.aos8:
         _register_aos8_tools(mcp, config)
+    if config.uxi:
+        _register_uxi_tools(mcp, config)
 
     # --- Cross-platform aggregators ---
     # These are workarounds for dynamic mode's "AI picks one platform and stops"
@@ -340,6 +363,8 @@ def create_server(config: ServerConfig) -> FastMCP:
         mcp.add_transform(Visibility(False, tags={"axis_write", "axis_write_delete"}, components={"tool"}))
     if not config.enable_aos8_write_tools:
         mcp.add_transform(Visibility(False, tags={"aos8_write", "aos8_write_delete"}, components={"tool"}))
+    if not config.enable_uxi_write_tools:
+        mcp.add_transform(Visibility(False, tags={"uxi_write", "uxi_write_delete"}, components={"tool"}))
 
     # --- Tool-mode-specific catalog transforms ---
     if config.tool_mode == "dynamic":
@@ -390,7 +415,7 @@ _SKILLS_FIRST_GATE = (
 _SEARCH_DESCRIPTION = _SKILLS_FIRST_GATE + (
     "Find or list available HPE networking tools by name, function, or "
     "description across mist, central, aos8, clearpass, apstra, axis, "
-    "and greenlake platforms. Use this to discover the exact tool name "
+    "greenlake, and uxi platforms. Use this to discover the exact tool name "
     "for any networking task — listing sites, getting devices, searching "
     "events, managing config, checking health, etc. Returns matching tools "
     "ranked by relevance. Prefer this over guessing tool names: each "
@@ -401,7 +426,7 @@ _SEARCH_DESCRIPTION = _SKILLS_FIRST_GATE + (
 _TAGS_DESCRIPTION = _SKILLS_FIRST_GATE + (
     "Browse the HPE networking tool catalog grouped by category tag — "
     "platform name (mist / central / aos8 / clearpass / apstra / axis / "
-    "greenlake), read/write classification, or feature area. Use to scope "
+    "greenlake / uxi), read/write classification, or feature area. Use to scope "
     "the tool catalog by category before drilling in with `search` or "
     "`get_schema`. Returns tag names and the tools registered under each."
 )
@@ -409,7 +434,7 @@ _TAGS_DESCRIPTION = _SKILLS_FIRST_GATE + (
 _GET_SCHEMA_DESCRIPTION = _SKILLS_FIRST_GATE + (
     "Get full parameter schemas, enum values, types, and descriptions for "
     "one or more HPE networking tools (mist, central, aos8, clearpass, "
-    "apstra, axis, greenlake). Use after `search` or `tags` to confirm a "
+    "apstra, axis, greenlake, uxi). Use after `search` or `tags` to confirm a "
     "tool's exact input shape before invoking it. Each schema returned "
     "includes the parameter list, defaults, optional/required markers, "
     "and any nested object or enum types."
@@ -497,6 +522,8 @@ def _register_code_mode(mcp: FastMCP) -> None:
         "spec-driven Mist tools are reachable ONLY this way — a direct "
         "`call_tool('mist_get_self', ...)` raises `Unknown tool`. Prefer "
         "`<platform>_invoke_tool` for every per-platform tool.\n"
+        "  - UXI tools (`uxi_*`) are first-class direct tools — call them "
+        "by name, e.g. `await call_tool('uxi_list_sensors', {})`.\n"
         "  - `<platform>_list_tools` / `<platform>_get_tool_schema` — "
         "per-platform discovery meta-tools.\n"
         "  - `health` — cross-platform reachability.\n\n"
@@ -604,6 +631,14 @@ def _register_aos8_tools(mcp: FastMCP, config: ServerConfig) -> None:
 
     count = register_tools(mcp, config)
     logger.info("AOS8: registered {} tools", count)
+
+
+def _register_uxi_tools(mcp: FastMCP, config: ServerConfig) -> None:
+    """Register all UXI platform tools."""
+    from hpe_networking_mcp.platforms.uxi import register_tools
+
+    count = register_tools(mcp, config)
+    logger.info("UXI: registered {} tools", count)
 
 
 def _register_sync_tools(mcp: FastMCP) -> None:
