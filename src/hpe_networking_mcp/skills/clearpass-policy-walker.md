@@ -178,120 +178,75 @@ services = await call_tool("clearpass_list_policy_services", {"limit": 100})
 # Present names + type + enabled. DO NOT include the numeric id in your reply.
 ```
 
-### Step 3 — Render the FlowGraph as Mermaid
+### Step 3 — Embed the pre-rendered Mermaid sections from the response
 
-**Critical readability rules (read first):**
+**Use the ``mermaid`` field on the response directly. Do NOT
+re-assemble the diagram from ``nodes`` / ``edges``.** The engine
+pre-renders ready-to-paste Mermaid server-side specifically to
+eliminate AI-side assembly errors — previously the AI would inline two
+node declarations on the same source line, which throws Mermaid's
+``Parse error … got NODE_STRING`` (issues #356, #358). Pre-rendering
+sidesteps that whole failure mode.
 
-1. **Use `flowchart LR` (left-right)**, not `TD`. Role-mapping and
-   enforcement chains often have 12+ rules each — `TD` produces a
-   tall narrow column that the client shrinks to fit width, making
-   every label tiny and unreadable. `LR` lays the chain out
-   horizontally with reasonable node spacing.
-2. **Use `short_label` for every node, NOT `label`.** Each FlowNode
-   carries both: `label` is verbose (3 lines per predicate, full
-   namespace) suitable for inspector tooltips; `short_label` is a
-   compact single-line summary suitable for the diagram. With many
-   rules, `label` produces dense unreadable diamonds.
-3. **One node per source line. One edge per source line. Never
-   concatenate them.** Mermaid's parser does NOT span source lines
-   for node shapes — every declaration must end with a real newline
-   (or `;`). Writing `A[/x/] B(((y)))` on one line throws a `got
-   NODE_STRING` parse error. Even if two nodes are connected by an
-   edge, prefer to declare nodes on their own lines first, then list
-   edges:
-   ```
-   A0[/Set Role: Kid/]
-   END0(((Access: ALLOW)))
-   A0 --> END0
-   ```
-4. **Always wrap node label text in double quotes.** ClearPass
-   conditions contain `:`, `=`, `+`, `(`, `)`, `&`, `|`, `'`, and
-   other chars that Mermaid's bare-label parser treats as syntax.
-   Quoted labels (`A0{"Tips:Role = 'Kid' & Endpoint:Status =
-   'Known'"}`) parse safely. The compact-label engine emits `&` as
-   the AND separator between predicates — that MUST stay inside
-   quotes or Mermaid will read it as its own node-list separator.
-5. **For large policies (≥ 8 decision nodes total), split the
-   rendering into 2–3 separate Mermaid blocks** instead of one giant
-   diagram. See "Step 3b — Sectioned rendering" below.
+The response carries:
 
-Mermaid template (single-block version, fine for small policies):
+```python
+result["mermaid"] = {
+    "sections": [
+        {"title": "Block A — Service intake (start → match → auth)", "code": "flowchart LR\n..."},
+        {"title": "Block B — Role mapping", "code": "flowchart LR\n..."},
+        {"title": "Block C — Enforcement (decision → access)", "code": "flowchart LR\n..."},
+    ],
+    "simulated": False,  # or True when a simulation was requested
+}
+```
+
+For each entry in ``result["mermaid"]["sections"]``, emit a section
+header (the ``title``) and a fenced Mermaid block containing the
+``code`` verbatim:
+
+````markdown
+## Block A — Service intake (start → match → auth)
 
 ```mermaid
 flowchart LR
-    %%{init: {'flowchart': {'nodeSpacing': 30, 'rankSpacing': 50, 'curve': 'basis'}}}%%
-
-    %% --- nodes (use short_label, NOT label; ALWAYS wrap text in double quotes) ---
-    %% For each node in flow.nodes, emit ONE line — never two nodes inline:
-    %%   start        →  <id>(["<short_label>"])
-    %%   process      →  <id>["<short_label>"]
-    %%   decision     →  <id>{"<short_label>"}
-    %%   action       →  <id>[/"<short_label>"/]
-    %%   end (allow)  →  <id>((("<short_label>")))
-    %%   end (deny)   →  <id>((("<short_label>"))):::deny
-    %%   end (skip)   →  <id>((("<short_label>"))):::skip
-
-    %% --- edges (one per line) ---
-    %% For each edge in flow.edges:
-    %%   ""        →  from --> to
-    %%   YES       →  from -->|YES| to
-    %%   NO        →  from -->|NO| to
-    %%   FAIL      →  from -->|FAIL| to
-    %%   PASS      →  from -->|PASS| to
-    %%   CONTINUE  →  from -. CONTINUE .-> to
-
-    %% --- classes ---
-    classDef deny fill:#fee,stroke:#c33,stroke-width:2px;
-    classDef skip fill:#eee,stroke:#999,stroke-width:1px;
+    ...
 ```
 
-End-node classification rules (for `:::deny` / `:::skip`):
+## Block B — Role mapping
 
-- `:::deny` if the `short_label` starts with `Access: DENY` or contains
-  `Auth Failed`.
-- `:::skip` if the `short_label` starts with `Skip` (the
-  service-no-match branch).
-- No class (default styling) for `Access: ALLOW` and any non-end node.
-
-### Step 3b — Sectioned rendering (REQUIRED for ≥ 8 decision nodes)
-
-When the policy is large, ONE Mermaid block becomes unreadable even
-with `LR` + `short_label`. Split into:
-
-**Block A — Service intake** (start + service-match + auth + auth-fail):
-
-```
-nodes with id matching <sid>__start, <sid>__match, <sid>__no_match,
-<sid>__auth, <sid>__auth_fail
-plus edges between them
+```mermaid
+flowchart LR
+    ...
 ```
 
-**Block B — Role mapping** (the `rm_chain` rank_group):
+## Block C — Enforcement (decision → access)
 
+```mermaid
+flowchart LR
+    ...
 ```
-nodes with id matching <sid>__rm_rule_*, <sid>__rm_action_*, <sid>__rm_default,
-<sid>__no_role
-plus edges between them
-end this block with a "→ enforcement" placeholder edge to a stub node
-```
+````
 
-**Block C — Enforcement** (the `enf_chain` rank_group):
+Constraints when copying the code:
 
-```
-nodes with id matching <sid>__enf_rule_*, <sid>__enf_action_*, <sid>__enf_end_*,
-<sid>__enf_default_action, <sid>__enf_default_end, <sid>__enf_implicit_deny,
-<sid>__enf_no_policy
-plus edges between them
-start this block with a stub node receiving from "← from role mapping"
-```
+- Paste each ``code`` verbatim — preserve every newline. Do NOT
+  collapse whitespace, re-flow, or "tidy up" the syntax. The engine
+  emits one node per line, one edge per line, with labels safely
+  quoted; touching it re-introduces the parser bug.
+- Do not edit node labels or add classDefs of your own — the engine
+  already includes ``classDef deny`` / ``classDef skip`` (and the sim
+  classes when ``simulated`` is true).
+- Sections with no nodes (e.g. RADIUS_PROXY skips role mapping
+  entirely) are omitted from the list — just iterate what's there.
 
-Each block gets its own `flowchart LR` + init directive. Operators can
-zoom each section independently. Below the three blocks, add a
-one-sentence connection note: *"All role-mapping outcomes converge to
-the enforcement chain in Block C."*
+If your client supports it, render each section as its own code fence
+so the user can zoom them independently. If your client renders all
+fences sequentially that's fine too — they'll appear stacked.
 
-When in doubt about sizing: if the policy has more than 8 total
-decision nodes across role-mapping + enforcement, split.
+After the three blocks, add a one-sentence connection note: *"All
+role-mapping outcomes (Block B) converge to the enforcement chain in
+Block C."*
 
 ### Step 4 — Output format
 
@@ -406,30 +361,24 @@ can't evaluate, propagates ``None`` through And/Or/Not, and surfaces
 
 ### Step 5b — Highlighting the matched path in the re-rendered diagram
 
-When you re-render after a simulation call, decorate the diagram per
-the values on each decision node:
+The engine handles all simulation styling server-side. When you re-call
+``clearpass_compile_policy_flow`` with ``simulated_attributes``, the
+response's ``mermaid.sections`` already has:
 
-- ``simulation_match == True``: node gets the green class
-  (``:::sim_match``) — this rule fires.
-- ``simulation_match == False``: dim the node (``:::sim_skip``) — this
-  rule's condition is contradicted.
-- ``simulation_match is None``: yellow / question mark
-  (``:::sim_unknown``) — cannot evaluate.
-- Nodes that weren't on the consulted path (e.g. enforcement rules
-  past the first-applicable winner) stay default.
+- The green ``:::sim_match`` class applied to decision nodes whose rule
+  fires under the simulated context.
+- The dimmed ``:::sim_skip`` class applied to decision nodes whose
+  condition is contradicted.
+- The classDefs (``sim_match`` / ``sim_skip`` / ``sim_unknown``)
+  injected into every block.
 
-Add these classDefs to the Mermaid block:
+You don't need to add any styling yourself — just embed the
+``code`` verbatim per Step 3 and the highlighting appears.
 
-```
-classDef sim_match fill:#dfd,stroke:#3a3,stroke-width:3px;
-classDef sim_skip fill:#222,color:#555,stroke:#444;
-classDef sim_unknown fill:#fee,stroke:#aa6,stroke-width:2px;
-```
-
-Add a one-line summary box above the diagram naming the matched
-enforcement rule (by index / role list — NEVER by numeric ID) and
-the resulting access decision. Below the diagram, list any unknown
-attributes.
+Above the diagrams (between the summary header and Block A), add a
+one-line outcome banner naming the matched enforcement rule (by index
+/ role list — NEVER by numeric ID) and the resulting access decision.
+Below Block C, list any ``simulation.unknown_attributes``.
 
 ### Step 5c — Attribute prompting hints
 

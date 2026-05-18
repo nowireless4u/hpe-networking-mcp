@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.5.0] - 2026-05-18
+
+**Minor — ClearPass policy visualizer now pre-renders Mermaid server-side (#358).** `clearpass_compile_policy_flow` adds a `mermaid` field to the response with three ready-to-paste sectioned blocks. The skill embeds them verbatim — no more AI-side diagram assembly.
+
+### Why now
+
+v3.1.4.1's engine fix guaranteed `short_label` is single-line, but the operator's next test still hit `Parse error … got NODE_STRING` on Block B + Block C — the AI was inlining two node declarations on the same source line in its own assembly pass (`N{"…21"} RA0[/"Set Role…/]` with no edge between them). The skill template's "one declaration per line" rule wasn't enough — AI clients reliably miscompose multi-line Mermaid source. Pre-rendering server-side eliminates the entire failure mode.
+
+### New `format_mermaid()` helper
+
+`policy_visualizer/mermaid_render.py` converts a compiled `FlowGraph` into the structured output:
+
+```json
+{
+  "mermaid": {
+    "sections": [
+      {"title": "Block A — Service intake (start → match → auth)", "code": "flowchart LR\n…"},
+      {"title": "Block B — Role mapping", "code": "flowchart LR\n…"},
+      {"title": "Block C — Enforcement (decision → access)", "code": "flowchart LR\n…"}
+    ],
+    "simulated": false
+  }
+}
+```
+
+Each `code` is a complete `flowchart LR` block. Every node declaration on its own line. Every label wrapped in double quotes. Internal double quotes demoted to single quotes; `<` `>` HTML-escaped. classDefs (`deny` / `skip` — and `sim_match` / `sim_skip` / `sim_unknown` when a simulation was requested) injected per block. Cross-section edges rendered as labeled stub nodes ("→ Block C") so each block stays self-contained.
+
+Sections with no nodes are omitted (RADIUS_PROXY services skip Block B entirely, for instance).
+
+### Skill template rewritten
+
+`clearpass-policy-walker.md` Step 3 + Step 5b now say "embed `result['mermaid']['sections']` verbatim — do NOT re-assemble." The old per-shape syntax cheat-sheet is gone; AI clients don't need it anymore.
+
+### Backwards-compat
+
+`nodes` / `edges` arrays remain in the response for inspector tooling that needs the raw structure. The `mermaid` field is purely additive.
+
 ## [3.1.4.1] - 2026-05-18
 
 **Patch — fix ClearPass policy visualizer Mermaid render failures on large policies (#356).** Operator hit `Parse error … got NODE_STRING` rendering the sectioned Block B / Block C output from v3.1.3.3+. Action / process / end nodes set `label` with literal `\n` (e.g. `"Set Role:\nNest Dweller"`, `"Access: DENY\n(implicit)"`, `"Default:\n..."`) and never set `short_label` explicitly, so `FlowNode.__post_init__` defaulted `short_label = label` — newlines and all. When the AI substituted that into a Mermaid `[/.../]` shape, the literal newline broke Mermaid's per-line shape parser.

@@ -26,6 +26,7 @@ from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
 from hpe_networking_mcp.platforms.clearpass.policy_visualizer.api_adapter import adapt
 from hpe_networking_mcp.platforms.clearpass.policy_visualizer.flow_graph import compile_service
+from hpe_networking_mcp.platforms.clearpass.policy_visualizer.mermaid_render import format_mermaid
 from hpe_networking_mcp.platforms.clearpass.policy_visualizer.policy_details import build_details
 from hpe_networking_mcp.platforms.clearpass.policy_visualizer.policy_model import build
 from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
@@ -217,9 +218,22 @@ async def clearpass_compile_policy_flow(
     Returns:
         On success — dict with ``service_id`` (engine slug),
         ``service_name`` (the exact resolved name), ``service_type``,
-        ``nodes``, ``edges``, ``warnings``, and optionally ``details``.
-        Edge labels are one of ``""``, ``YES``, ``NO``, ``FAIL``,
-        ``PASS``, ``CONTINUE``.
+        ``nodes``, ``edges``, ``mermaid``, ``warnings``, and optionally
+        ``details``. Edge labels are one of ``""``, ``YES``, ``NO``,
+        ``FAIL``, ``PASS``, ``CONTINUE``.
+
+        The ``mermaid`` field carries ready-to-paste Mermaid source as
+        ``{"sections": [{"title": ..., "code": ...}, ...],
+        "simulated": bool}``. Each ``code`` is a complete
+        ``flowchart LR`` block — embed it verbatim in a Mermaid code
+        fence. **Do not re-assemble the diagram from the ``nodes`` /
+        ``edges`` arrays** — historically AI clients inline two node
+        declarations on a single source line, which Mermaid's per-line
+        shape parser refuses (issue #356, #358). The pre-rendered
+        ``mermaid.sections`` output eliminates that failure mode by
+        producing one node-per-line, quoted-label output server-side.
+        The ``nodes`` / ``edges`` arrays remain for inspector / tooling
+        use cases that need the raw structure.
 
         On ambiguous match — ``{"status": "ambiguous", "query": ...,
         "candidates": [<name>, ...]}`` — caller should re-prompt with a
@@ -283,6 +297,7 @@ async def clearpass_compile_policy_flow(
             "service_type": flow.service_type,
             "nodes": [asdict(n) for n in flow.nodes],
             "edges": [asdict(e) for e in flow.edges],
+            "mermaid": format_mermaid(flow),
             "warnings": list(model.warnings),
         }
         if include_details:
