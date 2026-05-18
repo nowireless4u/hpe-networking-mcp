@@ -435,16 +435,61 @@ class TestShortLabelPropagation:
         # short_label still encodes both conditions joined with &
         assert "&" in enf_dec.short_label
 
-    def test_non_decision_nodes_default_short_label_to_label(self):
-        """For start/process/action/end nodes, short_label defaults to label."""
+    def test_non_decision_nodes_default_short_label_to_label_single_line(self):
+        """For start/process/action/end nodes, short_label defaults to label
+        with embedded newlines collapsed to spaces — Mermaid node shapes
+        can't span source lines (issue #356).
+        """
         model = build(_minimal_raw())
         flow = compile_service(next(iter(model.services.values())), model)
         for node in flow.nodes:
             if node.type != "decision":
-                # These nodes don't get a compact override — default == label
-                assert node.short_label == node.label, (
-                    f"Non-decision node {node.id} ({node.type}) has short_label != label"
+                expected = " ".join(node.label.split())
+                assert node.short_label == expected, (
+                    f"Non-decision node {node.id} ({node.type}): "
+                    f"short_label={node.short_label!r} != collapsed label {expected!r}"
                 )
+
+    def test_short_label_is_always_single_line_across_all_nodes(self):
+        """Hard invariant: every node's short_label must be single-line for
+        ALL node types and ALL emitter branches — Mermaid renders break
+        when a literal newline lands inside a node shape (issue #356).
+
+        Use a fixture that exercises every label-emitting branch in
+        compile_service: start, service-match decision, no-match end,
+        auth process, auth-fail end, role-mapping rule decision + Set
+        Role action + default role action, enforcement rule decision +
+        ApplyProfiles action + ALLOW/DENY end + implicit_deny end.
+        """
+        rm_rules = [
+            {
+                "index": 0,
+                "expression": _single_predicate("UserA"),
+                "results": [{"name": "Set Role", "displayValue": "Kid"}],
+            },
+            {
+                "index": 1,
+                "expression": _single_predicate("UserB"),
+                "results": [{"name": "Set Role", "displayValue": "Nest Dweller"}],
+            },
+        ]
+        enf_rules = [
+            {
+                "index": 0,
+                "expression": _single_predicate("Kid"),
+                "results": [{"name": "Enforcement-Profile", "displayValue": "[Allow Access Profile]"}],
+            },
+        ]
+        model = build(
+            _minimal_raw(
+                rm_rules=rm_rules,
+                rm_default="Guest",
+                enf_rules=enf_rules,
+            )
+        )
+        flow = compile_service(next(iter(model.services.values())), model)
+        offenders = [(n.id, n.type, n.short_label) for n in flow.nodes if "\n" in n.short_label]
+        assert offenders == [], f"short_label must never contain a newline. Offenders: {offenders}"
 
 
 class TestCompileServiceRadiusProxy:

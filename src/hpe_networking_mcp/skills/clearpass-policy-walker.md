@@ -192,7 +192,26 @@ services = await call_tool("clearpass_list_policy_services", {"limit": 100})
    namespace) suitable for inspector tooltips; `short_label` is a
    compact single-line summary suitable for the diagram. With many
    rules, `label` produces dense unreadable diamonds.
-3. **For large policies (≥ 8 decision nodes total), split the
+3. **One node per source line. One edge per source line. Never
+   concatenate them.** Mermaid's parser does NOT span source lines
+   for node shapes — every declaration must end with a real newline
+   (or `;`). Writing `A[/x/] B(((y)))` on one line throws a `got
+   NODE_STRING` parse error. Even if two nodes are connected by an
+   edge, prefer to declare nodes on their own lines first, then list
+   edges:
+   ```
+   A0[/Set Role: Kid/]
+   END0(((Access: ALLOW)))
+   A0 --> END0
+   ```
+4. **Always wrap node label text in double quotes.** ClearPass
+   conditions contain `:`, `=`, `+`, `(`, `)`, `&`, `|`, `'`, and
+   other chars that Mermaid's bare-label parser treats as syntax.
+   Quoted labels (`A0{"Tips:Role = 'Kid' & Endpoint:Status =
+   'Known'"}`) parse safely. The compact-label engine emits `&` as
+   the AND separator between predicates — that MUST stay inside
+   quotes or Mermaid will read it as its own node-list separator.
+5. **For large policies (≥ 8 decision nodes total), split the
    rendering into 2–3 separate Mermaid blocks** instead of one giant
    diagram. See "Step 3b — Sectioned rendering" below.
 
@@ -202,17 +221,17 @@ Mermaid template (single-block version, fine for small policies):
 flowchart LR
     %%{init: {'flowchart': {'nodeSpacing': 30, 'rankSpacing': 50, 'curve': 'basis'}}}%%
 
-    %% --- nodes (use short_label, NOT label) ---
-    %% For each node in flow.nodes, emit ONE line:
-    %%   start        →  <id>([short_label])
-    %%   process      →  <id>[short_label]
-    %%   decision     →  <id>{short_label}
-    %%   action       →  <id>[/short_label/]
-    %%   end (allow)  →  <id>(((short_label)))
-    %%   end (deny)   →  <id>(((short_label))):::deny
-    %%   end (skip)   →  <id>(((short_label))):::skip
+    %% --- nodes (use short_label, NOT label; ALWAYS wrap text in double quotes) ---
+    %% For each node in flow.nodes, emit ONE line — never two nodes inline:
+    %%   start        →  <id>(["<short_label>"])
+    %%   process      →  <id>["<short_label>"]
+    %%   decision     →  <id>{"<short_label>"}
+    %%   action       →  <id>[/"<short_label>"/]
+    %%   end (allow)  →  <id>((("<short_label>")))
+    %%   end (deny)   →  <id>((("<short_label>"))):::deny
+    %%   end (skip)   →  <id>((("<short_label>"))):::skip
 
-    %% --- edges ---
+    %% --- edges (one per line) ---
     %% For each edge in flow.edges:
     %%   ""        →  from --> to
     %%   YES       →  from -->|YES| to

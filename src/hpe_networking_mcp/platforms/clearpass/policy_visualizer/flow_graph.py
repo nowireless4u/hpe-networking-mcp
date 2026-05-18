@@ -62,6 +62,12 @@ class FlowNode:
     def __post_init__(self) -> None:
         if not self.short_label:
             self.short_label = self.label
+        # short_label must be single-line — Mermaid node shapes (rhombus,
+        # parallelogram, etc.) can't span source lines. A literal newline
+        # inside a shape like `A0[/Set Role:\nNest Dweller/]` breaks the
+        # parser. Collapse any embedded whitespace runs to single spaces.
+        if "\n" in self.short_label or "\t" in self.short_label:
+            self.short_label = " ".join(self.short_label.split())
 
 
 @dataclass

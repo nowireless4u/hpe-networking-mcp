@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.4.1] - 2026-05-18
+
+**Patch — fix ClearPass policy visualizer Mermaid render failures on large policies (#356).** Operator hit `Parse error … got NODE_STRING` rendering the sectioned Block B / Block C output from v3.1.3.3+. Action / process / end nodes set `label` with literal `\n` (e.g. `"Set Role:\nNest Dweller"`, `"Access: DENY\n(implicit)"`, `"Default:\n..."`) and never set `short_label` explicitly, so `FlowNode.__post_init__` defaulted `short_label = label` — newlines and all. When the AI substituted that into a Mermaid `[/.../]` shape, the literal newline broke Mermaid's per-line shape parser.
+
+### Engine fix
+
+`FlowNode.__post_init__` now collapses any embedded whitespace runs (newlines + tabs + multi-spaces) in `short_label` to single spaces. The single-line invariant is now guaranteed for every node, regardless of node type or which compile_service branch emitted it. `label` keeps its multi-line form for inspector tooltips — only the diagram-facing `short_label` is normalized.
+
+Added a hard unit invariant test: every node returned by `compile_service` across a fixture exercising all node-emitter branches (start, decision, action, process, end variants, defaults, implicit deny) must have a single-line `short_label`.
+
+### Skill template hardened
+
+`clearpass-policy-walker.md` Step 3 readability rules now make two previously-implicit requirements explicit:
+
+- **One node per source line. One edge per source line.** Mermaid's parser doesn't span lines for shapes — `A[/x/] B(((y)))` on one line throws the parse error. Even with edges, declare nodes on their own lines first.
+- **Always wrap node label text in double quotes.** ClearPass conditions contain `:`, `=`, `+`, `&`, `|`, `'` etc. that Mermaid's bare-label parser treats as syntax; the compact-label engine emits `&` between AND predicates which MUST stay inside quotes or Mermaid reads it as its own node-list separator.
+
+The template Mermaid example shows the quoted form: `<id>{"<short_label>"}` instead of `<id>{<short_label>}`.
+
 ## [3.1.4.0] - 2026-05-18
 
 **Minor — ClearPass policy visualizer gains a what-if simulator. Pass a `simulated_attributes` context (roles, endpoint status, time, visitor name, etc.) and the tool evaluates every rule's predicates against it, returning per-decision-node `simulation_match` flags + a top-level `SimulationOutcome` describing the matched rules, resulting roles, applied profiles, and access decision.**
