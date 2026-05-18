@@ -2,15 +2,44 @@
 name: clearpass-policy-walker
 title: ClearPass policy visualizer — render a service's decision flow as Mermaid
 description: |
-  TRIGGERS — call this when the operator wants to visualize or
-  understand a ClearPass policy decision flow. Phrases include:
-  "visualize the X policy", "show me how service Y decides", "walk the
-  policy flow for Z", "what does the AirGroup service look like end-to-end",
-  "why does this MAC get this role", "render the enforcement chain",
-  "draw the policy", "diagram service N". Output is a Mermaid
-  flowchart that an AI client renders inline, plus a per-service
-  summary header and any unresolved-reference warnings. Backed by the
-  `clearpass_compile_policy_flow` tool which fans out across services,
+  TRIGGERS — call this whenever the operator wants to visualize,
+  render, diagram, draw, walk, or otherwise understand a ClearPass
+  service or its policy decision flow.
+
+  Match phrases include, with NAMED-SERVICE patterns the most common:
+
+  - "visualize the <name> service", "visualize the <name> auth service",
+    "visualize the <name> authentication service", "visualize the
+    <name> policy service", "visualize the <name> ClearPass service",
+    "visualize the <name> policy"
+  - "show me how <name> decides", "show me the <name> service",
+    "show me the <name> policy flow"
+  - "draw the <name> service", "draw the <name> policy"
+  - "render the <name> enforcement chain", "render the <name> policy"
+  - "diagram <name>", "diagram the <name> service",
+    "flowchart the <name> service"
+  - "walk the policy flow for <name>", "walk the <name> service",
+    "what does the <name> service look like end-to-end"
+  - "why does this MAC get this role", "why is this device getting
+    <role>"
+  - Anything that pairs the verbs visualize / render / diagram / draw
+    / flowchart / show-me / walk with a ClearPass service name —
+    including service names you don't immediately recognize. ClearPass
+    service names often contain casual phrases (e.g. "No Wireless For
+    You", "Guest Onboarding", "AirGroup Authorization") — treat the
+    whole name as opaque and feed it to `clearpass_compile_policy_flow`
+    via `service_name=`.
+
+  CRITICAL — when an operator names a specific ClearPass service, DO
+  NOT guess what it does. Call `clearpass_compile_policy_flow` (or
+  `clearpass_list_policy_services` first if you need to confirm the
+  exact name) to get the real, current configuration. Hallucinating a
+  guess at what a service named "No Wireless For You" might do is a
+  bug. The tools are cheap; use them.
+
+  Output is a Mermaid flowchart rendered inline plus a per-service
+  summary header and any unresolved-reference warnings. Backed by
+  `clearpass_compile_policy_flow` which fans out across services,
   role-mapping policies, enforcement policies + profiles, roles, auth
   methods, and auth sources to assemble the full picture.
   **Read-only.**
