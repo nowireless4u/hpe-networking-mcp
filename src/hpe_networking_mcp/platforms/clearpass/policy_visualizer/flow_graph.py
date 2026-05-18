@@ -22,7 +22,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
-from .conditions import expr_to_node_label
+from .conditions import expr_to_compact_label, expr_to_node_label
 from .policy_model import (
     ApplyProfiles,
     EnforcementProfile,
@@ -40,9 +40,20 @@ class FlowNode:
     id: str
     type: NodeType
     label: str
+    # short_label is a compact single-line summary of the same content as
+    # ``label`` — diagram renderers (Mermaid, Graphviz) should prefer this
+    # for the visual node text to keep dense policies legible, and fall
+    # back to ``label`` for inspector/tooltip text where verbosity is fine.
+    # Populated by compile_service() for decision nodes; for non-decision
+    # nodes it's left equal to ``label``.
+    short_label: str = ""
     trace_rule_id: str = ""
     sub_label: str = ""
     rank_group: str = ""
+
+    def __post_init__(self) -> None:
+        if not self.short_label:
+            self.short_label = self.label
 
 
 @dataclass
@@ -136,11 +147,13 @@ def compile_service(service: Service, model: PolicyModel) -> FlowGraph:
     # Service match decision
     # -----------------------------------------------------------------------
     match_label = expr_to_node_label(service.match)
+    match_short = expr_to_compact_label(service.match)
     svc_match = flow.add_node(
         FlowNode(
             id=f"{sid}__match",
             type="decision",
             label=f"Service Match?\n{match_label}",
+            short_label=f"Service Match? {match_short}",
             trace_rule_id=f"{sid}__match",
         )
     )
@@ -188,11 +201,13 @@ def compile_service(service: Service, model: PolicyModel) -> FlowGraph:
         for i, rule in enumerate(enf_rules):
             is_last_enf = i == len(enf_rules) - 1
             cond_label = expr_to_node_label(rule.when)
+            cond_short = expr_to_compact_label(rule.when)
             dec = flow.add_node(
                 FlowNode(
                     id=f"{sid}__enf_rule_{rule.index}",
                     type="decision",
                     label=cond_label,
+                    short_label=cond_short,
                     trace_rule_id=rule.id,
                     rank_group="enf_chain",
                 )
@@ -311,11 +326,13 @@ def compile_service(service: Service, model: PolicyModel) -> FlowGraph:
             for i, rule in enumerate(rm_rules):
                 is_last_rm = i == len(rm_rules) - 1
                 cond_label = expr_to_node_label(rule.when)
+                cond_short = expr_to_compact_label(rule.when)
                 dec = flow.add_node(
                     FlowNode(
                         id=f"{sid}__rm_rule_{rule.index}",
                         type="decision",
                         label=cond_label,
+                        short_label=cond_short,
                         trace_rule_id=rule.id,
                         rank_group="rm_chain",
                     )

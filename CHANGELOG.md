@@ -5,6 +5,58 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.3.3] - 2026-05-18
+
+**Patch — make the rendered ClearPass policy flow readable for large policies. Operator's screenshot showed the diagram correctly produced but rendered as one tall narrow column with tiny text, because Mermaid's default `flowchart TD` + the verbose multi-line decision labels collapsed under the conversation's width constraint.**
+
+### Three coordinated fixes
+
+1. **`expr_to_compact_label()` — single-line condition summaries.** New helper in `conditions.py` that produces a compact rendering: drops the namespace prefix (`Authorization:[Guest Device Repository]:Device Role ID` → `Device Role ID`), uses short operator glyphs (`=` `≠` `~=` `∈` `&` `|`), prefers `displayValue` over numeric IDs, and truncates long values with an ellipsis. Caps at 80 chars by default.
+
+   Compare:
+
+   ```
+   # expr_to_node_label (verbose — 3 lines per predicate, for inspector tooltips):
+   Authorization:[Guest Device Repository]:Device Role ID
+   EQUALS
+   21
+
+   # expr_to_compact_label (compact single-line, for diagram nodes):
+   Device Role ID = 21
+   ```
+
+2. **`FlowNode.short_label` field** populated by `compile_service()` for every decision node. Diagram renderers (Mermaid, Graphviz) should prefer this for the visible node text; `label` stays around for inspector / tooltip / details-block content where verbosity is fine. For non-decision nodes (`start`, `process`, `action`, `end`), `short_label` defaults to `label` via `__post_init__` so existing rendering paths still work unchanged.
+
+3. **Skill template rewritten for legibility.**
+   - Default direction switched to `flowchart LR` (left-right). Long chains lay out horizontally instead of stacking vertically.
+   - Added Mermaid `%%{init: ...}%%` directive prescribing reasonable `nodeSpacing` / `rankSpacing`.
+   - Template now uses `short_label` for every node, NOT `label`.
+   - New **Step 3b — Sectioned rendering** REQUIRED for policies with ≥ 8 decision nodes: render service-intake / role-mapping / enforcement as three separate Mermaid blocks instead of one giant diagram. Each block fits on screen, operators zoom each independently.
+
+### Why this matters
+
+A real ClearPass MAC-auth + MPSK enforcement policy on the operator's tenant has ~30 decision diamonds across role-mapping + enforcement chains. With the prior template (`TD` + verbose `label`), the rendered Mermaid was unreadable in the chat client — the whole graph got scaled to fit the conversation width while being many screens tall, making every label tiny. After the fix the chains lay out horizontally with one-line condition labels, or split across three readable blocks.
+
+### Files changed
+
+- `src/.../platforms/clearpass/policy_visualizer/conditions.py` — `expr_to_compact_label()` + `_OP_SHORT` glyph map + extracted `_pick_rhs_for_display()`.
+- `src/.../platforms/clearpass/policy_visualizer/flow_graph.py` — `FlowNode.short_label` field with `__post_init__` default; every decision-node construction populates it via `expr_to_compact_label`.
+- `src/.../skills/clearpass-policy-walker.md` — Step 3 rewritten with `LR` default + `short_label` requirement + Mermaid init directive; new Step 3b on sectioned rendering for large policies.
+- `tests/unit/test_clearpass_policy_visualizer_adapter.py` — `TestCompactLabel` (6 cases).
+- `tests/unit/test_clearpass_policy_visualizer_flow.py` — `TestShortLabelPropagation` (3 cases) verifying decision nodes get `short_label` and non-decision nodes default.
+
+### Counts
+
+- ClearPass tools: still 142
+- pytest: 1328 → **1337 passed** (9 new tests)
+
+### Verified
+
+- `ruff check .` ✓
+- `ruff format --check .` ✓
+- `mypy src/ --ignore-missing-imports` ✓
+- `pytest tests/ -q` ✓
+
 ## [3.1.3.2] - 2026-05-18
 
 **Patch — fix four operator-reported bugs in the ClearPass policy visualizer: strict name matching, internal IDs leaking to the user, every enforcement rule mis-labeled "Access: DENY" on real MPSK policies, and the visualization not explaining roles that come from auth-source attributes rather than role-mapping rules.**

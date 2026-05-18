@@ -14,6 +14,7 @@ from hpe_networking_mcp.platforms.clearpass.policy_visualizer.conditions import 
     Op,
     Or,
     Predicate,
+    expr_to_compact_label,
     expr_to_label,
     expr_to_node_label,
     normalize,
@@ -138,6 +139,79 @@ class TestLabels:
         label = expr_to_node_label(p)
         assert "Employee" in label
         assert "\n1" not in label  # raw "1" should be replaced
+
+
+class TestCompactLabel:
+    """Compact single-line labels for dense diagram nodes."""
+
+    def test_none_input(self):
+        assert expr_to_compact_label(None) == "(no condition)"
+
+    def test_single_predicate_drops_namespace_uses_short_op(self):
+        p = Predicate(
+            namespace="Authorization:[Guest Device Repository]",
+            attribute="Device Role ID",
+            op=Op.equals,
+            rhs_raw="21",
+            rhs_display="",
+        )
+        label = expr_to_compact_label(p)
+        # Namespace dropped, op short, no newlines
+        assert "Authorization:" not in label
+        assert "Device Role ID" in label
+        assert "=" in label
+        assert "21" in label
+        assert "\n" not in label
+        # Reasonable max length
+        assert len(label) < 80
+
+    def test_picks_display_value_over_numeric_raw(self):
+        p = Predicate(
+            namespace="GuestUser",
+            attribute="Role ID",
+            op=Op.equals,
+            rhs_raw="1",
+            rhs_display="Employee",
+        )
+        label = expr_to_compact_label(p)
+        assert "Employee" in label
+        # raw "1" replaced
+        assert label.count("1") == 0 or "Employee" in label
+
+    def test_multi_predicate_and_uses_ampersand(self):
+        expr = And(
+            operands=[
+                Predicate(namespace="Tips", attribute="Role", op=Op.equals, rhs_raw="IoT", rhs_display=""),
+                Predicate(namespace="Endpoint", attribute="Status", op=Op.equals, rhs_raw="Active", rhs_display=""),
+            ]
+        )
+        label = expr_to_compact_label(expr)
+        assert "&" in label
+        assert "Role" in label
+        assert "Status" in label
+        assert "\n" not in label
+
+    def test_multi_predicate_or_uses_pipe(self):
+        expr = Or(
+            operands=[
+                Predicate(namespace="X", attribute="a", op=Op.equals, rhs_raw="1", rhs_display=""),
+                Predicate(namespace="X", attribute="b", op=Op.equals, rhs_raw="2", rhs_display=""),
+            ]
+        )
+        label = expr_to_compact_label(expr)
+        assert "|" in label
+
+    def test_long_label_truncated_with_ellipsis(self):
+        p = Predicate(
+            namespace="X",
+            attribute="memberOf",
+            op=Op.equals,
+            rhs_raw="CN=Tier-2-Wireless-Deny,OU=T2-Groups,OU=Tier 2,OU=Admin Groups,OU=Groups,DC=example,DC=com",
+            rhs_display="",
+        )
+        label = expr_to_compact_label(p, max_len=50)
+        assert len(label) <= 50
+        assert label.endswith("...")
 
 
 # ---------------------------------------------------------------------------

@@ -180,21 +180,37 @@ services = await call_tool("clearpass_list_policy_services", {"limit": 100})
 
 ### Step 3 — Render the FlowGraph as Mermaid
 
-Use this exact template (don't improvise — the consistency across
-sessions is the point of the skill):
+**Critical readability rules (read first):**
+
+1. **Use `flowchart LR` (left-right)**, not `TD`. Role-mapping and
+   enforcement chains often have 12+ rules each — `TD` produces a
+   tall narrow column that the client shrinks to fit width, making
+   every label tiny and unreadable. `LR` lays the chain out
+   horizontally with reasonable node spacing.
+2. **Use `short_label` for every node, NOT `label`.** Each FlowNode
+   carries both: `label` is verbose (3 lines per predicate, full
+   namespace) suitable for inspector tooltips; `short_label` is a
+   compact single-line summary suitable for the diagram. With many
+   rules, `label` produces dense unreadable diamonds.
+3. **For large policies (≥ 8 decision nodes total), split the
+   rendering into 2–3 separate Mermaid blocks** instead of one giant
+   diagram. See "Step 3b — Sectioned rendering" below.
+
+Mermaid template (single-block version, fine for small policies):
 
 ```mermaid
-flowchart TD
-    %% --- nodes ---
+flowchart LR
+    %%{init: {'flowchart': {'nodeSpacing': 30, 'rankSpacing': 50, 'curve': 'basis'}}}%%
+
+    %% --- nodes (use short_label, NOT label) ---
     %% For each node in flow.nodes, emit ONE line:
-    %%   start        →  <id>([service_name])
-    %%   process      →  <id>[label]
-    %%   decision     →  <id>{label}
-    %%   action       →  <id>[/label/]
-    %%   end (allow)  →  <id>(((label)))
-    %%   end (deny)   →  <id>(((label))):::deny
-    %%   end (skip)   →  <id>(((label))):::skip
-    %% Multi-line labels: replace \n with <br/>
+    %%   start        →  <id>([short_label])
+    %%   process      →  <id>[short_label]
+    %%   decision     →  <id>{short_label}
+    %%   action       →  <id>[/short_label/]
+    %%   end (allow)  →  <id>(((short_label)))
+    %%   end (deny)   →  <id>(((short_label))):::deny
+    %%   end (skip)   →  <id>(((short_label))):::skip
 
     %% --- edges ---
     %% For each edge in flow.edges:
@@ -212,10 +228,51 @@ flowchart TD
 
 End-node classification rules (for `:::deny` / `:::skip`):
 
-- `:::deny` if the label starts with `Access: DENY` or `Auth Failed`.
-- `:::skip` if the label starts with `Skip` (the service-no-match
-  branch).
+- `:::deny` if the `short_label` starts with `Access: DENY` or contains
+  `Auth Failed`.
+- `:::skip` if the `short_label` starts with `Skip` (the
+  service-no-match branch).
 - No class (default styling) for `Access: ALLOW` and any non-end node.
+
+### Step 3b — Sectioned rendering (REQUIRED for ≥ 8 decision nodes)
+
+When the policy is large, ONE Mermaid block becomes unreadable even
+with `LR` + `short_label`. Split into:
+
+**Block A — Service intake** (start + service-match + auth + auth-fail):
+
+```
+nodes with id matching <sid>__start, <sid>__match, <sid>__no_match,
+<sid>__auth, <sid>__auth_fail
+plus edges between them
+```
+
+**Block B — Role mapping** (the `rm_chain` rank_group):
+
+```
+nodes with id matching <sid>__rm_rule_*, <sid>__rm_action_*, <sid>__rm_default,
+<sid>__no_role
+plus edges between them
+end this block with a "→ enforcement" placeholder edge to a stub node
+```
+
+**Block C — Enforcement** (the `enf_chain` rank_group):
+
+```
+nodes with id matching <sid>__enf_rule_*, <sid>__enf_action_*, <sid>__enf_end_*,
+<sid>__enf_default_action, <sid>__enf_default_end, <sid>__enf_implicit_deny,
+<sid>__enf_no_policy
+plus edges between them
+start this block with a stub node receiving from "← from role mapping"
+```
+
+Each block gets its own `flowchart LR` + init directive. Operators can
+zoom each section independently. Below the three blocks, add a
+one-sentence connection note: *"All role-mapping outcomes converge to
+the enforcement chain in Block C."*
+
+When in doubt about sizing: if the policy has more than 8 total
+decision nodes across role-mapping + enforcement, split.
 
 ### Step 4 — Output format
 

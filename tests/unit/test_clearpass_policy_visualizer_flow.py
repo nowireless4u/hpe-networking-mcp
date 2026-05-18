@@ -395,6 +395,58 @@ class TestIsDenySemantics:
         assert _is_deny(["unknown_pid"], ["Update DenyList Audit"], {}) is False
 
 
+class TestShortLabelPropagation:
+    """Decision nodes must populate short_label with the compact summary so
+    diagram renderers can produce legible Mermaid for large policies.
+    """
+
+    def test_service_match_decision_has_short_label(self):
+        model = build(_minimal_raw())
+        flow = compile_service(next(iter(model.services.values())), model)
+        match_node = next(n for n in flow.nodes if n.id.endswith("__match"))
+        assert match_node.short_label
+        # short_label must be substantially shorter than label for compound conditions
+        # (label includes 3 lines per predicate; short_label is single line)
+        assert "\n" not in match_node.short_label.replace("\n", " ")[: len(match_node.short_label)]
+        assert match_node.short_label.startswith("Service Match?")
+
+    def test_enforcement_decision_short_label_is_single_line(self):
+        enf_rules = [
+            {
+                "index": 0,
+                "expression": {
+                    "operator": "and",
+                    "displayOperator": "MATCHES_ALL",
+                    "attributes": [
+                        {"type": "Tips", "name": "Role", "operator": "EQUALS", "value": "X"},
+                        {"type": "Endpoint", "name": "Status", "operator": "EQUALS", "value": "Active"},
+                    ],
+                },
+                "results": [{"name": "Enforcement-Profile", "displayValue": "[Allow Access Profile]"}],
+            }
+        ]
+        model = build(_minimal_raw(enf_rules=enf_rules))
+        flow = compile_service(next(iter(model.services.values())), model)
+        enf_dec = next(n for n in flow.nodes if "__enf_rule_" in n.id)
+        # short_label is one line — no embedded newlines
+        assert "\n" not in enf_dec.short_label
+        # label is the verbose multi-line form
+        assert "\n" in enf_dec.label
+        # short_label still encodes both conditions joined with &
+        assert "&" in enf_dec.short_label
+
+    def test_non_decision_nodes_default_short_label_to_label(self):
+        """For start/process/action/end nodes, short_label defaults to label."""
+        model = build(_minimal_raw())
+        flow = compile_service(next(iter(model.services.values())), model)
+        for node in flow.nodes:
+            if node.type != "decision":
+                # These nodes don't get a compact override — default == label
+                assert node.short_label == node.label, (
+                    f"Non-decision node {node.id} ({node.type}) has short_label != label"
+                )
+
+
 class TestCompileServiceRadiusProxy:
     def test_radius_proxy_skips_auth_and_role_mapping(self):
         enf_rules = [
