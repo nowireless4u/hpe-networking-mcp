@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.3.2] - 2026-05-18
+
+**Patch — fix two operator-reported bugs in `clearpass_compile_policy_flow`: strict name matching forced a wasted round-trip on natural phrasing, and the AI leaked internal numeric service IDs into user-facing output.**
+
+### Fix 1 — Fuzzy service-name matching
+
+The compile tool previously did only exact-string match on `service_name`. Operator-natural phrasing like *"ClearPass No Wireless For You Auth Service"* (prepends "ClearPass") didn't exact-match the real `"No Wireless For You Auth Service"` → returned `service_not_found` → AI had to fall back to listing all services to find the real name. Wasted round-trip + a misleading "not found" the AI then had to explain.
+
+New tiered resolver (`_resolve_service_name`):
+
+1. `service_id` exact match (unchanged).
+2. `service_name` exact case-sensitive match (unchanged behavior — preserved for current callers).
+3. **NEW** — case-insensitive exact match.
+4. **NEW** — case-insensitive substring match. One result → use it. Multiple results → return `{"status": "ambiguous", "candidates": [<name>, ...]}` so the caller can present a disambiguation prompt by name.
+
+Now *"ClearPass No Wireless For You"* resolves correctly to *"No Wireless For You Auth Service"* in one call.
+
+### Fix 2 — Never expose internal service IDs in user-facing output
+
+The skill runbook didn't explicitly tell the AI to suppress numeric service IDs in its reply. AI output included text like "id 3010" and "id 3044" — internal API identifiers operators don't recognize and don't want to see. Added a top-of-skill **Operator-output rules** section with three explicit rules:
+
+1. NEVER expose numeric ClearPass service IDs (`3010`, `id 1`, `service_id=2`) in user-facing text.
+2. Don't expose engine-internal slug IDs either (the `service_id` slug in FlowGraph output).
+3. Refer to services by their full ClearPass name in quotes.
+
+The skill's disambiguation example now shows the right output: list candidate names, no IDs.
+
+### Files changed
+
+- `src/hpe_networking_mcp/platforms/clearpass/tools/policy_visualizer.py` — extracted `_resolve_service_name()` helper with 4-tier match; added `ambiguous` response shape; renamed `service_name` arg docstring to call out fuzzy matching; called out `service_id` as internal.
+- `src/hpe_networking_mcp/skills/clearpass-policy-walker.md` — restructured procedure around fuzzy match; added Operator-output rules section; replaced worked example with the No-Wireless-For-You ambiguous-resolution case.
+- `tests/unit/test_clearpass_policy_visualizer_tools.py` — added `TestResolveServiceName` (7 cases covering all 4 match tiers + id match) + `TestCompilePolicyFlowAmbiguousResponse` (end-to-end ambiguous response).
+
+### Verified
+
+- `ruff check .` ✓
+- `ruff format --check .` ✓
+- `mypy src/ --ignore-missing-imports` ✓
+- `pytest tests/ -q` ✓ (1312 → 1320 passed)
+
 ## [3.1.3.1] - 2026-05-18
 
 **Patch — version-aligns the trigger-coverage fix that landed in #351.**

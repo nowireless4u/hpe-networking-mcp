@@ -104,6 +104,130 @@ class TestCompilePolicyFlowValidation:
         assert "exactly one" in result.lower()
 
 
+class TestResolveServiceName:
+    """Direct tests of the resolver — easier to cover all match tiers without the bulk-fetch overhead."""
+
+    def test_exact_match_wins(self):
+        from hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer import (
+            _resolve_service_name,
+        )
+
+        services = [{"id": 1, "name": "[Foo]"}, {"id": 2, "name": "foo"}]
+        # Case-sensitive exact match prefers the literal first
+        name, candidates = _resolve_service_name(services, None, "[Foo]")
+        assert name == "[Foo]"
+        assert candidates == []
+
+    def test_case_insensitive_exact_match(self):
+        from hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer import (
+            _resolve_service_name,
+        )
+
+        services = [{"id": 1, "name": "[AirGroup Authorization Service]"}]
+        # Lowercased version of the canonical name should still resolve
+        name, candidates = _resolve_service_name(services, None, "[airgroup authorization service]")
+        assert name == "[AirGroup Authorization Service]"
+        assert candidates == []
+
+    def test_substring_match_single(self):
+        from hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer import (
+            _resolve_service_name,
+        )
+
+        services = [
+            {"id": 1, "name": "AirGroup Authorization Service"},
+            {"id": 2, "name": "[Policy Manager Admin Network Login Service]"},
+        ]
+        # "ClearPass AirGroup" — operator prepended noise. Substring "airgroup" matches one.
+        name, candidates = _resolve_service_name(services, None, "ClearPass AirGroup")
+        # The substring "ClearPass AirGroup" doesn't match — but operator phrasing tier
+        # falls back to substring of the QUERY in the NAME. Verify the more common case:
+        name, candidates = _resolve_service_name(services, None, "AirGroup")
+        assert name == "AirGroup Authorization Service"
+        assert candidates == []
+
+    def test_substring_match_multiple_returns_candidates(self):
+        from hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer import (
+            _resolve_service_name,
+        )
+
+        services = [
+            {"id": 1, "name": "No Wireless For You Auth Service"},
+            {"id": 2, "name": "No Wireless For You Auth Service - Mist"},
+            {"id": 3, "name": "Some Other Service"},
+        ]
+        name, candidates = _resolve_service_name(services, None, "No Wireless For You")
+        assert name is None
+        assert candidates == [
+            "No Wireless For You Auth Service",
+            "No Wireless For You Auth Service - Mist",
+        ]
+
+    def test_no_match_returns_none_no_candidates(self):
+        from hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer import (
+            _resolve_service_name,
+        )
+
+        services = [{"id": 1, "name": "Foo"}]
+        name, candidates = _resolve_service_name(services, None, "Bar")
+        assert name is None
+        assert candidates == []
+
+    def test_service_id_match(self):
+        from hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer import (
+            _resolve_service_name,
+        )
+
+        services = [{"id": 1, "name": "Foo"}, {"id": 2, "name": "Bar"}]
+        name, candidates = _resolve_service_name(services, 2, None)
+        assert name == "Bar"
+        assert candidates == []
+
+    def test_service_id_no_match(self):
+        from hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer import (
+            _resolve_service_name,
+        )
+
+        services = [{"id": 1, "name": "Foo"}]
+        name, candidates = _resolve_service_name(services, 99, None)
+        assert name is None
+        assert candidates == []
+
+
+class TestCompilePolicyFlowAmbiguousResponse:
+    @patch("hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.clearpass_get")
+    @patch(
+        "hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.get_clearpass_session",
+        new_callable=AsyncMock,
+    )
+    async def test_substring_matching_multiple_services_returns_ambiguous_with_names_only(self, mock_session, mock_get):
+        from hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer import (
+            clearpass_compile_policy_flow,
+        )
+
+        mock_session.return_value = MagicMock()
+        mock_get.return_value = _hal(
+            [
+                {"id": 3010, "name": "No Wireless For You Auth Service", "type": "RADIUS"},
+                {"id": 3044, "name": "No Wireless For You Auth Service - Mist", "type": "RADIUS"},
+                {"id": 1, "name": "[Other Service]", "type": "RADIUS"},
+            ]
+        )
+        result = await clearpass_compile_policy_flow(_ctx(), service_name="No Wireless For You")
+        assert isinstance(result, dict)
+        assert result["status"] == "ambiguous"
+        # candidates carry NAMES ONLY, not numeric IDs — IDs are internal API
+        # identifiers operators don't recognize and must not be exposed in
+        # user-facing output (per the skill's operator-output rules)
+        assert result["candidates"] == [
+            "No Wireless For You Auth Service",
+            "No Wireless For You Auth Service - Mist",
+        ]
+        for candidate in result["candidates"]:
+            assert isinstance(candidate, str)
+            assert "id" not in candidate.lower() or "wireless" in candidate.lower()  # name only
+
+
 class TestCompilePolicyFlowFanout:
     @patch("hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.clearpass_get")
     @patch(

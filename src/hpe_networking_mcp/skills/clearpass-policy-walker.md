@@ -71,49 +71,60 @@ just dump the raw config. Particularly useful for:
 
 **Read-only.** Does not mutate any ClearPass config.
 
+## Operator-output rules (read first)
+
+These constrain every response you produce inside this skill:
+
+1. **NEVER expose numeric ClearPass service IDs to the user.** IDs
+   like `3010`, `3044`, `id 1`, `service_id=2` are internal API
+   identifiers — operators don't know them and don't want to see
+   them. Refer to services by their full name in quotes. If you
+   internally pass `service_id` to the tool, fine — just don't echo
+   it in your reply.
+2. **Don't expose engine-internal slug IDs either** — values like
+   `service_id` in the returned FlowGraph (e.g. `no_wireless_for_you_..._a1b2c3`)
+   are for stable diff/test purposes, not for operators.
+3. Refer to services by their full ClearPass name. If a name has
+   surrounding brackets (`[Policy Manager Admin Network Login Service]`),
+   include them.
+
 ## Prerequisites
 
 - ClearPass reachable: `health(platform="clearpass")` first (skip if
   you already ran it earlier in the same session).
-- The operator has named the target service, OR is asking generally
+- The operator has named the target service (use it directly — the
+  compile tool does fuzzy matching), OR is asking generally
   ("show me a service" / "pick one to visualize") — in which case
   call the picker step first.
 
 ## Procedure
 
-### Step 1 — Pick the target service
+### Step 1 — Compile the flow (fuzzy match handles operator phrasing)
 
 If the operator named a specific service ("visualize the AirGroup
-service"), skip to Step 2 with `service_name` set.
-
-Otherwise, call the picker:
-
-```python
-services = await call_tool("clearpass_list_policy_services", {"limit": 100})
-# Surface a short summary (name, type, enabled) so the operator can choose.
-```
-
-The picker returns one entry per service with `id`, `name`, `type`,
-`template`, `enabled`, `role_mapping_policy`, `enf_policy`,
-`description`, `hit_count`, `monitor_mode`. Present a slim view —
-operators usually pick by name.
-
-### Step 2 — Compile the flow
+service" / "No Wireless For You" / "the office onboarding policy"),
+go straight to the compile call — the tool resolves the name fuzzily:
 
 ```python
 flow = await call_tool("clearpass_compile_policy_flow", {
-    "service_name": "<exact ClearPass service name, e.g. [AirGroup Authorization Service]>",
-    # or "service_id": 2,
+    "service_name": "<whatever the operator said>",
     "include_details": False,   # set True for the per-rule inspector data
 })
 ```
 
-Returns:
+Match order inside the tool: exact → case-insensitive exact →
+case-insensitive substring. A casual phrase like `"ClearPass No
+Wireless For You"` will resolve to the real `"No Wireless For You
+Auth Service"` automatically.
+
+### Step 2 — Handle the three response shapes
+
+**Success** — proceed to Step 3 to render. Shape:
 
 ```
 {
-    "service_id":   <internal slug>,
-    "service_name": <ClearPass name>,
+    "service_id":   <internal slug — DO NOT show user>,
+    "service_name": <exact ClearPass name — safe to show>,
     "service_type": "RADIUS" | "TACACS" | "RADIUS_PROXY",
     "nodes": [{id, type, label, sub_label, trace_rule_id, rank_group}, ...],
     "edges": [{from_id, to_id, label, reason}, ...],
@@ -121,13 +132,51 @@ Returns:
 }
 ```
 
-Node `type` is one of: `start`, `process`, `decision`, `action`, `end`.
-Edge `label` is one of: `""` (unconditional), `YES`, `NO`, `FAIL`,
-`PASS`, `CONTINUE`.
+**Ambiguous** — the substring matched multiple services. Shape:
 
-If the service wasn't found, the response carries
-`{"status": "service_not_found", "available_services": [...]}` — show
-the operator the available list and re-prompt.
+```
+{
+    "status": "ambiguous",
+    "query":  <what you sent>,
+    "candidates": ["<name 1>", "<name 2>", ...]
+}
+```
+
+Present the candidate names (no IDs, no other metadata) and ask the
+operator which one they meant. Example reply:
+
+> Multiple services match — which did you mean?
+> - "No Wireless For You Auth Service"
+> - "No Wireless For You Auth Service - Mist"
+
+Re-call the compile with the chosen name. Do not show numeric IDs in
+the disambiguation prompt.
+
+**Not found** — substring matched zero services. Shape:
+
+```
+{
+    "status": "service_not_found",
+    "query": <what you sent>,
+    "available_services": [<name>, ...],
+    "available_count": <int>
+}
+```
+
+Reply with the closest plausible matches by name and ask the operator
+to confirm. If the count is small (≤ 25 — the full list is returned)
+you can list them all; otherwise call `clearpass_list_policy_services`
+for the full inventory and present it.
+
+### Step 1-alt — Picker (only when operator hasn't named a service)
+
+When the operator says something like *"show me a service to
+visualize"* without naming one:
+
+```python
+services = await call_tool("clearpass_list_policy_services", {"limit": 100})
+# Present names + type + enabled. DO NOT include the numeric id in your reply.
+```
 
 ### Step 3 — Render the FlowGraph as Mermaid
 
@@ -194,25 +243,34 @@ Emit, in this exact order:
 Do NOT include the raw JSON FlowGraph in the response — the diagram
 is the point.
 
-## Worked example
+## Worked example — fuzzy match in action
 
-Operator: *"Visualize the AirGroup Authorization Service."*
+Operator: *"Visualize the ClearPass No Wireless For You Auth Service."*
 
 ```python
-# Step 1 — skip picker (operator named the service)
-
-# Step 2 — compile
+# Step 1 — compile (with the operator's exact phrasing — fuzzy match
+# will resolve it to the real service name)
 flow = await call_tool("clearpass_compile_policy_flow", {
-    "service_name": "[AirGroup Authorization Service]",
+    "service_name": "ClearPass No Wireless For You Auth Service",
 })
 
-# Step 3 — render Mermaid per template, with nodes from flow["nodes"]
-# and edges from flow["edges"]. Use service_name in the start-node
-# shape: <start_id>([AirGroup Authorization Service])
-
-# Step 4 — output:
-#   header → mermaid block → warnings (if any) → walkthrough
+# Tool internally:
+#   - exact match: no
+#   - case-insensitive exact: no
+#   - case-insensitive substring "no wireless for you":
+#       → matches both "No Wireless For You Auth Service" AND
+#         "No Wireless For You Auth Service - Mist"
+#   - returns status="ambiguous" with both names as candidates
 ```
+
+Reply to the operator (NO IDs):
+
+> Multiple services match — which did you mean?
+> - "No Wireless For You Auth Service"
+> - "No Wireless For You Auth Service - Mist"
+
+Operator picks one → re-call with the exact name → success → Step 3
+(render) + Step 4 (output).
 
 ## When NOT to use this skill
 

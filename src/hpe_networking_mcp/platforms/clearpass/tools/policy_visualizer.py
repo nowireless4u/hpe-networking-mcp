@@ -108,6 +108,59 @@ async def clearpass_list_policy_services(
         return f"Error listing policy services: {e}"
 
 
+def _resolve_service_name(
+    services: list[dict],
+    service_id: int | None,
+    service_name: str | None,
+) -> tuple[str | None, list[str]]:
+    """Resolve a service identifier to its exact REST name.
+
+    Tier order — first non-empty result wins:
+
+    1. ``service_id`` exact match (unambiguous).
+    2. ``service_name`` exact match (case-sensitive — what the UI shows).
+    3. ``service_name`` case-insensitive exact match (handles casing slips).
+    4. ``service_name`` case-insensitive substring match (handles
+       operator phrasing like ``"ClearPass No Wireless For You"`` when
+       the real name is ``"No Wireless For You Auth Service"``). One
+       match → use it. Multiple matches → return them all as candidates
+       so the caller can disambiguate.
+
+    Returns:
+        ``(target_name, candidates)`` — ``target_name`` is the resolved
+        exact name (``None`` if zero or ambiguous matches), ``candidates``
+        is the multi-match list (empty unless ambiguous).
+    """
+    if service_id is not None:
+        for svc in services:
+            if svc.get("id") == service_id:
+                name = svc.get("name") or ""
+                return (name, []) if name else (None, [])
+        return (None, [])
+
+    if service_name is None:
+        return (None, [])
+
+    # Tier 2: exact (case-sensitive)
+    for svc in services:
+        if svc.get("name") == service_name:
+            return (svc["name"], [])
+
+    # Tier 3: exact (case-insensitive)
+    query_lower = service_name.lower()
+    for svc in services:
+        if (svc.get("name") or "").lower() == query_lower:
+            return (svc["name"], [])
+
+    # Tier 4: substring (case-insensitive)
+    matches = [svc["name"] for svc in services if svc.get("name") and query_lower in svc["name"].lower()]
+    if len(matches) == 1:
+        return (matches[0], [])
+    if len(matches) > 1:
+        return (None, sorted(matches))
+    return (None, [])
+
+
 @tool(annotations=READ_ONLY)
 async def clearpass_compile_policy_flow(
     ctx: Context,
@@ -125,23 +178,39 @@ async def clearpass_compile_policy_flow(
 
     Exactly one of ``service_id`` or ``service_name`` must be provided.
 
+    Name resolution is fuzzy — exact match wins, then case-insensitive
+    exact, then case-insensitive substring. So
+    ``service_name="ClearPass No Wireless For You"`` will find the
+    actual ``"No Wireless For You Auth Service"``. If the substring
+    matches multiple services the response shape is
+    ``{"status": "ambiguous", "candidates": [<name>, ...]}`` — surface
+    the candidate names (NOT any numeric IDs) to the operator so they
+    can pick.
+
     Args:
         service_id: ClearPass numeric service ID (e.g. ``1`` for
             ``[Policy Manager Admin Network Login Service]``).
-        service_name: ClearPass service name as it appears in the UI
-            (e.g. ``"[AirGroup Authorization Service]"``).
+            Internal — don't surface this in user-facing output.
+        service_name: ClearPass service name. Accepts exact, casing
+            variations, or a partial substring that uniquely identifies
+            the service.
         include_details: When true, attaches an ``"details"`` block
             with per-rule action / linked-names data suitable for an
             inspector view alongside the rendered diagram.
 
     Returns:
-        Dict with ``service_id`` (engine slug), ``service_name``,
-        ``service_type``, ``nodes`` (list of ``{id, type, label,
-        sub_label, trace_rule_id, rank_group}``), ``edges`` (list of
-        ``{from_id, to_id, label, reason}``), ``warnings`` (list of
-        unresolved-reference messages), and optionally ``details``.
-        Edge labels are one of ``""`` (unconditional), ``YES``, ``NO``,
-        ``FAIL``, ``PASS``, ``CONTINUE``.
+        On success — dict with ``service_id`` (engine slug),
+        ``service_name`` (the exact resolved name), ``service_type``,
+        ``nodes``, ``edges``, ``warnings``, and optionally ``details``.
+        Edge labels are one of ``""``, ``YES``, ``NO``, ``FAIL``,
+        ``PASS``, ``CONTINUE``.
+
+        On ambiguous match — ``{"status": "ambiguous", "query": ...,
+        "candidates": [<name>, ...]}`` — caller should re-prompt with a
+        more specific name.
+
+        On no match — ``{"status": "service_not_found", "query": ...,
+        "available_services": [<name>, ...], "available_count": <int>}``.
     """
     if (service_id is None) == (service_name is None):
         return "Error: provide exactly one of service_id or service_name"
@@ -161,21 +230,18 @@ async def clearpass_compile_policy_flow(
         auth_methods = _bulk_get(client_pe, "/auth-method")
         auth_sources = _bulk_get(client_pe, "/auth-source")
 
-        # Resolve target by REST id/name (model uses slug-hashed internal IDs)
-        target_name: str | None = None
-        for svc in services:
-            if service_id is not None and svc.get("id") == service_id:
-                target_name = svc.get("name")
-                break
-            if service_name is not None and svc.get("name") == service_name:
-                target_name = svc.get("name")
-                break
+        target_name, candidates = _resolve_service_name(services, service_id, service_name)
+        if candidates:
+            return {
+                "status": "ambiguous",
+                "query": service_name,
+                "candidates": candidates,
+            }
         if target_name is None:
-            available = sorted(s.get("name", "") for s in services)
+            available = sorted(s.get("name", "") for s in services if s.get("name"))
             return {
                 "status": "service_not_found",
-                "service_id": service_id,
-                "service_name": service_name,
+                "query": service_name if service_name is not None else f"id={service_id}",
                 "available_services": available[:25],
                 "available_count": len(available),
             }
