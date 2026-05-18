@@ -243,6 +243,51 @@ Emit, in this exact order:
 Do NOT include the raw JSON FlowGraph in the response — the diagram
 is the point.
 
+### Step 4b — When roles in enforcement rules don't appear in the role-mapping section
+
+ClearPass enforcement rules can match on roles that the role-mapping
+policy never sets — those roles come from **authorization-source
+attributes** (e.g. ``Authorization:[Guest Device Repository]:Role ID``
+maps a guest-device repository field directly to ``Tips:Role``). The
+visualizer renders the enforcement rule conditions accurately
+(including non-role attributes like ``GuestUser:visitor``,
+``Endpoint:Status``, ``Authorization:[Guest Device Repository]:Device
+Role ID``) but the role-mapping section only shows what the role-
+mapping policy explicitly sets.
+
+If you see a role referenced in an enforcement rule that has no
+matching ``Set Role`` action in the role-mapping section, **call it
+out in the walkthrough**:
+
+> Note: the role "Visitor 'Inspire 3D'" referenced in enforcement
+> rule 0 isn't set by the role-mapping policy — it comes from the
+> ``[Guest Device Repository]`` authorization source as a per-device
+> attribute. Same applies to "Endpoint=Oculus" in rule 5 (endpoint
+> attribute, not a role).
+
+### Step 4c — When rules apply multiple profiles (MAC auth + MPSK shape)
+
+A common ClearPass pattern is one rule that applies **many profiles
+together**: one RADIUS Accept (the access decision), one VLAN
+assignment, one MPSK passphrase profile, and several
+Post_Authentication updates (endpoint database writes, SDWAN role
+pushes, downloadable-role assignments). The flow renders this as:
+
+- Decision node: the rule's WHEN conditions
+- Action node: ALL profile names, comma-separated (might be 5-10
+  names)
+- End node: ``Access: ALLOW`` — the RADIUS-layer decision
+
+The end node is intentionally the RADIUS-layer ALLOW/DENY. The
+post-auth + endpoint-update profiles are visible in the action node
+(operator can see what side-effects run) but they don't change the
+access decision — they happen regardless of whether access is
+granted. If the operator asks *"why does this rule say ALLOW when
+it's an MPSK enforcement?"*, explain: the RADIUS server sends
+Access-Accept and the action node lists the per-device profiles
+(MPSK passphrase, VLAN, downloadable role, endpoint updates) that
+ride with it.
+
 ## Worked example — fuzzy match in action
 
 Operator: *"Visualize the ClearPass No Wireless For You Auth Service."*

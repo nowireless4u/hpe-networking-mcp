@@ -70,7 +70,13 @@ class FlowGraph:
 
 
 _DENY_PROFILE_TYPES = {"radius_reject", "tacacs_other", "generic_reject"}
-_DENY_ACTIONS = {"deny", "reject"}
+_DENY_ACTIONS = {"deny", "reject", "drop"}
+_POST_AUTH_PROFILE_TYPE = "post_auth"
+# Real MAC-auth + MPSK enforcement rules combine ONE RADIUS Accept (the
+# access decision) with several Post_Authentication side-effects
+# (endpoint updates, SDWAN role pushes, etc.). The side-effects must
+# never contribute to the rule's ALLOW/DENY label — they happen
+# regardless of whether access was granted.
 
 
 def _is_deny(
@@ -78,23 +84,37 @@ def _is_deny(
     profile_names: list[str],
     profiles: dict[str, EnforcementProfile],
 ) -> bool:
-    """Return True if any profile in the list represents a deny/reject outcome.
+    """Return True if any profile in the list represents an explicit deny.
 
-    Resolution order:
-    1. profile_type field ("radius_reject", "tacacs_other") — canonical
-    2. action field ("deny", "reject") — secondary signal
-    3. name heuristic — fallback for profiles not present in the model
+    Post-authentication profiles are skipped — they're side-effects, not
+    access decisions. Unknown / missing action is NOT treated as deny —
+    we require an explicit signal. Falling back to a name heuristic
+    requires a strong substring match.
+
+    Resolution order (per profile):
+    1. ``profile_type == "post_auth"`` → skip (side-effect, not an
+       access decision).
+    2. ``profile_type`` in ``{radius_reject, tacacs_other,
+       generic_reject}`` → explicit deny.
+    3. ``action`` in ``{deny, reject, drop}`` → explicit deny.
+    4. Profile not present in the model (placeholder): only count as
+       deny if the profile NAME starts with ``[Deny`` or equals/contains
+       a strong deny token. ClearPass's built-in deny profile is named
+       ``[Deny Access Profile]``.
     """
     for pid, name in zip(profile_ids, profile_names, strict=False):
         profile = profiles.get(pid)
         if profile is not None:
+            if profile.profile_type == _POST_AUTH_PROFILE_TYPE:
+                continue
             if profile.profile_type in _DENY_PROFILE_TYPES:
                 return True
-            if profile.action.lower() in _DENY_ACTIONS:
+            if profile.action and profile.action.lower() in _DENY_ACTIONS:
                 return True
-        else:
-            if "deny" in name.lower():
-                return True
+            continue
+        lowered = name.lower()
+        if "deny access profile" in lowered or lowered.startswith("[deny"):
+            return True
     return False
 
 

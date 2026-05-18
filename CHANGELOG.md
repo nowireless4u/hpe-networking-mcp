@@ -7,7 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.1.3.2] - 2026-05-18
 
-**Patch — fix two operator-reported bugs in `clearpass_compile_policy_flow`: strict name matching forced a wasted round-trip on natural phrasing, and the AI leaked internal numeric service IDs into user-facing output.**
+**Patch — fix four operator-reported bugs in the ClearPass policy visualizer: strict name matching, internal IDs leaking to the user, every enforcement rule mis-labeled "Access: DENY" on real MPSK policies, and the visualization not explaining roles that come from auth-source attributes rather than role-mapping rules.**
+
+### Fix 3 — Every enforcement rule mis-labeled "Access: DENY" on MAC auth + MPSK policies
+
+The most visible bug from a live operator session. On a real MPSK enforcement policy where every rule applies ~10 profiles (one RADIUS Accept + one VLAN + one MPSK + several Post_Authentication side-effect updates), the visualizer labeled every rule "Access: DENY" while the default (single RADIUS Accept) correctly showed "Access: ALLOW."
+
+Two compounding tool bugs:
+
+1. **`_bucket_for_profile()` missed `Post_Authentication`** — the underscore-long-form variant ClearPass REST returns. It recognized `Post-Auth` and `PostAuth` only. Post-auth profiles fell through to `genericEnfProfiles`.
+2. **`build()` for `genericEnfProfiles` defaulted missing actions to `generic_reject`** — and Post_Authentication profiles have no `action` field (`null` in the REST response). So they got `profile_type="generic_reject"`. Then `_is_deny()` matched on that type and flagged the rule as deny.
+
+Fixes:
+
+- **`_bucket_for_profile()` normalizes type via lowercase + strip separators**: `Post_Authentication`, `PostAuthentication`, `post-auth`, `PostAuth` all bucket to `postAuthEnfProfiles`.
+- **`_is_deny()` semantically tightened**:
+  - Skips `post_auth` profiles entirely (side-effects, not access decisions).
+  - Requires an explicit deny signal: `profile_type` in `{radius_reject, tacacs_other, generic_reject}` OR `action` in `{deny, reject, drop}`. Missing/empty action no longer counts.
+  - Placeholder name heuristic tightened: requires `[Deny Access Profile]` substring or `[Deny`-bracketed prefix. Bare word "deny" in an unrelated context (e.g. `"Update DenyList Audit"`) no longer triggers.
+
+### Fix 4 — Visualization gives no clue when enforcement rules match on auth-source attributes
+
+ClearPass enforcement rules can match on roles or attributes the role-mapping policy never sets — e.g. `Authorization:[Guest Device Repository]:Device Role ID EQUALS 24` maps a guest-device-repository field directly to a per-device classification. The flow rendering is technically correct (it includes the full condition), but operators looking at the visualization couldn't easily tell which roles came from the role-mapping policy vs which came from authorization-source attributes.
+
+Added skill guidance (Step 4b in `clearpass-policy-walker.md`): when a role/attribute referenced in an enforcement rule doesn't appear as a `Set Role` action in the role-mapping section, call it out explicitly in the walkthrough with its source repository.
+
+Also added Step 4c covering the multi-profile MAC-auth + MPSK shape: explains why a rule with 10 profiles still ends in `Access: ALLOW` (RADIUS-layer decision) and that the side-effect profiles in the action node ride alongside the access decision.
+
+### Fix 1 — Fuzzy service-name matching
 
 ### Fix 1 — Fuzzy service-name matching
 
@@ -38,12 +65,21 @@ The skill's disambiguation example now shows the right output: list candidate na
 - `src/hpe_networking_mcp/skills/clearpass-policy-walker.md` — restructured procedure around fuzzy match; added Operator-output rules section; replaced worked example with the No-Wireless-For-You ambiguous-resolution case.
 - `tests/unit/test_clearpass_policy_visualizer_tools.py` — added `TestResolveServiceName` (7 cases covering all 4 match tiers + id match) + `TestCompilePolicyFlowAmbiguousResponse` (end-to-end ambiguous response).
 
+### Files changed (this patch)
+
+- `src/hpe_networking_mcp/platforms/clearpass/policy_visualizer/api_adapter.py` — `_bucket_for_profile()` normalizes type via lowercase + strip separators, recognizing `Post_Authentication` and its spelling variants.
+- `src/hpe_networking_mcp/platforms/clearpass/policy_visualizer/flow_graph.py` — `_is_deny()` skips post-auth profiles, requires explicit deny, stricter placeholder name heuristic; `_DENY_ACTIONS` adds `drop`.
+- `src/hpe_networking_mcp/platforms/clearpass/tools/policy_visualizer.py` — `_resolve_service_name()` 4-tier fuzzy match + `ambiguous` response shape.
+- `src/hpe_networking_mcp/skills/clearpass-policy-walker.md` — Operator-output rules section (no IDs in user-visible text); Step 4b on auth-source role attribution; Step 4c on the multi-profile MAC-auth + MPSK shape.
+- `tests/unit/test_clearpass_policy_visualizer_tools.py` — `TestResolveServiceName` + `TestCompilePolicyFlowAmbiguousResponse`.
+- `tests/unit/test_clearpass_policy_visualizer_flow.py` — `TestCompileServiceMacAuthMpskShape` (realistic 10-profile rule shape); `TestIsDenySemantics` (post-auth-skipping + explicit-deny + drop + placeholder-name-strictness).
+
 ### Verified
 
 - `ruff check .` ✓
 - `ruff format --check .` ✓
 - `mypy src/ --ignore-missing-imports` ✓
-- `pytest tests/ -q` ✓ (1312 → 1320 passed)
+- `pytest tests/ -q` ✓ (1312 → 1328 passed)
 
 ## [3.1.3.1] - 2026-05-18
 

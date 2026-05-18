@@ -115,16 +115,31 @@ def _adapt_enf_rule(rest_rule: dict, index: int) -> dict:
 
 
 def _bucket_for_profile(profile: dict) -> str:
-    """Return the raw bucket name for an enforcement profile based on its type."""
-    ptype = profile.get("type", "")
-    # ClearPass UI labels: "RADIUS" / "TACACS" / "RADIUS_CoA" / "Post-Auth" / ...
-    if ptype == "TACACS":
+    """Return the raw bucket name for an enforcement profile based on its type.
+
+    ClearPass REST returns ``type`` in inconsistent casings / separators
+    across deployments — observed values include ``"RADIUS"``,
+    ``"TACACS"``, ``"RADIUS_CoA"``, ``"Post-Auth"``, ``"PostAuth"``,
+    ``"Post_Authentication"``. Normalize by lowercasing + stripping
+    separators so all the spelling variants land in the right bucket.
+
+    The post-auth bucketing is load-bearing for the flow renderer's
+    ALLOW/DENY classification: post-auth profiles are side-effects, not
+    access decisions, and ``_is_deny`` skips them. If they leak into
+    the generic bucket and pick up a missing-action default, they get
+    mis-classified as ``generic_reject`` and every enforcement rule
+    that references them gets labeled "Access: DENY" — which was the
+    visible bug in MPSK policies (every rule mixes a RADIUS Accept
+    with several Post_Authentication updates).
+    """
+    norm = (profile.get("type") or "").strip().lower().replace("-", "").replace("_", "")
+    if norm == "tacacs":
         return "tacacsEnfProfiles"
-    if ptype in ("RADIUS_CoA", "RADIUS CoA"):
+    if norm in ("radiuscoa", "coaradius"):
         return "radiusCoaEnfProfiles"
-    if ptype in ("Post-Auth", "PostAuth"):
+    if norm in ("postauth", "postauthentication"):
         return "postAuthEnfProfiles"
-    if ptype == "RADIUS":
+    if norm == "radius":
         return "radiusEnfProfiles"
     return "genericEnfProfiles"
 

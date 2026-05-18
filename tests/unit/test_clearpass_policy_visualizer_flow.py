@@ -222,6 +222,179 @@ class TestCompileServiceNoEnforcementPolicy:
         assert any("no enforcement policy" in label.lower() for label in labels)
 
 
+class TestCompileServiceMacAuthMpskShape:
+    """The shape that actually broke in the field — every rule mixes one
+    RADIUS Accept profile (the access decision) with multiple
+    Post_Authentication side-effect profiles. Pre-fix bug: every rule was
+    labeled "Access: DENY" because the post-auth profiles fell into the
+    generic bucket and got `generic_reject` via the missing-action default,
+    which `_is_deny` then matched. Verifies the access decision now ignores
+    post-auth and resolves correctly to ALLOW.
+    """
+
+    def _build_mpsk_raw(self) -> dict:
+        return {
+            "roles": [{"name": "IoT Device", "description": ""}],
+            "authMethods": [],
+            "authSources": [],
+            "radiusEnfProfiles": [
+                {"name": "WLAN-IoT-DEVICE", "action": "Accept", "description": ""},
+                {"name": "VLAN-IoT", "action": "Accept", "description": ""},
+                {"name": "[Registered Device MPSK]", "action": "Accept", "description": ""},
+                {"name": "No Wireless For You Default PSK", "action": "Accept", "description": ""},
+            ],
+            "postAuthEnfProfiles": [
+                # These are the profiles that previously broke the classifier.
+                # `EnforcementProfile.action` defaults to "" for post-auth (REST
+                # returns action=None); the fix ensures we skip them in _is_deny.
+                {"name": "Update PDC-FW (Device Name)", "description": ""},
+                {"name": "Update EdgeConnect Orchestrator Roles", "description": ""},
+                {"name": "SDWAN Role Update IoT Device", "description": ""},
+                {"name": "[Update Endpoint Known]", "description": ""},
+            ],
+            "tacacsEnfProfiles": [],
+            "radiusCoaEnfProfiles": [],
+            "genericEnfProfiles": [],
+            "roleMappings": [],
+            "enforcementPolicies": [
+                {
+                    "name": "MPSK-Enforcement",
+                    "policyType": "RADIUS",
+                    "ruleCombineAlgo": "first-applicable",
+                    "defaultProfile": "No Wireless For You Default PSK",
+                    "rules": [
+                        {
+                            "index": 0,
+                            "expression": _single_predicate("IoT Device"),
+                            "results": [
+                                {
+                                    "name": "Enforcement-Profile",
+                                    "displayValue": (
+                                        "WLAN-IoT-DEVICE, VLAN-IoT, [Registered Device MPSK], "
+                                        "Update PDC-FW (Device Name), Update EdgeConnect Orchestrator Roles, "
+                                        "SDWAN Role Update IoT Device, [Update Endpoint Known]"
+                                    ),
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+            "services": [
+                {
+                    "name": "MPSK-Service",
+                    "description": "",
+                    "serviceType": "RADIUS_PROXY",  # short-circuit auth + role mapping for the test
+                    "matchExpression": _single_predicate("anything"),
+                    "authMethods": [],
+                    "authSources": [],
+                    "roleMappings": [],
+                    "enfPolicies": ["MPSK-Enforcement"],
+                }
+            ],
+        }
+
+    def test_rule_mixing_radius_accept_with_post_auth_is_allow_not_deny(self):
+        model = build(self._build_mpsk_raw())
+        flow = compile_service(next(iter(model.services.values())), model)
+        # The single enforcement rule should produce an Access: ALLOW end node,
+        # NOT Access: DENY (the prior bug).
+        end_labels = [n.label for n in flow.nodes if n.type == "end"]
+        rule_ends = [label for label in end_labels if label.startswith("Access:")]
+        assert any("ALLOW" in label for label in rule_ends), (
+            f"Expected at least one ALLOW end node, got: {rule_ends}. "
+            "Mixing RADIUS Accept with Post_Authentication profiles "
+            "should resolve to ALLOW — the post-auth profiles are "
+            "side-effects, not access decisions."
+        )
+        assert not any("DENY" in label and "(default)" not in label for label in rule_ends), (
+            f"Rule end labels include DENY for an Accept-with-side-effects rule: {rule_ends}"
+        )
+
+    def test_default_radius_accept_resolves_to_allow(self):
+        model = build(self._build_mpsk_raw())
+        flow = compile_service(next(iter(model.services.values())), model)
+        default_ends = [n.label for n in flow.nodes if n.type == "end" and "default" in n.label]
+        assert any("ALLOW" in label for label in default_ends), (
+            f"Default profile is RADIUS Accept — expected ALLOW (default), got: {default_ends}"
+        )
+
+
+class TestIsDenySemantics:
+    """Direct tests of _is_deny's revised semantics (post-fix)."""
+
+    def test_explicit_radius_reject_is_deny(self):
+        from hpe_networking_mcp.platforms.clearpass.policy_visualizer.flow_graph import _is_deny
+        from hpe_networking_mcp.platforms.clearpass.policy_visualizer.policy_model import EnforcementProfile
+
+        profiles = {
+            "p1": EnforcementProfile(
+                id="p1",
+                name="[Deny Access Profile]",
+                profile_type="radius_reject",
+                action="reject",
+            ),
+        }
+        assert _is_deny(["p1"], ["[Deny Access Profile]"], profiles) is True
+
+    def test_explicit_drop_action_is_deny(self):
+        from hpe_networking_mcp.platforms.clearpass.policy_visualizer.flow_graph import _is_deny
+        from hpe_networking_mcp.platforms.clearpass.policy_visualizer.policy_model import EnforcementProfile
+
+        profiles = {
+            "p1": EnforcementProfile(
+                id="p1",
+                name="[Drop Access Profile]",
+                profile_type="radius_reject",
+                action="drop",
+            ),
+        }
+        assert _is_deny(["p1"], ["[Drop Access Profile]"], profiles) is True
+
+    def test_post_auth_alone_is_not_deny(self):
+        from hpe_networking_mcp.platforms.clearpass.policy_visualizer.flow_graph import _is_deny
+        from hpe_networking_mcp.platforms.clearpass.policy_visualizer.policy_model import EnforcementProfile
+
+        # Post-auth profiles in isolation have no access decision — must not deny
+        profiles = {
+            "p1": EnforcementProfile(id="p1", name="[Update Endpoint Known]", profile_type="post_auth", action=""),
+        }
+        assert _is_deny(["p1"], ["[Update Endpoint Known]"], profiles) is False
+
+    def test_radius_accept_plus_post_auth_is_not_deny(self):
+        from hpe_networking_mcp.platforms.clearpass.policy_visualizer.flow_graph import _is_deny
+        from hpe_networking_mcp.platforms.clearpass.policy_visualizer.policy_model import EnforcementProfile
+
+        profiles = {
+            "p1": EnforcementProfile(id="p1", name="WLAN-IoT-DEVICE", profile_type="radius_accept", action="accept"),
+            "p2": EnforcementProfile(id="p2", name="[Update Endpoint Known]", profile_type="post_auth", action=""),
+        }
+        assert _is_deny(["p1", "p2"], ["WLAN-IoT-DEVICE", "[Update Endpoint Known]"], profiles) is False
+
+    def test_missing_action_is_not_deny(self):
+        """Pre-fix bug: missing/empty action defaulted to generic_reject which was treated as deny."""
+        from hpe_networking_mcp.platforms.clearpass.policy_visualizer.flow_graph import _is_deny
+        from hpe_networking_mcp.platforms.clearpass.policy_visualizer.policy_model import EnforcementProfile
+
+        profiles = {
+            "p1": EnforcementProfile(id="p1", name="some-profile", profile_type="radius_accept", action=""),
+        }
+        assert _is_deny(["p1"], ["some-profile"], profiles) is False
+
+    def test_placeholder_with_bracketed_deny_name_is_deny(self):
+        # Placeholder = profile not found in the model dict. Old code matched
+        # any name containing "deny" (e.g. "Update Deny List" would falsely
+        # trigger). New code requires the canonical [Deny Access Profile]
+        # spelling or a [Deny... bracketed name.
+        from hpe_networking_mcp.platforms.clearpass.policy_visualizer.flow_graph import _is_deny
+
+        # Placeholder (not in profiles dict) — heuristic only
+        assert _is_deny(["unknown_pid"], ["[Deny Access Profile]"], {}) is True
+        # False positive guard: a name containing the word "deny" in some
+        # non-deny context should NOT trigger
+        assert _is_deny(["unknown_pid"], ["Update DenyList Audit"], {}) is False
+
+
 class TestCompileServiceRadiusProxy:
     def test_radius_proxy_skips_auth_and_role_mapping(self):
         enf_rules = [
