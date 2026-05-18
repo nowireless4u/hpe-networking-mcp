@@ -115,6 +115,10 @@ TOOLS: dict[str, list[str]] = {
         "clearpass_get_application_dictionaries",
         "clearpass_get_radius_dynamic_authorization_template",
     ],
+    "policy_visualizer": [
+        "clearpass_list_policy_services",
+        "clearpass_compile_policy_flow",
+    ],
     "integrations": [
         "clearpass_get_extensions",
         "clearpass_get_syslog_targets",

@@ -5,6 +5,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.3.0] - 2026-05-18
+
+**Minor — ClearPass policy visualizer: render a service's full decision flow (service match → authentication → role mapping → enforcement) as a Mermaid flowchart. Ships as 2 new tools + 1 new skill, backed by an internal compilation engine ported (and adapted for REST) from an existing standalone project. Closes #349.**
+
+### What got added
+
+| Layer | Component | Purpose |
+|---|---|---|
+| Tool | `clearpass_list_policy_services` | Slim picker-ready service list (id / name / type / template / enabled / role_mapping_policy / enf_policy / hit_count / monitor_mode) |
+| Tool | `clearpass_compile_policy_flow` | Compile one service into a FlowGraph (nodes + edges + warnings) ready for an AI client to render as Mermaid. Supports `service_id` OR `service_name`; optional `include_details` for per-rule inspector data. |
+| Skill | `clearpass-policy-walker` | Multi-step runbook: pick service → compile → render as Mermaid + per-service summary + walkthrough |
+| Engine | `clearpass/policy_visualizer/` (5 modules, ~1,400 LOC) | `conditions.py` (Boolean AST + Op enum), `policy_model.py` (typed PolicyModel + cross-reference resolver), `flow_graph.py` (FlowGraph compiler), `policy_details.py` (inspector serializer), `api_adapter.py` (REST JSON → raw dict bridge) |
+
+### Semantics baked into the compiler
+
+- **First-applicable**: role-mapping or enforcement chain stops at the first matching rule.
+- **Evaluate-all**: every matching action runs; subsequent decisions wired with `CONTINUE` edges from prior actions.
+- **Implicit deny**: terminating "Access: DENY (implicit)" node when no rule matches and no default exists.
+- **RADIUS_PROXY**: service-match YES wires directly into enforcement, skipping authentication + role mapping entirely.
+- **Unresolved references**: never fail-fast — surface a placeholder object and append a human-readable warning to `model.warnings`.
+
+### REST data sources
+
+Every call to `clearpass_compile_policy_flow` fans out to 7 endpoints (`/config/service`, `/role-mapping`, `/enforcement-policy`, `/enforcement-profile`, `/role`, `/auth-method`, `/auth-source`) to resolve cross-references — typical tenant returns in well under a second.
+
+### Counts
+
+- ClearPass: 140 → **142**
+- Server-wide underlying tools: 1891 → **1893**
+- Bundled skills: 10 → **11**
+
+### Verified
+
+- `ruff check .` ✓
+- `ruff format --check .` ✓
+- `mypy src/ --ignore-missing-imports` ✓
+- `pytest tests/ -q` ✓ (1266 → 1300+ passed; 3 new test files: `test_clearpass_policy_visualizer_adapter.py` covers operator mapping + adapter shape, `test_clearpass_policy_visualizer_flow.py` covers model build + flow semantics including evaluate-all, implicit-deny, RADIUS_PROXY, and `test_clearpass_policy_visualizer_tools.py` covers the 2 MCP tools with mocked HTTP layer)
+
+### Not yet shipped (future work)
+
+- Cisco ISE policy visualization (the upstream supports it; not built here)
+- XML import (REST is the source of truth)
+- Server-side SVG/PNG rendering (AI client renders Mermaid in-conversation)
+- Orphan / unused-object detection across the whole tenant (would reuse `policy_model.build()`)
+- Live per-rule hit-count data (ClearPass exposes it at a different endpoint; not wired in yet)
+
 ## [3.1.2.1] - 2026-05-16
 
 **Patch — correct the feature-comparison matrix in README.md (12-row audit) + fix the `central_get_asset_tags` / `central_get_asset_tag` / `central_manage_asset_tag_metadata` docstrings to describe what they actually wrap.**

@@ -9,18 +9,18 @@ Tools are namespaced by platform: `mist_*` (Juniper Mist), `central_*` (Aruba Ce
 
 The server ships with `MCP_TOOL_MODE=code` by default since v3.0.0.0. At session start the AI sees **6 tools**:
 
-- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 1891 underlying tools
+- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 1893 underlying tools
 - **`tags(detail="brief")`** — browse the catalog by platform / module
 - **`search(query, tags=[...], detail)`** — BM25 search the catalog
 - **`get_schema(tools=[...], detail)`** — fetch parameter shape for named tools
 - **`skills_list(filter=...)`** — list bundled multi-step runbooks (since v2.3.0.0)
 - **`skills_load(name=...)`** — load a runbook to execute
 
-All 1891 per-platform tools documented below still exist and are reachable via `await call_tool(name, params)` inside `execute()`. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the discovery tools (`tags`, `search`, `get_schema`).
+All 1893 per-platform tools documented below still exist and are reachable via `await call_tool(name, params)` inside `execute()`. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the discovery tools (`tags`, `search`, `get_schema`).
 
 **Why code mode is the default since v3.0.0.0**: smallest initial token cost, single-round-trip multi-step orchestration, and validated against small local LLMs (Qwen3 4B Q4_K_M; see [#246](https://github.com/nowireless4u/hpe-networking-mcp/issues/246) reassessment).
 
-Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface (per-platform discovery — see next section). The `static` mode was REMOVED in v3.0.0.0 — at 1891 tools / ~64K tokens it was no longer practical.
+Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface (per-platform discovery — see next section). The `static` mode was REMOVED in v3.0.0.0 — at 1893 tools / ~64K tokens it was no longer practical.
 
 ## Dynamic mode (opt-in since v3.0.0.0; was the v2.x default)
 
@@ -39,7 +39,7 @@ With `MCP_TOOL_MODE=dynamic` the AI sees **24 tools**:
   - `skills_list(filter=...)` — list bundled multi-step runbooks
   - `skills_load(name=...)` — load a runbook to execute
 
-The 1891 per-platform tools are reachable via `<platform>_invoke_tool(name=..., arguments={...})`. Best when an orchestrator wants explicit per-tool dispatch rather than the sandboxed Python composition that code mode provides.
+The 1893 per-platform tools are reachable via `<platform>_invoke_tool(name=..., arguments={...})`. Best when an orchestrator wants explicit per-tool dispatch rather than the sandboxed Python composition that code mode provides.
 
 ## Code mode details (the default — see above for surface summary)
 
@@ -96,7 +96,7 @@ If you do try to dispatch to a discovery tool by mistake, `SandboxErrorCatchMidd
 - **`code` (default since v3.0.0.0)** — best for orchestrators driving small / local LLMs, multi-step aggregations, cross-platform joins, filter/map/reduce workflows. Smallest initial token cost. Validated against Qwen3 4B Q4_K_M via OpenClaw (see #246 reassessment).
 - **`dynamic` (opt-in since v3.0.0.0; was the v2.x default)** — best when the orchestrator wants explicit per-tool dispatch via `<platform>_invoke_tool` rather than sandboxed Python composition. Stable, production-tested for lookup-style questions.
 
-The `static` mode was REMOVED in v3.0.0.0 — at 1891 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` raises ValueError at startup.
+The `static` mode was REMOVED in v3.0.0.0 — at 1893 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` raises ValueError at startup.
 
 ## Overview
 
@@ -104,7 +104,7 @@ The `static` mode was REMOVED in v3.0.0.0 — at 1891 tools / ~64K tokens it was
 |----------|----------------|-------------|---------|-------|
 | Juniper Mist | 31 | 4 | 2 | 37 |
 | Aruba Central | 63 | 20 | 12 | 95 |
-| Aruba ClearPass | 65 | 75 | -- | 140 |
+| Aruba ClearPass | 67 | 75 | -- | 142 |
 | Juniper Apstra | 12 | 7 | -- | 19 |
 | HPE GreenLake | 10 | -- | -- | 10 |
 | Axis Atmos Cloud | 12 | 13 | -- | 25 |
@@ -1746,7 +1746,7 @@ All 10 GreenLake tools are read-only today. Write tools would follow the same ga
 
 ---
 
-## Aruba ClearPass (140 tools)
+## Aruba ClearPass (142 tools)
 
 ClearPass tools use the `pyclearpass` SDK with OAuth2 client credentials. Write tools require
 `ENABLE_CLEARPASS_WRITE_TOOLS=true`. Update/delete operations require user confirmation.
@@ -1911,6 +1911,15 @@ ClearPass tools use the `pyclearpass` SDK with OAuth2 client credentials. Write 
 | `clearpass_manage_radius_dictionary` | Create, update, delete, enable, disable RADIUS dictionaries |
 | `clearpass_manage_tacacs_dictionary` | Create, update, delete TACACS+ dictionaries |
 | `clearpass_manage_application_dictionary` | Create, update, delete application dictionaries |
+
+### Policy Visualizer (2 read)
+
+Backed by an internal engine that compiles a ClearPass service's full decision chain (service match → authentication → role mapping → enforcement) into a flowchart-ready graph. Pair with the `clearpass-policy-walker` skill for end-to-end Mermaid rendering.
+
+| Tool | Description |
+|------|-------------|
+| `clearpass_list_policy_services` | List ClearPass policy services as a slim picker-ready summary (id, name, type, template, enabled, role_mapping_policy, enf_policy, hit_count, monitor_mode) |
+| `clearpass_compile_policy_flow` | Compile a chosen service (by `service_id` or `service_name`) into a FlowGraph (nodes + edges with YES/NO/FAIL/PASS/CONTINUE labels + warnings list). First-applicable / evaluate-all / implicit-deny semantics baked in. RADIUS_PROXY services skip auth + role mapping. |
 
 ### Server Configuration (13 read + 12 write)
 
