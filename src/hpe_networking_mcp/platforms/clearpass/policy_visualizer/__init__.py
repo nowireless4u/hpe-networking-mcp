@@ -8,9 +8,10 @@ Pipeline:
     REST JSON
       → api_adapter.adapt()      raw dict in policy_model's expected shape
       → policy_model.build()     typed PolicyModel (services + cross-refs)
-      → flow_graph.compile_service()    FlowGraph (nodes + edges)
+      → flow_graph.compile_service()    FlowGraph (nodes + edges +
+                                                    optional simulation)
 
-Lifted (and adapted) from the policy-visualizer project. Cisco ISE
-support, the FastAPI HTTP layer, and the XML parser are intentionally
-omitted — we pull live data via the existing ``clearpass_get_*`` tools.
+ClearPass-only. The upstream project this was lifted from also supported
+Cisco ISE; those code paths were stripped during the port and the
+engine has no ISE-specific operators, parsers, or data models.
 """

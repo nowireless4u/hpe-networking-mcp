@@ -125,6 +125,233 @@ class Not:
 BooleanExpr = Predicate | And | Or | Not
 
 
+# ---------------------------------------------------------------------------
+# Predicate evaluator (simulation engine)
+# ---------------------------------------------------------------------------
+
+
+# Attributes that ClearPass treats as multi-valued — when an operator passes
+# a list for these, the predicate matches if ANY value in the list satisfies
+# the condition. For a scalar value (string) we treat it as a single-element
+# list, so callers can pass strings interchangeably for unambiguous attributes.
+MULTI_VALUED_ATTRIBUTE_NAMES = frozenset({"Role"})
+
+
+def _attribute_path(predicate: Predicate) -> str:
+    """Return the canonical lookup key for a predicate's attribute.
+
+    Example: ``Predicate(namespace='Tips', attribute='Role')`` →
+    ``'Tips:Role'``. Matches the shape callers should use for keys in
+    the ``simulated_attributes`` dict.
+    """
+    if predicate.namespace and predicate.attribute:
+        return f"{predicate.namespace}:{predicate.attribute}"
+    return predicate.attribute or predicate.namespace or ""
+
+
+def _values_for(predicate: Predicate, context: dict[str, str | list[str]]) -> list[str] | None:
+    """Look up the simulated value(s) for a predicate.
+
+    Returns ``None`` if no value is provided (the simulation cannot
+    evaluate this predicate — callers MUST treat ``None`` as
+    "uncertain", never as a false match). Returns a list (possibly
+    single-element) when a value is present.
+    """
+    key = _attribute_path(predicate)
+    if key not in context:
+        return None
+    value = context[key]
+    if isinstance(value, list):
+        # Preserve empty list as a present-but-empty attribute (matters for
+        # exists/not_exists). Callers can still pass `[]` to mean "this
+        # attribute is known to have no values."
+        return list(value)
+    # Scalar — wrap so the multi-valued comparators have a uniform shape.
+    return [value]
+
+
+def _eval_predicate_against_value(op: Op, value: str, rhs: str) -> bool:
+    """Apply a single Op to a single (value, rhs) pair.
+
+    Pure boolean — returns True/False only. Callers handle the
+    multi-value case (any-match for multi-valued attributes).
+    """
+    if op is Op.equals or op is Op.matches_exact:
+        return value == rhs
+    if op is Op.not_equals or op is Op.not_matches_exact:
+        return value != rhs
+    if op is Op.equals_ignore_case:
+        return value.lower() == rhs.lower()
+    if op is Op.not_equals_ignore_case:
+        return value.lower() != rhs.lower()
+    if op is Op.contains:
+        return rhs in value
+    if op is Op.not_contains:
+        return rhs not in value
+    if op is Op.starts_with:
+        return value.startswith(rhs)
+    if op is Op.not_starts_with:
+        return not value.startswith(rhs)
+    if op is Op.ends_with:
+        return value.endswith(rhs)
+    if op is Op.not_ends_with:
+        return not value.endswith(rhs)
+    if op is Op.regex:
+        try:
+            return re.search(rhs, value) is not None
+        except re.error:
+            return False
+    if op is Op.not_regex:
+        try:
+            return re.search(rhs, value) is None
+        except re.error:
+            return False
+    if op is Op.in_:
+        # RHS is comma-separated list of allowed values
+        allowed = {v.strip() for v in rhs.split(",")}
+        return value in allowed
+    if op is Op.matches_all:
+        # MATCHES_ALL on a per-predicate basis with a single value is
+        # effectively equality against each item in the comma-separated
+        # rhs — we treat it as "value equals every item" which is only
+        # true when rhs is a single item equal to value.
+        items = [v.strip() for v in rhs.split(",")]
+        return all(value == item for item in items)
+    if op is Op.belongs_to_group:
+        # No way to evaluate group membership without group data — return
+        # False conservatively. Operators should supply explicit role
+        # membership through `Tips:Role` instead of relying on group
+        # lookups.
+        return False
+    if op is Op.not_belongs_to_group:
+        return False
+    if op is Op.less_than:
+        return _numeric_compare(value, rhs, lambda a, b: a < b)
+    if op is Op.less_than_or_equals:
+        return _numeric_compare(value, rhs, lambda a, b: a <= b)
+    if op is Op.greater_than:
+        return _numeric_compare(value, rhs, lambda a, b: a > b)
+    if op is Op.greater_than_or_equals:
+        return _numeric_compare(value, rhs, lambda a, b: a >= b)
+    if op is Op.in_range:
+        # rhs is typically "start-end" — interpret leniently
+        try:
+            start, end = rhs.split("-", 1)
+            return _numeric_compare(start.strip(), value, lambda a, b: a <= b) and _numeric_compare(
+                value, end.strip(), lambda a, b: a <= b
+            )
+        except ValueError:
+            return False
+    # exists / not_exists are handled at the caller level (they don't need
+    # the value, just the presence). If we get here for one, fail safe.
+    if op is Op.exists:
+        return True  # value was present to get here
+    if op is Op.not_exists:
+        return False
+    return False
+
+
+def _numeric_compare(a: str, b: str, cmp) -> bool:
+    """Try numeric comparison, fall back to string. False on non-numeric coercion failure."""
+    try:
+        return cmp(float(a), float(b))
+    except (ValueError, TypeError):
+        try:
+            return cmp(a, b)
+        except TypeError:
+            return False
+
+
+def evaluate(expr: BooleanExpr | None, context: dict[str, str | list[str]]) -> bool | None:
+    """Evaluate a :data:`BooleanExpr` against a simulated attribute context.
+
+    Returns ``True`` / ``False`` / ``None`` (three-valued logic):
+
+    - ``True``: condition is satisfied by the context.
+    - ``False``: condition is contradicted by the context.
+    - ``None``: at least one referenced attribute is missing from the
+      context — the result is genuinely unknown.
+
+    Callers MUST treat ``None`` as uncertainty and never present it as
+    a confident outcome. This is load-bearing for correctness — the
+    prior fake-simulator burned the operator by presenting unevaluable
+    rules as confident DENYs.
+
+    Boolean propagation:
+
+    - ``And``: True if all True; False if any False; otherwise None.
+    - ``Or``: True if any True; False if all False; otherwise None.
+    - ``Not``: inverts True/False; passes through None.
+
+    Multi-valued attribute semantics: when the context supplies a list
+    for an attribute (e.g. ``Tips:Role`` with multiple assigned roles
+    from evaluate-all role mapping), the predicate matches if ANY value
+    in the list satisfies the condition. For ``not_*`` operators this
+    means ALL values must satisfy the "not" — a stricter semantic that
+    matches ClearPass behavior.
+    """
+    if expr is None:
+        return True  # absent condition matches everything
+
+    if isinstance(expr, Predicate):
+        return _evaluate_predicate(expr, context)
+    if isinstance(expr, And):
+        return _eval_and([evaluate(o, context) for o in expr.operands])
+    if isinstance(expr, Or):
+        return _eval_or([evaluate(o, context) for o in expr.operands])
+    if isinstance(expr, Not):
+        inner = evaluate(expr.operand, context)
+        return None if inner is None else not inner
+    return None
+
+
+def _evaluate_predicate(predicate: Predicate, context: dict[str, str | list[str]]) -> bool | None:
+    """Evaluate a single predicate. Returns None when the attribute is unknown."""
+    op = predicate.op
+    # Exists / not_exists are special — they only need to know presence
+    if op is Op.exists:
+        return _attribute_path(predicate) in context
+    if op is Op.not_exists:
+        return _attribute_path(predicate) not in context
+
+    values = _values_for(predicate, context)
+    if values is None:
+        return None  # unknown attribute
+
+    rhs = predicate.rhs_display or predicate.rhs_raw
+
+    # Multi-valued semantics:
+    #   For positive ops (equals, contains, regex, ...): ANY match → True
+    #   For negative ops (not_equals, not_contains, ...): ALL must hold → True
+    is_negative_op = op.value.startswith("not_") or op is Op.not_regex
+
+    if not values:
+        # Empty list: positive ops cannot match (no value to satisfy them);
+        # negative ops trivially hold (no value contradicts them).
+        return is_negative_op
+
+    per_value = [_eval_predicate_against_value(op, v, rhs) for v in values]
+    if is_negative_op:
+        return all(per_value)
+    return any(per_value)
+
+
+def _eval_and(results: list[bool | None]) -> bool | None:
+    if any(r is False for r in results):
+        return False
+    if any(r is None for r in results):
+        return None
+    return True
+
+
+def _eval_or(results: list[bool | None]) -> bool | None:
+    if any(r is True for r in results):
+        return True
+    if any(r is None for r in results):
+        return None
+    return False
+
+
 def _normalize_predicate(raw_attr: dict) -> Predicate:
     return Predicate(
         namespace=raw_attr.get("type", ""),

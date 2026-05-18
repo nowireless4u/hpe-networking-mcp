@@ -22,7 +22,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
-from .conditions import expr_to_compact_label, expr_to_node_label
+from .conditions import evaluate, expr_to_compact_label, expr_to_node_label
 from .policy_model import (
     ApplyProfiles,
     EnforcementProfile,
@@ -50,10 +50,52 @@ class FlowNode:
     trace_rule_id: str = ""
     sub_label: str = ""
     rank_group: str = ""
+    # Populated when compile_service is called with simulated_attributes.
+    # ``True``  → the rule fires under the simulated context
+    # ``False`` → the rule's condition is contradicted
+    # ``None``  → cannot evaluate (at least one referenced attribute missing
+    #             from the context — caller MUST NOT present this as a
+    #             confident outcome)
+    # Absent (when no simulation was requested) — left as None.
+    simulation_match: bool | None = None
 
     def __post_init__(self) -> None:
         if not self.short_label:
             self.short_label = self.label
+
+
+@dataclass
+class SimulationOutcome:
+    """Result of a what-if simulation against a chosen ``simulated_attributes`` context.
+
+    Populated only when :func:`compile_service` is called with a
+    non-empty ``simulated_attributes`` arg. Distinct from a per-node
+    ``simulation_match`` because it summarizes the END-TO-END outcome:
+    which role-mapping rules matched (and so what roles were assigned),
+    which enforcement rule was the first-applicable winner, what
+    profiles got applied, and what the resulting access decision was.
+
+    The ``status`` field is the most important — three values:
+
+    - ``"resolved"`` — every consulted predicate could be evaluated;
+      ``matching_enforcement_rule`` / ``access_decision`` are authoritative.
+    - ``"uncertain"`` — at least one predicate in the consulted chain
+      returned None (unknown attribute). The simulator cannot make a
+      confident claim; callers MUST present this as
+      "need attribute X, Y, Z to resolve" rather than naming an outcome.
+    - ``"no_match"`` — every rule's condition resolved to False; the
+      access decision is the policy's default branch.
+    """
+
+    requested_attributes: dict[str, str | list[str]]
+    status: str  # "resolved" | "uncertain" | "no_match"
+    matching_role_mapping_rules: list[str]
+    resulting_roles: list[str]
+    matching_enforcement_rule: str | None
+    applied_profiles: list[str]
+    access_decision: str  # "ALLOW" | "DENY" | "UNKNOWN"
+    unknown_attributes: list[str]
+    notes: list[str]
 
 
 @dataclass
@@ -71,6 +113,7 @@ class FlowGraph:
     service_type: str = "RADIUS"
     nodes: list[FlowNode] = field(default_factory=list)
     edges: list[FlowEdge] = field(default_factory=list)
+    simulation: SimulationOutcome | None = None
 
     def add_node(self, node: FlowNode) -> FlowNode:
         self.nodes.append(node)
@@ -133,8 +176,19 @@ def _profiles_label(profile_names: list[str]) -> str:
     return ", ".join(profile_names) if profile_names else "Apply profiles"
 
 
-def compile_service(service: Service, model: PolicyModel) -> FlowGraph:
-    """Compile one service into a :class:`FlowGraph`."""
+def compile_service(
+    service: Service,
+    model: PolicyModel,
+    simulated_attributes: dict[str, str | list[str]] | None = None,
+) -> FlowGraph:
+    """Compile one service into a :class:`FlowGraph`.
+
+    When ``simulated_attributes`` is provided, the resulting graph also
+    carries per-decision-node ``simulation_match`` flags and a
+    top-level :class:`SimulationOutcome` describing the end-to-end
+    what-if result. See :class:`SimulationOutcome` for the
+    uncertainty-first contract.
+    """
     flow = FlowGraph(service_id=service.id, service_name=service.name, service_type=service.service_type)
     sid = service.id
 
@@ -384,4 +438,242 @@ def compile_service(service: Service, model: PolicyModel) -> FlowGraph:
             # No role mapping — go straight to enforcement
             flow.add_edge(current_tail, enf_entry_id, current_label)
 
+    # Run what-if simulation against the supplied context, if any.
+    if simulated_attributes is not None:
+        _apply_simulation(service, model, flow, simulated_attributes)
+
     return flow
+
+
+# ---------------------------------------------------------------------------
+# What-if simulation
+# ---------------------------------------------------------------------------
+
+
+def _collect_unknown_attrs(expr, context: dict[str, str | list[str]]) -> set[str]:
+    """Walk a BooleanExpr and return the set of attribute paths referenced
+    that aren't present in ``context`` — these are what the caller needs
+    to provide to resolve an "uncertain" simulation outcome.
+    """
+    from .conditions import And, Not, Or, Predicate, _attribute_path
+
+    out: set[str] = set()
+    if expr is None:
+        return out
+    if isinstance(expr, Predicate):
+        path = _attribute_path(expr)
+        if path and path not in context:
+            out.add(path)
+        return out
+    if isinstance(expr, (And, Or)):
+        for operand in expr.operands:
+            out |= _collect_unknown_attrs(operand, context)
+        return out
+    if isinstance(expr, Not):
+        return _collect_unknown_attrs(expr.operand, context)
+    return out
+
+
+def _set_node_match(flow: FlowGraph, node_id: str, result: bool | None) -> None:
+    """Set ``simulation_match`` on the decision node with the given ID."""
+    for node in flow.nodes:
+        if node.id == node_id:
+            node.simulation_match = result
+            return
+
+
+def _apply_simulation(
+    service: Service,
+    model: PolicyModel,
+    flow: FlowGraph,
+    context: dict[str, str | list[str]],
+) -> None:
+    """Run the what-if simulation and attach :class:`SimulationOutcome` to the flow.
+
+    Strict uncertainty contract: if any consulted predicate evaluates
+    to ``None``, the outcome status is ``"uncertain"`` and the access
+    decision is ``"UNKNOWN"``. Never produce a confident outcome from a
+    partial evaluation.
+    """
+    sid = service.id
+    unknown_attrs: set[str] = set()
+    notes: list[str] = []
+
+    # ---- Service match
+    svc_match_result = evaluate(service.match, context)
+    _set_node_match(flow, f"{sid}__match", svc_match_result)
+    if svc_match_result is None:
+        unknown_attrs |= _collect_unknown_attrs(service.match, context)
+        flow.simulation = SimulationOutcome(
+            requested_attributes=dict(context),
+            status="uncertain",
+            matching_role_mapping_rules=[],
+            resulting_roles=[],
+            matching_enforcement_rule=None,
+            applied_profiles=[],
+            access_decision="UNKNOWN",
+            unknown_attributes=sorted(unknown_attrs),
+            notes=["Service match condition is uncertain — provide the missing attribute(s) and re-simulate."],
+        )
+        return
+    if svc_match_result is False:
+        flow.simulation = SimulationOutcome(
+            requested_attributes=dict(context),
+            status="no_match",
+            matching_role_mapping_rules=[],
+            resulting_roles=[],
+            matching_enforcement_rule=None,
+            applied_profiles=[],
+            access_decision="UNKNOWN",
+            unknown_attributes=[],
+            notes=["Service match returned False — this service does not apply to the simulated request."],
+        )
+        return
+
+    # ---- Role mapping (skipped for RADIUS_PROXY)
+    matching_rm_rules: list[str] = []
+    resulting_roles: list[str] = []
+    if service.service_type != "RADIUS_PROXY":
+        rm = model.role_mapping_policies.get(service.role_mapping_policy_id)
+        if rm is None:
+            rm = next(
+                (v for v in model.role_mapping_policies.values() if v.name == service.role_mapping_policy_name),
+                None,
+            )
+        if rm is not None:
+            evaluate_all_rm = rm.rule_combine_algo == "evaluate-all"
+            rm_uncertain = False
+            for rule in rm.rules:
+                result = evaluate(rule.when, context)
+                _set_node_match(flow, f"{sid}__rm_rule_{rule.index}", result)
+                if result is True:
+                    matching_rm_rules.append(rule.id)
+                    if (
+                        isinstance(rule.then, SetRole)
+                        and rule.then.role_name
+                        and rule.then.role_name not in resulting_roles
+                    ):
+                        resulting_roles.append(rule.then.role_name)
+                    if not evaluate_all_rm:
+                        break
+                elif result is None:
+                    rm_uncertain = True
+                    unknown_attrs |= _collect_unknown_attrs(rule.when, context)
+                    if not evaluate_all_rm:
+                        break
+            # Apply the default role only when no rule matched AND the
+            # chain was deterministic — never silently apply a default
+            # when uncertainty exists earlier in the chain.
+            if not matching_rm_rules and not rm_uncertain and rm.default is not None and rm.default.role_name:
+                resulting_roles.append(rm.default.role_name)
+            if rm_uncertain:
+                notes.append("Role mapping chain has uncertain rule(s); resulting role set may be incomplete.")
+
+    # ---- Build the enforcement-context by merging resolved roles into Tips:Role.
+    # If the operator also passed Tips:Role explicitly, union both sets.
+    ep_context: dict[str, str | list[str]] = dict(context)
+    if resulting_roles:
+        explicit = ep_context.get("Tips:Role")
+        if isinstance(explicit, list):
+            ep_context["Tips:Role"] = list({*explicit, *resulting_roles})
+        elif isinstance(explicit, str):
+            ep_context["Tips:Role"] = list({explicit, *resulting_roles})
+        else:
+            ep_context["Tips:Role"] = list(resulting_roles)
+
+    # ---- Enforcement
+    matching_ep_rule: str | None = None
+    applied_profiles: list[str] = []
+    ep = model.enforcement_policies.get(service.enforcement_policy_id)
+    if ep is None:
+        ep = next(
+            (v for v in model.enforcement_policies.values() if v.name == service.enforcement_policy_name),
+            None,
+        )
+
+    ep_uncertain = False
+    if ep is None or not ep.rules:
+        flow.simulation = SimulationOutcome(
+            requested_attributes=dict(context),
+            status="no_match",
+            matching_role_mapping_rules=matching_rm_rules,
+            resulting_roles=resulting_roles,
+            matching_enforcement_rule=None,
+            applied_profiles=[],
+            access_decision="DENY",
+            unknown_attributes=sorted(unknown_attrs),
+            notes=notes + ["No enforcement policy attached — service implicitly denies."],
+        )
+        return
+
+    evaluate_all_ep = ep.rule_combine_algo == "evaluate-all"
+    for rule in ep.rules:
+        result = evaluate(rule.when, ep_context)
+        _set_node_match(flow, f"{sid}__enf_rule_{rule.index}", result)
+        if result is True:
+            if not evaluate_all_ep:
+                matching_ep_rule = rule.id
+                if isinstance(rule.then, ApplyProfiles):
+                    applied_profiles = list(rule.then.profile_names)
+                break
+            # evaluate-all: collect all matching rules' profiles, no break
+            if matching_ep_rule is None:
+                matching_ep_rule = rule.id  # report the first matched as the "primary" winner
+            if isinstance(rule.then, ApplyProfiles):
+                applied_profiles.extend(p for p in rule.then.profile_names if p not in applied_profiles)
+        elif result is None:
+            ep_uncertain = True
+            unknown_attrs |= _collect_unknown_attrs(rule.when, ep_context)
+            if not evaluate_all_ep:
+                # In first-applicable mode, hitting an uncertain rule
+                # before any True means we can't determine the winner.
+                notes.append(
+                    f"Enforcement rule {rule.index} is uncertain — cannot determine the first-applicable "
+                    "winner without resolving it."
+                )
+                break
+
+    # Default branch only when chain was deterministic + no rule matched
+    if (
+        matching_ep_rule is None
+        and not ep_uncertain
+        and ep.default is not None
+        and isinstance(ep.default, ApplyProfiles)
+        and ep.default.profile_names
+    ):
+        applied_profiles = list(ep.default.profile_names)
+        matching_ep_rule = f"{ep.id}__default"
+
+    # ---- Determine outcome
+    if ep_uncertain or matching_ep_rule is None and unknown_attrs:
+        status = "uncertain"
+        access = "UNKNOWN"
+    elif matching_ep_rule is None:
+        status = "no_match"
+        access = "DENY"  # implicit deny when nothing matched and no default
+        notes.append("No enforcement rule matched and no default profile — implicit deny.")
+    else:
+        status = "resolved"
+        # Resolve profile names → ids to apply _is_deny semantics
+        profile_ids: list[str] = []
+        for pname in applied_profiles:
+            match = next((p for p in model.enforcement_profiles.values() if p.name == pname), None)
+            profile_ids.append(match.id if match else "")
+        access = "DENY" if _is_deny(profile_ids, applied_profiles, model.enforcement_profiles) else "ALLOW"
+
+    if unknown_attrs and status == "uncertain":
+        notes.append(
+            f"Resolve {len(unknown_attrs)} missing attribute(s) and re-simulate: {', '.join(sorted(unknown_attrs))}"
+        )
+
+    flow.simulation = SimulationOutcome(
+        requested_attributes=dict(context),
+        status=status,
+        matching_role_mapping_rules=matching_rm_rules,
+        resulting_roles=resulting_roles,
+        matching_enforcement_rule=matching_ep_rule,
+        applied_profiles=applied_profiles,
+        access_decision=access,
+        unknown_attributes=sorted(unknown_attrs),
+        notes=notes,
+    )

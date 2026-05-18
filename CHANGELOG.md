@@ -5,6 +5,93 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.4.0] - 2026-05-18
+
+**Minor — ClearPass policy visualizer gains a what-if simulator. Pass a `simulated_attributes` context (roles, endpoint status, time, visitor name, etc.) and the tool evaluates every rule's predicates against it, returning per-decision-node `simulation_match` flags + a top-level `SimulationOutcome` describing the matched rules, resulting roles, applied profiles, and access decision.**
+
+### Why now
+
+Operator's prior session showed an earlier (pre-v3.1.3.2) simulator-like rendering producing confidently wrong outcomes — the post-auth bucketing bug had every MPSK rule mis-classified as DENY and the visualization presented that as "this is what fires." The whole point of the new simulator is to be **uncertainty-first**: when it can't evaluate a predicate, it returns `None` and the skill MUST surface that as "need more info" rather than guessing.
+
+### Three-valued evaluator
+
+New `conditions.evaluate(expr, context)` — full `Op` coverage with strict three-valued logic:
+
+- `True` — condition is satisfied by the supplied context.
+- `False` — condition is contradicted.
+- `None` — at least one referenced attribute is missing from the context → genuinely unknown.
+
+`And` / `Or` / `Not` propagate `None` correctly:
+
+| Logic | Result |
+|---|---|
+| `True AND None` | `None` (can't claim AND is True without knowing the other) |
+| `False AND None` | `False` (short-circuit — AND already contradicted) |
+| `True OR None` | `True` (short-circuit — OR already satisfied) |
+| `False OR None` | `None` (can't claim OR is False without knowing the other) |
+| `NOT None` | `None` |
+
+### Multi-valued attribute support
+
+`Tips:Role` and similar attributes accept a `list[str]` context value (for evaluate-all role mapping where a device ends up with multiple roles). Semantics:
+
+- Positive ops (`equals`, `contains`, `regex`, `in_`, ...) → match if ANY value satisfies.
+- Negative ops (`not_equals`, `not_contains`, ...) → match only if ALL values satisfy ("none of the roles is X").
+
+### End-to-end simulation outcome
+
+The tool's response now carries a `simulation` block when `simulated_attributes` is supplied:
+
+```json
+{
+  "simulation": {
+    "requested_attributes": {"Connection:SSID": "TestSSID", "GuestUser:Role ID": "11"},
+    "status": "resolved",            // "resolved" | "uncertain" | "no_match"
+    "matching_role_mapping_rules": ["RM_rule_0"],
+    "resulting_roles": ["Kid"],
+    "matching_enforcement_rule": "EP_rule_0",
+    "applied_profiles": ["WLAN-KID", "VLAN-USER"],
+    "access_decision": "ALLOW",       // "ALLOW" | "DENY" | "UNKNOWN"
+    "unknown_attributes": [],
+    "notes": []
+  }
+}
+```
+
+The simulator merges resolved roles into the enforcement-evaluation context as `Tips:Role` so enforcement rules that match on role correctly resolve.
+
+### Skill workflow (Step 5)
+
+`clearpass-policy-walker` adds Step 5 — a REQUIRED post-render prompt offering the simulation, plus Step 5a defining the strict output contract:
+
+| `simulation.status` | What the AI says to the operator |
+|---|---|
+| `"resolved"` | Confidently name the matching rule + access decision |
+| `"uncertain"` | DO NOT name an outcome. List all `unknown_attributes` and ask for them. |
+| `"no_match"` | "No rule matched — implicit deny." |
+
+Step 5b adds re-render guidance with classDefs for green-match / dim-skip / yellow-unknown highlighting. Step 5c gives attribute prompting hints (common keys: `Tips:Role`, `GuestUser:visitor`, `Endpoint:Status`, `Connection:NAD-IP-Address`, etc.).
+
+### Files changed
+
+- `src/.../clearpass/policy_visualizer/conditions.py` — `evaluate()` + per-Op evaluators + multi-valued attribute support + `_attribute_path()` + `_collect_unknown_attrs()` exposed for the simulator.
+- `src/.../clearpass/policy_visualizer/flow_graph.py` — `SimulationOutcome` dataclass + `FlowNode.simulation_match` field + `FlowGraph.simulation` field + `_apply_simulation()` walking service-match → RM chain → EP chain with strict uncertainty propagation.
+- `src/.../clearpass/tools/policy_visualizer.py` — `simulated_attributes` parameter; `simulation` block in the response when supplied.
+- `src/.../skills/clearpass-policy-walker.md` — Step 5 / 5a / 5b / 5c covering the simulation workflow + uncertainty-first output contract + classDef highlighting + attribute prompting hints.
+- `tests/unit/test_clearpass_policy_visualizer_simulator.py` — comprehensive new test file: per-Op coverage, three-valued boolean propagation, multi-valued attribute semantics, the previously-burned partial-context case, and end-to-end simulation correctness.
+
+### Counts
+
+- ClearPass tools: still 142 (existing tool gained a parameter — no new tool)
+- pytest: 1337 → **1370 passed** (33 new tests in the simulator file)
+
+### Verified
+
+- `ruff check .` ✓
+- `ruff format --check .` ✓
+- `mypy src/ --ignore-missing-imports` ✓
+- `pytest tests/ -q` ✓
+
 ## [3.1.3.3] - 2026-05-18
 
 **Patch — make the rendered ClearPass policy flow readable for large policies. Operator's screenshot showed the diagram correctly produced but rendered as one tall narrow column with tiny text, because Mermaid's default `flowchart TD` + the verbose multi-line decision labels collapsed under the conversation's width constraint.**

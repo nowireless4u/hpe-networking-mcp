@@ -167,6 +167,7 @@ async def clearpass_compile_policy_flow(
     service_id: int | None = None,
     service_name: str | None = None,
     include_details: bool = False,
+    simulated_attributes: dict[str, str | list[str]] | None = None,
 ) -> dict | str:
     """Compile a ClearPass policy service into a FlowGraph for rendering.
 
@@ -197,6 +198,21 @@ async def clearpass_compile_policy_flow(
         include_details: When true, attaches an ``"details"`` block
             with per-rule action / linked-names data suitable for an
             inspector view alongside the rendered diagram.
+        simulated_attributes: Optional what-if context for predicate
+            evaluation. Keys are attribute paths
+            (``"<namespace>:<attribute>"`` — e.g. ``"Tips:Role"``,
+            ``"GuestUser:visitor"``, ``"Endpoint:Status"``,
+            ``"Connection:NAD-IP-Address"``). Values are strings or
+            lists of strings (lists for multi-valued attributes like
+            ``Tips:Role`` under evaluate-all role mapping). When set,
+            the response carries per-decision-node ``simulation_match``
+            flags AND a top-level ``simulation`` dict describing the
+            end-to-end what-if outcome (matching rules, resulting
+            roles, applied profiles, access decision, and — critically
+            — any ``unknown_attributes`` whose absence prevents a
+            confident answer). When ``simulation.status == "uncertain"``
+            the caller MUST surface that to the operator as "need
+            more info" rather than presenting an outcome.
 
     Returns:
         On success — dict with ``service_id`` (engine slug),
@@ -260,7 +276,7 @@ async def clearpass_compile_policy_flow(
         if target is None:
             return f"Internal error: service '{target_name}' resolved from REST but not present in compiled model"
 
-        flow = compile_service(target, model)
+        flow = compile_service(target, model, simulated_attributes=simulated_attributes)
         result: dict[str, Any] = {
             "service_id": flow.service_id,
             "service_name": flow.service_name,
@@ -271,6 +287,8 @@ async def clearpass_compile_policy_flow(
         }
         if include_details:
             result["details"] = build_details(target, model)
+        if flow.simulation is not None:
+            result["simulation"] = asdict(flow.simulation)
         return result
     except Exception as e:
         return f"Error compiling policy flow: {e}"

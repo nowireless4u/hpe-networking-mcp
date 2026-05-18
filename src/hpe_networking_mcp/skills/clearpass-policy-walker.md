@@ -345,6 +345,93 @@ Access-Accept and the action node lists the per-device profiles
 (MPSK passphrase, VLAN, downloadable role, endpoint updates) that
 ride with it.
 
+## Step 5 — What-if simulation (REQUIRED prompt after rendering)
+
+After Step 4 finishes (header + diagram + warnings + walkthrough),
+**you MUST offer the operator the simulation workflow.** Add a
+section to your reply:
+
+> **Want to see what fires for a specific device?**
+> I can simulate the policy against a device's attributes — tell me
+> the role(s) and any other attributes (visitor name, endpoint
+> status, time, etc.) and I'll re-render with the matching path
+> highlighted. Example: *"Role=Kid, GuestUser:visitor=Bobby,
+> time=20:00"*.
+
+When the operator responds with attributes, you re-call
+``clearpass_compile_policy_flow`` with ``simulated_attributes`` set
+and re-render with the matched path highlighted. The attribute keys
+use ``"<namespace>:<attribute>"`` form — the keys you saw in the
+rendered decision conditions. Values are strings or lists of strings.
+
+### Step 5a — Required UNCERTAINTY-FIRST output contract
+
+The simulator returns a ``simulation`` block with a ``status`` field
+that is the single most important value in the response. **You MUST
+honor it:**
+
+| ``simulation.status`` | What you say to the operator |
+|---|---|
+| ``"resolved"`` | Confidently name the matching enforcement rule and access decision: *"Matches **E11** → applies WLAN-NIGHT-NIGHT + VLAN-USER + MPSK + timeout 7am + SDWAN role updates → **Access: ALLOW**"* |
+| ``"uncertain"`` | DO NOT name an outcome. Say: *"Cannot determine the outcome without these additional attribute(s): `GuestUser:visitor`, `Endpoint:Status`. Provide them and I'll re-simulate."* List ALL items in ``simulation.unknown_attributes``. |
+| ``"no_match"`` | *"No enforcement rule matched the simulated context — falls through to implicit deny."* |
+
+This contract is load-bearing. A prior version of this skill
+appeared to support simulation but produced confidently wrong
+outcomes (the post-auth bucketing bug in v3.1.3.0 mis-classified
+every MPSK rule as DENY, and the simulator dutifully reported that as
+the answer). The current engine returns ``None`` for any predicate it
+can't evaluate, propagates ``None`` through And/Or/Not, and surfaces
+``unknown_attributes`` explicitly so the AI never has to guess.
+**Never override ``status: "uncertain"`` with a confident guess.**
+
+### Step 5b — Highlighting the matched path in the re-rendered diagram
+
+When you re-render after a simulation call, decorate the diagram per
+the values on each decision node:
+
+- ``simulation_match == True``: node gets the green class
+  (``:::sim_match``) — this rule fires.
+- ``simulation_match == False``: dim the node (``:::sim_skip``) — this
+  rule's condition is contradicted.
+- ``simulation_match is None``: yellow / question mark
+  (``:::sim_unknown``) — cannot evaluate.
+- Nodes that weren't on the consulted path (e.g. enforcement rules
+  past the first-applicable winner) stay default.
+
+Add these classDefs to the Mermaid block:
+
+```
+classDef sim_match fill:#dfd,stroke:#3a3,stroke-width:3px;
+classDef sim_skip fill:#222,color:#555,stroke:#444;
+classDef sim_unknown fill:#fee,stroke:#aa6,stroke-width:2px;
+```
+
+Add a one-line summary box above the diagram naming the matched
+enforcement rule (by index / role list — NEVER by numeric ID) and
+the resulting access decision. Below the diagram, list any unknown
+attributes.
+
+### Step 5c — Attribute prompting hints
+
+When the operator asks "what attributes can I provide?" or you need
+to suggest a starting point, name the attributes that appear in the
+rendered conditions for THIS service. Don't list arbitrary ClearPass
+attribute paths — only the ones that actually affect this policy's
+decisions. Pull them from the decision-node conditions.
+
+Common ones for typical policies:
+
+- ``Tips:Role`` — pass as a list when evaluate-all role mapping can
+  assign multiple roles (e.g. ``["Kid", "Night Night"]``).
+- ``GuestUser:visitor`` — visitor name (string).
+- ``GuestUser:Role ID`` — guest device role ID (string).
+- ``Endpoint:Status`` — ``"Known"`` / ``"Unknown"`` / etc.
+- ``Authorization:[Guest Device Repository]:Device Role ID`` —
+  per-device numeric role from the guest device repo.
+- ``Connection:NAD-IP-Address`` — string.
+- ``Connection:Client-Mac-Address`` — string.
+
 ## Worked example — fuzzy match in action
 
 Operator: *"Visualize the ClearPass No Wireless For You Auth Service."*
