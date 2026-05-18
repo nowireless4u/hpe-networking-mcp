@@ -207,12 +207,104 @@ _NUMERIC_CSV = re.compile(r"^\d+(?:,\d+)*$")
 _INTERNAL_REF = re.compile(r"^[A-Za-z][A-Za-z0-9_]*:\d+(?:,[A-Za-z][A-Za-z0-9_]*:\d+)*$")
 
 
+_OP_SHORT = {
+    Op.equals: "=",
+    Op.not_equals: "≠",
+    Op.contains: "⊇",
+    Op.not_contains: "⊉",
+    Op.starts_with: "^=",
+    Op.not_starts_with: "^≠",
+    Op.ends_with: "$=",
+    Op.not_ends_with: "$≠",
+    Op.regex: "~=",
+    Op.not_regex: "~≠",
+    Op.in_: "∈",
+    Op.matches_all: "≡",
+    Op.exists: "∃",
+    Op.not_exists: "∄",
+    Op.less_than: "<",
+    Op.less_than_or_equals: "≤",
+    Op.greater_than: ">",
+    Op.greater_than_or_equals: "≥",
+}
+
+
+def expr_to_compact_label(expr: BooleanExpr | None, max_len: int = 80) -> str:
+    """Render a compact single-line label suitable for dense diagrams.
+
+    Trades verbosity for legibility — drops the namespace prefix, uses
+    short operator glyphs, and joins multi-predicate boolean wrappers
+    inline with ``&`` / ``|``. Designed for Mermaid decision-diamond
+    labels in policies with many rules where the multi-line
+    :func:`expr_to_node_label` output collapses into an unreadable
+    column.
+
+    Examples::
+
+        # Single predicate
+        "Device Role ID = 21"
+        # Two-predicate AND
+        "Role = 'IoT Device' & Status = 'Active'"
+        # Long values truncated
+        "memberOf = 'CN=Tier-2-Wireless-Den...'"
+    """
+    if expr is None:
+        return "(no condition)"
+
+    def _trim_rhs(raw: str, display: str, budget: int) -> str:
+        chosen = _pick_rhs_for_display(raw, display)
+        if len(chosen) > budget:
+            chosen = chosen[: max(1, budget - 3)] + "..."
+        return chosen
+
+    def _pred(e: Predicate, budget: int) -> str:
+        attr = e.attribute or e.namespace or "?"
+        op = _OP_SHORT.get(e.op, e.op.value)
+        rhs = _trim_rhs(e.rhs_raw, e.rhs_display, max(8, budget - len(attr) - len(op) - 3))
+        # Quote strings that aren't bare numerics / simple tokens
+        if rhs and not rhs.isdigit() and not all(c.isalnum() or c in "._-" for c in rhs):
+            rhs = f"'{rhs}'"
+        return f"{attr} {op} {rhs}"
+
+    def _render(e: BooleanExpr, budget: int) -> str:
+        if isinstance(e, Predicate):
+            return _pred(e, budget)
+        if isinstance(e, And):
+            parts = [_render(o, budget // max(1, len(e.operands))) for o in e.operands]
+            return " & ".join(parts)
+        if isinstance(e, Or):
+            parts = [_render(o, budget // max(1, len(e.operands))) for o in e.operands]
+            return " | ".join(parts)
+        if isinstance(e, Not):
+            return f"!({_render(e.operand, max(8, budget - 3))})"
+        return str(e)
+
+    label = _render(expr, max_len)
+    if len(label) > max_len:
+        label = label[: max_len - 3] + "..."
+    return label
+
+
+def _pick_rhs_for_display(raw: str, display: str) -> str:
+    """Prefer ``displayValue`` when ``value`` is a bare numeric ID or
+    internal reference token (e.g. ``NadGroup:3004``) — these would
+    otherwise leak opaque IDs into the label.
+    """
+    raw_stripped = raw.strip()
+    if display.strip() and (_NUMERIC_CSV.match(raw_stripped) or _INTERNAL_REF.match(raw_stripped)):
+        return display.strip()
+    return raw
+
+
 def expr_to_node_label(expr: BooleanExpr | None) -> str:
     """Render a multi-line label for a flowchart decision node.
 
     Each predicate becomes three lines (attribute / operator / value).
     Long values wrap at comma boundaries (suitable for AD DNs). AND/OR
     separators appear between predicates.
+
+    For dense diagrams where this verbosity makes the rendered output
+    unreadable, prefer :func:`expr_to_compact_label`.
     """
     if expr is None:
         return "(no condition)"
@@ -234,18 +326,10 @@ def expr_to_node_label(expr: BooleanExpr | None) -> str:
             lines.append(remaining)
         return "\n".join(lines)
 
-    def _pick_rhs(raw: str, display: str) -> str:
-        """Prefer display when raw is a bare numeric ID, numeric CSV, or
-        internal ClearPass reference token (e.g. ``NadGroup:3004``)."""
-        raw_stripped = raw.strip()
-        if display.strip() and (_NUMERIC_CSV.match(raw_stripped) or _INTERNAL_REF.match(raw_stripped)):
-            return display.strip()
-        return raw
-
     def _pred(e: Predicate) -> str:
         attr = f"{e.namespace}:{e.attribute}" if e.namespace else e.attribute
         op = e.raw_operator or e.op.value.upper()
-        rhs = _wrap_value(_pick_rhs(e.rhs_raw, e.rhs_display))
+        rhs = _wrap_value(_pick_rhs_for_display(e.rhs_raw, e.rhs_display))
         return f"{attr}\n{op}\n{rhs}"
 
     def _lines(e: BooleanExpr) -> list[str]:
