@@ -363,3 +363,13 @@ class TestCompilePolicyFlowFanout:
         assert len(result["edges"]) > 0
         # ALLOW end node should be present (single enf rule resolves to Allow Access Profile)
         assert any("ALLOW" in n["label"] for n in result["nodes"] if n["type"] == "end")
+        # Combine algorithms surfaced as top-level fields (issue #360)
+        assert "role_mapping_combine" in result
+        assert "enforcement_combine" in result
+        # This fixture has no role mapping → None; first-applicable enf → "first-applicable"
+        assert result["role_mapping_combine"] is None
+        assert result["enforcement_combine"] == "first-applicable"
+        # Section titles in mermaid output include the combine algorithm so
+        # AI clients building custom widgets don't hardcode "stop on match"
+        enf_block = next(s for s in result["mermaid"]["sections"] if "Enforcement" in s["title"])
+        assert "first-applicable" in enf_block["title"]

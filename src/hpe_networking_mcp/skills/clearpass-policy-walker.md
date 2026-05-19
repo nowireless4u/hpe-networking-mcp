@@ -43,9 +43,9 @@ description: |
   role-mapping policies, enforcement policies + profiles, roles, auth
   methods, and auth sources to assemble the full picture.
   **Read-only.**
-platforms: [clearpass]
-tags: [clearpass, policy, visualization, audit]
-tools: [health, clearpass_list_policy_services, clearpass_compile_policy_flow]
+platforms: [clearpass, central]
+tags: [clearpass, central, policy, visualization, audit]
+tools: [health, clearpass_list_policy_services, clearpass_compile_policy_flow, central_get_role_with_policy]
 ---
 
 # ClearPass policy visualizer
@@ -295,6 +295,66 @@ out in the walkthrough**:
 > ``[Guest Device Repository]`` authorization source as a per-device
 > attribute. Same applies to "Endpoint=Oculus" in rule 5 (endpoint
 > attribute, not a role).
+
+### Step 4b-2 — Honor the rule-combine algorithms (NEVER hardcode "stop on match")
+
+The response carries two top-level fields you MUST use when labelling
+rule rows in any UI (custom widget or otherwise):
+
+- ``role_mapping_combine`` — one of ``"first-applicable"`` /
+  ``"evaluate-all"`` / ``None``.
+- ``enforcement_combine`` — same domain.
+
+The mermaid section titles already include the combine algorithm —
+when emitting your own rule list (e.g. expandable cards per rule),
+label them accordingly:
+
+- ``evaluate-all`` → "**continue on match**" (rules continue, device
+  can accumulate multiple roles or actions).
+- ``first-applicable`` → "**stop on match**" (first matching rule wins).
+- ``None`` → don't apply a combine label (service has no policy of
+  that kind).
+
+Hardcoding "stop on match" on an evaluate-all role-mapping policy is a
+bug (issue #360). A common ClearPass shape is **evaluate-all role
+mapping + first-applicable enforcement** — read the response fields,
+don't assume.
+
+### Step 4d — Drilling into Aruba role definitions (cross-platform)
+
+When the operator wants to see what an Aruba role actually does
+(beyond the name), call ``central_get_role_with_policy(name=<role>)``.
+You'll know which roles to look up because enforcement profiles push
+them via the ``Aruba-User-Role`` attribute — visible in
+``details.profile_attributes[<profile name>].attributes[]``. Common
+examples:
+
+- Profile ``WLAN-NIGHT-NIGHT`` has ``Aruba-User-Role = "night-night"``
+- Profile ``WLAN-NEST-DEVICE`` has ``Aruba-User-Role = "nest-device"``
+
+Call shape:
+
+```python
+detail = await call_tool("central_get_role_with_policy", {"name": "night-night"})
+# Returns: {name, role: {...}|None, policy: {...}|None, not_found: [...], errors: [...]}
+```
+
+Surface in your reply as an additional inspector block (mirror the
+role-mapping / enforcement section style). The ``policy.security-
+policy.policy-rule[]`` array has the firewall rules — each rule's
+``condition`` (rule-type, services with app-category / application,
+source/destination) and ``action`` (``ACTION_ALLOW`` /
+``ACTION_DENY``) are what determines what traffic the role can do.
+
+Many roles are **skeletal** (just ``{name, description}``) — that's
+fine. Many roles **have no separate security policy** —
+``not_found: ["policy"]`` is informational, not an error. Say so:
+"*The night-night role is referenced as a source in the 'AP default'
+policy but has no policy named after itself.*"
+
+Prefetch is cheap (~2 GETs per role), but call only for roles the
+operator actually asks about — don't blast Central for every profile
+referenced in a 15-rule enforcement chain.
 
 ### Step 4c — When rules apply multiple profiles (MAC auth + MPSK shape)
 

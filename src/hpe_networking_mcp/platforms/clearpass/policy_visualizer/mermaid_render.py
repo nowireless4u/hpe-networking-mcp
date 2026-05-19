@@ -185,13 +185,24 @@ def _render_block(
     return "\n".join(lines)
 
 
-def format_mermaid(flow: FlowGraph) -> dict:
+def format_mermaid(
+    flow: FlowGraph,
+    *,
+    role_mapping_combine: str | None = None,
+    enforcement_combine: str | None = None,
+) -> dict:
     """Render a :class:`FlowGraph` as three Mermaid section blocks.
 
     Returns the dict shape documented at the top of this module. Every
     declaration is emitted on its own source line and every label is
     wrapped in double quotes so Mermaid's per-line parser can't trip on
     AI assembly errors.
+
+    When ``role_mapping_combine`` / ``enforcement_combine`` are provided
+    (one of ``"first-applicable"`` / ``"evaluate-all"``), the
+    corresponding section title is suffixed with the combine algorithm
+    so AI clients building custom widgets can label rule rows correctly
+    without inferring from CONTINUE edges.
 
     Empty sections are omitted from the result — RADIUS_PROXY services
     skip role mapping entirely, for instance, and policies without an
@@ -224,10 +235,17 @@ def format_mermaid(flow: FlowGraph) -> dict:
             FlowEdge(from_id=edge.from_id, to_id=stub_id, label=edge.label, reason=edge.reason)
         )
 
+    def _combine_suffix(combine: str | None) -> str:
+        if combine == "evaluate-all":
+            return " (evaluate-all — rules continue, multiple actions accumulate)"
+        if combine == "first-applicable":
+            return " (first-applicable — first matching rule wins)"
+        return ""
+
     section_titles = {
         "A": "Block A — Service intake (start → match → auth)",
-        "B": "Block B — Role mapping",
-        "C": "Block C — Enforcement (decision → access)",
+        "B": "Block B — Role mapping" + _combine_suffix(role_mapping_combine),
+        "C": "Block C — Enforcement (decision → access)" + _combine_suffix(enforcement_combine),
     }
 
     sections: list[dict[str, str]] = []

@@ -67,7 +67,14 @@ def _build_rule_index(role_mapping_rules: list[dict], enforcement_rules: list[di
 
 
 def build_details(service: Service, model: PolicyModel) -> dict:
-    """Serialize a service + its referenced policies into an inspector dict."""
+    """Serialize a service + its referenced policies into an inspector dict.
+
+    Includes a ``profile_attributes`` block that maps every enforcement
+    profile referenced by THIS service to its raw RADIUS / TACACS
+    attribute pushes. This is what tells the operator (or the
+    cross-platform Central role resolver) what each profile actually
+    DOES — names like ``WLAN-NIGHT-NIGHT`` are otherwise opaque.
+    """
     from .policy_model import ApplyProfiles, SetRole
 
     service_context = {
@@ -143,11 +150,38 @@ def build_details(service: Service, model: PolicyModel) -> dict:
         linked_names=[],
     )
 
+    # Profile attributes — every profile referenced by THIS service's
+    # enforcement rules (rule actions + default). Maps name → list of
+    # raw attribute dicts so the AI can show what each profile pushes
+    # (Aruba-User-Role, Aruba-Named-User-Vlan, Session-Timeout, etc.)
+    # without re-fetching the enforcement-profile collection.
+    referenced_profile_names: set[str] = set()
+    if enf_policy:
+        for rule in enf_policy.rules:
+            if isinstance(rule.then, ApplyProfiles):
+                referenced_profile_names.update(rule.then.profile_names)
+        if isinstance(enf_policy.default, ApplyProfiles):
+            referenced_profile_names.update(enf_policy.default.profile_names)
+
+    name_to_profile = {p.name: p for p in model.enforcement_profiles.values()}
+    profile_attributes: dict[str, dict] = {}
+    for pname in referenced_profile_names:
+        profile = name_to_profile.get(pname)
+        if profile is None:
+            continue
+        profile_attributes[pname] = {
+            "profile_type": profile.profile_type,
+            "action": profile.action,
+            "description": profile.description,
+            "attributes": list(profile.attributes),
+        }
+
     return {
         "service_context": service_context,
         "authen_rules": [],
         "role_mapping_rules": role_mapping_rules,
         "enforcement_rules": enforcement_rules,
+        "profile_attributes": profile_attributes,
         "warnings": list(model.warnings),
         "rule_index": rule_index,
     }

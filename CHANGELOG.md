@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.6.0] - 2026-05-19
+
+**Minor — ClearPass policy visualizer fix combine-algorithm mislabeling + add cross-platform Aruba role resolution (#360).** Operator's custom widget on v3.1.5.0 hardcoded "stop on match" on every role-mapping rule row even though the policy is evaluate-all (rules continue, devices accumulate multiple roles). Also: there was no way to drill into what an Aruba role actually does — `WLAN-NIGHT-NIGHT` was just a name. Both fixed.
+
+### Combine algorithm surfaced as structured response fields
+
+`clearpass_compile_policy_flow` returns two new top-level fields:
+
+- `role_mapping_combine` — `"first-applicable"` / `"evaluate-all"` / `None`
+- `enforcement_combine` — same domain
+
+Mermaid section titles now include the combine algorithm: *"Block B — Role mapping (evaluate-all — rules continue, multiple actions accumulate)"* / *"Block C — Enforcement (first-applicable — first matching rule wins)"*. AI clients building custom widgets must label rule rows from these fields, not hardcode.
+
+### Enforcement profile attributes surfaced
+
+`EnforcementProfile` model + adapter extended to carry the raw `attributes` list (RADIUS / TACACS attribute pushes — e.g. `Aruba-User-Role: night-night`, `Aruba-Named-User-Vlan: iot`, `Session-Timeout: 28800`). Available in `details.profile_attributes[<profile name>].attributes` when `include_details=True`. Operators (and the new Central role resolver) can now see what each profile actually pushes — names like `WLAN-NIGHT-NIGHT` are no longer opaque.
+
+### New Central tool: `central_get_role_with_policy`
+
+Bundles two endpoints in one call:
+
+- `GET /network-config/v1alpha1/roles/{name}` — role config (VLAN, session params, classification settings)
+- `GET /network-config/v1alpha1/policies/{name}` — security policy named after the role (firewall rules with per-rule `condition` + `action`)
+
+Response shape: `{name, role: {...}|None, policy: {...}|None, not_found: [...], errors: [...]}`. Either resource being absent is reported in `not_found` (informational — many shared roles are skeletal, many roles have no separately-named policy). Per-endpoint exceptions go in `errors` and don't abort the other fetch.
+
+Use case: when ClearPass enforcement profile pushes `Aruba-User-Role: night-night`, the AI calls `central_get_role_with_policy(name="night-night")` to surface what that role actually grants/denies (e.g. deny SOCIAL-NETWORKING, deny netflix, deny hulu, etc.).
+
+### Skill template updated
+
+`clearpass-policy-walker.md` gets:
+
+- Step 4b-2 — honor the combine algorithms; never hardcode "stop on match" on evaluate-all role-mapping.
+- Step 4d — call `central_get_role_with_policy` when operator asks about role detail. Cheap (~2 GETs per role) but call only for roles the operator actually asks about.
+
 ## [3.1.5.0] - 2026-05-18
 
 **Minor — ClearPass policy visualizer now pre-renders Mermaid server-side (#358).** `clearpass_compile_policy_flow` adds a `mermaid` field to the response with three ready-to-paste sectioned blocks. The skill embeds them verbatim — no more AI-side diagram assembly.

@@ -514,6 +514,68 @@ class TestCompileServiceRadiusProxy:
 # ---------------------------------------------------------------------------
 
 
+class TestEnforcementProfileAttributes:
+    """RADIUS / TACACS attribute pushes on enforcement profiles are
+    surfaced through the model (issue #360 — operators want to see
+    what each profile actually does, e.g. Aruba-User-Role pushes).
+    """
+
+    def test_profile_attributes_flow_from_raw_to_model(self):
+        raw = _minimal_raw()
+        # Inject a RADIUS profile with attribute push (overrides defaults)
+        raw["radiusEnfProfiles"] = [
+            {
+                "name": "WLAN-NIGHT-NIGHT",
+                "action": "Accept",
+                "description": "",
+                "attributes": [{"type": "Radius:Aruba", "name": "Aruba-User-Role", "value": "night-night"}],
+            }
+        ]
+        model = build(raw)
+        profile = next(p for p in model.enforcement_profiles.values() if p.name == "WLAN-NIGHT-NIGHT")
+        assert profile.attributes == [{"type": "Radius:Aruba", "name": "Aruba-User-Role", "value": "night-night"}]
+
+    def test_profile_attributes_default_empty_list(self):
+        model = build(_minimal_raw())
+        # The default [Allow Access Profile] fixture has no attributes — should be []
+        allow = next(p for p in model.enforcement_profiles.values() if p.name == "[Allow Access Profile]")
+        assert allow.attributes == []
+
+    def test_details_profile_attributes_block_includes_referenced_profiles_only(self):
+        # Build a fixture where ONE referenced + ONE unreferenced profile exist;
+        # only the referenced one should appear in details.profile_attributes.
+        raw = _minimal_raw(
+            enf_rules=[
+                {
+                    "index": 0,
+                    "expression": _single_predicate("X"),
+                    "results": [{"name": "Enforcement-Profile", "displayValue": "WLAN-NIGHT-NIGHT"}],
+                }
+            ]
+        )
+        raw["radiusEnfProfiles"] = [
+            {
+                "name": "WLAN-NIGHT-NIGHT",
+                "action": "Accept",
+                "attributes": [{"type": "Radius:Aruba", "name": "Aruba-User-Role", "value": "night-night"}],
+            },
+            {
+                "name": "WLAN-UNUSED",
+                "action": "Accept",
+                "attributes": [{"type": "Radius:Aruba", "name": "Aruba-User-Role", "value": "some-other-role"}],
+            },
+        ]
+        model = build(raw)
+        svc = next(iter(model.services.values()))
+        details = build_details(svc, model)
+        assert "profile_attributes" in details
+        assert "WLAN-NIGHT-NIGHT" in details["profile_attributes"]
+        assert "WLAN-UNUSED" not in details["profile_attributes"]
+        assert details["profile_attributes"]["WLAN-NIGHT-NIGHT"]["attributes"] == [
+            {"type": "Radius:Aruba", "name": "Aruba-User-Role", "value": "night-night"}
+        ]
+
+
 class TestBuildDetails:
     def test_details_contains_service_context_and_rules(self):
         rm_rules = [

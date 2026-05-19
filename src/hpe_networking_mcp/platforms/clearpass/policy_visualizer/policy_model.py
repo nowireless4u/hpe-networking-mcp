@@ -135,6 +135,12 @@ class EnforcementProfile:
     profile_type: str
     action: str = ""
     description: str = ""
+    # Raw RADIUS / TACACS attributes the profile pushes. Each entry is
+    # ``{"type": "Radius:Aruba", "name": "Aruba-User-Role", "value":
+    # "night-night"}`` shape (ClearPass REST format). Surfaces what the
+    # profile actually DOES — operators (and the cross-platform Central
+    # role resolver) walk these to find role / VLAN assignments.
+    attributes: list[dict] = field(default_factory=list)
 
 
 @dataclass
@@ -221,6 +227,7 @@ def build(raw: dict[str, Any]) -> PolicyModel:
             profile_type=profile_type,
             action=action,
             description=rp.get("description", ""),
+            attributes=list(rp.get("attributes") or []),
         )
     for pp in raw.get("postAuthEnfProfiles", []):
         pid = _stable_id(pp["name"])
@@ -229,6 +236,7 @@ def build(raw: dict[str, Any]) -> PolicyModel:
             name=pp["name"],
             profile_type="post_auth",
             description=pp.get("description", ""),
+            attributes=list(pp.get("attributes") or []),
         )
     for tp in raw.get("tacacsEnfProfiles", []):
         pid = _stable_id(tp["name"])
@@ -239,6 +247,7 @@ def build(raw: dict[str, Any]) -> PolicyModel:
             profile_type="tacacs_accept" if action == "accept" else "tacacs_other",
             action=action,
             description=tp.get("description", ""),
+            attributes=list(tp.get("attributes") or []),
         )
     for cp in raw.get("radiusCoaEnfProfiles", []):
         pid = _stable_id(cp["name"])
@@ -248,6 +257,7 @@ def build(raw: dict[str, Any]) -> PolicyModel:
             profile_type="radius_coa",
             action=cp.get("action", "").lower(),
             description=cp.get("description", ""),
+            attributes=list(cp.get("attributes") or []),
         )
     for gp in raw.get("genericEnfProfiles", []):
         pid = _stable_id(gp["name"])
@@ -258,6 +268,7 @@ def build(raw: dict[str, Any]) -> PolicyModel:
             profile_type="generic_accept" if action == "accept" else "generic_reject",
             action=action,
             description=gp.get("description", ""),
+            attributes=list(gp.get("attributes") or []),
         )
     profile_by_name = {v.name: v for v in model.enforcement_profiles.values()}
 

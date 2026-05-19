@@ -145,11 +145,18 @@ def _bucket_for_profile(profile: dict) -> str:
 
 
 def _normalize_profile(profile: dict) -> dict:
-    """Slim a REST enforcement profile to the keys the builder reads."""
+    """Slim a REST enforcement profile to the keys the builder reads.
+
+    Includes the ``attributes`` list (RADIUS / TACACS attribute pushes)
+    so downstream consumers can see what the profile actually does —
+    e.g. ``Aruba-User-Role = night-night`` tells the cross-platform
+    Central role resolver to fetch the role's access policy.
+    """
     return {
         "name": profile.get("name", ""),
         "action": profile.get("action", ""),
         "description": profile.get("description", ""),
+        "attributes": profile.get("attributes") or [],
     }
 
 

@@ -218,9 +218,19 @@ async def clearpass_compile_policy_flow(
     Returns:
         On success — dict with ``service_id`` (engine slug),
         ``service_name`` (the exact resolved name), ``service_type``,
-        ``nodes``, ``edges``, ``mermaid``, ``warnings``, and optionally
-        ``details``. Edge labels are one of ``""``, ``YES``, ``NO``,
-        ``FAIL``, ``PASS``, ``CONTINUE``.
+        ``role_mapping_combine`` (``"first-applicable"`` /
+        ``"evaluate-all"`` / ``None``), ``enforcement_combine`` (same
+        domain), ``nodes``, ``edges``, ``mermaid``, ``warnings``, and
+        optionally ``details``. Edge labels are one of ``""``, ``YES``,
+        ``NO``, ``FAIL``, ``PASS``, ``CONTINUE``.
+
+        ``role_mapping_combine`` / ``enforcement_combine`` are the rule
+        combine algorithms surfaced from the model. Evaluate-all role
+        mapping means a device can accumulate multiple roles in one
+        pass (rules continue on match); first-applicable enforcement
+        means the first matching rule wins. Use these to label rule
+        rows correctly in custom UIs — don't hardcode "stop on match"
+        (issue #360).
 
         The ``mermaid`` field carries ready-to-paste Mermaid source as
         ``{"sections": [{"title": ..., "code": ...}, ...],
@@ -291,13 +301,25 @@ async def clearpass_compile_policy_flow(
             return f"Internal error: service '{target_name}' resolved from REST but not present in compiled model"
 
         flow = compile_service(target, model, simulated_attributes=simulated_attributes)
+
+        # Surface the rule-combine algorithms so callers building custom
+        # UIs don't have to infer from CONTINUE edges. None when the
+        # service doesn't reference a corresponding policy (e.g.
+        # RADIUS_PROXY services have no role mapping).
+        rm_policy = model.role_mapping_policies.get(target.role_mapping_policy_id)
+        rm_combine = rm_policy.rule_combine_algo if rm_policy is not None else None
+        ep_policy = model.enforcement_policies.get(target.enforcement_policy_id)
+        ep_combine = ep_policy.rule_combine_algo if ep_policy is not None else None
+
         result: dict[str, Any] = {
             "service_id": flow.service_id,
             "service_name": flow.service_name,
             "service_type": flow.service_type,
+            "role_mapping_combine": rm_combine,
+            "enforcement_combine": ep_combine,
             "nodes": [asdict(n) for n in flow.nodes],
             "edges": [asdict(e) for e in flow.edges],
-            "mermaid": format_mermaid(flow),
+            "mermaid": format_mermaid(flow, role_mapping_combine=rm_combine, enforcement_combine=ep_combine),
             "warnings": list(model.warnings),
         }
         if include_details:

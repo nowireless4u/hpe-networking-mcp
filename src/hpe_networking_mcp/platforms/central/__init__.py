@@ -80,6 +80,7 @@ TOOLS = {
     ],
     "roles": [
         "central_get_roles",
+        "central_get_role_with_policy",
         "central_manage_role",
     ],
     "security_policy": [
