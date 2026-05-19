@@ -67,6 +67,7 @@ TOOLS = {
     "scope": [
         "central_get_scope_tree",
         "central_get_scope_resources",
+        "central_get_committed_config",
         "central_get_effective_config",
         "central_get_devices_in_scope",
         "central_get_scope_diagram",
@@ -80,6 +81,7 @@ TOOLS = {
     ],
     "roles": [
         "central_get_roles",
+        "central_get_role_with_policy",
         "central_manage_role",
     ],
     "security_policy": [

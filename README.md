@@ -676,7 +676,7 @@ hpe-networking-mcp/
 │       ├── mist/                # 1037 Mist tools (spec-driven) + 2 prompts + API client
 │       ├── central/             # 88 Central tools + 12 prompts + API client
 │       ├── greenlake/           # 10 GreenLake tools + OAuth2 client
-│       ├── clearpass/           # 140 ClearPass tools + pyclearpass SDK client
+│       ├── clearpass/           # 142 ClearPass tools + pyclearpass SDK client
 │       ├── apstra/              # 19 Apstra tools + async httpx client
 │       ├── axis/                # 25 Axis Atmos Cloud tools + httpx client (JWT bearer)
 │       ├── aos8/                # 47 AOS8 tools + 9 prompts + UIDARUBA session client

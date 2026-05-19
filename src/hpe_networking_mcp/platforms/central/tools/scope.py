@@ -112,6 +112,83 @@ async def central_get_scope_resources(
 
 
 @tool(annotations=READ_ONLY)
+async def central_get_committed_config(
+    ctx: Context,
+    scope_id: str,
+    persona: str | None = None,
+    include_details: bool = True,
+) -> dict | str:
+    """
+    Get the configuration committed directly at a scope node (no inheritance).
+
+    The "committed" view shows what was assigned AT this scope — it does
+    NOT roll up parent-scope inheritance. Use
+    :func:`central_get_effective_config` for the inherited rollup
+    (committed + everything inherited from ancestors).
+
+    Returns the same per-resource shape ``effective_resources`` uses so
+    the two views are directly diff-able side by side: when an operator
+    asks "what did the parent contribute vs what was added here?", call
+    both and compare ``committed_resources`` to ``effective_resources``.
+
+    Parameters:
+        scope_id: The scope ID to query.
+        persona: Optional persona filter (e.g. ``"CAMPUS_AP"``,
+            ``"ACCESS_SWITCH"``, ``"BRANCH_GW"``). Omit for all
+            personas committed at this scope.
+        include_details: When True (default) include each resource's
+            full configuration data. Set False for a name-only summary
+            useful when the operator only wants the inventory.
+
+    Returns:
+        Dict with ``scope_id``, ``scope_name``, ``type``, ``scope_path``
+        (Global → ... → this scope, useful when comparing to
+        ``effective_resources``' ``inheritance_path``), and
+        ``committed_resources`` — a flat list of
+        ``{persona, name, has_details, details?}`` entries. Empty list
+        when nothing is committed at this scope (a normal case for
+        intermediate site-collection nodes that exist purely as
+        organizational containers).
+    """
+    conn = ctx.lifespan_context["central_conn"]
+    try:
+        tree = build_scope_tree(conn)
+    except Exception as e:
+        return f"Error building scope tree: {e}"
+
+    node = tree.get_node(scope_id)
+    if node is None or node.data is None:
+        return f"Scope '{scope_id}' not found in the tree. Use central_get_scope_tree to list valid scope IDs."
+
+    device = node.data.get("device", {})
+    resources_tree = node.data.get("resources")
+    meta = device.get("meta") or {}
+
+    committed: list[dict] = []
+    if resources_tree is not None and resources_tree.root is not None:
+        for persona_node in sorted(resources_tree.children(resources_tree.root), key=lambda n: n.tag):
+            if persona and persona_node.tag != persona:
+                continue
+            for rn in resources_tree.children(persona_node.tag):
+                entry: dict = {
+                    "persona": persona_node.tag,
+                    "name": rn.tag,
+                    "has_details": rn.data is not None,
+                }
+                if include_details and rn.data is not None:
+                    entry["details"] = rn.data
+                committed.append(entry)
+
+    return {
+        "scope_id": device.get("scope_id"),
+        "scope_name": meta.get("scope_name", scope_id),
+        "type": device.get("type", ""),
+        "scope_path": build_inheritance_path(tree, scope_id),
+        "committed_resources": committed,
+    }
+
+
+@tool(annotations=READ_ONLY)
 async def central_get_effective_config(
     ctx: Context,
     scope_id: str,

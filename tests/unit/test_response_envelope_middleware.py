@@ -307,19 +307,45 @@ class TestPayloadFromContent:
         payload = {"name": "mcp", "privileges": []}
         assert _payload_from_content(_text(payload)) == payload
 
-    def test_non_json_text_returns_none(self):
-        assert _payload_from_content([TextContent(type="text", text="not json")]) is None
+    def test_non_json_text_preserved_as_string(self):
+        """Issue #362 — bare-string returns (e.g. Mermaid source from
+        central_get_scope_diagram, error fallback strings from tools
+        declared `-> dict | list | str`) MUST survive the envelope wrap
+        instead of becoming ``data: null``. Pre-fix this returned None
+        and the AI silently lost the entire result."""
+        assert _payload_from_content([TextContent(type="text", text="not json")]) == "not json"
+
+    def test_mermaid_string_preserved(self):
+        """The actual scope_diagram failure case from operator #362."""
+        mermaid = "flowchart TD\n    N1((HQ))\n    N2((BRANCH-1))\n    N1 --> N2"
+        assert _payload_from_content([TextContent(type="text", text=mermaid)]) == mermaid
 
     def test_empty_or_none_content_returns_none(self):
         assert _payload_from_content([]) is None
         assert _payload_from_content(None) is None
 
+    def test_empty_text_block_returns_none(self):
+        """Empty-string text blocks shouldn't satisfy the fallback —
+        truly empty content still yields None."""
+        assert _payload_from_content([TextContent(type="text", text="")]) is None
+
     def test_first_json_parseable_block_wins(self):
+        """JSON blocks take priority over later non-JSON blocks (existing behaviour)."""
         blocks = [
             TextContent(type="text", text="not json"),
             TextContent(type="text", text=json.dumps({"recovered": True})),
         ]
         assert _payload_from_content(blocks) == {"recovered": True}
+
+    def test_first_text_used_when_no_block_parses_as_json(self):
+        """When zero blocks parse as JSON, fall back to the FIRST non-empty
+        text block — not concatenated, not later blocks. Preserves
+        single-block string returns deterministically."""
+        blocks = [
+            TextContent(type="text", text="first non-json"),
+            TextContent(type="text", text="second non-json"),
+        ]
+        assert _payload_from_content(blocks) == "first non-json"
 
 
 @pytest.mark.unit
@@ -396,17 +422,49 @@ class TestContentFallbackRecovery:
         assert result is original
 
     @pytest.mark.asyncio
-    async def test_non_json_content_still_yields_null_data(self):
-        """No regression: non-JSON text content → data: None (pre-fix behaviour)."""
+    async def test_non_json_content_preserved_as_string(self):
+        """Issue #362 — bare-string returns (e.g. Mermaid source from
+        central_get_scope_diagram, error strings from tools declared
+        `-> dict | list | str`) MUST land in `data` as the raw string
+        rather than `data: null`. Pre-fix the string was silently lost.
+        """
         middleware = ResponseEnvelopeMiddleware()
         ctx = _make_context("health")
-        original = _make_tool_result(structured=None, content=[TextContent(type="text", text="plain text, not json")])
+        original = _make_tool_result(
+            structured=None,
+            content=[TextContent(type="text", text="plain text, not json")],
+        )
         call_next = AsyncMock(return_value=original)
 
         result = await middleware.on_call_tool(ctx, call_next)
 
-        assert result.structured_content["data"] is None
+        assert result.structured_content["data"] == "plain text, not json"
         assert result.structured_content["ok"] is True
+
+    @pytest.mark.asyncio
+    async def test_invoke_tool_dispatch_to_string_returning_tool_preserves_mermaid(self):
+        """The exact path from issue #362: `central_invoke_tool` dispatching
+        to `central_get_scope_diagram`. The underlying tool returns the
+        Mermaid source as a `str`; FastMCP doesn't populate
+        structured_content for `-> Any` meta-tools forwarding a non-dict;
+        the envelope must recover the string from content rather than
+        emitting `data: null`.
+        """
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context("central_invoke_tool")
+        mermaid = "flowchart TD\n    N1((HQ))\n    N2((BRANCH-1))\n    N1 --> N2"
+        original = _make_tool_result(
+            structured=None,
+            content=[TextContent(type="text", text=mermaid)],
+        )
+        call_next = AsyncMock(return_value=original)
+
+        result = await middleware.on_call_tool(ctx, call_next)
+
+        assert result.structured_content["data"] == mermaid
+        assert result.structured_content["ok"] is True
+        assert result.structured_content["tool"] == "central_invoke_tool"
+        assert result.structured_content["platform"] == "central"
 
     @pytest.mark.asyncio
     async def test_structured_content_takes_precedence_over_content(self):

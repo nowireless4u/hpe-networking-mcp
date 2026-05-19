@@ -110,7 +110,7 @@ def _is_envelope_shape(value: Any) -> bool:
 
 
 def _payload_from_content(content: list | None) -> Any:
-    """Recover a tool's JSON payload from its content blocks.
+    """Recover a tool's payload from its content blocks.
 
     FastMCP leaves ``structured_content`` as ``None`` for a tool annotated
     ``-> Any`` that returns a **non-dict** value — most importantly a bare
@@ -121,16 +121,31 @@ def _payload_from_content(content: list | None) -> Any:
     text, so recover it here — otherwise the envelope's ``data`` is
     ``null`` and the AI never sees the result. See issue #327.
 
-    Returns the parsed JSON of the first JSON-parseable ``TextContent``
-    block, or ``None`` when no block parses (the envelope then falls back
-    to ``data: null`` — the pre-fix behaviour, no regression).
+    Two-pass recovery:
+
+    1. First pass — find a JSON-parseable block (preserves dict/list
+       payloads from ``-> Any`` tools that returned a non-dict, plus
+       structured returns from ``-> dict | list | str`` tools).
+    2. Fallback — if no block parses as JSON, return the first non-empty
+       text block as a raw string. This preserves bare-string returns —
+       Mermaid source from ``central_get_scope_diagram``, error fallback
+       strings from tools declared ``-> dict | list | str``, etc. — that
+       previously vanished into ``data: null`` (issue #362).
+
+    Returns ``None`` only when no text block carries any content.
     """
+    # First pass: any JSON-parseable block wins (preserves dict/list payloads).
     for block in content or []:
         if isinstance(block, TextContent) and block.text:
             try:
                 return json.loads(block.text)
             except (ValueError, TypeError):
                 continue
+    # Second pass: no JSON found. Fall back to the first non-empty text
+    # block so bare-string returns survive instead of becoming data: null.
+    for block in content or []:
+        if isinstance(block, TextContent) and block.text:
+            return block.text
     return None
 
 
