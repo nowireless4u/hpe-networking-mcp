@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.axis._registry import tool
 from hpe_networking_mcp.platforms.axis.client import format_http_error, get_axis_client
@@ -18,7 +19,7 @@ async def axis_get_custom_ip_categories(
     custom_ip_category_id: str | None = None,
     page_number: int = 1,
     page_size: int = 50,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Get Axis custom IP categories.
 
     Customer-defined IP groupings used in policy rules. For threat-intel
@@ -35,7 +36,8 @@ async def axis_get_custom_ip_categories(
             return await client.get_json(f"/IpCategories/{custom_ip_category_id}")
         return await client.get_paged("/IpCategories", page_number=page_number, page_size=page_size)
     except Exception as e:
-        return f"Error fetching custom IP categories: {format_http_error(e)}"
+        detail = format_http_error(e)
+        raise ToolError({"status_code": 502, "message": f"Error fetching custom IP categories: {detail}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"axis_write_delete"})
@@ -45,7 +47,7 @@ async def axis_manage_custom_ip_category(
     payload: dict | None = None,
     custom_ip_category_id: str | None = None,
     confirmed: bool = False,
-) -> dict | str:
+) -> dict:
     """Create, update, or delete an Axis custom IP category.
 
     Writes stage in Axis. Call ``axis_commit_changes`` to apply.

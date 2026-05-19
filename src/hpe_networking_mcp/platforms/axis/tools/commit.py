@@ -13,6 +13,7 @@ caller a clear positive response.
 from __future__ import annotations
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms.axis._registry import tool
@@ -26,7 +27,7 @@ _COMMIT_TIMEOUT = 60.0
 async def axis_commit_changes(
     ctx: Context,
     confirmed: bool = False,
-) -> dict | str:
+) -> dict:
     """Apply all staged Axis changes (POST /Commit).
 
     Every ``axis_manage_*`` write tool stages its change; this is the tool
@@ -54,4 +55,5 @@ async def axis_commit_changes(
         body = response.json() if response.content else {}
         return {"status": "committed", "status_code": response.status_code, "body": body}
     except Exception as e:
-        return f"Error committing Axis changes: {format_http_error(e)}"
+        detail = format_http_error(e)
+        raise ToolError({"status_code": 502, "message": f"Error committing Axis changes: {detail}"}) from e

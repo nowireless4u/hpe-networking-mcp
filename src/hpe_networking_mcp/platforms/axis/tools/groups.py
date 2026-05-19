@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.axis._registry import tool
 from hpe_networking_mcp.platforms.axis.client import format_http_error, get_axis_client
@@ -18,7 +19,7 @@ async def axis_get_groups(
     group_id: str | None = None,
     page_number: int = 1,
     page_size: int = 50,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Get Axis groups (Atmos IdP user groups).
 
     Args:
@@ -32,7 +33,8 @@ async def axis_get_groups(
             return await client.get_json(f"/Groups/{group_id}")
         return await client.get_paged("/Groups", page_number=page_number, page_size=page_size)
     except Exception as e:
-        return f"Error fetching groups: {format_http_error(e)}"
+        detail = format_http_error(e)
+        raise ToolError({"status_code": 502, "message": f"Error fetching groups: {detail}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"axis_write_delete"})
@@ -42,7 +44,7 @@ async def axis_manage_group(
     payload: dict | None = None,
     group_id: str | None = None,
     confirmed: bool = False,
-) -> dict | str:
+) -> dict:
     """Create, update, or delete an Axis user group.
 
     Writes stage in Axis. Call ``axis_commit_changes`` to apply.

@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms.axis._registry import tool
@@ -24,7 +25,7 @@ async def axis_get_connectors(
     connector_id: str | None = None,
     page_number: int = 1,
     page_size: int = 50,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Get Axis connectors (tunnel-endpoint devices).
 
     If ``connector_id`` is provided, returns a single connector record.
@@ -43,7 +44,8 @@ async def axis_get_connectors(
             return await client.get_json(f"/Connectors/{connector_id}")
         return await client.get_paged("/Connectors", page_number=page_number, page_size=page_size)
     except Exception as e:
-        return f"Error fetching connectors: {format_http_error(e)}"
+        detail = format_http_error(e)
+        raise ToolError({"status_code": 502, "message": f"Error fetching connectors: {detail}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"axis_write_delete"})
@@ -53,7 +55,7 @@ async def axis_manage_connector(
     payload: dict | None = None,
     connector_id: str | None = None,
     confirmed: bool = False,
-) -> dict | str:
+) -> dict:
     """Create, update, or delete an Axis connector.
 
     Writes stage in Axis. Call ``axis_commit_changes`` to apply.
@@ -80,7 +82,7 @@ async def axis_regenerate_connector(
     ctx: Context,
     connector_id: str,
     confirmed: bool = False,
-) -> dict | str:
+) -> dict:
     """Issue a fresh installation command for an existing Axis connector.
 
     Invalidates the prior install command for the same connector — anyone
@@ -105,4 +107,5 @@ async def axis_regenerate_connector(
         client = await get_axis_client()
         return await client.post_json(f"/Connectors/{connector_id}/regenerate", json_body={})
     except Exception as e:
-        return f"Error regenerating connector: {format_http_error(e)}"
+        detail = format_http_error(e)
+        raise ToolError({"status_code": 502, "message": f"Error regenerating connector: {detail}"}) from e

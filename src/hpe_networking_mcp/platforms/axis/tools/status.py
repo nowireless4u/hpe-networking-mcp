@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms.axis._registry import tool
@@ -22,7 +23,7 @@ async def axis_get_status(
     ctx: Context,
     entity_type: Annotated[str, Field(description="Either 'connector' or 'tunnel'.")],
     entity_id: Annotated[str, Field(description="GUID of the connector or tunnel.")],
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Get runtime status for a connector or tunnel.
 
     Connector status returns rich telemetry (state, CPU/mem/disk/network,
@@ -38,9 +39,12 @@ async def axis_get_status(
     elif entity_type == "tunnel":
         path = f"/Tunnels/{entity_id}/status"
     else:
-        return f"Invalid entity_type '{entity_type}'. Must be 'connector' or 'tunnel'."
+        raise ToolError(
+            {"status_code": 400, "message": f"Invalid entity_type '{entity_type}'. Must be 'connector' or 'tunnel'."}
+        )
     try:
         client = await get_axis_client()
         return await client.get_json(path)
     except Exception as e:
-        return f"Error fetching {entity_type} status: {format_http_error(e)}"
+        detail = format_http_error(e)
+        raise ToolError({"status_code": 502, "message": f"Error fetching {entity_type} status: {detail}"}) from e

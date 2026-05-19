@@ -20,6 +20,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms.axis.client import format_http_error, get_axis_client
@@ -37,7 +38,7 @@ async def manage_entity(
     payload: dict | None,
     entity_id: str | None,
     confirmed: bool,
-) -> dict | str:
+) -> dict:
     """Generic create/update/delete dispatcher for Axis CRUD entities.
 
     Args:
@@ -55,11 +56,16 @@ async def manage_entity(
         string error message.
     """
     if action_type not in _VALID_ACTIONS:
-        return f"Invalid action_type '{action_type}'. Must be one of: {', '.join(_VALID_ACTIONS)}."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(_VALID_ACTIONS)}.",
+            }
+        )
     if action_type in ("update", "delete") and not entity_id:
-        return f"entity_id is required for action '{action_type}'."
+        raise ToolError({"status_code": 400, "message": f"entity_id is required for action '{action_type}'."})
     if action_type in ("create", "update") and not payload:
-        return f"payload is required for action '{action_type}'."
+        raise ToolError({"status_code": 400, "message": f"payload is required for action '{action_type}'."})
 
     target = entity_id or "(new)"
     decline = await confirm_write(ctx, f"Axis: {action_type} {label} '{target}'. Confirm?")
@@ -75,7 +81,8 @@ async def manage_entity(
         else:
             result = await client.delete_resource(f"{base_path}/{entity_id}")
     except Exception as e:
-        return f"Error during {action_type} {label}: {format_http_error(e)}"
+        detail = format_http_error(e)
+        raise ToolError({"status_code": 502, "message": f"Error during {action_type} {label}: {detail}"}) from e
 
     response: dict[str, Any] = result if isinstance(result, dict) else {"result": result}
     response["next_step"] = _NEXT_STEP_HINT

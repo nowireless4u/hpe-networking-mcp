@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.axis._registry import tool
 from hpe_networking_mcp.platforms.axis.client import format_http_error, get_axis_client
@@ -23,7 +24,7 @@ async def axis_get_tunnels(
     tunnel_id: str | None = None,
     page_number: int = 1,
     page_size: int = 50,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Get Axis tunnels.
 
     If ``tunnel_id`` is provided, returns a single tunnel.
@@ -40,7 +41,8 @@ async def axis_get_tunnels(
             return await client.get_json(f"/Tunnels/{tunnel_id}")
         return await client.get_paged("/Tunnels", page_number=page_number, page_size=page_size)
     except Exception as e:
-        return f"Error fetching tunnels: {format_http_error(e)}"
+        detail = format_http_error(e)
+        raise ToolError({"status_code": 502, "message": f"Error fetching tunnels: {detail}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"axis_write_delete"})
@@ -50,7 +52,7 @@ async def axis_manage_tunnel(
     payload: dict | None = None,
     tunnel_id: str | None = None,
     confirmed: bool = False,
-) -> dict | str:
+) -> dict:
     """Create, update, or delete an Axis tunnel.
 
     Writes stage in Axis. Call ``axis_commit_changes`` to apply.
