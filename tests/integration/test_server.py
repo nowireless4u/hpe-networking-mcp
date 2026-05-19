@@ -176,6 +176,7 @@ class TestCreateServer:
             enable_apstra_write_tools=True,
             enable_axis_write_tools=True,
             enable_aos8_write_tools=True,
+            enable_uxi_write_tools=True,
             tool_mode="code",
         )
 

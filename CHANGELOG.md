@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0.1] - 2026-05-19
+
+**Patch — v3.2.0.0 audit follow-up + codify the error-contract pattern.** Three things ship together because they're tied to the same decision:
+
+### Tool count math corrected
+PR #348 was authored against base `3.1.2.1` (server tool count `1891`) but landed on top of v3.1.7.1 (count `1894`). The PR's documentation claimed `1891 → 1912`; the actual post-merge count is **1894 → 1915**. Fixed across `README.md` (10 occurrences), `CHANGELOG.md` (1 occurrence), `docs/TOOLS.md` (5 occurrences), `INSTRUCTIONS.md` (1 occurrence).
+
+### Error-contract pattern codified — `raise ToolError` preferred for new tools
+PR #348 (UXI) introduced the pattern of `raise ToolError({"status_code": ..., "message": ...})` for validation / upstream / not-found failures, contrasting with the older v2.2.0.1 "return error string, never raise" rule. The audit surfaced this divergence; on review, dendyc's pattern is more principled:
+
+- **Envelope correctness.** A tool returning `"Error: ..."` as a success value gets wrapped by `ResponseEnvelopeMiddleware` into `{ok: True, data: "Error: ...", ...}` — `ok: True` is misleading for a validation failure. ToolError reaches FastMCP's proper error path and produces a structured response.
+- **Structured status codes** let AI clients programmatically distinguish 4xx (retry with different args) from 5xx (escalate / wait). Free-form strings can't.
+- **Test-ability.** `pytest.raises(ToolError) as e: ...; assert e.value.args[0]["status_code"] == 400` is unambiguous; string-comparison is fragile.
+- **The original constraint that forced the string-return rule no longer exists.** The v2.2.0.1 rule was adopted because ToolError in code mode crashed the whole `execute()` block via MontyRuntimeError. `SandboxErrorCatchMiddleware` (introduced after issue #333) now catches ToolError in code mode and re-raises with readable text. The sandbox is safe.
+
+Codified in CLAUDE.md "Tool error contract (preferred for new tools — v3.2.0.1+)" section with the canonical pattern, status-code domain (400 / 401 / 403 / 404 / 422 / 500 / 502), and explicit migration policy: **opportunistic, not proactive.** Existing platforms (mist, greenlake, axis, clearpass, apstra, aos8, most of central) keep their string-return pattern. Migrate when other work touches the file.
+
+### Demonstration migration: `central/tools/scope.py`
+All 6 tools (`central_get_scope_tree`, `central_get_scope_resources`, `central_get_committed_config`, `central_get_effective_config`, `central_get_devices_in_scope`, `central_get_scope_diagram`) converted to raise `ToolError` with status codes:
+
+- **404** for "scope not found in tree" (validation against the loaded tree)
+- **502** for "error building scope tree" (upstream Central API failure)
+
+Return type annotations tightened from `dict | str` → `dict` (and `dict | list | str` → `dict | list`) — the str path is gone. Module docstring updated to reference the new error contract.
+
+Updated `test_central_committed_config.py` test names + bodies — `test_*_returns_error_string` → `test_*_raises_tool_error_<code>`, asserting `pytest.raises(ToolError)` and inspecting the structured `status_code` + `message` payload.
+
+### Test-coverage fix
+`tests/integration/test_server.py::TestCreateServer::test_no_visibility_transform_when_write_tools_enabled` was missing `enable_uxi_write_tools=True` in its all-writes-enabled config — pre-existing gap from the PR #348 merge that landed silently green because the previous test runs didn't include the UXI assertion path. Test now passes (1454 tests total).
+
+
+
 ## [3.2.0.0] - 2026-05-18
 
 **Minor — add HPE UXI (User Experience Insight) as the eighth platform. 21 tools (11 read + 10 write), OAuth2 client-credentials auth, cursor pagination, path-traversal ID guard, and a new cross-platform diagnostics skill.**
@@ -32,7 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Server-wide tool count: 1891 → 1912.
+- Server-wide tool count: 1894 → 1915.
 - `README.md`: UXI column added to feature matrix; intro, architecture diagram, startup log example, env-var tables, and platform auto-disable section updated.
 - `docs/TOOLS.md`: HPE UXI section added; overview table and bundled-skills table updated.
 - `pyproject.toml` version: `3.1.2.1` → `3.2.0.0`.

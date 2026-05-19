@@ -9,18 +9,18 @@ Tools are namespaced by platform: `mist_*` (Juniper Mist), `central_*` (Aruba Ce
 
 The server ships with `MCP_TOOL_MODE=code` by default since v3.0.0.0. At session start the AI sees **6 tools**:
 
-- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 1894 underlying tools
+- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 1915 underlying tools
 - **`tags(detail="brief")`** — browse the catalog by platform / module
 - **`search(query, tags=[...], detail)`** — BM25 search the catalog
 - **`get_schema(tools=[...], detail)`** — fetch parameter shape for named tools
 - **`skills_list(filter=...)`** — list bundled multi-step runbooks (since v2.3.0.0)
 - **`skills_load(name=...)`** — load a runbook to execute
 
-All 1894 per-platform tools documented below still exist and are reachable via `await call_tool(name, params)` inside `execute()`. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the discovery tools (`tags`, `search`, `get_schema`).
+All 1915 per-platform tools documented below still exist and are reachable via `await call_tool(name, params)` inside `execute()`. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the discovery tools (`tags`, `search`, `get_schema`).
 
 **Why code mode is the default since v3.0.0.0**: smallest initial token cost, single-round-trip multi-step orchestration, and validated against small local LLMs (Qwen3 4B Q4_K_M; see [#246](https://github.com/nowireless4u/hpe-networking-mcp/issues/246) reassessment).
 
-Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface (per-platform discovery — see next section). The `static` mode was REMOVED in v3.0.0.0 — at 1894 tools / ~64K tokens it was no longer practical.
+Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface (per-platform discovery — see next section). The `static` mode was REMOVED in v3.0.0.0 — at 1915 tools / ~64K tokens it was no longer practical.
 
 ## Dynamic mode (opt-in since v3.0.0.0; was the v2.x default)
 
@@ -39,7 +39,7 @@ With `MCP_TOOL_MODE=dynamic` the AI sees **24 tools**:
   - `skills_list(filter=...)` — list bundled multi-step runbooks
   - `skills_load(name=...)` — load a runbook to execute
 
-The 1894 per-platform tools are reachable via `<platform>_invoke_tool(name=..., arguments={...})`. Best when an orchestrator wants explicit per-tool dispatch rather than the sandboxed Python composition that code mode provides.
+The 1915 per-platform tools are reachable via `<platform>_invoke_tool(name=..., arguments={...})`. Best when an orchestrator wants explicit per-tool dispatch rather than the sandboxed Python composition that code mode provides.
 
 ## Code mode details (the default — see above for surface summary)
 
@@ -96,7 +96,7 @@ If you do try to dispatch to a discovery tool by mistake, `SandboxErrorCatchMidd
 - **`code` (default since v3.0.0.0)** — best for orchestrators driving small / local LLMs, multi-step aggregations, cross-platform joins, filter/map/reduce workflows. Smallest initial token cost. Validated against Qwen3 4B Q4_K_M via OpenClaw (see #246 reassessment).
 - **`dynamic` (opt-in since v3.0.0.0; was the v2.x default)** — best when the orchestrator wants explicit per-tool dispatch via `<platform>_invoke_tool` rather than sandboxed Python composition. Stable, production-tested for lookup-style questions.
 
-The `static` mode was REMOVED in v3.0.0.0 — at 1894 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` raises ValueError at startup.
+The `static` mode was REMOVED in v3.0.0.0 — at 1915 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` raises ValueError at startup.
 
 ## Overview
 
@@ -132,6 +132,48 @@ In **code mode**, the three aggregators (`site_health_check`,
 `site_rf_check`, `manage_wlan_profile`) are NOT registered — code mode's
 premise is that the LLM composes per-platform calls itself. `health` is
 registered in every mode.
+
+## Tool error contract (preferred for new tools — v3.2.0.1+)
+
+Public tools (`@tool`-decorated functions in `platforms/<platform>/tools/`) SHOULD raise `fastmcp.exceptions.ToolError` with a structured payload for any failure path — validation, upstream service error, not-found, etc. The pattern, adopted from the UXI platform in v3.2.0.0:
+
+```python
+from fastmcp.exceptions import ToolError
+
+async def example_tool(ctx, scope_id: str) -> dict:
+    if not _VALID_ID.match(scope_id):
+        raise ToolError({"status_code": 400, "message": f"Invalid scope_id: {scope_id!r}"})
+
+    try:
+        return await client.get(f"/scopes/{scope_id}")
+    except UpstreamNotFound:
+        raise ToolError({"status_code": 404, "message": f"Scope {scope_id!r} not found"})
+    except ToolError:
+        raise  # let pre-raised ToolErrors pass through unchanged
+    except Exception as e:
+        raise ToolError({"status_code": 502, "message": f"Upstream failure: {e}"}) from e
+```
+
+**Why raise instead of return string** (the older v2.2.0.1 pattern):
+
+1. **Envelope correctness** — a tool returning `"Error: bad input"` as a success value gets wrapped by `ResponseEnvelopeMiddleware` into `{ok: True, data: "Error: ...", ...}` — `ok: True` is misleading for a validation failure. ToolError reaches FastMCP's proper error path.
+2. **Structured status codes** let AI clients programmatically branch on 4xx vs 5xx.
+3. **Test-ability** — `pytest.raises(ToolError) as e: assert e.value.args[0]["status_code"] == 400` is unambiguous.
+4. **Code mode is safe** — `SandboxErrorCatchMiddleware` (introduced after issue #333) catches ToolError inside `execute()` blocks and re-raises with readable text, so the sandbox doesn't die. The original constraint that forced the string-return pattern is gone.
+
+**Status code domain** (informal — HTTP-style):
+
+| Code | Use for |
+|------|---------|
+| 400 | Validation failure (bad input, malformed ID, invalid enum value) |
+| 401 | Authentication failure (token expired/invalid) |
+| 403 | Authorization failure (permission denied by upstream) |
+| 404 | Resource not found (looked up by ID and missing) |
+| 422 | Semantically invalid (good shape, bad meaning) |
+| 500 | Internal tool error (missing dependency, programming bug) |
+| 502 | Upstream service failure (Central API down, parse error) |
+
+**Migration policy** — the v2.2.0.1 string-return platforms (mist, greenlake, axis, clearpass, apstra, aos8, most of central) are acceptable as-is. **Migrate opportunistically** when other work already touches the file; **don't proactively migrate** — that's hundreds of tool functions, behavioral churn, and tests to rewrite. The `central/tools/scope.py` migration in v3.2.0.1 is the demonstration of the conversion shape; reference `tests/unit/test_central_committed_config.py` for the canonical `pytest.raises(ToolError)` test pattern.
 
 ## Skills (since v2.3.0.0)
 

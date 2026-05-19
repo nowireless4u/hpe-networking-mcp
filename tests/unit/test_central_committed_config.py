@@ -134,30 +134,45 @@ class TestCentralGetCommittedConfig:
         assert entry["has_details"] is True
 
     @patch("hpe_networking_mcp.platforms.central.tools.scope.build_scope_tree")
-    async def test_unknown_scope_id_returns_error_string(self, mock_build):
+    async def test_unknown_scope_id_raises_tool_error_404(self, mock_build):
+        """Migrated to ToolError pattern in v3.2.0.1. The error-contract
+        rule changed: validation / not-found errors now raise
+        ``ToolError`` with structured ``status_code`` + ``message`` payload
+        so AI clients can programmatically branch on 4xx vs 5xx, and the
+        envelope doesn't misleadingly wrap them as ``ok: True``.
+        """
+        from fastmcp.exceptions import ToolError
+
         from hpe_networking_mcp.platforms.central.tools.scope import central_get_committed_config
 
         mock_build.return_value = _make_tree()
-        result = await central_get_committed_config(_ctx(), scope_id="does-not-exist")
+        with pytest.raises(ToolError) as exc_info:
+            await central_get_committed_config(_ctx(), scope_id="does-not-exist")
 
-        assert isinstance(result, str)
-        assert "does-not-exist" in result
+        payload = exc_info.value.args[0]
+        assert payload["status_code"] == 404
+        assert "does-not-exist" in payload["message"]
 
     @patch("hpe_networking_mcp.platforms.central.tools.scope.build_scope_tree")
-    async def test_build_scope_tree_exception_returns_error_string(self, mock_build):
-        """Code-mode error contract: when ``build_scope_tree`` raises, the
-        tool MUST return the failure as a string (not propagate). A
-        propagated exception in a code-mode sandbox kills the WHOLE
-        ``execute()`` block, taking every prior successful call with it.
+    async def test_build_scope_tree_exception_raises_tool_error_502(self, mock_build):
+        """Upstream-failure path (Central API unreachable / parse error /
+        any other tree-builder crash) raises ``ToolError`` with status
+        502 — distinct from validation errors (400/404) so AI clients
+        can decide whether to retry, escalate, or surface differently.
+        ``SandboxErrorCatchMiddleware`` rescues the raise in code mode.
         """
+        from fastmcp.exceptions import ToolError
+
         from hpe_networking_mcp.platforms.central.tools.scope import central_get_committed_config
 
         mock_build.side_effect = RuntimeError("Central API unreachable")
-        result = await central_get_committed_config(_ctx(), scope_id="anything")
+        with pytest.raises(ToolError) as exc_info:
+            await central_get_committed_config(_ctx(), scope_id="anything")
 
-        assert isinstance(result, str)
-        assert "Error building scope tree" in result
-        assert "Central API unreachable" in result
+        payload = exc_info.value.args[0]
+        assert payload["status_code"] == 502
+        assert "Error building scope tree" in payload["message"]
+        assert "Central API unreachable" in payload["message"]
 
     @patch("hpe_networking_mcp.platforms.central.tools.scope.build_scope_tree")
     async def test_scope_with_no_committed_resources_returns_empty_list(self, mock_build):

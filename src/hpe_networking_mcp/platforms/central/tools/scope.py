@@ -1,13 +1,24 @@
 """Aruba Central scope/configuration tree tools.
 
-Provides 5 read-only tools for inspecting the Central scope hierarchy,
-configuration resources, effective (inherited) config, devices within
-scopes, and Mermaid diagram generation.
+Provides 6 read-only tools for inspecting the Central scope hierarchy,
+configuration resources, committed config at a scope, effective
+(inherited) config, devices within scopes, and Mermaid diagram
+generation.
+
+Error contract (v3.2.0.1+): every public tool raises
+``fastmcp.exceptions.ToolError`` with a structured payload
+(``{"status_code": <HTTP-style int>, "message": "..."}``) on failure.
+This replaces the older "return error string" pattern from v2.2.0.1
+— the change is safe in code mode because
+``SandboxErrorCatchMiddleware`` catches the raise and re-raises with
+readable text. See CLAUDE.md "Tool error contract" section for the
+project-wide pattern + status-code domain.
 """
 
 from typing import Literal
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.scope_builder import (
@@ -27,7 +38,7 @@ from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 async def central_get_scope_tree(
     ctx: Context,
     view: Literal["committed", "effective"] = "committed",
-) -> dict | list | str:
+) -> dict | list:
     """
     Get the full Aruba Central scope/configuration hierarchy as a tree.
 
@@ -48,7 +59,7 @@ async def central_get_scope_tree(
         tree = build_scope_tree(conn)
         return tree_to_dict(tree, effective=(view == "effective"))
     except Exception as e:
-        return f"Error building scope tree: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error building scope tree: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -57,7 +68,7 @@ async def central_get_scope_resources(
     scope_id: str,
     persona: str | None = None,
     include_details: bool = False,
-) -> dict | str:
+) -> dict:
     """
     Get the configuration resources directly assigned to a specific scope node.
 
@@ -78,11 +89,18 @@ async def central_get_scope_resources(
     try:
         tree = build_scope_tree(conn)
     except Exception as e:
-        return f"Error building scope tree: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error building scope tree: {e}"}) from e
 
     node = tree.get_node(scope_id)
     if node is None or node.data is None:
-        return f"Scope '{scope_id}' not found in the tree. Use central_get_scope_tree to list valid scope IDs."
+        raise ToolError(
+            {
+                "status_code": 404,
+                "message": (
+                    f"Scope {scope_id!r} not found in the tree. Use central_get_scope_tree to list valid scope IDs."
+                ),
+            }
+        )
 
     device = node.data.get("device", {})
     resources_tree = node.data.get("resources")
@@ -117,7 +135,7 @@ async def central_get_committed_config(
     scope_id: str,
     persona: str | None = None,
     include_details: bool = True,
-) -> dict | str:
+) -> dict:
     """
     Get the configuration committed directly at a scope node (no inheritance).
 
@@ -154,11 +172,18 @@ async def central_get_committed_config(
     try:
         tree = build_scope_tree(conn)
     except Exception as e:
-        return f"Error building scope tree: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error building scope tree: {e}"}) from e
 
     node = tree.get_node(scope_id)
     if node is None or node.data is None:
-        return f"Scope '{scope_id}' not found in the tree. Use central_get_scope_tree to list valid scope IDs."
+        raise ToolError(
+            {
+                "status_code": 404,
+                "message": (
+                    f"Scope {scope_id!r} not found in the tree. Use central_get_scope_tree to list valid scope IDs."
+                ),
+            }
+        )
 
     device = node.data.get("device", {})
     resources_tree = node.data.get("resources")
@@ -194,7 +219,7 @@ async def central_get_effective_config(
     scope_id: str,
     persona: str | None = None,
     include_details: bool = False,
-) -> dict | str:
+) -> dict:
     """
     Get the effective (inherited + committed) configuration for a scope node.
 
@@ -217,11 +242,18 @@ async def central_get_effective_config(
     try:
         tree = build_scope_tree(conn)
     except Exception as e:
-        return f"Error building scope tree: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error building scope tree: {e}"}) from e
 
     node = tree.get_node(scope_id)
     if node is None or node.data is None:
-        return f"Scope '{scope_id}' not found in the tree. Use central_get_scope_tree to list valid scope IDs."
+        raise ToolError(
+            {
+                "status_code": 404,
+                "message": (
+                    f"Scope {scope_id!r} not found in the tree. Use central_get_scope_tree to list valid scope IDs."
+                ),
+            }
+        )
 
     device = node.data.get("device", {})
     meta = device.get("meta") or {}
@@ -242,7 +274,7 @@ async def central_get_devices_in_scope(
     ctx: Context,
     scope_id: str,
     device_type: str | None = None,
-) -> dict | str:
+) -> dict:
     """
     List all devices under a given scope (including nested sub-scopes).
 
@@ -263,11 +295,18 @@ async def central_get_devices_in_scope(
     try:
         tree = build_scope_tree(conn)
     except Exception as e:
-        return f"Error building scope tree: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error building scope tree: {e}"}) from e
 
     node = tree.get_node(scope_id)
     if node is None:
-        return f"Scope '{scope_id}' not found in the tree. Use central_get_scope_tree to list valid scope IDs."
+        raise ToolError(
+            {
+                "status_code": 404,
+                "message": (
+                    f"Scope {scope_id!r} not found in the tree. Use central_get_scope_tree to list valid scope IDs."
+                ),
+            }
+        )
 
     devices = get_devices_in_scope(tree, scope_id, device_type)
     return {
@@ -305,4 +344,4 @@ async def central_get_scope_diagram(
         tree = build_scope_tree(conn)
         return tree_to_mermaid(tree, scope_id, include_resources, include_devices)
     except Exception as e:
-        return f"Error generating scope diagram: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error generating scope diagram: {e}"}) from e
