@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
 
@@ -112,7 +113,7 @@ async def greenlake_get_devices(
             description="Zero-based offset for pagination.",
         ),
     ] = None,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """List devices in the GreenLake workspace."""
     logger.debug("greenlake_get_devices called")
 
@@ -131,7 +132,7 @@ async def greenlake_get_devices(
         if offset is not None:
             params["offset"] = _coerce_int(offset, "offset")
     except ValueError as e:
-        return f"Error: {e}"
+        raise ToolError({"status_code": 400, "message": f"Invalid parameter: {e}"}) from e
 
     token_manager = ctx.lifespan_context["greenlake_token_manager"]
     config = ctx.lifespan_context["config"]
@@ -168,12 +169,12 @@ async def greenlake_get_device_by_id(
         str,
         Field(description="The resource ID of the device."),
     ],
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Retrieve details for a single device."""
     logger.debug("greenlake_get_device_by_id called, id={}", id)
 
     if not id or not id.strip():
-        return "Error: id is required and cannot be empty"
+        raise ToolError({"status_code": 400, "message": "id is required and cannot be empty"})
 
     token_manager = ctx.lifespan_context["greenlake_token_manager"]
     config = ctx.lifespan_context["config"]

@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
 
@@ -104,7 +105,7 @@ async def greenlake_get_audit_logs(
             description="Zero-based offset for pagination.",
         ),
     ] = None,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Retrieve audit logs from HPE GreenLake."""
     logger.debug("greenlake_get_audit_logs called")
 
@@ -121,7 +122,7 @@ async def greenlake_get_audit_logs(
         if offset is not None:
             params["offset"] = _coerce_int(offset, "offset")
     except ValueError as e:
-        return f"Error: {e}"
+        raise ToolError({"status_code": 400, "message": f"Invalid parameter: {e}"}) from e
 
     token_manager = ctx.lifespan_context["greenlake_token_manager"]
     config = ctx.lifespan_context["config"]
@@ -156,12 +157,12 @@ async def greenlake_get_audit_log_details(
             description=("ID of the audit log record whose ``hasDetails`` value is ``true``."),
         ),
     ],
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Retrieve detailed information for a single audit log entry."""
     logger.debug("greenlake_get_audit_log_details called, id={}", id)
 
     if not id or not id.strip():
-        return "Error: id is required and cannot be empty"
+        raise ToolError({"status_code": 400, "message": "id is required and cannot be empty"})
 
     token_manager = ctx.lifespan_context["greenlake_token_manager"]
     config = ctx.lifespan_context["config"]

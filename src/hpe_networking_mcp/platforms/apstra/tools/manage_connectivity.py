@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms.apstra import guidelines
@@ -20,7 +21,7 @@ async def apstra_apply_ct_policies(
     blueprint_id: str,
     application_points: str | list[dict[str, Any]] | dict[str, Any],
     confirmed: bool = False,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Apply or remove connectivity-template policies on application endpoints.
 
     Uses the ``obj-policy-batch-apply`` endpoint with ``async=full`` and PATCH.
@@ -34,7 +35,7 @@ async def apstra_apply_ct_policies(
     try:
         normalized = normalize_application_points(application_points)
     except ValueError as e:
-        return f"Invalid application_points: {e}"
+        raise ToolError({"status_code": 400, "message": f"Invalid application_points: {e}"}) from e
 
     if not confirmed:
         decline = await confirm_write(
@@ -63,4 +64,5 @@ async def apstra_apply_ct_policies(
             "data": data,
         }
     except Exception as e:
-        return f"Error applying CT policies: {format_http_error(e) if hasattr(e, 'response') else e}"
+        detail = format_http_error(e) if hasattr(e, "response") else e
+        raise ToolError({"status_code": 502, "message": f"Error applying CT policies: {detail}"}) from e

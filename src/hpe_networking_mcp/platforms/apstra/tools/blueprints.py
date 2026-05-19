@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.apstra import guidelines
 from hpe_networking_mcp.platforms.apstra._registry import tool
@@ -13,7 +14,7 @@ from hpe_networking_mcp.platforms.apstra.tools import READ_ONLY
 
 
 @tool(annotations=READ_ONLY)
-async def apstra_get_blueprints(ctx: Context) -> dict[str, Any] | str:
+async def apstra_get_blueprints(ctx: Context) -> dict[str, Any]:
     """Get list of all Apstra blueprints.
 
     Returns the blueprint summary records (including id, label, design, status)
@@ -28,11 +29,12 @@ async def apstra_get_blueprints(ctx: Context) -> dict[str, Any] | str:
             "data": items,
         }
     except Exception as e:
-        return f"Error fetching blueprints: {format_http_error(e) if hasattr(e, 'response') else e}"
+        detail = format_http_error(e) if hasattr(e, "response") else e
+        raise ToolError({"status_code": 502, "message": f"Error fetching blueprints: {detail}"}) from e
 
 
 @tool(annotations=READ_ONLY)
-async def apstra_get_templates(ctx: Context) -> dict[str, Any] | str:
+async def apstra_get_templates(ctx: Context) -> dict[str, Any]:
     """Get list of available design templates for blueprint creation."""
     try:
         client = await get_apstra_client()
@@ -42,4 +44,5 @@ async def apstra_get_templates(ctx: Context) -> dict[str, Any] | str:
             "data": payload,
         }
     except Exception as e:
-        return f"Error fetching templates: {format_http_error(e) if hasattr(e, 'response') else e}"
+        detail = format_http_error(e) if hasattr(e, "response") else e
+        raise ToolError({"status_code": 502, "message": f"Error fetching templates: {detail}"}) from e

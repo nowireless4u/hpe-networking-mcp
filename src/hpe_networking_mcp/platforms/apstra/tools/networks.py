@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.apstra import guidelines
 from hpe_networking_mcp.platforms.apstra._registry import tool
@@ -13,7 +14,7 @@ from hpe_networking_mcp.platforms.apstra.tools import READ_ONLY
 
 
 @tool(annotations=READ_ONLY)
-async def apstra_get_virtual_networks(ctx: Context, blueprint_id: str) -> dict[str, Any] | str:
+async def apstra_get_virtual_networks(ctx: Context, blueprint_id: str) -> dict[str, Any]:
     """Get virtual networks in a blueprint, including bound systems and VLAN IDs.
 
     Args:
@@ -27,11 +28,12 @@ async def apstra_get_virtual_networks(ctx: Context, blueprint_id: str) -> dict[s
             "data": payload,
         }
     except Exception as e:
-        return f"Error fetching virtual networks: {format_http_error(e) if hasattr(e, 'response') else e}"
+        detail = format_http_error(e) if hasattr(e, "response") else e
+        raise ToolError({"status_code": 502, "message": f"Error fetching virtual networks: {detail}"}) from e
 
 
 @tool(annotations=READ_ONLY)
-async def apstra_get_remote_gateways(ctx: Context, blueprint_id: str) -> dict[str, Any] | str:
+async def apstra_get_remote_gateways(ctx: Context, blueprint_id: str) -> dict[str, Any]:
     """Get all remote EVPN gateways in a blueprint.
 
     Args:
@@ -45,4 +47,5 @@ async def apstra_get_remote_gateways(ctx: Context, blueprint_id: str) -> dict[st
             "data": payload,
         }
     except Exception as e:
-        return f"Error fetching remote gateways: {format_http_error(e) if hasattr(e, 'response') else e}"
+        detail = format_http_error(e) if hasattr(e, "response") else e
+        raise ToolError({"status_code": 502, "message": f"Error fetching remote gateways: {detail}"}) from e

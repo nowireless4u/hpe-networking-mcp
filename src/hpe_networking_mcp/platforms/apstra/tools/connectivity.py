@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.apstra import guidelines
 from hpe_networking_mcp.platforms.apstra._registry import tool
@@ -13,7 +14,7 @@ from hpe_networking_mcp.platforms.apstra.tools import READ_ONLY
 
 
 @tool(annotations=READ_ONLY)
-async def apstra_get_connectivity_templates(ctx: Context, blueprint_id: str) -> dict[str, Any] | str:
+async def apstra_get_connectivity_templates(ctx: Context, blueprint_id: str) -> dict[str, Any]:
     """Get connectivity templates (endpoint policies) in a blueprint.
 
     Policies marked ``"visible": true`` can be assigned to interfaces.
@@ -29,11 +30,12 @@ async def apstra_get_connectivity_templates(ctx: Context, blueprint_id: str) -> 
             "data": payload,
         }
     except Exception as e:
-        return f"Error fetching connectivity templates: {format_http_error(e) if hasattr(e, 'response') else e}"
+        detail = format_http_error(e) if hasattr(e, "response") else e
+        raise ToolError({"status_code": 502, "message": f"Error fetching connectivity templates: {detail}"}) from e
 
 
 @tool(annotations=READ_ONLY)
-async def apstra_get_application_endpoints(ctx: Context, blueprint_id: str) -> dict[str, Any] | str:
+async def apstra_get_application_endpoints(ctx: Context, blueprint_id: str) -> dict[str, Any]:
     """Get all possible application endpoints for connectivity templates.
 
     This endpoint uses POST semantics per Apstra's API contract, returning the
@@ -51,4 +53,5 @@ async def apstra_get_application_endpoints(ctx: Context, blueprint_id: str) -> d
             "data": payload,
         }
     except Exception as e:
-        return f"Error fetching application endpoints: {format_http_error(e) if hasattr(e, 'response') else e}"
+        detail = format_http_error(e) if hasattr(e, "response") else e
+        raise ToolError({"status_code": 502, "message": f"Error fetching application endpoints: {detail}"}) from e

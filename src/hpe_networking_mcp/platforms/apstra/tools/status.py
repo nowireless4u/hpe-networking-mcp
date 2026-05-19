@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.apstra import guidelines
 from hpe_networking_mcp.platforms.apstra._registry import tool
@@ -13,7 +14,7 @@ from hpe_networking_mcp.platforms.apstra.tools import READ_ONLY
 
 
 @tool(annotations=READ_ONLY)
-async def apstra_get_anomalies(ctx: Context, blueprint_id: str) -> dict[str, Any] | str:
+async def apstra_get_anomalies(ctx: Context, blueprint_id: str) -> dict[str, Any]:
     """Get anomalies for a blueprint.
 
     Args:
@@ -27,11 +28,12 @@ async def apstra_get_anomalies(ctx: Context, blueprint_id: str) -> dict[str, Any
             "data": payload,
         }
     except Exception as e:
-        return f"Error fetching anomalies: {format_http_error(e) if hasattr(e, 'response') else e}"
+        detail = format_http_error(e) if hasattr(e, "response") else e
+        raise ToolError({"status_code": 502, "message": f"Error fetching anomalies: {detail}"}) from e
 
 
 @tool(annotations=READ_ONLY)
-async def apstra_get_diff_status(ctx: Context, blueprint_id: str) -> dict[str, Any] | str:
+async def apstra_get_diff_status(ctx: Context, blueprint_id: str) -> dict[str, Any]:
     """Get configuration diff status (staging vs active) for a blueprint.
 
     Use this after changes to confirm pending work is staged correctly before
@@ -48,11 +50,12 @@ async def apstra_get_diff_status(ctx: Context, blueprint_id: str) -> dict[str, A
             "data": payload,
         }
     except Exception as e:
-        return f"Error fetching diff status: {format_http_error(e) if hasattr(e, 'response') else e}"
+        detail = format_http_error(e) if hasattr(e, "response") else e
+        raise ToolError({"status_code": 502, "message": f"Error fetching diff status: {detail}"}) from e
 
 
 @tool(annotations=READ_ONLY)
-async def apstra_get_protocol_sessions(ctx: Context, blueprint_id: str) -> dict[str, Any] | str:
+async def apstra_get_protocol_sessions(ctx: Context, blueprint_id: str) -> dict[str, Any]:
     """Get all protocol (e.g. BGP) sessions in a blueprint.
 
     Args:
@@ -66,4 +69,5 @@ async def apstra_get_protocol_sessions(ctx: Context, blueprint_id: str) -> dict[
             "data": payload,
         }
     except Exception as e:
-        return f"Error fetching protocol sessions: {format_http_error(e) if hasattr(e, 'response') else e}"
+        detail = format_http_error(e) if hasattr(e, "response") else e
+        raise ToolError({"status_code": 502, "message": f"Error fetching protocol sessions: {detail}"}) from e

@@ -261,88 +261,61 @@ class TestCodeModeRegistrationHook:
 
 @pytest.mark.unit
 class TestCodeModeErrorReturns:
-    """Regression coverage for the issue #202 fix.
+    """Error-contract coverage — REVISED for the v3.2.1.0 sweep.
 
-    In code mode, a tool function that raises propagates as ``MontyRuntimeError``
-    and crashes the AI's whole ``execute()`` call — even a ``try/except`` inside
-    the sandbox can't catch it. Tools must therefore RETURN errors as a string
-    or dict, not raise. These tests assert the contract for the affected
-    surface so a future edit can't silently regress.
+    The original issue #202 rule ("tools must RETURN error strings, never
+    raise") was reversed: `SandboxErrorCatchMiddleware` (post-#333) now
+    catches `ToolError` inside the code-mode sandbox and re-raises with
+    readable text, so the sandbox no longer dies. The preferred pattern is
+    to `raise ToolError({"status_code": ..., "message": ...})`. These tests
+    assert the migrated GreenLake surface raises structured ToolErrors.
 
-    See ``CHANGELOG.md`` and issue #202 for the full root-cause writeup.
+    See CHANGELOG.md [3.2.0.1] / [3.2.1.0] and docs/TOOLS.md "Tool error
+    contract" for the full writeup.
     """
 
     @pytest.mark.asyncio
-    async def test_greenlake_get_user_details_empty_id_returns_string(self):
-        """Empty-string id returns an error string instead of raising.
+    async def test_greenlake_get_user_details_empty_id_raises_tool_error(self):
+        """Empty-string id raises ToolError(400) instead of returning a string.
         The registry shim (with ``_registry.mcp = None`` at import time in
         tests) returns the raw function, so ``ctx`` can be ``None`` for the
-        early-return path that never touches it.
+        early-validation path that never touches it.
         """
+        from fastmcp.exceptions import ToolError
+
         from hpe_networking_mcp.platforms.greenlake.tools.users import (
             greenlake_get_user_details,
         )
 
-        result = await greenlake_get_user_details(None, id="")  # type: ignore[arg-type]
-        assert isinstance(result, str)
-        assert result.startswith("Error:")
+        with pytest.raises(ToolError) as exc_info:
+            await greenlake_get_user_details(None, id="")  # type: ignore[arg-type]
+        assert exc_info.value.args[0]["status_code"] == 400
 
     @pytest.mark.asyncio
-    async def test_greenlake_get_workspace_empty_returns_string(self):
+    async def test_greenlake_get_workspace_empty_raises_tool_error(self):
+        from fastmcp.exceptions import ToolError
+
         from hpe_networking_mcp.platforms.greenlake.tools.workspaces import (
             greenlake_get_workspace,
         )
 
-        result = await greenlake_get_workspace(None, workspaceId="")  # type: ignore[arg-type]
-        assert isinstance(result, str)
-        assert result.startswith("Error:")
+        with pytest.raises(ToolError) as exc_info:
+            await greenlake_get_workspace(None, workspaceId="")  # type: ignore[arg-type]
+        assert exc_info.value.args[0]["status_code"] == 400
 
     def test_greenlake_users_coerce_int_still_raises_for_helper_callers(self):
-        """``_coerce_int`` itself remains a raising helper — only the public
-        tool entry that calls it is required to be code-mode-safe (via try/
-        except wrapping the param-build block). Pinning this so we don't
-        accidentally rewrite the helper to return error sentinels and
-        silently break unrelated callers.
+        """``_coerce_int`` remains a raising helper — its ValueError is caught
+        by the public tool entry's param-build try/except and re-raised as a
+        ToolError(400). Pinning this so we don't accidentally rewrite the
+        helper to return error sentinels and silently break callers.
         """
         from hpe_networking_mcp.platforms.greenlake.tools.users import _coerce_int
 
         with pytest.raises(ValueError):
             _coerce_int("abc", "limit")
 
-    # NOTE (v3.1.0.0, issue #304): the original ``test_mist_mac_to_device_id_*``
-    # and ``test_mist_get_configuration_object_schema_*`` test methods were
-    # removed alongside the Mist tools they tested. The spec-driven Mist
-    # tool generation no longer has those hand-coded modules — coverage
-    # for generator output sits in ``test_mist_spec_driven.py`` (added in
-    # v3.1.0.0) instead of per-tool unit assertions.
-
-    def test_no_raise_in_greenlake_tool_files(self):
-        """Static guard: every public tool function in ``greenlake/tools/*.py``
-        must return errors as strings (or dicts), not raise. This catches a
-        future edit that re-introduces the bug.
-
-        Helper functions (names starting with ``_``) are exempt — they may
-        raise as long as their callers wrap the call.
-        """
-        import ast
-        from pathlib import Path
-
-        tools_dir = (
-            Path(__file__).parent.parent.parent / "src" / "hpe_networking_mcp" / "platforms" / "greenlake" / "tools"
-        )
-        offenders: list[str] = []
-        for py_file in tools_dir.glob("*.py"):
-            if py_file.name == "__init__.py":
-                continue
-            tree = ast.parse(py_file.read_text())
-            for node in ast.walk(tree):
-                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    # Skip helpers — names starting with ``_``.
-                    if node.name.startswith("_"):
-                        continue
-                    for inner in ast.walk(node):
-                        if isinstance(inner, ast.Raise):
-                            offenders.append(f"{py_file.name}::{node.name}:{inner.lineno}")
-        assert not offenders, (
-            f"Public GreenLake tool functions must not raise — code mode crashes the sandbox. Offenders: {offenders}"
-        )
+    # NOTE (v3.2.1.0): the old ``test_no_raise_in_greenlake_tool_files`` AST
+    # guard was removed — it enforced the obsolete no-raise rule. GreenLake
+    # tools now raise ToolError per the codified contract. An inverse guard
+    # (assert tools DO raise ToolError) is deferred until 2-3 more platforms
+    # migrate so it has enough surface area to be worth maintaining.

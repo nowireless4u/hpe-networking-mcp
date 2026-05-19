@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms.apstra import guidelines
@@ -40,7 +41,7 @@ async def apstra_create_virtual_network(
     virtual_gateway_ipv6_enabled: str | bool = False,
     ipv6_enabled: str | bool = False,
     confirmed: bool = False,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Create a virtual network via Apstra's ``virtual-networks-batch`` API.
 
     Accepts flexible input shapes (JSON strings or native types) for backward
@@ -68,7 +69,7 @@ async def apstra_create_virtual_network(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if vn_type not in ("vxlan", "vlan"):
-        return f"Invalid vn_type '{vn_type}'. Must be 'vxlan' or 'vlan'."
+        raise ToolError({"status_code": 400, "message": f"Invalid vn_type '{vn_type}'. Must be 'vxlan' or 'vlan'."})
 
     if not confirmed:
         decline = await confirm_write(
@@ -85,12 +86,12 @@ async def apstra_create_virtual_network(
         ipv6_enabled_b = bool(parse_bool(ipv6_enabled))
         policy_tagged_b = parse_bool(create_policy_tagged) if create_policy_tagged is not None else None
     except ValueError as e:
-        return f"Invalid boolean parameter: {e}"
+        raise ToolError({"status_code": 400, "message": f"Invalid boolean parameter: {e}"}) from e
 
     try:
         normalized_system_ids = normalize_to_string_list(system_ids)
     except ValueError as e:
-        return f"Invalid system_ids: {e}"
+        raise ToolError({"status_code": 400, "message": f"Invalid system_ids: {e}"}) from e
 
     if normalized_system_ids:
         target_len = len(normalized_system_ids)
@@ -98,7 +99,7 @@ async def apstra_create_virtual_network(
             normalized_vlan_ids = normalize_to_int_list(vlan_ids, target_len) if vlan_ids is not None else None
             normalized_access = normalize_to_nested_list(access_switch_node_ids, target_len)
         except ValueError as e:
-            return f"Invalid VLAN or access-switch input: {e}"
+            raise ToolError({"status_code": 400, "message": f"Invalid VLAN or access-switch input: {e}"}) from e
     else:
         normalized_vlan_ids = None
         normalized_access = None
@@ -177,7 +178,8 @@ async def apstra_create_virtual_network(
             "data": response.json(),
         }
     except Exception as e:
-        return f"Error creating virtual network: {format_http_error(e) if hasattr(e, 'response') else e}"
+        detail = format_http_error(e) if hasattr(e, "response") else e
+        raise ToolError({"status_code": 502, "message": f"Error creating virtual network: {detail}"}) from e
 
 
 @tool(annotations=WRITE, tags={"apstra_write"})
@@ -195,7 +197,7 @@ async def apstra_create_remote_gateway(
     holdtime_timer: int = 30,
     ttl: int = 30,
     confirmed: bool = False,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Create a remote EVPN gateway in a blueprint.
 
     Args:
@@ -247,4 +249,5 @@ async def apstra_create_remote_gateway(
             "data": response.json(),
         }
     except Exception as e:
-        return f"Error creating remote gateway: {format_http_error(e) if hasattr(e, 'response') else e}"
+        detail = format_http_error(e) if hasattr(e, "response") else e
+        raise ToolError({"status_code": 502, "message": f"Error creating remote gateway: {detail}"}) from e

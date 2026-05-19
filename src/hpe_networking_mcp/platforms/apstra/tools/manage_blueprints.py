@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms.apstra import guidelines
@@ -20,7 +21,7 @@ async def apstra_deploy(
     description: str,
     staging_version: int,
     confirmed: bool = False,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Deploy a blueprint's staged configuration to the fabric.
 
     Args:
@@ -50,7 +51,8 @@ async def apstra_deploy(
             "data": response.json() if response.content else {"status": "accepted"},
         }
     except Exception as e:
-        return f"Error deploying blueprint: {format_http_error(e) if hasattr(e, 'response') else e}"
+        detail = format_http_error(e) if hasattr(e, "response") else e
+        raise ToolError({"status_code": 502, "message": f"Error deploying blueprint: {detail}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"apstra_write_delete"})
@@ -58,7 +60,7 @@ async def apstra_delete_blueprint(
     ctx: Context,
     blueprint_id: str,
     confirmed: bool = False,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Permanently delete an Apstra blueprint.
 
     Args:
@@ -89,7 +91,8 @@ async def apstra_delete_blueprint(
             "data": body,
         }
     except Exception as e:
-        return f"Error deleting blueprint: {format_http_error(e) if hasattr(e, 'response') else e}"
+        detail = format_http_error(e) if hasattr(e, "response") else e
+        raise ToolError({"status_code": 502, "message": f"Error deleting blueprint: {detail}"}) from e
 
 
 @tool(annotations=WRITE, tags={"apstra_write"})
@@ -98,7 +101,7 @@ async def apstra_create_datacenter_blueprint(
     blueprint_name: str,
     template_id: str,
     confirmed: bool = False,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Create a new datacenter (``two_stage_l3clos``) blueprint from a template.
 
     Args:
@@ -131,7 +134,8 @@ async def apstra_create_datacenter_blueprint(
             "data": response.json(),
         }
     except Exception as e:
-        return f"Error creating datacenter blueprint: {format_http_error(e) if hasattr(e, 'response') else e}"
+        detail = format_http_error(e) if hasattr(e, "response") else e
+        raise ToolError({"status_code": 502, "message": f"Error creating datacenter blueprint: {detail}"}) from e
 
 
 @tool(annotations=WRITE, tags={"apstra_write"})
@@ -139,7 +143,7 @@ async def apstra_create_freeform_blueprint(
     ctx: Context,
     blueprint_name: str,
     confirmed: bool = False,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Create a new freeform blueprint.
 
     Args:
@@ -166,4 +170,5 @@ async def apstra_create_freeform_blueprint(
             "data": response.json(),
         }
     except Exception as e:
-        return f"Error creating freeform blueprint: {format_http_error(e) if hasattr(e, 'response') else e}"
+        detail = format_http_error(e) if hasattr(e, "response") else e
+        raise ToolError({"status_code": 502, "message": f"Error creating freeform blueprint: {detail}"}) from e

@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
 
@@ -89,7 +90,7 @@ async def greenlake_get_users(
             description=("Pagination offset (number of pages to skip)."),
         ),
     ] = None,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """List users in the GreenLake workspace."""
     logger.debug("greenlake_get_users called")
 
@@ -102,7 +103,7 @@ async def greenlake_get_users(
         if offset is not None:
             params["offset"] = _coerce_int(offset, "offset")
     except ValueError as e:
-        return f"Error: {e}"
+        raise ToolError({"status_code": 400, "message": f"Invalid parameter: {e}"}) from e
 
     token_manager = ctx.lifespan_context["greenlake_token_manager"]
     config = ctx.lifespan_context["config"]
@@ -137,12 +138,12 @@ async def greenlake_get_user_details(
             description=("The unique identifier of the user. Example: 7600415a-8876-5722-9f3c-b0fd11112283"),
         ),
     ],
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Retrieve detailed information for a single user."""
     logger.debug("greenlake_get_user_details called, id={}", id)
 
     if not id or not id.strip():
-        return "Error: id is required and cannot be empty"
+        raise ToolError({"status_code": 400, "message": "id is required and cannot be empty"})
 
     token_manager = ctx.lifespan_context["greenlake_token_manager"]
     config = ctx.lifespan_context["config"]

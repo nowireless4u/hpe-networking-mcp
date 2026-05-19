@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
 
@@ -44,7 +45,7 @@ async def greenlake_get_workspace(
             description=("The unique identifier of the workspace. Example: 7600415a-8876-5722-9f3c-b0fd11112283"),
         ),
     ],
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Retrieve basic information for a single workspace."""
     logger.debug(
         "greenlake_get_workspace called, workspaceId={}",
@@ -52,7 +53,7 @@ async def greenlake_get_workspace(
     )
 
     if not workspaceId or not workspaceId.strip():
-        return "Error: workspaceId is required and cannot be empty"
+        raise ToolError({"status_code": 400, "message": "workspaceId is required and cannot be empty"})
 
     token_manager = ctx.lifespan_context["greenlake_token_manager"]
     config = ctx.lifespan_context["config"]
@@ -87,7 +88,7 @@ async def greenlake_get_workspace_details(
             description=("The unique identifier of the workspace. Example: 7600415a-8876-5722-9f3c-b0fd11112283"),
         ),
     ],
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Retrieve detailed workspace information (contact info)."""
     logger.debug(
         "greenlake_get_workspace_details called, workspaceId={}",
@@ -95,7 +96,7 @@ async def greenlake_get_workspace_details(
     )
 
     if not workspaceId or not workspaceId.strip():
-        return "Error: workspaceId is required and cannot be empty"
+        raise ToolError({"status_code": 400, "message": "workspaceId is required and cannot be empty"})
 
     token_manager = ctx.lifespan_context["greenlake_token_manager"]
     config = ctx.lifespan_context["config"]
