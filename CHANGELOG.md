@@ -7,7 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.1.6.0] - 2026-05-19
 
-**Minor — ClearPass policy visualizer fix combine-algorithm mislabeling + add cross-platform Aruba role resolution (#360).** Operator's custom widget on v3.1.5.0 hardcoded "stop on match" on every role-mapping rule row even though the policy is evaluate-all (rules continue, devices accumulate multiple roles). Also: there was no way to drill into what an Aruba role actually does — `WLAN-NIGHT-NIGHT` was just a name. Both fixed.
+**Minor — ClearPass policy visualizer fix combine-algorithm mislabeling + add cross-platform Aruba role resolution (#360); response envelope no longer drops bare-string returns from invoke_tool dispatch (#362).**
+
+### Envelope bug — bare-string returns silently lost via `<platform>_invoke_tool` (#362)
+
+Operator dispatched `central_get_scope_diagram` via `central_invoke_tool` and got `{ok: True, data: None}` — the Mermaid source was silently lost. Root cause: `_payload_from_content` in the response envelope only recovered JSON-parseable text blocks (`json.loads(block.text)` raises on a Mermaid string → loop `continue`s → returns None). Affected EVERY string-returning tool dispatched through the meta-tool path, including the very common `-> dict | list | str` error-fallback case where the AI silently lost `"Error: ..."` messages.
+
+Fixed in `middleware/response_envelope.py:_payload_from_content`: two-pass recovery — first pass finds a JSON-parseable block (existing behaviour, preserves dict/list payloads), fallback returns the first non-empty text block as a raw string. Bare-string returns now survive. Unit tests pin the contract.
+
+### Operator's original v3.1.5.0 visualizer feedback (#360)
+
+Custom widget on v3.1.5.0 hardcoded "stop on match" on every role-mapping rule row even though the policy is evaluate-all (rules continue, devices accumulate multiple roles). Also: there was no way to drill into what an Aruba role actually does — `WLAN-NIGHT-NIGHT` was just a name. Both fixed.
 
 ### Combine algorithm surfaced as structured response fields
 
