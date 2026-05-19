@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.7.1] - 2026-05-19
+
+**Patch — v3.1.7.0 audit follow-up: sanitize tenant identifiers from shipped skill + close doc drift.** No behaviour change; clears the cleanup items the v3.1.7.0 audit surfaced before the next feature lands on top.
+
+- **Sanitize tenant-real names** from `central-scope-visualizer.md` worked examples. Replaced operator's actual site / collection / role / alias / policy names (`HOME`, `Lake House`, `EST Timezone Sites`, `PD-US`, `CST`, `US Sites`, `JA`, `AdamsLAB`, `night-night`, `apple-tv`, `login-control`, `fpp-device`, `nest-device`, `9004-US`, `635-US`, `755-US`, `BR-150`) with generic placeholders (`HQ` / `BRANCH-1` / `East Region Sites` / `Region-A..D` / `CORP-LAB` / `policy-A..D` / `role-A..C` / `model-A..E`). Industry-generic Aruba product references kept (CX-8360, CX-6300, CX-6200 model families). Per the [generic-example-names rule](../../.claude/projects/-Users-jonadams-Documents-Coding-Projects-hpe-networking-mcp/memory/feedback_generic_example_names.md), shipped artifacts must not leak tenant identity.
+- **README.md tool counts updated** — Central 613 → 614, total underlying tools 1893 → 1894 (12 occurrences across the comparison table, ASCII architecture diagram, env-var docs, and troubleshooting section).
+- **INSTRUCTIONS.md scope-tools section updated** — added `central_get_committed_config` to the inventory line + a guidance bullet explaining when to use it vs `central_get_effective_config`. Flagged `central_get_scope_diagram` as deprecated for visualization with a pointer to the new `central-scope-visualizer` skill. Total tool count bumped to 1894.
+- **docs/TOOLS.md** — new `### Scope & Configuration Hierarchy` section documenting all six scope tools (the five existing + the new `central_get_committed_config`) with one-line descriptions + parameter tables. Added rows for `clearpass-policy-walker` and `central-scope-visualizer` skills in the skill index table. Central header bumped to `(614 tools + 12 prompts)`. Tool-count references updated throughout (1893 → 1894).
+- **`test_central_committed_config.py`** — added `test_build_scope_tree_exception_returns_error_string` covering the code-mode error contract path that the audit flagged as missing (when `build_scope_tree` raises, the tool returns the failure as a string, not propagates).
+
 ## [3.1.7.0] - 2026-05-19
 
 **Minor — Central scope visualizer skill + symmetric `central_get_committed_config` tool.** Operator's first try at `central_get_scope_diagram` produced a sprawling unreadable wall — devices and device-groups all enumerated as separate circle nodes. The structured `central_get_scope_tree` output already has everything needed for the screenshot-quality visualizations operators want (per-scope resource counts, persona breakdowns, device-type rollups) — there was just no discoverable runbook telling the AI to use that path instead of the raw Mermaid string.

@@ -9,18 +9,18 @@ Tools are namespaced by platform: `mist_*` (Juniper Mist), `central_*` (Aruba Ce
 
 The server ships with `MCP_TOOL_MODE=code` by default since v3.0.0.0. At session start the AI sees **6 tools**:
 
-- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 1893 underlying tools
+- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 1894 underlying tools
 - **`tags(detail="brief")`** — browse the catalog by platform / module
 - **`search(query, tags=[...], detail)`** — BM25 search the catalog
 - **`get_schema(tools=[...], detail)`** — fetch parameter shape for named tools
 - **`skills_list(filter=...)`** — list bundled multi-step runbooks (since v2.3.0.0)
 - **`skills_load(name=...)`** — load a runbook to execute
 
-All 1893 per-platform tools documented below still exist and are reachable via `await call_tool(name, params)` inside `execute()`. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the discovery tools (`tags`, `search`, `get_schema`).
+All 1894 per-platform tools documented below still exist and are reachable via `await call_tool(name, params)` inside `execute()`. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the discovery tools (`tags`, `search`, `get_schema`).
 
 **Why code mode is the default since v3.0.0.0**: smallest initial token cost, single-round-trip multi-step orchestration, and validated against small local LLMs (Qwen3 4B Q4_K_M; see [#246](https://github.com/nowireless4u/hpe-networking-mcp/issues/246) reassessment).
 
-Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface (per-platform discovery — see next section). The `static` mode was REMOVED in v3.0.0.0 — at 1893 tools / ~64K tokens it was no longer practical.
+Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface (per-platform discovery — see next section). The `static` mode was REMOVED in v3.0.0.0 — at 1894 tools / ~64K tokens it was no longer practical.
 
 ## Dynamic mode (opt-in since v3.0.0.0; was the v2.x default)
 
@@ -39,7 +39,7 @@ With `MCP_TOOL_MODE=dynamic` the AI sees **24 tools**:
   - `skills_list(filter=...)` — list bundled multi-step runbooks
   - `skills_load(name=...)` — load a runbook to execute
 
-The 1893 per-platform tools are reachable via `<platform>_invoke_tool(name=..., arguments={...})`. Best when an orchestrator wants explicit per-tool dispatch rather than the sandboxed Python composition that code mode provides.
+The 1894 per-platform tools are reachable via `<platform>_invoke_tool(name=..., arguments={...})`. Best when an orchestrator wants explicit per-tool dispatch rather than the sandboxed Python composition that code mode provides.
 
 ## Code mode details (the default — see above for surface summary)
 
@@ -96,7 +96,7 @@ If you do try to dispatch to a discovery tool by mistake, `SandboxErrorCatchMidd
 - **`code` (default since v3.0.0.0)** — best for orchestrators driving small / local LLMs, multi-step aggregations, cross-platform joins, filter/map/reduce workflows. Smallest initial token cost. Validated against Qwen3 4B Q4_K_M via OpenClaw (see #246 reassessment).
 - **`dynamic` (opt-in since v3.0.0.0; was the v2.x default)** — best when the orchestrator wants explicit per-tool dispatch via `<platform>_invoke_tool` rather than sandboxed Python composition. Stable, production-tested for lookup-style questions.
 
-The `static` mode was REMOVED in v3.0.0.0 — at 1893 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` raises ValueError at startup.
+The `static` mode was REMOVED in v3.0.0.0 — at 1894 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` raises ValueError at startup.
 
 ## Overview
 
@@ -171,6 +171,8 @@ skills register in every mode without violating the code-mode design.
 | `morning-coffee-report` | Daily ops digest covering the last 24h: who's been in (audit logs), what's broken (active alerts), top talkers (clients/APs by load), AI insights (Mist SLE). Day-over-day delta deferred to phase 2 | v2.3.1.8 |
 | `central-scope-walker` | Aruba Central scope-tree walker — resolves a scope name / path / scope_id to its Central `scope_id` plus parent path, type, and metadata. Tiny utility skill (one paste-ready `execute` snippet) referenced by `central-scope-audit`, `change-pre-check`, `change-post-check`, `aos-migration`. Authored in response to small-local-model failures at authoring tree-recursion in the sandbox (Qwen3 4B / OpenClaw test report 2026-05-07) | v3.0.1.5 |
 | `cross-platform-rf-check` | Cross-platform site RF / channel-planning check — code-mode runbook equivalent of the `site_rf_check` tool (which is registered in `dynamic` mode only). Resolves a site on Mist + Central, pulls per-AP per-band radio state (channel, power, utilization, noise floor), aggregates channel distribution, and flags co-channel clusters / airtime pressure / elevated noise. Authored after operators hit "AI can't find site_rf_check" in code mode | v3.1.0.6 |
+| `clearpass-policy-walker` | ClearPass policy visualizer — compiles a policy service into a sectioned Mermaid flowchart (Block A intake / Block B role mapping / Block C enforcement) with combine-algorithm labels, what-if simulator, and on-demand drill into Aruba role policies via `central_get_role_with_policy` | v3.1.3.0 / v3.1.6.0 |
+| `central-scope-visualizer` | Aruba Central scope hierarchy visualizer — RF-check-style data-fetch runbook for the scope tree. Five zoom levels (top-level overview / drilled-in site / per-scope committed inspector / per-scope effective inspector / committed-vs-effective diff). Operator-output rules pin aggregate-by-default rendering, resource counts on every node, and never-expose-numeric-IDs. Replaces the deprecated `central_get_scope_diagram` Mermaid path | v3.1.7.0 |
 
 The `TEMPLATE.md` file in the skills directory is a starting point if you
 want to author a new skill — it's filtered out of the registry by name.
@@ -671,7 +673,7 @@ logged and skipped; the rest of the catalog still loads. See
 
 ---
 
-## Aruba Central (613 tools + 12 prompts)
+## Aruba Central (614 tools + 12 prompts)
 
 > **v3.1.1.0**: bulk-imported 197 net-new config-model object types (389 net-new tools across 19 new modules) from the gitignored local snapshot at `api-endpoints/central/config/`. See the **Config-Model Tools** section at the end of the Central section for the new module inventory and the `central_get_<type>` / `central_manage_<type>` naming convention. The 15 hand-curated tool pairs documented in detail below (sites, devices, alerts, security_policy, wlan_profiles, gateway_clusters, named_vlans, aliases, server_groups, config_assignments, scope, gateway_cluster_intent) keep their tuned docstrings and edge-case handling.
 
@@ -1333,6 +1335,67 @@ to translate between Central's named/aliased config and Mist's inline config.
 | action_type | str | Yes | `create`, `update`, or `delete`. |
 | payload | dict | Yes | Device group payload. For create: `scopeName` required. Optional: `description`. |
 | group_id | str | No | Group ID. Required for update and delete. |
+
+### Scope & Configuration Hierarchy
+
+Six read-only tools for inspecting the Central scope hierarchy (Global → Site collections → Sites → Device collections → Devices) and the configuration committed at each level. The `central-scope-visualizer` skill orchestrates these into ready-to-render visualizations; the `central-scope-walker` skill resolves a scope name / path to its `scope_id` for downstream tool calls.
+
+#### `central_get_scope_tree`
+
+> Returns the full scope hierarchy as a nested dict. Each node carries `scope_id`, `scope_name`, `type` (`GLOBAL` / `SITE_COLLECTION` / `SITE` / `DEVICE_COLLECTION` / `DEVICE`), `persona_count`, `resource_count`, `child_scope_count`, `device_count`, per-persona `categories` breakdown, and recursive `children`. One call gives you everything needed for top-level visualizations + per-scope counts.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| view | str | No | `committed` (default — directly assigned at each scope) or `effective` (rolls up inherited resources at every descendant scope). |
+
+#### `central_get_scope_resources`
+
+> Returns the configuration resources directly assigned to a specific scope node — does NOT roll up inherited resources from parent scopes (use `central_get_effective_config` for that, or `central_get_committed_config` for the same data in a shape that diffs cleanly).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| scope_id | str | Yes | The scope ID to look up. Get from `central_get_scope_tree`. |
+| persona | str | No | Filter (e.g. `CAMPUS_AP`, `ACCESS_SWITCH`, `BRANCH_GW`). Omit for all personas. |
+| include_details | bool | No | Include full resource configuration data (default false). |
+
+#### `central_get_committed_config` (v3.1.7.0+)
+
+> Returns resources committed AT the given scope as a flat list with persona attribution and `scope_path`. Same per-resource shape as `central_get_effective_config`'s `effective_resources` so the two views diff cleanly side-by-side when answering "what did the parent contribute vs what was added here?".
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| scope_id | str | Yes | The scope ID. Get from `central_get_scope_tree`. |
+| persona | str | No | Filter (e.g. `CAMPUS_AP`, `ACCESS_SWITCH`). |
+| include_details | bool | No | Include full resource configuration data (default `true`). |
+
+#### `central_get_effective_config`
+
+> Walks from the given scope up to the global root, collecting all resources at each ancestor. Returns `inheritance_path` (Global → … → this scope) plus `effective_resources` — each resource grouped by name with `instances` showing where it was committed (`origin_scope_id`, `origin_scope_name`, `persona`).
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| scope_id | str | Yes | The scope ID to query. |
+| persona | str | No | Filter. |
+| include_details | bool | No | Include full resource configuration data (default false). |
+
+#### `central_get_devices_in_scope`
+
+> Recursively collects all DEVICE leaves beneath the given scope. Each device dict includes `category`, `persona`, `device_type` (`AP` / `SWITCH` / `GATEWAY` / `OTHER`), `device_model`, `serial_number`, `mac_address`, `part_number`.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| scope_id | str | Yes | The scope ID to search under. |
+| device_type | str | No | Filter to one of `AP`, `SWITCH`, `GATEWAY`, `OTHER`. |
+
+#### `central_get_scope_diagram`
+
+> Generates a Mermaid `flowchart TD` string for the scope hierarchy. **Deprecated for visualization** — on real tenants the single Mermaid block sprawls horizontally into an unreadable wall and disconnects device groups into floating islands. Use the `central-scope-visualizer` skill instead, which fetches the structured tree and lets the AI render whatever diagram fits the request. Kept available as a text-mode fallback when nothing else works.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| scope_id | str | No | Optional subtree root. Omit for full tree. |
+| include_resources | bool | No | Show resource nodes via dashed edges. On large tenants this explodes the line count (180 → 2000+); leave false. |
+| include_devices | bool | No | Show device leaf nodes (default true). |
 
 ### Config Assignments
 

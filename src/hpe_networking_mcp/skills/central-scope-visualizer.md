@@ -69,22 +69,23 @@ These constrain every response you produce inside this skill:
 
 1. **Aggregate by default, enumerate on demand.** When a scope has 4+
    sibling site-collections, show them as one aggregated node
-   ("4 Site Collections — CST · US Sites · JA · PD-US") with an
-   affordance to expand. When a site has 17 devices spanning 5 models,
-   show them grouped by type ("Switches — 8 (8360×2, 6300×2,
-   6200×2)") not as 17 individual rectangles. Enumerated walls of
-   nodes are unreadable; the operator can ask to drill in.
+   ("4 Site Collections — Region-A · Region-B · Region-C · Region-D")
+   with an affordance to expand. When a site has 17 devices spanning
+   5 models, show them grouped by type ("Switches — 8 (CX-8360×2,
+   CX-6300×2, CX-6200×2)") not as 17 individual rectangles.
+   Enumerated walls of nodes are unreadable; the operator can ask to
+   drill in.
 2. **Resource counts on every node.** Each scope's most useful single
    number is "how much config lives here?" Always include resource
    count (from `tree_to_dict`'s `resource_count`) and device count
    (`device_count`) on every visible node.
 3. **NEVER expose raw numeric scope IDs to the user.** Values like
-   `"197674198"`, `"18413656377"`, `"2611343621"` are internal
-   identifiers — operators don't recognize them. Use scope NAMES
-   (`"HOME"`, `"EST Timezone Sites"`, `"Global"`) in user-facing
-   output. When a scope has no friendly name (some intermediate
-   site-collection nodes), show its TYPE plus child counts instead
-   (e.g. "Site collection · 3 sites · 12 devices") rather than the ID.
+   `"1234567890"` or `"9876543210"` are internal identifiers —
+   operators don't recognize them. Use scope NAMES (`"HQ"`,
+   `"East Region Sites"`, `"Global"`) in user-facing output. When a
+   scope has no friendly name (some intermediate site-collection
+   nodes), show its TYPE plus child counts instead (e.g.
+   "Site collection · 3 sites · 12 devices") rather than the ID.
 4. **Color-code by node type** in the legend: Global (gray/neutral),
    Site collection (orange/green), Site (blue), Device collection
    (yellow/purple), Device (white/gray-outline). Match the legend
@@ -124,7 +125,7 @@ These constrain every response you produce inside this skill:
 | User request | Zoom level | Primary tool |
 |---|---|---|
 | "visualize the scope hierarchy" / "show me the scope tree" / "draw the Central scope" | **Top-level overview** | `central_get_scope_tree(view="committed")` |
-| "show me what's at site HQ" / "what does HOME look like" | **Drilled-in subtree** for one site | `central_get_scope_tree` + `central_get_devices_in_scope(scope_id=<site>)` |
+| "show me what's at site HQ" / "what does BRANCH-1 look like" | **Drilled-in subtree** for one site | `central_get_scope_tree` + `central_get_devices_in_scope(scope_id=<site>)` |
 | "what config is at <scope>" / "what's directly assigned here" | **Committed config at one scope** | `central_get_committed_config(scope_id=<scope>)` |
 | "what's the effective config at <scope>" / "where does <resource> come from at <scope>" | **Effective config at one scope** | `central_get_effective_config(scope_id=<scope>)` |
 | "what did the parent contribute vs what was added at <scope>" / "committed vs effective at <scope>" | **Both views — diff** | `central_get_committed_config` + `central_get_effective_config` side-by-side |
@@ -172,10 +173,10 @@ Pattern for each visible node:
 When you have 4+ sibling site-collections under Global, fold them into one node:
 
 ```
-+--------------------------------+
-|  4 Site Collections            |
-|  CST · US Sites · JA · PD-US   |   ← first ~3 names, then "..."
-+--------------------------------+
++-------------------------------------+
+|  4 Site Collections                 |
+|  Region-A · Region-B · Region-C ... |   ← first ~3 names, then "..."
++-------------------------------------+
 ```
 
 The legend goes at the **top** of the response (above the tree), not the bottom:
@@ -194,7 +195,7 @@ End the overview with a one-line offer: *"Want to drill into a specific site or 
 
 #### 3b — Drilled-in subtree for one site
 
-Goal: show one site (HOME, Lake House, etc.) with its device-type rollups underneath.
+Goal: show one site (HQ, BRANCH-1, etc.) with its device-type rollups underneath.
 
 ```python
 # Step 3b — find the site_id then get device inventory
@@ -216,7 +217,7 @@ Render the site as the root, with one child per device TYPE (not per device):
 
 ```
 +----------------------+
-|  HOME                |
+|  HQ                  |
 |  17 devices · 3 personas |
 +----------------------+
         |
@@ -225,9 +226,9 @@ Render the site as the root, with one child per device TYPE (not per device):
 +----+ +----+ +----+ +-------+
 | APs| | SW | | GW | | Bridge|
 | 4  | | 8  | | 4  | | 1     |
-| 635-US,| | 8360×2,| | 9004-US ×4 | | BR-150 |
-| 755-US×3| 6300×2, |
-+----+ | 6200×2 |
+| (model-A,| | (model-B×2,| | (model-D ×4) | | (model-E ×1)|
+| model-C×3)| model-B×2, |
++----+ | model-B×2)|
        +-------+
 ```
 
@@ -235,11 +236,11 @@ In Mermaid:
 
 ```mermaid
 flowchart TD
-    SITE["HOME<br/>17 devices · 3 personas"]
-    APS["Access Points<br/>4 (635-US, 755-US ×3)"]
-    SW["Switches<br/>8 (8360×2, 6300×2, 6200×2)"]
-    GW["Gateways<br/>4 × 9004-US"]
-    BR["Bridge<br/>1 × BR-150"]
+    SITE["HQ<br/>17 devices · 3 personas"]
+    APS["Access Points<br/>4 (model-A, model-C ×3)"]
+    SW["Switches<br/>8 (model-B×2, model-B×2, model-B×2)"]
+    GW["Gateways<br/>4 × model-D"]
+    BR["Bridge<br/>1 × model-E"]
     SITE --> APS
     SITE --> SW
     SITE --> GW
@@ -265,17 +266,17 @@ Render as labelled groups of chips per persona, with category headers
 inside each persona block. Example (one persona block):
 
 ```
-Global › EST Timezone Sites  [CAMPUS_AP]
-51 resources committed at this scope — these are inherited by HOME and Lake House
+Global › East Region Sites  [CAMPUS_AP]
+51 resources committed at this scope — these are inherited by HQ and BRANCH-1
 
 POLICIES (17)
-[apple-tv] [login-control] [printer] [domain-machine] ...
+[policy-A] [policy-B] [policy-C] [policy-D] ...
 
 ROLES (13)
-[amazon-device] [parent] [game-console] ...
+[role-A] [role-B] [role-C] ...
 
 ALIASES (7)
-[AdamsLAB] [user] [user-vlan] ...
+[CORP-LAB] [user-alias] [user-vlan] ...
 ```
 
 Always include the **inheritance flow statement** at the top: *"These N resources flow down to all sites in <site-collection>. The <site> site adds M more on top: …"* — operators need to know what's reused vs site-specific.
@@ -294,7 +295,7 @@ eff = await call_tool("central_get_effective_config", {"scope_id": scope_id})
 Render as chip-list with the origin scope visible per chip — color-code or label by origin. Example chip:
 
 ```
-[apple-tv ← Global]   [login-control ← EST Timezone Sites]   [fpp-device ← HOME]
+[policy-A ← Global]   [policy-B ← East Region Sites]   [policy-C ← HQ]
 ```
 
 #### 3e — Committed vs effective diff for one scope
@@ -375,20 +376,21 @@ Reply (rich-client variant — embed card tree; chips for legend):
            │
    ┌───────┼────────────┬──────────────┐
    │       │            │              │
-┌─────┐ ┌─────┐ ┌──────────────┐ ┌──────────────┐
-│ EST │ │PD-US│ │ 4 Site       │ │ 28 Device    │
-│Sites│ │ 14r │ │ Collections  │ │ Collections  │
-│177r │ └─────┘ │ CST · USSites│ │ (CNX, US-EST,│
-└─────┘         │ · JA · ...   │ │  PDC, ...)   │
-                └──────────────┘ └──────────────┘
+┌─────────┐ ┌──────────┐ ┌──────────────┐ ┌──────────────┐
+│  East   │ │  West    │ │ 4 Site       │ │ 28 Device    │
+│  Region │ │  Region  │ │ Collections  │ │ Collections  │
+│  177r   │ │  14r     │ │ Region-A ·   │ │ (group-1,    │
+└─────────┘ └──────────┘ │ Region-B ... │ │  group-2,    │
+                         └──────────────┘ │  group-3 ...)│
+                                          └──────────────┘
    │
-┌──────┬──────┐
-│ HOME │ Lake │
-│ 52r ·│ House│
-│ 17d  │ 12r  │
-└──────┴──────┘
+┌──────────┬──────────┐
+│   HQ     │ BRANCH-1 │
+│   52r ·  │  12r     │
+│   17d    │          │
+└──────────┴──────────┘
 
-**Walkthrough:** Global carries the lion's share of the library (399 resources, mostly platform-level: aliases, auth servers, system policies). EST Timezone Sites adds 177 resources that flow down to HOME (52 site-specific on top) and Lake House (12 site-specific). PD-US is a thin collection (14 resources). The 4 site collections at right are organizational containers with light direct config — most config lives one level up in the per-region collections.
+**Walkthrough:** Global carries the lion's share of the library (399 resources, mostly platform-level: aliases, auth servers, system policies). East Region Sites adds 177 resources that flow down to HQ (52 site-specific on top) and BRANCH-1 (12 site-specific). West Region is a thin collection (14 resources). The 4 site collections at right are organizational containers with light direct config — most config lives one level up in the per-region collections.
 
 Want to drill into a site, or see what's committed/effective at a specific scope?
 ```

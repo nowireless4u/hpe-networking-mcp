@@ -144,6 +144,22 @@ class TestCentralGetCommittedConfig:
         assert "does-not-exist" in result
 
     @patch("hpe_networking_mcp.platforms.central.tools.scope.build_scope_tree")
+    async def test_build_scope_tree_exception_returns_error_string(self, mock_build):
+        """Code-mode error contract: when ``build_scope_tree`` raises, the
+        tool MUST return the failure as a string (not propagate). A
+        propagated exception in a code-mode sandbox kills the WHOLE
+        ``execute()`` block, taking every prior successful call with it.
+        """
+        from hpe_networking_mcp.platforms.central.tools.scope import central_get_committed_config
+
+        mock_build.side_effect = RuntimeError("Central API unreachable")
+        result = await central_get_committed_config(_ctx(), scope_id="anything")
+
+        assert isinstance(result, str)
+        assert "Error building scope tree" in result
+        assert "Central API unreachable" in result
+
+    @patch("hpe_networking_mcp.platforms.central.tools.scope.build_scope_tree")
     async def test_scope_with_no_committed_resources_returns_empty_list(self, mock_build):
         """An intermediate scope can exist as an organizational container
         without anything directly committed. Returns an empty list rather

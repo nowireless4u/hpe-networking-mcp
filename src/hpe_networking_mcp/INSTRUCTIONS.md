@@ -16,7 +16,7 @@ Tools are namespaced by platform:
 
 Two modes are supported (the `static` mode was removed in v3.0.0.0):
 
-- **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 1893 underlying tools are reachable from inside a sandboxed Python `execute()` block via `await call_tool("<platform>_invoke_tool", {"name": "<tool>", "params": {...}})` — see the in-sandbox dispatch note below; the ~1000 spec-driven Mist tools are reachable **only** through `mist_invoke_tool`, not by direct name. The smallest initial surface; best for orchestrators driving small / local LLMs.
+- **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 1894 underlying tools are reachable from inside a sandboxed Python `execute()` block via `await call_tool("<platform>_invoke_tool", {"name": "<tool>", "params": {...}})` — see the in-sandbox dispatch note below; the ~1000 spec-driven Mist tools are reachable **only** through `mist_invoke_tool`, not by direct name. The smallest initial surface; best for orchestrators driving small / local LLMs.
 - **`MCP_TOOL_MODE=dynamic`** (opt-in since v3.0.0.0; was the v2.x default) — 24 tools visible:
     - **4 cross-platform tools**: `health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`
     - **3 meta-tools per platform × 7 platforms** = 21: `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`
@@ -339,11 +339,12 @@ When asked to create a new site based on an existing site:
 - **Switch PoE & Trends**: central_get_switch_hardware_trends, central_get_switch_poe
   - **ALWAYS use `central_get_switch_hardware_trends` for PoE capacity/consumption data** — it returns all stack members with per-member PoE data. Do NOT use `central_get_switch_details` for PoE as it only returns the conductor's data for stacked switches.
   - Use `central_get_switch_poe` for per-port PoE wattage (which port is drawing how many watts).
-- **Scope & Configuration**: central_get_scope_tree, central_get_scope_resources, central_get_effective_config, central_get_devices_in_scope, central_get_scope_diagram
+- **Scope & Configuration**: central_get_scope_tree, central_get_scope_resources, central_get_committed_config, central_get_effective_config, central_get_devices_in_scope, central_get_scope_diagram
   - Use `central_get_scope_tree` to view the full scope hierarchy (Global → Collections → Sites → Devices)
-  - Use `central_get_scope_resources` to see what configuration profiles are assigned at a specific scope level
+  - Use `central_get_scope_resources` to see what configuration profiles are assigned at a specific scope level (legacy walker; `central_get_committed_config` returns the same data in a shape that diffs cleanly against `central_get_effective_config`)
+  - Use `central_get_committed_config(scope_id, persona?, include_details=True)` to see resources directly assigned AT a scope — same per-resource shape as `central_get_effective_config` for clean side-by-side diff when asking "what did the parent contribute vs what was added here?" (v3.1.7.0+)
   - Use `central_get_effective_config` to see what configuration a device inherits and from where — pass `include_details=true` for full resource configuration data
-  - Use `central_get_scope_diagram` to generate a Mermaid flowchart of the scope hierarchy — render it directly, the string is pre-built
+  - Use `central_get_scope_diagram` to generate a Mermaid flowchart of the scope hierarchy — **deprecated for visualization** (sprawls horizontally on real tenants); for visualization use the `central-scope-visualizer` skill which fetches the structured tree and lets the AI build whatever diagram fits the request
   - **Presenting scope data**: Each scope node includes `persona_count`, `resource_count`, and per-persona `categories` (e.g. policy, vlan, profile). Present as an indented hierarchy with counts at each level. Group resources by category, not as flat lists. For effective config, show the `inheritance_path` first (Global → Collection → Site), then group resources by origin scope to show what each level contributes. Use the `scope_configuration_overview` or `scope_effective_config` prompts for guided workflows.
 - **WLANs**: central_get_wlans, central_get_wlan_stats
   - Use `central_get_wlan_stats` for throughput trends (tx/rx time-series) for a specific SSID over a time window
