@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.7.0] - 2026-05-19
+
+**Minor — Central scope visualizer skill + symmetric `central_get_committed_config` tool.** Operator's first try at `central_get_scope_diagram` produced a sprawling unreadable wall — devices and device-groups all enumerated as separate circle nodes. The structured `central_get_scope_tree` output already has everything needed for the screenshot-quality visualizations operators want (per-scope resource counts, persona breakdowns, device-type rollups) — there was just no discoverable runbook telling the AI to use that path instead of the raw Mermaid string.
+
+### New skill: `central-scope-visualizer`
+
+RF-check-style runbook for Central scope hierarchy visualization. Surfaces from `skills_list` in code mode so the AI has a discoverable entry point. Gives as much data as possible (whole tree + per-scope committed/effective config + device inventory) and lets the AI build whatever diagram fits the request — top-level overview, drilled-in site, per-scope inspector, committed-vs-effective diff.
+
+Operator-output rules pinned: aggregate by default (don't enumerate 17 devices as 17 boxes — group by type with counts), resource counts on every node, never expose raw numeric scope IDs, color-code by node type, legend at the top. Doesn't blindly call `central_get_scope_diagram` — that tool is now noted as deprecated for visualization, kept only as text-mode fallback.
+
+### New tool: `central_get_committed_config(scope_id, persona?, include_details=True)`
+
+Symmetric sibling of `central_get_effective_config`. Returns what's COMMITTED at a scope (no parent-scope inheritance rollup) with the same per-resource shape as `effective_resources` so the two views diff cleanly side-by-side. Useful when the operator asks "what did the parent contribute vs what was added at this scope?" — call both and compare. The legacy `central_get_scope_resources` does the same job functionally but the asymmetric naming made the relationship non-obvious to operators (and to AIs reading the catalog).
+
+Live-verified shape against HOME scope (52 committed resources across ACCESS_SWITCH / CAMPUS_AP personas). Returns empty `committed_resources` list — not an error — when an organizational-container scope has nothing directly assigned.
+
 ## [3.1.6.0] - 2026-05-19
 
 **Minor — ClearPass policy visualizer fix combine-algorithm mislabeling + add cross-platform Aruba role resolution (#360); response envelope no longer drops bare-string returns from invoke_tool dispatch (#362).**
