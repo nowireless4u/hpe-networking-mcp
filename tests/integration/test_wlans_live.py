@@ -1,6 +1,7 @@
 """Integration tests for WLAN tools against live Central API."""
 
 import pytest
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.central.tools.wlans import (
     central_get_wlan_stats,
@@ -50,12 +51,19 @@ async def test_get_wlan_stats_custom_time_window(live_ctx):
     if not wlan_name:
         pytest.skip("WLAN has no name")
 
-    result = await central_get_wlan_stats(
-        live_ctx,
-        wlan_name=wlan_name,
-        start_time="2026-04-14T00:00:00.000Z",
-        end_time="2026-04-14T23:59:59.999Z",
-    )
+    try:
+        result = await central_get_wlan_stats(
+            live_ctx,
+            wlan_name=wlan_name,
+            start_time="2026-04-14T00:00:00.000Z",
+            end_time="2026-04-14T23:59:59.999Z",
+        )
+    except ToolError:
+        # v3.2.1.0: a non-2xx from the live API (e.g. the requested
+        # historical window has aged out of retention) now raises
+        # ToolError rather than returning an error string. That's a
+        # valid outcome for this live call.
+        return
     assert isinstance(result, (list, str))
 
 
