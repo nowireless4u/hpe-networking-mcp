@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.1.4] - 2026-05-20
+
+**Patch — make `central_get_audit_logs` forgiving of the two params AI clients keep getting wrong.** Live-verified against the audit API:
+
+- **`offset=0` returns HTTP 500.** Pagination is 1-based (`offset=1` → page 1, `offset=2` → page 2); `offset=0` is invalid and 500s. AI clients naturally pass `offset=0`, which was a direct cause of the audit-log failures. The tool now clamps `offset` to `>= 1`.
+- **The time params accept ISO 8601, not just epoch ms.** The old docstring said "epoch milliseconds," which pushed clients to *compute* epoch ms (and `datetime.now()` is blocked in the code-mode sandbox). The API accepts ISO 8601 directly (verified), and the tool forwards the value verbatim — so the fix is documentation: `start_at`/`end_at` now documented as "ISO 8601 (e.g. `2026-02-19T00:00:00Z`) or epoch milliseconds." This also aligns with the code-mode sandbox guidance to hardcode literal ISO-8601 strings.
+- `limit` is now clamped to the documented `1..200` range.
+
+Tests added to `test_central_audit_logs.py`: offset-zero clamped to 1, limit capped at 200, ISO timestamps forwarded unchanged.
+
 ## [3.2.1.3] - 2026-05-20
 
 **Patch — add backoff to `retry_central_command` so transient flaps don't defeat all retries.** The helper retried up to 5× on transient errors (429 / 5xx) but with **zero delay between attempts** — all 5 fired in under a second, so a brief upstream flap (e.g. the deprecated audit endpoint degrading near its sunset) failed every attempt and surfaced a 502. Now waits a capped exponential backoff between retries (0.5s → 1s → 2s → 4s, cap 5s; no wait after the final attempt), letting calls ride out short blips. Applies to every Central tool, not just audit.

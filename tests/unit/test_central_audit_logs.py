@@ -57,6 +57,37 @@ class TestCentralGetAuditLogs:
         assert exc_info.value.args[0]["status_code"] == 404
 
 
+class TestParamClamping:
+    @patch("hpe_networking_mcp.platforms.central.tools.audit_logs.retry_central_command")
+    async def test_offset_zero_clamped_to_one(self, mock_cmd):
+        """offset=0 makes the audit API return HTTP 500 — clamp it to 1 so the
+        AI's natural 'start at zero' doesn't fail."""
+        from hpe_networking_mcp.platforms.central.tools.audit_logs import central_get_audit_logs
+
+        mock_cmd.return_value = {"code": 200, "msg": {"audits": []}}
+        await central_get_audit_logs(_ctx(), start_at="1", end_at="2", offset=0)
+        assert mock_cmd.call_args.kwargs["api_params"]["offset"] == 1
+
+    @patch("hpe_networking_mcp.platforms.central.tools.audit_logs.retry_central_command")
+    async def test_limit_capped_at_200(self, mock_cmd):
+        from hpe_networking_mcp.platforms.central.tools.audit_logs import central_get_audit_logs
+
+        mock_cmd.return_value = {"code": 200, "msg": {"audits": []}}
+        await central_get_audit_logs(_ctx(), start_at="1", end_at="2", limit=1000)
+        assert mock_cmd.call_args.kwargs["api_params"]["limit"] == 200
+
+    @patch("hpe_networking_mcp.platforms.central.tools.audit_logs.retry_central_command")
+    async def test_iso_timestamps_pass_through_unchanged(self, mock_cmd):
+        """The API accepts ISO 8601 directly; the tool must forward it verbatim."""
+        from hpe_networking_mcp.platforms.central.tools.audit_logs import central_get_audit_logs
+
+        mock_cmd.return_value = {"code": 200, "msg": {"audits": []}}
+        await central_get_audit_logs(_ctx(), start_at="2026-02-19T00:00:00Z", end_at="2026-05-20T23:59:59Z")
+        params = mock_cmd.call_args.kwargs["api_params"]
+        assert params["start-at"] == "2026-02-19T00:00:00Z"
+        assert params["end-at"] == "2026-05-20T23:59:59Z"
+
+
 class TestDeprecationSurfacing:
     @patch("hpe_networking_mcp.platforms.central.tools.audit_logs.retry_central_command")
     async def test_deprecation_headers_surfaced_in_payload(self, mock_cmd):

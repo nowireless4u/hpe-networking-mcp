@@ -24,14 +24,22 @@ async def central_get_audit_logs(
     who changed what and when.
 
     Parameters:
-        start_at: Start of the time window in epoch milliseconds (required).
-        end_at: End of the time window in epoch milliseconds (required).
+        start_at: Start of the time window. Accepts an ISO 8601 timestamp
+            (e.g. "2026-02-19T00:00:00Z") or epoch milliseconds. Required.
+        end_at: End of the time window, same formats as start_at. Required.
         filter: OData filter expression to narrow results.
         sort: Sort order for results (e.g. "+timestamp" or "-timestamp").
-        limit: Number of records per page (default 200, max 200).
-        offset: Page number starting at 1 (default 1).
+        limit: Records per page (default 200; clamped to 1..200).
+        offset: 1-based page number (default 1). offset=2 is the second page,
+            etc. The API returns HTTP 500 for offset 0, so values < 1 are
+            clamped to 1.
     """
     conn = ctx.lifespan_context["central_conn"]
+
+    # The audit API paginates by 1-based page number and returns a 500 for
+    # offset 0, so clamp it; limit is capped at the documented max of 200.
+    offset = max(1, offset)
+    limit = max(1, min(limit, 200))
 
     query_params: dict = {
         "start-at": start_at,
