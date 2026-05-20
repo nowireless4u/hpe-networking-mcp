@@ -48,7 +48,7 @@ async def central_get_audit_logs(
         resp = retry_central_command(
             conn,
             api_method="GET",
-            api_path="network-services/v1alpha1/audits",
+            api_path="network-services/v1/audits",
             api_params=query_params,
         )
     except Exception as e:
@@ -81,7 +81,7 @@ async def central_get_audit_log_detail(
         resp = retry_central_command(
             conn,
             api_method="GET",
-            api_path=f"network-services/v1alpha1/audit/{id}",
+            api_path=f"network-services/v1/audit/{id}",
             api_params={},
         )
     except Exception as e:
