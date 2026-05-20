@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.1.2] - 2026-05-20
+
+**Patch — surface Central API deprecation/sunset to callers.** Central signals API retirement via the standard `Deprecation` / `Sunset` response headers (RFC 8594), but the platform layer was dropping them — so neither operators nor AI clients could tell an endpoint was being retired (surfaced while testing the audit-trail tools, whose upstream is `deprecation: true`, `sunset: 2026-05-20`).
+
+- New `deprecation_notice(resp)` helper in `central/utils.py` extracts a `{deprecated, sunset, message}` notice from a response's headers (or `None`).
+- `retry_central_command` now logs a warning on any successful response carrying those headers — platform-wide coverage for every Central tool.
+- `central_get_audit_logs` / `central_get_audit_log_detail` merge the notice into their returned payload under `_deprecation`, so AI clients see the retirement notice alongside the data.
+
+Tests added to `test_central_audit_logs.py` covering the helper, payload surfacing, and the no-headers case.
+
 ## [3.2.1.1] - 2026-05-20
 
 **Patch — fix audit-logs tools calling the wrong API version.** `central_get_audit_logs` and `central_get_audit_log_detail` called `network-services/v1alpha1/audits` and `network-services/v1alpha1/audit/{id}`, but the live routes are under **`v1`**, not `v1alpha1` — the `v1alpha1` paths return a gateway `404 Route Not Found` (verified live: `v1/audits` returns 200 with the same `start-at`/`end-at` epoch-ms params; `v1alpha1/audits` 404s, while a sibling `network-services/v1alpha1` route resolves, ruling out a group/auth issue). Both tools were therefore non-functional. Fixed by changing the version segment `v1alpha1` → `v1` in both calls; request params were already correct.

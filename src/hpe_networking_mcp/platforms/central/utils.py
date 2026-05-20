@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+from loguru import logger
+
 from hpe_networking_mcp.platforms.central.models import (
     Alert,
     Client,
@@ -233,6 +235,33 @@ def paginated_fetch(
     return items
 
 
+def deprecation_notice(resp: dict[str, Any]) -> dict[str, Any] | None:
+    """Extract a structured deprecation notice from a Central response's headers.
+
+    New Central signals API retirement via the standard ``Deprecation`` and
+    ``Sunset`` response headers (RFC 8594). Returns a small notice dict when
+    either is present, else ``None``. Tools can merge the notice into their
+    returned payload so AI clients learn the endpoint is being retired.
+
+    Args:
+        resp: A response dict from ``retry_central_command`` (carries ``headers``).
+
+    Returns:
+        ``{"deprecated": True, "sunset": <str|None>, "message": <str>}`` when the
+        response is deprecated, else ``None``.
+    """
+    headers = resp.get("headers") or {}
+    deprecation = headers.get("deprecation") or headers.get("Deprecation")
+    sunset = headers.get("sunset") or headers.get("Sunset")
+    if not (deprecation or sunset):
+        return None
+    message = "This Central API endpoint is deprecated"
+    if sunset:
+        message += f" and scheduled for sunset ({sunset})"
+    message += ". Plan migration to its replacement."
+    return {"deprecated": True, "sunset": sunset, "message": message}
+
+
 def retry_central_command(
     central_conn: Any,
     api_method: str,
@@ -279,6 +308,14 @@ def retry_central_command(
         code = resp.get("code", 0)
         # success
         if 200 <= code < 300:
+            notice = deprecation_notice(resp)
+            if notice is not None:
+                logger.warning(
+                    "Central endpoint {} {} is DEPRECATED (sunset={}) — plan migration",
+                    api_method,
+                    api_path,
+                    notice.get("sunset"),
+                )
             return resp
 
         # retry on server errors or rate limiting

@@ -57,6 +57,41 @@ class TestCentralGetAuditLogs:
         assert exc_info.value.args[0]["status_code"] == 404
 
 
+class TestDeprecationSurfacing:
+    @patch("hpe_networking_mcp.platforms.central.tools.audit_logs.retry_central_command")
+    async def test_deprecation_headers_surfaced_in_payload(self, mock_cmd):
+        from hpe_networking_mcp.platforms.central.tools.audit_logs import central_get_audit_logs
+
+        mock_cmd.return_value = {
+            "code": 200,
+            "msg": {"audits": [], "totalCount": 0},
+            "headers": {"deprecation": "true", "sunset": "Wed, 20 May 2026 23:59:59 GMT"},
+        }
+        result = await central_get_audit_logs(_ctx(), start_at="1", end_at="2")
+
+        assert result["_deprecation"]["deprecated"] is True
+        assert result["_deprecation"]["sunset"] == "Wed, 20 May 2026 23:59:59 GMT"
+        assert "sunset" in result["_deprecation"]["message"].lower()
+        # original body preserved
+        assert result["audits"] == []
+        assert result["totalCount"] == 0
+
+    @patch("hpe_networking_mcp.platforms.central.tools.audit_logs.retry_central_command")
+    async def test_no_deprecation_key_when_headers_absent(self, mock_cmd):
+        from hpe_networking_mcp.platforms.central.tools.audit_logs import central_get_audit_logs
+
+        mock_cmd.return_value = {"code": 200, "msg": {"audits": [], "totalCount": 0}, "headers": {}}
+        result = await central_get_audit_logs(_ctx(), start_at="1", end_at="2")
+        assert "_deprecation" not in result
+
+    def test_deprecation_notice_helper(self):
+        from hpe_networking_mcp.platforms.central.utils import deprecation_notice
+
+        assert deprecation_notice({"headers": {}}) is None
+        assert deprecation_notice({"headers": {"sunset": "X"}})["deprecated"] is True
+        assert deprecation_notice({"headers": {"deprecation": "true"}})["deprecated"] is True
+
+
 class TestCentralGetAuditLogDetail:
     @patch("hpe_networking_mcp.platforms.central.tools.audit_logs.retry_central_command")
     async def test_uses_v1_path_with_id(self, mock_cmd):

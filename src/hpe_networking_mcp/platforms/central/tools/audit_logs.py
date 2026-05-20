@@ -3,7 +3,7 @@ from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import deprecation_notice, retry_central_command
 
 
 @tool(annotations=READ_ONLY)
@@ -57,7 +57,11 @@ async def central_get_audit_logs(
     code = resp.get("code", 0)
     if not (200 <= code < 300):
         raise ToolError({"status_code": code, "message": f"Central API error: {resp.get('msg')}"})
-    return resp.get("msg", {})
+    body = resp.get("msg", {})
+    notice = deprecation_notice(resp)
+    if notice is not None and isinstance(body, dict):
+        body = {**body, "_deprecation": notice}
+    return body
 
 
 @tool(annotations=READ_ONLY)
@@ -90,4 +94,8 @@ async def central_get_audit_log_detail(
     code = resp.get("code", 0)
     if not (200 <= code < 300):
         raise ToolError({"status_code": code, "message": f"Central API error: {resp.get('msg')}"})
-    return resp.get("msg", {})
+    body = resp.get("msg", {})
+    notice = deprecation_notice(resp)
+    if notice is not None and isinstance(body, dict):
+        body = {**body, "_deprecation": notice}
+    return body
