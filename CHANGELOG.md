@@ -2559,8 +2559,6 @@ curl -i -X POST http://127.0.0.1:8000/mcp \
 ### Documentation
 - README.md, docs/TOOLS.md tool counts corrected from 38 → **47 AOS8 tools** (26 read + 12 write + 9 differentiators). The 9 differentiator tools were added in Phase 7 but the user-facing strings were not refreshed at the time. Note for [2.4.0.0]: tool count was incorrectly stated as 38; the actual shipped count was 47.
 - docs/TOOLS.md: new `### Differentiators (9)` subsection lists all 9 AOS8-unique read tools with descriptions.
-- `.planning/phases/04-differentiator-tools/04-VERIFICATION.md` added — formally documents that Phase 4 was administratively merged into Phase 7 (plans 07-01/07-02/07-03) and corrected by Phase 8 (plan 08-01).
-- REQUIREMENTS.md DIFF-01..09 traceability now reads "Complete".
 
 ### Tests
 - New `tests/unit/test_server_code_mode.py` (2 tests) — guards code-mode `execute_description` literal against future platform-prefix drift.
