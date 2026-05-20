@@ -1,6 +1,7 @@
 from typing import Literal
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pycentral.troubleshooting.troubleshooting import Troubleshooting
 
 from hpe_networking_mcp.platforms.central._registry import tool
@@ -63,7 +64,7 @@ async def central_ping(
     try:
         resp = method_map[device_type](**kwargs)
     except Exception as e:
-        return f"Error running ping test: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error running ping test: {e}"}) from e
 
     if not resp:
         return "Ping test returned no results."
@@ -104,7 +105,7 @@ async def central_traceroute(
             destination=destination,
         )
     except Exception as e:
-        return f"Error running traceroute test: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error running traceroute test: {e}"}) from e
 
     if not resp:
         return "Traceroute test returned no results."
@@ -141,7 +142,7 @@ async def central_cable_test(
             ports=port_list,
         )
     except Exception as e:
-        return f"Error running cable test: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error running cable test: {e}"}) from e
 
     if not resp:
         return "Cable test returned no results."
@@ -178,7 +179,7 @@ async def central_show_commands(
             commands=command_list,
         )
     except Exception as e:
-        return f"Error running show commands: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error running show commands: {e}"}) from e
 
     if not resp:
         return "Show commands returned no results."

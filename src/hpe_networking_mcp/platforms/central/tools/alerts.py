@@ -1,6 +1,7 @@
 from typing import Literal
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from mcp.types import ToolAnnotations
 
 from hpe_networking_mcp.platforms.central._registry import tool
@@ -94,7 +95,7 @@ async def central_get_alerts(
     try:
         odata = build_odata_filter(pairs)
     except ValueError as e:
-        return f"Error: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error: {e}"}) from e
     if odata:
         query_params["filter"] = odata
 

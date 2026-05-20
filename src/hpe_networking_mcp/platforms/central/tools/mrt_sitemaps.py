@@ -9,6 +9,7 @@ location-services accuracy and the floor-plan view in Central's UI.
 from typing import Annotated, Literal
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
@@ -24,7 +25,7 @@ WRITE_DELETE = ToolAnnotations(
 )
 
 
-def _call(conn, method: str, path: str, params: dict | None = None, data: dict | None = None) -> dict | str:
+def _call(conn, method: str, path: str, params: dict | None = None, data: dict | None = None) -> dict:
     response = retry_central_command(
         central_conn=conn,
         api_method=method,
@@ -47,7 +48,7 @@ def _call(conn, method: str, path: str, params: dict | None = None, data: dict |
 async def central_get_sitemap_summary(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
-) -> dict | str:
+) -> dict:
     """Get high-level sitemap summary for a site (counts, floors, devices placed)."""
     conn = ctx.lifespan_context["central_conn"]
     return _call(conn, "GET", f"network-monitoring/v1/sitemaps-summary/{site_id}")
@@ -58,7 +59,7 @@ async def central_get_catalogue_aps(
     ctx: Context,
     limit: int = 100,
     offset: int = 0,
-) -> dict | str:
+) -> dict:
     """List catalogue APs — the AP models available for placement on floor plans."""
     conn = ctx.lifespan_context["central_conn"]
     return _call(
@@ -85,7 +86,7 @@ async def central_get_sitemap_devices(
         _DeviceStatus,
         Field(description="``'deployed'``, ``'assigned'``, or ``'planned'``."),
     ],
-) -> dict | str:
+) -> dict:
     """List network devices on a site map by lifecycle status.
 
     ``planned`` = placeholders on the floor plan that haven't been
@@ -111,7 +112,7 @@ async def central_manage_sitemap_devices(
             description="Action body — typically a list of device placements with serial / floor / x / y / rotation."
         ),
     ],
-) -> dict | str:
+) -> dict:
     """Apply a device-placement lifecycle transition on a site map.
 
     | action | endpoint |
@@ -133,7 +134,7 @@ async def central_manage_sitemap_devices(
         "unplan": ("DELETE", "network-devices-planned"),
     }
     if action not in action_map:
-        return f"Error: unknown action '{action}'."
+        raise ToolError({"status_code": 400, "message": f"unknown action '{action}'."})
     method, segment = action_map[action]
     response = retry_central_command(
         central_conn=conn,
@@ -157,7 +158,7 @@ async def central_get_floor(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
     floor_id: Annotated[str, Field(description="Floor identifier.")],
-) -> dict | str:
+) -> dict:
     """Get one floor's configuration (dimensions, scale, building, image ref)."""
     conn = ctx.lifespan_context["central_conn"]
     return _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}")
@@ -179,12 +180,12 @@ async def central_manage_floor(
         dict | None,
         Field(description="Floor configuration body. Required for create/update; ignored for delete."),
     ] = None,
-) -> dict | str:
+) -> dict:
     """Create / update / delete a floor under a site."""
     conn = ctx.lifespan_context["central_conn"]
     if action_type == "create":
         if not payload:
-            return "Error: ``payload`` is required for create."
+            raise ToolError({"status_code": 400, "message": "``payload`` is required for create."})
         response = retry_central_command(
             central_conn=conn,
             api_method="POST",
@@ -193,7 +194,7 @@ async def central_manage_floor(
         )
     elif action_type == "update":
         if not floor_id or not payload:
-            return "Error: ``floor_id`` and ``payload`` are required for update."
+            raise ToolError({"status_code": 400, "message": "``floor_id`` and ``payload`` are required for update."})
         response = retry_central_command(
             central_conn=conn,
             api_method="PUT",
@@ -202,14 +203,14 @@ async def central_manage_floor(
         )
     elif action_type == "delete":
         if not floor_id:
-            return "Error: ``floor_id`` is required for delete."
+            raise ToolError({"status_code": 400, "message": "``floor_id`` is required for delete."})
         response = retry_central_command(
             central_conn=conn,
             api_method="DELETE",
             api_path=f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}",
         )
     else:
-        return f"Error: unknown action_type '{action_type}'."
+        raise ToolError({"status_code": 400, "message": f"unknown action_type '{action_type}'."})
     code = response.get("code", 0)
     if 200 <= code < 300:
         return {"status": "success", "action": action_type, "floor_id": floor_id, "data": response.get("msg", {})}
@@ -225,7 +226,7 @@ async def central_set_floor_scale(
         dict,
         Field(description="Scale calibration body — typically two anchor points + real-world distance."),
     ],
-) -> dict | str:
+) -> dict:
     """Set the physical scale calibration for a floor (drives location accuracy)."""
     conn = ctx.lifespan_context["central_conn"]
     response = retry_central_command(
@@ -245,7 +246,7 @@ async def central_get_floor_image(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
     floor_id: Annotated[str, Field(description="Floor identifier.")],
-) -> dict | str:
+) -> dict:
     """Get the floor-plan image reference / metadata."""
     conn = ctx.lifespan_context["central_conn"]
     return _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/image")
@@ -260,7 +261,7 @@ async def central_set_floor_image(
         dict,
         Field(description="Image-upload payload — typically a base64 blob or upload URL reference per Central's docs."),
     ],
-) -> dict | str:
+) -> dict:
     """Upload / replace the floor-plan image for a floor."""
     conn = ctx.lifespan_context["central_conn"]
     response = retry_central_command(
@@ -284,7 +285,7 @@ async def central_set_floor_image(
 async def central_get_buildings(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
-) -> dict | str:
+) -> dict:
     """List buildings at a site."""
     conn = ctx.lifespan_context["central_conn"]
     return _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/buildings")
@@ -303,12 +304,12 @@ async def central_manage_building(
         dict | None,
         Field(description="Building body. Required for update; ignored for delete."),
     ] = None,
-) -> dict | str:
+) -> dict:
     """Update or delete a building. (Create endpoint not exposed by Central MRT.)"""
     conn = ctx.lifespan_context["central_conn"]
     if action_type == "update":
         if not payload:
-            return "Error: ``payload`` is required for update."
+            raise ToolError({"status_code": 400, "message": "``payload`` is required for update."})
         response = retry_central_command(
             central_conn=conn,
             api_method="PUT",
@@ -322,7 +323,7 @@ async def central_manage_building(
             api_path=f"network-monitoring/v1/sitemaps/{site_id}/buildings/{building_id}",
         )
     else:
-        return f"Error: unknown action_type '{action_type}'."
+        raise ToolError({"status_code": 400, "message": f"unknown action_type '{action_type}'."})
     code = response.get("code", 0)
     if 200 <= code < 300:
         return {"status": "success", "action": action_type, "building_id": building_id, "data": response.get("msg", {})}
@@ -344,7 +345,7 @@ async def central_import_sitemap(
             description="Import-request body — typically references the floor-plan file(s) being imported and metadata."
         ),
     ],
-) -> dict | str:
+) -> dict:
     """Kick off a sitemap import (bulk floor-plan upload). Poll status via ``central_get_sitemap_import_status``."""
     conn = ctx.lifespan_context["central_conn"]
     response = retry_central_command(
@@ -364,7 +365,7 @@ async def central_get_sitemap_import_status(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
     import_id: Annotated[str, Field(description="Import job identifier (from ``central_import_sitemap``).")],
-) -> dict | str:
+) -> dict:
     """Get the status / result of a sitemap import job."""
     conn = ctx.lifespan_context["central_conn"]
     return _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/import/{import_id}")
@@ -376,7 +377,7 @@ async def central_get_sitemap_import_status(
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_wall_types(ctx: Context) -> dict | str:
+async def central_get_wall_types(ctx: Context) -> dict:
     """List the wall types configured at the tenant level (used in floor walls)."""
     conn = ctx.lifespan_context["central_conn"]
     return _call(conn, "GET", "network-monitoring/v1/wall-types")
@@ -393,14 +394,14 @@ async def central_manage_wall_types(
         dict | None,
         Field(description="Wall-types body — typically a list of {name, attenuation, color, ...}. Ignored for delete."),
     ] = None,
-) -> dict | str:
+) -> dict:
     """Create / update / delete tenant-global wall types."""
     conn = ctx.lifespan_context["central_conn"]
     method_map = {"create": "POST", "update": "PUT", "delete": "DELETE"}
     if action_type not in method_map:
-        return f"Error: unknown action_type '{action_type}'."
+        raise ToolError({"status_code": 400, "message": f"unknown action_type '{action_type}'."})
     if action_type != "delete" and not payload:
-        return f"Error: ``payload`` is required for {action_type}."
+        raise ToolError({"status_code": 400, "message": f"``payload`` is required for {action_type}."})
     response = retry_central_command(
         central_conn=conn,
         api_method=method_map[action_type],
@@ -423,7 +424,7 @@ async def central_get_floor_walls(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
     floor_id: Annotated[str, Field(description="Floor identifier.")],
-) -> dict | str:
+) -> dict:
     """List walls placed on a floor (used by location services for signal attenuation modeling)."""
     conn = ctx.lifespan_context["central_conn"]
     return _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/walls")
@@ -442,14 +443,14 @@ async def central_manage_floor_walls(
         dict | None,
         Field(description="Wall-set body. Ignored for delete (which clears all walls on the floor)."),
     ] = None,
-) -> dict | str:
+) -> dict:
     """Manage walls on a floor (create / update / delete the wall set)."""
     conn = ctx.lifespan_context["central_conn"]
     method_map = {"create": "POST", "update": "PUT", "delete": "DELETE"}
     if action_type not in method_map:
-        return f"Error: unknown action_type '{action_type}'."
+        raise ToolError({"status_code": 400, "message": f"unknown action_type '{action_type}'."})
     if action_type != "delete" and not payload:
-        return f"Error: ``payload`` is required for {action_type}."
+        raise ToolError({"status_code": 400, "message": f"``payload`` is required for {action_type}."})
     response = retry_central_command(
         central_conn=conn,
         api_method=method_map[action_type],
@@ -467,7 +468,7 @@ async def central_get_floor_zones(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
     floor_id: Annotated[str, Field(description="Floor identifier.")],
-) -> dict | str:
+) -> dict:
     """List zones placed on a floor (named polygons used for location analytics)."""
     conn = ctx.lifespan_context["central_conn"]
     return _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/zones")
@@ -486,14 +487,14 @@ async def central_manage_floor_zones(
         dict | None,
         Field(description="Zone-set body. Ignored for delete."),
     ] = None,
-) -> dict | str:
+) -> dict:
     """Manage zones on a floor (create / update / delete the zone set)."""
     conn = ctx.lifespan_context["central_conn"]
     method_map = {"create": "POST", "update": "PUT", "delete": "DELETE"}
     if action_type not in method_map:
-        return f"Error: unknown action_type '{action_type}'."
+        raise ToolError({"status_code": 400, "message": f"unknown action_type '{action_type}'."})
     if action_type != "delete" and not payload:
-        return f"Error: ``payload`` is required for {action_type}."
+        raise ToolError({"status_code": 400, "message": f"``payload`` is required for {action_type}."})
     response = retry_central_command(
         central_conn=conn,
         api_method=method_map[action_type],

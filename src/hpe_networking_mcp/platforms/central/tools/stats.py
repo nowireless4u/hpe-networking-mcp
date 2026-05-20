@@ -1,6 +1,7 @@
 from typing import Literal
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pycentral.new_monitoring.aps import MonitoringAPs
 from pycentral.new_monitoring.gateways import MonitoringGateways
 
@@ -42,7 +43,7 @@ async def central_get_ap_stats(
     try:
         resp = MonitoringAPs.get_ap_stats(**kwargs)
     except Exception as e:
-        return f"Error fetching AP stats: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching AP stats: {e}"}) from e
 
     if not resp:
         return f"No stats found for AP '{serial_number}'. Verify the serial using central_find_device."
@@ -91,7 +92,7 @@ async def central_get_ap_utilization(
     try:
         resp = method_map[metric](**kwargs)
     except Exception as e:
-        return f"Error fetching AP {metric} utilization: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching AP {metric} utilization: {e}"}) from e
 
     if not resp:
         return f"No {metric} utilization data for AP '{serial_number}'. Verify the serial using central_find_device."
@@ -132,7 +133,7 @@ async def central_get_gateway_stats(
     try:
         resp = MonitoringGateways.get_gateway_stats(**kwargs)
     except Exception as e:
-        return f"Error fetching gateway stats: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching gateway stats: {e}"}) from e
 
     if not resp:
         return f"No stats found for gateway '{serial_number}'. Verify the serial using central_find_device."
@@ -180,7 +181,7 @@ async def central_get_gateway_utilization(
     try:
         resp = method_map[metric](**kwargs)
     except Exception as e:
-        return f"Error fetching gateway {metric} utilization: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching gateway {metric} utilization: {e}"}) from e
 
     if not resp:
         return (
@@ -223,7 +224,7 @@ async def central_get_gateway_wan_availability(
     try:
         resp = MonitoringGateways.get_gateway_wan_availability(**kwargs)
     except Exception as e:
-        return f"Error fetching gateway WAN availability: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching gateway WAN availability: {e}"}) from e
 
     if not resp:
         return f"No WAN availability data for gateway '{serial_number}'. Verify the serial using central_find_device."
@@ -254,7 +255,7 @@ async def central_get_tunnel_health(
             serial_number=serial_number,
         )
     except Exception as e:
-        return f"Error fetching tunnel health: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching tunnel health: {e}"}) from e
 
     if not resp:
         return f"No tunnel health data for gateway '{serial_number}'. Verify the serial using central_find_device."

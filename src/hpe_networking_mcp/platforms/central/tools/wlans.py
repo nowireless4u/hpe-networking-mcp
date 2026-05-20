@@ -1,6 +1,7 @@
 from typing import Literal
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pycentral.new_monitoring.aps import MonitoringAPs
 
 from hpe_networking_mcp.platforms.central._registry import tool
@@ -49,7 +50,7 @@ async def central_get_wlans(
 
         resp = MonitoringAPs.get_wlans(**kwargs)
     except Exception as e:
-        return f"Error fetching WLANs: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching WLANs: {e}"}) from e
 
     if isinstance(resp, dict):
         items = resp.get("items", [])
@@ -101,11 +102,11 @@ async def central_get_wlan_stats(
             api_params={"filter": f"timestamp gt {start_at} and timestamp lt {end_at}"},
         )
     except Exception as e:
-        return f"Error fetching WLAN statistics: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching WLAN statistics: {e}"}) from e
 
     code = response.get("code", 0)
     if not (200 <= code < 300):
-        return f"Error fetching WLAN stats (HTTP {code}): {response.get('msg')}"
+        raise ToolError({"status_code": code, "message": f"Error fetching WLAN stats: {response.get('msg')}"})
 
     # Flatten the graph structure into a list of samples
     msg = response.get("msg", {})

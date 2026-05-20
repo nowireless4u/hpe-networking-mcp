@@ -11,6 +11,7 @@ with sort/filter/search for spotting which devices need attention.
 from typing import Any
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
@@ -92,7 +93,12 @@ async def central_get_devices_config_health(
         ``/network-config/v1alpha1/config-health/devices`` response shape.
     """
     if search is not None and not (_SEARCH_MIN_CHARS <= len(search) <= _SEARCH_MAX_CHARS):
-        return f"Error: search must be {_SEARCH_MIN_CHARS}-{_SEARCH_MAX_CHARS} chars when supplied, got {len(search)}"
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"search must be {_SEARCH_MIN_CHARS}-{_SEARCH_MAX_CHARS} chars, got {len(search)}",
+            }
+        )
 
     api_params: dict[str, Any] = {"limit": limit, "offset": offset}
     if sort is not None:

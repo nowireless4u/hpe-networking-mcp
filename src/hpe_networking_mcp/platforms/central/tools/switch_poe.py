@@ -1,6 +1,7 @@
 """Central tools for switch PoE and hardware trends."""
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
@@ -11,7 +12,7 @@ from hpe_networking_mcp.platforms.central.utils import retry_central_command
 async def central_get_switch_hardware_trends(
     ctx: Context,
     serial_number: str,
-) -> dict | str:
+) -> dict:
     """
     Get time-series hardware trends for a switch including PoE
     capacity, PoE consumption, CPU, memory, temperature, and
@@ -36,13 +37,18 @@ async def central_get_switch_hardware_trends(
             api_path=(f"network-monitoring/v1/switches/{serial_number}/hardware-trends"),
         )
     except Exception as e:
-        return f"Error fetching hardware trends: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching hardware trends: {e}"}) from e
 
     code = resp.get("code", 0)
     if code == 404:
-        return f"Switch '{serial_number}' not found. For stacked switches, use the conductor serial or stack ID."
+        raise ToolError(
+            {
+                "status_code": 404,
+                "message": f"Switch '{serial_number}' not found. For a stack, use the conductor serial / stack ID.",
+            }
+        )
     if not (200 <= code < 300):
-        return f"Central API error (HTTP {code}): {resp.get('msg')}"
+        raise ToolError({"status_code": code, "message": f"Central API error: {resp.get('msg')}"})
 
     msg = resp.get("msg", {})
     data = msg.get("response", msg)
@@ -98,7 +104,7 @@ async def central_get_switch_poe(
     ctx: Context,
     serial_number: str,
     limit: int = 100,
-) -> dict | str:
+) -> dict:
     """
     Get per-port PoE data for a switch showing power drawn
     on each interface.
@@ -121,13 +127,13 @@ async def central_get_switch_poe(
             api_params={"limit": limit},
         )
     except Exception as e:
-        return f"Error fetching port PoE data: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching port PoE data: {e}"}) from e
 
     code = resp.get("code", 0)
     if code == 404:
-        return f"Switch '{serial_number}' not found."
+        raise ToolError({"status_code": 404, "message": f"Switch '{serial_number}' not found."})
     if not (200 <= code < 300):
-        return f"Central API error (HTTP {code}): {resp.get('msg')}"
+        raise ToolError({"status_code": code, "message": f"Central API error: {resp.get('msg')}"})
 
     msg = resp.get("msg", {})
     data = msg.get("response", msg)

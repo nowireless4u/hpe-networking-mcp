@@ -1,4 +1,5 @@
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
@@ -16,7 +17,7 @@ async def central_get_applications(
     client_id: str | None = None,
     filter: str | None = None,
     sort: str | None = None,
-) -> dict | str:
+) -> dict:
     """
     Get application usage data for a site within a time window.
 
@@ -58,9 +59,9 @@ async def central_get_applications(
             api_params=query_params,
         )
     except Exception as e:
-        return f"Error fetching applications: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching applications: {e}"}) from e
 
     code = resp.get("code", 0)
     if not (200 <= code < 300):
-        return f"Central API error (HTTP {code}): {resp.get('msg')}"
+        raise ToolError({"status_code": code, "message": f"Central API error: {resp.get('msg')}"})
     return resp.get("msg", {})

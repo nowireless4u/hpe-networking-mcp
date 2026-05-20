@@ -1,6 +1,7 @@
 from typing import Literal
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.models import (
@@ -63,7 +64,7 @@ async def central_get_events(
     search: str | None = None,
     limit: int = 50,
     cursor: int | None = None,
-) -> PaginatedEvents | str:
+) -> PaginatedEvents:
     """
     Retrieve events for a given context (site, device, or client) within a specified time range.
 
@@ -97,7 +98,7 @@ async def central_get_events(
     try:
         start_at, end_at = _resolve_time_window(time_range, start_time, end_time)
     except ValueError as e:
-        return f"Error: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error: {e}"}) from e
 
     query_params: dict = {
         "context-type": context_type,
@@ -121,7 +122,7 @@ async def central_get_events(
             api_params=query_params,
         )
     except Exception as e:
-        return f"Error fetching events: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching events: {e}"}) from e
 
     msg = response["msg"]
     raw_events = msg.get("events", [])  # key is "events", not "items"
@@ -141,7 +142,7 @@ async def central_get_events_count(
     time_range: TIME_RANGE = "last_1h",
     start_time: str | None = None,
     end_time: str | None = None,
-) -> EventFilters | str:
+) -> EventFilters:
     """
     Return a breakdown of event counts for a context without fetching full event details.
 
@@ -168,7 +169,7 @@ async def central_get_events_count(
     try:
         start_at, end_at = _resolve_time_window(time_range, start_time, end_time)
     except ValueError as e:
-        return f"Error: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error: {e}"}) from e
 
     response = retry_central_command(
         ctx.lifespan_context["central_conn"],

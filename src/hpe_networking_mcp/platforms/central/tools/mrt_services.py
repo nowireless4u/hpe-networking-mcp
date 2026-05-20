@@ -11,6 +11,7 @@ distinct subsystem; they're collected here because they share the
 from typing import Annotated, Literal
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
@@ -26,7 +27,7 @@ WRITE_DELETE = ToolAnnotations(
 )
 
 
-def _get(conn, path: str, params: dict | None = None) -> dict | str:
+def _get(conn, path: str, params: dict | None = None) -> dict:
     response = retry_central_command(
         central_conn=conn,
         api_method="GET",
@@ -48,7 +49,7 @@ def _get(conn, path: str, params: dict | None = None) -> dict | str:
 async def central_get_fco_resp_info(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Device serial number.")],
-) -> dict | str:
+) -> dict:
     """Get FCO (Factory Cell Order) response info for one device.
 
     Returns provisioning / RMA-related metadata tied to the device's
@@ -64,7 +65,7 @@ async def central_get_fco_resp_info_all(
     ctx: Context,
     limit: int = 100,
     offset: int = 0,
-) -> dict | str:
+) -> dict:
     """List FCO response info across all devices in the tenant.
 
     Paginated; use for bulk audits of factory-order state.
@@ -84,7 +85,7 @@ async def central_get_asset_tags(
     filter: str | None = None,
     limit: int = 100,
     offset: int = 0,
-) -> dict | str:
+) -> dict:
     """List BLE asset tags detected by the tenant's APs.
 
     Asset tags are physical BLE beacons (e.g. ArubaAssetTag, Blyott)
@@ -115,7 +116,7 @@ async def central_get_asset_tag(
         str,
         Field(description="Asset-tag identifier (assigned by Central on first detection)."),
     ],
-) -> dict | str:
+) -> dict:
     """Get one BLE asset tag's full record.
 
     Returns classifications, BLE MAC, first/last seen, attached metadata,
@@ -150,7 +151,7 @@ async def central_manage_asset_tag_metadata(
             ),
         ),
     ] = None,
-) -> dict | str:
+) -> dict:
     """Create / update / delete the descriptive metadata attached to a BLE asset tag.
 
     The metadata is the inventory record for a tracked asset — name,
@@ -161,10 +162,10 @@ async def central_manage_asset_tag_metadata(
     conn = ctx.lifespan_context["central_conn"]
     method_map = {"create": "POST", "update": "PUT", "delete": "DELETE"}
     if action_type not in method_map:
-        return f"Error: unknown action_type '{action_type}'."
+        raise ToolError({"status_code": 400, "message": f"unknown action_type '{action_type}'."})
     method = method_map[action_type]
     if action_type != "delete" and not payload:
-        return f"Error: ``payload`` is required for {action_type}."
+        raise ToolError({"status_code": 400, "message": f"``payload`` is required for {action_type}."})
     response = retry_central_command(
         central_conn=conn,
         api_method=method,
@@ -200,7 +201,7 @@ async def central_start_ap_ranging_scan(
             ),
         ),
     ],
-) -> dict | str:
+) -> dict:
     """Kick off an AP ranging scan.
 
     Ranging scans calibrate inter-AP distances for accurate location
@@ -226,7 +227,7 @@ async def central_get_ap_ranging_scans(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
     floor_id: Annotated[str, Field(description="Floor identifier (under ``site_id``).")],
-) -> dict | str:
+) -> dict:
     """List AP ranging scans for a floor."""
     conn = ctx.lifespan_context["central_conn"]
     return _get(
@@ -241,7 +242,7 @@ async def central_get_ap_ranging_scan(
     site_id: Annotated[str, Field(description="Site identifier.")],
     floor_id: Annotated[str, Field(description="Floor identifier.")],
     scan_id: Annotated[str, Field(description="Scan identifier.")],
-) -> dict | str:
+) -> dict:
     """Get one AP ranging scan's results / status."""
     conn = ctx.lifespan_context["central_conn"]
     return _get(
@@ -256,7 +257,7 @@ async def central_delete_ap_ranging_scan(
     site_id: Annotated[str, Field(description="Site identifier.")],
     floor_id: Annotated[str, Field(description="Floor identifier.")],
     scan_id: Annotated[str, Field(description="Scan identifier to delete.")],
-) -> dict | str:
+) -> dict:
     """Delete an AP ranging scan record. Requires ``ENABLE_CENTRAL_WRITE_TOOLS=true``."""
     conn = ctx.lifespan_context["central_conn"]
     response = retry_central_command(
@@ -281,7 +282,7 @@ async def central_get_site_device_locations(
     site_id: Annotated[str, Field(description="Site identifier.")],
     limit: int = 100,
     offset: int = 0,
-) -> dict | str:
+) -> dict:
     """List device locations placed at a site (across all floors)."""
     conn = ctx.lifespan_context["central_conn"]
     return _get(
@@ -296,7 +297,7 @@ async def central_get_site_device_location(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
     location_id: Annotated[str, Field(description="Device-location identifier.")],
-) -> dict | str:
+) -> dict:
     """Get one device-location record."""
     conn = ctx.lifespan_context["central_conn"]
     return _get(conn, f"network-services/v1/sites/{site_id}/device-locations/{location_id}")
@@ -307,7 +308,7 @@ async def central_get_device_location(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
     serial_number: Annotated[str, Field(description="Device serial number.")],
-) -> dict | str:
+) -> dict:
     """Get the placement (floor + coordinates) for a specific device at a site."""
     conn = ctx.lifespan_context["central_conn"]
     return _get(
@@ -334,12 +335,12 @@ async def central_manage_device_location(
             ),
         ),
     ] = None,
-) -> dict | str:
+) -> dict:
     """Place / move / unplace a device on a site's floor plan."""
     conn = ctx.lifespan_context["central_conn"]
     if action_type == "set":
         if not payload:
-            return "Error: ``payload`` is required for set."
+            raise ToolError({"status_code": 400, "message": "``payload`` is required for set."})
         response = retry_central_command(
             central_conn=conn,
             api_method="POST",
@@ -353,7 +354,7 @@ async def central_manage_device_location(
             api_path=f"network-services/v1/sites/{site_id}/devices/{serial_number}/location",
         )
     else:
-        return f"Error: unknown action_type '{action_type}'."
+        raise ToolError({"status_code": 400, "message": f"unknown action_type '{action_type}'."})
     code = response.get("code", 0)
     if 200 <= code < 300:
         return {
@@ -376,7 +377,7 @@ async def central_get_wifi_clients_locations(
     filter: str | None = None,
     limit: int = 100,
     offset: int = 0,
-) -> dict | str:
+) -> dict:
     """Get real-time locations of WiFi clients across the tenant.
 
     PII: returns client MAC + computed coordinates. MACs ride existing
@@ -396,7 +397,7 @@ async def central_get_location_analytics_trends(
     start: Annotated[str | None, Field(description="ISO-8601 start timestamp.")] = None,
     end: Annotated[str | None, Field(description="ISO-8601 end timestamp.")] = None,
     filter: str | None = None,
-) -> dict | str:
+) -> dict:
     """Get location-analytics trend data over a time window.
 
     Surfaces visitor dwell-time, footfall, and repeat-visitor analytics
@@ -417,7 +418,7 @@ async def central_get_location_analytics_trends(
 async def central_get_location_analytics_site_insights(
     ctx: Context,
     filter: str | None = None,
-) -> dict | str:
+) -> dict:
     """Get per-site location-analytics insights (summary KPIs)."""
     conn = ctx.lifespan_context["central_conn"]
     params: dict = {}

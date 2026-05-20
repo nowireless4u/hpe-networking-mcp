@@ -1,6 +1,7 @@
 from typing import Literal
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pycentral.new_monitoring.clients import Clients
 
 from hpe_networking_mcp.platforms.central._registry import tool
@@ -73,7 +74,7 @@ async def central_get_clients(
     try:
         filter_str = build_odata_filter(pairs)
     except ValueError as e:
-        return f"Error: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error: {e}"}) from e
 
     try:
         clients = Clients.get_all_clients(
@@ -86,7 +87,7 @@ async def central_get_clients(
             filter_str=filter_str,
         )
     except Exception as e:
-        return f"Error occurred while fetching clients: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error occurred while fetching clients: {e}"}) from e
 
     if not clients:
         return "No clients found matching the specified criteria."
@@ -117,7 +118,7 @@ async def central_find_client(
     except Exception as e:
         if MISSING_CLIENT_RESPONSE in str(e):
             return f"No client found with MAC address '{mac_address}'."
-        return f"Error occurred while fetching client details: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error occurred while fetching client details: {e}"}) from e
 
     if not result:
         return f"No client found with MAC address '{mac_address}'."

@@ -1,6 +1,7 @@
 from typing import Literal
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pycentral.new_monitoring import MonitoringDevices
 
 from hpe_networking_mcp.platforms.central._registry import tool
@@ -82,7 +83,7 @@ async def central_get_devices(
     try:
         filter_str = build_odata_filter(pairs)
     except ValueError as e:
-        return f"Error: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error: {e}"}) from e
 
     # normalize site_assigned: True -> "ASSIGNED", False -> "UNASSIGNED"
     site_assigned_str: str | None = None if site_assigned is None else ("ASSIGNED" if site_assigned else "UNASSIGNED")
@@ -95,7 +96,7 @@ async def central_get_devices(
             sort=sort,
         )
     except Exception as e:
-        return f"Error fetching devices: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching devices: {e}"}) from e
 
     if not devices:
         return "No devices found matching the specified criteria."
@@ -134,16 +135,16 @@ async def central_find_device(
     try:
         filter_str = build_odata_filter(pairs)
     except ValueError as e:
-        return f"Error: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error: {e}"}) from e
     try:
         device_resp = MonitoringDevices.get_device_inventory(
             central_conn=ctx.lifespan_context["central_conn"],
             filter_str=filter_str,
         )
     except Exception as e:
-        return f"Error occurred while fetching device data: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error occurred while fetching device data: {e}"}) from e
     if "items" not in device_resp:
-        return f"Unexpected API error response: {device_resp}"
+        raise ToolError({"status_code": 502, "message": f"Unexpected API error response: {device_resp}"})
 
     if len(device_resp["items"]) == 0:
         return "No device found matching the provided criteria."

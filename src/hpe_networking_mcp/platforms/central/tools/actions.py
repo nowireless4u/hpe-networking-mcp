@@ -1,6 +1,7 @@
 from typing import Literal
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from mcp.types import ToolAnnotations
 from pycentral.troubleshooting.troubleshooting import Troubleshooting
 
@@ -73,7 +74,7 @@ async def central_disconnect_users_ssid(
             network=ssid,
         )
     except Exception as e:
-        return f"Error disconnecting users from SSID: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error disconnecting users from SSID: {e}"}) from e
 
     if not resp:
         return "Disconnect users from SSID returned no results."
@@ -105,7 +106,7 @@ async def central_disconnect_users_ap(
             serial_number=resolved_id,
         )
     except Exception as e:
-        return f"Error disconnecting users from AP: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error disconnecting users from AP: {e}"}) from e
 
     if not resp:
         return "Disconnect users from AP returned no results."
@@ -141,7 +142,7 @@ async def central_disconnect_client_ap(
             mac_address=mac_address,
         )
     except Exception as e:
-        return f"Error disconnecting client from AP: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error disconnecting client from AP: {e}"}) from e
 
     if not resp:
         return "Disconnect client from AP returned no results."
@@ -174,7 +175,7 @@ async def central_disconnect_client_gateway(
             mac_address=mac_address,
         )
     except Exception as e:
-        return f"Error disconnecting client from gateway: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error disconnecting client from gateway: {e}"}) from e
 
     if not resp:
         return "Disconnect client from gateway returned no results."
@@ -203,7 +204,7 @@ async def central_disconnect_clients_gateway(
             serial_number=serial_number,
         )
     except Exception as e:
-        return f"Error disconnecting clients from gateway: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error disconnecting clients from gateway: {e}"}) from e
 
     if not resp:
         return "Disconnect clients from gateway returned no results."
@@ -286,7 +287,7 @@ async def central_port_bounce_switch(
     try:
         port_info = _get_switch_ports(conn, serial_number)
     except Exception as e:
-        return f"Error checking port status: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error checking port status: {e}"}) from e
 
     safe_ports = []
     skipped = []
@@ -318,7 +319,7 @@ async def central_port_bounce_switch(
             ports=safe_ports,
         )
     except Exception as e:
-        return f"Error bouncing switch ports: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error bouncing switch ports: {e}"}) from e
 
     return {
         "bounced": safe_ports,
@@ -362,7 +363,7 @@ async def central_poe_bounce_switch(
     try:
         port_info = _get_switch_ports(conn, serial_number)
     except Exception as e:
-        return f"Error checking port status: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error checking port status: {e}"}) from e
 
     safe_ports = []
     skipped = []
@@ -398,7 +399,7 @@ async def central_poe_bounce_switch(
             ports=safe_ports,
         )
     except Exception as e:
-        return f"Error bouncing PoE on switch ports: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error bouncing PoE on switch ports: {e}"}) from e
 
     return {
         "bounced": safe_ports,
@@ -436,7 +437,7 @@ async def central_port_bounce_gateway(
             ports=port_list,
         )
     except Exception as e:
-        return f"Error bouncing gateway ports: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error bouncing gateway ports: {e}"}) from e
 
     if not resp:
         return "Port bounce returned no results."
@@ -472,7 +473,7 @@ async def central_poe_bounce_gateway(
             ports=port_list,
         )
     except Exception as e:
-        return f"Error bouncing PoE on gateway ports: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error bouncing PoE on gateway ports: {e}"}) from e
 
     if not resp:
         return "PoE bounce returned no results."

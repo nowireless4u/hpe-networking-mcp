@@ -105,14 +105,19 @@ class TestCentralGetDevicesConfigHealth:
 
     @pytest.mark.parametrize("bad_search", ["", "ab", "x" * 129, "x" * 500])
     async def test_search_length_rejected(self, bad_search):
-        """Search must be 3-128 chars per upstream OpenAPI."""
+        """Search must be 3-128 chars per upstream OpenAPI. v3.2.1.0:
+        validation failures raise ToolError(400) instead of returning a
+        string."""
+        from fastmcp.exceptions import ToolError
+
         from hpe_networking_mcp.platforms.central.tools.config_health import (
             central_get_devices_config_health,
         )
 
-        result = await central_get_devices_config_health(_ctx(), search=bad_search)
-        assert isinstance(result, str)
-        assert "search must be 3-128 chars" in result
+        with pytest.raises(ToolError) as exc_info:
+            await central_get_devices_config_health(_ctx(), search=bad_search)
+        assert exc_info.value.args[0]["status_code"] == 400
+        assert "search must be 3-128 chars" in exc_info.value.args[0]["message"]
 
     @pytest.mark.parametrize("good_search", ["foo", "x" * 3, "x" * 128, "abc switch"])
     @patch("hpe_networking_mcp.platforms.central.tools.config_health.retry_central_command")

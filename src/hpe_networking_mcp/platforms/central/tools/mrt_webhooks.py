@@ -13,6 +13,7 @@ untrusted AI clients.
 from typing import Annotated, Literal
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
@@ -33,7 +34,7 @@ async def central_get_webhooks(
     ctx: Context,
     limit: int = 100,
     offset: int = 0,
-) -> dict | str:
+) -> dict:
     """List configured webhooks.
 
     Returns webhook definitions (URL, event types, HMAC settings,
@@ -57,7 +58,7 @@ async def central_get_webhooks(
 async def central_get_webhook(
     ctx: Context,
     webhook_id: Annotated[str, Field(description="Webhook identifier.")],
-) -> dict | str:
+) -> dict:
     """Get one webhook's full configuration by ID."""
     conn = ctx.lifespan_context["central_conn"]
     response = retry_central_command(
@@ -104,7 +105,7 @@ async def central_manage_webhook(
             ),
         ),
     ] = False,
-) -> dict | str:
+) -> dict:
     """Create, update, or delete a webhook.
 
     Requires ``ENABLE_CENTRAL_WRITE_TOOLS=true``. Update defaults to
@@ -115,7 +116,7 @@ async def central_manage_webhook(
 
     if action_type == "create":
         if not payload:
-            return "Error: ``payload`` is required for create."
+            raise ToolError({"status_code": 400, "message": "``payload`` is required for create."})
         response = retry_central_command(
             central_conn=conn,
             api_method="POST",
@@ -124,9 +125,9 @@ async def central_manage_webhook(
         )
     elif action_type == "update":
         if not webhook_id:
-            return "Error: ``webhook_id`` is required for update."
+            raise ToolError({"status_code": 400, "message": "``webhook_id`` is required for update."})
         if not payload:
-            return "Error: ``payload`` is required for update."
+            raise ToolError({"status_code": 400, "message": "``payload`` is required for update."})
         method = "PUT" if replace_existing else "PATCH"
         response = retry_central_command(
             central_conn=conn,
@@ -136,14 +137,14 @@ async def central_manage_webhook(
         )
     elif action_type == "delete":
         if not webhook_id:
-            return "Error: ``webhook_id`` is required for delete."
+            raise ToolError({"status_code": 400, "message": "``webhook_id`` is required for delete."})
         response = retry_central_command(
             central_conn=conn,
             api_method="DELETE",
             api_path=f"network-services/v1/webhooks/{webhook_id}",
         )
     else:
-        return f"Error: unknown action_type '{action_type}'."
+        raise ToolError({"status_code": 400, "message": f"unknown action_type '{action_type}'."})
 
     code = response.get("code", 0)
     if 200 <= code < 300:
@@ -155,7 +156,7 @@ async def central_manage_webhook(
 async def central_rotate_webhook_hmac_key(
     ctx: Context,
     webhook_id: Annotated[str, Field(description="Webhook identifier to rotate.")],
-) -> dict | str:
+) -> dict:
     """Rotate the HMAC signing key for a webhook.
 
     After rotation, the old key stops signing future deliveries.

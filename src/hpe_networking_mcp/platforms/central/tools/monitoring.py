@@ -1,6 +1,7 @@
 from typing import Literal
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pycentral.new_monitoring.aps import MonitoringAPs
 from pycentral.new_monitoring.gateways import MonitoringGateways
 
@@ -77,7 +78,7 @@ async def central_get_aps(
     try:
         filter_str = build_odata_filter(pairs)
     except ValueError as e:
-        return f"Error: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error: {e}"}) from e
 
     try:
         kwargs: dict = {"central_conn": conn}
@@ -87,7 +88,7 @@ async def central_get_aps(
             kwargs["sort"] = sort
         aps = MonitoringAPs.get_all_aps(**kwargs)
     except Exception as e:
-        return f"Error fetching access points: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching access points: {e}"}) from e
 
     return aps or []
 
@@ -116,7 +117,7 @@ async def central_get_ap_wlans(
             serial_number=serial_number,
         )
     except Exception as e:
-        return f"Error fetching AP WLANs: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching AP WLANs: {e}"}) from e
 
     items = resp.get("items", []) if isinstance(resp, dict) else []
     if wlan_name:
@@ -150,7 +151,7 @@ async def central_get_ap_details(
             serial_number=serial_number,
         )
     except Exception as e:
-        return f"Error fetching AP details: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching AP details: {e}"}) from e
 
     if not resp:
         return f"No AP found with serial number '{serial_number}'. Verify the serial using central_find_device."
@@ -181,13 +182,13 @@ async def central_get_switch_details(
             api_path=(f"network-monitoring/v1/switches/{serial_number}"),
         )
     except Exception as e:
-        return f"Error fetching switch details: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching switch details: {e}"}) from e
 
     code = resp.get("code", 0)
     if code == 404:
         return f"No switch found with serial number '{serial_number}'. Verify the serial using central_find_device."
     if not (200 <= code < 300):
-        return f"Central API error (HTTP {code}): {resp.get('msg')}"
+        raise ToolError({"status_code": code, "message": f"Central API error: {resp.get('msg')}"})
 
     result = resp.get("msg", {})
 
@@ -264,7 +265,7 @@ async def central_get_gateway_details(
             serial_number=serial_number,
         )
     except Exception as e:
-        return f"Error fetching gateway details: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching gateway details: {e}"}) from e
 
     if not resp:
         return f"No gateway found with serial number '{serial_number}'. Verify the serial using central_find_device."

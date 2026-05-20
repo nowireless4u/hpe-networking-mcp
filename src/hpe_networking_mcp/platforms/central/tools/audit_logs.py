@@ -1,4 +1,5 @@
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
@@ -14,7 +15,7 @@ async def central_get_audit_logs(
     sort: str | None = None,
     limit: int = 200,
     offset: int = 1,
-) -> dict | str:
+) -> dict:
     """
     Retrieve audit logs from Aruba Central within a time window.
 
@@ -51,11 +52,11 @@ async def central_get_audit_logs(
             api_params=query_params,
         )
     except Exception as e:
-        return f"Error fetching audit logs: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching audit logs: {e}"}) from e
 
     code = resp.get("code", 0)
     if not (200 <= code < 300):
-        return f"Central API error (HTTP {code}): {resp.get('msg')}"
+        raise ToolError({"status_code": code, "message": f"Central API error: {resp.get('msg')}"})
     return resp.get("msg", {})
 
 
@@ -63,7 +64,7 @@ async def central_get_audit_logs(
 async def central_get_audit_log_detail(
     ctx: Context,
     id: str,
-) -> dict | str:
+) -> dict:
     """
     Get the full detail of a single audit log entry.
 
@@ -84,9 +85,9 @@ async def central_get_audit_log_detail(
             api_params={},
         )
     except Exception as e:
-        return f"Error fetching audit log detail: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching audit log detail: {e}"}) from e
 
     code = resp.get("code", 0)
     if not (200 <= code < 300):
-        return f"Central API error (HTTP {code}): {resp.get('msg')}"
+        raise ToolError({"status_code": code, "message": f"Central API error: {resp.get('msg')}"})
     return resp.get("msg", {})

@@ -47,10 +47,15 @@ class TestCentralGetApsEmptyContract:
         assert await central_get_aps(_ctx()) == sample
 
     @patch("hpe_networking_mcp.platforms.central.tools.monitoring.MonitoringAPs.get_all_aps")
-    async def test_sdk_exception_returns_error_string(self, mock_get_all):
+    async def test_sdk_exception_raises_tool_error(self, mock_get_all):
+        """v3.2.1.0: SDK exceptions now raise ToolError(502) instead of
+        returning an error string."""
+        from fastmcp.exceptions import ToolError
+
         from hpe_networking_mcp.platforms.central.tools.monitoring import central_get_aps
 
         mock_get_all.side_effect = RuntimeError("auth failed")
-        result = await central_get_aps(_ctx())
-        assert isinstance(result, str)
-        assert "auth failed" in result
+        with pytest.raises(ToolError) as exc_info:
+            await central_get_aps(_ctx())
+        assert exc_info.value.args[0]["status_code"] == 502
+        assert "auth failed" in exc_info.value.args[0]["message"]
