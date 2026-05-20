@@ -544,7 +544,10 @@ def _register_code_mode(mcp: FastMCP) -> None:
         "including `datetime.now()`, `time.time()`, file I/O, `os.environ`, "
         "and `subprocess`. For timestamps, accept ISO strings as parameters "
         "or hardcode literal ISO-8601 strings rather than computing them "
-        "inside the sandbox."
+        "inside the sandbox. Not every stdlib module exists in the sandbox — "
+        "e.g. `import collections` (Counter/defaultdict) raises "
+        "ModuleNotFoundError. Use builtins instead: a plain `dict` for "
+        "counting/grouping, plus `set`, `sorted`, `sum`, and `min`/`max`."
     )
 
     # Build the skills registry once and hand factories to CodeMode so the

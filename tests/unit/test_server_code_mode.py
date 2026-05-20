@@ -59,6 +59,20 @@ def test_execute_description_names_all_platforms() -> None:
 
 
 @pytest.mark.unit
+def test_execute_description_warns_unavailable_stdlib_modules() -> None:
+    """The Monty sandbox is a Python subset — some stdlib modules aren't
+    importable (e.g. `collections`). Operator transcripts repeatedly hit
+    `ModuleNotFoundError: No module named 'collections'` in code mode, so the
+    description must warn and point at builtins instead."""
+    body = _read_execute_description_block()
+    assert "collections" in body and "ModuleNotFoundError" in body, (
+        "execute_description must warn that not every stdlib module exists in "
+        "the sandbox (e.g. `import collections` raises ModuleNotFoundError) and "
+        "steer the AI to builtins."
+    )
+
+
+@pytest.mark.unit
 def test_execute_description_steers_to_invoke_tool() -> None:
     """#328: the description must steer the LLM to `<platform>_invoke_tool`
     as the dispatch path — NOT bare-name `call_tool("mist_get_self", ...)`,

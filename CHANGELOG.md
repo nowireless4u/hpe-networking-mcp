@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 4xx still raises immediately (no retry, no sleep).
 - New `tests/unit/test_central_retry.py` covering the backoff schedule, transient-then-success, 429 retry, exhaustion-then-raise, and the 4xx fast-fail (all with `time.sleep` patched).
 
+**Also — code-mode sandbox guidance.** The `execute` description now warns that not every stdlib module exists in the Monty sandbox (e.g. `import collections` raises `ModuleNotFoundError`) and steers the AI to builtins (plain `dict` for counting/grouping, `set`, `sorted`, `sum`, `min`/`max`). Operator transcripts repeatedly hit this when aggregating audit data in code mode. Regression test added to `test_server_code_mode.py`.
+
 ## [3.2.1.2] - 2026-05-20
 
 **Patch — surface Central API deprecation/sunset to callers.** Central signals API retirement via the standard `Deprecation` / `Sunset` response headers (RFC 8594), but the platform layer was dropping them — so neither operators nor AI clients could tell an endpoint was being retired (surfaced while testing the audit-trail tools, whose upstream is `deprecation: true`, `sunset: 2026-05-20`).
