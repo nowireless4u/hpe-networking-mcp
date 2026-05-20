@@ -1,3 +1,4 @@
+import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -16,6 +17,17 @@ from hpe_networking_mcp.platforms.central.models import (
     SiteData,
     SiteMetrics,
 )
+
+# Exponential backoff for retry_central_command's transient-failure path.
+# Without a delay, all retries fire in <1s and a brief upstream flap
+# (e.g. the degrading audit endpoint near its sunset) defeats every attempt.
+_RETRY_BACKOFF_BASE_SECS = 0.5
+_RETRY_BACKOFF_CAP_SECS = 5.0
+
+
+def _retry_backoff_secs(attempt: int) -> float:
+    """Seconds to wait before the next retry (1-indexed attempt). Capped exponential."""
+    return min(_RETRY_BACKOFF_BASE_SECS * (2 ** (attempt - 1)), _RETRY_BACKOFF_CAP_SECS)
 
 
 def normalize_site_name_filter(value: str | list[str] | None) -> list[str] | None:
@@ -303,6 +315,8 @@ def retry_central_command(
                 exc,
             )
             last_response = {"code": 0, "msg": str(exc)}
+            if attempt < max_retries:
+                time.sleep(_retry_backoff_secs(attempt))
             continue
 
         code = resp.get("code", 0)
@@ -329,6 +343,8 @@ def retry_central_command(
                 max_retries,
             )
             last_response = resp
+            if attempt < max_retries:
+                time.sleep(_retry_backoff_secs(attempt))
             continue
 
         # client errors -> raise immediately

@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.1.3] - 2026-05-20
+
+**Patch — add backoff to `retry_central_command` so transient flaps don't defeat all retries.** The helper retried up to 5× on transient errors (429 / 5xx) but with **zero delay between attempts** — all 5 fired in under a second, so a brief upstream flap (e.g. the deprecated audit endpoint degrading near its sunset) failed every attempt and surfaced a 502. Now waits a capped exponential backoff between retries (0.5s → 1s → 2s → 4s, cap 5s; no wait after the final attempt), letting calls ride out short blips. Applies to every Central tool, not just audit.
+
+- New `_retry_backoff_secs(attempt)` helper; `time.sleep` between retries on both the transport-exception and 429/5xx paths.
+- 4xx still raises immediately (no retry, no sleep).
+- New `tests/unit/test_central_retry.py` covering the backoff schedule, transient-then-success, 429 retry, exhaustion-then-raise, and the 4xx fast-fail (all with `time.sleep` patched).
+
 ## [3.2.1.2] - 2026-05-20
 
 **Patch — surface Central API deprecation/sunset to callers.** Central signals API retirement via the standard `Deprecation` / `Sunset` response headers (RFC 8594), but the platform layer was dropping them — so neither operators nor AI clients could tell an endpoint was being retired (surfaced while testing the audit-trail tools, whose upstream is `deprecation: true`, `sunset: 2026-05-20`).
