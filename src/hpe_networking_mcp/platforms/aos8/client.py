@@ -8,7 +8,6 @@ Mirrors the structural template of platforms/apstra/client.py with these AOS8 de
   * Explicit ``if ... raise`` instead of ``assert`` (python -O hazard fix).
 
 References:
-  - .planning/phases/02-api-client/02-RESEARCH.md §Architecture Patterns 1-7
   - https://developer.arubanetworks.com/aos8/docs/login
   - https://developer.arubanetworks.com/aos8/docs/showcommand-api
 """

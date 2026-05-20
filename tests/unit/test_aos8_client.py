@@ -1,8 +1,8 @@
-"""Wave 0 TDD test scaffold for AOS8Client.
+"""Unit tests for AOS8Client.
 
-Tests will fail with ImportError until Plan 02 creates client.py — that is the
-correct RED state. Each test maps to one CLIENT-NN requirement from
-.planning/phases/02-api-client/02-RESEARCH.md.
+Covers the AOS 8 / Mobility Conductor client behaviors: UIDARUBA cookie +
+query-param auth, the GET/POST-only method whitelist, application-level
+error detection (``_global_result.status``), and URL log sanitization.
 """
 
 from __future__ import annotations
