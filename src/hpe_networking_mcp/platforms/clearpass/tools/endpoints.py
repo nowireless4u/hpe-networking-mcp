@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
@@ -59,8 +60,10 @@ async def clearpass_get_endpoints(
         ]
         query = "?" + "&".join(p for p in params if p)
         return clearpass_get(client, "/endpoint" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching endpoints: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching endpoints: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -81,5 +84,7 @@ async def clearpass_get_endpoint_profiler(
 
         client = await get_clearpass_session(ApiEndpointVisibility)
         return client.get_device_profiler_device_fingerprint_by_mac_or_ip(mac_or_ip=mac_or_ip)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching endpoint profiler data: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching endpoint profiler data: {e}"}) from e

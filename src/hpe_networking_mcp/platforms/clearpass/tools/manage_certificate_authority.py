@@ -16,6 +16,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
@@ -87,9 +88,14 @@ async def clearpass_manage_certificate_authority(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in _CA_ACTIONS:
-        return f"Invalid action_type '{action_type}'. Must be one of: {', '.join(_CA_ACTIONS)}."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(_CA_ACTIONS)}.",
+            }
+        )
     if action_type in ("sign", "revoke", "reject", "export", "delete") and not certificate_id:
-        return f"certificate_id is required for action '{action_type}'."
+        raise ToolError({"status_code": 400, "message": f"certificate_id is required for action '{action_type}'."})
 
     decline = await confirm_write(ctx, f"ClearPass CA: {action_type} certificate {certificate_id or '(new)'}. Confirm?")
     if decline:
@@ -110,8 +116,10 @@ async def clearpass_manage_certificate_authority(
             return client._send_request(f"/certificate/{certificate_id}", "delete")
         # sign / revoke / reject / export
         return client._send_request(f"/certificate/{certificate_id}/{action_type}", "post", query=payload)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing CA certificate ({action_type}): {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing CA certificate ({action_type}): {e}"}) from e
 
 
 _ONBOARD_ACTIONS = ("update", "delete")
@@ -149,9 +157,11 @@ async def clearpass_manage_onboard_device(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in _ONBOARD_ACTIONS:
-        return f"Invalid action_type '{action_type}'. Must be 'update' or 'delete'."
+        raise ToolError(
+            {"status_code": 400, "message": f"Invalid action_type '{action_type}'. Must be 'update' or 'delete'."}
+        )
     if action_type == "update" and not payload:
-        return "payload is required for action 'update'."
+        raise ToolError({"status_code": 400, "message": "payload is required for action 'update'."})
 
     decline = await confirm_write(
         ctx,
@@ -169,5 +179,7 @@ async def clearpass_manage_onboard_device(
             return client._send_request(path, "delete")
         body: Any = payload if payload is not None else {}
         return client._send_request(path, "patch", query=body)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing onboard device ({action_type}): {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing onboard device ({action_type}): {e}"}) from e

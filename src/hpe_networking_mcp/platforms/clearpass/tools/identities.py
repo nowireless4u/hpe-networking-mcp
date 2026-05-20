@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
@@ -40,8 +41,10 @@ async def clearpass_get_api_clients(
             return client.get_api_client_by_client_id(client_id=client_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/api-client" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching API clients: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching API clients: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -79,8 +82,10 @@ async def clearpass_get_local_users(
             return client.get_local_user_user_id_by_user_id(user_id=user_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/local-user" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching local users: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching local users: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -119,8 +124,10 @@ async def clearpass_get_static_host_lists(
             return client.get_static_host_list_name_by_name(name=name)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/static-host-list" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching static host lists: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching static host lists: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -157,8 +164,10 @@ async def clearpass_get_devices(
             return client.get_device_mac_by_macaddr(macaddr=macaddr)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/device" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching devices: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching devices: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -193,8 +202,10 @@ async def clearpass_get_deny_listed_users(
             )
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/deny-listed-users" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching deny-listed users: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching deny-listed users: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -239,5 +250,7 @@ async def clearpass_get_external_accounts(
             return clearpass_get(client, f"/external-account/name/{name}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/external-account" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching external accounts: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching external accounts: {e}"}) from e

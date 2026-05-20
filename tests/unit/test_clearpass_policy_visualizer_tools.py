@@ -10,6 +10,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from fastmcp.exceptions import ToolError
 
 pytestmark = pytest.mark.unit
 
@@ -94,14 +95,16 @@ class TestCompilePolicyFlowValidation:
         )
 
         # Neither
-        result = await clearpass_compile_policy_flow(_ctx())
-        assert isinstance(result, str)
-        assert "exactly one" in result.lower()
+        with pytest.raises(ToolError) as exc_info:
+            await clearpass_compile_policy_flow(_ctx())
+        assert exc_info.value.args[0]["status_code"] == 400
+        assert "exactly one" in exc_info.value.args[0]["message"].lower()
 
         # Both
-        result = await clearpass_compile_policy_flow(_ctx(), service_id=1, service_name="X")
-        assert isinstance(result, str)
-        assert "exactly one" in result.lower()
+        with pytest.raises(ToolError) as exc_info:
+            await clearpass_compile_policy_flow(_ctx(), service_id=1, service_name="X")
+        assert exc_info.value.args[0]["status_code"] == 400
+        assert "exactly one" in exc_info.value.args[0]["message"].lower()
 
 
 class TestResolveServiceName:

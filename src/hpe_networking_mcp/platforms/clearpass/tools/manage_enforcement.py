@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
@@ -46,7 +47,12 @@ async def clearpass_manage_enforcement_policy(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
 
     if action_type != "create" and not confirmed:
         decline = await _confirm_write(ctx, f"{action_type} enforcement policy", policy_id or name)
@@ -61,7 +67,7 @@ async def clearpass_manage_enforcement_policy(
         if action_type == "create":
             return client._send_request("/enforcement-policy", "post", query=payload)
         if not policy_id and not name:
-            return "Either policy_id or name is required for update/delete."
+            raise ToolError({"status_code": 400, "message": "Either policy_id or name is required for update/delete."})
         if action_type == "update":
             if policy_id:
                 return client._send_request(f"/enforcement-policy/{policy_id}", "patch", query=payload)
@@ -70,8 +76,10 @@ async def clearpass_manage_enforcement_policy(
         if policy_id:
             return client.delete_enforcement_policy_by_enforcement_policy_id(enforcement_policy_id=policy_id)
         return client.delete_enforcement_policy_name_by_name(name=name)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing enforcement policy: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing enforcement policy: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -96,7 +104,12 @@ async def clearpass_manage_enforcement_profile(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
 
     if action_type != "create" and not confirmed:
         decline = await _confirm_write(ctx, f"{action_type} enforcement profile", profile_id or name)
@@ -111,7 +124,7 @@ async def clearpass_manage_enforcement_profile(
         if action_type == "create":
             return client._send_request("/enforcement-profile", "post", query=payload)
         if not profile_id and not name:
-            return "Either profile_id or name is required for update/delete."
+            raise ToolError({"status_code": 400, "message": "Either profile_id or name is required for update/delete."})
         if action_type == "update":
             if profile_id:
                 return client._send_request(f"/enforcement-profile/{profile_id}", "patch", query=payload)
@@ -120,5 +133,7 @@ async def clearpass_manage_enforcement_profile(
         if profile_id:
             return client.delete_enforcement_profile_by_enforcement_profile_id(enforcement_profile_id=profile_id)
         return client.delete_enforcement_profile_name_by_name(name=name)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing enforcement profile: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing enforcement profile: {e}"}) from e

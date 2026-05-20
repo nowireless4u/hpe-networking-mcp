@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
@@ -43,7 +44,12 @@ async def clearpass_manage_api_client(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
     decline = await _confirm_write(ctx, action_type, "API client", client_id, confirmed)
     if decline:
         return decline
@@ -54,12 +60,14 @@ async def clearpass_manage_api_client(
         if action_type == "create":
             return client._send_request("/api-client", "post", query=payload)
         if not client_id:
-            return "client_id is required for update/delete."
+            raise ToolError({"status_code": 400, "message": "client_id is required for update/delete."})
         if action_type == "update":
             return client._send_request(f"/api-client/{client_id}", "patch", query=payload)
         return client.delete_api_client_by_client_id(client_id=client_id)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing API client: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing API client: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -81,7 +89,12 @@ async def clearpass_manage_local_user(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
     decline = await _confirm_write(ctx, action_type, "local user", local_user_id or user_id, confirmed)
     if decline:
         return decline
@@ -92,15 +105,19 @@ async def clearpass_manage_local_user(
         if action_type == "create":
             return client._send_request("/local-user", "post", query=payload)
         if not local_user_id and not user_id:
-            return "Either local_user_id or user_id is required for update/delete."
+            raise ToolError(
+                {"status_code": 400, "message": "Either local_user_id or user_id is required for update/delete."}
+            )
         if action_type == "update":
             path = f"/local-user/{local_user_id}" if local_user_id else f"/local-user/user-id/{user_id}"
             return client._send_request(path, "patch", query=payload)
         if local_user_id:
             return client.delete_local_user_by_local_user_id(local_user_id=local_user_id)
         return client.delete_local_user_user_id_by_user_id(user_id=user_id)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing local user: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing local user: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -124,7 +141,12 @@ async def clearpass_manage_static_host_list(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
     decline = await _confirm_write(ctx, action_type, "static host list", static_host_list_id or name, confirmed)
     if decline:
         return decline
@@ -135,7 +157,9 @@ async def clearpass_manage_static_host_list(
         if action_type == "create":
             return client._send_request("/static-host-list", "post", query=payload)
         if not static_host_list_id and not name:
-            return "Either static_host_list_id or name is required for update/delete."
+            raise ToolError(
+                {"status_code": 400, "message": "Either static_host_list_id or name is required for update/delete."}
+            )
         if action_type == "update":
             path = (
                 f"/static-host-list/{static_host_list_id}" if static_host_list_id else f"/static-host-list/name/{name}"
@@ -144,8 +168,10 @@ async def clearpass_manage_static_host_list(
         if static_host_list_id:
             return client.delete_static_host_list_by_static_host_list_id(static_host_list_id=static_host_list_id)
         return client.delete_static_host_list_name_by_name(name=name)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing static host list: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing static host list: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -167,7 +193,12 @@ async def clearpass_manage_device(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
     decline = await _confirm_write(ctx, action_type, "device", device_id or macaddr, confirmed)
     if decline:
         return decline
@@ -178,15 +209,19 @@ async def clearpass_manage_device(
         if action_type == "create":
             return client._send_request("/device", "post", query=payload)
         if not device_id and not macaddr:
-            return "Either device_id or macaddr is required for update/delete."
+            raise ToolError(
+                {"status_code": 400, "message": "Either device_id or macaddr is required for update/delete."}
+            )
         if action_type == "update":
             path = f"/device/{device_id}" if device_id else f"/device/mac/{macaddr}"
             return client._send_request(path, "patch", query=payload)
         if device_id:
             return client.delete_device_by_device_id(device_id=device_id)
         return client.delete_device_mac_by_macaddr(macaddr=macaddr)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing device: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing device: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -206,7 +241,9 @@ async def clearpass_manage_deny_listed_user(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("create", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create' or 'delete'."
+        raise ToolError(
+            {"status_code": 400, "message": f"Invalid action_type '{action_type}'. Must be 'create' or 'delete'."}
+        )
     decline = await _confirm_write(ctx, action_type, "deny-listed user", deny_listed_users_id, confirmed)
     if decline:
         return decline
@@ -217,7 +254,9 @@ async def clearpass_manage_deny_listed_user(
         if action_type == "create":
             return client._send_request("/deny-listed-users", "post", query=payload)
         if not deny_listed_users_id:
-            return "deny_listed_users_id is required for delete."
+            raise ToolError({"status_code": 400, "message": "deny_listed_users_id is required for delete."})
         return client.delete_deny_listed_users_by_deny_listed_users_id(deny_listed_users_id=deny_listed_users_id)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing deny-listed user: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing deny-listed user: {e}"}) from e

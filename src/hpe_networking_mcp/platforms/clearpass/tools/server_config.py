@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
@@ -40,8 +41,10 @@ async def clearpass_get_admin_users(
             return client.get_admin_user_by_admin_user_id(admin_user_id=admin_user_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/admin-user" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching admin users: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching admin users: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -76,8 +79,10 @@ async def clearpass_get_admin_privileges(
             )
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/admin-privilege" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching admin privileges: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching admin privileges: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -105,8 +110,10 @@ async def clearpass_get_operator_profiles(
         client = await get_clearpass_session(ApiGlobalServerConfiguration)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/operator-profile" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching operator profiles: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching operator profiles: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -129,8 +136,10 @@ async def clearpass_get_licenses(
         if license_id:
             return client.get_application_license_by_license_id(license_id=license_id)
         return client.get_application_license_summary()
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching licenses: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching licenses: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -147,8 +156,10 @@ async def clearpass_get_cluster_params(
 
         client = await get_clearpass_session(ApiGlobalServerConfiguration)
         return client.get_cluster_parameters()
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching cluster parameters: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching cluster parameters: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -169,8 +180,10 @@ async def clearpass_get_password_policies(
             "admin_password_policy": admin_policy,
             "local_user_password_policy": local_user_policy,
         }
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching password policies: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching password policies: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -203,8 +216,10 @@ async def clearpass_get_attributes(
             return client.get_attribute_by_attribute_id(attribute_id=attribute_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/attribute" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching attributes: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching attributes: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -237,8 +252,10 @@ async def clearpass_get_data_filters(
             return client.get_data_filter_by_data_filter_id(data_filter_id=data_filter_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/data-filter" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching data filters: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching data filters: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -273,8 +290,10 @@ async def clearpass_get_file_backup_servers(
             )
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/file-backup-server" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching file backup servers: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching file backup servers: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -291,8 +310,10 @@ async def clearpass_get_messaging_setup(
 
         client = await get_clearpass_session(ApiGlobalServerConfiguration)
         return client.get_messaging_setup()
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching messaging setup: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching messaging setup: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -327,8 +348,10 @@ async def clearpass_get_snmp_trap_receivers(
             )
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/snmp-trap-receiver" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching SNMP trap receivers: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching SNMP trap receivers: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -363,8 +386,10 @@ async def clearpass_get_policy_manager_zones(
             )
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/server/policy-manager-zones" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching Policy Manager zones: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching Policy Manager zones: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -381,5 +406,7 @@ async def clearpass_get_oauth_privileges(
 
         client = await get_clearpass_session(ApiGlobalServerConfiguration)
         return clearpass_get(client, "/oauth/all-privileges")
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching OAuth privileges: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching OAuth privileges: {e}"}) from e

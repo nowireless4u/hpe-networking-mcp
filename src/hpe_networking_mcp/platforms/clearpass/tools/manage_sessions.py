@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
@@ -56,11 +57,18 @@ async def clearpass_disconnect_session(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if target_type not in _VALID_TARGETS:
-        return f"Invalid target_type '{target_type}'. Must be one of: {', '.join(_VALID_TARGETS)}."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid target_type '{target_type}'. Must be one of: {', '.join(_VALID_TARGETS)}.",
+            }
+        )
     if target_type != "bulk" and not target_value:
-        return f"target_value is required when target_type is '{target_type}'."
+        raise ToolError(
+            {"status_code": 400, "message": f"target_value is required when target_type is '{target_type}'."}
+        )
     if target_type == "bulk" and not filter:
-        return "filter is required when target_type is 'bulk'."
+        raise ToolError({"status_code": 400, "message": "filter is required when target_type is 'bulk'."})
 
     if not confirmed:
         decline = await _confirm_session_action(ctx, "disconnect", target_type, target_value)
@@ -80,8 +88,10 @@ async def clearpass_disconnect_session(
         filter_map = {"username": "username", "mac": "mac_address", "ip": "framedipaddress"}
         query = {filter_map[target_type]: target_value}
         return client._send_request("/session/disconnect", "post", query=query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error disconnecting session: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error disconnecting session: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -117,11 +127,18 @@ async def clearpass_perform_coa(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if target_type not in _VALID_TARGETS:
-        return f"Invalid target_type '{target_type}'. Must be one of: {', '.join(_VALID_TARGETS)}."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid target_type '{target_type}'. Must be one of: {', '.join(_VALID_TARGETS)}.",
+            }
+        )
     if target_type != "bulk" and not target_value:
-        return f"target_value is required when target_type is '{target_type}'."
+        raise ToolError(
+            {"status_code": 400, "message": f"target_value is required when target_type is '{target_type}'."}
+        )
     if target_type == "bulk" and not filter:
-        return "filter is required when target_type is 'bulk'."
+        raise ToolError({"status_code": 400, "message": "filter is required when target_type is 'bulk'."})
 
     if not confirmed:
         decline = await _confirm_session_action(ctx, "CoA", target_type, target_value)
@@ -141,5 +158,7 @@ async def clearpass_perform_coa(
         filter_map = {"username": "username", "mac": "mac_address", "ip": "framedipaddress"}
         query = {filter_map[target_type]: target_value}
         return client._send_request("/session/reauthorize", "post", query=query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error performing CoA: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error performing CoA: {e}"}) from e

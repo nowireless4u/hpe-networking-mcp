@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
@@ -34,8 +35,10 @@ async def clearpass_get_access_controls(
                 resource_name=resource_name,
             )
         return client.get_server_access_control_by_server_uuid(server_uuid=server_uuid)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching access controls: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching access controls: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -63,8 +66,10 @@ async def clearpass_get_ad_domains(
                 netbios_name=netbios_name,
             )
         return client.get_ad_domain_by_server_uuid(server_uuid=server_uuid)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching AD domains: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching AD domains: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -90,8 +95,10 @@ async def clearpass_get_server_version(
             "cppm_version": client.get_cppm_version(),
             "server_version": client.get_server_version(),
         }
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching server version: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching server version: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -107,8 +114,10 @@ async def clearpass_get_fips_status(
 
         client = await get_clearpass_session(ApiLocalServerConfiguration)
         return client.get_server_fips()
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching FIPS status: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching FIPS status: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -136,8 +145,10 @@ async def clearpass_get_server_services(
                 service_name=service_name,
             )
         return client.get_server_service_by_server_uuid(server_uuid=server_uuid)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching server services: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching server services: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -158,8 +169,10 @@ async def clearpass_get_server_snmp(
 
         client = await get_clearpass_session(ApiLocalServerConfiguration)
         return client.get_server_snmp_by_server_uuid(server_uuid=server_uuid)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching server SNMP config: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching server SNMP config: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -187,5 +200,7 @@ async def clearpass_get_cluster_servers(
 
         client = await get_clearpass_session(ApiLocalServerConfiguration)
         return client.get_cluster_server()
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching cluster servers: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching cluster servers: {e}"}) from e

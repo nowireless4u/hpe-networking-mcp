@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
@@ -47,8 +48,10 @@ async def clearpass_get_sessions(
         ]
         query = "?" + "&".join(p for p in params if p)
         return clearpass_get(client, "/session" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching sessions: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching sessions: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -69,8 +72,10 @@ async def clearpass_get_session_action_status(
 
         client = await get_clearpass_session(ApiSessionControl)
         return client.get_session_action_by_action_id(action_id=action_id)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching session action status: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching session action status: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -91,5 +96,7 @@ async def clearpass_get_reauth_profiles(
 
         client = await get_clearpass_session(ApiSessionControl)
         return client.get_session_by_id_reauthorize(id=session_id)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching reauthorization profiles: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching reauthorization profiles: {e}"}) from e

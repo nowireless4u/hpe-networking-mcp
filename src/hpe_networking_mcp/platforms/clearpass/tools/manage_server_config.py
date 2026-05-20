@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
@@ -37,7 +38,12 @@ async def clearpass_manage_admin_user(
 ) -> dict | str:
     """Create, update, or delete a ClearPass admin user."""
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
     decline = await _confirm_write(ctx, action_type, "admin user", admin_user_id or name, confirmed)
     if decline:
         return decline
@@ -48,15 +54,19 @@ async def clearpass_manage_admin_user(
         if action_type == "create":
             return client._send_request("/admin-user", "post", query=payload)
         if not admin_user_id and not name:
-            return "Either admin_user_id or name is required for update/delete."
+            raise ToolError(
+                {"status_code": 400, "message": "Either admin_user_id or name is required for update/delete."}
+            )
         if action_type == "update":
             path = f"/admin-user/{admin_user_id}" if admin_user_id else f"/admin-user/name/{name}"
             return client._send_request(path, "patch", query=payload)
         if admin_user_id:
             return client.delete_admin_user_by_admin_user_id(admin_user_id=admin_user_id)
         return client._send_request(f"/admin-user/name/{name}", "delete")
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing admin user: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing admin user: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -70,7 +80,12 @@ async def clearpass_manage_admin_privilege(
 ) -> dict | str:
     """Create, update, or delete a ClearPass admin privilege."""
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
     decline = await _confirm_write(ctx, action_type, "admin privilege", admin_privilege_id or name, confirmed)
     if decline:
         return decline
@@ -81,15 +96,19 @@ async def clearpass_manage_admin_privilege(
         if action_type == "create":
             return client._send_request("/admin-privilege", "post", query=payload)
         if not admin_privilege_id and not name:
-            return "Either admin_privilege_id or name is required for update/delete."
+            raise ToolError(
+                {"status_code": 400, "message": "Either admin_privilege_id or name is required for update/delete."}
+            )
         if action_type == "update":
             path = f"/admin-privilege/{admin_privilege_id}" if admin_privilege_id else f"/admin-privilege/name/{name}"
             return client._send_request(path, "patch", query=payload)
         if admin_privilege_id:
             return client.delete_admin_privilege_by_admin_privilege_id(admin_privilege_id=admin_privilege_id)
         return client._send_request(f"/admin-privilege/name/{name}", "delete")
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing admin privilege: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing admin privilege: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -105,7 +124,12 @@ async def clearpass_manage_operator_profile(
 ) -> dict | str:
     """Create, update, or delete a ClearPass operator profile."""
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
     decline = await _confirm_write(ctx, action_type, "operator profile", operator_profile_id or name, confirmed)
     if decline:
         return decline
@@ -116,7 +140,9 @@ async def clearpass_manage_operator_profile(
         if action_type == "create":
             return client._send_request("/operator-profile", "post", query=payload)
         if not operator_profile_id and not name:
-            return "Either operator_profile_id or name is required for update/delete."
+            raise ToolError(
+                {"status_code": 400, "message": "Either operator_profile_id or name is required for update/delete."}
+            )
         if action_type == "update":
             path = (
                 f"/operator-profile/{operator_profile_id}" if operator_profile_id else f"/operator-profile/name/{name}"
@@ -125,8 +151,10 @@ async def clearpass_manage_operator_profile(
         if operator_profile_id:
             return client.delete_operator_profile_by_operator_profile_id(operator_profile_id=operator_profile_id)
         return client._send_request(f"/operator-profile/name/{name}", "delete")
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing operator profile: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing operator profile: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -142,7 +170,9 @@ async def clearpass_manage_license(
     """Create, delete, or activate a ClearPass application license."""
     valid = ("create", "delete", "activate_online", "activate_offline")
     if action_type not in valid:
-        return f"Invalid action_type '{action_type}'. Must be one of: {', '.join(valid)}."
+        raise ToolError(
+            {"status_code": 400, "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(valid)}."}
+        )
     decline = await _confirm_write(ctx, action_type, "license", license_id, confirmed)
     if decline:
         return decline
@@ -153,14 +183,16 @@ async def clearpass_manage_license(
         if action_type == "create":
             return client._send_request("/application-license", "post", query=payload)
         if not license_id:
-            return "license_id is required for delete/activate operations."
+            raise ToolError({"status_code": 400, "message": "license_id is required for delete/activate operations."})
         if action_type == "delete":
             return client.delete_application_license_by_license_id(license_id=license_id)
         if action_type == "activate_online":
             return client.update_application_license_activate_online_by_license_id(license_id=license_id)
         return client.update_application_license_activate_offline_by_license_id(license_id=license_id)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing license: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing license: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -178,8 +210,10 @@ async def clearpass_manage_cluster_params(
 
         client = await get_clearpass_session(ApiGlobalServerConfiguration)
         return client._send_request("/cluster/parameters", "patch", query=payload)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing cluster parameters: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing cluster parameters: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -192,7 +226,9 @@ async def clearpass_manage_password_policy(
     """Update ClearPass admin or local user password policy."""
     valid = ("update_admin", "update_local")
     if action_type not in valid:
-        return f"Invalid action_type '{action_type}'. Must be one of: {', '.join(valid)}."
+        raise ToolError(
+            {"status_code": 400, "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(valid)}."}
+        )
     decline = await _confirm_write(ctx, action_type, "password policy", action_type, confirmed)
     if decline:
         return decline
@@ -202,8 +238,10 @@ async def clearpass_manage_password_policy(
         client = await get_clearpass_session(ApiGlobalServerConfiguration)
         path = "/admin-user/password-policy" if action_type == "update_admin" else "/local-user/password-policy"
         return client._send_request(path, "patch", query=payload)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing password policy: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing password policy: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -217,7 +255,12 @@ async def clearpass_manage_attribute(
 ) -> dict | str:
     """Create, update, or delete a ClearPass attribute."""
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
     decline = await _confirm_write(ctx, action_type, "attribute", attribute_id or name, confirmed)
     if decline:
         return decline
@@ -228,15 +271,19 @@ async def clearpass_manage_attribute(
         if action_type == "create":
             return client._send_request("/attribute", "post", query=payload)
         if not attribute_id and not name:
-            return "Either attribute_id or name is required for update/delete."
+            raise ToolError(
+                {"status_code": 400, "message": "Either attribute_id or name is required for update/delete."}
+            )
         if action_type == "update":
             path = f"/attribute/{attribute_id}" if attribute_id else f"/attribute/name/{name}"
             return client._send_request(path, "patch", query=payload)
         if attribute_id:
             return client.delete_attribute_by_attribute_id(attribute_id=attribute_id)
         return client._send_request(f"/attribute/name/{name}", "delete")
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing attribute: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing attribute: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -250,7 +297,12 @@ async def clearpass_manage_data_filter(
 ) -> dict | str:
     """Create, update, or delete a ClearPass data filter."""
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
     decline = await _confirm_write(ctx, action_type, "data filter", data_filter_id or name, confirmed)
     if decline:
         return decline
@@ -261,15 +313,19 @@ async def clearpass_manage_data_filter(
         if action_type == "create":
             return client._send_request("/data-filter", "post", query=payload)
         if not data_filter_id and not name:
-            return "Either data_filter_id or name is required for update/delete."
+            raise ToolError(
+                {"status_code": 400, "message": "Either data_filter_id or name is required for update/delete."}
+            )
         if action_type == "update":
             path = f"/data-filter/{data_filter_id}" if data_filter_id else f"/data-filter/name/{name}"
             return client._send_request(path, "patch", query=payload)
         if data_filter_id:
             return client.delete_data_filter_by_data_filter_id(data_filter_id=data_filter_id)
         return client._send_request(f"/data-filter/name/{name}", "delete")
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing data filter: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing data filter: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -285,7 +341,12 @@ async def clearpass_manage_file_backup_server(
 ) -> dict | str:
     """Create, update, or delete a ClearPass file backup server."""
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
     decline = await _confirm_write(ctx, action_type, "file backup server", file_backup_server_id or name, confirmed)
     if decline:
         return decline
@@ -296,7 +357,9 @@ async def clearpass_manage_file_backup_server(
         if action_type == "create":
             return client._send_request("/file-backup-server", "post", query=payload)
         if not file_backup_server_id and not name:
-            return "Either file_backup_server_id or name is required for update/delete."
+            raise ToolError(
+                {"status_code": 400, "message": "Either file_backup_server_id or name is required for update/delete."}
+            )
         if action_type == "update":
             path = (
                 f"/file-backup-server/{file_backup_server_id}"
@@ -309,8 +372,10 @@ async def clearpass_manage_file_backup_server(
                 file_backup_server_id=file_backup_server_id
             )
         return client._send_request(f"/file-backup-server/name/{name}", "delete")
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing file backup server: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing file backup server: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -322,7 +387,12 @@ async def clearpass_manage_messaging_setup(
 ) -> dict | str:
     """Create, update, or delete the ClearPass messaging setup."""
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
     decline = await _confirm_write(ctx, action_type, "messaging setup", "global", confirmed)
     if decline:
         return decline
@@ -335,8 +405,10 @@ async def clearpass_manage_messaging_setup(
         if action_type == "update":
             return client._send_request("/messaging-setup", "patch", query=payload)
         return client.delete_messaging_setup()
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing messaging setup: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing messaging setup: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -352,7 +424,12 @@ async def clearpass_manage_snmp_trap_receiver(
 ) -> dict | str:
     """Create, update, or delete a ClearPass SNMP trap receiver."""
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
     decline = await _confirm_write(ctx, action_type, "SNMP trap receiver", snmp_trap_receiver_id or name, confirmed)
     if decline:
         return decline
@@ -363,7 +440,9 @@ async def clearpass_manage_snmp_trap_receiver(
         if action_type == "create":
             return client._send_request("/snmp-trap-receiver", "post", query=payload)
         if not snmp_trap_receiver_id and not name:
-            return "Either snmp_trap_receiver_id or name is required for update/delete."
+            raise ToolError(
+                {"status_code": 400, "message": "Either snmp_trap_receiver_id or name is required for update/delete."}
+            )
         if action_type == "update":
             path = (
                 f"/snmp-trap-receiver/{snmp_trap_receiver_id}"
@@ -376,8 +455,10 @@ async def clearpass_manage_snmp_trap_receiver(
                 snmp_trap_receiver_id=snmp_trap_receiver_id
             )
         return client._send_request(f"/snmp-trap-receiver/name/{name}", "delete")
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing SNMP trap receiver: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing SNMP trap receiver: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -393,7 +474,12 @@ async def clearpass_manage_policy_manager_zone(
 ) -> dict | str:
     """Create, update, or delete a ClearPass policy manager zone."""
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
     decline = await _confirm_write(ctx, action_type, "policy manager zone", policy_manager_zones_id or name, confirmed)
     if decline:
         return decline
@@ -404,7 +490,9 @@ async def clearpass_manage_policy_manager_zone(
         if action_type == "create":
             return client._send_request("/server/policy-manager-zones", "post", query=payload)
         if not policy_manager_zones_id and not name:
-            return "Either policy_manager_zones_id or name is required for update/delete."
+            raise ToolError(
+                {"status_code": 400, "message": "Either policy_manager_zones_id or name is required for update/delete."}
+            )
         if action_type == "update":
             path = (
                 f"/server/policy-manager-zones/{policy_manager_zones_id}"
@@ -417,5 +505,7 @@ async def clearpass_manage_policy_manager_zone(
                 policy_manager_zones_id=policy_manager_zones_id
             )
         return client._send_request(f"/server/policy-manager-zones/name/{name}", "delete")
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing policy manager zone: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing policy manager zone: {e}"}) from e

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
@@ -51,8 +52,10 @@ async def clearpass_get_roles(
         ]
         query = "?" + "&".join(p for p in params if p)
         return clearpass_get(client, "/role" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching roles: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching roles: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -99,5 +102,7 @@ async def clearpass_get_role_mappings(
         ]
         query = "?" + "&".join(p for p in params if p)
         return clearpass_get(client, "/role-mapping" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching role mappings: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching role mappings: {e}"}) from e

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
@@ -44,8 +45,10 @@ async def clearpass_get_network_devices(
             return client.get_network_device_name_by_name(name=name)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/network-device" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching network devices: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching network devices: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -66,8 +69,10 @@ async def clearpass_get_network_device_stats(
 
         client = await get_clearpass_session(ApiPolicyElements)
         return client.get_network_device_by_network_device_id(network_device_id=device_id)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching network device stats: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching network device stats: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -93,8 +98,10 @@ async def clearpass_test_device_connectivity(
             "device": result,
             "note": "Actual connectivity testing requires ClearPass server-side capabilities.",
         }
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching device for connectivity review: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching device for connectivity review: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -127,5 +134,7 @@ async def clearpass_validate_device_config(
             "device": device,
             "validation_issues": issues if issues else "No issues found",
         }
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error validating device config: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error validating device config: {e}"}) from e

@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
@@ -46,7 +47,9 @@ async def clearpass_manage_service(
     """
     valid = ("create", "update", "delete", "enable", "disable")
     if action_type not in valid:
-        return f"Invalid action_type '{action_type}'. Must be one of: {', '.join(valid)}."
+        raise ToolError(
+            {"status_code": 400, "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(valid)}."}
+        )
     decline = await _confirm_write(ctx, action_type, "service", config_service_id or name, confirmed)
     if decline:
         return decline
@@ -57,24 +60,26 @@ async def clearpass_manage_service(
         if action_type == "create":
             return client._send_request("/config/service", "post", query=payload)
         if not config_service_id and not name:
-            return "Either config_service_id or name is required."
+            raise ToolError({"status_code": 400, "message": "Either config_service_id or name is required."})
         if action_type == "update":
             path = f"/config/service/{config_service_id}" if config_service_id else f"/config/service/name/{name}"
             return client._send_request(path, "patch", query=payload)
         if action_type == "enable":
             if not config_service_id:
-                return "config_service_id is required for enable."
+                raise ToolError({"status_code": 400, "message": "config_service_id is required for enable."})
             return client.update_config_service_by_config_service_id_enable(config_service_id=config_service_id)
         if action_type == "disable":
             if not config_service_id:
-                return "config_service_id is required for disable."
+                raise ToolError({"status_code": 400, "message": "config_service_id is required for disable."})
             return client.update_config_service_by_config_service_id_disable(config_service_id=config_service_id)
         # delete
         if config_service_id:
             return client.delete_config_service_by_config_service_id(config_service_id=config_service_id)
         return client.delete_config_service_name_by_name(name=name)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing service: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing service: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -98,7 +103,12 @@ async def clearpass_manage_device_group(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
     decline = await _confirm_write(ctx, action_type, "device group", network_device_group_id or name, confirmed)
     if decline:
         return decline
@@ -109,7 +119,9 @@ async def clearpass_manage_device_group(
         if action_type == "create":
             return client._send_request("/network-device-group", "post", query=payload)
         if not network_device_group_id and not name:
-            return "Either network_device_group_id or name is required for update/delete."
+            raise ToolError(
+                {"status_code": 400, "message": "Either network_device_group_id or name is required for update/delete."}
+            )
         if action_type == "update":
             path = (
                 f"/network-device-group/{network_device_group_id}"
@@ -122,8 +134,10 @@ async def clearpass_manage_device_group(
                 network_device_group_id=network_device_group_id
             )
         return client.delete_network_device_group_name_by_name(name=name)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing device group: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing device group: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -147,7 +161,12 @@ async def clearpass_manage_posture_policy(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
     decline = await _confirm_write(ctx, action_type, "posture policy", posture_policy_id or name, confirmed)
     if decline:
         return decline
@@ -158,15 +177,19 @@ async def clearpass_manage_posture_policy(
         if action_type == "create":
             return client._send_request("/posture-policy", "post", query=payload)
         if not posture_policy_id and not name:
-            return "Either posture_policy_id or name is required for update/delete."
+            raise ToolError(
+                {"status_code": 400, "message": "Either posture_policy_id or name is required for update/delete."}
+            )
         if action_type == "update":
             path = f"/posture-policy/{posture_policy_id}" if posture_policy_id else f"/posture-policy/name/{name}"
             return client._send_request(path, "patch", query=payload)
         if posture_policy_id:
             return client.delete_posture_policy_by_posture_policy_id(posture_policy_id=posture_policy_id)
         return client.delete_posture_policy_name_by_name(name=name)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing posture policy: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing posture policy: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -188,7 +211,12 @@ async def clearpass_manage_proxy_target(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
     decline = await _confirm_write(ctx, action_type, "proxy target", proxy_target_id or name, confirmed)
     if decline:
         return decline
@@ -199,15 +227,19 @@ async def clearpass_manage_proxy_target(
         if action_type == "create":
             return client._send_request("/proxy-target", "post", query=payload)
         if not proxy_target_id and not name:
-            return "Either proxy_target_id or name is required for update/delete."
+            raise ToolError(
+                {"status_code": 400, "message": "Either proxy_target_id or name is required for update/delete."}
+            )
         if action_type == "update":
             path = f"/proxy-target/{proxy_target_id}" if proxy_target_id else f"/proxy-target/name/{name}"
             return client._send_request(path, "patch", query=payload)
         if proxy_target_id:
             return client.delete_proxy_target_by_proxy_target_id(proxy_target_id=proxy_target_id)
         return client.delete_proxy_target_name_by_name(name=name)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing proxy target: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing proxy target: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -232,7 +264,9 @@ async def clearpass_manage_radius_dictionary(
     """
     valid = ("create", "update", "delete", "enable", "disable")
     if action_type not in valid:
-        return f"Invalid action_type '{action_type}'. Must be one of: {', '.join(valid)}."
+        raise ToolError(
+            {"status_code": 400, "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(valid)}."}
+        )
     decline = await _confirm_write(ctx, action_type, "RADIUS dictionary", radius_dictionary_id or name, confirmed)
     if decline:
         return decline
@@ -243,7 +277,7 @@ async def clearpass_manage_radius_dictionary(
         if action_type == "create":
             return client._send_request("/radius-dictionary", "post", query=payload)
         if not radius_dictionary_id and not name:
-            return "Either radius_dictionary_id or name is required."
+            raise ToolError({"status_code": 400, "message": "Either radius_dictionary_id or name is required."})
         if action_type == "update":
             path = (
                 f"/radius-dictionary/{radius_dictionary_id}"
@@ -253,13 +287,13 @@ async def clearpass_manage_radius_dictionary(
             return client._send_request(path, "patch", query=payload)
         if action_type == "enable":
             if not radius_dictionary_id:
-                return "radius_dictionary_id is required for enable."
+                raise ToolError({"status_code": 400, "message": "radius_dictionary_id is required for enable."})
             return client.update_radius_dictionary_by_radius_dictionary_id_enable(
                 radius_dictionary_id=radius_dictionary_id
             )
         if action_type == "disable":
             if not radius_dictionary_id:
-                return "radius_dictionary_id is required for disable."
+                raise ToolError({"status_code": 400, "message": "radius_dictionary_id is required for disable."})
             return client.update_radius_dictionary_by_radius_dictionary_id_disable(
                 radius_dictionary_id=radius_dictionary_id
             )
@@ -267,8 +301,10 @@ async def clearpass_manage_radius_dictionary(
         if radius_dictionary_id:
             return client._send_request(f"/radius-dictionary/{radius_dictionary_id}", "delete")
         return client._send_request(f"/radius-dictionary/name/{name}", "delete")
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing RADIUS dictionary: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing RADIUS dictionary: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -292,7 +328,12 @@ async def clearpass_manage_tacacs_dictionary(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
     decline = await _confirm_write(ctx, action_type, "TACACS dictionary", tacacs_dictionary_id or name, confirmed)
     if decline:
         return decline
@@ -303,7 +344,9 @@ async def clearpass_manage_tacacs_dictionary(
         if action_type == "create":
             return client._send_request("/tacacs-dictionary", "post", query=payload)
         if not tacacs_dictionary_id and not name:
-            return "Either tacacs_dictionary_id or name is required for update/delete."
+            raise ToolError(
+                {"status_code": 400, "message": "Either tacacs_dictionary_id or name is required for update/delete."}
+            )
         if action_type == "update":
             path = (
                 f"/tacacs-dictionary/{tacacs_dictionary_id}"
@@ -314,8 +357,10 @@ async def clearpass_manage_tacacs_dictionary(
         if tacacs_dictionary_id:
             return client._send_request(f"/tacacs-dictionary/{tacacs_dictionary_id}", "delete")
         return client._send_request(f"/tacacs-dictionary/name/{name}", "delete")
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing TACACS dictionary: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing TACACS dictionary: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -339,7 +384,12 @@ async def clearpass_manage_application_dictionary(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
     decline = await _confirm_write(
         ctx, action_type, "application dictionary", application_dictionary_id or name, confirmed
     )
@@ -352,7 +402,12 @@ async def clearpass_manage_application_dictionary(
         if action_type == "create":
             return client._send_request("/application-dictionary", "post", query=payload)
         if not application_dictionary_id and not name:
-            return "Either application_dictionary_id or name is required for update/delete."
+            raise ToolError(
+                {
+                    "status_code": 400,
+                    "message": "Either application_dictionary_id or name is required for update/delete.",
+                }
+            )
         if action_type == "update":
             path = (
                 f"/application-dictionary/{application_dictionary_id}"
@@ -363,5 +418,7 @@ async def clearpass_manage_application_dictionary(
         if application_dictionary_id:
             return client._send_request(f"/application-dictionary/{application_dictionary_id}", "delete")
         return client._send_request(f"/application-dictionary/name/{name}", "delete")
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing application dictionary: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing application dictionary: {e}"}) from e

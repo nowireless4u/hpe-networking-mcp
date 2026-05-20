@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.1.0] - 2026-05-20
+
+**Minor — error-contract sweep: every platform now raises `ToolError` instead of returning error strings.** v3.2.0.1 codified the `raise ToolError({"status_code": int, "message": str})` pattern and explicitly scoped migration as *opportunistic*. This release supersedes that stance and proactively completes the migration across all remaining platforms, so the contract is now uniform server-wide. Shipped as one atomic change set (no partial state): public tools raise structured `ToolError` for failure paths (validation, upstream error, not-found), while genuine info-strings (empty-result / "No X found" / no-op) and elicitation confirmation/decline dicts are preserved as ordinary returns.
+
+Why this is safe and correct (recap from v3.2.0.1): `ResponseEnvelopeMiddleware` was wrapping returned error strings as `{ok: True, ...}` — misleading; `ToolError` reaches FastMCP's proper error path. Structured status codes let AI clients distinguish 4xx (retry) from 5xx (escalate). `SandboxErrorCatchMiddleware` catches `ToolError` inside code-mode `execute()` blocks, so the sandbox stays safe.
+
+### Status-code domain applied
+`400` validation (bad/missing/invalid input) · `404` resource looked up by ID and missing · `500` internal/programming error (e.g. unreachable `action_type` fall-through) · `502` upstream service failure. Auth/config failures keep their existing structured codes from each platform's session layer (e.g. ClearPass `get_clearpass_session` raises `503`).
+
+### Platforms migrated
+- **GreenLake** (10 sites) — validation/coerce failures → 400.
+- **Apstra** (23 sites) — upstream failures → 502 via `format_http_error`; `manage_networks` validation → 400.
+- **Axis** (23 sites) — upstream → 502; `_manage.py` shared-helper guards + `status.py` entity-type guard → 400.
+- **Central** non-scope (~77 sites) — upstream → 502; `mrt_*` validation → 400; `switch_poe`/`wlans` HTTP-code errors now raise with the real upstream `code`; switch-not-found → 404. (`central/tools/scope.py` was already migrated in v3.2.0.1.)
+- **ClearPass** (249 sites across all 36 `tools/*.py` modules) — read-tool upstream failures → 502 (each `except Exception` now has a preceding `except ToolError: raise` so the session layer's structured 503 passes through unchanged); write/manage validation guards (`Invalid action_type`, `Must be one of`, `… is required`, `Either … required`) → 400; defensive `Unhandled action_type` fall-throughs and an `Internal error:` guard → 500; source-device-not-found → 404; two `"Error:"`-prefixed strings that were actually pre-call validation guards → 400.
+
+### Pattern note — `except ToolError: raise` pass-through
+Where a tool's `try` body calls a session/helper that itself raises `ToolError` (config/auth/validation), the `except Exception → 502` handler is now preceded by `except ToolError: raise` so structured errors propagate unchanged instead of being re-wrapped as a generic 502.
+
+### Tests
+`test_clearpass_policy_visualizer_tools.py::test_requires_exactly_one_selector` updated from asserting a returned error string to `pytest.raises(ToolError)` + `status_code == 400`. Full suite green: **1453 passed, 1 skipped**; ruff / mypy / bandit clean. No tool counts changed (refactor only).
+
+
+
 ## [3.2.0.1] - 2026-05-19
 
 **Patch — v3.2.0.0 audit follow-up + codify the error-contract pattern.** Three things ship together because they're tied to the same decision:

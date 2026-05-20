@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
@@ -27,8 +28,10 @@ async def clearpass_get_audit_logs(
 
         client = await get_clearpass_session(ApiLogs)
         return client.get_login_audit_by_name(name=username)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching audit logs: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching audit logs: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -59,8 +62,10 @@ async def clearpass_get_system_events(
         client = await get_clearpass_session(ApiLogs)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/system-event" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching system events: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching system events: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -98,8 +103,10 @@ async def clearpass_get_insight_alerts(
             return client.get_alert_by_name(name=name)
         query = f"?offset={offset}&limit={limit}&calculate_count={'true' if calculate_count else 'false'}"
         return clearpass_get(client, "/alert" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching insight alerts: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching insight alerts: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -137,8 +144,10 @@ async def clearpass_get_insight_reports(
             return client.get_report_by_name(name=name)
         query = f"?offset={offset}&limit={limit}&calculate_count={'true' if calculate_count else 'false'}"
         return clearpass_get(client, "/report" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching insight reports: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching insight reports: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -177,6 +186,13 @@ async def clearpass_get_endpoint_insights(
                 from_time=from_time,
                 to_time=to_time,
             )
-        return "Error: at least one parameter (mac, ip, ip_range, or from_time+to_time) is required."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": "Error: at least one parameter (mac, ip, ip_range, or from_time+to_time) is required.",
+            }
+        )
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching endpoint insights: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching endpoint insights: {e}"}) from e

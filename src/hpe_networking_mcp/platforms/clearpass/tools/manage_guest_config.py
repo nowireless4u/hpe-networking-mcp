@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
@@ -44,7 +45,12 @@ async def clearpass_manage_pass_template(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("create", "update", "replace", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', 'replace', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', 'replace', or 'delete'.",
+            }
+        )
 
     if action_type != "create" and not confirmed:
         decline = await _confirm_write(ctx, f"{action_type} pass template", template_id)
@@ -59,14 +65,16 @@ async def clearpass_manage_pass_template(
         if action_type == "create":
             return client._send_request("/template/pass", "post", query=payload)
         if not template_id:
-            return "template_id is required for update/replace/delete."
+            raise ToolError({"status_code": 400, "message": "template_id is required for update/replace/delete."})
         if action_type == "update":
             return client._send_request(f"/template/pass/{template_id}", "patch", query=payload)
         if action_type == "replace":
             return client._send_request(f"/template/pass/{template_id}", "put", query=payload)
         return client.delete_template_pass_by_id(id=template_id)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing pass template: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing pass template: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -88,7 +96,12 @@ async def clearpass_manage_print_template(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("create", "update", "replace", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', 'replace', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', 'replace', or 'delete'.",
+            }
+        )
 
     if action_type != "create" and not confirmed:
         decline = await _confirm_write(ctx, f"{action_type} print template", template_id)
@@ -103,14 +116,16 @@ async def clearpass_manage_print_template(
         if action_type == "create":
             return client._send_request("/template/print", "post", query=payload)
         if not template_id:
-            return "template_id is required for update/replace/delete."
+            raise ToolError({"status_code": 400, "message": "template_id is required for update/replace/delete."})
         if action_type == "update":
             return client._send_request(f"/template/print/{template_id}", "patch", query=payload)
         if action_type == "replace":
             return client._send_request(f"/template/print/{template_id}", "put", query=payload)
         return client.delete_template_print_by_id(id=template_id)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing print template: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing print template: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -134,7 +149,12 @@ async def clearpass_manage_weblogin_page(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("create", "update", "replace", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', 'replace', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', 'replace', or 'delete'.",
+            }
+        )
 
     if action_type != "create" and not confirmed:
         decline = await _confirm_write(ctx, f"{action_type} weblogin page", page_id or page_name)
@@ -149,7 +169,9 @@ async def clearpass_manage_weblogin_page(
         if action_type == "create":
             return client._send_request("/weblogin", "post", query=payload)
         if not page_id and not page_name:
-            return "Either page_id or page_name is required for update/replace/delete."
+            raise ToolError(
+                {"status_code": 400, "message": "Either page_id or page_name is required for update/replace/delete."}
+            )
         if action_type == "delete":
             if page_id:
                 return client.delete_weblogin_by_id(id=page_id)
@@ -158,8 +180,10 @@ async def clearpass_manage_weblogin_page(
         path_suffix = f"/{page_id}" if page_id else f"/page-name/{page_name}"
         method = "patch" if action_type == "update" else "put"
         return client._send_request(f"/weblogin{path_suffix}", method, query=payload)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing weblogin page: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing weblogin page: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -177,7 +201,12 @@ async def clearpass_manage_guest_settings(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if setting_type not in ("authentication", "manager"):
-        return f"Invalid setting_type '{setting_type}'. Must be 'authentication' or 'manager'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid setting_type '{setting_type}'. Must be 'authentication' or 'manager'.",
+            }
+        )
 
     if not confirmed:
         decline = await _confirm_write(ctx, f"update guest {setting_type} settings", setting_type)
@@ -192,5 +221,7 @@ async def clearpass_manage_guest_settings(
         if setting_type == "authentication":
             return client._send_request("/guest/authentication", "patch", query=payload)
         return client._send_request("/guestmanager", "patch", query=payload)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing guest settings: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing guest settings: {e}"}) from e

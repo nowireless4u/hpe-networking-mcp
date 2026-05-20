@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
@@ -45,7 +46,9 @@ async def clearpass_manage_access_control(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'update' or 'delete'."
+        raise ToolError(
+            {"status_code": 400, "message": f"Invalid action_type '{action_type}'. Must be 'update' or 'delete'."}
+        )
     decline = await _confirm_write(ctx, action_type, "access control", f"{server_uuid}/{resource_name}", confirmed)
     if decline:
         return decline
@@ -58,8 +61,10 @@ async def clearpass_manage_access_control(
         return client.delete_server_access_control_by_server_uuid_resource_name(
             server_uuid=server_uuid, resource_name=resource_name
         )
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing access control: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing access control: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -84,7 +89,9 @@ async def clearpass_manage_ad_domain(
     """
     valid = ("join", "leave", "configure_password_servers")
     if action_type not in valid:
-        return f"Invalid action_type '{action_type}'. Must be one of: {', '.join(valid)}."
+        raise ToolError(
+            {"status_code": 400, "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(valid)}."}
+        )
     decline = await _confirm_write(ctx, action_type, "AD domain", server_uuid, confirmed)
     if decline:
         return decline
@@ -97,12 +104,14 @@ async def clearpass_manage_ad_domain(
         if action_type == "leave":
             return client._send_request(f"/ad-domain/{server_uuid}/leave", "put", query=payload)
         if not netbios_name:
-            return "netbios_name is required for configure_password_servers."
+            raise ToolError({"status_code": 400, "message": "netbios_name is required for configure_password_servers."})
         return client._send_request(
             f"/ad-domain/{server_uuid}/netbios-name/{netbios_name}/password-servers", "patch", query=payload
         )
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing AD domain: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing AD domain: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -127,8 +136,10 @@ async def clearpass_manage_cluster_server(
 
         client = await get_clearpass_session(ApiLocalServerConfiguration)
         return client._send_request(f"/cluster/server/{server_uuid}", "patch", query=payload)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing cluster server: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing cluster server: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -148,7 +159,9 @@ async def clearpass_manage_server_service(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("start", "stop"):
-        return f"Invalid action_type '{action_type}'. Must be 'start' or 'stop'."
+        raise ToolError(
+            {"status_code": 400, "message": f"Invalid action_type '{action_type}'. Must be 'start' or 'stop'."}
+        )
     decline = await _confirm_write(ctx, action_type, "server service", f"{service_name}@{server_uuid}", confirmed)
     if decline:
         return decline
@@ -163,8 +176,10 @@ async def clearpass_manage_server_service(
         return client.update_server_service_by_server_uuid_service_name_stop(
             server_uuid=server_uuid, service_name=service_name
         )
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing server service: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing server service: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -222,5 +237,7 @@ async def clearpass_manage_service_params(
         client = await get_clearpass_session(ApiLocalServerConfiguration)
         path = f"/server/{server_uuid}/service/{service_id}"
         return client._send_request(path, "patch", query=param_values)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error editing service params: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error editing service params: {e}"}) from e

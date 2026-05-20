@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
@@ -62,7 +63,12 @@ async def clearpass_manage_auth_source(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in _SOURCE_ACTIONS:
-        return f"Invalid action_type '{action_type}'. Must be one of: {', '.join(_SOURCE_ACTIONS)}."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(_SOURCE_ACTIONS)}.",
+            }
+        )
 
     if action_type != "create" and not confirmed:
         decline = await _confirm_write(ctx, f"{action_type} auth source", auth_source_id or name)
@@ -74,8 +80,10 @@ async def clearpass_manage_auth_source(
 
         client = await get_clearpass_session(ApiPolicyElements)
         return _execute_auth_source_action(client, action_type, payload, auth_source_id, name)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing auth source: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing auth source: {e}"}) from e
 
 
 def _execute_auth_source_action(
@@ -97,7 +105,7 @@ def _execute_auth_source_action(
         return client._send_request("/auth-source", "post", query=payload)
 
     if not auth_source_id and not name:
-        return "Either auth_source_id or name is required for this action."
+        raise ToolError({"status_code": 400, "message": "Either auth_source_id or name is required for this action."})
 
     if action_type == "delete":
         if auth_source_id:
@@ -132,7 +140,12 @@ async def clearpass_manage_auth_method(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
 
     if action_type != "create" and not confirmed:
         decline = await _confirm_write(ctx, f"{action_type} auth method", auth_method_id or name)
@@ -147,7 +160,9 @@ async def clearpass_manage_auth_method(
         if action_type == "create":
             return client._send_request("/auth-method", "post", query=payload)
         if not auth_method_id and not name:
-            return "Either auth_method_id or name is required for update/delete."
+            raise ToolError(
+                {"status_code": 400, "message": "Either auth_method_id or name is required for update/delete."}
+            )
         if action_type == "update":
             if auth_method_id:
                 return client._send_request(f"/auth-method/{auth_method_id}", "patch", query=payload)
@@ -156,5 +171,7 @@ async def clearpass_manage_auth_method(
         if auth_method_id:
             return client.delete_auth_method_by_auth_method_id(auth_method_id=auth_method_id)
         return client.delete_auth_method_name_by_name(name=name)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing auth method: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing auth method: {e}"}) from e

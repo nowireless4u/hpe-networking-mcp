@@ -173,7 +173,7 @@ async def example_tool(ctx, scope_id: str) -> dict:
 | 500 | Internal tool error (missing dependency, programming bug) |
 | 502 | Upstream service failure (Central API down, parse error) |
 
-**Migration policy** — the v2.2.0.1 string-return platforms (mist, greenlake, axis, clearpass, apstra, aos8, most of central) are acceptable as-is. **Migrate opportunistically** when other work already touches the file; **don't proactively migrate** — that's hundreds of tool functions, behavioral churn, and tests to rewrite. The `central/tools/scope.py` migration in v3.2.0.1 is the demonstration of the conversion shape; reference `tests/unit/test_central_committed_config.py` for the canonical `pytest.raises(ToolError)` test pattern.
+**Status — fully migrated (v3.2.1.0).** The error-contract sweep converted every platform that had string-return error paths (greenlake, apstra, axis, central, clearpass; mist and aos8 had none) to `raise ToolError`. All tools now follow this contract — new tools MUST too. When a `try` body calls a session/helper that itself raises `ToolError`, precede `except Exception` with `except ToolError: raise` so structured errors propagate unchanged. Genuine info-strings (empty-result / "No X found" / no-op) and elicitation confirmation/decline dicts stay as ordinary returns — only failure paths raise. Reference `tests/unit/test_central_committed_config.py` for the canonical `pytest.raises(ToolError)` test pattern.
 
 ## Skills (since v2.3.0.0)
 

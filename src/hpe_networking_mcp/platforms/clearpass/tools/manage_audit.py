@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
@@ -50,7 +51,12 @@ async def clearpass_manage_insight_alert(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in _ALERT_ACTIONS:
-        return f"Invalid action_type '{action_type}'. Must be one of: {', '.join(_ALERT_ACTIONS)}."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(_ALERT_ACTIONS)}.",
+            }
+        )
 
     if action_type != "create" and not confirmed:
         decline = await _confirm_write(ctx, f"{action_type} insight alert", alert_id)
@@ -62,8 +68,10 @@ async def clearpass_manage_insight_alert(
 
         client = await get_clearpass_session(ApiInsight)
         return _execute_alert_action(client, action_type, payload, alert_id)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing insight alert: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing insight alert: {e}"}) from e
 
 
 def _execute_alert_action(client, action_type: str, payload: dict, alert_id: str | None) -> dict | str:
@@ -81,7 +89,7 @@ def _execute_alert_action(client, action_type: str, payload: dict, alert_id: str
     if action_type == "create":
         return client._send_request("/alert", "post", query=payload)
     if not alert_id:
-        return "alert_id is required for this action."
+        raise ToolError({"status_code": 400, "message": "alert_id is required for this action."})
     if action_type == "update":
         return client._send_request(f"/alert/{alert_id}", "patch", query=payload)
     if action_type == "delete":
@@ -94,7 +102,7 @@ def _execute_alert_action(client, action_type: str, payload: dict, alert_id: str
         return client._send_request(f"/alert/{alert_id}/mute", "patch", query={})
     if action_type == "unmute":
         return client._send_request(f"/alert/{alert_id}/unmute", "patch", query={})
-    return f"Unhandled action_type: {action_type}"
+    raise ToolError({"status_code": 500, "message": f"Unhandled action_type: {action_type}"})
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -120,7 +128,12 @@ async def clearpass_manage_insight_report(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in _REPORT_ACTIONS:
-        return f"Invalid action_type '{action_type}'. Must be one of: {', '.join(_REPORT_ACTIONS)}."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(_REPORT_ACTIONS)}.",
+            }
+        )
 
     if action_type != "create" and not confirmed:
         decline = await _confirm_write(ctx, f"{action_type} insight report", report_id)
@@ -132,8 +145,10 @@ async def clearpass_manage_insight_report(
 
         client = await get_clearpass_session(ApiInsight)
         return _execute_report_action(client, action_type, payload, report_id)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing insight report: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing insight report: {e}"}) from e
 
 
 def _execute_report_action(client, action_type: str, payload: dict, report_id: str | None) -> dict | str:
@@ -151,7 +166,7 @@ def _execute_report_action(client, action_type: str, payload: dict, report_id: s
     if action_type == "create":
         return client._send_request("/report", "post", query=payload)
     if not report_id:
-        return "report_id is required for this action."
+        raise ToolError({"status_code": 400, "message": "report_id is required for this action."})
     if action_type == "delete":
         return client.delete_report_by_id(id=report_id)
     if action_type == "enable":
@@ -160,7 +175,7 @@ def _execute_report_action(client, action_type: str, payload: dict, report_id: s
         return client.update_report_by_id_disable(id=report_id)
     if action_type == "run":
         return client.new_report_by_id_run(id=report_id)
-    return f"Unhandled action_type: {action_type}"
+    raise ToolError({"status_code": 500, "message": f"Unhandled action_type: {action_type}"})
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -187,7 +202,9 @@ async def clearpass_create_system_event(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if level not in ("INFO", "WARN", "ERROR"):
-        return f"Invalid level '{level}'. Must be 'INFO', 'WARN', or 'ERROR'."
+        raise ToolError(
+            {"status_code": 400, "message": f"Invalid level '{level}'. Must be 'INFO', 'WARN', or 'ERROR'."}
+        )
 
     if not confirmed:
         decline = await _confirm_write(ctx, "create system event", f"{source}/{action}")
@@ -206,5 +223,7 @@ async def clearpass_create_system_event(
             "description": description,
         }
         return client._send_request("/system-event", "post", query=payload)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error creating system event: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error creating system event: {e}"}) from e

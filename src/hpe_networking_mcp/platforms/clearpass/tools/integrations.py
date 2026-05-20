@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
@@ -45,8 +46,10 @@ async def clearpass_get_extensions(
             return client.get_extension_instance_by_id(id=extension_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/extension/instance" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching extensions: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching extensions: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -79,8 +82,10 @@ async def clearpass_get_syslog_targets(
             return client.get_syslog_target_by_syslog_target_id(syslog_target_id=syslog_target_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/syslog-target" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching syslog targets: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching syslog targets: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -115,8 +120,10 @@ async def clearpass_get_syslog_export_filters(
             )
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/syslog-export-filter" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching syslog export filters: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching syslog export filters: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -149,8 +156,10 @@ async def clearpass_get_event_sources(
             return client.get_event_sources_by_event_sources_id(event_sources_id=event_sources_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/event-sources" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching event sources: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching event sources: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -185,8 +194,10 @@ async def clearpass_get_context_servers(
             )
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/context-server-action" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching context server actions: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching context server actions: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -221,8 +232,10 @@ async def clearpass_get_endpoint_context_servers(
             )
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/endpoint-context-server" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching endpoint context servers: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching endpoint context servers: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -250,5 +263,7 @@ async def clearpass_get_extension_log(
         if tail is not None:
             path += f"?tail={tail}"
         return clearpass_get(client, path)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching extension log: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching extension log: {e}"}) from e

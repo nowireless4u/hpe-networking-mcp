@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
@@ -51,8 +52,10 @@ async def clearpass_get_auth_sources(
         ]
         query = "?" + "&".join(p for p in params if p)
         return clearpass_get(client, "/auth-source" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching auth sources: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching auth sources: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -73,8 +76,10 @@ async def clearpass_get_auth_source_status(
 
         client = await get_clearpass_session(ApiPolicyElements)
         return client.get_auth_source_by_auth_source_id(auth_source_id=auth_source_id)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching auth source status: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching auth source status: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -101,8 +106,10 @@ async def clearpass_test_auth_source(
             "note": "Actual connectivity testing (LDAP bind, AD join check) "
             "requires ClearPass server-side capabilities.",
         }
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching auth source for testing: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching auth source for testing: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -146,5 +153,7 @@ async def clearpass_get_auth_methods(
         ]
         query = "?" + "&".join(p for p in params if p)
         return clearpass_get(client, "/auth-method" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching auth methods: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching auth methods: {e}"}) from e

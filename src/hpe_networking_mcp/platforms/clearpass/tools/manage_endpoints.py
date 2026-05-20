@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
@@ -39,7 +40,12 @@ async def clearpass_manage_endpoint(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
 
     if action_type != "create" and not confirmed:
         identifier = endpoint_id or mac_address or "unknown"
@@ -56,7 +62,9 @@ async def clearpass_manage_endpoint(
             return client._send_request("/endpoint", "post", query=payload)
 
         if not endpoint_id and not mac_address:
-            return "Either endpoint_id or mac_address is required for update/delete."
+            raise ToolError(
+                {"status_code": 400, "message": "Either endpoint_id or mac_address is required for update/delete."}
+            )
 
         if action_type == "update":
             if endpoint_id:
@@ -67,5 +75,7 @@ async def clearpass_manage_endpoint(
         if endpoint_id:
             return client.delete_endpoint_by_endpoint_id(endpoint_id=endpoint_id)
         return client.delete_endpoint_mac_address_by_mac_address(mac_address=mac_address)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing endpoint: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing endpoint: {e}"}) from e

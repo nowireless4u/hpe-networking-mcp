@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
@@ -51,5 +52,7 @@ async def clearpass_get_guest_users(
         ]
         query = "?" + "&".join(p for p in params if p)
         return clearpass_get(client, "/guest" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching guest users: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching guest users: {e}"}) from e

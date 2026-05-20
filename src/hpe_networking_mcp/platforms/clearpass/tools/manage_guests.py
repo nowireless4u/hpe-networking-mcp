@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
@@ -43,7 +44,12 @@ async def clearpass_manage_guest_user(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
 
     if action_type != "create" and not confirmed:
         decline = await _confirm_write(ctx, action_type, guest_id or username)
@@ -58,7 +64,9 @@ async def clearpass_manage_guest_user(
         if action_type == "create":
             return client._send_request("/guest", "post", query=payload)
         if not guest_id and not username:
-            return "Either guest_id or username is required for update/delete."
+            raise ToolError(
+                {"status_code": 400, "message": "Either guest_id or username is required for update/delete."}
+            )
         if action_type == "update":
             if guest_id:
                 return client._send_request(f"/guest/{guest_id}", "patch", query=payload)
@@ -67,8 +75,10 @@ async def clearpass_manage_guest_user(
         if guest_id:
             return client.delete_guest_by_guest_id(guest_id=guest_id)
         return client.delete_guest_username_by_username(username=username)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing guest user: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing guest user: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -86,7 +96,9 @@ async def clearpass_send_guest_credentials(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if delivery_method not in ("sms", "email"):
-        return f"Invalid delivery_method '{delivery_method}'. Must be 'sms' or 'email'."
+        raise ToolError(
+            {"status_code": 400, "message": f"Invalid delivery_method '{delivery_method}'. Must be 'sms' or 'email'."}
+        )
 
     if not confirmed:
         decline = await _confirm_write(ctx, f"send credentials via {delivery_method}", guest_id)
@@ -98,8 +110,10 @@ async def clearpass_send_guest_credentials(
 
         client = await get_clearpass_session(ApiGuestActions)
         return client._send_request(f"/guest/{guest_id}/send-{delivery_method}", "post", query={})
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error sending guest credentials: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error sending guest credentials: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -117,7 +131,9 @@ async def clearpass_generate_guest_pass(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if pass_type not in ("digital", "receipt"):
-        return f"Invalid pass_type '{pass_type}'. Must be 'digital' or 'receipt'."
+        raise ToolError(
+            {"status_code": 400, "message": f"Invalid pass_type '{pass_type}'. Must be 'digital' or 'receipt'."}
+        )
 
     if not confirmed:
         decline = await _confirm_write(ctx, f"generate {pass_type} pass", guest_id)
@@ -130,8 +146,10 @@ async def clearpass_generate_guest_pass(
         client = await get_clearpass_session(ApiGuestActions)
         endpoint = "pass" if pass_type == "digital" else "receipt"  # nosec B105 — API path, not a password
         return client._send_request(f"/guest/{guest_id}/{endpoint}", "post", query={})
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error generating guest pass: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error generating guest pass: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -149,7 +167,7 @@ async def clearpass_process_sponsor_action(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action not in ("approve", "reject"):
-        return f"Invalid action '{action}'. Must be 'approve' or 'reject'."
+        raise ToolError({"status_code": 400, "message": f"Invalid action '{action}'. Must be 'approve' or 'reject'."})
 
     if not confirmed:
         decline = await _confirm_write(ctx, f"sponsor {action}", guest_id)
@@ -161,5 +179,7 @@ async def clearpass_process_sponsor_action(
 
         client = await get_clearpass_session(ApiGuestActions)
         return client._send_request(f"/guest/{guest_id}/sponsor/{action}", "post", query={})
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error processing sponsor action: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error processing sponsor action: {e}"}) from e

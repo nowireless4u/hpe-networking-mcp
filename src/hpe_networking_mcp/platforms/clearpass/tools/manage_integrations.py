@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
@@ -42,7 +43,9 @@ async def clearpass_manage_extension(
     """
     valid = ("start", "stop", "restart", "delete")
     if action_type not in valid:
-        return f"Invalid action_type '{action_type}'. Must be one of: {', '.join(valid)}."
+        raise ToolError(
+            {"status_code": 400, "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(valid)}."}
+        )
     decline = await _confirm_write(ctx, action_type, "extension", extension_id, confirmed)
     if decline:
         return decline
@@ -57,8 +60,10 @@ async def clearpass_manage_extension(
         if action_type == "restart":
             return client.new_extension_instance_by_id_restart(id=extension_id)
         return client.delete_extension_instance_by_id(id=extension_id)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing extension: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing extension: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -80,7 +85,12 @@ async def clearpass_manage_syslog_target(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
     decline = await _confirm_write(ctx, action_type, "syslog target", syslog_target_id or name, confirmed)
     if decline:
         return decline
@@ -91,15 +101,19 @@ async def clearpass_manage_syslog_target(
         if action_type == "create":
             return client._send_request("/syslog-target", "post", query=payload)
         if not syslog_target_id and not name:
-            return "Either syslog_target_id or name is required for update/delete."
+            raise ToolError(
+                {"status_code": 400, "message": "Either syslog_target_id or name is required for update/delete."}
+            )
         if action_type == "update":
             path = f"/syslog-target/{syslog_target_id}" if syslog_target_id else f"/syslog-target/name/{name}"
             return client._send_request(path, "patch", query=payload)
         if syslog_target_id:
             return client.delete_syslog_target_by_syslog_target_id(syslog_target_id=syslog_target_id)
         return client._send_request(f"/syslog-target/name/{name}", "delete")
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing syslog target: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing syslog target: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -123,7 +137,12 @@ async def clearpass_manage_syslog_export_filter(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in ("create", "update", "delete"):
-        return f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
+            }
+        )
     decline = await _confirm_write(ctx, action_type, "syslog export filter", syslog_export_filter_id or name, confirmed)
     if decline:
         return decline
@@ -134,7 +153,9 @@ async def clearpass_manage_syslog_export_filter(
         if action_type == "create":
             return client._send_request("/syslog-export-filter", "post", query=payload)
         if not syslog_export_filter_id and not name:
-            return "Either syslog_export_filter_id or name is required for update/delete."
+            raise ToolError(
+                {"status_code": 400, "message": "Either syslog_export_filter_id or name is required for update/delete."}
+            )
         if action_type == "update":
             path = (
                 f"/syslog-export-filter/{syslog_export_filter_id}"
@@ -147,8 +168,10 @@ async def clearpass_manage_syslog_export_filter(
                 syslog_export_filter_id=syslog_export_filter_id
             )
         return client._send_request(f"/syslog-export-filter/name/{name}", "delete")
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing syslog export filter: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing syslog export filter: {e}"}) from e
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -173,7 +196,9 @@ async def clearpass_manage_endpoint_context_server(
     """
     valid = ("create", "update", "delete", "trigger_poll")
     if action_type not in valid:
-        return f"Invalid action_type '{action_type}'. Must be one of: {', '.join(valid)}."
+        raise ToolError(
+            {"status_code": 400, "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(valid)}."}
+        )
     decline = await _confirm_write(
         ctx, action_type, "endpoint context server", endpoint_context_server_id or name, confirmed
     )
@@ -186,7 +211,7 @@ async def clearpass_manage_endpoint_context_server(
         if action_type == "create":
             return client._send_request("/endpoint-context-server", "post", query=payload)
         if not endpoint_context_server_id and not name:
-            return "Either endpoint_context_server_id or name is required."
+            raise ToolError({"status_code": 400, "message": "Either endpoint_context_server_id or name is required."})
         if action_type == "update":
             path = (
                 f"/endpoint-context-server/{endpoint_context_server_id}"
@@ -195,7 +220,9 @@ async def clearpass_manage_endpoint_context_server(
             )
             return client._send_request(path, "patch", query=payload)
         if not endpoint_context_server_id:
-            return "endpoint_context_server_id is required for delete/trigger_poll."
+            raise ToolError(
+                {"status_code": 400, "message": "endpoint_context_server_id is required for delete/trigger_poll."}
+            )
         if action_type == "trigger_poll":
             return client.update_endpoint_context_server_by_endpoint_context_server_id_trigger_poll(
                 endpoint_context_server_id=endpoint_context_server_id
@@ -203,5 +230,7 @@ async def clearpass_manage_endpoint_context_server(
         return client.delete_endpoint_context_server_by_endpoint_context_server_id(
             endpoint_context_server_id=endpoint_context_server_id
         )
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing endpoint context server: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing endpoint context server: {e}"}) from e

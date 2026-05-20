@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
@@ -78,7 +79,12 @@ async def clearpass_manage_certificate(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in _CERT_ACTIONS:
-        return f"Invalid action_type '{action_type}'. Must be one of: {', '.join(_CERT_ACTIONS)}."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(_CERT_ACTIONS)}.",
+            }
+        )
 
     if not confirmed:
         identifier = cert_id or server_uuid or "certificate"
@@ -91,8 +97,10 @@ async def clearpass_manage_certificate(
 
         client = await get_clearpass_session(ApiCertificateAuthority)
         return _execute_cert_action(client, action_type, payload, cert_id, server_uuid, service_name)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing certificate: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing certificate: {e}"}) from e
 
 
 def _execute_cert_action(
@@ -121,22 +129,27 @@ def _execute_cert_action(
 
     if action_type == "delete_trust_list":
         if not cert_id:
-            return "cert_id is required for delete_trust_list."
+            raise ToolError({"status_code": 400, "message": "cert_id is required for delete_trust_list."})
         return client.delete_cert_trust_list_by_cert_trust_list_id(cert_trust_list_id=cert_id)
 
     if action_type == "delete_client_cert":
         if not cert_id:
-            return "cert_id is required for delete_client_cert."
+            raise ToolError({"status_code": 400, "message": "cert_id is required for delete_client_cert."})
         return client.delete_client_cert_by_client_cert_id(client_cert_id=cert_id)
 
     if action_type in ("enable_server_cert", "disable_server_cert"):
         if not server_uuid or not service_name:
-            return "server_uuid and service_name are required for enable/disable_server_cert."
+            raise ToolError(
+                {
+                    "status_code": 400,
+                    "message": "server_uuid and service_name are required for enable/disable_server_cert.",
+                }
+            )
         action = "enable" if action_type == "enable_server_cert" else "disable"
         path = f"/server-cert/name/{server_uuid}/{service_name}/{action}"
         return client._send_request(path, "patch", query={})
 
-    return f"Unhandled action_type: {action_type}"
+    raise ToolError({"status_code": 500, "message": f"Unhandled action_type: {action_type}"})
 
 
 @tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
@@ -173,5 +186,7 @@ async def clearpass_create_csr(
 
         client = await get_clearpass_session(ApiCertificateAuthority)
         return client._send_request("/certificate/csr", "post", query=payload)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error creating CSR: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error creating CSR: {e}"}) from e

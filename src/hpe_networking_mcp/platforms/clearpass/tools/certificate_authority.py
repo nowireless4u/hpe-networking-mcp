@@ -15,6 +15,7 @@ See: https://developer.arubanetworks.com/cppm/reference (Certificate Authority)
 from __future__ import annotations
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
@@ -62,8 +63,10 @@ async def clearpass_get_certificates(
             return clearpass_get(client, f"/certificate/{certificate_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/certificate" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching CA certificates: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching CA certificates: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -107,5 +110,7 @@ async def clearpass_get_onboard_devices(
             return clearpass_get(client, f"/onboard/device/{onboard_device_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/onboard/device" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching onboard devices: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching onboard devices: {e}"}) from e

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
@@ -40,8 +41,10 @@ async def clearpass_get_pass_templates(
             return client.get_template_pass_by_id(id=template_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/template/pass" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching pass templates: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching pass templates: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -74,8 +77,10 @@ async def clearpass_get_print_templates(
             return client.get_template_print_by_id(id=template_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/template/print" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching print templates: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching print templates: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -112,8 +117,10 @@ async def clearpass_get_weblogin_pages(
             return client.get_weblogin_page_name_by_page_name(page_name=page_name)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/weblogin" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching web login pages: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching web login pages: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -130,8 +137,10 @@ async def clearpass_get_guest_auth_settings(
 
         client = await get_clearpass_session(ApiGuestConfiguration)
         return client.get_guest_authentication()
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching guest authentication settings: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching guest authentication settings: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -148,5 +157,7 @@ async def clearpass_get_guest_manager_settings(
 
         client = await get_clearpass_session(ApiGuestConfiguration)
         return client.get_guestmanager()
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching guest manager settings: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching guest manager settings: {e}"}) from e

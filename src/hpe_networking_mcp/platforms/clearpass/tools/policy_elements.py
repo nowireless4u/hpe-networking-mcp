@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
@@ -44,8 +45,10 @@ async def clearpass_get_services(
             return client.get_config_service_name_by_name(name=name)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/config/service" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching services: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching services: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -82,8 +85,10 @@ async def clearpass_get_posture_policies(
             return client.get_posture_policy_name_by_name(name=name)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/posture-policy" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching posture policies: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching posture policies: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -122,8 +127,10 @@ async def clearpass_get_device_groups(
             return client.get_network_device_group_name_by_name(name=name)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/network-device-group" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching device groups: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching device groups: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -160,8 +167,10 @@ async def clearpass_get_proxy_targets(
             return client.get_proxy_target_name_by_name(name=name)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/proxy-target" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching proxy targets: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching proxy targets: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -200,8 +209,10 @@ async def clearpass_get_radius_dictionaries(
             return client.get_radius_dictionary_name_by_name(name=name)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/radius-dictionary" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching RADIUS dictionaries: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching RADIUS dictionaries: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -240,8 +251,10 @@ async def clearpass_get_tacacs_dictionaries(
             return client.get_tacacs_service_dictionary_name_by_name(name=name)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/tacacs-service-dictionary" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching TACACS+ dictionaries: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching TACACS+ dictionaries: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -280,8 +293,10 @@ async def clearpass_get_application_dictionaries(
             return client.get_application_dictionary_name_by_name(name=name)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/application-dictionary" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching application dictionaries: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching application dictionaries: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -325,5 +340,9 @@ async def clearpass_get_radius_dynamic_authorization_template(
             return clearpass_get(client, f"/radius-dynamic-authorization-template/name/{name}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/radius-dynamic-authorization-template" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching RADIUS dynamic authorization templates: {e}"
+        raise ToolError(
+            {"status_code": 502, "message": f"Error fetching RADIUS dynamic authorization templates: {e}"}
+        ) from e

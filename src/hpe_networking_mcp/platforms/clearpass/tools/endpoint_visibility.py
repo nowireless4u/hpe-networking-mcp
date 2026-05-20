@@ -10,6 +10,7 @@ See: https://developer.arubanetworks.com/cppm/reference (Endpoint Visibility)
 from __future__ import annotations
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
@@ -54,8 +55,10 @@ async def clearpass_get_onguard_activity(
             return clearpass_get(client, f"/onguard-activity/mac/{mac}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/onguard-activity" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching OnGuard activity: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching OnGuard activity: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -95,8 +98,10 @@ async def clearpass_get_fingerprint_dictionary(
             return clearpass_get(client, f"/fingerprint/{fingerprint_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/fingerprint" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching fingerprint dictionary: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching fingerprint dictionary: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -136,8 +141,10 @@ async def clearpass_get_network_scan(
             return clearpass_get(client, f"/config/network-scan/{scan_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/config/network-scan" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching network scans: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching network scans: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -164,5 +171,7 @@ async def clearpass_get_onguard_settings(
         client = await get_clearpass_session(ApiEndpointVisibility)
         path = "/onguard/global-settings" if global_settings else "/onguard/settings"
         return clearpass_get(client, path)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching OnGuard settings: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching OnGuard settings: {e}"}) from e

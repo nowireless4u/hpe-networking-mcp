@@ -21,6 +21,7 @@ from dataclasses import asdict
 from typing import Any
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
@@ -105,8 +106,10 @@ async def clearpass_list_policy_services(
             }
             for s in items
         ]
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error listing policy services: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error listing policy services: {e}"}) from e
 
 
 def _resolve_service_name(
@@ -253,7 +256,7 @@ async def clearpass_compile_policy_flow(
         "available_services": [<name>, ...], "available_count": <int>}``.
     """
     if (service_id is None) == (service_name is None):
-        return "Error: provide exactly one of service_id or service_name"
+        raise ToolError({"status_code": 400, "message": "Error: provide exactly one of service_id or service_name"})
 
     try:
         from pyclearpass.api_enforcementprofile import ApiEnforcementProfile
@@ -298,7 +301,13 @@ async def clearpass_compile_policy_flow(
         model = build(raw)
         target = next((s for s in model.services.values() if s.name == target_name), None)
         if target is None:
-            return f"Internal error: service '{target_name}' resolved from REST but not present in compiled model"
+            raise ToolError(
+                {
+                    "status_code": 500,
+                    "message": f"Internal error: service '{target_name}' resolved from REST "
+                    "but not present in compiled model",
+                }
+            )
 
         flow = compile_service(target, model, simulated_attributes=simulated_attributes)
 
@@ -327,5 +336,7 @@ async def clearpass_compile_policy_flow(
         if flow.simulation is not None:
             result["simulation"] = asdict(flow.simulation)
         return result
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error compiling policy flow: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error compiling policy flow: {e}"}) from e

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
@@ -54,8 +55,10 @@ async def clearpass_get_enforcement_policies(
         ]
         query = "?" + "&".join(p for p in params if p)
         return clearpass_get(client, "/enforcement-policy" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching enforcement policies: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching enforcement policies: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -102,8 +105,10 @@ async def clearpass_get_enforcement_profiles(
         ]
         query = "?" + "&".join(p for p in params if p)
         return clearpass_get(client, "/enforcement-profile" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching enforcement profiles: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching enforcement profiles: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)

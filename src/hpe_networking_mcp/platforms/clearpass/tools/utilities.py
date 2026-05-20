@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
@@ -29,5 +30,7 @@ async def clearpass_generate_random_password(
         if type == "mpsk":
             return client.get_random_mpsk()
         return client.get_random_password()
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error generating random password: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error generating random password: {e}"}) from e

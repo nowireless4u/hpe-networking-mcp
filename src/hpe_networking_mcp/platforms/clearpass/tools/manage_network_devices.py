@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
@@ -92,7 +93,12 @@ async def clearpass_manage_network_device(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type not in _VALID_ACTIONS:
-        return f"Invalid action_type '{action_type}'. Must be one of: {', '.join(_VALID_ACTIONS)}."
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(_VALID_ACTIONS)}.",
+            }
+        )
 
     if action_type != "create" and not confirmed:
         decline = await _confirm_action(ctx, action_type, device_id, name)
@@ -104,8 +110,10 @@ async def clearpass_manage_network_device(
 
         client = await get_clearpass_session(ApiPolicyElements)
         return await _execute_device_action(client, action_type, payload, device_id, name, source_device_id)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error managing network device: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error managing network device: {e}"}) from e
 
 
 async def _execute_device_action(
@@ -129,10 +137,10 @@ async def _execute_device_action(
 
     if action_type == "clone":
         if not source_device_id:
-            return "source_device_id is required for clone action."
+            raise ToolError({"status_code": 400, "message": "source_device_id is required for clone action."})
         source = client.get_network_device_by_network_device_id(network_device_id=source_device_id)
         if not isinstance(source, dict):
-            return f"Failed to retrieve source device {source_device_id}."
+            raise ToolError({"status_code": 404, "message": f"Failed to retrieve source device {source_device_id}."})
         source.pop("id", None)
         source.update(payload)
         return client._send_request("/network-device", "post", query=source)
@@ -141,7 +149,7 @@ async def _execute_device_action(
     if not resolved_id and action_type == "delete" and name:
         return client.delete_network_device_name_by_name(name=name)
     if not resolved_id:
-        return "Either device_id or name is required for this action."
+        raise ToolError({"status_code": 400, "message": "Either device_id or name is required for this action."})
 
     if action_type == "update":
         return client._send_request(f"/network-device/{resolved_id}", "patch", query=payload)

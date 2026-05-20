@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
@@ -49,8 +50,10 @@ async def clearpass_get_trust_list(
             )
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/cert-trust-list" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching trust list: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching trust list: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -83,8 +86,10 @@ async def clearpass_get_client_certificates(
             return client.get_client_cert_by_client_cert_id(client_cert_id=client_cert_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/client-cert" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching client certificates: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching client certificates: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -117,8 +122,10 @@ async def clearpass_get_server_certificates(
                 service_name=service_name,
             )
         return clearpass_get(client, "/server-cert")
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching server certificates: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching server certificates: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -151,8 +158,10 @@ async def clearpass_get_service_certificates(
             return client.get_service_cert_by_service_cert_id(service_cert_id=service_cert_id)
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/service-cert" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching service certificates: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching service certificates: {e}"}) from e
 
 
 @tool(annotations=READ_ONLY)
@@ -191,5 +200,7 @@ async def clearpass_get_revocation_list(
             return clearpass_get(client, f"/revocation-list/{revocation_list_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return clearpass_get(client, "/revocation-list" + query)
+    except ToolError:
+        raise
     except Exception as e:
-        return f"Error fetching revocation lists: {e}"
+        raise ToolError({"status_code": 502, "message": f"Error fetching revocation lists: {e}"}) from e
