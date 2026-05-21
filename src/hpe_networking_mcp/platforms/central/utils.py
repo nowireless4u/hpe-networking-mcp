@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+from fastmcp.exceptions import ToolError
 from loguru import logger
 
 from hpe_networking_mcp.platforms.central.models import (
@@ -292,7 +293,12 @@ def retry_central_command(
         api_data: Request body payload (sent as JSON for POST/PUT).
         max_retries: Max retry attempts for transient errors.
 
-    Client errors (4xx) are raised immediately.
+    Raises:
+        ToolError: On client errors (4xx, immediate) and after exhausting
+            retries on transient failures. The structured payload carries the
+            real ``status_code`` + ``message`` so the error survives code-mode
+            masking (a bare ``Exception`` here gets reduced to "Error calling
+            tool …" and the AI can't self-correct).
     """
     api_params = api_params or {}
     api_data = api_data or {}
@@ -349,11 +355,15 @@ def retry_central_command(
 
         # client errors -> raise immediately
         if 400 <= code < 500:
-            raise Exception(f"Client error from central: {resp}")
+            raise ToolError({"status_code": code, "message": f"Central API error (HTTP {code}): {resp.get('msg')}"})
 
         last_response = resp
 
-    raise Exception(f"Failed after {max_retries} attempts: {last_response}")
+    last_code = (last_response or {}).get("code", 0)
+    status = last_code if isinstance(last_code, int) and 400 <= last_code < 600 else 502
+    raise ToolError(
+        {"status_code": status, "message": f"Central API unreachable after {max_retries} attempts: {last_response}"}
+    )
 
 
 def transform_to_site_data(site_raw: dict) -> SiteData:
