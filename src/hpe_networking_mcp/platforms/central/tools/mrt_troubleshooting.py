@@ -421,7 +421,7 @@ async def central_disconnect_user_by_network(
     serial_number: Annotated[str, Field(description="AP serial number.")],
     network_name: Annotated[str, Field(description="Network name (SSID) to disconnect users from.")],
 ) -> dict | str:
-    """Disconnect users associated to a specific network (SSID) on an AP (operational — runs immediately, no confirmation)."""
+    """Disconnect users on a specific network/SSID on an AP (operational — runs immediately, no confirmation)."""
     return _post_action(
         ctx.lifespan_context["central_conn"],
         "aps",
