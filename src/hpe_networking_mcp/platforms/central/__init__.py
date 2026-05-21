@@ -114,6 +114,7 @@ TOOLS = {
     "config_health": [
         "central_get_device_config_issues",
         "central_get_devices_config_health",
+        "central_resync_device_config",
     ],
     "gateway_cluster_intent": [
         "central_get_gateway_cluster_intent_profiles",

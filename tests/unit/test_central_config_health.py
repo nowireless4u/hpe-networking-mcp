@@ -132,3 +132,36 @@ class TestCentralGetDevicesConfigHealth:
         assert not (isinstance(result, str) and "search must be" in result)
         # Search arg made it to the request.
         assert mock_cmd.call_args.kwargs["api_params"]["search"] == good_search
+
+
+class TestCentralResyncDeviceConfig:
+    @patch("hpe_networking_mcp.platforms.central.tools.config_health.retry_central_command")
+    async def test_posts_serials_to_resync_endpoint(self, mock_cmd):
+        from hpe_networking_mcp.platforms.central.tools.config_health import (
+            central_resync_device_config,
+        )
+
+        mock_cmd.return_value = {
+            "code": 200,
+            "msg": {"message": "Full configuration sync triggered for 2 devices."},
+        }
+        result = await central_resync_device_config(_ctx(), serials=["ABC123", "DEF456"])
+
+        kwargs = mock_cmd.call_args.kwargs
+        assert kwargs["api_method"] == "POST"
+        assert kwargs["api_path"] == "network-config/v1alpha1/config-health/devices-resync"
+        # Body field is exactly "serials" (a list) — other field names 400 upstream.
+        assert kwargs["api_data"] == {"serials": ["ABC123", "DEF456"]}
+        assert result == {"message": "Full configuration sync triggered for 2 devices."}
+
+    async def test_empty_serials_raises_400(self):
+        from fastmcp.exceptions import ToolError
+
+        from hpe_networking_mcp.platforms.central.tools.config_health import (
+            central_resync_device_config,
+        )
+
+        with pytest.raises(ToolError) as exc_info:
+            await central_resync_device_config(_ctx(), serials=[])
+        assert exc_info.value.args[0]["status_code"] == 400
+        assert "non-empty list" in exc_info.value.args[0]["message"]

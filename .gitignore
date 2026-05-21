@@ -94,3 +94,7 @@ docs/central_configuration_model.md
 # Local working artifacts kept under docs/mappings/ — early drafts of cross-
 # platform configuration mapping references. Not tracked.
 docs/mappings/
+
+# Local-only inventory of probed-live undocumented Central endpoints.
+# Sourced from non-public material; never tracked or redistributed.
+docs/central-undocumented-endpoints.md

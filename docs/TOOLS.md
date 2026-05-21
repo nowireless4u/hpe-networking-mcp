@@ -9,18 +9,18 @@ Tools are namespaced by platform: `mist_*` (Juniper Mist), `central_*` (Aruba Ce
 
 The server ships with `MCP_TOOL_MODE=code` by default since v3.0.0.0. At session start the AI sees **6 tools**:
 
-- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 1915 underlying tools
+- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 1916 underlying tools
 - **`tags(detail="brief")`** — browse the catalog by platform / module
 - **`search(query, tags=[...], detail)`** — BM25 search the catalog
 - **`get_schema(tools=[...], detail)`** — fetch parameter shape for named tools
 - **`skills_list(filter=...)`** — list bundled multi-step runbooks (since v2.3.0.0)
 - **`skills_load(name=...)`** — load a runbook to execute
 
-All 1915 per-platform tools documented below still exist and are reachable via `await call_tool(name, params)` inside `execute()`. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the discovery tools (`tags`, `search`, `get_schema`).
+All 1916 per-platform tools documented below still exist and are reachable via `await call_tool(name, params)` inside `execute()`. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the discovery tools (`tags`, `search`, `get_schema`).
 
 **Why code mode is the default since v3.0.0.0**: smallest initial token cost, single-round-trip multi-step orchestration, and validated against small local LLMs (Qwen3 4B Q4_K_M; see [#246](https://github.com/nowireless4u/hpe-networking-mcp/issues/246) reassessment).
 
-Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface (per-platform discovery — see next section). The `static` mode was REMOVED in v3.0.0.0 — at 1915 tools / ~64K tokens it was no longer practical.
+Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface (per-platform discovery — see next section). The `static` mode was REMOVED in v3.0.0.0 — at 1916 tools / ~64K tokens it was no longer practical.
 
 ## Dynamic mode (opt-in since v3.0.0.0; was the v2.x default)
 
@@ -39,7 +39,7 @@ With `MCP_TOOL_MODE=dynamic` the AI sees **24 tools**:
   - `skills_list(filter=...)` — list bundled multi-step runbooks
   - `skills_load(name=...)` — load a runbook to execute
 
-The 1915 per-platform tools are reachable via `<platform>_invoke_tool(name=..., arguments={...})`. Best when an orchestrator wants explicit per-tool dispatch rather than the sandboxed Python composition that code mode provides.
+The 1916 per-platform tools are reachable via `<platform>_invoke_tool(name=..., arguments={...})`. Best when an orchestrator wants explicit per-tool dispatch rather than the sandboxed Python composition that code mode provides.
 
 ## Code mode details (the default — see above for surface summary)
 
@@ -96,7 +96,7 @@ If you do try to dispatch to a discovery tool by mistake, `SandboxErrorCatchMidd
 - **`code` (default since v3.0.0.0)** — best for orchestrators driving small / local LLMs, multi-step aggregations, cross-platform joins, filter/map/reduce workflows. Smallest initial token cost. Validated against Qwen3 4B Q4_K_M via OpenClaw (see #246 reassessment).
 - **`dynamic` (opt-in since v3.0.0.0; was the v2.x default)** — best when the orchestrator wants explicit per-tool dispatch via `<platform>_invoke_tool` rather than sandboxed Python composition. Stable, production-tested for lookup-style questions.
 
-The `static` mode was REMOVED in v3.0.0.0 — at 1915 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` raises ValueError at startup.
+The `static` mode was REMOVED in v3.0.0.0 — at 1916 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` raises ValueError at startup.
 
 ## Overview
 
@@ -716,7 +716,7 @@ logged and skipped; the rest of the catalog still loads. See
 
 ---
 
-## Aruba Central (614 tools + 12 prompts)
+## Aruba Central (615 tools + 12 prompts)
 
 > **v3.1.1.0**: bulk-imported 197 net-new config-model object types (389 net-new tools across 19 new modules) from the gitignored local snapshot at `api-endpoints/central/config/`. See the **Config-Model Tools** section at the end of the Central section for the new module inventory and the `central_get_<type>` / `central_manage_<type>` naming convention. The 15 hand-curated tool pairs documented in detail below (sites, devices, alerts, security_policy, wlan_profiles, gateway_clusters, named_vlans, aliases, server_groups, config_assignments, scope, gateway_cluster_intent) keep their tuned docstrings and edge-case handling.
 
@@ -1603,6 +1603,14 @@ Diagnostics for the New Central Configuration API config-health surface (`/netwo
 | sort | str | No | Sort by one of `name`, `serial`, `type`, `siteName`, `configStatus`, `deviceFunction`, `lastConfigTimestamp`, `model`, `deviceGroupName`, `topPriorityIssue`, `recommendedAction`, `role`, `deployment`, `activeIssues`. Append `asc` or `desc` (e.g. `"activeIssues desc"`). |
 | filter | str | No | OData 4.0 filter on `name`, `deviceFunction`, `configStatus`, `type`, `model`, `serial`, `deviceGroupName`, or `activeIssues`. |
 | search | str | No | Free-text search across `name`, `serial`, `siteName`, `topPriorityIssue`, and `recommendedAction` (3-128 chars when supplied). |
+
+#### `central_resync_device_config`
+
+> Triggers a full configuration sync (resync) for one or more devices — the standard remediation when a device is `OUT_OF_SYNC` or shows `CONFIG_PUSH_FAILURES`. Idempotent and non-destructive (re-pushes the *intended* config; does not change it). `OPERATIONAL` — runs immediately, no confirmation prompt, not gated behind `ENABLE_CENTRAL_WRITE_TOOLS`. Central silently skips serials it can't act on and reports how many were actually triggered.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| serials | list[str] | Yes | Device serial numbers to resync (non-empty list). |
 
 ---
 

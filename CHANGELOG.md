@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.1.7] - 2026-05-21
+
+**Patch — new tool `central_resync_device_config`.** Adds a config-resync companion to the existing config-health diagnostics (`config_health.py`). Forces Central to re-push the intended configuration to one or more devices — the standard remediation when `central_get_devices_config_health` / `central_get_device_config_issues` show a device `OUT_OF_SYNC` or with `CONFIG_PUSH_FAILURES`.
+
+- **Endpoint**: `POST network-config/v1alpha1/config-health/devices-resync`, body `{"serials": [...]}` (in-policy under the `network-*/v1alpha1` rule). Live-verified against a tenant: returns `{"message": "Full configuration sync triggered for N devices."}`. The route had previously been observed returning a gateway error; it is now active.
+- **Annotation**: `OPERATIONAL` — runs immediately, no confirmation prompt, not gated behind `ENABLE_CENTRAL_WRITE_TOOLS` (matches the disconnect/reboot tools). Idempotent and non-destructive: it re-applies intended config, it does not change it.
+- **Body field** is exactly `serials` (a list); other field names are rejected with HTTP 400. Central silently skips serials it can't act on (stale/phantom inventory, unsupported device types) and reports how many were actually triggered, so N may be fewer than the count passed in. Empty list → `ToolError(400)` before any request.
+
+Central: 614 → 615 underlying tools; server-wide 1915 → 1916. Updated README, INSTRUCTIONS.md, docs/TOOLS.md, and `tests/unit/test_central_config_health.py`.
+
 ## [3.2.1.6] - 2026-05-21
 
 **Patch — `retry_central_command` raises `ToolError`, fixing the masked-error class globally.** v3.2.1.5 fixed error visibility for the `mrt_troubleshooting` family; this generalizes it to **every** Central tool. The helper previously raised a bare `Exception` on 4xx and after exhausting retries — and a bare exception propagating through `central_invoke_tool` (which only catches `ToolError`, issue #333) or the code-mode sandbox gets reduced by `mask_error_details=True` to the useless `Error calling tool …`, leaving the AI nothing to act on.
