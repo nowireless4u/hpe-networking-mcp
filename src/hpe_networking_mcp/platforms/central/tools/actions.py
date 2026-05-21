@@ -114,17 +114,18 @@ async def central_disconnect_users_ap(
 
 
 @tool(annotations=OPERATIONAL)
-async def central_disconnect_client_ap(
+async def central_disconnect_client_switch(
     ctx: Context,
     serial_number: str,
     device_type: Literal["aos-s", "cx"],
     mac_address: str,
 ) -> dict | str:
     """
-    Disconnect a specific client by MAC address from a switch.
+    Disconnect a specific client by MAC address from a switch (aos-s/cx).
 
-    Use central_find_client to get the MAC address and
-    central_find_device to get the switch serial number.
+    This targets SWITCHES, not APs — for AP client disconnects use
+    central_disconnect_user_by_mac_on_ap. Use central_find_client to get the
+    MAC address and central_find_device to get the switch serial number.
 
     Parameters:
         serial_number: Switch serial number (required).
@@ -142,10 +143,10 @@ async def central_disconnect_client_ap(
             mac_address=mac_address,
         )
     except Exception as e:
-        raise ToolError({"status_code": 502, "message": f"Error disconnecting client from AP: {e}"}) from e
+        raise ToolError({"status_code": 502, "message": f"Error disconnecting client from switch: {e}"}) from e
 
     if not resp:
-        return "Disconnect client from AP returned no results."
+        return "Disconnect client from switch returned no results."
     return resp
 
 

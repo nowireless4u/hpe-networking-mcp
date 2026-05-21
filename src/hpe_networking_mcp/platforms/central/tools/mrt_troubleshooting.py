@@ -19,14 +19,15 @@ Pattern notes:
 * ``list-tasks`` per family is wrapped by one shared
   ``central_list_troubleshooting_tasks``.
 * Operational actions (reboot, halt, locate, disconnect) use the
-  ``OPERATIONAL`` annotation — they fire elicitation but are not gated
-  behind ``ENABLE_CENTRAL_WRITE_TOOLS`` (matches the existing
-  reboot / disconnect / port-bounce surface).
+  ``OPERATIONAL`` annotation — they run immediately without a confirmation
+  prompt and are not gated behind ``ENABLE_CENTRAL_WRITE_TOOLS`` (matches
+  the existing reboot / disconnect / port-bounce surface).
 """
 
 from typing import Annotated, Literal
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
@@ -49,17 +50,25 @@ DeviceFamilySwitchGw = Literal["aos-s", "cx", "gateways"]
 
 
 def _call(conn, method: str, path: str, params: dict | None = None, data: dict | None = None) -> dict | str:
-    response = retry_central_command(
-        central_conn=conn,
-        api_method=method,
-        api_path=path,
-        api_params=params or {},
-        api_data=data or {},
-    )
+    try:
+        response = retry_central_command(
+            central_conn=conn,
+            api_method=method,
+            api_path=path,
+            api_params=params or {},
+            api_data=data or {},
+        )
+    except ToolError:
+        raise
+    except Exception as e:
+        # retry_central_command raises a bare Exception on 4xx/5xx; surface the
+        # real upstream detail as a ToolError so it isn't masked to a generic
+        # "Error calling tool" in code mode (the message carries the HTTP body).
+        raise ToolError({"status_code": 502, "message": f"Central troubleshooting request failed: {e}"}) from e
     code = response.get("code", 0)
     if 200 <= code < 300:
         return response.get("msg", {})
-    return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
+    raise ToolError({"status_code": code, "message": f"Central API error (HTTP {code}): {response.get('msg')}"})
 
 
 def _post_action(conn, family: str, serial: str, action: str, payload: dict | None) -> dict | str:
@@ -347,7 +356,7 @@ async def central_reboot_device(
         Field(description="Optional reboot body (vendor-specific flags). Omit for defaults."),
     ] = None,
 ) -> dict | str:
-    """Reboot a device (operational — fires elicitation). Returns a ``task_id`` to poll."""
+    """Reboot a device (operational — runs immediately, no confirmation). Returns a ``task_id`` to poll."""
     return _post_action(
         ctx.lifespan_context["central_conn"],
         device_family,
@@ -366,7 +375,7 @@ async def central_reboot_swarm(
         Field(description="Optional reboot body. Omit for defaults."),
     ] = None,
 ) -> dict | str:
-    """Reboot an entire IAP / Instant swarm (operational — fires elicitation)."""
+    """Reboot an entire IAP / Instant swarm (operational — runs immediately, no confirmation)."""
     return _post_action(ctx.lifespan_context["central_conn"], "aps", serial_number, "rebootSwarm", payload)
 
 
@@ -402,7 +411,7 @@ async def central_halt_gateway(
         Field(description="Optional halt body. Omit for defaults."),
     ] = None,
 ) -> dict | str:
-    """Halt (graceful shutdown) a gateway (operational — fires elicitation)."""
+    """Halt (graceful shutdown) a gateway (operational — runs immediately, no confirmation)."""
     return _post_action(ctx.lifespan_context["central_conn"], "gateways", serial_number, "halt", payload)
 
 
@@ -410,18 +419,15 @@ async def central_halt_gateway(
 async def central_disconnect_user_by_network(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
-    payload: Annotated[
-        dict,
-        Field(description="Network-scope disconnect body — typically ``{ssid_name}`` or per-network selector."),
-    ],
+    network_name: Annotated[str, Field(description="Network name (SSID) to disconnect users from.")],
 ) -> dict | str:
-    """Disconnect users associated to a specific network on an AP (operational — fires elicitation)."""
+    """Disconnect users associated to a specific network (SSID) on an AP (operational — runs immediately, no confirmation)."""
     return _post_action(
         ctx.lifespan_context["central_conn"],
         "aps",
         serial_number,
         "disconnectUserByNetwork",
-        payload,
+        {"networkName": network_name},
     )
 
 
@@ -429,22 +435,15 @@ async def central_disconnect_user_by_network(
 async def central_disconnect_user_by_mac_on_ap(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
-    payload: Annotated[
-        dict,
-        Field(description="Per-MAC disconnect body — typically ``{mac_address}``."),
-    ],
+    user_mac_address: Annotated[str, Field(description="MAC address of the user/client to disconnect.")],
 ) -> dict | str:
-    """Disconnect a specific user/client by MAC from an AP (operational — fires elicitation).
-
-    Use this MRT variant when the existing ``central_disconnect_client_ap``
-    pathway doesn't reach the device. Both target the same outcome.
-    """
+    """Disconnect a specific user/client by MAC address from an AP (operational — runs immediately, no confirmation)."""
     return _post_action(
         ctx.lifespan_context["central_conn"],
         "aps",
         serial_number,
         "disconnectUserByMacAddress",
-        payload,
+        {"userMacAddress": user_mac_address},
     )
 
 
@@ -452,12 +451,8 @@ async def central_disconnect_user_by_mac_on_ap(
 async def central_disconnect_user_all_on_ap(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
-    payload: Annotated[
-        dict | None,
-        Field(description="Optional body. Omit for the default disconnect-everyone behavior."),
-    ] = None,
 ) -> dict | str:
-    """Disconnect ALL users on an AP (operational — fires elicitation).
+    """Disconnect ALL users on an AP (operational — runs immediately, no confirmation).
 
     Service-affecting — every associated client gets bounced. Use only
     during planned maintenance windows.
@@ -467,7 +462,7 @@ async def central_disconnect_user_all_on_ap(
         "aps",
         serial_number,
         "disconnectUserAll",
-        payload,
+        None,
     )
 
 
@@ -475,12 +470,8 @@ async def central_disconnect_user_all_on_ap(
 async def central_disconnect_client_all_on_gateway(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
-    payload: Annotated[
-        dict | None,
-        Field(description="Optional body. Omit for the default disconnect-everyone behavior."),
-    ] = None,
 ) -> dict | str:
-    """Disconnect ALL clients terminating on a gateway (operational — fires elicitation).
+    """Disconnect ALL clients terminating on a gateway (operational — runs immediately, no confirmation).
 
     Service-affecting — every client connected through the gateway gets
     bounced. Use only during planned maintenance windows.
@@ -490,7 +481,7 @@ async def central_disconnect_client_all_on_gateway(
         "gateways",
         serial_number,
         "disconnectClientAll",
-        payload,
+        None,
     )
 
 
@@ -498,16 +489,13 @@ async def central_disconnect_client_all_on_gateway(
 async def central_disconnect_client_by_mac_on_gateway(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
-    payload: Annotated[
-        dict,
-        Field(description="Per-MAC disconnect body — typically ``{mac_address}``."),
-    ],
+    client_mac_address: Annotated[str, Field(description="MAC address of the client to disconnect.")],
 ) -> dict | str:
-    """Disconnect a specific client by MAC from a gateway (operational — fires elicitation)."""
+    """Disconnect a specific client by MAC address from a gateway (operational — runs immediately, no confirmation)."""
     return _post_action(
         ctx.lifespan_context["central_conn"],
         "gateways",
         serial_number,
         "disconnectClientByMacAddress",
-        payload,
+        {"clientMacAddress": client_mac_address},
     )

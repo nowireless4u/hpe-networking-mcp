@@ -356,7 +356,7 @@ When asked to create a new site based on an existing site:
 - **Events**: central_get_events, central_get_events_count
 - **Audit Logs**: central_get_audit_logs, central_get_audit_log_detail
 - **Applications**: central_get_applications
-- **Troubleshooting**: central_ping, central_traceroute, central_cable_test, central_show_commands, central_disconnect_users_ssid, central_disconnect_users_ap, central_disconnect_client_ap, central_disconnect_client_gateway, central_disconnect_clients_gateway, central_port_bounce_switch, central_poe_bounce_switch, central_port_bounce_gateway, central_poe_bounce_gateway
+- **Troubleshooting**: central_ping, central_traceroute, central_cable_test, central_show_commands, central_disconnect_users_ssid, central_disconnect_users_ap, central_disconnect_client_switch, central_disconnect_client_gateway, central_disconnect_clients_gateway, central_port_bounce_switch, central_poe_bounce_switch, central_port_bounce_gateway, central_poe_bounce_gateway
 - **WLAN Profiles**: central_get_wlan_profiles, central_manage_wlan_profile
   - Use `central_get_wlan_profiles` to read WLAN SSID profile configurations from the library
   - Use `central_manage_wlan_profile` to create, update, or delete WLAN profiles — requires `ENABLE_CENTRAL_WRITE_TOOLS=true`

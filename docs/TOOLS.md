@@ -1216,13 +1216,14 @@ Rule shape:
 |-----------|------|----------|-------------|
 | serial_number | str | Yes | AP serial number. |
 
-#### `central_disconnect_client_ap`
+#### `central_disconnect_client_switch`
 
-> Disconnect a specific client by MAC address from an AP.
+> Disconnect a specific client by MAC address from a switch (aos-s/cx). Targets switches, not APs — use `central_disconnect_user_by_mac_on_ap` for AP clients.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| serial_number | str | Yes | AP serial number. |
+| serial_number | str | Yes | Switch serial number. |
+| device_type | str | Yes | Switch type — "aos-s" or "cx". |
 | mac_address | str | Yes | Client MAC address. |
 
 #### `central_disconnect_client_gateway`

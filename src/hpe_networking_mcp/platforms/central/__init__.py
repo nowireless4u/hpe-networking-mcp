@@ -56,7 +56,7 @@ TOOLS = {
     "actions": [
         "central_disconnect_users_ssid",
         "central_disconnect_users_ap",
-        "central_disconnect_client_ap",
+        "central_disconnect_client_switch",
         "central_disconnect_client_gateway",
         "central_disconnect_clients_gateway",
         "central_port_bounce_switch",

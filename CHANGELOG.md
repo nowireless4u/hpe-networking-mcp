@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.1.5] - 2026-05-21
+
+**Patch — fix the Central client-disconnect tools (broken payload contract) + make their failures diagnosable.** Surfaced from an operator transcript where the AI couldn't disconnect a wireless client.
+
+### Disconnect tools sent the wrong body field
+The 5 MRT disconnect tools exposed a free-form `payload` dict with a misleading hint ("typically `{mac_address}`"), but the API requires specific fields — and they differ between APs and gateways. Every call 400'd. Replaced the free-form `payload` with explicit, correctly-named params that build the exact body (live-verified against the tenant — `userMacAddress` returns HTTP 202 INITIATED):
+
+| Tool | body |
+|------|------|
+| `central_disconnect_user_by_mac_on_ap` | `{"userMacAddress": …}` |
+| `central_disconnect_user_by_network` | `{"networkName": …}` |
+| `central_disconnect_user_all_on_ap` | _(none)_ |
+| `central_disconnect_client_by_mac_on_gateway` | `{"clientMacAddress": …}` |
+| `central_disconnect_client_all_on_gateway` | _(none)_ |
+
+### The real error was masked
+`_call` (mrt_troubleshooting) let `retry_central_command`'s **bare `Exception`** propagate on a 4xx. `central_invoke_tool` only catches `ToolError` (issue #333), so the bare exception slipped through and `mask_error_details=True` reduced it to the useless `Error calling tool …` — the AI (and operator) couldn't see the underlying `400`. `_call` now raises `ToolError` with the real status + body, so `central_invoke_tool` returns a structured `{"status": "tool_error", "status_code", "message"}` and the direct-call path surfaces readable text via `SandboxErrorCatch`.
+
+### Renamed misleading tool
+`central_disconnect_client_ap` → **`central_disconnect_client_switch`** — it targets switches (`aos-s`/`cx`), not APs, and the name sent the AI down the wrong path. Updated the registration list, INSTRUCTIONS.md, and docs/TOOLS.md; error strings corrected from "from AP" → "from switch".
+
+### Docstrings corrected
+These OPERATIONAL troubleshooting tools claimed "fires elicitation" but never confirmed (and shouldn't — consistent with port/PoE bounce). Replaced with "runs immediately, no confirmation" across the file.
+
+Added `tests/unit/test_central_disconnect_tools.py` — pins each tool's exact body, the `ToolError` surfacing (400 detail + 502 wrapping), and the `_switch` rename.
+
 ## [3.2.1.4] - 2026-05-20
 
 **Patch — make `central_get_audit_logs` forgiving of the two params AI clients keep getting wrong.** Live-verified against the audit API:
