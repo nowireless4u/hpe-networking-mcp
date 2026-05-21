@@ -11,6 +11,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import pytest
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.central.utils import (
     _retry_backoff_secs,
@@ -60,16 +61,22 @@ class TestRetryBackoff:
         assert [c.args[0] for c in mock_sleep.call_args_list] == [0.5]
 
     @patch("hpe_networking_mcp.platforms.central.utils.time.sleep")
-    def test_exhausts_retries_then_raises_without_sleeping_after_last(self, mock_sleep):
-        conn = _conn([{"code": 500, "msg": {"message": "down"}}] * 5)
-        with pytest.raises(Exception, match="Failed after 5 attempts"):
+    def test_exhausts_retries_then_raises_toolerror_without_sleeping_after_last(self, mock_sleep):
+        conn = _conn([{"code": 503, "msg": {"message": "down"}}] * 5)
+        with pytest.raises(ToolError) as exc:
             retry_central_command(conn, "GET", "network-services/v1/audits")
+        # exhaustion preserves the last transient code, not a generic 500
+        assert exc.value.args[0]["status_code"] == 503
+        assert "after 5 attempts" in exc.value.args[0]["message"]
         # 5 attempts -> sleeps after attempts 1..4 only (no sleep after the last)
         assert [c.args[0] for c in mock_sleep.call_args_list] == [0.5, 1.0, 2.0, 4.0]
 
     @patch("hpe_networking_mcp.platforms.central.utils.time.sleep")
-    def test_4xx_raises_immediately_no_sleep(self, mock_sleep):
+    def test_4xx_raises_toolerror_immediately_no_sleep(self, mock_sleep):
         conn = _conn([{"code": 400, "msg": {"message": "bad"}}])
-        with pytest.raises(Exception, match="Client error"):
+        with pytest.raises(ToolError) as exc:
             retry_central_command(conn, "GET", "network-services/v1/audits")
+        # real 4xx code is preserved (not masked, not relabelled 502)
+        assert exc.value.args[0]["status_code"] == 400
+        assert "bad" in exc.value.args[0]["message"]
         mock_sleep.assert_not_called()
