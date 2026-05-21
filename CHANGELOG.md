@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.1.8] - 2026-05-21
+
+**Patch — refresh Central config-model tools against an updated `api-endpoints/central/config/` spec snapshot.** Re-ran the diff between the maintainer's refreshed config-model OpenAPI specs and the committed tools; 3 of 19 generated modules had drifted.
+
+### Added — Application Experience DAP family (6 tools)
+Three net-new config-object specs (`dap`, `dap-application`, `dap-sla`, tag-group *Application Experience*, full CRUD) gained tools:
+- `central_get_dap` / `central_manage_dap`
+- `central_get_dap_application` / `central_manage_dap_application`
+- `central_get_dap_sla` / `central_manage_dap_sla`
+
+### Changed — `system-info` is now a named collection
+The `system-info` spec changed from a singleton to a collection with a `/system-info/{name}` item path (full CRUD). `central_get_system_info` now accepts an optional `name` (omit → list all); `central_manage_system_info` now takes a `name`. Previously both only addressed the singleton URL, leaving named profiles unreachable.
+
+### Changed — `mesh` docstring
+`central_get_mesh` / `central_manage_mesh` (Wireless) picked up the spec's richer Mesh-profile description. Docstring-only; no signature change.
+
+These three module files were regenerated from the current specs (verified to contain no hand-edits beyond the spec-driven deltas, so regeneration is equivalent to a surgical edit). The other 16 generated modules and all 15 hand-curated types were unchanged by the spec refresh.
+
+Central: 614 → 620 underlying tools; server-wide 1916 → 1922. Updated README, docs/TOOLS.md.
+
 ## [3.2.1.7] - 2026-05-21
 
 **Patch — new tool `central_resync_device_config`.** Adds a config-resync companion to the existing config-health diagnostics (`config_health.py`). Forces Central to re-push the intended configuration to one or more devices — the standard remediation when `central_get_devices_config_health` / `central_get_device_config_issues` show a device `OUT_OF_SYNC` or with `CONFIG_PUSH_FAILURES`.

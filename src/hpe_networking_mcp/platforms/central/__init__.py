@@ -132,6 +132,12 @@ TOOLS = {
         "central_manage_app_bandwidth_contract",
         "central_get_app_recog_control",
         "central_manage_app_recog_control",
+        "central_get_dap",
+        "central_manage_dap",
+        "central_get_dap_application",
+        "central_manage_dap_application",
+        "central_get_dap_sla",
+        "central_manage_dap_sla",
     ],
     "central_nac": [
         "central_get_cda_airpass_approval",

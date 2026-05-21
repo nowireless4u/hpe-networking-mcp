@@ -160,7 +160,7 @@ async def central_get_mesh(
 ) -> dict | list | str:
     """Get ``mesh`` configurations from Central.
 
-    Configuration data for Mesh network topology.
+    Configure and retrieve Mesh profiles for Aruba Access Points, enabling wireless backhaul connectivity between mesh portals and mesh points. These profiles define mesh cluster settings, band selection, topology behavior, role selection, and recovery parameters used to build and maintain the mesh network. Use this API to retrieve the list of Mesh profiles.
 
     Parameters:
         name: Specific ``mesh`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -191,7 +191,7 @@ async def central_manage_mesh(
 ) -> dict | str:
     """Create, update, or delete a ``mesh`` configuration in Central.
 
-    Configuration data for Mesh network topology.
+    Configure and retrieve Mesh profiles for Aruba Access Points, enabling wireless backhaul connectivity between mesh portals and mesh points. These profiles define mesh cluster settings, band selection, topology behavior, role selection, and recovery parameters used to build and maintain the mesh network. Use this API to retrieve the list of Mesh profiles.
     """
     return await _manage_resource(
         ctx,

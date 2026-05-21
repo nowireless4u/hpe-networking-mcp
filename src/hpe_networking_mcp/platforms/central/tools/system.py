@@ -1852,26 +1852,32 @@ async def central_manage_sysmon(
 @tool(annotations=READ_ONLY)
 async def central_get_system_info(
     ctx: Context,
+    name: str | None = None,
 ) -> dict | list | str:
-    """Get the ``system-info`` singleton configuration from Central.
+    """Get ``system-info`` configurations from Central.
 
-    System information provides key details about the Aruba device, including hardware model, software version, serial number, and operational status. This information is essential for inventory management, support, and troubleshooting. Use this API to retrieve system information for Aruba devices.
+    System information provides key details about the Aruba device, including hardware model, software version, serial number, and operational status. This information is essential for inventory management, support, and troubleshooting. Use this API to retrieve the list of System Information profiles.
+
+    Parameters:
+        name: Specific ``system-info`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "system-info", None)
+    return await _get_resource(ctx, "system-info", name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
 async def central_manage_system_info(
     ctx: Context,
+    name: Annotated[str, Field(description="``system-info`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the singleton ``system-info`` object. "
+                "Payload for the ``system-info`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
                 "field set; use ``central_get_system_info`` to "
-                "inspect the current state. For ``delete``, ``payload`` is ignored."
+                "inspect an existing object for reference. "
+                "For ``delete``, ``payload`` is ignored."
             )
         ),
     ],
@@ -1879,15 +1885,15 @@ async def central_manage_system_info(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete the singleton ``system-info`` configuration in Central.
+    """Create, update, or delete a ``system-info`` configuration in Central.
 
-    System information provides key details about the Aruba device, including hardware model, software version, serial number, and operational status. This information is essential for inventory management, support, and troubleshooting. Use this API to retrieve system information for Aruba devices.
+    System information provides key details about the Aruba device, including hardware model, software version, serial number, and operational status. This information is essential for inventory management, support, and troubleshooting. Use this API to retrieve the list of System Information profiles.
     """
     return await _manage_resource(
         ctx,
         "system-info",
         "system-info",
-        None,
+        name,
         action_type,
         payload,
         scope_id,
