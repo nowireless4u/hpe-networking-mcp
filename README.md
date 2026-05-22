@@ -56,11 +56,11 @@ Managing HPE networking infrastructure with AI assistants today means juggling m
 | **Staged Writes + Commit Workflow** | — | — | — | — | ✅ | ✅ | — | — |
 | **Guided Prompts** | ✅ | ✅ | — | — | — | — | ✅ | — |
 | **Dynamic Tool Discovery** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Underlying tools** | **1037 + 2 prompts** | **614 + 12 prompts** | **10** | **140** | **19** | **25** | **47 + 9 prompts** | **21** |
+| **Underlying tools** | **1037 + 2 prompts** | **620 + 12 prompts** | **10** | **140** | **19** | **25** | **47 + 9 prompts** | **21** |
 | **Exposed meta-tools (dynamic mode)** | **3** | **3** | **3** | **3** | **3** | **3** | **3** | **3** |
 | **Cross-Platform** | **3 tools + 3 prompts** | **3 tools + 3 prompts** | — | **1 tool** | — | — | — | — |
 
-> **Default tool surface (v3.0.0.0+)**: ships with `MCP_TOOL_MODE=code` by default. Code mode exposes only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`); all 1916 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. Smallest initial token cost (~minimal context); best for orchestrators driving small / local LLMs. Set `MCP_TOOL_MODE=dynamic` to use the v2.x default behavior — each platform exposes 3 meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`) plus the 4 cross-platform static tools and 2 skills tools (24 total surface, ~3,700 tokens). The `static` mode was REMOVED in v3.0.0.0. Every tool's response is wrapped in a uniform envelope `{ok, status, data, message, tool, platform}`. v2.3.0.0 introduces **Skills** — markdown-defined multi-step procedures discoverable via `skills_list` / `skills_load`; see [docs/TOOLS.md#skills](docs/TOOLS.md). v2.4.0.0 adds **AOS8** (47 tools + 9 prompts) — see [INSTRUCTIONS.md](INSTRUCTIONS.md) for AOS8-specific operator guidance. v3.2.0.0 adds **HPE UXI** (21 tools). See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md).
+> **Default tool surface (v3.0.0.0+)**: ships with `MCP_TOOL_MODE=code` by default. Code mode exposes only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`); all 1922 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. Smallest initial token cost (~minimal context); best for orchestrators driving small / local LLMs. Set `MCP_TOOL_MODE=dynamic` to use the v2.x default behavior — each platform exposes 3 meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`) plus the 4 cross-platform static tools and 2 skills tools (24 total surface, ~3,700 tokens). The `static` mode was REMOVED in v3.0.0.0. Every tool's response is wrapped in a uniform envelope `{ok, status, data, message, tool, platform}`. v2.3.0.0 introduces **Skills** — markdown-defined multi-step procedures discoverable via `skills_list` / `skills_load`; see [docs/TOOLS.md#skills](docs/TOOLS.md). v2.4.0.0 adds **AOS8** (47 tools + 9 prompts) — see [INSTRUCTIONS.md](INSTRUCTIONS.md) for AOS8-specific operator guidance. v3.2.0.0 adds **HPE UXI** (21 tools). See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md).
 
 ### Aruba Central Guided Prompts
 
@@ -200,7 +200,7 @@ docker compose up -d
 docker compose logs
 ```
 
-Look for lines like `Mist: 1037 underlying tools registered (code mode)`, `ClearPass: 140 underlying tools registered (code mode)`, `Axis: 25 underlying tools registered (code mode)`, `AOS8: 47 underlying tools (code mode)`, `UXI: 21 underlying tools (code mode)`, `Tool mode: code`, and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. In the default code mode (since v3.0.0.0), only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are exposed at the top level; all 1916 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface instead. Mist registers 2 guided prompts; Central registers 12; AOS8 registers 9.
+Look for lines like `Mist: 1037 underlying tools registered (code mode)`, `ClearPass: 140 underlying tools registered (code mode)`, `Axis: 25 underlying tools registered (code mode)`, `AOS8: 47 underlying tools (code mode)`, `UXI: 21 underlying tools (code mode)`, `Tool mode: code`, and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. In the default code mode (since v3.0.0.0), only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are exposed at the top level; all 1922 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface instead. Mist registers 2 guided prompts; Central registers 12; AOS8 registers 9.
 
 ### Docker Image
 
@@ -525,10 +525,10 @@ Set `ENABLE_UXI_WRITE_TOOLS=true` to expose the 10 UXI write tools (gated by eli
 │ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐│
 │ │  Mist  │ │Central │ │GreenLk │ │ClrPass │ │ Apstra │ │  Axis  │ │  AOS8  │ │  UXI   ││
 │ │ mist_* │ │centrl_*│ │grnlake │ │clrpass │ │apstra_*│ │ axis_* │ │ aos8_* │ │ uxi_*  ││
-│ │ 1037   │ │614tools│ │10 tools│ │140 tool│ │19 tools│ │25 tools│ │47 tools│ │21 tools││
+│ │ 1037   │ │620tools│ │10 tools│ │140 tool│ │19 tools│ │25 tools│ │47 tools│ │21 tools││
 │ │+2 prmt │ │+12prmt │ │        │ │        │ │        │ │        │ │+9 prmt │ │        ││
 │                                                                                         │
-│  All 1916 underlying tools reachable via call_tool() in code mode or via                │
+│  All 1922 underlying tools reachable via call_tool() in code mode or via                │
 │  per-platform meta-tools (<platform>_list_tools / get_schema / invoke) in dynamic mode. │
 │ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘│
 │     │          │          │          │          │          │          │          │       │
@@ -543,7 +543,7 @@ Set `ENABLE_UXI_WRITE_TOOLS=true` to expose the 10 UXI write tools (gated by eli
 
 - **FastMCP** framework with Python 3.12+
 - **Streamable HTTP** transport (modern MCP standard)
-- **Code tool mode by default (since v3.0.0.0)** — only `execute` + 5 discovery tools exposed; all 1916 underlying tools reachable via `await call_tool(name, params)` inside the sandbox. Smallest initial token cost; best for orchestrators driving small / local LLMs. Set `MCP_TOOL_MODE=dynamic` for the v2.x meta-tool surface (24 tools, ~3,700 tokens).
+- **Code tool mode by default (since v3.0.0.0)** — only `execute` + 5 discovery tools exposed; all 1922 underlying tools reachable via `await call_tool(name, params)` inside the sandbox. Smallest initial token cost; best for orchestrators driving small / local LLMs. Set `MCP_TOOL_MODE=dynamic` for the v2.x meta-tool surface (24 tools, ~3,700 tokens).
 - **Tool namespacing** — `mist_*`, `central_*`, `greenlake_*`, `clearpass_*`, `apstra_*`, `axis_*`, `aos8_*`, `uxi_*` prefixes prevent collisions
 - **Platform isolation** — each module manages its own API client and auth; a failing platform doesn't affect the others
 - **Non-root container** — runs as `mcpuser` (uid 1000)
@@ -607,7 +607,7 @@ The retry logic detects transient failures in two patterns: response-dict (Mist/
 | `ENABLE_AOS8_WRITE_TOOLS` | `false` | Enable AOS8 write tools (call `aos8_write_memory` after each change to persist) |
 | `ENABLE_UXI_WRITE_TOOLS` | `false` | Enable UXI write tools (sensor/agent/group/assignment mutations) |
 | `DISABLE_ELICITATION` | `false` | Disable write confirmation prompts |
-| `MCP_TOOL_MODE` | `code` | Tool exposure: `code` (default since v3.0.0.0 — 6 tools at top level: `execute` + 5 discovery; all 1916 underlying tools reachable via `call_tool()` inside the sandbox) or `dynamic` (24 tools — 4 cross-platform + 21 per-platform meta-tools + 2 skills tools; underlying tools hidden until invoked via `<platform>_invoke_tool`). The `static` value was REMOVED in v3.0.0.0 |
+| `MCP_TOOL_MODE` | `code` | Tool exposure: `code` (default since v3.0.0.0 — 6 tools at top level: `execute` + 5 discovery; all 1922 underlying tools reachable via `call_tool()` inside the sandbox) or `dynamic` (24 tools — 4 cross-platform + 21 per-platform meta-tools + 2 skills tools; underlying tools hidden until invoked via `<platform>_invoke_tool`). The `static` value was REMOVED in v3.0.0.0 |
 | `RETRY_MAX_ATTEMPTS` | `3` | Max retry attempts on transient failures (5xx reads, 429 reads+writes). Set to `1` to disable retry |
 | `RETRY_INITIAL_DELAY` | `1.0` | Initial retry backoff seconds (exponential: 1s, 2s, 4s) |
 | `RETRY_MAX_DELAY` | `60.0` | Cap on a single retry sleep (also caps `Retry-After` header values) |
@@ -802,25 +802,25 @@ If tools time out after ~4 minutes, check that:
 - Node.js is installed: `npx --version`
 - The container didn't lose connectivity after sleep: `docker compose restart`
 
-### Tool Surface Looks Wrong (6 tools vs. 1916)
+### Tool Surface Looks Wrong (6 tools vs. 1922)
 
-Since v3.0.0.0, the server defaults to `MCP_TOOL_MODE=code`: only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 1916 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. A correctly configured server with all 8 platforms enabled will advertise **6 tools** to the AI client.
+Since v3.0.0.0, the server defaults to `MCP_TOOL_MODE=code`: only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 1922 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. A correctly configured server with all 8 platforms enabled will advertise **6 tools** to the AI client.
 
 Check the mode in the logs:
 
 ```bash
 docker compose logs | grep "Tool mode"
-# "Tool mode: code"      → default since v3.0.0.0 (6 exposed tools, 1916 underlying via call_tool)
+# "Tool mode: code"      → default since v3.0.0.0 (6 exposed tools, 1922 underlying via call_tool)
 # "Tool mode: dynamic"   → opt-in to v2.x meta-tool surface (24 exposed: 21 per-platform + 4 cross-platform + 2 skills)
 ```
 
 To use the v2.x meta-tool discovery surface (each platform exposes `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`), set `MCP_TOOL_MODE=dynamic` in `docker-compose.yml` under `environment`:
 ```yaml
 - MCP_TOOL_MODE=dynamic   # 24 exposed; per-platform meta-tools + cross-platform + skills
-- MCP_TOOL_MODE=code      # 6 exposed; sandboxed call_tool() reaches all 1916 (default since v3.0.0.0)
+- MCP_TOOL_MODE=code      # 6 exposed; sandboxed call_tool() reaches all 1922 (default since v3.0.0.0)
 ```
 
-The `static` mode (every underlying tool visible up front) was REMOVED in v3.0.0.0 — at 1916 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` now raises an error at startup with a migration message.
+The `static` mode (every underlying tool visible up front) was REMOVED in v3.0.0.0 — at 1922 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` now raises an error at startup with a migration message.
 
 See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md) for the v1.x → v2.x meta-tool history.
 
