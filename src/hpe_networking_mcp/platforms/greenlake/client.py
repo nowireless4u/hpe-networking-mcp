@@ -86,6 +86,57 @@ class GreenLakeHttpClient:
             logger.error("Request failed: {}", str(e))
             raise
 
+    async def post_raw(
+        self,
+        endpoint: str,
+        data: dict[str, Any] | None = None,
+        additional_headers: dict[str, str] | None = None,
+    ) -> httpx.Response:
+        """Perform an authenticated POST and return the full httpx.Response.
+
+        Unlike post(), does NOT call raise_for_status() -- the caller
+        handles status codes. Used by bulk_add.py to capture the Location
+        header from 202 Accepted responses.
+        """
+        url = f"{self.base_url}{endpoint}"
+        headers = self._get_auth_headers()
+        if additional_headers:
+            headers.update(additional_headers)
+        logger.debug("POST (raw) {}", url)
+        try:
+            response = await self.client.post(url, headers=headers, json=data)
+            return response
+            # NOTE: no raise_for_status() -- caller inspects status_code directly
+        except Exception as e:
+            logger.error("Request failed: {}", str(e))
+            raise
+
+    async def patch_raw(
+        self,
+        endpoint: str,
+        data: dict[str, Any] | None = None,
+        additional_headers: dict[str, str] | None = None,
+        params: dict[str, Any] | None = None,
+    ) -> httpx.Response:
+        """Perform an authenticated PATCH and return the full httpx.Response.
+
+        Unlike post(), does NOT call raise_for_status() -- the caller
+        handles status codes. Used by assignment helpers to capture the Location
+        header from 202 Accepted responses.
+        """
+        url = f"{self.base_url}{endpoint}"
+        headers = self._get_auth_headers()
+        if additional_headers:
+            headers.update(additional_headers)
+        logger.debug("PATCH (raw) {}", url)
+        try:
+            response = await self.client.patch(url, headers=headers, json=data, params=params)
+            return response
+            # NOTE: no raise_for_status() -- caller inspects status_code directly
+        except Exception as e:
+            logger.error("Request failed: {}", str(e))
+            raise
+
     # -- helpers -----------------------------------------------------------
 
     def _get_auth_headers(self) -> dict[str, str]:

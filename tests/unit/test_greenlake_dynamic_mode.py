@@ -38,14 +38,15 @@ class TestGreenLakeRegistryPopulation:
         assert actual == expected, f"Mismatch — missing: {expected - actual}, extra: {actual - expected}"
 
     def test_expected_surface_size(self, greenlake_registry_populated):
-        """GreenLake has exactly 10 tools (2 per service × 5 services)."""
-        assert len(greenlake_registry_populated) == 10
+        """GreenLake has 10 read tools + 1 write tool (greenlake_bulk_add_devices)."""
+        assert len(greenlake_registry_populated) == 11
 
-    def test_greenlake_has_no_write_gate(self, greenlake_registry_populated):
-        """GreenLake is read-only today — no tool should carry a write tag."""
+    def test_greenlake_has_no_destructive_tools(self, greenlake_registry_populated):
+        """GreenLake has no delete/destructive tools — only bulk_add carries a write tag."""
         for name, spec in greenlake_registry_populated.items():
-            write_tags = {"greenlake_write", "greenlake_write_delete"}
-            assert not (spec.tags & write_tags), f"{name} unexpectedly carries a write tag"
+            assert "greenlake_write_delete" not in spec.tags, f"{name} unexpectedly carries a delete tag"
+        write_tools = {name for name, spec in greenlake_registry_populated.items() if "greenlake_write" in spec.tags}
+        assert write_tools == {"greenlake_bulk_add_devices"}, f"Unexpected write tools: {write_tools}"
 
     def test_categories_derived_from_module_names(self, greenlake_registry_populated):
         """Category == source module short name."""
