@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.1.9] - 2026-05-21
+
+**Patch — add per-entry policy-group tools.** Follow-up to the v3.2.1.8 spec review, which found the `policy-group` spec exposes a per-entry item path (`/policy-groups/policy-group/policy-group-list/{name}`, full CRUD) that the hand-curated tools didn't wrap — they only managed at the collection level, and a docstring incorrectly claimed "there is no per-name path."
+
+Added (2 tools):
+- `central_get_policy_group_entry(name)` — fetch a single policy-group-list entry by name.
+- `central_manage_policy_group_entry(name, action_type, payload, …)` — create/update/delete a single entry without rewriting the whole evaluation order. Gated by `ENABLE_CENTRAL_WRITE_TOOLS=true` + chat confirmation on non-create actions (same as the collection-level tool).
+
+The existing `central_get_policy_groups` / `central_manage_policy_group` (collection-level, wholesale replace) are unchanged except for corrected docstrings that now cross-reference the per-entry tools. Both delegate to the shared `_get_resource` / `_manage_resource` helpers, which build the nested item path from `api_base="policy-groups/policy-group/policy-group-list"`.
+
+Central: 620 → 622 underlying tools; server-wide 1922 → 1924. Updated README, docs/TOOLS.md; added `tests/unit/test_central_policy_group_entry.py`.
+
 ## [3.2.1.8] - 2026-05-21
 
 **Patch — refresh Central config-model tools against an updated `api-endpoints/central/config/` spec snapshot.** Re-ran the diff between the maintainer's refreshed config-model OpenAPI specs and the committed tools; 3 of 19 generated modules had drifted.
