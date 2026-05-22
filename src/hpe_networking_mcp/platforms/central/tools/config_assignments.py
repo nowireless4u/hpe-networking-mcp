@@ -181,11 +181,19 @@ async def central_manage_config_assignment(
     target scope (Global, site collection, or site) by name.
     """
     if action_type not in ("assign", "remove"):
-        raise ToolError(f"Invalid action_type: {action_type}. Must be 'assign' or 'remove'.")
+        raise ToolError(
+            {"status_code": 400, "message": f"Invalid action_type: {action_type}. Must be 'assign' or 'remove'."}
+        )
 
     if device_function not in VALID_DEVICE_FUNCTIONS:
         raise ToolError(
-            f"Invalid device_function: {device_function}. Valid values: {', '.join(sorted(VALID_DEVICE_FUNCTIONS))}"
+            {
+                "status_code": 400,
+                "message": (
+                    f"Invalid device_function: {device_function}. "
+                    f"Valid values: {', '.join(sorted(VALID_DEVICE_FUNCTIONS))}"
+                ),
+            }
         )
 
     conn = ctx.lifespan_context["central_conn"]

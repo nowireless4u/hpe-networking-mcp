@@ -276,7 +276,7 @@ async def _execute_config_action(
     - DELETE: DELETE to {path}/bulk, body is {"items": [{"id": "..."}]}
     """
     if action_type in (ActionType.UPDATE, ActionType.DELETE) and not resource_id:
-        raise ToolError(f"Resource ID is required for {action_type.value} operations.")
+        raise ToolError({"status_code": 400, "message": f"Resource ID is required for {action_type.value} operations."})
 
     action_wording = {
         ActionType.CREATE: "create a new",
@@ -367,11 +367,11 @@ async def _execute_collection_site_action(
         payload: Must contain 'siteIds' list.
     """
     if not collection_id:
-        raise ToolError("collection_id is required for add_sites/remove_sites.")
+        raise ToolError({"status_code": 400, "message": "collection_id is required for add_sites/remove_sites."})
 
     site_ids = payload.get("siteIds", [])
     if not site_ids:
-        raise ToolError("payload must contain 'siteIds' list.")
+        raise ToolError({"status_code": 400, "message": "payload must contain 'siteIds' list."})
 
     conn = ctx.lifespan_context["central_conn"]
 

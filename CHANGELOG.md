@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.1.10] - 2026-05-22
+
+**Patch — make the `ToolError` contract uniform: validation guards now raise structured payloads.** A sweep found 15 validation guards across Central (12) and AOS 8 (3) still raising `ToolError("plain string")` instead of the v3.2.0.1-codified `ToolError({"status_code": 400, "message": ...})`. They weren't broken (a string still raises, and `_invoke_tool` wraps it), but a client couldn't read `status_code` off them, and CLAUDE.md states all platforms moved to the structured form. Migrated all 15:
+
+- **Central (12):** `configuration.py` (×3: resource-id/collection-id/siteIds guards), `roles.py`, `gateway_clusters.py`, `gateway_cluster_intent.py`, `config_assignments.py` (×2: action_type + device_function), `security_policy.py` (the shared `_manage_resource` helper — covers every `central_manage_*` security-policy tool), `security_policy_ext.py`, `wlan_profiles.py` (×2: action_type + opmode).
+- **AOS 8 (3):** `writes.py` (the shared `_post_managed_object` body: action_type + identifier guards, plus the AAA server_type guard).
+
+All are input-validation failures → `status_code: 400`. No behavior change beyond the payload shape (the human-readable message text is preserved). `_invoke_tool` already handled both forms, so no caller breaks; skills/prompts reference tool names only, not the error shape. The `sandbox_error_catch.py` middleware string-raise is intentional (human-readable code-mode display) and left as-is.
+
+Updated `tests/unit/test_central_gateway_clusters.py` to assert the structured payload; added `tests/unit/test_central_aos8_toolerror_contract.py` locking the two shared helpers. Full suite green (1484 passed, 1 skipped); ruff/format/mypy clean.
+
+> Note: one more site of the same class exists in **Mist** (`_client.py` org_id guard), left out of this patch because the cleanup was scoped to Central + AOS 8.
+
 ## [3.2.1.9] - 2026-05-21
 
 **Patch — add per-entry policy-group tools.** Follow-up to the v3.2.1.8 spec review, which found the `policy-group` spec exposes a per-entry item path (`/policy-groups/policy-group/policy-group-list/{name}`, full CRUD) that the hand-curated tools didn't wrap — they only managed at the collection level, and a docstring incorrectly claimed "there is no per-name path."

@@ -58,9 +58,14 @@ async def _post_managed_object(
 ) -> dict[str, Any] | str:
     """Shared body for the 9 manage_X tools (WRITE-01..09)."""
     if action_type not in _ACTION_MAP:
-        raise ToolError(f"Invalid action_type {action_type!r}. Must be 'create', 'update', or 'delete'.")
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type {action_type!r}. Must be 'create', 'update', or 'delete'.",
+            }
+        )
     if not payload.get(identifier_field):
-        raise ToolError(f"payload must include {identifier_field!r}.")
+        raise ToolError({"status_code": 400, "message": f"payload must include {identifier_field!r}."})
 
     action = _ACTION_MAP[action_type]
     identifier = payload[identifier_field]
@@ -237,7 +242,12 @@ async def aos8_manage_aaa_server(
     Returns ``{"result": ..., "requires_write_memory_for": [config_path]}`` on success.
     """
     if server_type not in _AAA_SERVER_OBJECT_BY_TYPE:
-        raise ToolError(f"Invalid server_type {server_type!r}. Must be 'radius', 'tacacs', 'ldap', or 'internal'.")
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid server_type {server_type!r}. Must be 'radius', 'tacacs', 'ldap', or 'internal'.",
+            }
+        )
     object_name = _AAA_SERVER_OBJECT_BY_TYPE[server_type]
     return await _post_managed_object(
         ctx=ctx,

@@ -60,7 +60,12 @@ async def _manage_resource(
     ``firmware-compliance``) can use the same helper.
     """
     if action_type not in ("create", "update", "delete"):
-        raise ToolError(f"Invalid action_type: {action_type}. Must be 'create', 'update', or 'delete'.")
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type: {action_type}. Must be 'create', 'update', or 'delete'.",
+            }
+        )
 
     method_map = {"create": "POST", "update": "PATCH", "delete": "DELETE"}
     api_method = method_map[action_type]

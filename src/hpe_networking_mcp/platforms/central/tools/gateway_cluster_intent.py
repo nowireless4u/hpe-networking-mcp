@@ -160,7 +160,12 @@ async def central_manage_gateway_cluster_intent_profile(
     realized cluster profiles manually via central_manage_gateway_cluster.
     """
     if action_type not in ("create", "update", "delete"):
-        raise ToolError(f"Invalid action_type: {action_type}. Must be 'create', 'update', or 'delete'.")
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type: {action_type}. Must be 'create', 'update', or 'delete'.",
+            }
+        )
 
     api_path = f"network-config/v1alpha1/gw-cluster-intent-config/{name}"
     method_map = {"create": "POST", "update": "PATCH", "delete": "DELETE"}

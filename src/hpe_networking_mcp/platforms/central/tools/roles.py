@@ -213,7 +213,12 @@ async def central_manage_role(
     assign it to a scope if needed.
     """
     if action_type not in ("create", "update", "delete"):
-        raise ToolError(f"Invalid action_type: {action_type}. Must be 'create', 'update', or 'delete'.")
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type: {action_type}. Must be 'create', 'update', or 'delete'.",
+            }
+        )
 
     api_path = f"network-config/v1alpha1/roles/{name}"
     method_map = {"create": "POST", "update": "PATCH", "delete": "DELETE"}

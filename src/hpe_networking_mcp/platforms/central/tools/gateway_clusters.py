@@ -166,7 +166,12 @@ async def central_manage_gateway_cluster(
     Manual clusters are created here directly with explicit member gateways.
     """
     if action_type not in ("create", "update", "delete"):
-        raise ToolError(f"Invalid action_type: {action_type}. Must be 'create', 'update', or 'delete'.")
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type: {action_type}. Must be 'create', 'update', or 'delete'.",
+            }
+        )
 
     api_path = f"network-config/v1alpha1/gateway-clusters/{name}"
     method_map = {"create": "POST", "update": "PATCH", "delete": "DELETE"}

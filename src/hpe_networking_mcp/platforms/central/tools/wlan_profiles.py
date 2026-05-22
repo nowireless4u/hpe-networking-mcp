@@ -144,7 +144,12 @@ async def central_manage_wlan_profile(
     the payload will be dropped from the stored profile.
     """
     if action_type not in ("create", "update", "delete"):
-        raise ToolError(f"Invalid action_type: {action_type}. Must be 'create', 'update', or 'delete'.")
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type: {action_type}. Must be 'create', 'update', or 'delete'.",
+            }
+        )
 
     # Validate opmode on create/update to catch cross-platform translation errors
     if action_type in ("create", "update") and "opmode" in payload:
@@ -175,11 +180,16 @@ async def central_manage_wlan_profile(
         opmode = payload["opmode"]
         if opmode not in valid_opmodes:
             raise ToolError(
-                f"Invalid opmode '{opmode}'. "
-                "If you are syncing a WLAN from Mist, use the "
-                "sync_wlans_mist_to_central prompt instead of calling this "
-                "tool directly — it handles opmode translation automatically. "
-                f"Valid opmodes: {', '.join(sorted(valid_opmodes))}"
+                {
+                    "status_code": 400,
+                    "message": (
+                        f"Invalid opmode '{opmode}'. "
+                        "If you are syncing a WLAN from Mist, use the "
+                        "sync_wlans_mist_to_central prompt instead of calling this "
+                        "tool directly — it handles opmode translation automatically. "
+                        f"Valid opmodes: {', '.join(sorted(valid_opmodes))}"
+                    ),
+                }
             )
 
     api_path = f"network-config/v1alpha1/wlan-ssids/{ssid}"

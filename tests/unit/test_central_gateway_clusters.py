@@ -171,7 +171,7 @@ class TestManageGwClusterIntentProfile:
             central_manage_gateway_cluster_intent_profile,
         )
 
-        with pytest.raises(ToolError, match="Invalid action_type"):
+        with pytest.raises(ToolError) as exc_info:
             await central_manage_gateway_cluster_intent_profile(
                 _ctx(),
                 name="x",
@@ -181,6 +181,9 @@ class TestManageGwClusterIntentProfile:
                 device_function=None,
                 confirmed=True,
             )
+        # v3.2.1.10: validation errors carry the structured {status_code, message} payload.
+        assert exc_info.value.args[0]["status_code"] == 400
+        assert "Invalid action_type" in exc_info.value.args[0]["message"]
 
 
 # ---------------------------------------------------------------------------

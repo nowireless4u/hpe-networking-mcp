@@ -83,7 +83,12 @@ async def central_manage_policy_group(
     ``central_manage_policy_group_entry`` instead.
     """
     if action_type not in ("create", "update", "delete"):
-        raise ToolError(f"Invalid action_type: {action_type}. Must be 'create', 'update', or 'delete'.")
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": f"Invalid action_type: {action_type}. Must be 'create', 'update', or 'delete'.",
+            }
+        )
 
     method_map = {"create": "POST", "update": "PATCH", "delete": "DELETE"}
     api_method = method_map[action_type]
