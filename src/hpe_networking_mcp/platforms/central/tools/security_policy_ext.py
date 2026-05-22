@@ -45,8 +45,8 @@ async def central_get_policy_groups(
 
     Policy groups define the evaluation sequence for all firewall
     policies. They control the order in which policies are applied
-    to traffic. This is a global configuration — there is no
-    per-name lookup.
+    to traffic. This returns the whole collection; to fetch a single
+    entry by name use ``central_get_policy_group_entry``.
     """
     return await _get_resource(ctx, "policy-groups", None)
 
@@ -77,9 +77,10 @@ async def central_manage_policy_group(
 ) -> dict | str:
     """Create, update, or delete the policy group configuration.
 
-    Unlike other resources, policy-groups operate at the collection
-    level — there is no per-name path. The payload defines the entire
-    policy evaluation order.
+    This operates at the collection level — the payload defines the
+    entire policy evaluation order, replacing it wholesale. To edit a
+    single entry by name without rewriting the whole list, use
+    ``central_manage_policy_group_entry`` instead.
     """
     if action_type not in ("create", "update", "delete"):
         raise ToolError(f"Invalid action_type: {action_type}. Must be 'create', 'update', or 'delete'.")
@@ -134,6 +135,65 @@ async def central_manage_policy_group(
         return {"status": "success", "action": action_type, "data": response.get("msg", {})}
 
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
+
+
+@tool(annotations=READ_ONLY)
+async def central_get_policy_group_entry(
+    ctx: Context,
+    name: Annotated[str, Field(description="Name of the policy-group-list entry to fetch.")],
+) -> dict | list | str:
+    """Get a single policy-group-list entry by name from Central.
+
+    Targeted, per-entry counterpart to ``central_get_policy_groups``
+    (which returns the whole collection). Wraps the
+    ``/policy-groups/policy-group/policy-group-list/{name}`` item path —
+    use this to inspect one entry's position/description without
+    pulling the entire evaluation order.
+
+    Parameters:
+        name: The policy-group-list entry name.
+    """
+    return await _get_resource(ctx, "policy-groups/policy-group/policy-group-list", name)
+
+
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+async def central_manage_policy_group_entry(
+    ctx: Context,
+    name: Annotated[str, Field(description="Name of the policy-group-list entry to create/update/delete.")],
+    action_type: Annotated[str, Field(description="'create', 'update', or 'delete'.")],
+    payload: Annotated[
+        dict,
+        Field(
+            description=(
+                "Policy-group-list entry payload. Key fields: name, "
+                "position (evaluation order), description. Use "
+                "central_get_policy_group_entry to inspect an existing "
+                "entry for reference. For 'delete', payload is ignored."
+            )
+        ),
+    ],
+    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Create, update, or delete a single policy-group-list entry by name.
+
+    Targeted, per-entry counterpart to ``central_manage_policy_group``
+    (which replaces the whole collection). Wraps the
+    ``/policy-groups/policy-group/policy-group-list/{name}`` item path so
+    one entry can be edited without rewriting the entire evaluation order.
+    """
+    return await _manage_resource(
+        ctx,
+        "policy-groups/policy-group/policy-group-list",
+        "policy-group entry",
+        name,
+        action_type,
+        payload,
+        scope_id,
+        device_function,
+        confirmed,
+    )
 
 
 # ---------------------------------------------------------------------------

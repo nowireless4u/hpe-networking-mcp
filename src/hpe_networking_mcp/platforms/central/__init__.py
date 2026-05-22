@@ -99,6 +99,8 @@ TOOLS = {
     "security_policy_ext": [
         "central_get_policy_groups",
         "central_manage_policy_group",
+        "central_get_policy_group_entry",
+        "central_manage_policy_group_entry",
         "central_get_role_gpids",
         "central_manage_role_gpid",
     ],
