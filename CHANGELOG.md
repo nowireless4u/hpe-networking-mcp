@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.2.0] - 2026-05-26
+
+**Minor — config-model payload schemas surfaced through `central_get_tool_schema`, plus a switch-QoS authoring skill (#384).** Every `central_manage_*` / `central_get_*` config-model tool exposes an opaque `payload: dict` whose only guidance was "consult the OpenAPI schema" — but those specs are gitignored and never shipped in the runtime image, so an AI client had no field names or enum values and resorted to guessing against the live tenant. A real authoring session burned ~15 rejected `400`s guessing the `named-condition` entry-list field (`condition-entry-list`? `condition-list`? — it's `condition-rule`) and the `rules-type` enum (`ipv4`? `ip`? `acl`? — it's `NAMED_CONDITION_IP`), then wrongly concluded no tool existed for a QoS marker policy (it's `central_manage_policy` with `type: POLICY_QOS`).
+
+**What changed:**
+
+- **Distilled schema artifact (committed under `src/`).** New `scripts/distill_central_config_schemas.py` reads the same `api-endpoints/central/config/` spec snapshot the importer uses, resolves each object's request-body schema (`allOf`/`$ref`/`oneOf`), and emits `src/hpe_networking_mcp/platforms/central/_config_payload_schemas.json` — field names, types, enum values, and `x-supportedDeviceType` tags, with descriptions dropped and catalog-sized enums (e.g. the ~4000-entry DPI `application` list) capped to keep slices small (named-condition ≈ 11 KiB, policy ≈ 20 KiB). Unlike the one-shot importer this is **safe to re-run** — it only writes the data artifact, never the hand-curated tool modules.
+- **`central_get_tool_schema` enrichment.** `build_meta_tools` gained an optional `payload_schema_provider`; Central wires it to a loader (`config_schemas.py: lookup_payload_schema`). For a config-model tool the response now carries a `payload_schema` block (object + resolved field set). No new top-level tool, no extra round-trip — it lands exactly where clients already look (`list_tools` → `get_tool_schema` → `invoke_tool`). Other platforms pass no provider and their response shape is unchanged.
+- **New skill `central-qos-policy`.** Schema-first runbook for building switch QoS into Central: traffic classes (`named-condition`) → marker policy (`policy`, `type: POLICY_QOS`, per-rule `packet-marking.dscp` + `local-queue-priority`) → interface/VLAN bind, CX vs AOS-S (PVOS) aware, with the "read the schema, validate one, then bulk-push; never guess" discipline baked in.
+
+Tests: `test_central_config_schemas.py` (artifact integrity + loader — asserts `NAMED_CONDITION_IP`, `condition-rule`, `POLICY_QOS`, enum capping, hand-curated indexing) and four `payload_schema_provider` cases added to `test_meta_tools.py` (attach on match, omit on `None`/no-provider, swallow provider exceptions). No tool-count change.
+
 ## [3.2.1.11] - 2026-05-26
 
 **Patch — code-mode robustness from an operator transcript: paginated-collection guidance + cable-test budget controls.** Two unrelated failure modes surfaced in a single code-mode `execute()` session, both fixed by hardening the layer rather than the AI.

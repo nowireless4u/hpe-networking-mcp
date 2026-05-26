@@ -15,6 +15,7 @@ exactly; only the invocation surface changes.
 from __future__ import annotations
 
 import inspect
+from collections.abc import Callable
 from typing import Any, get_args, get_origin, get_type_hints
 
 from fastmcp import Context, FastMCP
@@ -243,13 +244,26 @@ def _param_summary(fm_tool: Any) -> dict[str, str]:
     return result
 
 
-def build_meta_tools(platform: str, mcp: FastMCP) -> None:
+def build_meta_tools(
+    platform: str,
+    mcp: FastMCP,
+    payload_schema_provider: Callable[[str], dict[str, Any] | None] | None = None,
+) -> None:
     """Register the three meta-tools for a platform on the FastMCP server.
 
     Called from each platform's ``register_tools`` when ``tool_mode`` is
     ``"dynamic"``. The per-platform ``_registry.tool()`` shim has already
     populated ``REGISTRIES[platform]`` with ``ToolSpec`` entries by the time
     this runs.
+
+    Args:
+        payload_schema_provider: Optional callable mapping a tool name to a
+            distilled payload field schema (or ``None``). When supplied,
+            ``<platform>_get_tool_schema`` attaches the result as
+            ``payload_schema`` so AI clients can author opaque ``payload``
+            dicts without guessing field names/enums. Central uses this to
+            surface config-model object schemas (issue #384); other platforms
+            pass nothing and the response shape is unchanged.
     """
     if platform not in REGISTRIES:
         raise ValueError(f"Unknown platform: {platform}")
@@ -374,7 +388,7 @@ def build_meta_tools(platform: str, mcp: FastMCP) -> None:
 
         input_schema = getattr(fm_tool, "parameters", None) or getattr(fm_tool, "input_schema", None)
         annotations = getattr(fm_tool, "annotations", None)
-        return {
+        result: dict[str, Any] = {
             "status": "ok",
             "name": name,
             "category": spec.category,
@@ -383,6 +397,19 @@ def build_meta_tools(platform: str, mcp: FastMCP) -> None:
             "annotations": _annotations_to_dict(annotations),
             "input_schema": input_schema,
         }
+
+        # For tools whose ``payload`` is an opaque config-model body, attach the
+        # distilled field schema so clients author it without guessing (#384).
+        if payload_schema_provider is not None:
+            try:
+                payload_schema = payload_schema_provider(name)
+            except Exception as exc:  # never let schema enrichment break discovery
+                logger.warning("{}_get_tool_schema: payload schema provider failed for {!r} — {}", platform, name, exc)
+                payload_schema = None
+            if payload_schema:
+                result["payload_schema"] = payload_schema
+
+        return result
 
     # ---- <platform>_invoke_tool -----------------------------------------
 

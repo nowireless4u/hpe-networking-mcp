@@ -467,3 +467,49 @@ class TestInvokeToolCoercion:
             params={"required": "value", "optional_uuid": None},
         )
         assert result == {"optional_is_none": True}
+
+
+@pytest.mark.unit
+class TestPayloadSchemaProvider:
+    """get_tool_schema enrichment via an optional payload_schema_provider (#384)."""
+
+    async def test_payload_schema_attached_when_provider_matches(self, stub_apstra_registry):
+        def provider(name: str):
+            if name == "apstra_get_blueprints":
+                return {"object": "blueprint", "fields": {"label": {"type": "string"}}}
+            return None
+
+        mcp = FastMCP(name="test-provider")
+        build_meta_tools("apstra", mcp, payload_schema_provider=provider)
+        tool = await mcp.get_tool("apstra_get_tool_schema")
+
+        result = await tool.fn(_fake_ctx(ServerConfig()), name="apstra_get_blueprints")
+        assert result["status"] == "ok"
+        assert result["payload_schema"] == {"object": "blueprint", "fields": {"label": {"type": "string"}}}
+
+    async def test_no_payload_schema_key_when_provider_returns_none(self, stub_apstra_registry):
+        mcp = FastMCP(name="test-provider-none")
+        build_meta_tools("apstra", mcp, payload_schema_provider=lambda _name: None)
+        tool = await mcp.get_tool("apstra_get_tool_schema")
+
+        result = await tool.fn(_fake_ctx(ServerConfig()), name="apstra_get_blueprints")
+        assert result["status"] == "ok"
+        assert "payload_schema" not in result
+
+    async def test_no_payload_schema_key_when_no_provider(self, mcp_with_meta_tools):
+        tool = await mcp_with_meta_tools.get_tool("apstra_get_tool_schema")
+        result = await tool.fn(_fake_ctx(ServerConfig()), name="apstra_get_blueprints")
+        assert result["status"] == "ok"
+        assert "payload_schema" not in result
+
+    async def test_provider_exception_is_swallowed(self, stub_apstra_registry):
+        def boom(_name: str):
+            raise RuntimeError("provider blew up")
+
+        mcp = FastMCP(name="test-provider-boom")
+        build_meta_tools("apstra", mcp, payload_schema_provider=boom)
+        tool = await mcp.get_tool("apstra_get_tool_schema")
+
+        result = await tool.fn(_fake_ctx(ServerConfig()), name="apstra_get_blueprints")
+        assert result["status"] == "ok"  # discovery still works
+        assert "payload_schema" not in result
