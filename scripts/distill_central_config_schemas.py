@@ -63,6 +63,19 @@ HAND_CURATED_TOOL_NAMES: dict[str, list[str]] = {
     "policy-group": ["central_get_policy_groups", "central_manage_policy_group"],
     "role-acl": ["central_get_role_acls", "central_manage_role_acl"],
     "role-gpid": ["central_get_role_gpids", "central_manage_role_gpid"],
+    "role": ["central_get_roles", "central_manage_role"],
+    "wlan": ["central_get_wlans", "central_manage_wlan_profile"],
+    "config-assignment": ["central_get_config_assignments", "central_manage_config_assignment"],
+    "gw-cluster": ["central_get_gateway_clusters", "central_manage_gateway_cluster"],
+    "gw-cluster-intent": [
+        "central_get_gateway_cluster_intent_profiles",
+        "central_manage_gateway_cluster_intent_profile",
+    ],
+    # Read-only in this codebase (no central_manage_* tool) — map the GET tool
+    # so the field set is still available as a reference.
+    "named-vlan": ["central_get_named_vlans"],
+    "alias": ["central_get_aliases"],
+    "auth-server-group": ["central_get_server_groups"],
 }
 
 # Cap recursion so a self-referential or pathological schema can't blow the
@@ -270,7 +283,19 @@ def main() -> int:
 
         # Map tool names → spec stem.
         if stem in SKIP_FILENAMES:
-            for tool_name in HAND_CURATED_TOOL_NAMES.get(stem, []):
+            mapped = HAND_CURATED_TOOL_NAMES.get(stem)
+            if not mapped:
+                # A hand-curated object has a real payload schema but no entry
+                # in HAND_CURATED_TOOL_NAMES — its tool(s) won't surface the
+                # schema. Make that visible at regeneration time rather than
+                # letting it silently fall through (the gap closed in #386).
+                print(
+                    f"WARN: skip-list object {stem!r} has a payload schema but no "
+                    f"HAND_CURATED_TOOL_NAMES entry — its tools will NOT surface a "
+                    f"payload_schema. Add it to the map.",
+                    file=sys.stderr,
+                )
+            for tool_name in mapped or []:
                 tool_index[tool_name] = stem
         else:
             snake = _to_snake_case(obj.title)

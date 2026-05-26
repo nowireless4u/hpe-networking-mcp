@@ -91,3 +91,25 @@ class TestLookup:
         # policy is a hand-curated (skip-list) object; it must still resolve.
         assert lookup_payload_schema("central_manage_policy") is not None
         assert lookup_payload_schema("central_get_policies") is not None
+
+    @pytest.mark.parametrize(
+        "tool_name",
+        [
+            # The hand-curated gap closed in #386 — these diverge from the
+            # importer naming formula and must be explicitly mapped.
+            "central_manage_role",
+            "central_manage_wlan_profile",
+            "central_manage_config_assignment",
+            "central_manage_gateway_cluster",
+            "central_manage_gateway_cluster_intent_profile",
+            # read-only hand-curated objects (GET tool maps to the schema)
+            "central_get_named_vlans",
+            "central_get_aliases",
+            "central_get_server_groups",
+        ],
+    )
+    def test_hand_curated_gap_objects_resolve(self, tool_name):
+        """Regression lock: every hand-curated config tool surfaces its schema."""
+        schema = lookup_payload_schema(tool_name)
+        assert schema is not None, f"{tool_name} should resolve to a payload schema"
+        assert schema["fields"], f"{tool_name} schema should have fields"
