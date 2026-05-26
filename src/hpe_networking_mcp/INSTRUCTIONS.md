@@ -163,6 +163,37 @@ When tokenization is off, tool responses contain plaintext values — your behav
 
   Tools known to use the inner wrapper as of v3.0.0.0: most `central_*` and `aos8_*` reads (e.g. `central_get_sites`, `aos8_get_ap_database`, `aos8_get_effective_config`). Tools that return the payload directly (no inner wrapper): `health`, the 4 cross-platform tools, most `mist_*` reads. When in doubt, use the fallback pattern above — it's safe for both shapes.
 
+- **Many list tools return a PAGINATED COLLECTION, not a bare list.** The Central monitoring reads bulk-imported from `network-monitoring/v1/*` in v3.1.2.0 (the `mrt_*` family — e.g. `central_get_switches`, `central_get_gateways`, and the `*_trends` / `*_radios` / `*_ports` reads) return the raw API envelope, so `result["data"]` is a **dict** `{"items": [...], "next": ..., "total": ..., "count": ...}`, NOT the list of rows. The actual rows live at `result["data"]["items"]`. (A few older hand-curated reads such as `central_get_aps` already unwrap to a bare list at `result["data"]` — which is exactly why you can't assume one shape.)
+
+  This is the single most common code-mode mistake: assuming `data` is a list and iterating it. Iterating a dict yields its **string keys** (`"items"`, `"next"`, ...), so the next `.get(...)` call raises `AttributeError: 'str' object has no attribute 'get'`:
+
+  ```python
+  # ❌ Wrong — `data` is {"items": [...], ...}; this iterates the keys, then 'items'.get(...) raises.
+  switches = await call_tool("central_invoke_tool", {"name": "central_get_switches", "params": {}})
+  home = [s for s in (switches.get("data") or []) if s.get("siteName") == "HOME"]
+  ```
+
+  ```python
+  # ✅ Correct — reach the rows at data["items"].
+  switches = await call_tool("central_invoke_tool", {"name": "central_get_switches", "params": {}})
+  rows = (switches.get("data") or {}).get("items", [])
+  home = [s for s in rows if s.get("siteName") == "HOME"]
+  result = {"home_switches": home, "total": len(home)}
+  result
+  ```
+
+  Use this one defensive helper to get the rows regardless of which shape a read returns (bare list, inner `{"result": [...]}`, or paginated `{"items": [...]}`):
+
+  ```python
+  def rows(response):
+      d = response.get("data", response)
+      if isinstance(d, dict):
+          d = d.get("result", d)            # peel inner {"result": ...} wrapper
+          if isinstance(d, dict) and "items" in d:
+              return d["items"]             # paginated collection → its rows
+      return d if isinstance(d, list) else []
+  ```
+
 ## Code-mode `execute()` patterns
 
 Two rules — both are responses to live small-local-model failure modes (Zach's OpenClaw + Qwen3 4B test report, 2026-05-07).
@@ -241,6 +272,12 @@ The `execute()` sandbox uses `pydantic-monty` for its Python parser. It supports
 | `asyncio.gather()` | unavailable | Use sequential `await` calls — same wall-clock cost matters less here than in production async code |
 
 **This list grows as more failures surface.** If you hit a sandbox error not listed here, file an issue with the exact error message — both the documented blocklist and the `tests/unit/test_skill_snippet_sandbox_compat.py` lint update from the same evidence.
+
+### 4. Watch the wall-clock budget with poll-and-wait tools
+
+The sandbox kills any `execute()` block that runs longer than the configured budget (default 30s; operators can raise it via `CODE_SANDBOX_MAX_DURATION_SECS`). Most reads are sub-second, but a few tools **block while polling** an upstream task and can consume most of the budget on their own. The clearest example is `central_cable_test`, which polls for results up to `max_attempts * poll_interval` seconds (default 5 × 5 = ~25s).
+
+For these tools: **call them in their own `execute()` block — don't chain other calls after them** — and lower `max_attempts` / `poll_interval` when you need a tighter budget. A block that runs `central_cable_test` plus another Central read will routinely breach the default 30s with `TimeoutError: time limit exceeded`.
 
 ---
 

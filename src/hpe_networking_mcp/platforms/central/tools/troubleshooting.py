@@ -118,6 +118,8 @@ async def central_cable_test(
     serial_number: str,
     device_type: Literal["aos-s", "cx"],
     ports: str,
+    max_attempts: int = 5,
+    poll_interval: int = 5,
 ) -> dict | str:
     """
     Initiate a cable test on switch ports.
@@ -125,11 +127,26 @@ async def central_cable_test(
     Returns cable status and length for each port. Useful for
     diagnosing physical layer issues.
 
+    This tool is fire-and-poll: it triggers the test, then blocks while
+    polling for the result up to ``max_attempts`` times at ``poll_interval``
+    seconds apart. The worst case is roughly ``max_attempts * poll_interval``
+    seconds of blocking. In code mode this counts against the sandbox
+    wall-clock budget (default 30s, see CODE_SANDBOX_MAX_DURATION_SECS), so
+    do NOT combine this call with other tool calls in one ``execute()`` block,
+    and lower ``max_attempts`` / ``poll_interval`` if you need a tighter budget.
+
     Parameters:
         serial_number: Switch serial number (required).
         device_type: Switch type — "aos-s" or "cx" (required).
         ports: Comma-separated port list, e.g. "1/1/1,1/1/2" (required).
+        max_attempts: Result-poll attempts before giving up (1-10, default 5).
+        poll_interval: Seconds between poll attempts (1-10, default 5).
     """
+    if not 1 <= max_attempts <= 10:
+        raise ToolError({"status_code": 400, "message": f"max_attempts must be 1-10, got {max_attempts}"})
+    if not 1 <= poll_interval <= 10:
+        raise ToolError({"status_code": 400, "message": f"poll_interval must be 1-10, got {poll_interval}"})
+
     conn = ctx.lifespan_context["central_conn"]
     resolved_id = _resolve_if_switch(conn, serial_number, device_type)
     port_list = [p.strip() for p in ports.split(",")]
@@ -140,6 +157,8 @@ async def central_cable_test(
             device_type=device_type,
             serial_number=resolved_id,
             ports=port_list,
+            max_attempts=max_attempts,
+            poll_interval=poll_interval,
         )
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error running cable test: {e}"}) from e

@@ -387,7 +387,7 @@ def create_server(config: ServerConfig) -> FastMCP:
         # Cross-platform aggregators (site_health_check, site_rf_check,
         # manage_wlan_profile) were not registered above in code mode, so
         # they don't leak into Search's catalog.
-        _register_code_mode(mcp)
+        _register_code_mode(mcp, config.code_sandbox_max_duration_secs)
 
     return mcp
 
@@ -441,7 +441,7 @@ _GET_SCHEMA_DESCRIPTION = _SKILLS_FIRST_GATE + (
 )
 
 
-def _register_code_mode(mcp: FastMCP) -> None:
+def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
     """Install the FastMCP CodeMode transform for ``MCP_TOOL_MODE=code``.
 
     Falls back with a warning if ``pydantic-monty`` isn't installed — the
@@ -490,7 +490,7 @@ def _register_code_mode(mcp: FastMCP) -> None:
             return tool
 
     limits = ResourceLimits(
-        max_duration_secs=30.0,
+        max_duration_secs=max_duration_secs,
         max_memory=128 * 1024 * 1024,
         max_recursion_depth=50,
     )

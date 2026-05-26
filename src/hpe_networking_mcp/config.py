@@ -164,6 +164,14 @@ class ServerConfig:
     enable_pii_tokenization: bool = False
     pii_max_tokens_per_session: int = 10_000
 
+    # Code-mode sandbox wall-clock budget (v3.2.1.11). The MontySandboxProvider
+    # kills an ``execute()`` block that runs longer than this. The default 30s
+    # is comfortable for read/compose workflows, but poll-and-wait operational
+    # tools (e.g. ``central_cable_test`` blocks up to ~25s of synchronous
+    # polling) can breach it when combined with other calls in one block.
+    # Raise via ``CODE_SANDBOX_MAX_DURATION_SECS`` when driving such tools.
+    code_sandbox_max_duration_secs: float = 30.0
+
     # Platform secrets — None means platform is disabled
     mist: MistSecrets | None = None
     central: CentralSecrets | None = None
@@ -537,6 +545,18 @@ def load_config() -> ServerConfig:
         )
         pii_max_tokens = 10_000
 
+    # Code-mode sandbox wall-clock budget (CODE_SANDBOX_MAX_DURATION_SECS).
+    # Must be positive; invalid or non-positive values fall back to 30s.
+    try:
+        sandbox_max_duration = float(os.getenv("CODE_SANDBOX_MAX_DURATION_SECS", "30"))
+        if sandbox_max_duration <= 0:
+            raise ValueError("must be positive")
+    except ValueError:
+        logger.warning(
+            "Invalid CODE_SANDBOX_MAX_DURATION_SECS; defaulting to 30.0",
+        )
+        sandbox_max_duration = 30.0
+
     # Load platform credentials from Docker secrets
     mist = _load_mist()
     central = _load_central()
@@ -565,6 +585,7 @@ def load_config() -> ServerConfig:
         allowed_origins=allowed_origins,
         enable_pii_tokenization=enable_pii_tokenization,
         pii_max_tokens_per_session=pii_max_tokens,
+        code_sandbox_max_duration_secs=sandbox_max_duration,
         mist=mist,
         central=central,
         greenlake=greenlake,

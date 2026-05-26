@@ -1181,13 +1181,15 @@ Rule shape:
 
 #### `central_cable_test`
 
-> Initiate a cable test on switch ports (cable status and length).
+> Initiate a cable test on switch ports (cable status and length). Fire-and-poll: blocks up to `max_attempts * poll_interval` seconds. In code mode, call it in its own `execute()` block — it can consume most of the sandbox wall-clock budget.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | serial_number | str | Yes | Switch serial number. |
 | device_type | str | Yes | `aos-s` or `cx`. |
 | ports | str | Yes | Comma-separated port list (e.g. `1/1/1,1/1/2`). |
+| max_attempts | int | No | Result-poll attempts before giving up (1-10, default 5). |
+| poll_interval | int | No | Seconds between poll attempts (1-10, default 5). |
 
 #### `central_show_commands`
 

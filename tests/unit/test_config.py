@@ -190,6 +190,22 @@ class TestLoadConfig:
         assert config.disable_elicitation is True
         assert config.debug is True
 
+    def test_code_sandbox_max_duration_defaults_to_30(self, patch_secrets_dir, monkeypatch):
+        monkeypatch.delenv("CODE_SANDBOX_MAX_DURATION_SECS", raising=False)
+        config = load_config()
+        assert config.code_sandbox_max_duration_secs == 30.0
+
+    def test_code_sandbox_max_duration_env_override(self, patch_secrets_dir, monkeypatch):
+        monkeypatch.setenv("CODE_SANDBOX_MAX_DURATION_SECS", "90")
+        config = load_config()
+        assert config.code_sandbox_max_duration_secs == 90.0
+
+    @pytest.mark.parametrize("bad_value", ["abc", "0", "-5", ""])
+    def test_code_sandbox_max_duration_invalid_falls_back_to_30(self, patch_secrets_dir, monkeypatch, bad_value):
+        monkeypatch.setenv("CODE_SANDBOX_MAX_DURATION_SECS", bad_value)
+        config = load_config()
+        assert config.code_sandbox_max_duration_secs == 30.0
+
 
 # ---------------------------------------------------------------------------
 # enabled_platforms property

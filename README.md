@@ -613,6 +613,7 @@ The retry logic detects transient failures in two patterns: response-dict (Mist/
 | `RETRY_MAX_DELAY` | `60.0` | Cap on a single retry sleep (also caps `Retry-After` header values) |
 | `ENABLE_PII_TOKENIZATION` | `false` | Tokenize sensitive fields (PSKs, RADIUS secrets, hostnames, emails, etc.) in tool responses before they reach the AI. Round-trips: AI passes tokens back into write tools and the middleware substitutes plaintext. MAC normalization is always-on regardless of this toggle. See [PII Tokenization](#pii-tokenization-v2310) above. |
 | `PII_MAX_TOKENS_PER_SESSION` | `10000` | Soft cap on the per-session keymap size. Cap-hit logs a warning and falls through with plaintext rather than erroring out the call. |
+| `CODE_SANDBOX_MAX_DURATION_SECS` | `30.0` | Wall-clock budget for a single code-mode `execute()` block. Raise it when driving poll-and-wait tools (e.g. `central_cable_test`, which blocks up to ~25s). Invalid / non-positive values fall back to `30.0`. |
 
 ---
 

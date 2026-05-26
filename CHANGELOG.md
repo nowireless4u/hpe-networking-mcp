@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.1.11] - 2026-05-26
+
+**Patch — code-mode robustness from an operator transcript: paginated-collection guidance + cable-test budget controls.** Two unrelated failure modes surfaced in a single code-mode `execute()` session, both fixed by hardening the layer rather than the AI.
+
+**1. Paginated-collection shape (#381).** An AI iterated `result["data"]` from `central_get_switches` as if it were a list and got `AttributeError: 'str' object has no attribute 'get'`. Root cause (reproduced live): the `network-monitoring/v1/*` MRT reads return the raw API envelope, so `data` is a **dict** `{"items": [...], "next", "total", "count"}`, not the rows. Iterating a dict yields its string keys, so the next `.get(...)` blows up. The rows live at `data["items"]`. (A few older hand-curated reads such as `central_get_aps` already unwrap to a bare list — so the shape genuinely isn't uniform, which is the trap.) Added a dedicated INSTRUCTIONS.md subsection documenting the shape and a defensive `rows()` helper that handles all three conventions (bare list / inner `{"result": ...}` / paginated `{"items": ...}`). Docs-only for this half — no behavior change.
+
+**2. Cable-test poll budget (#382).** A block calling `central_cable_test` plus a second read hit `TimeoutError: time limit exceeded: 31.1s > 30s`. `central_cable_test` is fire-and-poll — pycentral's `cable_test` blocks up to `max_attempts * poll_interval` (default 5 × 5 = ~25s) of synchronous polling, nearly the whole sandbox budget on its own. Two complementary fixes:
+
+- **Configurable sandbox budget.** The code-mode `MontySandboxProvider` wall-clock limit (`max_duration_secs`) was a hardcoded `30.0` in `server.py`. It's now driven by `ServerConfig.code_sandbox_max_duration_secs`, overridable via the `CODE_SANDBOX_MAX_DURATION_SECS` env var (default 30.0; invalid / non-positive values fall back to 30.0 with a warning).
+- **Exposed poll params on `central_cable_test`.** Added `max_attempts` / `poll_interval` (validated 1-10, `status_code: 400` on out-of-range) forwarded to pycentral, so callers can fit a tighter budget. Docstring + INSTRUCTIONS.md + TOOLS.md now warn to call it in its own `execute()` block and not chain other calls after it.
+
+Tests: `test_config.py` covers the new env var (default / override / invalid fallback); new `test_central_cable_test.py` covers param validation, forwarding, and the empty-result info string. No tool-count change.
+
 ## [3.2.1.10] - 2026-05-22
 
 **Patch — make the `ToolError` contract uniform: validation guards now raise structured payloads.** A sweep found 15 validation guards across Central (12) and AOS 8 (3) still raising `ToolError("plain string")` instead of the v3.2.0.1-codified `ToolError({"status_code": 400, "message": ...})`. They weren't broken (a string still raises, and `_invoke_tool` wraps it), but a client couldn't read `status_code` off them, and CLAUDE.md states all platforms moved to the structured form. Migrated all 15:
