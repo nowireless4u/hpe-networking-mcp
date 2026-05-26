@@ -57,7 +57,11 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
     # Meta-tools are always registered (issue #302). In code mode they're
     # reachable via ``await call_tool("mist_list_tools", ...)`` from inside
     # ``execute()`` even though they're hidden from the top-level catalog.
-    build_meta_tools("mist", mcp)
+    # The payload-schema provider lets mist_get_tool_schema surface the
+    # distilled request-body field set for opaque ``body`` dicts (#384 Mist).
+    from hpe_networking_mcp.platforms.mist.request_body_schemas import lookup_payload_schema
+
+    build_meta_tools("mist", mcp, payload_schema_provider=lookup_payload_schema)
     logger.info(
         "Mist: registered {} generated tool module(s) + 3 meta-tools ({} mode)",
         len(loaded),

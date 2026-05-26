@@ -317,6 +317,9 @@ Mist endpoints that support pagination return `X-Next-Page` / `X-Page-Total` hea
 
 ## Mist Best Practices
 
+### Authoring create/update payloads
+Mist write tools (`mist_create_*`, `mist_update_*`, …) take an opaque `body: dict`. **Don't guess the field set** — call `mist_get_tool_schema(name="mist_create_<obj>")` first. For body-bearing tools its response carries a `payload_schema` block: the resolved field names, types, and enum values (e.g. the `wlan` body's `ssid`, auth/encryption fields). Object bodies appear under `fields`; bulk array bodies and multi-variant bodies (e.g. the ap/switch/gateway device profile) appear under `root`. An `enum_count` on an enum means it was truncated for size. `create` and `update` for the same object share one schema. GET tools have no body and return no `payload_schema`.
+
 ### Configuration Hierarchy
 Push configuration as high as possible: Org-level templates → Site group assignment → Site-level → Device-level. Device-level overrides are a last resort — they cannot be managed in bulk and cause drift.
 

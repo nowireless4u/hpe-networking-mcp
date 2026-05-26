@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.3.0] - 2026-05-26
+
+**Minor — Mist counterpart to the config-model payload-schema enrichment: `mist_get_tool_schema` now surfaces request-body schemas (#384).** Mist write/config tools (`mist_create_*`, `mist_update_*`, …) take an opaque `body: dict[str, Any]` described only as "Request Body" — the field set lives in the vendored OpenAPI spec, which isn't shipped in the runtime image, so an AI client guesses against the live org/site exactly as it did for Central before v3.2.2.0. This brings the same fix to Mist.
+
+- **`scripts/distill_mist_schemas.py`** — reads `vendor/mist_openapi.json`, reuses `_mist_generator` for operation walking + tool naming (so names match the generated tools exactly), resolves each body (`$ref`/`allOf`/`oneOf`/`anyOf`/array-root/`additionalProperties`-map), and emits the committed artifact `src/hpe_networking_mcp/platforms/mist/_request_body_schemas.json`. **352 body-bearing ops → 209 distinct component schemas** (deduped — create/update tools that share a body reference one entry), ≈ 750 KiB, 0 distilled empty. WLAN bodies ≈ 12 KiB; bulk array bodies and the ap/switch/gateway `oneOf` device-profile body are captured under a `root` key.
+- **`mist_get_tool_schema` enrichment** — Mist wires the existing (platform-agnostic) `build_meta_tools(..., payload_schema_provider=...)` hook to `request_body_schemas.lookup_payload_schema`. Body-bearing tools now return a `payload_schema` block (`{"object": <component>, "fields": {...}}` for object bodies, `{"object": …, "root": {...}}` for array/oneOf/map bodies). GET tools return nothing — response shape unchanged.
+- **Lockstep regeneration** — `regenerate_mist_tools.py` now runs the distiller after regenerating tools, so a daily spec sync refreshes both in one step and the artifact can't drift from the tool surface.
+
+Tests: `test_mist_request_body_schemas.py` (artifact integrity + loader: WLAN object body with `ssid`, create/update dedup to one component, oneOf-rooted device profile, array-rooted bulk import, GET tools resolve to `None`, index floor). The generic `payload_schema_provider` mechanism is already covered by `test_meta_tools.py`. No tool-count change.
+
 ## [3.2.2.1] - 2026-05-26
 
 **Patch — close the `payload_schema` coverage gap for hand-curated Central config tools (#386).** The v3.2.2.0 enrichment auto-covers every import-generated `central_*` config tool, but hand-curated (skip-list) objects only surface a schema if listed in the distiller's `HAND_CURATED_TOOL_NAMES` (their tool names diverge from the importer's `central_{get,manage}_<snake(title)>` formula). v3.2.2.0 mapped the 7 security-policy-family objects; this maps the remaining 8:

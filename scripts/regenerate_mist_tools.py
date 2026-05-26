@@ -86,6 +86,17 @@ def main() -> int:
     for slug, count in sorted(summary.items(), key=lambda kv: (-kv[1], kv[0])):
         print(f"  {count:4}  {slug}")
 
+    # Keep the distilled request-body schema artifact in lockstep with the
+    # regenerated tools — both derive from the same vendored spec, and a stale
+    # artifact would surface wrong field sets via mist_get_tool_schema (#384).
+    print("\nRegenerating distilled request-body schemas …")
+    try:
+        from distill_mist_schemas import main as distill_main
+
+        distill_main([])
+    except Exception as exc:  # don't fail tool regen if distillation hiccups
+        print(f"WARN: request-body schema distillation failed: {exc}", file=sys.stderr)
+
     print("\nDone. Review the diff and commit before tagging.")
     return 0
 
