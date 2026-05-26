@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.2.1] - 2026-05-26
+
+**Patch — close the `payload_schema` coverage gap for hand-curated Central config tools (#386).** The v3.2.2.0 enrichment auto-covers every import-generated `central_*` config tool, but hand-curated (skip-list) objects only surface a schema if listed in the distiller's `HAND_CURATED_TOOL_NAMES` (their tool names diverge from the importer's `central_{get,manage}_<snake(title)>` formula). v3.2.2.0 mapped the 7 security-policy-family objects; this maps the remaining 8:
+
+- `role` → `central_manage_role`, `wlan` → `central_manage_wlan_profile` (both high-traffic authoring targets), plus `config-assignment`, `gw-cluster`, `gw-cluster-intent` → their manage tools.
+- `named-vlan`, `alias`, `auth-server-group` are GET-only in this codebase — their read tool is mapped so the field set is still available for reference.
+
+Their schemas were already present in the distilled artifact (the distiller distills every spec regardless of the skip list); only the tool→schema pointer was missing, so this is purely a `tool_index` extension (408 → 421 indexed names). Also adds a **regeneration-time warning** in the distiller: any future skip-list object that has a payload schema but no `HAND_CURATED_TOOL_NAMES` entry is now flagged on stderr instead of silently falling through. Test: a parametrized regression lock (`test_hand_curated_gap_objects_resolve`) over all 8 newly-mapped tools.
+
 ## [3.2.2.0] - 2026-05-26
 
 **Minor — config-model payload schemas surfaced through `central_get_tool_schema`, plus a switch-QoS authoring skill (#384).** Every `central_manage_*` / `central_get_*` config-model tool exposes an opaque `payload: dict` whose only guidance was "consult the OpenAPI schema" — but those specs are gitignored and never shipped in the runtime image, so an AI client had no field names or enum values and resorted to guessing against the live tenant. A real authoring session burned ~15 rejected `400`s guessing the `named-condition` entry-list field (`condition-entry-list`? `condition-list`? — it's `condition-rule`) and the `rules-type` enum (`ipv4`? `ip`? `acl`? — it's `NAMED_CONDITION_IP`), then wrongly concluded no tool existed for a QoS marker policy (it's `central_manage_policy` with `type: POLICY_QOS`).
