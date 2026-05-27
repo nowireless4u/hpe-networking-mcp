@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.3.2] - 2026-05-26
+
+**Patch — drop the vestigial `health()` pre-flight from single-platform skills.** Six skills opened with a "confirm reachable" `health()` step that added a tool call without changing behavior — the first real call (a config read/write) surfaces unreachability just as well, and the health result wasn't used. Removed it from the single-platform read/write skills: `central-qos-policy`, `central-scope-audit`, `mist-scope-audit`, `central-scope-walker`, `central-scope-visualizer` (step list renumbered 0→4), `clearpass-policy-walker` — trimmed both the prerequisite/step text and the `health` entry in each `tools:` list.
+
+**Kept** where `health()` is load-bearing — i.e. multi-platform skills where one upfront probe genuinely gates which platform branches run / drives the verdict, or where health is the point: `infrastructure-health-check`, `morning-coffee-report`, `uxi-cross-platform-diagnostics`, `aos-migration`, `change-pre-check`, `change-post-check`, `cross-platform-rf-check`, `wlan-sync-validation`. Skills-only change; no tool-count change.
+
 ## [3.2.3.1] - 2026-05-26
 
 **Patch — harden the `central-qos-policy` skill with live-verified payload shapes + surface string-format hints in the distiller (#390).** A live end-to-end rebuild of a real switch QoS config (8 traffic classes / 764 rules + a `POLICY_QOS` marker + VLAN-interface bind) exposed that the v3.2.2.0 skill carried **guessed** payload shapes that the API accepts with `200` but silently drops. Replaced them with the exact, read-back-verified shapes:

@@ -37,8 +37,6 @@ to pin a name to an ID before running downstream operations.
 
 ## Prerequisites
 
-- Central reachable: `health(platform="central")` first (skip if you
-  already ran it earlier in the same session).
 - The operator has provided either:
   - an exact / partial scope name (`"HQ"`, `"dallas-hq"`), OR
   - a path (`"USE/dallas-hq"`, `"Global/USE/dallas-hq/floor-3"`), OR

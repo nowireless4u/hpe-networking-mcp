@@ -45,7 +45,7 @@ description: |
   **Read-only.**
 platforms: [clearpass, central]
 tags: [clearpass, central, policy, visualization, audit]
-tools: [health, clearpass_list_policy_services, clearpass_compile_policy_flow, central_get_role_with_policy]
+tools: [clearpass_list_policy_services, clearpass_compile_policy_flow, central_get_role_with_policy]
 ---
 
 # ClearPass policy visualizer
@@ -90,8 +90,6 @@ These constrain every response you produce inside this skill:
 
 ## Prerequisites
 
-- ClearPass reachable: `health(platform="clearpass")` first (skip if
-  you already ran it earlier in the same session).
 - The operator has named the target service (use it directly — the
   compile tool does fuzzy matching), OR is asking generally
   ("show me a service" / "pick one to visualize") — in which case

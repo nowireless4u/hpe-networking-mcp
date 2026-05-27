@@ -26,7 +26,6 @@ description: |
 platforms: [central]
 tags: [central, qos, dscp, switch, cx, aos-s, policy, config-model, write]
 tools:
-  - health
   - central_get_scope_tree
   - central_list_tools
   - central_get_tool_schema
@@ -99,7 +98,7 @@ interface vlan 2
 
 ## Prerequisites
 
-- `health(platform="central")` reachable; `ENABLE_CENTRAL_WRITE_TOOLS` on.
+- `ENABLE_CENTRAL_WRITE_TOOLS` on (else build + show payloads only, don't write). The first `central_get_tool_schema` / create call surfaces any reachability problem — no separate health pre-flight needed.
 - **Library scope** unless told otherwise: omit `scope_id` (build everything
   shared). For a scoped object pass `scope_id` + `device_function`.
 - Switch OS is CX in the verified shapes below (`count`, `subnet-address`,

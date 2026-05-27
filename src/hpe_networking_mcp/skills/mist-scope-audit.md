@@ -20,7 +20,7 @@ description: |
   Wired & Wireless Network Deployment Guide.
 platforms: [mist]
 tags: [mist, audit, configuration, scope, drift-detection, vsg]
-tools: [health, mist_get_self, mist_list_org_templates, mist_list_org_wlans, mist_list_site_wlans, mist_list_org_rf_templates, mist_list_org_network_templates, mist_list_org_site_templates, mist_list_org_site_groups, mist_list_org_sites, mist_list_org_device_profiles, mist_list_org_psks, mist_list_org_device_upgrades, mist_get_site_setting, mist_get_org_settings]
+tools: [mist_get_self, mist_list_org_templates, mist_list_org_wlans, mist_list_site_wlans, mist_list_org_rf_templates, mist_list_org_network_templates, mist_list_org_site_templates, mist_list_org_site_groups, mist_list_org_sites, mist_list_org_device_profiles, mist_list_org_psks, mist_list_org_device_upgrades, mist_get_site_setting, mist_get_org_settings]
 ---
 
 # Juniper Mist comprehensive configuration scope audit
@@ -57,7 +57,6 @@ catalog returns name + parameter schema for every match.
 
 ## Prerequisites
 
-- Mist must be reachable (`health(platform="mist")` first).
 - Operator picks an audit scope: **org-wide** (default), a specific
   **site group**, or a specific **site**.
 - For orgs with 50+ sites, the per-site WLAN inspection in step 5 is
@@ -69,11 +68,10 @@ catalog returns name + parameter schema for every match.
 Run the steps in order. Each step pulls a slice of the catalog and
 adds findings to the running report.
 
-### Step 0 — Reachability + org_id
+### Step 0 — Resolve org_id
 
 **Tools (in order):**
-- `health(platform="mist")` — confirm reachable.
-- `mist_get_self()` — get `org_id` from the returned `privileges[].org_id` field. (The v3.1.0.0 refactor dropped the old `action_type=` polyglot parameter — `mist_get_self()` is now a single-shape call.)
+- `mist_get_self()` — get `org_id` from the returned `privileges[].org_id` field. (Also surfaces any reachability problem on the first real call — no separate health pre-flight needed.) (The v3.1.0.0 refactor dropped the old `action_type=` polyglot parameter — `mist_get_self()` is now a single-shape call.)
 
 **Why:** every later call needs `org_id`. If the user has access to
 multiple orgs, ask which one to audit.

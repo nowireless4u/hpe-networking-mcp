@@ -15,7 +15,7 @@ description: |
   Policy Design + Policy Deploy).
 platforms: [central]
 tags: [central, audit, configuration, scope, drift-detection, vsg]
-tools: [health, central_get_scope_tree, central_get_scope_resources, central_get_effective_config, central_get_devices_in_scope, central_get_scope_diagram, central_get_config_assignments, central_get_wlan_profiles, central_get_wlans, central_get_roles, central_get_role_acls, central_get_role_gpids, central_get_policies, central_get_policy_groups, central_get_object_groups, central_get_net_services, central_get_net_groups, central_get_aliases, central_get_server_groups, central_get_named_vlans, central_get_devices, central_get_aps, central_get_sites]
+tools: [central_get_scope_tree, central_get_scope_resources, central_get_effective_config, central_get_devices_in_scope, central_get_scope_diagram, central_get_config_assignments, central_get_wlan_profiles, central_get_wlans, central_get_roles, central_get_role_acls, central_get_role_gpids, central_get_policies, central_get_policy_groups, central_get_object_groups, central_get_net_services, central_get_net_groups, central_get_aliases, central_get_server_groups, central_get_named_vlans, central_get_devices, central_get_aps, central_get_sites]
 ---
 
 # Aruba Central VSG-anchored configuration scope audit
@@ -36,7 +36,6 @@ appropriate `central_manage_*` tools after reviewing.
 
 ## Prerequisites
 
-- Central must be reachable (`health(platform="central")` first).
 - Operator picks an audit scope: **org-wide** (default), a specific
   **site collection**, or a specific **site**. Org-wide for a large
   deployment can produce 100+ findings — confirm with the operator
@@ -53,10 +52,9 @@ compares it to its VSG-recommended scope AND VSG-recommended values,
 and adds findings to the running report. Steps that depend on earlier
 output (e.g., role-policy linkage) are flagged.
 
-### Step 0 — Reachability + scope-tree snapshot
+### Step 0 — Scope-tree snapshot
 
 **Tools (in order):**
-- `health(platform="central")` — confirm reachable.
 - `central_get_scope_tree(view="committed")` — what's directly assigned at each scope.
 - `central_get_scope_tree(view="effective")` — full inherited+committed view.
 

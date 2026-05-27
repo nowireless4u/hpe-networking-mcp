@@ -41,7 +41,7 @@ description: |
   **Read-only.** Does not mutate any Central config.
 platforms: [central]
 tags: [central, scope, hierarchy, visualization, audit, diagram]
-tools: [health, central_get_scope_tree, central_get_scope_resources, central_get_committed_config, central_get_effective_config, central_get_devices_in_scope, central_get_scope_diagram]
+tools: [central_get_scope_tree, central_get_scope_resources, central_get_committed_config, central_get_effective_config, central_get_devices_in_scope, central_get_scope_diagram]
 ---
 
 # Aruba Central scope hierarchy visualizer
@@ -100,11 +100,9 @@ These constrain every response you produce inside this skill:
 
 ## Prerequisites
 
-- Central reachable: `health(platform="central")` first (skip if you
-  already ran it earlier in the same session).
 - The operator has indicated what they want to see (full tree / one
   site / committed vs effective / etc.). When the request is
-  ambiguous, default to the top-level overview (Step 2) and offer to
+  ambiguous, default to the top-level overview (Step 1) and offer to
   drill in.
 
 ## Response shapes
@@ -132,14 +130,7 @@ These constrain every response you produce inside this skill:
 
 Default when the request is ambiguous: top-level overview with an offer to drill in.
 
-### Step 1 — Confirm reachability
-
-**Tool:** `health(platform="central")`
-**Why:** Every other step depends on Central being reachable; this is a 1-call sanity check.
-**Expected:** `status: ok`.
-**If anomaly:** Surface the error and stop — no fallback to other platforms (this is Central-only).
-
-### Step 2 — Fetch the structured tree (always)
+### Step 1 — Fetch the structured tree (always)
 
 **Tool:** `central_get_scope_tree(view="committed")`
 **Why:** This is the foundation. It returns the **whole hierarchy** with per-scope `resource_count`, `device_count`, `persona_count`, `child_scope_count`, and per-persona `categories` breakdown. One call gives you everything needed for the top-level overview AND the data for any drilled-in view.
@@ -150,7 +141,7 @@ Default when the request is ambiguous: top-level overview with an offer to drill
 - `view="committed"` (default) — what's directly assigned at each scope. Use this for the structural overview.
 - `view="effective"` — adds inherited resources at every descendant scope. Use this when the operator's question is about what's actually applied at the leaves (a SITE scope's `resources` includes everything that flows down from Global + its site-collection ancestors).
 
-### Step 3 — Render the requested zoom level
+### Step 2 — Render the requested zoom level
 
 Pick the template that matches Step 0's zoom level.
 
@@ -198,7 +189,7 @@ End the overview with a one-line offer: *"Want to drill into a specific site or 
 Goal: show one site (HQ, BRANCH-1, etc.) with its device-type rollups underneath.
 
 ```python
-# Step 3b — find the site_id then get device inventory
+# Step 2b — find the site_id then get device inventory
 tree_resp = await call_tool("central_get_scope_tree", {"view": "committed"})
 # walk the tree to find the named site → grab its scope_id
 # ... (paste central-scope-walker snippet to do the name-to-id resolution)
@@ -254,7 +245,7 @@ grouped by persona, with category sub-grouping (Policies, Roles,
 Aliases, etc.).
 
 ```python
-# Step 3c — committed config at one scope
+# Step 2c — committed config at one scope
 cfg = await call_tool("central_get_committed_config", {"scope_id": scope_id})
 # Group by persona → category → resource name for chip rendering
 # Personas: CAMPUS_AP, ACCESS_SWITCH, BRANCH_GW, MOBILITY_GW, etc.
@@ -320,7 +311,7 @@ Inherited from ancestors (N resources)
   From EST Sites: [chip ← EST Sites] [chip ← EST Sites]
 ```
 
-### Step 4 — Walkthrough beneath the diagram
+### Step 3 — Walkthrough beneath the diagram
 
 Below every visualization, add a short (3-6 sentence) walkthrough in plain English:
 
@@ -330,7 +321,7 @@ Below every visualization, add a short (3-6 sentence) walkthrough in plain Engli
 
 Reference scope names (not IDs). Operators will use the walkthrough to know what to ask next.
 
-### Step 5 — Always offer the next zoom level
+### Step 4 — Always offer the next zoom level
 
 End every response with a one-line affordance:
 
@@ -344,12 +335,10 @@ Operator: *"Visualize the Central scope hierarchy."*
 
 ```python
 # Step 1
-health_resp = await call_tool("health", {"platform": "central"})
-# Step 2
 tree_resp = await call_tool("central_get_scope_tree", {"view": "committed"})
 tree = tree_resp.get("data", {})
 
-# Step 3a — top-level overview
+# Step 2a — top-level overview
 # Walk the tree's root + direct children. Aggregate device groups.
 root = tree
 collections = []
