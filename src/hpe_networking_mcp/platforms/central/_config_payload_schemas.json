@@ -154,6 +154,7 @@
      "device_types": [
       "Access Point"
      ],
+     "format": "mac-address",
      "type": "string"
     },
     "channel": {
@@ -232,6 +233,7 @@
      "device_types": [
       "Access Point"
      ],
+     "format": "request-info",
      "type": "string"
     },
     "ssid": {
@@ -1896,6 +1898,7 @@
       "Access Point",
       "Gateway"
      ],
+     "format": "name",
      "type": "string"
     },
     "role-restrictions": {
@@ -1978,9 +1981,11 @@
   "airgroup-servers": {
    "fields": {
     "mac-address": {
+     "format": "mac-address",
      "type": "string"
     },
     "name": {
+     "format": "name",
      "type": "string"
     },
     "network-visibility": {
@@ -1988,9 +1993,11 @@
       "access-points": {
        "items": {
         "host-name": {
+         "format": "host-name",
          "type": "string"
         },
         "serial-number": {
+         "format": "serial-number",
          "type": "string"
         }
        },
@@ -2032,6 +2039,7 @@
      "type": "string"
     },
     "display-name": {
+     "format": "display-name",
      "type": "string"
     },
     "name": {
@@ -2039,6 +2047,7 @@
       "Access Point",
       "Gateway"
      ],
+     "format": "name",
      "type": "string"
     },
     "service-ids": {
@@ -2055,6 +2064,7 @@
         "Access Point",
         "Gateway"
        ],
+       "format": "mdns-sid-tcp|mdns-sid-udp|ssdp-sid-device|ssdp-sid-service",
        "type": "string"
       }
      },
@@ -2193,6 +2203,7 @@
       "bfd-echo-source-address": {
        "properties": {
         "name": {
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         }
        },
@@ -2292,6 +2303,7 @@
           "name-server": {
            "items": {
             "ip": {
+             "format": "ipv4-address|ipv6-address",
              "type": "string"
             },
             "management-interface": {
@@ -2319,6 +2331,7 @@
            "type": "array"
           },
           "vrf": {
+           "format": "name-type",
            "type": "string"
           }
          },
@@ -2333,6 +2346,7 @@
        ],
        "properties": {
         "domain": {
+         "format": "domain-name",
          "type": "string"
         }
        },
@@ -2460,12 +2474,14 @@
          "device_types": [
           "Gateway"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "host-ipv6-address": {
          "device_types": [
           "Gateway"
          ],
+         "format": "ipv6-address",
          "type": "string"
         }
        },
@@ -2526,6 +2542,7 @@
           "NO_DHCP",
           "NONE"
          ],
+         "format": "ipv4-prefix",
          "type": "string"
         }
        },
@@ -2534,6 +2551,7 @@
       "ipv4-address-value": {
        "properties": {
         "address": {
+         "format": "ipv4-address",
          "type": "string"
         }
        },
@@ -2558,6 +2576,7 @@
       "ipv4-prefix-value": {
        "properties": {
         "prefix": {
+         "format": "ipv4-prefix",
          "type": "string"
         }
        },
@@ -2598,6 +2617,7 @@
             "DHCP_FULL_RAPID_COMMIT",
             "NO_DHCP"
            ],
+           "format": "ipv6-prefix",
            "type": "string"
           },
           "eui64": {
@@ -2623,6 +2643,7 @@
       "ipv6-address-value": {
        "properties": {
         "address": {
+         "format": "ipv6-address",
          "type": "string"
         }
        },
@@ -2631,6 +2652,7 @@
       "ipv6-link-local-address-value": {
        "properties": {
         "ipv6-link-local-address": {
+         "format": "ipv6-address",
          "type": "string"
         }
        },
@@ -2639,6 +2661,7 @@
       "ipv6-prefix-value": {
        "properties": {
         "prefix": {
+         "format": "ipv6-prefix",
          "type": "string"
         }
        },
@@ -2657,6 +2680,7 @@
         "ipv6-configuration": {
          "properties": {
           "device-address": {
+           "format": "ipv6-address",
            "type": "string"
           },
           "device-interface-type": {
@@ -2738,12 +2762,14 @@
       "network-address-value": {
        "properties": {
         "network-ipv4-address": {
+         "format": "ipv4-prefix",
          "type": "string"
         },
         "network-ipv6-address": {
          "device_types": [
           "Gateway"
          ],
+         "format": "ipv6-prefix",
          "type": "string"
         }
        },
@@ -2752,6 +2778,7 @@
       "next-hop-ipv4": {
        "properties": {
         "hop-address": {
+         "format": "ipv4-nexthop-address-prefix",
          "type": "string"
         }
        },
@@ -2760,6 +2787,7 @@
       "next-hop-ipv6": {
        "properties": {
         "hop-address": {
+         "format": "ipv6-address",
          "type": "string"
         }
        },
@@ -2812,6 +2840,7 @@
         "servers": {
          "items": {
           "address": {
+           "format": "ipv4-address|ipv6-address|domain-name",
            "type": "string"
           },
           "burst": {
@@ -2981,6 +3010,7 @@
        ],
        "properties": {
         "virtual-controller-dnsip": {
+         "format": "ipv4-address",
          "type": "string"
         }
        },
@@ -2992,6 +3022,7 @@
        ],
        "properties": {
         "virtual-controller-ip": {
+         "format": "ipv4-address",
          "type": "string"
         }
        },
@@ -3003,6 +3034,7 @@
        ],
        "properties": {
         "virtual-controller-ipv6": {
+         "format": "ipv6-address",
          "type": "string"
         }
        },
@@ -3025,9 +3057,11 @@
        ],
        "properties": {
         "gateway": {
+         "format": "ipv4-address",
          "type": "string"
         },
         "mask": {
+         "format": "ipv4-address",
          "type": "string"
         },
         "vlan": {
@@ -3086,6 +3120,7 @@
      "type": "string"
     },
     "name": {
+     "format": "name",
      "type": "string"
     },
     "type": {
@@ -3997,6 +4032,7 @@
      "type": "boolean"
     },
     "allow-new-aps-alias": {
+     "format": "name",
      "type": "string"
     },
     "allowed-ap": {
@@ -4055,6 +4091,7 @@
      "type": "boolean"
     },
     "conductor-alias": {
+     "format": "name",
      "type": "string"
     },
     "content-filtering": {
@@ -4072,12 +4109,14 @@
        "device_types": [
         "Access Point"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string"
       },
       "primary-server": {
        "device_types": [
         "Access Point"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string"
       },
       "shared-key": {
@@ -4096,6 +4135,7 @@
      "type": "string"
     },
     "country-code-alias": {
+     "format": "name",
      "type": "string"
     },
     "deny-inter-user-bridging": {
@@ -4129,6 +4169,7 @@
      "device_types": [
       "Access Point"
      ],
+     "format": "vlan-range",
      "type": "string"
     },
     "disable-factory-reset": {
@@ -4220,6 +4261,7 @@
        "type": "string"
       },
       "height-alias": {
+       "format": "name",
        "type": "string"
       },
       "indoor-sp-location": {
@@ -4301,6 +4343,7 @@
      "type": "string"
     },
     "lacp-alias": {
+     "format": "name",
      "type": "string"
     },
     "lci": {
@@ -4311,6 +4354,7 @@
          "device_types": [
           "Access Point"
          ],
+         "format": "height",
          "type": "string"
         },
         "move": {
@@ -4328,12 +4372,14 @@
          "device_types": [
           "Access Point"
          ],
+         "format": "number",
          "type": "string"
         },
         "uncertainty": {
          "device_types": [
           "Access Point"
          ],
+         "format": "uncertainty",
          "type": "string"
         }
        },
@@ -4435,6 +4481,7 @@
      "type": "string"
     },
     "location-alias": {
+     "format": "name",
      "type": "string"
     },
     "mas-integration": {
@@ -4501,12 +4548,14 @@
        "device_types": [
         "Access Point"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "subnet-mask": {
        "device_types": [
         "Access Point"
        ],
+       "format": "ipv4-address",
        "type": "string"
       }
      },
@@ -4537,6 +4586,7 @@
        "device_types": [
         "Access Point"
        ],
+       "format": "end-hour",
        "type": "string"
       },
       "end-month": {
@@ -4592,6 +4642,7 @@
        "device_types": [
         "Access Point"
        ],
+       "format": "start-hour",
        "type": "string"
       },
       "start-month": {
@@ -4659,6 +4710,7 @@
      "type": "object"
     },
     "swarm-mode-alias": {
+     "format": "name",
      "type": "string"
     },
     "system-vlan": {
@@ -4697,6 +4749,7 @@
      "type": "boolean"
     },
     "usb-port-alias": {
+     "format": "name",
      "type": "string"
     },
     "usb-port-disable": {
@@ -4712,6 +4765,7 @@
      "type": "boolean"
     },
     "usb-power-override-alias": {
+     "format": "name",
      "type": "string"
     },
     "utb-filter-block": {
@@ -4725,27 +4779,32 @@
      "type": "string"
     },
     "vc-dnsip-alias": {
+     "format": "name",
      "type": "string"
     },
     "vc-vlan-alias": {
+     "format": "name",
      "type": "string"
     },
     "virtual-controller-dnsip": {
      "device_types": [
       "Access Point"
      ],
+     "format": "ipv4-address",
      "type": "string"
     },
     "virtual-controller-ip": {
      "device_types": [
       "Access Point"
      ],
+     "format": "ipv4-address",
      "type": "string"
     },
     "virtual-controller-ipv6": {
      "device_types": [
       "Access Point"
      ],
+     "format": "ipv6-address",
      "type": "string"
     },
     "virtual-controller-name": {
@@ -4763,12 +4822,14 @@
        "device_types": [
         "Access Point"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "mask": {
        "device_types": [
         "Access Point"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "vlan": {
@@ -4831,9 +4892,11 @@
        "device_types": [
         "Access Point"
        ],
+       "format": "domain-name",
        "type": "string"
       },
       "domain-name-alias": {
+       "format": "name",
        "type": "string"
       },
       "dot3az": {
@@ -4861,6 +4924,7 @@
        "type": "string"
       },
       "eth0-mode-alias": {
+       "format": "name",
        "type": "string"
       },
       "eth1-mode": {
@@ -4871,6 +4935,7 @@
        "type": "string"
       },
       "eth1-mode-alias": {
+       "format": "name",
        "type": "string"
       },
       "interface-mode": {
@@ -4893,9 +4958,11 @@
         "NO_DHCP",
         "NONE"
        ],
+       "format": "ipv4-prefix",
        "type": "string"
       },
       "ipv4-management-alias": {
+       "format": "name",
        "type": "string"
       },
       "ipv6-address-auto": {
@@ -4945,6 +5012,7 @@
        "type": "integer"
       },
       "resolver-alias": {
+       "format": "name",
        "type": "string"
       },
       "speed": {
@@ -4968,18 +5036,23 @@
       "static-ipv4": {
        "properties": {
         "dns": {
+         "format": "ipv4-address",
          "type": "string"
         },
         "domain": {
+         "format": "domain-name",
          "type": "string"
         },
         "gateway": {
+         "format": "ipv4-address",
          "type": "string"
         },
         "ip": {
+         "format": "ipv4-address",
          "type": "string"
         },
         "mask": {
+         "format": "ipv4-address",
          "type": "string"
         }
        },
@@ -4988,15 +5061,19 @@
       "static-ipv6": {
        "properties": {
         "dns": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "domain": {
+         "format": "domain-name",
          "type": "string"
         },
         "gateway": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "ip6-prefix": {
+         "format": "ipv6-prefix",
          "type": "string"
         }
        },
@@ -5023,6 +5100,7 @@
          "type": "string"
         },
         "eap-identity-alias": {
+         "format": "name",
          "type": "string"
         },
         "eap-identity-password": {
@@ -5032,6 +5110,7 @@
          "type": "string"
         },
         "eap-identity-password-alias": {
+         "format": "name",
          "type": "string"
         },
         "eap-tls-cert-type": {
@@ -5188,9 +5267,11 @@
         "NO_DHCP",
         "NONE"
        ],
+       "format": "ipv4-prefix",
        "type": "string"
       },
       "ipv4-management-alias": {
+       "format": "name",
        "type": "string"
       },
       "ipv6-management-address-format": {
@@ -5234,6 +5315,7 @@
        "type": "integer"
       },
       "resolver-alias": {
+       "format": "name",
        "type": "string"
       },
       "speed": {
@@ -5285,9 +5367,11 @@
        "type": "boolean"
       },
       "ip": {
+       "format": "ipv4-address|ipv6-address|domain-name",
        "type": "string"
       },
       "ip-for-cell": {
+       "format": "ipv4-address|ipv6-address|domain-name",
        "type": "string"
       },
       "pkt-lost-cnt": {
@@ -6029,6 +6113,7 @@
      "type": "boolean"
     },
     "description": {
+     "format": "description",
      "type": "string"
     },
     "firewall-visibility": {
@@ -6051,6 +6136,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name",
      "type": "string"
     },
     "recog-types": {
@@ -6093,6 +6179,7 @@
      "device_types": [
       "Gateway"
      ],
+     "format": "redirect-url",
      "type": "string"
     },
     "url-visibility": {
@@ -6137,6 +6224,7 @@
       "Switch CX",
       "Switch PVOS"
      ],
+     "format": "aspath-list-name",
      "type": "string"
     },
     "description": {
@@ -6176,6 +6264,7 @@
      "device_types": [
       "Access Point"
      ],
+     "format": "name",
      "type": "string"
     },
     "admin-password": {
@@ -6189,6 +6278,7 @@
      "device_types": [
       "Access Point"
      ],
+     "format": "name",
      "type": "string"
     },
     "allow-cleartext": {
@@ -6220,6 +6310,7 @@
       "Gateway",
       "Switch CX"
      ],
+     "format": "ipv4-address|ipv6-address|domain-name",
      "type": "string"
     },
     "auth-throttle": {
@@ -6250,6 +6341,7 @@
      "device_types": [
       "Access Point"
      ],
+     "format": "name",
      "type": "string"
     },
     "called-station-id": {
@@ -6394,12 +6486,14 @@
        "device_types": [
         "Access Point"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string"
       },
       "ip": {
        "device_types": [
         "Access Point"
        ],
+       "format": "ipv4-prefix",
        "type": "string"
       },
       "vlan": {
@@ -6702,12 +6796,14 @@
       "Gateway",
       "Switch PVOS"
      ],
+     "format": "ipv4-address|ipv6-address",
      "type": "string"
     },
     "nas-ipv6-address": {
      "device_types": [
       "Gateway"
      ],
+     "format": "ipv4-address|ipv6-address",
      "type": "string"
     },
     "port-access-keepalive": {
@@ -6747,6 +6843,7 @@
      "device_types": [
       "Access Point"
      ],
+     "format": "name",
      "type": "string"
     },
     "radsec-client-cert": {
@@ -6890,6 +6987,7 @@
      "device_types": [
       "Gateway"
      ],
+     "format": "ipv4-address|ipv6-address",
      "type": "string"
     },
     "source-interface-vlan": {
@@ -6979,6 +7077,7 @@
       "Switch CX",
       "Gateway"
      ],
+     "format": "name-type",
      "type": "string"
     },
     "window-duration": {
@@ -7002,6 +7101,7 @@
      "device_types": [
       "Access Point"
      ],
+     "format": "ipv4-address|ipv6-address|ipv4-prefix",
      "type": "string"
     },
     "xmlapi-server-key": {
@@ -7809,6 +7909,7 @@
     "echo-source-address": {
      "properties": {
       "alias": {
+       "format": "name",
        "type": "string"
       },
       "echo-source-address": {
@@ -7816,6 +7917,7 @@
         "Switch PVOS",
         "Switch CX"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string"
       },
       "use-alias": {
@@ -8013,6 +8115,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "route-map-name",
          "type": "string"
         }
        },
@@ -8073,6 +8176,7 @@
              "device_types": [
               "Switch CX"
              ],
+             "format": "ipv4-prefix",
              "type": "string"
             },
             "advertise-map": {
@@ -8086,6 +8190,7 @@
              "device_types": [
               "Gateway"
              ],
+             "format": "ipv4-address",
              "type": "string"
             },
             "aggregate-address-sources": {
@@ -8102,12 +8207,14 @@
              "device_types": [
               "Gateway"
              ],
+             "format": "ipv4-address",
              "type": "string"
             },
             "aggregate-source-route-map": {
              "device_types": [
               "Gateway"
              ],
+             "format": "route-map-name",
              "type": "string"
             },
             "as-set": {
@@ -8173,6 +8280,7 @@
              "device_types": [
               "Switch CX"
              ],
+             "format": "route-map-name",
              "type": "string"
             },
             "suppress-limit": {
@@ -8197,12 +8305,14 @@
              "device_types": [
               "Gateway"
              ],
+             "format": "ipv4-address",
              "type": "string"
             },
             "network-mask": {
              "device_types": [
               "Gateway"
              ],
+             "format": "ipv4-address",
              "type": "string"
             },
             "prefix": {
@@ -8210,6 +8320,7 @@
               "Switch CX",
               "Switch PVOS"
              ],
+             "format": "ipv4-prefix",
              "type": "string"
             },
             "route-map": {
@@ -8217,6 +8328,7 @@
               "Switch CX",
               "Switch PVOS"
              ],
+             "format": "route-map-name",
              "type": "string"
             }
            },
@@ -8236,6 +8348,7 @@
               "Switch PVOS",
               "Gateway"
              ],
+             "format": "route-map-name",
              "type": "string"
             },
             "route-type": {
@@ -8282,6 +8395,7 @@
              "device_types": [
               "Switch CX"
              ],
+             "format": "ipv6-prefix",
              "type": "string"
             },
             "advertise-map": {
@@ -8353,6 +8467,7 @@
              "device_types": [
               "Switch CX"
              ],
+             "format": "route-map-name",
              "type": "string"
             },
             "suppress-limit": {
@@ -8377,12 +8492,14 @@
              "device_types": [
               "Switch CX"
              ],
+             "format": "ipv6-prefix",
              "type": "string"
             },
             "route-map": {
              "device_types": [
               "Switch CX"
              ],
+             "format": "route-map-name",
              "type": "string"
             }
            },
@@ -8406,6 +8523,7 @@
              "device_types": [
               "Switch CX"
              ],
+             "format": "route-map-name",
              "type": "string"
             },
             "route-type": {
@@ -8608,6 +8726,7 @@
                 "Switch PVOS",
                 "Gateway"
                ],
+               "format": "route-map-name",
                "mandatory": true,
                "type": "string"
               }
@@ -8631,6 +8750,7 @@
                 "Switch CX",
                 "Gateway"
                ],
+               "format": "route-map-name",
                "type": "string"
               }
              },
@@ -8728,6 +8848,7 @@
                "device_types": [
                 "Switch CX"
                ],
+               "format": "prefix-list-name-address-family",
                "mandatory": true,
                "type": "string"
               }
@@ -8842,6 +8963,7 @@
                 "Switch PVOS",
                 "Gateway"
                ],
+               "format": "route-map-name",
                "mandatory": true,
                "type": "string"
               }
@@ -8862,6 +8984,7 @@
                 "Switch CX",
                 "Gateway"
                ],
+               "format": "route-map-name",
                "type": "string"
               }
              },
@@ -8956,6 +9079,7 @@
                "device_types": [
                 "Switch CX"
                ],
+               "format": "prefix-list-name-address-family",
                "mandatory": true,
                "type": "string"
               }
@@ -9046,6 +9170,7 @@
                 "Switch PVOS",
                 "Gateway"
                ],
+               "format": "route-map-name",
                "mandatory": true,
                "type": "string"
               }
@@ -9068,12 +9193,14 @@
              "device_types": [
               "Gateway"
              ],
+             "format": "route-map-name",
              "type": "string"
             },
             "evpn-import-route-map": {
              "device_types": [
               "Gateway"
              ],
+             "format": "route-map-name",
              "type": "string"
             },
             "next-hop-self": {
@@ -9159,6 +9286,7 @@
                 "Switch PVOS",
                 "Gateway"
                ],
+               "format": "route-map-name",
                "mandatory": true,
                "type": "string"
               }
@@ -9353,6 +9481,7 @@
           "Switch PVOS",
           "Gateway"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         },
         "peer-as": {
@@ -9453,12 +9582,14 @@
             "Switch PVOS",
             "Gateway"
            ],
+           "format": "ipv4-address|ipv6-address",
            "type": "string"
           },
           "local-lag-interface": {
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "local-loopback-interface": {
@@ -9603,6 +9734,7 @@
                 "Switch PVOS",
                 "Gateway"
                ],
+               "format": "route-map-name",
                "mandatory": true,
                "type": "string"
               }
@@ -9626,6 +9758,7 @@
                 "Switch CX",
                 "Gateway"
                ],
+               "format": "route-map-name",
                "type": "string"
               }
              },
@@ -9717,6 +9850,7 @@
                "device_types": [
                 "Switch CX"
                ],
+               "format": "prefix-list-name-address-family",
                "mandatory": true,
                "type": "string"
               }
@@ -9820,6 +9954,7 @@
                 "Switch PVOS",
                 "Gateway"
                ],
+               "format": "route-map-name",
                "mandatory": true,
                "type": "string"
               }
@@ -9840,6 +9975,7 @@
                 "Switch CX",
                 "Gateway"
                ],
+               "format": "route-map-name",
                "type": "string"
               }
              },
@@ -9928,6 +10064,7 @@
                "device_types": [
                 "Switch CX"
                ],
+               "format": "prefix-list-name-address-family",
                "mandatory": true,
                "type": "string"
               }
@@ -10006,6 +10143,7 @@
                 "Switch PVOS",
                 "Gateway"
                ],
+               "format": "route-map-name",
                "mandatory": true,
                "type": "string"
               }
@@ -10101,6 +10239,7 @@
                 "Switch PVOS",
                 "Gateway"
                ],
+               "format": "route-map-name",
                "mandatory": true,
                "type": "string"
               }
@@ -10280,6 +10419,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "ipv4-prefix|ipv6-prefix",
            "type": "string"
           },
           "max-limit": {
@@ -10400,12 +10540,14 @@
             "Switch PVOS",
             "Gateway"
            ],
+           "format": "ipv4-address|ipv6-address",
            "type": "string"
           },
           "local-lag-interface": {
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "local-loopback-interface": {
@@ -10464,6 +10606,7 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "ipv4-address",
        "type": "integer|string"
       },
       "route-selection-options": {
@@ -10533,6 +10676,7 @@
         "Switch PVOS",
         "Gateway"
        ],
+       "format": "[ipv4-router-id-address, ipv4-address]",
        "type": "string"
       },
       "timers": {
@@ -10597,9 +10741,11 @@
     "airpass-profile": {
      "properties": {
       "approval-email": {
+       "format": "email-type",
        "type": "string"
       },
       "domain-name": {
+       "format": "cda-cg-domain-name",
        "mandatory": true,
        "type": "string"
       },
@@ -10613,6 +10759,7 @@
       "site": {
        "items": {
         "site-id": {
+         "format": "scope-id-type",
          "mandatory": true,
          "type": "string"
         }
@@ -10639,6 +10786,7 @@
      "type": "object"
     },
     "auth-profile-id": {
+     "format": "auth-profile-id",
      "type": "string"
     },
     "auth-type": {
@@ -10683,6 +10831,7 @@
        "type": "string"
       },
       "network-login-host-override": {
+       "format": "cda-cg-domain-name",
        "type": "string"
       },
       "pre-auth-access-rules": {
@@ -10690,6 +10839,7 @@
         "destination": {
          "properties": {
           "domain-name": {
+           "format": "cda-cg-domain-name",
            "mandatory": true,
            "type": "string"
           },
@@ -10714,9 +10864,11 @@
        "type": "boolean"
       },
       "register-auto-expire": {
+       "format": "duration-type",
        "type": "string"
       },
       "registration-identity-store": {
+       "format": "id",
        "type": "string"
       },
       "require-sponsor-approval": {
@@ -10802,12 +10954,14 @@
         "uem": {
          "items": {
           "bearer-token": {
+           "format": "bearer-token",
            "type": "string"
           },
           "enable": {
            "type": "boolean"
           },
           "intune-extension": {
+           "format": "printable-string",
            "type": "string"
           },
           "name": {
@@ -10821,6 +10975,7 @@
            "type": "string"
           },
           "uem-id": {
+           "format": "uem-id",
            "type": "string"
           },
           "uem-type": {
@@ -10864,9 +11019,11 @@
       "local-wlan-scope": {
        "items": {
         "scope-id": {
+         "format": "scope-id-type",
          "type": "string"
         },
         "site-id": {
+         "format": "scope-id-type",
          "type": "string"
         }
        },
@@ -10886,9 +11043,11 @@
     "mpsk": {
      "properties": {
       "password-auto-expire": {
+       "format": "duration-type",
        "type": "string"
       },
       "password-minimum-age": {
+       "format": "duration-type",
        "type": "string"
       },
       "password-minimum-history": {
@@ -10915,6 +11074,7 @@
      "type": "string"
     },
     "portal-profile": {
+     "format": "portal-id",
      "type": "string"
     },
     "shared-network": {
@@ -10934,6 +11094,7 @@
          "type": "string"
         },
         "scope-id": {
+         "format": "scope-id-type",
          "mandatory": true,
          "type": "string"
         }
@@ -10975,6 +11136,7 @@
            "type": "string"
           },
           "condition-group-id": {
+           "format": "condition-group-id",
            "type": "string"
           },
           "operator": {
@@ -11023,6 +11185,7 @@
          "type": "array"
         },
         "condition-id": {
+         "format": "condition-id",
          "type": "string"
         },
         "position": {
@@ -11044,6 +11207,7 @@
        "type": "string"
       },
       "profile-id": {
+       "format": "profile-id",
        "type": "string"
       },
       "profile-name": {
@@ -11115,6 +11279,7 @@
      "type": "string"
     },
     "policy-id": {
+     "format": "policy-id",
      "type": "string"
     },
     "policy-type": {
@@ -11159,6 +11324,7 @@
              "type": "string"
             },
             "condition-group-id": {
+             "format": "condition-group-id",
              "type": "string"
             },
             "operator": {
@@ -11207,6 +11373,7 @@
            "type": "array"
           },
           "condition-id": {
+           "format": "condition-id",
            "type": "string"
           },
           "position": {
@@ -11234,6 +11401,7 @@
          "type": "string"
         },
         "profile-id": {
+         "format": "profile-id",
          "type": "string"
         },
         "profile-name": {
@@ -11290,6 +11458,7 @@
        "type": "integer"
       },
       "rule-id": {
+       "format": "rule-id",
        "type": "string"
       },
       "rule-name": {
@@ -11321,6 +11490,7 @@
     "google": {
      "properties": {
       "admin-email": {
+       "format": "email-type",
        "mandatory": true,
        "type": "string"
       },
@@ -11333,6 +11503,7 @@
        "type": "string"
       },
       "client-email": {
+       "format": "email-type",
        "mandatory": true,
        "type": "string"
       },
@@ -11397,12 +11568,14 @@
        "type": "string"
       },
       "hosted-domain": {
+       "format": "cda-cg-domain-name",
        "type": "string"
       }
      },
      "type": "object"
     },
     "id": {
+     "format": "id",
      "type": "string"
     },
     "id-store-type": {
@@ -11528,6 +11701,7 @@
      "type": "string"
     },
     "provider-id": {
+     "format": "provider-id",
      "mandatory": true,
      "type": "string"
     },
@@ -11551,10 +11725,12 @@
       "country-service-overrides": {
        "items": {
         "country-code": {
+         "format": "country-code",
          "mandatory": true,
          "type": "string"
         },
         "messaging-service": {
+         "format": "cda-twilio-sid",
          "mandatory": true,
          "type": "string"
         }
@@ -11562,6 +11738,7 @@
        "type": "array"
       },
       "default-service": {
+       "format": "cda-twilio-sid",
        "type": "string"
       }
      },
@@ -11596,6 +11773,7 @@
      "type": "object"
     },
     "message-id": {
+     "format": "message-id",
      "mandatory": true,
      "type": "string"
     },
@@ -11636,6 +11814,7 @@
   "cda-portal-default-custom-message": {
    "fields": {
     "message-id": {
+     "format": "message-id",
      "mandatory": true,
      "type": "string"
     },
@@ -11871,6 +12050,7 @@
      "type": "string"
     },
     "override-id": {
+     "format": "override-id",
      "mandatory": true,
      "type": "string"
     }
@@ -11882,6 +12062,7 @@
      "type": "string"
     },
     "login-image": {
+     "format": "login-image",
      "type": "string"
     },
     "login-image-link": {
@@ -11892,25 +12073,31 @@
      "type": "string"
     },
     "overrides": {
+     "format": "override-id",
      "type": "string"
     },
     "portal-id": {
+     "format": "portal-id",
      "mandatory": true,
      "type": "string"
     },
     "registration-email-message": {
+     "format": "message-id",
      "type": "string"
     },
     "registration-sms-message": {
+     "format": "message-id",
      "type": "string"
     },
     "require-accept-terms": {
      "type": "boolean"
     },
     "skin": {
+     "format": "skin-id",
      "type": "string"
     },
     "sponsor-approval-email-message": {
+     "format": "message-id",
      "type": "string"
     },
     "terms-location": {
@@ -11921,9 +12108,11 @@
      "type": "string"
     },
     "verification-code-sms-message": {
+     "format": "message-id",
      "type": "string"
     },
     "verification-link-email-message": {
+     "format": "message-id",
      "type": "string"
     }
    }
@@ -11931,12 +12120,15 @@
   "cda-portal-skin-profile": {
    "fields": {
     "background-color": {
+     "format": "cda-cg-csscolor",
      "type": "string"
     },
     "background-image": {
+     "format": "background-image",
      "type": "string"
     },
     "brand-image": {
+     "format": "brand-image",
      "type": "string"
     },
     "brand-link": {
@@ -11954,15 +12146,18 @@
      "type": "string"
     },
     "content-background-color": {
+     "format": "cda-cg-csscolor",
      "type": "string"
     },
     "description": {
      "type": "string"
     },
     "favicon-image": {
+     "format": "favicon-image",
      "type": "string"
     },
     "header-background-color": {
+     "format": "cda-cg-csscolor",
      "type": "string"
     },
     "max-columns": {
@@ -11973,12 +12168,14 @@
      "type": "string"
     },
     "primary-color": {
+     "format": "cda-cg-csscolor",
      "type": "string"
     },
     "show-header": {
      "type": "boolean"
     },
     "skin-id": {
+     "format": "skin-id",
      "mandatory": true,
      "type": "string"
     },
@@ -11998,6 +12195,7 @@
      "type": "string"
     },
     "text-color": {
+     "format": "cda-cg-csscolor",
      "type": "string"
     },
     "wifi4eu-language": {
@@ -12044,6 +12242,7 @@
      "type": "string"
     },
     "tag-id": {
+     "format": "tag-id",
      "type": "string"
     }
    }
@@ -12219,6 +12418,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -12374,9 +12574,11 @@
      "type": "string"
     },
     "valid-from": {
+     "format": "date-and-time",
      "type": "string"
     },
     "valid-to": {
+     "format": "date-and-time",
      "type": "string"
     }
    }
@@ -12497,6 +12699,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "community-expanded",
        "mandatory": true,
        "type": "string"
       },
@@ -12507,6 +12710,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "route-target-expanded",
        "mandatory": true,
        "type": "string"
       },
@@ -12520,6 +12724,7 @@
      "type": "array"
     },
     "community-list-name-community-type": {
+     "format": "community-list-name-community-type",
      "type": "string"
     },
     "description": {
@@ -12669,6 +12874,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name-type",
      "type": "string"
     },
     "name": {
@@ -12776,6 +12982,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name-type",
      "mandatory": true,
      "type": "string"
     }
@@ -12885,6 +13092,7 @@
           "Switch PVOS",
           "Switch CX"
          ],
+         "format": "rate-pps",
          "type": "integer|string"
         }
        },
@@ -12902,6 +13110,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         },
         "ip-match": {
@@ -12936,6 +13145,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "rate",
          "type": "integer|string"
         },
         "user-defined-class-index": {
@@ -12963,6 +13173,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name",
      "type": "string"
     }
    }
@@ -13001,6 +13212,7 @@
      "type": "boolean"
     },
     "name": {
+     "format": "name",
      "type": "string"
     },
     "netsvc-sip": {
@@ -13447,6 +13659,7 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string"
       },
       "key": {
@@ -13581,24 +13794,28 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "subject-alt-name-dns",
      "type": "string"
     },
     "subject-alt-name-ip": {
      "device_types": [
       "Switch CX"
      ],
+     "format": "ipv4-address|ipv6-address",
      "type": "string"
     },
     "validity-end": {
      "device_types": [
       "Switch PVOS"
      ],
+     "format": "validity-end",
      "type": "string"
     },
     "validity-start": {
      "device_types": [
       "Switch PVOS"
      ],
+     "format": "validity-start",
      "type": "string"
     }
    }
@@ -13690,6 +13907,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "vendor-oui",
        "type": "string"
       },
       "vendor-oui-subtype": {
@@ -13731,6 +13949,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "mac-address-type|mac-oui|mac-mask-32|mac-mask-40",
        "type": "string"
       },
       "sequence-number": {
@@ -14022,6 +14241,7 @@
         "Gateway",
         "Switch PVOS"
        ],
+       "format": "domain-name",
        "type": "string"
       },
       "dynamic-dns": {
@@ -14041,6 +14261,7 @@
         "Gateway",
         "Access Point"
        ],
+       "format": "pool-id",
        "type": "string"
       },
       "lease-time": {
@@ -14050,6 +14271,7 @@
         "Gateway",
         "Switch PVOS"
        ],
+       "format": "lease-time-format",
        "type": "string"
       },
       "netbios-config-mode": {
@@ -14093,6 +14315,7 @@
         "Gateway",
         "Switch CX"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "option": {
@@ -14118,6 +14341,7 @@
           "Switch PVOS",
           "Gateway"
          ],
+         "format": "hex-string",
          "type": "string"
         },
         "ip": {
@@ -14186,12 +14410,14 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "mac": {
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "mac-address",
          "type": "string"
         },
         "netmask": {
@@ -14207,6 +14433,7 @@
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "tftp-server-name": {
@@ -14274,6 +14501,7 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "domain",
        "type": "string"
       },
       "lease-time": {
@@ -14283,6 +14511,7 @@
         "Gateway",
         "Switch PVOS"
        ],
+       "format": "lease-time-format",
        "type": "string"
       },
       "option": {
@@ -14379,6 +14608,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv6-address",
          "type": "string"
         }
        },
@@ -14643,6 +14873,7 @@
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "timeout": {
@@ -14779,6 +15010,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name-type",
          "type": "string"
         }
        },
@@ -14804,6 +15036,7 @@
        "type": "boolean"
       },
       "enable-alias": {
+       "format": "name",
        "type": "string"
       },
       "external-storage": {
@@ -14963,6 +15196,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "timeout": {
@@ -15008,6 +15242,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name-type",
          "type": "string"
         }
        },
@@ -15081,6 +15316,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "prefix-list-name-address-family",
          "type": "string"
         },
         "match-server": {
@@ -15186,6 +15422,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "timeout": {
@@ -15312,12 +15549,14 @@
         "Switch CX",
         "Gateway"
        ],
+       "format": "name",
        "type": "string"
       },
       "vrf": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -15336,6 +15575,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -15413,6 +15653,7 @@
           "Switch PVOS",
           "Gateway"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         },
         "management-interface": {
@@ -15441,6 +15682,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -15452,6 +15694,7 @@
       "Switch CX",
       "Switch PVOS"
      ],
+     "format": "name",
      "type": "string"
     },
     "split-dns": {
@@ -15490,6 +15733,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -15567,12 +15811,14 @@
      "device_types": [
       "Access Point"
      ],
+     "format": "ipv4-address|ipv6-address|ip-address-type",
      "type": "string"
     },
     "tftp-server": {
      "device_types": [
       "Access Point"
      ],
+     "format": "ipv4-address|ipv6-address",
      "type": "string"
     },
     "username": {
@@ -15801,6 +16047,7 @@
       "Switch PVOS",
       "Switch CX"
      ],
+     "format": "ipv4-address|ipv6-address|domain-name",
      "mandatory": true,
      "type": "string"
     },
@@ -15816,6 +16063,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name-type",
      "type": "string"
     },
     "username": {
@@ -15930,6 +16178,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "rd-rt-type",
          "type": "string"
         },
         "route-distinguisher-auto": {
@@ -15977,6 +16226,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "rd-rt-type",
          "type": "string"
         },
         "vlan-ethernet-tag": {
@@ -16023,6 +16273,7 @@
        "type": "string"
       },
       "index": {
+       "format": "index",
        "type": "string"
       }
      },
@@ -16033,12 +16284,15 @@
      "type": "boolean"
     },
     "hec-token": {
+     "format": "hec-token",
      "type": "string"
     },
     "hec-url": {
+     "format": "hec-url",
      "type": "string"
     },
     "name": {
+     "format": "printable-string",
      "mandatory": true,
      "type": "string"
     },
@@ -16073,6 +16327,7 @@
     "agent": {
      "properties": {
       "agent-url": {
+       "format": "agent-url",
        "mandatory": true,
        "type": "string"
       },
@@ -16081,6 +16336,7 @@
        "type": "string"
       },
       "site-id": {
+       "format": "scope-id-type",
        "mandatory": true,
        "type": "string"
       }
@@ -16109,6 +16365,7 @@
      "type": "object"
     },
     "name": {
+     "format": "printable-string",
      "mandatory": true,
      "type": "string"
     },
@@ -16155,6 +16412,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address|ipv6-address|domain-name",
        "type": "string"
       },
       "directory": {
@@ -16210,6 +16468,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -16823,6 +17082,7 @@
       "Switch CX",
       "Switch PVOS"
      ],
+     "format": "name",
      "type": "string"
     }
    }
@@ -16893,6 +17153,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name-type",
      "type": "string"
     }
    }
@@ -17487,6 +17748,7 @@
          "type": "string"
         },
         "since": {
+         "format": "date-and-time",
          "type": "string"
         }
        },
@@ -17498,6 +17760,7 @@
       "upgrade-schedule": {
        "properties": {
         "since": {
+         "format": "date-and-time",
          "type": "string"
         },
         "upgrade-schedule-mode": {
@@ -17678,6 +17941,7 @@
      "type": "boolean"
     },
     "name": {
+     "format": "profile-name-type",
      "type": "string"
     },
     "revocation-check-point": {
@@ -17714,6 +17978,7 @@
          "device_types": [
           "Gateway"
          ],
+         "format": "primary-url",
          "type": "string"
         },
         "responder-cert": {
@@ -17845,18 +18110,21 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "ip": {
        "device_types": [
         "Gateway"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "mac": {
        "device_types": [
         "Gateway"
        ],
+       "format": "mac-address",
        "type": "string"
       },
       "priority": {
@@ -17880,18 +18148,21 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "ipv6": {
        "device_types": [
         "Gateway"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "mac": {
        "device_types": [
         "Gateway"
        ],
+       "format": "mac-address",
        "type": "string"
       },
       "priority": {
@@ -17913,6 +18184,7 @@
      "device_types": [
       "Gateway"
      ],
+     "format": "name",
      "type": "string"
     },
     "one-to-one-redundancy": {
@@ -18266,6 +18538,7 @@
         "NO_DHCP",
         "NONE"
        ],
+       "format": "ipv4-prefix",
        "type": "string"
       },
       "filter-broadcast-helper": {
@@ -18293,6 +18566,7 @@
        "type": "boolean"
       },
       "vrf-forwarding": {
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -18309,6 +18583,7 @@
           "DHCP_FULL_RAPID_COMMIT",
           "NO_DHCP"
          ],
+         "format": "ipv6-prefix",
          "type": "string"
         },
         "eui64": {
@@ -18326,15 +18601,18 @@
       "helper": {
        "items": {
         "address": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "source": {
+         "format": "ipv6-address",
          "type": "string"
         }
        },
        "type": "array"
       },
       "link-local": {
+       "format": "ipv6-address",
        "type": "string"
       },
       "pd-address": {
@@ -18346,6 +18624,7 @@
          "type": "boolean"
         },
         "subnet-host-id": {
+         "format": "ipv6-address",
          "type": "string"
         }
        },
@@ -18401,9 +18680,11 @@
       "tlv": {
        "properties": {
         "host-ipv4-address": {
+         "format": "ipv4-address",
          "type": "string"
         },
         "host-ipv6-address": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "med-extension": {
@@ -18831,12 +19112,14 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "qos-string-type",
        "type": "string"
       },
       "threshold-profile": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "qos-string-type",
        "type": "string"
       },
       "trust": {
@@ -19004,6 +19287,7 @@
      "type": "object"
     },
     "switchport-alias": {
+     "format": "name",
      "type": "string"
     },
     "trusted": {
@@ -19087,6 +19371,7 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "vlan-list",
        "type": "string"
       }
      },
@@ -19172,6 +19457,7 @@
      "device_types": [
       "Gateway"
      ],
+     "format": "ipv4-address|ipv6-address",
      "type": "string"
     },
     "datapath-energy-efficiency": {
@@ -19218,6 +19504,7 @@
          "device_types": [
           "Gateway"
          ],
+         "format": "aruba-ipv4-address|aruba-ipv6-address",
          "mandatory": true,
          "type": "string"
         },
@@ -19225,6 +19512,7 @@
          "device_types": [
           "Gateway"
          ],
+         "format": "mac-address",
          "type": "string"
         }
        },
@@ -19341,6 +19629,7 @@
        "type": "integer"
       },
       "device-vlan-alias": {
+       "format": "name",
        "type": "string"
       }
      },
@@ -19361,6 +19650,7 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "device-interface-type": {
@@ -19383,6 +19673,7 @@
      "type": "object"
     },
     "ipv6-device-vlan-alias": {
+     "format": "name",
      "type": "string"
     },
     "ipv6-enable": {
@@ -19586,6 +19877,7 @@
          "device_types": [
           "Gateway"
          ],
+         "format": "mac-address",
          "type": "string"
         },
         "type": {
@@ -19632,6 +19924,7 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string"
       },
       "nas-vlan": {
@@ -19783,6 +20076,7 @@
       "Switch PVOS",
       "Switch CX"
      ],
+     "format": "ipv4-address|ipv6-address|domain-name",
      "type": "string"
     },
     "description": {
@@ -19820,6 +20114,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name-type",
      "type": "string"
     }
    }
@@ -19989,6 +20284,7 @@
          "device_types": [
           "Access Point"
          ],
+         "format": "oui",
          "type": "string"
         },
         "type": {
@@ -21369,6 +21665,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "mac-address": {
@@ -21376,6 +21673,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "mac-address",
          "type": "string"
         }
        },
@@ -21796,6 +22094,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name",
      "type": "string"
     },
     "flow-control-mode": {
@@ -22036,12 +22335,14 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name",
        "type": "string"
       },
       "ipv6-monitor": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "name",
        "type": "string"
       }
      },
@@ -22064,6 +22365,7 @@
         "NO_DHCP",
         "NONE"
        ],
+       "format": "ipv4-prefix",
        "type": "string"
       },
       "dhcp-client-id": {
@@ -22131,6 +22433,7 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -22146,6 +22449,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "server": {
@@ -22187,6 +22491,7 @@
           "DHCP_FULL_RAPID_COMMIT",
           "NO_DHCP"
          ],
+         "format": "ipv6-prefix",
          "type": "string"
         },
         "eui64": {
@@ -22245,9 +22550,11 @@
        ],
        "items": {
         "address": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "source": {
+         "format": "ipv6-address",
          "type": "string"
         }
        },
@@ -22258,6 +22565,7 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "pd-address": {
@@ -22542,6 +22850,7 @@
             "Switch PVOS",
             "Switch CX"
            ],
+           "format": "country-code",
            "type": "string"
           },
           "what": {
@@ -22617,21 +22926,25 @@
          "type": "string"
         },
         "host-ipv4-address": {
+         "format": "ipv4-address",
          "type": "string"
         },
         "host-ipv6-address": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "management-tlv-ipv4-addr": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "management-tlv-ipv4-addr",
          "type": "string"
         },
         "management-tlv-ipv6-addr": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "management-tlv-ipv6-addr",
          "type": "string"
         },
         "med": {
@@ -23110,6 +23423,7 @@
       "Gateway",
       "Access Point"
      ],
+     "format": "name",
      "type": "string"
     },
     "nd": {
@@ -23133,6 +23447,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "ipv6-address",
          "type": "string"
         },
         "mac-address": {
@@ -23140,6 +23455,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "mac-address",
          "type": "string"
         }
        },
@@ -23299,6 +23615,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "source-address-any": {
@@ -23387,6 +23704,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "source-address-any": {
@@ -23464,6 +23782,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "source-address-any": {
@@ -23545,6 +23864,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "source-address-any": {
@@ -23750,6 +24070,7 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "src-interface-id",
        "type": "string"
       },
       "src-interface-type": {
@@ -23864,6 +24185,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "mac-address",
          "type": "string"
         },
         "vlan": {
@@ -23893,6 +24215,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "portchannel-lag",
      "type": "string"
     },
     "priority-flow-control": {
@@ -24488,12 +24811,14 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "qos-string-type",
        "type": "string"
       },
       "threshold-profile": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "qos-string-type",
        "type": "string"
       },
       "trust": {
@@ -24795,6 +25120,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "instance-id",
          "type": "integer|string"
         },
         "priority": {
@@ -25083,6 +25409,7 @@
         "Switch CX",
         "Gateway"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string"
       },
       "advertise-interval": {
@@ -25154,6 +25481,7 @@
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string|boolean"
       },
       "null-auth-compatibility": {
@@ -25343,6 +25671,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name-type",
      "type": "string"
     },
     "vrrp": {
@@ -25406,6 +25735,7 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "ipv4-address",
        "type": "string"
       }
      },
@@ -25428,6 +25758,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "addl-prefix-len": {
@@ -25445,6 +25776,7 @@
         "Gateway",
         "Switch PVOS"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "prefix-len": {
@@ -25460,6 +25792,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "ipv4-address-prefix",
      "type": "string"
     },
     "ipv6-address": {
@@ -25474,6 +25807,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv6-address-prefix",
        "type": "string"
       },
       "tag": {
@@ -25503,6 +25837,7 @@
           "Gateway",
           "Switch PVOS"
          ],
+         "format": "ipv6-address",
          "type": "string"
         },
         "prefix-len": {
@@ -25530,6 +25865,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv6-link-local-address",
        "type": "string"
       }
      },
@@ -25539,6 +25875,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "ipv6-link-local-address",
      "type": "string"
     },
     "pim-bidir": {
@@ -25636,6 +25973,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name-type",
      "type": "string"
     }
    }
@@ -25660,6 +25998,7 @@
       "Gateway",
       "Switch CX"
      ],
+     "format": "ipv4-address",
      "type": "string"
     },
     "default-gateway-ipv4-alias": {
@@ -25668,6 +26007,7 @@
       "Switch PVOS",
       "Gateway"
      ],
+     "format": "name",
      "type": "string"
     },
     "default-gateway-ipv6": {
@@ -25676,6 +26016,7 @@
       "Gateway",
       "Switch CX"
      ],
+     "format": "ipv6-address",
      "type": "string"
     },
     "default-gateway-ipv6-alias": {
@@ -25684,6 +26025,7 @@
       "Switch PVOS",
       "Gateway"
      ],
+     "format": "name",
      "type": "string"
     },
     "description": {
@@ -25700,6 +26042,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "domain-name",
      "type": "string"
     },
     "enable": {
@@ -25745,6 +26088,7 @@
       "Gateway",
       "Switch PVOS"
      ],
+     "format": "ipv4-prefix",
      "type": "string"
     },
     "ipv6-dhcp-rapid-commit": {
@@ -25765,6 +26109,7 @@
       "Gateway",
       "Switch PVOS"
      ],
+     "format": "ipv6-prefix",
      "type": "string"
     },
     "lldp-oper-mode": {
@@ -25807,12 +26152,14 @@
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "default-gateway-ipv6": {
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "enable": {
@@ -25837,6 +26184,7 @@
         "NO_DHCP",
         "NONE"
        ],
+       "format": "ipv4-prefix",
        "type": "string"
       },
       "ipv6-address": {
@@ -25849,6 +26197,7 @@
         "DHCP_FULL_RAPID_COMMIT",
         "NO_DHCP"
        ],
+       "format": "ipv6-prefix",
        "type": "string"
       },
       "ipv6-enable": {
@@ -25861,6 +26210,7 @@
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "member-id": {
@@ -25910,48 +26260,56 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "ipv4-address",
      "type": "string"
     },
     "primary-nameserver-ipv4-alias": {
      "device_types": [
       "Switch CX"
      ],
+     "format": "name",
      "type": "string"
     },
     "primary-nameserver-ipv6": {
      "device_types": [
       "Switch CX"
      ],
+     "format": "ipv6-address",
      "type": "string"
     },
     "primary-nameserver-ipv6-alias": {
      "device_types": [
       "Switch CX"
      ],
+     "format": "name",
      "type": "string"
     },
     "secondary-nameserver-ipv4": {
      "device_types": [
       "Switch CX"
      ],
+     "format": "ipv4-address",
      "type": "string"
     },
     "secondary-nameserver-ipv4-alias": {
      "device_types": [
       "Switch CX"
      ],
+     "format": "name",
      "type": "string"
     },
     "secondary-nameserver-ipv6": {
      "device_types": [
       "Switch CX"
      ],
+     "format": "ipv6-address",
      "type": "string"
     },
     "secondary-nameserver-ipv6-alias": {
      "device_types": [
       "Switch CX"
      ],
+     "format": "name",
      "type": "string"
     },
     "speed-duplex": {
@@ -26142,6 +26500,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "mac-address": {
@@ -26149,6 +26508,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "mac-address",
          "type": "string"
         }
        },
@@ -26534,12 +26894,14 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name",
        "type": "string"
       },
       "ipv6-monitor": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "name",
        "type": "string"
       }
      },
@@ -26562,6 +26924,7 @@
         "NO_DHCP",
         "NONE"
        ],
+       "format": "ipv4-prefix",
        "type": "string"
       },
       "dhcp-client-id": {
@@ -26629,6 +26992,7 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -26644,6 +27008,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "server": {
@@ -26685,6 +27050,7 @@
           "DHCP_FULL_RAPID_COMMIT",
           "NO_DHCP"
          ],
+         "format": "ipv6-prefix",
          "type": "string"
         },
         "eui64": {
@@ -26743,9 +27109,11 @@
        ],
        "items": {
         "address": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "source": {
+         "format": "ipv6-address",
          "type": "string"
         }
        },
@@ -26756,6 +27124,7 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "pd-address": {
@@ -27147,6 +27516,7 @@
       "Switch PVOS",
       "Gateway"
      ],
+     "format": "name",
      "type": "string"
     },
     "nd": {
@@ -27170,6 +27540,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "ipv6-address",
          "type": "string"
         },
         "mac-address": {
@@ -27177,6 +27548,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "mac-address",
          "type": "string"
         }
        },
@@ -27330,6 +27702,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "source-address-any": {
@@ -27418,6 +27791,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "source-address-any": {
@@ -27495,6 +27869,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "source-address-any": {
@@ -27576,6 +27951,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "source-address-any": {
@@ -28230,12 +28606,14 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "qos-string-type",
        "type": "string"
       },
       "threshold-profile": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "qos-string-type",
        "type": "string"
       },
       "trust": {
@@ -28429,6 +28807,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "instance-id",
          "type": "integer|string"
         },
         "priority": {
@@ -28537,6 +28916,7 @@
      "type": "string"
     },
     "sw-profile-alias": {
+     "format": "name",
      "type": "string"
     },
     "switchport": {
@@ -28656,6 +29036,7 @@
         "Switch CX",
         "Gateway"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string"
       },
       "advertise-interval": {
@@ -28727,6 +29108,7 @@
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string|boolean"
       },
       "null-auth-compatibility": {
@@ -28916,6 +29298,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name-type",
      "type": "string"
     },
     "vrrp": {
@@ -29058,6 +29441,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "port-list-type",
          "type": "string"
         },
         "aos-s-port-profile": {
@@ -29136,6 +29520,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "port-list-type",
          "type": "string"
         }
        },
@@ -29158,6 +29543,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "port-list-type",
          "type": "string"
         },
         "aos-s-port-profile": {
@@ -29239,6 +29625,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "port-list-type",
          "type": "string"
         }
        },
@@ -29261,6 +29648,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "port-list-type",
          "type": "string"
         },
         "aos-s-port-profile": {
@@ -29405,6 +29793,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "port-list-type",
          "type": "string"
         }
        },
@@ -29527,6 +29916,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "port-list-type",
          "type": "string"
         },
         "aos-s-port-profile": {
@@ -29607,6 +29997,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "port-list-type",
          "type": "string"
         }
        },
@@ -29626,6 +30017,7 @@
          "device_types": [
           "Access Point"
          ],
+         "format": "port-name",
          "type": "string"
         },
         "port-profile": {
@@ -29693,6 +30085,7 @@
          "device_types": [
           "Gateway"
          ],
+         "format": "triplet-port-list-type",
          "mandatory": true,
          "type": "string"
         },
@@ -29870,6 +30263,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "port-list-type",
          "type": "string"
         },
         "pvos-port-profile": {
@@ -29948,6 +30342,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "port-list-type",
          "type": "string"
         }
        },
@@ -29970,6 +30365,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "port-list-type",
          "type": "string"
         },
         "pvos-port-profile": {
@@ -30051,6 +30447,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "port-list-type",
          "type": "string"
         }
        },
@@ -30173,6 +30570,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "port-list-type",
          "type": "string"
         },
         "pvos-port-profile": {
@@ -30253,6 +30651,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "port-list-type",
          "type": "string"
         }
        },
@@ -30272,6 +30671,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "port-list-type",
          "type": "string"
         },
         "sw-port-profile": {
@@ -30347,6 +30747,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "port-list-type",
          "type": "string"
         }
        },
@@ -30558,6 +30959,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "port-list-type",
          "type": "string"
         },
         "sw-port-profile": {
@@ -30647,6 +31049,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "port-list-type",
          "type": "string"
         }
        },
@@ -30824,6 +31227,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "port-list-type",
            "type": "string"
           },
           "sw-port-profile": {
@@ -30908,6 +31312,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "port-list-type",
            "type": "string"
           }
          },
@@ -30924,6 +31329,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "port-list-type",
            "type": "string"
           },
           "sw-port-profile": {
@@ -31008,6 +31414,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "port-list-type",
            "type": "string"
           }
          },
@@ -31044,6 +31451,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "mac-address": {
@@ -31051,6 +31459,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "mac-address",
          "type": "string"
         }
        },
@@ -31267,6 +31676,7 @@
         "NO_DHCP",
         "NONE"
        ],
+       "format": "ipv4-prefix",
        "type": "string"
       },
       "dhcp-client-id": {
@@ -31334,6 +31744,7 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -31349,6 +31760,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "server": {
@@ -31390,6 +31802,7 @@
           "DHCP_FULL_RAPID_COMMIT",
           "NO_DHCP"
          ],
+         "format": "ipv6-prefix",
          "type": "string"
         },
         "eui64": {
@@ -31448,9 +31861,11 @@
        ],
        "items": {
         "address": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "source": {
+         "format": "ipv6-address",
          "type": "string"
         }
        },
@@ -31461,6 +31876,7 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "pd-address": {
@@ -31619,6 +32035,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "ipv6-address",
          "type": "string"
         },
         "mac-address": {
@@ -31626,6 +32043,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "mac-address",
          "type": "string"
         }
        },
@@ -31709,6 +32127,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "source-address-any": {
@@ -31797,6 +32216,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "source-address-any": {
@@ -31874,6 +32294,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "source-address-any": {
@@ -31955,6 +32376,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "source-address-any": {
@@ -32054,6 +32476,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name-type",
      "type": "string"
     },
     "vrrp": {
@@ -32089,6 +32512,7 @@
       "Switch PVOS",
       "Gateway"
      ],
+     "format": "ipv4-address|ipv6-address",
      "type": "string"
     },
     "enabled": {
@@ -32163,9 +32587,11 @@
          "type": "boolean"
         },
         "icmp-destination": {
+         "format": "ipv4-address",
          "type": "string"
         },
         "icmp-nexthop": {
+         "format": "ipv4-address",
          "type": "string"
         },
         "interval": {
@@ -32240,12 +32666,14 @@
       "Switch CX",
       "Gateway"
      ],
+     "format": "ipv4-prefix",
      "type": "string"
     },
     "ipv6-address": {
      "device_types": [
       "Gateway"
      ],
+     "format": "ipv6-address",
      "type": "string"
     },
     "ipv6-prefix": {
@@ -32300,6 +32728,7 @@
       "SWITCH_IP",
       "LOOPBACK_IP"
      ],
+     "format": "ipv4-address|ipv6-address",
      "type": "string|integer"
     },
     "ttl": {
@@ -32328,6 +32757,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name-type",
      "type": "string"
     }
    }
@@ -32399,12 +32829,14 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "mac-address",
        "type": "string"
       },
       "mac-address-v6": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "mac-address",
        "type": "string"
       },
       "virtual-gw-l3-src-mac-enable": {
@@ -32437,6 +32869,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "mac-address": {
@@ -32444,6 +32877,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "mac-address",
          "type": "string"
         }
        },
@@ -32728,9 +33162,11 @@
         "NO_DHCP",
         "NONE"
        ],
+       "format": "ipv4-prefix",
        "type": "string"
       },
       "address-alias": {
+       "format": "name",
        "type": "string"
       },
       "central-pool-type": {
@@ -32763,6 +33199,7 @@
         "Gateway",
         "Access Point"
        ],
+       "format": "pool-id",
        "type": "string"
       },
       "dhcps-profile-name": {
@@ -32827,6 +33264,7 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "name",
        "type": "string"
       },
       "suppress-arp": {
@@ -32840,12 +33278,14 @@
         "Gateway",
         "Access Point"
        ],
+       "format": "pool-id",
        "type": "string"
       },
       "vrf-forwarding": {
        "device_types": [
         "Gateway"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -32861,6 +33301,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "server": {
@@ -32904,6 +33345,7 @@
           "DHCP_FULL_RAPID_COMMIT",
           "NO_DHCP"
          ],
+         "format": "ipv6-prefix",
          "type": "string"
         },
         "eui64": {
@@ -32924,6 +33366,7 @@
        "type": "array"
       },
       "addresses-alias": {
+       "format": "name",
        "type": "string"
       },
       "autoconfig": {
@@ -32970,12 +33413,14 @@
          "device_types": [
           "Gateway"
          ],
+         "format": "ipv6-address",
          "type": "string"
         },
         "source": {
          "device_types": [
           "Gateway"
          ],
+         "format": "ipv6-address",
          "type": "string"
         }
        },
@@ -32987,9 +33432,11 @@
         "Switch PVOS",
         "Gateway"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "link-local-alias": {
+       "format": "name",
        "type": "string"
       },
       "pd-address": {
@@ -33200,6 +33647,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "ipv6-address",
          "type": "string"
         },
         "mac-address": {
@@ -33207,6 +33655,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "mac-address",
          "type": "string"
         }
        },
@@ -33343,6 +33792,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "source-address-any": {
@@ -33445,6 +33895,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "source-address-any": {
@@ -33542,6 +33993,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "source-address-any": {
@@ -33623,6 +34075,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "source-address-any": {
@@ -33723,6 +34176,7 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "password": {
@@ -33803,6 +34257,7 @@
       "Switch CX",
       "Gateway"
      ],
+     "format": "name-type",
      "type": "string"
     },
     "vrrp": {
@@ -33906,12 +34361,14 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "ipv4-address",
      "type": "string"
     },
     "src-ipv6": {
      "device_types": [
       "Switch CX"
      ],
+     "format": "ipv6-address",
      "type": "string"
     },
     "udp-port": {
@@ -33963,6 +34420,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -34016,6 +34474,7 @@
       "Switch CX",
       "Switch PVOS"
      ],
+     "format": "name",
      "type": "string"
     },
     "interface-lag": {
@@ -34023,6 +34482,7 @@
       "Switch CX",
       "Switch PVOS"
      ],
+     "format": "name",
      "type": "string"
     },
     "interface-types": {
@@ -34045,6 +34505,7 @@
      "device_types": [
       "Switch PVOS"
      ],
+     "format": "ipv6-address",
      "type": "string"
     },
     "mac": {
@@ -34052,6 +34513,7 @@
       "Switch CX",
       "Switch PVOS"
      ],
+     "format": "mac-address",
      "type": "string"
     }
    }
@@ -34217,6 +34679,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name",
        "type": "string"
       },
       "ip-protocol": {
@@ -34271,6 +34734,7 @@
         "Switch PVOS",
         "Switch CX"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "ipv6": {
@@ -34278,12 +34742,14 @@
         "Switch PVOS",
         "Switch CX"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "lag": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "name",
        "type": "string"
       },
       "loopback": {
@@ -34320,6 +34786,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -34373,6 +34840,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "hostname",
      "type": "string"
     },
     "ip": {
@@ -34380,6 +34848,7 @@
       "Switch CX",
       "Gateway"
      ],
+     "format": "ipv4-address|ipv6-address",
      "type": "string"
     },
     "local-collector": {
@@ -34393,6 +34862,7 @@
       "Switch CX",
       "Gateway"
      ],
+     "format": "name",
      "type": "string"
     },
     "observation-domain": {
@@ -34453,6 +34923,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name-type",
      "type": "string"
     }
    }
@@ -34553,6 +35024,7 @@
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "responder-name": {
@@ -34580,6 +35052,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "interface-loopback": {
@@ -34592,6 +35065,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "interface-subinterface": {
@@ -34616,12 +35090,14 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "ipv6-address": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv6-address",
          "type": "string"
         }
        },
@@ -34645,6 +35121,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -34661,6 +35138,7 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "destination-hostname",
        "type": "string"
       },
       "destination-ipv4": {
@@ -34668,12 +35146,14 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "ipv4-address-prefix",
        "type": "string"
       },
       "destination-ipv6": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv6-address-prefix",
        "type": "string"
       },
       "destination-port": {
@@ -34688,12 +35168,14 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "domain-name-server-ipv6": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "enable": {
@@ -34812,6 +35294,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "date-and-time",
          "type": "string"
         },
         "stop": {
@@ -34829,6 +35312,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "date-and-time",
          "type": "string"
         }
        },
@@ -34844,6 +35328,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "interface-loopback": {
@@ -34856,6 +35341,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "interface-subinterface": {
@@ -34880,12 +35366,14 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "ipv6-address": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv6-address",
          "type": "string"
         },
         "port": {
@@ -35027,6 +35515,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -35072,6 +35561,7 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "probe-destination-uri": {
@@ -35147,6 +35637,7 @@
      "type": "integer"
     },
     "date-time": {
+     "format": "date-and-time",
      "type": "string"
     },
     "days": {
@@ -35301,18 +35792,21 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "utc-date",
      "type": "string"
     },
     "start-date-every": {
      "device_types": [
       "Switch CX"
      ],
+     "format": "utc-date",
      "type": "string"
     },
     "start-date-on": {
      "device_types": [
       "Switch CX"
      ],
+     "format": "utc-date",
      "type": "string"
     },
     "start-time-at": {
@@ -35320,18 +35814,21 @@
       "Switch CX",
       "Switch PVOS"
      ],
+     "format": "start-time-at",
      "type": "string"
     },
     "start-time-every": {
      "device_types": [
       "Switch CX"
      ],
+     "format": "start-time-every",
      "type": "string"
     },
     "start-time-on": {
      "device_types": [
       "Switch CX"
      ],
+     "format": "start-time-on",
      "type": "string"
     },
     "trigger-at": {
@@ -35451,6 +35948,7 @@
      "device_types": [
       "Switch PVOS"
      ],
+     "format": "yearly-date",
      "type": "string"
     }
    }
@@ -35531,6 +36029,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name",
        "type": "string"
       },
       "recv-id": {
@@ -35690,12 +36189,14 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "ipv4-address-prefix",
      "type": "string"
     },
     "management-ipv6-address": {
      "device_types": [
       "Switch CX"
      ],
+     "format": "ipv6-address-prefix",
      "type": "string"
     },
     "management-vlan": {
@@ -37457,6 +37958,7 @@
        "type": "string"
       },
       "type-alias": {
+       "format": "name",
        "type": "string"
       }
      },
@@ -37876,6 +38378,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name-type",
          "type": "string"
         }
        },
@@ -37934,18 +38437,21 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         },
         "mac": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "mac-address",
          "type": "string"
         },
         "port": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string|integer"
         },
         "table": {
@@ -37970,6 +38476,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name-type",
          "type": "string"
         }
        },
@@ -37997,6 +38504,7 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "mac-address",
        "type": "string"
       },
       "type-process-subcategory": {
@@ -38160,6 +38668,7 @@
         "Gateway",
         "Access Point"
        ],
+       "format": "ipv4-address|ipv6-address|host-type-address",
        "type": "string"
       },
       "host-filter": {
@@ -38332,6 +38841,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -38460,6 +38970,7 @@
         "Access Point",
         "Switch PVOS"
        ],
+       "format": "mac-address",
        "type": "string"
       }
      },
@@ -38488,6 +38999,7 @@
      "device_types": [
       "Switch PVOS"
      ],
+     "format": "cak",
      "type": "string"
     },
     "cipher-suites": {
@@ -38497,6 +39009,7 @@
      "device_types": [
       "Switch PVOS"
      ],
+     "format": "ckn",
      "type": "string"
     },
     "clear-tag-mode": {
@@ -38714,6 +39227,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name",
      "type": "string"
     },
     "username": {
@@ -38739,6 +39253,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name",
      "type": "string"
     },
     "name": {
@@ -38746,6 +39261,7 @@
       "Switch CX",
       "Switch PVOS"
      ],
+     "format": "name",
      "type": "string"
     },
     "rest-rule": {
@@ -39198,18 +39714,21 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         },
         "high-bound-group-addr": {
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         },
         "low-bound-group-addr": {
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         },
         "proxy-domain-name": {
@@ -39255,12 +39774,14 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "ssm-range": {
        "device_types": [
         "Gateway"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "startup-query-count": {
@@ -39385,12 +39906,14 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "ssm-range-start": {
        "device_types": [
         "Gateway"
        ],
+       "format": "ipv6-address",
        "type": "string"
       }
      },
@@ -39455,6 +39978,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "destination-switch-serial": {
@@ -39490,6 +40014,7 @@
             "Switch CX",
             "Switch PVOS"
            ],
+           "format": "name",
            "type": "string"
           }
          },
@@ -39504,6 +40029,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           }
          },
@@ -39514,6 +40040,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "span-id": {
@@ -39538,6 +40065,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name-type",
          "type": "string"
         }
        },
@@ -39578,6 +40106,7 @@
             "Switch CX",
             "Switch PVOS"
            ],
+           "format": "name",
            "type": "string"
           },
           "skip-tag": {
@@ -39612,6 +40141,7 @@
             "Switch CX",
             "Switch PVOS"
            ],
+           "format": "name",
            "type": "string"
           },
           "skip-tag": {
@@ -39632,6 +40162,7 @@
            "device_types": [
             "Switch PVOS"
            ],
+           "format": "mac-address",
            "type": "string"
           },
           "mac-direction": {
@@ -39717,6 +40248,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "name",
          "type": "string"
         },
         "eth-interfaces": {
@@ -39751,6 +40283,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "encap": {
@@ -39769,6 +40302,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "source-udp": {
@@ -39787,6 +40321,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name-type",
          "type": "string"
         }
        },
@@ -39817,6 +40352,7 @@
         "Switch CX",
         "Access Point"
        ],
+       "format": "cak",
        "type": "string"
       },
       "cak-ciphertext": {
@@ -39830,6 +40366,7 @@
         "Switch CX",
         "Access Point"
        ],
+       "format": "ckn",
        "type": "string"
       },
       "key-type": {
@@ -39849,6 +40386,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "mac-address",
      "type": "string"
     },
     "eapol-dot1q-tagged": {
@@ -39861,6 +40399,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "eapol-eth-type",
      "type": "string"
     },
     "key-server-priority": {
@@ -39960,6 +40499,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name",
        "mandatory": true,
        "type": "string|integer"
       },
@@ -39974,6 +40514,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address|ipv6-address",
        "mandatory": true,
        "type": "string"
       },
@@ -39981,6 +40522,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-prefix|ipv6-prefix",
        "mandatory": true,
        "type": "string"
       },
@@ -40047,6 +40589,7 @@
        "type": "string"
       },
       "passphrase-alias": {
+       "format": "name",
        "type": "string"
       },
       "role": {
@@ -40091,6 +40634,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "connect-retry-interval": {
@@ -40115,6 +40659,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "holdtime-interval": {
@@ -40133,6 +40678,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "loopback-tcp-connection-source": {
@@ -40216,6 +40762,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -40232,12 +40779,14 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "ipv4-address",
      "type": "string"
     },
     "l3vni-source-ipv6": {
      "device_types": [
       "Switch CX"
      ],
+     "format": "ipv6-link-local-address",
      "type": "string"
     },
     "multi-fabric-border-ipv4": {
@@ -40662,6 +41211,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "redirect",
        "type": "string"
       },
       "set-monitor": {
@@ -40857,6 +41407,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name",
      "type": "string"
     },
     "ready": {
@@ -40892,6 +41443,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "watch-name",
        "type": "string"
       }
      },
@@ -40992,18 +41544,21 @@
             "Switch PVOS",
             "Gateway"
            ],
+           "format": "name",
            "type": "string"
           },
           "host-ipv4-address": {
            "device_types": [
             "Gateway"
            ],
+           "format": "ipv4-address",
            "type": "string"
           },
           "host-ipv6-address": {
            "device_types": [
             "Gateway"
            ],
+           "format": "ipv6-address",
            "type": "string"
           }
          },
@@ -41034,15 +41589,18 @@
             "Switch PVOS",
             "Gateway"
            ],
+           "format": "name",
            "type": "string"
           },
           "network-ipv4-address": {
+           "format": "ipv4-prefix",
            "type": "string"
           },
           "network-ipv6-address": {
            "device_types": [
             "Gateway"
            ],
+           "format": "ipv6-prefix",
            "type": "string"
           }
          },
@@ -41074,18 +41632,21 @@
               "Switch PVOS",
               "Gateway"
              ],
+             "format": "name",
              "type": "string"
             },
             "host-ipv4-address": {
              "device_types": [
               "Gateway"
              ],
+             "format": "ipv4-address",
              "type": "string"
             },
             "host-ipv6-address": {
              "device_types": [
               "Gateway"
              ],
+             "format": "ipv6-address",
              "type": "string"
             }
            },
@@ -41102,15 +41663,18 @@
               "Switch PVOS",
               "Gateway"
              ],
+             "format": "name",
              "type": "string"
             },
             "network-ipv4-address": {
+             "format": "ipv4-prefix",
              "type": "string"
             },
             "network-ipv6-address": {
              "device_types": [
               "Gateway"
              ],
+             "format": "ipv6-prefix",
              "type": "string"
             }
            },
@@ -41139,6 +41703,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "ipv4-subnet-mask|ipv6-subnet-mask",
            "type": "string"
           }
          },
@@ -41176,6 +41741,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "enet-address",
          "type": "string"
         },
         "destination-mac-mask": {
@@ -41183,6 +41749,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "enet-address",
          "type": "string"
         },
         "ethermask": {
@@ -41231,6 +41798,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "enet-address",
          "type": "string"
         },
         "source-mac-mask": {
@@ -41238,6 +41806,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "enet-address",
          "type": "string"
         },
         "vlan": {
@@ -41595,18 +42164,21 @@
             "Switch PVOS",
             "Gateway"
            ],
+           "format": "name",
            "type": "string"
           },
           "host-ipv4-address": {
            "device_types": [
             "Gateway"
            ],
+           "format": "ipv4-address",
            "type": "string"
           },
           "host-ipv6-address": {
            "device_types": [
             "Gateway"
            ],
+           "format": "ipv6-address",
            "type": "string"
           }
          },
@@ -41631,15 +42203,18 @@
             "Switch PVOS",
             "Gateway"
            ],
+           "format": "name",
            "type": "string"
           },
           "network-ipv4-address": {
+           "format": "ipv4-prefix",
            "type": "string"
           },
           "network-ipv6-address": {
            "device_types": [
             "Gateway"
            ],
+           "format": "ipv6-prefix",
            "type": "string"
           }
          },
@@ -41671,18 +42246,21 @@
               "Switch PVOS",
               "Gateway"
              ],
+             "format": "name",
              "type": "string"
             },
             "host-ipv4-address": {
              "device_types": [
               "Gateway"
              ],
+             "format": "ipv4-address",
              "type": "string"
             },
             "host-ipv6-address": {
              "device_types": [
               "Gateway"
              ],
+             "format": "ipv6-address",
              "type": "string"
             }
            },
@@ -41699,15 +42277,18 @@
               "Switch PVOS",
               "Gateway"
              ],
+             "format": "name",
              "type": "string"
             },
             "network-ipv4-address": {
+             "format": "ipv4-prefix",
              "type": "string"
             },
             "network-ipv6-address": {
              "device_types": [
               "Gateway"
              ],
+             "format": "ipv6-prefix",
              "type": "string"
             }
            },
@@ -41736,6 +42317,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "ipv4-subnet-mask|ipv6-subnet-mask",
            "type": "string"
           }
          },
@@ -41921,6 +42503,7 @@
         "Gateway",
         "Access Point"
        ],
+       "format": "name",
        "type": "string"
       },
       "vlan-id-ranges": {
@@ -42018,6 +42601,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "prefix-list-name-address-family",
          "type": "string"
         }
        },
@@ -42117,6 +42701,7 @@
         "Access Point",
         "Gateway"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string"
       },
       "address-range": {
@@ -42184,6 +42769,7 @@
         "Access Point",
         "Gateway"
        ],
+       "format": "ipv4-prefix|ipv6-prefix",
        "type": "string"
       },
       "tunnel-name": {
@@ -42497,6 +43083,7 @@
         "Gateway",
         "Access Point"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string"
       },
       "ipsec-map": {
@@ -42580,6 +43167,7 @@
        ],
        "properties": {
         "serial-number": {
+         "format": "serial-number",
          "type": "string"
         },
         "uplinks": {
@@ -42698,6 +43286,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -42763,6 +43352,7 @@
         "Switch CX",
         "Access Point"
        ],
+       "format": "ipv4-address|ipv6-address|domain-name",
        "type": "string"
       },
       "burst": {
@@ -42843,6 +43433,7 @@
      "type": "array"
     },
     "servers-alias": {
+     "format": "name",
      "type": "string"
     },
     "source-interface": {
@@ -42874,6 +43465,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name-type",
      "type": "string"
     }
    }
@@ -42910,36 +43502,42 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "ipv4-prefix": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-prefix",
        "type": "string"
       },
       "ipv4-subnet-address": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-subnet-mask",
        "type": "string"
       },
       "ipv6-address": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "ipv6-prefix": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv6-prefix",
        "type": "string"
       },
       "ipv6-subnet-address": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv6-subnet-mask",
        "type": "string"
       },
       "ports": {
@@ -42998,6 +43596,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name-type",
      "type": "string"
     }
    }
@@ -43029,6 +43628,7 @@
           "Switch PVOS",
           "Gateway"
          ],
+         "format": "ipv4-address",
          "type": "string|integer"
         },
         "area-type": {
@@ -43131,6 +43731,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "keychain-key": {
@@ -43144,6 +43745,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "loopback-id": {
@@ -43198,6 +43800,7 @@
            "device_types": [
             "Switch PVOS"
            ],
+           "format": "ipv4-address|ipv6-address",
            "type": "string"
           },
           "passive": {
@@ -43375,6 +43978,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "keychain-key": {
@@ -43388,6 +43992,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "loopback-id": {
@@ -43442,6 +44047,7 @@
            "device_types": [
             "Switch PVOS"
            ],
+           "format": "ipv4-address|ipv6-address",
            "type": "string"
           },
           "passive": {
@@ -43620,6 +44226,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "keychain-key": {
@@ -43633,6 +44240,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "loopback-id": {
@@ -43687,6 +44295,7 @@
            "device_types": [
             "Switch PVOS"
            ],
+           "format": "ipv4-address|ipv6-address",
            "type": "string"
           },
           "passive": {
@@ -43902,6 +44511,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "keychain-key": {
@@ -43915,6 +44525,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "loopback-id": {
@@ -43969,6 +44580,7 @@
            "device_types": [
             "Switch PVOS"
            ],
+           "format": "ipv4-address|ipv6-address",
            "type": "string"
           },
           "passive": {
@@ -44146,6 +44758,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "keychain-key": {
@@ -44159,6 +44772,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "loopback-id": {
@@ -44213,6 +44827,7 @@
            "device_types": [
             "Switch PVOS"
            ],
+           "format": "ipv4-address|ipv6-address",
            "type": "string"
           },
           "passive": {
@@ -44392,6 +45007,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "keychain-key": {
@@ -44405,6 +45021,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "loopback-id": {
@@ -44459,6 +45076,7 @@
            "device_types": [
             "Switch PVOS"
            ],
+           "format": "ipv4-address|ipv6-address",
            "type": "string"
           },
           "passive": {
@@ -44637,6 +45255,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "keychain-key": {
@@ -44650,6 +45269,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "loopback-id": {
@@ -44704,6 +45324,7 @@
            "device_types": [
             "Switch PVOS"
            ],
+           "format": "ipv4-address|ipv6-address",
            "type": "string"
           },
           "passive": {
@@ -44912,6 +45533,7 @@
             "Switch CX",
             "Switch PVOS"
            ],
+           "format": "ipv4-address",
            "type": "string"
           },
           "retransmit-interval": {
@@ -45003,6 +45625,7 @@
          "device_types": [
           "Gateway"
          ],
+         "format": "route-map-name",
          "type": "string"
         }
        },
@@ -45100,6 +45723,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "ipv4-prefix|ipv6-prefix",
          "type": "string"
         }
        },
@@ -45109,12 +45733,14 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "exclude-network": {
        "device_types": [
         "Gateway"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "graceful-restart-cfg": {
@@ -45297,6 +45923,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "route-map-name",
          "type": "string"
         },
         "vlan-selection": {
@@ -45316,6 +45943,7 @@
            "device_types": [
             "Gateway"
            ],
+           "format": "vlans",
            "mandatory": true,
            "type": "string"
           },
@@ -45323,6 +45951,7 @@
            "device_types": [
             "Gateway"
            ],
+           "format": "vlans-add",
            "mandatory": true,
            "type": "string"
           },
@@ -45330,6 +45959,7 @@
            "device_types": [
             "Gateway"
            ],
+           "format": "vlans-remove",
            "mandatory": true,
            "type": "string"
           }
@@ -45360,6 +45990,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "ipv4-prefix|ipv6-prefix",
          "type": "string"
         }
        },
@@ -45377,6 +46008,7 @@
         "Switch CX",
         "Gateway"
        ],
+       "format": "[ipv4-router-id-address, ipv4-address]",
        "type": "string"
       },
       "snmpv3": {
@@ -45419,12 +46051,14 @@
          "device_types": [
           "Gateway"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "aggregate-network": {
          "device_types": [
           "Gateway"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "cost": {
@@ -45443,6 +46077,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv4-prefix",
          "type": "string"
         },
         "route-type": {
@@ -45585,6 +46220,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "ipv4-address",
          "type": "string|integer"
         },
         "area-type": {
@@ -45806,6 +46442,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "key-type": {
@@ -45824,6 +46461,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "loopback-id": {
@@ -46040,6 +46678,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "key-type": {
@@ -46058,6 +46697,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "loopback-id": {
@@ -46263,6 +46903,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "key-type": {
@@ -46281,6 +46922,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "loopback-id": {
@@ -46526,6 +47168,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "key-type": {
@@ -46544,6 +47187,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "loopback-id": {
@@ -46749,6 +47393,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "key-type": {
@@ -46767,6 +47412,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "loopback-id": {
@@ -46972,6 +47618,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "key-type": {
@@ -46990,6 +47637,7 @@
            "device_types": [
             "Switch CX"
            ],
+           "format": "name",
            "type": "string"
           },
           "loopback-id": {
@@ -47189,6 +47837,7 @@
             "Switch CX",
             "Switch PVOS"
            ],
+           "format": "ipv4-address",
            "type": "string"
           },
           "retransmit-interval": {
@@ -47329,6 +47978,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "ipv6-prefix",
          "type": "string"
         }
        },
@@ -47498,6 +48148,7 @@
           "Switch PVOS",
           "Switch CX"
          ],
+         "format": "route-map-name",
          "type": "string"
         }
        },
@@ -47546,6 +48197,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "[ipv4-router-id-address, ipv4-address]",
        "type": "string"
       },
       "snmpv3": {
@@ -47583,6 +48235,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv6-prefix",
          "type": "string"
         },
         "tag": {
@@ -47686,6 +48339,7 @@
   "overlay-wlan": {
    "fields": {
     "essid-alias-name": {
+     "format": "name",
      "type": "string"
     },
     "essid-name": {
@@ -47694,6 +48348,7 @@
     "gw-cluster-list": {
      "items": {
       "cluster": {
+       "format": "cluster",
        "type": "string"
       },
       "cluster-redundancy-type": {
@@ -47705,6 +48360,7 @@
        "type": "string"
       },
       "cluster-scope-id": {
+       "format": "scope-id-type",
        "type": "string"
       },
       "cluster-type": {
@@ -47793,12 +48449,14 @@
      "device_types": [
       "Gateway"
      ],
+     "format": "name",
      "type": "string"
     },
     "ip-address": {
      "device_types": [
       "Gateway"
      ],
+     "format": "ipv4-address|ipv6-address",
      "type": "string"
     },
     "local-filesystem": {
@@ -47861,12 +48519,14 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "mac-address",
        "type": "string"
       },
       "peer-ip": {
        "device_types": [
         "Gateway"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string"
       }
      },
@@ -48053,6 +48713,7 @@
        "device_types": [
         "Access Point"
        ],
+       "format": "venue-name-hex",
        "type": "string"
       },
       "venue-type": {
@@ -48255,6 +48916,7 @@
        "device_types": [
         "Access Point"
        ],
+       "format": "fr-name-hex",
        "type": "string"
       },
       "lang-code": {
@@ -48349,6 +49011,7 @@
      "device_types": [
       "Access Point"
      ],
+     "format": "mac-address",
      "type": "string"
     },
     "identity-profile": {
@@ -48406,12 +49069,14 @@
      "device_types": [
       "Access Point"
      ],
+     "format": "qos-map-excp",
      "type": "string"
     },
     "qos-map-range": {
      "device_types": [
       "Access Point"
      ],
+     "format": "qos-map-range",
      "type": "string"
     },
     "query-response-length-limit": {
@@ -48556,6 +49221,7 @@
        "device_types": [
         "Access Point"
        ],
+       "format": "org-id",
        "type": "string"
       }
      },
@@ -48673,6 +49339,7 @@
      "type": "boolean"
     },
     "enable-alias": {
+     "format": "name",
      "type": "string"
     },
     "encoding": {
@@ -48761,6 +49428,7 @@
        "type": "string"
       },
       "device-id-v2": {
+       "format": "device-id-v2",
        "type": "string"
       }
      },
@@ -48836,12 +49504,14 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "interface-portchannel": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "interface-type": {
@@ -48920,12 +49590,14 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "interface-portchannel": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "interface-type": {
@@ -48998,12 +49670,14 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "interface-portchannel": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "interface-type": {
@@ -49077,12 +49751,14 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "interface-portchannel": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "interface-type": {
@@ -49178,12 +49854,14 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "interface-portchannel": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "interface-type": {
@@ -49238,6 +49916,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         }
        },
@@ -49253,12 +49932,14 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "interface-portchannel": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "interface-type": {
@@ -49294,6 +49975,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         },
         "source-prefix": {
@@ -49301,6 +49983,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "ipv4-prefix",
          "type": "string"
         },
         "sub-interface": {
@@ -49322,12 +50005,14 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "interface-portchannel": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "interface-type": {
@@ -49363,6 +50048,7 @@
           "Switch PVOS",
           "Switch CX"
          ],
+         "format": "ipv6-address",
          "type": "string"
         },
         "source-prefix": {
@@ -49370,6 +50056,7 @@
           "Switch PVOS",
           "Switch CX"
          ],
+         "format": "ipv6-prefix",
          "type": "string"
         },
         "sub-interface": {
@@ -49428,6 +50115,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         },
         "static-rp-group-policy": {
@@ -49460,6 +50148,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv6-address",
          "type": "string"
         }
        },
@@ -49476,6 +50165,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "ipv4-prefix",
          "type": "string"
         },
         "override-enable": {
@@ -49490,6 +50180,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         }
        },
@@ -49506,6 +50197,7 @@
           "Switch PVOS",
           "Switch CX"
          ],
+         "format": "ipv6-prefix",
          "type": "string"
         },
         "override-enable": {
@@ -49520,6 +50212,7 @@
           "Switch PVOS",
           "Switch CX"
          ],
+         "format": "ipv6-address",
          "type": "string"
         }
        },
@@ -49584,6 +50277,7 @@
              "device_types": [
               "Access Point"
              ],
+             "format": "ipv4-address|ipv6-address",
              "type": "string"
             },
             "name": {
@@ -49606,6 +50300,7 @@
            ],
            "properties": {
             "ip-address": {
+             "format": "ipv4-address|ipv6-address",
              "type": "string"
             },
             "name": {
@@ -49832,6 +50527,7 @@
              "type": "string"
             },
             "esi-group": {
+             "format": "name",
              "type": "string"
             },
             "tunnel": {
@@ -49851,6 +50547,7 @@
                "device_types": [
                 "Access Point"
                ],
+               "format": "ipv4-address|ipv6-address",
                "type": "string"
               },
               "name": {
@@ -50095,6 +50792,7 @@
         "aggregator": {
          "properties": {
           "aggregator-uuid": {
+           "format": "uuid",
            "type": "string"
           },
           "group-type": {
@@ -50162,18 +50860,21 @@
                 "Switch PVOS",
                 "Gateway"
                ],
+               "format": "name",
                "type": "string"
               },
               "host-ipv4-address": {
                "device_types": [
                 "Gateway"
                ],
+               "format": "ipv4-address",
                "type": "string"
               },
               "host-ipv6-address": {
                "device_types": [
                 "Gateway"
                ],
+               "format": "ipv6-address",
                "type": "string"
               }
              },
@@ -50204,15 +50905,18 @@
                 "Switch PVOS",
                 "Gateway"
                ],
+               "format": "name",
                "type": "string"
               },
               "network-ipv4-address": {
+               "format": "ipv4-prefix",
                "type": "string"
               },
               "network-ipv6-address": {
                "device_types": [
                 "Gateway"
                ],
+               "format": "ipv6-prefix",
                "type": "string"
               }
              },
@@ -50244,18 +50948,21 @@
                   "Switch PVOS",
                   "Gateway"
                  ],
+                 "format": "name",
                  "type": "string"
                 },
                 "host-ipv4-address": {
                  "device_types": [
                   "Gateway"
                  ],
+                 "format": "ipv4-address",
                  "type": "string"
                 },
                 "host-ipv6-address": {
                  "device_types": [
                   "Gateway"
                  ],
+                 "format": "ipv6-address",
                  "type": "string"
                 }
                },
@@ -50272,15 +50979,18 @@
                   "Switch PVOS",
                   "Gateway"
                  ],
+                 "format": "name",
                  "type": "string"
                 },
                 "network-ipv4-address": {
+                 "format": "ipv4-prefix",
                  "type": "string"
                 },
                 "network-ipv6-address": {
                  "device_types": [
                   "Gateway"
                  ],
+                 "format": "ipv6-prefix",
                  "type": "string"
                 }
                },
@@ -50309,6 +51019,7 @@
                "device_types": [
                 "Switch CX"
                ],
+               "format": "ipv4-subnet-mask|ipv6-subnet-mask",
                "type": "string"
               }
              },
@@ -50346,6 +51057,7 @@
               "Switch CX",
               "Switch PVOS"
              ],
+             "format": "enet-address",
              "type": "string"
             },
             "destination-mac-mask": {
@@ -50353,6 +51065,7 @@
               "Switch CX",
               "Switch PVOS"
              ],
+             "format": "enet-address",
              "type": "string"
             },
             "ethermask": {
@@ -50401,6 +51114,7 @@
               "Switch CX",
               "Switch PVOS"
              ],
+             "format": "enet-address",
              "type": "string"
             },
             "source-mac-mask": {
@@ -50408,6 +51122,7 @@
               "Switch CX",
               "Switch PVOS"
              ],
+             "format": "enet-address",
              "type": "string"
             },
             "vlan": {
@@ -50852,18 +51567,21 @@
                 "Switch PVOS",
                 "Gateway"
                ],
+               "format": "name",
                "type": "string"
               },
               "host-ipv4-address": {
                "device_types": [
                 "Gateway"
                ],
+               "format": "ipv4-address",
                "type": "string"
               },
               "host-ipv6-address": {
                "device_types": [
                 "Gateway"
                ],
+               "format": "ipv6-address",
                "type": "string"
               }
              },
@@ -50888,15 +51606,18 @@
                 "Switch PVOS",
                 "Gateway"
                ],
+               "format": "name",
                "type": "string"
               },
               "network-ipv4-address": {
+               "format": "ipv4-prefix",
                "type": "string"
               },
               "network-ipv6-address": {
                "device_types": [
                 "Gateway"
                ],
+               "format": "ipv6-prefix",
                "type": "string"
               }
              },
@@ -50928,18 +51649,21 @@
                   "Switch PVOS",
                   "Gateway"
                  ],
+                 "format": "name",
                  "type": "string"
                 },
                 "host-ipv4-address": {
                  "device_types": [
                   "Gateway"
                  ],
+                 "format": "ipv4-address",
                  "type": "string"
                 },
                 "host-ipv6-address": {
                  "device_types": [
                   "Gateway"
                  ],
+                 "format": "ipv6-address",
                  "type": "string"
                 }
                },
@@ -50956,15 +51680,18 @@
                   "Switch PVOS",
                   "Gateway"
                  ],
+                 "format": "name",
                  "type": "string"
                 },
                 "network-ipv4-address": {
+                 "format": "ipv4-prefix",
                  "type": "string"
                 },
                 "network-ipv6-address": {
                  "device_types": [
                   "Gateway"
                  ],
+                 "format": "ipv6-prefix",
                  "type": "string"
                 }
                },
@@ -50993,6 +51720,7 @@
                "device_types": [
                 "Switch CX"
                ],
+               "format": "ipv4-subnet-mask|ipv6-subnet-mask",
                "type": "string"
               }
              },
@@ -51372,6 +52100,7 @@
         "Gateway",
         "Switch PVOS"
        ],
+       "format": "ipv4-prefix",
        "mandatory": true,
        "type": "string"
       },
@@ -51380,6 +52109,7 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "ipv6-prefix",
        "mandatory": true,
        "type": "string"
       },
@@ -51406,6 +52136,7 @@
      "type": "array"
     },
     "prefix-list-name-address-family": {
+     "format": "prefix-list-name-address-family",
      "type": "string"
     }
    }
@@ -51422,6 +52153,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "psm-extension-name",
      "type": "string"
     },
     "psm-ips": {
@@ -51431,6 +52163,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name-type",
      "mandatory": true,
      "type": "string"
     }
@@ -51576,6 +52309,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "qos-string-type",
        "type": "string"
       }
      },
@@ -51593,6 +52327,7 @@
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "ipv4-address|ipv6-address|ipv4-prefix|ipv6-prefix",
        "type": "string"
       },
       "dscp": {
@@ -51885,6 +52620,7 @@
      "enum": [
       "DEFAULT"
      ],
+     "format": "qos-string-type",
      "type": "string"
     },
     "service-type": {
@@ -51901,6 +52637,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "qos-string-type",
      "type": "string"
     },
     "trust": {
@@ -52024,6 +52761,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "qos-string-type",
      "type": "string"
     }
    }
@@ -52254,6 +52992,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "qos-string-type",
      "type": "string"
     }
    }
@@ -52297,6 +53036,7 @@
        "type": "integer"
       },
       "antenna-pol-alias": {
+       "format": "name",
        "type": "string"
       },
       "channel-for-2dot4GHz": {
@@ -52309,6 +53049,7 @@
        "type": "string"
       },
       "channel-for-2dot4GHz-alias": {
+       "format": "name",
        "type": "string"
       },
       "channel-for-2nd-5GHz": {
@@ -52321,6 +53062,7 @@
        "type": "string"
       },
       "channel-for-2nd-5GHz-alias": {
+       "format": "name",
        "type": "string"
       },
       "channel-for-2nd-6GHz": {
@@ -52333,6 +53075,7 @@
        "type": "string"
       },
       "channel-for-2nd-6GHz-alias": {
+       "format": "name",
        "type": "string"
       },
       "channel-for-5GHz": {
@@ -52345,6 +53088,7 @@
        "type": "string"
       },
       "channel-for-5GHz-alias": {
+       "format": "name",
        "type": "string"
       },
       "channel-for-6GHz": {
@@ -52357,6 +53101,7 @@
        "type": "string"
       },
       "channel-for-6GHz-alias": {
+       "format": "name",
        "type": "string"
       },
       "effective-gain": {
@@ -52366,6 +53111,7 @@
        "type": "string"
       },
       "effective-gain-alias": {
+       "format": "name",
        "type": "string"
       },
       "power": {
@@ -52375,6 +53121,7 @@
        "type": "string"
       },
       "power-alias": {
+       "format": "name",
        "type": "string"
       },
       "radio-type": {
@@ -52843,6 +53590,7 @@
          "device_types": [
           "Access Point"
          ],
+         "format": "supported-mcs-map",
          "type": "string"
         },
         "txbf": {
@@ -53237,6 +53985,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name-type",
      "type": "string"
     },
     "central-custom-ca": {
@@ -53261,6 +54010,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name-type",
      "type": "string"
     },
     "description": {
@@ -53404,6 +54154,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "name",
          "type": "string"
         },
         "interface-name-address-family": {
@@ -53414,6 +54165,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         },
         "lag-name": {
@@ -53421,6 +54173,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "name",
          "type": "string"
         },
         "loopback-id": {
@@ -53649,6 +54402,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "name",
          "type": "string"
         },
         "ip-address": {
@@ -53656,6 +54410,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         },
         "lag-name": {
@@ -53663,6 +54418,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "name",
          "type": "string"
         },
         "lag-name-address-family": {
@@ -53891,6 +54647,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "name",
          "type": "string"
         },
         "ip-address": {
@@ -53898,6 +54655,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         },
         "lag-name": {
@@ -53905,6 +54663,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "name",
          "type": "string"
         },
         "loopback-id": {
@@ -54180,6 +54939,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "name",
          "type": "string"
         },
         "ip-address": {
@@ -54187,6 +54947,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         },
         "lag-name": {
@@ -54194,6 +54955,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "name",
          "type": "string"
         },
         "loopback-id": {
@@ -54748,12 +55510,14 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name",
        "type": "string"
       },
       "ipv6-monitor": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "name",
        "type": "string"
       }
      },
@@ -54988,6 +55752,7 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "gateway-role",
        "type": "string"
       },
       "gateway-zone": {
@@ -55071,18 +55836,21 @@
          "device_types": [
           "Gateway"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "via-dhcp-subnet": {
          "device_types": [
           "Gateway"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "via-dhcp-subnet-netmask": {
          "device_types": [
           "Gateway"
          ],
+         "format": "ipv4-address",
          "type": "string"
         }
        },
@@ -55211,6 +55979,7 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "trunk-allowed-vlans",
        "type": "string"
       },
       "trunk-native-vlan": {
@@ -55366,36 +56135,42 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "ipv4-prefix": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv4-prefix",
          "type": "string"
         },
         "ipv4-subnet-address": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv4-subnet-mask",
          "type": "string"
         },
         "ipv6-address": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv6-address",
          "type": "string"
         },
         "ipv6-prefix": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv6-prefix",
          "type": "string"
         },
         "ipv6-subnet-address": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv6-subnet-mask",
          "type": "string"
         }
        },
@@ -55418,6 +56193,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -55476,12 +56252,14 @@
         "Switch PVOS",
         "Switch CX"
        ],
+       "format": "aspath-list-name",
        "type": "string"
       },
       "match-community": {
        "device_types": [
         "Gateway"
        ],
+       "format": "match-community-type",
        "type": "integer|string"
       },
       "match-community-asn": {
@@ -55521,6 +56299,7 @@
           "Gateway",
           "Switch CX"
          ],
+         "format": "community-list-name-community-type",
          "type": "string"
         },
         "exact-match": {
@@ -55536,6 +56315,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name",
        "type": "string"
       },
       "match-extended-community-list": {
@@ -55547,6 +56327,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "community-list-name-community-type",
          "type": "string"
         },
         "exact-match": {
@@ -55578,6 +56359,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "ipv4-nexthop-addresses": {
@@ -55589,6 +56371,7 @@
           "Switch PVOS",
           "Gateway"
          ],
+         "format": "prefix-list-name-address-family",
          "type": "string"
         }
        },
@@ -55600,6 +56383,7 @@
         "Switch PVOS",
         "Gateway"
        ],
+       "format": "prefix-list-name-address-family",
        "type": "string"
       },
       "match-ipv4-route-source-prefix-list": {
@@ -55607,6 +56391,7 @@
         "Switch PVOS",
         "Switch CX"
        ],
+       "format": "prefix-list-name-address-family",
        "type": "string"
       },
       "match-ipv6-nexthop-address": {
@@ -55619,6 +56404,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv6-address",
          "type": "string"
         },
         "ipv6-nexthop-addresses": {
@@ -55629,6 +56415,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "prefix-list-name-address-family",
          "type": "string"
         }
        },
@@ -55639,6 +56426,7 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "prefix-list-name-address-family",
        "type": "string"
       },
       "match-ipv6-route-source-prefix-list": {
@@ -55682,6 +56470,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name",
        "type": "string"
       },
       "match-route-type": {
@@ -55751,6 +56540,7 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "name-type",
        "type": "string"
       },
       "seq-no-op-type": {
@@ -55776,6 +56566,7 @@
           "Switch PVOS",
           "Gateway"
          ],
+         "format": "prepend-as",
          "type": "string"
         }
        },
@@ -55801,6 +56592,7 @@
          "device_types": [
           "Gateway"
          ],
+         "format": "community-type-asnn-num",
          "type": "integer|string"
         }
        },
@@ -55880,6 +56672,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "mac-address",
          "type": "string"
         }
        },
@@ -55891,6 +56684,7 @@
         "Switch PVOS",
         "Gateway"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "set-ipv6-nexthop": {
@@ -55898,6 +56692,7 @@
         "Switch PVOS",
         "Switch CX"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "set-local-broadcast-group": {
@@ -55971,6 +56766,7 @@
       "Switch PVOS",
       "Gateway"
      ],
+     "format": "route-map-name",
      "type": "string"
     }
    }
@@ -55993,6 +56789,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string"
       },
       "collector": {
@@ -56009,6 +56806,7 @@
           "Switch PVOS",
           "Switch CX"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         },
         "udp-port": {
@@ -56028,6 +56826,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name-type",
          "type": "string"
         }
        },
@@ -56048,6 +56847,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "name",
          "type": "string"
         },
         "polling-enable": {
@@ -56086,6 +56886,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "name",
          "type": "string"
         },
         "polling-enable": {
@@ -56211,6 +57012,7 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "name",
        "type": "string"
       },
       "primary-portchannel-port": {
@@ -56218,6 +57020,7 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "name",
        "type": "string"
       },
       "protected-vlans": {
@@ -56228,6 +57031,7 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "name",
        "type": "string"
       },
       "secondary-portchannel-port": {
@@ -56235,6 +57039,7 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "name",
        "type": "string"
       }
      },
@@ -56355,6 +57160,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name-type",
        "mandatory": true,
        "type": "string"
       }
@@ -56674,6 +57480,7 @@
       "DEST_IP_ADDRESS",
       "LOOPBACK"
      ],
+     "format": "ipv4-address|ipv6-address",
      "type": "string"
     },
     "restricted-access": {
@@ -56691,12 +57498,14 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name",
        "type": "string"
       },
       "lag-interface": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "name",
        "type": "string"
       },
       "loopback-interface": {
@@ -56709,12 +57518,14 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "source-ipv6": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "vlan-interface": {
@@ -56727,6 +57538,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -56747,12 +57559,14 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name",
        "type": "string"
       },
       "lag-interface": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "name",
        "type": "string"
       },
       "loopback-interface": {
@@ -56765,12 +57579,14 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "source-ipv6": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "vlan-interface": {
@@ -56783,6 +57599,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -56813,6 +57630,7 @@
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "ipv4-address|ipv6-address",
        "mandatory": true,
        "type": "string"
       },
@@ -56820,6 +57638,7 @@
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "filter": {
@@ -56908,6 +57727,7 @@
       "DEST_IP_ADDRESS",
       "LOOPBACK"
      ],
+     "format": "ipv4-address|ipv6-address",
      "type": "string"
     },
     "unique-req-id-enable": {
@@ -57343,6 +58163,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -57425,6 +58246,7 @@
      "device_types": [
       "Access Point"
      ],
+     "format": "ipv4-address",
      "type": "string"
     },
     "server-port": {
@@ -57481,6 +58303,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "type": {
@@ -57524,6 +58347,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "ipv4-address",
          "type": "string"
         },
         "mac-address": {
@@ -57531,6 +58355,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "mac-address",
          "type": "string"
         }
        },
@@ -57557,6 +58382,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "ipv6-address",
          "type": "string"
         },
         "mac-address": {
@@ -57564,6 +58390,7 @@
           "Switch CX",
           "Gateway"
          ],
+         "format": "mac-address",
          "type": "string"
         },
         "vlan_id": {
@@ -57618,9 +58445,11 @@
         "Switch PVOS",
         "Gateway"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "ipv4-address-alias": {
+       "format": "name",
        "type": "string"
       },
       "metric": {
@@ -57701,12 +58530,14 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "lag": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "nexthop-interface-type": {
@@ -57768,15 +58599,18 @@
         "Access Point",
         "Gateway"
        ],
+       "format": "ipv4-nexthop-address-prefix",
        "type": "string"
       },
       "next-hop-alias": {
+       "format": "name",
        "type": "string"
       },
       "next-hop-ip": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "nullroute": {
@@ -57870,12 +58704,14 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "lag": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "nexthop-interface-type": {
@@ -57939,9 +58775,11 @@
         "Switch CX",
         "Gateway"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "next-hop-alias": {
+       "format": "name",
        "type": "string"
       },
       "nexthop-id": {
@@ -57956,6 +58794,7 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "nullroute": {
@@ -57972,6 +58811,7 @@
         "Switch CX",
         "Gateway"
        ],
+       "format": "ipv6-prefix",
        "type": "string"
       },
       "prefix-vrf-nexthop-id": {
@@ -57993,12 +58833,14 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "lag": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "name",
          "type": "string"
         },
         "source-interface-type": {
@@ -58056,6 +58898,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -58070,9 +58913,11 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "ipv6-address-alias": {
+       "format": "name",
        "type": "string"
       },
       "ipv6-dg-name": {
@@ -58233,6 +59078,7 @@
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "vlan-list",
        "type": "string"
       },
       "priority": {
@@ -58694,6 +59540,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name",
      "type": "string"
     },
     "flow-control-mode": {
@@ -58922,12 +59769,14 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name",
        "type": "string"
       },
       "ipv6-monitor": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "name",
        "type": "string"
       }
      },
@@ -58950,6 +59799,7 @@
         "NO_DHCP",
         "NONE"
        ],
+       "format": "ipv4-prefix",
        "type": "string"
       },
       "dhcp-client-id": {
@@ -59017,6 +59867,7 @@
        "device_types": [
         "Gateway"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -59032,6 +59883,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "server": {
@@ -59073,6 +59925,7 @@
           "DHCP_FULL_RAPID_COMMIT",
           "NO_DHCP"
          ],
+         "format": "ipv6-prefix",
          "type": "string"
         },
         "eui64": {
@@ -59131,9 +59984,11 @@
        ],
        "items": {
         "address": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "source": {
+         "format": "ipv6-address",
          "type": "string"
         }
        },
@@ -59144,6 +59999,7 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "pd-address": {
@@ -59854,12 +60710,14 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "qos-string-type",
          "type": "string"
         },
         "threshold-profile": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "qos-string-type",
          "type": "string"
         },
         "trust": {
@@ -60113,6 +60971,7 @@
             "Switch PVOS",
             "Switch CX"
            ],
+           "format": "country-code",
            "type": "string"
           },
           "what": {
@@ -60188,9 +61047,11 @@
          "type": "string"
         },
         "host-ipv4-address": {
+         "format": "ipv4-address",
          "type": "string"
         },
         "host-ipv6-address": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "med": {
@@ -60766,6 +61627,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "source-address-any": {
@@ -60854,6 +61716,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "source-address-any": {
@@ -60931,6 +61794,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "source-address-any": {
@@ -61012,6 +61876,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv6-address",
        "type": "string"
       },
       "source-address-any": {
@@ -61550,12 +62415,14 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "qos-string-type",
        "type": "string"
       },
       "threshold-profile": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "qos-string-type",
        "type": "string"
       },
       "trust": {
@@ -61800,6 +62667,7 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "instance-id",
          "type": "integer|string"
         },
         "priority": {
@@ -62054,6 +62922,7 @@
         "Switch CX",
         "Gateway"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string"
       },
       "advertise-interval": {
@@ -62125,6 +62994,7 @@
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string|boolean"
       },
       "null-auth-compatibility": {
@@ -62314,6 +63184,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "name-type",
      "type": "string"
     },
     "vrrp": {
@@ -62366,6 +63237,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "fabric-module-name",
        "type": "string"
       },
       "hw-profile": {
@@ -62443,6 +63315,7 @@
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "slot-name",
        "type": "string"
       },
       "slot-sku": {
@@ -62476,6 +63349,7 @@
         "Switch PVOS",
         "Switch CX"
        ],
+       "format": "line-module-name",
        "type": "string"
       },
       "power-admin-state": {
@@ -62662,6 +63536,7 @@
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "mac-address",
        "type": "string"
       },
       "oobm-member": {
@@ -62679,9 +63554,11 @@
          "type": "boolean"
         },
         "default-gateway-ipv4": {
+         "format": "ipv4-address",
          "type": "string"
         },
         "default-gateway-ipv6": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "enable": {
@@ -62700,6 +63577,7 @@
           "NO_DHCP",
           "NONE"
          ],
+         "format": "ipv4-prefix",
          "type": "string"
         },
         "ipv6-address": {
@@ -62709,12 +63587,14 @@
           "DHCP_FULL_RAPID_COMMIT",
           "NO_DHCP"
          ],
+         "format": "ipv6-prefix",
          "type": "string"
         },
         "ipv6-enable": {
          "type": "boolean"
         },
         "link-local": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "speed-duplex": {
@@ -62826,6 +63706,7 @@
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string"
       },
       "lldp-snmp-community": {
@@ -62866,6 +63747,7 @@
      "type": "string"
     },
     "stack-id": {
+     "format": "uuid|stack-id-type",
      "type": "string"
     },
     "template-name": {
@@ -63311,6 +64193,7 @@
          "device_types": [
           "Switch PVOS"
          ],
+         "format": "ipv4-prefix|ipv6-prefix",
          "type": "string"
         },
         "dhcp-lease": {
@@ -63328,6 +64211,7 @@
            "device_types": [
             "Switch PVOS"
            ],
+           "format": "ipv4-address|ipv6-address|domain-name",
            "type": "string"
           },
           "page-path": {
@@ -63849,6 +64733,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "internal-vlan-range",
      "type": "string"
     },
     "ip-load-sharing": {
@@ -63867,6 +64752,7 @@
      "device_types": [
       "Switch PVOS"
      ],
+     "format": "ipv4-address",
      "type": "string"
     },
     "ip-routing": {
@@ -63890,6 +64776,7 @@
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string"
       },
       "interval": {
@@ -64128,6 +65015,7 @@
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "tag-type",
        "type": "string"
       },
       "vlan-mode": {
@@ -64207,6 +65095,7 @@
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "begin-date",
        "type": "string"
       },
       "daylight-time-rule": {
@@ -64228,6 +65117,7 @@
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "end-date",
        "type": "string"
       },
       "hour-offset": {
@@ -64282,6 +65172,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "unicast-mac-address",
      "type": "string"
     }
    }
@@ -64391,6 +65282,7 @@
       "Access Point",
       "Gateway"
      ],
+     "format": "date-and-time",
      "type": "string"
     },
     "name": {
@@ -64428,6 +65320,7 @@
         "Access Point",
         "Gateway"
        ],
+       "format": "end-time",
        "type": "string"
       },
       "index": {
@@ -64458,6 +65351,7 @@
         "Access Point",
         "Gateway"
        ],
+       "format": "start-time",
        "type": "string"
       }
      },
@@ -64468,6 +65362,7 @@
       "Access Point",
       "Gateway"
      ],
+     "format": "date-and-time",
      "type": "string"
     }
    }
@@ -64489,6 +65384,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name",
        "type": "string"
       },
       "interface-type": {
@@ -64505,6 +65401,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name",
        "type": "string"
       },
       "loopback": {
@@ -64589,12 +65486,14 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         },
         "destination-ip-prefix": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv4-prefix|ipv6-prefix",
          "type": "string"
         },
         "destination-port": {
@@ -64607,6 +65506,7 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "egress-interface",
          "type": "string"
         },
         "egress-queue": {
@@ -64658,12 +65558,14 @@
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         },
         "source-ip-prefix": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv4-prefix|ipv6-prefix",
          "type": "string"
         },
         "source-port": {
@@ -64732,6 +65634,7 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "ipv4-address",
        "type": "string"
       },
       "enable": {
@@ -64780,6 +65683,7 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "ipv4-address",
        "mandatory": true,
        "type": "string"
       },
@@ -65064,6 +65968,7 @@
       "Gateway",
       "Switch CX"
      ],
+     "format": "name",
      "type": "string"
     },
     "destination-guard": {
@@ -65507,12 +66412,14 @@
       "Switch CX",
       "Switch PVOS"
      ],
+     "format": "name",
      "type": "string"
     },
     "vrf": {
      "device_types": [
       "Switch CX"
      ],
+     "format": "name-type",
      "type": "string"
     },
     "wired-aaa-profile": {
@@ -65552,6 +66459,7 @@
      "type": "string"
     },
     "description-alias": {
+     "format": "name",
      "type": "string"
     },
     "destination-guard": {
@@ -65939,6 +66847,7 @@
      "type": "integer"
     },
     "vlan-range": {
+     "format": "vlan-list",
      "type": "string"
     },
     "voice-enable": {
@@ -65953,6 +66862,7 @@
       "Switch CX",
       "Switch PVOS"
      ],
+     "format": "name",
      "type": "string"
     },
     "wired-aaa-profile": {
@@ -66076,6 +66986,7 @@
       "Switch CX",
       "Gateway"
      ],
+     "format": "name-type",
      "type": "string"
     },
     "policy-in": {
@@ -66095,6 +67006,7 @@
       "Switch CX",
       "Gateway"
      ],
+     "format": "rd-rt-type",
      "type": "string"
     }
    }
@@ -66164,6 +67076,7 @@
         "Switch CX",
         "Gateway"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string"
       },
       "advertise-interval": {
@@ -66235,6 +67148,7 @@
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string|boolean"
       },
       "null-auth-compatibility": {
@@ -66541,6 +67455,7 @@
        "device_types": [
         "Switch PVOS"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string"
       },
       "lldp-snmp-community": {
@@ -66611,6 +67526,7 @@
          "type": "boolean"
         },
         "ethernet-ifname": {
+         "format": "ethernet-ifname",
          "type": "string"
         },
         "existing-ethernet-ip": {
@@ -66620,6 +67536,7 @@
          "type": "boolean"
         },
         "ipv4-address": {
+         "format": "ipv4-prefix",
          "type": "string"
         },
         "ipv4-address-secondary": {
@@ -66629,6 +67546,7 @@
          "type": "array"
         },
         "link-local": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "shutdown-on-split": {
@@ -66683,14 +67601,17 @@
        "type": "array"
       },
       "hostname": {
+       "format": "hostname",
        "type": "string"
       },
       "inter-switch-link": {
        "properties": {
         "physical-interface": {
+         "format": "physical-interface",
          "type": "string"
         },
         "portchannel-interface": {
+         "format": "portchannel-interface",
          "type": "string"
         }
        },
@@ -66699,9 +67620,11 @@
       "keepalive-device": {
        "properties": {
         "ethernet-ifname": {
+         "format": "ethernet-ifname",
          "type": "string"
         },
         "if-mgmt": {
+         "format": "if-mgmt",
          "type": "string"
         },
         "keepalive-type": {
@@ -66739,15 +67662,18 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         },
         "portchannel-ifname": {
+         "format": "portchannel-ifname",
          "type": "string"
         },
         "source-ip": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         },
         "vlan-id": {
@@ -66784,6 +67710,7 @@
          "type": "boolean"
         },
         "ipv4-address": {
+         "format": "ipv4-prefix",
          "type": "string"
         },
         "ipv4-address-secondary": {
@@ -66793,6 +67720,7 @@
          "type": "array"
         },
         "link-local": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "loopback-id": {
@@ -66825,6 +67753,7 @@
          "type": "boolean"
         },
         "ipv4-address": {
+         "format": "ipv4-prefix",
          "type": "string"
         },
         "ipv4-address-secondary": {
@@ -66834,9 +67763,11 @@
          "type": "array"
         },
         "link-local": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "mgmt-ifname": {
+         "format": "mgmt-ifname",
          "type": "string"
         }
        },
@@ -66901,6 +67832,7 @@
          "type": "boolean"
         },
         "ipv4-address": {
+         "format": "ipv4-prefix",
          "type": "string"
         },
         "ipv4-address-secondary": {
@@ -66918,6 +67850,7 @@
          "type": "string"
         },
         "link-local": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "linkup-delay-timer-exclude": {
@@ -66930,6 +67863,7 @@
          "type": "array"
         },
         "portchannel-ifname": {
+         "format": "portchannel-ifname",
          "type": "string"
         },
         "routing": {
@@ -67033,6 +67967,7 @@
          "type": "boolean"
         },
         "ipv4-address": {
+         "format": "ipv4-prefix",
          "type": "string"
         },
         "ipv4-address-secondary": {
@@ -67042,6 +67977,7 @@
          "type": "array"
         },
         "link-local": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "vlan-id": {
@@ -67065,6 +68001,7 @@
          "type": "boolean"
         },
         "vrf-name": {
+         "format": "name-type",
          "type": "string"
         }
        },
@@ -67097,6 +68034,7 @@
          "type": "boolean"
         },
         "ethernet-ifname": {
+         "format": "ethernet-ifname",
          "type": "string"
         },
         "existing-ethernet-ip": {
@@ -67106,6 +68044,7 @@
          "type": "boolean"
         },
         "ipv4-address": {
+         "format": "ipv4-prefix",
          "type": "string"
         },
         "ipv4-address-secondary": {
@@ -67115,6 +68054,7 @@
          "type": "array"
         },
         "link-local": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "shutdown-on-split": {
@@ -67169,14 +68109,17 @@
        "type": "array"
       },
       "hostname": {
+       "format": "hostname",
        "type": "string"
       },
       "inter-switch-link": {
        "properties": {
         "physical-interface": {
+         "format": "physical-interface",
          "type": "string"
         },
         "portchannel-interface": {
+         "format": "portchannel-interface",
          "type": "string"
         }
        },
@@ -67185,9 +68128,11 @@
       "keepalive-device": {
        "properties": {
         "ethernet-ifname": {
+         "format": "ethernet-ifname",
          "type": "string"
         },
         "if-mgmt": {
+         "format": "if-mgmt",
          "type": "string"
         },
         "keepalive-type": {
@@ -67225,15 +68170,18 @@
           "Switch CX",
           "Switch PVOS"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         },
         "portchannel-ifname": {
+         "format": "portchannel-ifname",
          "type": "string"
         },
         "source-ip": {
          "device_types": [
           "Switch CX"
          ],
+         "format": "ipv4-address|ipv6-address",
          "type": "string"
         },
         "vlan-id": {
@@ -67270,6 +68218,7 @@
          "type": "boolean"
         },
         "ipv4-address": {
+         "format": "ipv4-prefix",
          "type": "string"
         },
         "ipv4-address-secondary": {
@@ -67279,6 +68228,7 @@
          "type": "array"
         },
         "link-local": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "loopback-id": {
@@ -67311,6 +68261,7 @@
          "type": "boolean"
         },
         "ipv4-address": {
+         "format": "ipv4-prefix",
          "type": "string"
         },
         "ipv4-address-secondary": {
@@ -67320,9 +68271,11 @@
          "type": "array"
         },
         "link-local": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "mgmt-ifname": {
+         "format": "mgmt-ifname",
          "type": "string"
         }
        },
@@ -67387,6 +68340,7 @@
          "type": "boolean"
         },
         "ipv4-address": {
+         "format": "ipv4-prefix",
          "type": "string"
         },
         "ipv4-address-secondary": {
@@ -67404,6 +68358,7 @@
          "type": "string"
         },
         "link-local": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "linkup-delay-timer-exclude": {
@@ -67416,6 +68371,7 @@
          "type": "array"
         },
         "portchannel-ifname": {
+         "format": "portchannel-ifname",
          "type": "string"
         },
         "routing": {
@@ -67519,6 +68475,7 @@
          "type": "boolean"
         },
         "ipv4-address": {
+         "format": "ipv4-prefix",
          "type": "string"
         },
         "ipv4-address-secondary": {
@@ -67528,6 +68485,7 @@
          "type": "array"
         },
         "link-local": {
+         "format": "ipv6-address",
          "type": "string"
         },
         "vlan-id": {
@@ -67551,6 +68509,7 @@
          "type": "boolean"
         },
         "vrf-name": {
+         "format": "name-type",
          "type": "string"
         }
        },
@@ -67642,9 +68601,11 @@
            "type": "array"
           },
           "mac-address-v4": {
+           "format": "mac-address",
            "type": "string"
           },
           "mac-address-v6": {
+           "format": "mac-address",
            "type": "string"
           },
           "virtual-gw-l3-src-mac-enable": {
@@ -67681,6 +68642,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "mac-address",
        "type": "string"
       }
      },
@@ -67721,6 +68683,7 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "name",
        "type": "string"
       },
       "interface-lag": {
@@ -67728,6 +68691,7 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "name",
        "type": "string"
       },
       "peer-detect-interval": {
@@ -67752,6 +68716,7 @@
        "type": "integer"
       },
       "ethernet-ifname": {
+       "format": "ethernet-ifname",
        "type": "string"
       },
       "hello-interval": {
@@ -67762,6 +68727,7 @@
        "type": "integer"
       },
       "if-mgmt": {
+       "format": "if-mgmt",
        "type": "string"
       },
       "loopback-id": {
@@ -67772,15 +68738,18 @@
         "Switch CX",
         "Switch PVOS"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string"
       },
       "portchannel-ifname": {
+       "format": "portchannel-ifname",
        "type": "string"
       },
       "source-ip": {
        "device_types": [
         "Switch CX"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string"
       },
       "udp-port": {
@@ -67797,6 +68766,7 @@
        "device_types": [
         "Switch CX"
        ],
+       "format": "name-type",
        "type": "string"
       }
      },
@@ -67844,6 +68814,7 @@
      "device_types": [
       "Switch CX"
      ],
+     "format": "mac-address",
      "type": "string"
     }
    }
@@ -68286,6 +69257,7 @@
        "device_types": [
         "Access Point"
        ],
+       "format": "ipv4-address|ipv6-address",
        "type": "string"
       },
       "port": {
@@ -68479,6 +69451,7 @@
     "essid": {
      "properties": {
       "alias": {
+       "format": "name",
        "type": "string"
       },
       "name": {
@@ -68543,6 +69516,7 @@
        "device_types": [
         "Access Point"
        ],
+       "format": "supported-mcs-map",
        "type": "string"
       }
      },
@@ -68709,6 +69683,7 @@
        "device_types": [
         "Access Point"
        ],
+       "format": "supported-mcs-map",
        "type": "string"
       },
       "txbf": {
@@ -68813,6 +69788,7 @@
        "device_types": [
         "Access Point"
        ],
+       "format": "vht-supported-mcs-map",
        "type": "string"
       },
       "vht-txbf-explicit": {
@@ -69071,6 +70047,7 @@
        "device_types": [
         "Access Point"
        ],
+       "format": "wep-key",
        "type": "string"
       },
       "wep-key-index": {
@@ -69093,6 +70070,7 @@
        "type": "string"
       },
       "wpa-passphrase-alias": {
+       "format": "name",
        "type": "string"
       }
      },

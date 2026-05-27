@@ -189,7 +189,11 @@ def _distill_field(
 
     entry: dict[str, Any] = {}
 
-    # oneOf unions (e.g. protocol/dscp accept int OR a named enum).
+    # oneOf unions (e.g. protocol/dscp accept int OR a named enum; subnet
+    # fields accept an IPv4 OR IPv6 pattern). Collect the string-format hints
+    # (``x-patternSources``) too — that's how "dotted-mask" (ipv4-subnet-mask)
+    # is distinguished from "CIDR" (ipv4-prefix), which the bare type can't show.
+    fmts: list[str] = []
     if "oneOf" in fdef:
         types: list[str] = []
         enum_vals: list[Any] = []
@@ -199,6 +203,8 @@ def _distill_field(
                 types.append(m["type"])
             if m.get("enum"):
                 enum_vals = m["enum"]
+            if m.get("x-patternSources"):
+                fmts.append(m["x-patternSources"])
         if types:
             entry["type"] = "|".join(dict.fromkeys(types))
         if enum_vals:
@@ -215,6 +221,13 @@ def _distill_field(
         entry["enum"] = capped
         if full is not None:
             entry["enum_count"] = full
+
+    # String-format hint: tells the AI the accepted literal form (e.g.
+    # ``ipv4-subnet-mask`` = dotted quad + slash + dotted mask, NOT CIDR).
+    if fdef.get("x-patternSources"):
+        fmts.append(fdef["x-patternSources"])
+    if fmts:
+        entry["format"] = "|".join(dict.fromkeys(fmts))
 
     dts = fdef.get("x-supportedDeviceType")
     if dts:

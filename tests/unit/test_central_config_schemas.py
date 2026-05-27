@@ -46,6 +46,18 @@ class TestArtifact:
         manage_schema = lookup_payload_schema("central_manage_named_condition")
         assert get_schema == manage_schema
 
+    def test_subnet_mask_field_carries_format_hint(self):
+        """Pattern-typed string fields expose x-patternSources as `format` (#390).
+
+        network-subnet-address is dotted-mask (ipv4-subnet-mask), NOT CIDR — the
+        bare `type: string` can't convey that; the format hint must.
+        """
+        schema = lookup_payload_schema("central_manage_named_condition")
+        assert schema is not None
+        item = schema["fields"]["condition-rule"]["items"]
+        nsa = item["destination"]["properties"]["subnet-address"]["properties"]["network-subnet-address"]
+        assert "ipv4-subnet-mask" in (nsa.get("format") or ""), nsa
+
     def test_policy_exposes_qos_type(self):
         """central_manage_policy is unified — its type enum includes POLICY_QOS."""
         schema = lookup_payload_schema("central_manage_policy")

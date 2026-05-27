@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.3.1] - 2026-05-26
+
+**Patch — harden the `central-qos-policy` skill with live-verified payload shapes + surface string-format hints in the distiller (#390).** A live end-to-end rebuild of a real switch QoS config (8 traffic classes / 764 rules + a `POLICY_QOS` marker + VLAN-interface bind) exposed that the v3.2.2.0 skill carried **guessed** payload shapes that the API accepts with `200` but silently drops. Replaced them with the exact, read-back-verified shapes:
+
+- **Traffic class (`named-condition`)**: every `source`/`destination` requires a `type: "ADDRESS_SUBNET_MASK"` discriminator (omitting it = silent address drop), and `network-subnet-address` must be **dotted-quad/dotted-mask** (`10.0.0.0/255.0.0.0`, host = `/255.255.255.255`), **not CIDR**. DSCP-match (`ip-header.dscp`), fragment+ignore, and port operators (`COMPARISON_EQ`/`COMPARISON_RANGE`) shapes added.
+- **Marker policy (`POLICY_QOS`)**: class reference is `condition.named-condition.condition-reference` (**undocumented** — absent from the spec); default class → `condition.type: CONDITION_DEFAULT`; action `type: ACTION_QOS` + `secondary-actions.local-queue-priority` (integer) + `secondary-actions.dscp` (`CS0` → `DEFAULT`).
+- **Interface bind**: create the layer2 VLAN via `central_manage_vlan` if missing, then apply on the SVI via `central_manage_interface_vlan` `policy.access-group-vlan-in` (routed-in, CX).
+- **Read-back-and-assert is now mandatory** in the skill — the API returns `success` while discarding under-specified subtrees, so the old "validate one (check for errors)" step passed broken objects. The skill now GETs each object and asserts the match criteria / class references actually persisted.
+
+Distiller (`scripts/distill_central_config_schemas.py`): pattern-typed string fields now carry a `format` hint from `x-patternSources` (e.g. `network-subnet-address` → `ipv4-subnet-mask|ipv6-subnet-mask`), so the dotted-mask-vs-CIDR distinction is visible in `payload_schema` instead of a bare `type: string`. Central artifact regenerated (+~33 KiB). Skill-only + data-artifact change; no tool-count change.
+
 ## [3.2.3.0] - 2026-05-26
 
 **Minor — Mist counterpart to the config-model payload-schema enrichment: `mist_get_tool_schema` now surfaces request-body schemas (#384).** Mist write/config tools (`mist_create_*`, `mist_update_*`, …) take an opaque `body: dict[str, Any]` described only as "Request Body" — the field set lives in the vendored OpenAPI spec, which isn't shipped in the runtime image, so an AI client guesses against the live org/site exactly as it did for Central before v3.2.2.0. This brings the same fix to Mist.
