@@ -1,24 +1,35 @@
 ---
 name: central-qos-policy
-title: Aruba Central switch QoS policy build — traffic classes + marker policy + interface bind
+title: Aruba Central switch QoS build — classes + marker policy + interface bind + queue/schedule/DSCP-map
 description: |
   PRIMARY TRIGGER — invoke whenever the operator wants to CREATE or push
   switch QoS (Quality of Service) into Aruba Central: classifier/marker
-  policies, DSCP marking, traffic classes, priority queueing, or to translate
-  an AOS-CX / AOS-S (ProVision) QoS config into Central library objects.
+  policies, DSCP marking, traffic classes, queue/schedule profiles, the
+  system-wide DSCP→local-priority map, or to translate an AOS-CX / AOS-S
+  (ProVision) QoS config into Central library objects.
 
   Match phrases include: "push QoS policies to Central", "create a QoS marker
   policy", "build my DSCP marking policy", "create traffic classes", "set up
   QoS classification on my switches", "translate this switch QoS config to
   Central", "mark voice traffic EF / video AF41", "class ip / policy qos in
-  Central", "apply a QoS policy to a VLAN/interface".
+  Central", "apply a QoS policy to a VLAN/interface", "qos queue-profile",
+  "qos schedule-profile", "apply qos queue-profile … schedule-profile …",
+  "qos dscp-map", "factory-default schedule-profile".
 
-  Switch QoS in Central decomposes into objects built IN ORDER: (1) traffic
-  classes = `named-condition`, (2) the marker/classifier policy = `policy`
-  with `type: POLICY_QOS`, (3) optional interface/VLAN binding (create the
-  VLAN if missing). This skill carries EXACT, live-verified payload shapes —
-  several key fields are UNDOCUMENTED in the OpenAPI spec, so the schema alone
-  is not enough (see the "exact shapes" sections below).
+  Switch QoS in Central decomposes into two halves that meet on the
+  local-priority integer:
+   • INGRESS / per-class — (1) traffic classes = `named-condition`,
+     (2) marker/classifier policy = `policy` with `type: POLICY_QOS`,
+     (3) optional VLAN/SVI binding (create the VLAN if missing).
+   • EGRESS / system-wide — (4) queue-profile = `qos-queue` (local-priority
+     → hardware queue), (5) schedule-profile = `qos-schedule` (per-queue
+     WEIGHTED/STRICT/MIN_BANDWIDTH algo + weight/cap), (6) the atomic apply +
+     DSCP-map = `qos-global` (one named library object holds both refs +
+     `dscp-map[]`), assigned to a scope to activate on devices.
+
+  This skill carries EXACT, live-verified payload shapes — several key fields
+  are UNDOCUMENTED in the OpenAPI spec, so the schema alone is not enough
+  (see the "exact shapes" sections below).
 
   Scope: ArubaOS-CX (`cx`) and ArubaOS-Switch / ProVision (`aos-s` / PVOS).
   Not for AP or gateway QoS (those use `dap` / firewall QoS — different model).
@@ -38,6 +49,12 @@ tools:
   - central_manage_vlan
   - central_get_interface_vlan
   - central_manage_interface_vlan
+  - central_get_qos_queue
+  - central_manage_qos_queue
+  - central_get_qos_schedule
+  - central_manage_qos_schedule
+  - central_get_qos_global
+  - central_manage_qos_global
 ---
 
 # Aruba Central switch QoS policy build
@@ -51,6 +68,7 @@ config-model objects — **not** a raw CLI template block.
 A typical switch QoS config (CLI):
 
 ```
+# Ingress / per-class (marking pipeline)
 class ip QOS-m-voice-ef                       # traffic class: which packets
     5  match any any 10.16.46.254 count
     20 match udp 10.128.3.40/255.128.7.255 range 8000 48200 any count
@@ -62,6 +80,19 @@ policy QOS-P-marker                            # marker policy: class -> action
     90 class ip default            action local-priority 1 action dscp CS0
 interface vlan 2
     apply policy QOS-P-marker routed-in        # bind to the VLAN interface
+
+# Egress / system-wide (queueing + scheduling + DSCP-map)
+qos queue-profile home                         # local-priority -> hw queue
+    map queue 0 local-priority 0
+    ...
+    map queue 7 local-priority 5               # voice (lp5) -> strict q7
+qos schedule-profile QOS-P-mpls-scheduler      # per-queue algo + weights
+    dwrr queue 0 weight 5
+    ...
+    strict queue 7 max-bandwidth 768 kbps      # cap voice queue
+apply qos queue-profile home schedule-profile QOS-P-mpls-scheduler
+qos dscp-map 40 local-priority 7 color green   # remap DSCP -> local-priority
+qos dscp-map 47 local-priority 7 color green
 ```
 
 ### CLI → Central object mapping
@@ -72,9 +103,18 @@ interface vlan 2
 | `policy <name>` + `class … action …` | QoS marker policy (`policy`, `type: POLICY_QOS`) | `central_manage_policy` |
 | `interface vlan <id>` (the VLAN itself) | layer2 VLAN | `central_manage_vlan` |
 | `apply policy <name> routed-in` on the SVI | VLAN-interface policy bind | `central_manage_interface_vlan` |
+| `qos queue-profile <name>` + `map queue Q local-priority LP` | queue-profile (`qos-queue`) | `central_manage_qos_queue` |
+| `qos schedule-profile <name>` + `dwrr` / `wfq` / `strict` queue lines | schedule-profile (`qos-schedule`) | `central_manage_qos_schedule` |
+| `apply qos queue-profile X schedule-profile Y` + `qos dscp-map …` | system-wide apply + DSCP-map (`qos-global` — one named library object) | `central_manage_qos_global` |
 
 **This is a write workflow** — every create fires elicitation unless
 `confirmed=true`, and requires `ENABLE_CENTRAL_WRITE_TOOLS`.
+
+**Sections in this skill** map to the CLI pieces: A (classes) → B (marker policy)
+→ C (SVI bind) cover the ingress / marking half (existing); D (queue-profile) →
+E (schedule-profile) → F (apply + dscp-map via qos-global) cover the egress /
+system-wide half. G is the update-an-applied-profile automated ritual. The two
+halves are orthogonal — operators commonly push only one or the other.
 
 ## The three rules that prevent silent failure
 
@@ -203,7 +243,251 @@ Field notes:
 
 If the config has no `apply policy …` line, skip this section entirely.
 
+### D. Queue-profile — `central_manage_qos_queue`
+
+Maps local-priority (the marker's output) → hardware queue. The CLI form
+`map queue Q local-priority LP` becomes one entry per queue in a `priority`
+array; each entry's `priorities` is a list (a queue can absorb multiple LPs).
+
+```jsonc
+// qos queue-profile home
+//   map queue 0 local-priority 0  ...  map queue 4 local-priority 4
+//   map queue 5 local-priority 7  (q5 absorbs lp7 — scavenger)
+//   map queue 6 local-priority 6
+//   map queue 7 local-priority 5  (q7 absorbs lp5 — voice / EF)
+{
+  "priority": [
+    {"queue": 0, "priorities": [0]},
+    {"queue": 1, "priorities": [1]},
+    {"queue": 2, "priorities": [2]},
+    {"queue": 3, "priorities": [3]},
+    {"queue": 4, "priorities": [4]},
+    {"queue": 5, "priorities": [7]},
+    {"queue": 6, "priorities": [6]},
+    {"queue": 7, "priorities": [5]}
+  ]
+}
+```
+
+Validation rules (enforce client-side before write):
+- **All eight local-priorities (0–7) must be mapped, no duplicates.** A queue
+  may carry multiple LPs (`priorities: [3, 4]`), but the same LP must not
+  appear in two queues. Walk the array and fail fast if either rule breaks.
+- **Queue numbers** 0–7 (CX hardware).
+- **Profile name**: 1–64 chars, `[a-zA-Z0-9._-]+`. Cannot be `DEFAULT` (that's
+  the factory-default literal — see section F).
+
+Distiller note: `payload_schema` annotates `priority` as Switch PVOS only, but
+the inner item fields list both CX and PVOS and the API accepts the shape on CX
+(round-trip verified). Ignore the top-level annotation; trust the shape.
+
+### E. Schedule-profile — `central_manage_qos_schedule`
+
+Per-queue scheduling algorithm + weight (or strict + optional rate cap). The
+CLI forms `dwrr queue Q weight W` and `wfq queue Q weight W` both collapse
+to `algorithm: "WEIGHTED"` at the API — the API enum has no DWRR/WFQ split.
+(Factory-default schedule-profile is all queues `WEIGHTED` weight 1, which
+on the device runs as WFQ.)
+
+```jsonc
+// qos schedule-profile QOS-P-mpls-scheduler
+//   dwrr queue 0..6 weight ...    (WEIGHTED at the API)
+//   strict queue 7 max-bandwidth 768 kbps
+{
+  "sched-entries": [
+    {"queue": 0, "algorithm": "WEIGHTED", "weight": 5},
+    {"queue": 1, "algorithm": "WEIGHTED", "weight": 9},
+    {"queue": 2, "algorithm": "WEIGHTED", "weight": 41},
+    {"queue": 3, "algorithm": "WEIGHTED", "weight": 21},
+    {"queue": 4, "algorithm": "WEIGHTED", "weight": 20},
+    {"queue": 5, "algorithm": "WEIGHTED", "weight": 1},
+    {"queue": 6, "algorithm": "WEIGHTED", "weight": 3},
+    {"queue": 7, "algorithm": "STRICT",   "max-bandwidth-kbps": 768}
+  ]
+}
+```
+
+Field notes:
+- `algorithm` enum: `WEIGHTED` (DWRR or WFQ), `STRICT`, `MIN_BANDWIDTH`. Mandatory per entry.
+- `weight`: integer 1–1023; for `WEIGHTED` and `MIN_BANDWIDTH`.
+- `max-bandwidth-kbps` (integer kbps) XOR `max-bandwidth-percent` (integer 1–100). Never both on one entry.
+- `burst`: integer kilobytes, valid only when one of the max-bandwidth fields is set.
+- `minimum-bandwidth`: integer 1–100 (percent), for `MIN_BANDWIDTH` only.
+
+Validation rules:
+- **Must define every queue that appears in the paired queue-profile** (same queue numbers, same count — typically all 8 on CX).
+- **All entries must use the same `algorithm`, except the highest-numbered queue may be `STRICT`.** Mixed WEIGHTED+STRICT on lower queues is rejected. `STRICT queue 7 + WEIGHTED queue 0..6` is the only legal mix.
+- Profile name: same character/length rules as queue-profile; cannot be `DEFAULT`.
+
+### F. System-wide apply + DSCP-map — `central_manage_qos_global`
+
+One named library `qos-global` object holds **both** the queue/schedule refs
+AND the DSCP-map. The CLI atomic line `apply qos queue-profile X schedule-profile Y`
+plus the `qos dscp-map …` block all become **one write** in Central, then a
+scope assignment to activate on devices.
+
+```jsonc
+// apply qos queue-profile home schedule-profile QOS-P-mpls-scheduler
+// qos dscp-map 40 local-priority 7 color green
+// qos dscp-map 41 local-priority 7 color green
+// ... (46/EF intentionally skipped — preserves factory voice mapping)
+// qos dscp-map 47 local-priority 7 color green
+{
+  "q-profile":     "home",                          // custom profile name (oneOf branch 1)
+  "sched-profile": "QOS-P-mpls-scheduler",          // custom profile name (oneOf branch 1)
+  "dscp-map": [
+    {"dscp": 40, "priority": 7, "color": "GREEN"},
+    {"dscp": 41, "priority": 7, "color": "GREEN"},
+    {"dscp": 42, "priority": 7, "color": "GREEN"},
+    {"dscp": 43, "priority": 7, "color": "GREEN"},
+    {"dscp": 44, "priority": 7, "color": "GREEN"},
+    {"dscp": 45, "priority": 7, "color": "GREEN"},
+    {"dscp": 47, "priority": 7, "color": "GREEN"}
+  ]
+}
+```
+
+**The five translation points that small models miss:**
+
+1. **`WEIGHTED` covers BOTH `dwrr` and `wfq`.** The CLI distinction is lost at the API. Operators thinking "wfq" should send `algorithm: "WEIGHTED"` with `weight: 1` per queue (matches factory-default behavior).
+2. **`factory-default` is the enum literal `"DEFAULT"`**, not the string `"factory-default"`. `q-profile` and `sched-profile` are each a `oneOf`: a custom profile name (1-64 chars, `[a-zA-Z0-9._-]+`) OR the literal `"DEFAULT"`. So `apply qos queue-profile branch-1 schedule-profile factory-default` becomes `{"q-profile": "branch-1", "sched-profile": "DEFAULT"}`.
+3. **`qos-global` is a named library object, not a singleton.** The path is `/qos-global/{name}` with full CRUD. An operator-chosen name (e.g. `"Global-QoS-MPLS"`) holds the refs + dscp-map; **activation on devices happens via scope-assignment**, not by the create itself.
+4. **DSCP-map lives inside qos-global** as a sub-array — not a separate object. The seven `qos dscp-map …` CLI lines + the `apply qos …` line collapse to one `central_manage_qos_global` payload.
+5. **PATCH semantics — field-preserve + array-upsert-by-key.** On `action_type: "update"`:
+   - Top-level fields you don't send are **preserved** (sending only `q-profile`+`sched-profile` leaves `dscp-map`, `cos-map`, `trust`, etc. intact).
+   - Array fields (`dscp-map`, etc.) are **upserted by their `x-key`** (`dscp` for dscp-map). Entries you send are merged into the existing array by key; entries you don't send are kept. **You cannot remove an array entry by omission** — that requires deleting the whole qos-global and recreating, or a future per-row delete pattern.
+
+Field notes:
+- `dscp-map[].dscp` 0–63, `.priority` 0–7, `.color` `GREEN|YELLOW|RED`. Optional `.cos-override` (0–7, 802.1p remark) and `.name`.
+- `cos-map` (peer field) handles L2 CoS in the same shape. `trust` enum: `DEFAULT`/`DOT1P`/`DSCP`/`IP_PRECEDENCE`/`NONE`/`DEVICE_ARUBA_AP`/`DEVICE_NONE`.
+- After creating the qos-global, **assign it to the target scope** via the config-assignments tool so devices in that scope pick it up. Library-only creation doesn't activate anything.
+
+### G. Updating an applied profile — automated ritual
+
+The qos-global API rejects edits to a queue-profile or schedule-profile while
+that profile is currently applied (`q-profile` or `sched-profile` on the active
+qos-global). The recovery procedure is documented in the spec: flip qos-global
+to `DEFAULT`/`DEFAULT`, edit the profile, restore the refs. Paste this block —
+inputs at the top, the rest runs:
+
+```python
+# Update an applied queue- or schedule-profile safely.
+# PATCH semantics: any qos-global field you don't send is preserved; dscp-map /
+# cos-map / trust are kept intact across the flip.
+profile_name    = "QOS-P-mpls-scheduler"          # the profile being edited
+profile_kind    = "schedule"                      # "queue" or "schedule"
+qos_global_name = "Global-QoS-MPLS"               # the active qos-global object
+edit_payload    = {                               # the new profile shape
+    "sched-entries": [
+        # ... your updated sched-entries ...
+    ],
+}
+
+def _unwrap(resp):
+    d = resp.get("data", {})
+    return d.get("data", d) if isinstance(d, dict) else d
+
+status = {"steps": [], "ok": True, "plan": None}
+
+# 1) Read the current qos-global to learn what's applied
+current = await call_tool("central_invoke_tool", {
+    "name": "central_get_qos_global", "params": {"name": qos_global_name}})
+cur = _unwrap(current)
+old_q = cur.get("q-profile")
+old_s = cur.get("sched-profile")
+status["steps"].append({"step": "read_current", "old_q": old_q, "old_s": old_s})
+
+# 2) Decide whether the flip ritual is needed
+ritual_needed = (
+    (profile_kind == "queue"    and old_q == profile_name) or
+    (profile_kind == "schedule" and old_s == profile_name)
+)
+status["ritual_needed"] = ritual_needed
+status["plan"] = (
+    f"flip {qos_global_name} -> DEFAULT/DEFAULT, edit {profile_kind} profile "
+    f"{profile_name!r}, restore refs ({old_q!r}/{old_s!r}); "
+    "dscp-map and other qos-global fields are preserved by PATCH semantics"
+    if ritual_needed else
+    f"profile {profile_name!r} is not currently applied to {qos_global_name!r} "
+    "(old_q/old_s shown above) — editing in place; no flip needed"
+)
+
+# 3) Flip qos-global to DEFAULT/DEFAULT (only if ritual needed)
+if ritual_needed:
+    flip = await call_tool("central_manage_qos_global", {
+        "name": qos_global_name, "action_type": "update",
+        "payload": {"q-profile": "DEFAULT", "sched-profile": "DEFAULT"},
+        "confirmed": True})
+    flip_ok = flip.get("ok")
+    status["steps"].append({"step": "flip_to_default", "ok": flip_ok, "status": flip.get("status")})
+    if not flip_ok:
+        status["ok"] = False
+        status["failed_at"] = "flip_to_default"
+
+    # Read-back assert the flip actually took
+    if status["ok"]:
+        rb = await call_tool("central_invoke_tool", {
+            "name": "central_get_qos_global", "params": {"name": qos_global_name}})
+        rb_data = _unwrap(rb)
+        flip_seen_ok = (rb_data.get("q-profile") == "DEFAULT"
+                        and rb_data.get("sched-profile") == "DEFAULT")
+        status["steps"].append({"step": "verify_flip", "ok": flip_seen_ok,
+                                "q": rb_data.get("q-profile"),
+                                "s": rb_data.get("sched-profile")})
+        if not flip_seen_ok:
+            status["ok"] = False
+            status["failed_at"] = "verify_flip"
+
+# 4) Edit the profile
+if status["ok"]:
+    edit_tool  = "central_manage_qos_queue" if profile_kind == "queue" else "central_manage_qos_schedule"
+    edit_param = "q_profile_name" if profile_kind == "queue" else "sched_profile_name"
+    edit = await call_tool(edit_tool, {
+        edit_param: profile_name, "action_type": "update",
+        "payload": edit_payload, "confirmed": True})
+    edit_ok = edit.get("ok")
+    status["steps"].append({"step": "edit_profile", "ok": edit_ok, "status": edit.get("status")})
+    if not edit_ok:
+        status["ok"] = False
+        status["failed_at"] = "edit_profile"
+
+# 5) Restore refs — always runs if we flipped, even on failure (rollback)
+if ritual_needed:
+    restore = await call_tool("central_manage_qos_global", {
+        "name": qos_global_name, "action_type": "update",
+        "payload": {"q-profile": old_q, "sched-profile": old_s},
+        "confirmed": True})
+    status["steps"].append({"step": "restore_refs", "ok": restore.get("ok"),
+                            "rollback": not status["ok"]})
+
+# 6) Final read-back — surface the end-state
+final = await call_tool("central_invoke_tool", {
+    "name": "central_get_qos_global", "params": {"name": qos_global_name}})
+final_data = _unwrap(final)
+status["final_state"] = {
+    "q-profile":     final_data.get("q-profile"),
+    "sched-profile": final_data.get("sched-profile"),
+}
+
+status
+```
+
+What this block guarantees:
+- **Skip-if-not-applied**: if the profile being edited isn't currently active on `qos_global_name`, no flip happens — the profile is edited in place.
+- **Read-back assertion** after the flip catches silent server-side no-ops before we proceed to edit.
+- **Always-restore** in the `if ritual_needed:` block — runs whether the edit succeeded or failed, so a failed edit doesn't leave the switch on factory-default.
+- **PATCH preservation** — `dscp-map`, `cos-map`, `trust`, and any other qos-global fields you didn't touch are kept across the flip and restore (verified live).
+
+The remaining exposure window: edit fails AND restore also fails. Surface
+`status["failed_at"]` and `status["final_state"]` in the operator-facing reply.
+
 ## Steps
+
+**Decide which halves apply** before starting. The marking half (1–5) and the
+system half (6–9) are independent — if the operator's intent only covers one,
+skip the other.
+
+Ingress / marking half (sections A–C):
 
 1. **Pull schemas** for `central_manage_named_condition` + `central_manage_policy`
    (`central_get_tool_schema`) — confirms surrounding fields/enums. The exact
@@ -219,12 +503,41 @@ If the config has no `apply policy …` line, skip this section entirely.
 5. **Bind to the VLAN** (section C) if applicable, read back the SVI, assert
    `policy.access-group-vlan-in` == the policy name.
 
+Egress / system-wide half (sections D–F):
+
+6. **Build the queue-profile** (section D) — `central_manage_qos_queue`, read
+   back, assert every queue 0–7 is present and every local-priority 0–7 appears
+   exactly once across `priorities` arrays. If the operator wants to use the
+   factory queue-profile, skip this step and reference `"DEFAULT"` in step 8.
+7. **Build the schedule-profile** (section E) — `central_manage_qos_schedule`,
+   read back, assert all queues from the queue-profile are present, the
+   single-algorithm rule (only the highest-numbered queue may be `STRICT`) holds,
+   and any `STRICT` queue with a cap carries either `max-bandwidth-kbps` or
+   `max-bandwidth-percent` but not both. Skip this step too if using `"DEFAULT"`.
+8. **Build the qos-global** (section F) — `central_manage_qos_global` with a
+   meaningful name (e.g. `Global-QoS-<intent>`), payload carrying `q-profile`,
+   `sched-profile`, and any `dscp-map[]` rows. Read back; assert refs are
+   strings (not the enum-literal `"DEFAULT"` unless that was intended) and
+   every dscp-map row persisted with `dscp`/`priority`/`color`. **The CLI
+   atomic `apply` collapses into this one write** — there is no separate
+   "apply" call.
+9. **Assign the qos-global to the target scope** so devices pick it up — use
+   the config-assignments tool. Library-only creation doesn't activate
+   anything on hardware.
+
+Updating an already-applied profile: use the section G ritual block instead of
+calling the manage tool directly — the API rejects in-place edits to applied
+queue- and schedule-profiles.
+
 ## Output
 
-- Per-object push result table (class/policy/VLAN/SVI → created/failed + read-back-verified).
-- The marker rule order (class → local-priority + DSCP).
-- Confirmation the policy is bound to the VLAN interface (or noted as skipped).
+- Per-object push result table (class/policy/VLAN/SVI/queue-profile/schedule-profile/qos-global → created/failed + read-back-verified).
+- The marker rule order (class → local-priority + DSCP) and the queue map (queue → local-priorities).
+- Confirmation the policy is bound to the VLAN interface (or noted as skipped) and the qos-global is assigned to the target scope (or noted as library-only).
 
-**Build classes → POLICY_QOS policy → VLAN+SVI bind. Use the exact shapes above
-(the spec omits key fields). Read back and assert every object — the API drops
-under-specified subtrees silently while returning success.**
+**Marking half: classes → POLICY_QOS policy → VLAN+SVI bind. System half:
+queue-profile → schedule-profile → qos-global (apply + dscp-map) → scope
+assignment. Use the exact shapes above (the spec omits key fields, collapses
+DWRR/WFQ into WEIGHTED, and uses `"DEFAULT"` as the factory-profile literal).
+Read back and assert every object — the API drops under-specified subtrees
+silently while returning success.**
