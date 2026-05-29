@@ -37,7 +37,7 @@ The GitHub Actions workflow at `.github/workflows/sync-mist-openapi.yml` runs da
 
 1. Fetches the upstream `mist.openapi.json` from `mistsys/mist_openapi:master`.
 2. Validates the spec parses cleanly as OpenAPI 3.x.
-3. If changed AND parses: auto-commits the new spec to `main` and updates this file's `Current sync` section.
+3. If changed AND parses: opens (or updates) a PR on `chore/sync-mist-openapi` with the new vendored spec + refreshed `Current sync` block, and enables auto-merge so CI gates the merge.
 4. If parse fails: opens a GitHub issue flagging the regression.
 
 **Tool regeneration does NOT happen on auto-sync.** Regeneration runs at release time, manually by the maintainer:
@@ -47,6 +47,17 @@ uv run python scripts/regenerate_mist_tools.py
 ```
 
 This decouples spec freshness from release cadence — the vendored spec is always current, but the live Mist tool surface only changes when the maintainer deliberately ships.
+
+### PAT requirement
+
+`main` is branch-protected (PRs + 4 required status checks). The default `GITHUB_TOKEN` cannot trigger downstream workflows on a PR it opens, so the sync workflow uses a fine-grained PAT (repo secret `MIST_SYNC_PAT`) to open the PR — without it the PR sits forever waiting on CI that never runs.
+
+One-time setup:
+
+1. Create a fine-grained PAT scoped to this repo only.
+2. Permissions: **Contents: read & write**, **Pull requests: read & write**.
+3. Save as repo secret `MIST_SYNC_PAT`.
+4. Ensure `allow_auto_merge` is enabled at the repo level (Settings → General → Pull Requests → Allow auto-merge).
 
 ## Stats (at current sync)
 

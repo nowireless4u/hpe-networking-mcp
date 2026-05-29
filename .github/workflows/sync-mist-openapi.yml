@@ -1,12 +1,16 @@
 name: Sync Mist OpenAPI
 
 # Pulls the upstream Mist OpenAPI spec from mistsys/mist_openapi daily,
-# validates it parses cleanly, and auto-commits the updated vendored copy
-# to `main` if it changed. **Tool regeneration does NOT happen here** —
-# the maintainer runs the generator manually at release time so the
-# tool surface changes are reviewed before tagging.
+# validates it parses cleanly, and opens an auto-merge PR with the updated
+# vendored copy if it changed. **Tool regeneration does NOT happen here** —
+# the maintainer runs the generator manually at release time so the tool
+# surface changes are reviewed before tagging.
 #
-# See `vendor/mist_openapi.SOURCE.md` for the broader sync design.
+# Branch protection on `main` requires PRs + 4 status checks; the default
+# GITHUB_TOKEN cannot trigger downstream workflows on a PR it opens, so
+# this workflow uses a fine-grained PAT (secret: MIST_SYNC_PAT) to open
+# the PR and enable auto-merge. See vendor/mist_openapi.SOURCE.md for the
+# PAT-setup instructions.
 
 on:
   schedule:
@@ -15,7 +19,8 @@ on:
   workflow_dispatch: # manual run via the Actions UI
 
 permissions:
-  contents: write # to push spec updates to main
+  contents: write # peter-evans needs this to push the sync branch
+  pull-requests: write # to open / update the sync PR
   issues: write # to file a regression issue if the spec fails to parse
 
 jobs:
@@ -25,7 +30,7 @@ jobs:
       - name: Checkout main
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.MIST_SYNC_PAT }}
 
       - name: Fetch upstream spec
         id: fetch
@@ -103,12 +108,11 @@ jobs:
           # Refresh the "Current sync" block in SOURCE.md.
           python3 - <<'PY'
           import re
+          import subprocess
           from pathlib import Path
           src = Path("vendor/mist_openapi.SOURCE.md").read_text(encoding="utf-8")
           version = "${{ steps.validate.outputs.version }}"
           sha = "${{ steps.sha.outputs.sha }}"
-          today = "$(date -u +%Y-%m-%d)"
-          import subprocess
           today = subprocess.check_output(["date", "-u", "+%Y-%m-%d"]).decode().strip()
           new_block = (
               f"## Current sync\n\n"
@@ -125,22 +129,47 @@ jobs:
           Path("vendor/mist_openapi.SOURCE.md").write_text(new_text, encoding="utf-8")
           PY
 
-      - name: Commit and push
+      - name: Create or update sync PR
         if: steps.diff.outputs.changed == 'true'
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add vendor/mist_openapi.json vendor/mist_openapi.SOURCE.md
-          git commit -m "chore(vendor): sync Mist OpenAPI to ${{ steps.validate.outputs.version }} (auto)
+        id: cpr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.MIST_SYNC_PAT }}
+          branch: chore/sync-mist-openapi
+          delete-branch: true
+          add-paths: |
+            vendor/mist_openapi.json
+            vendor/mist_openapi.SOURCE.md
+          commit-message: |
+            chore(vendor): sync Mist OpenAPI to ${{ steps.validate.outputs.version }} (auto)
 
-          Upstream: https://github.com/mistsys/mist_openapi
-          Blob SHA: ${{ steps.sha.outputs.sha }}
+            Upstream: https://github.com/mistsys/mist_openapi
+            Blob SHA: ${{ steps.sha.outputs.sha }}
 
-          Tool regeneration not run by this workflow — maintainer runs
-          \`uv run python scripts/regenerate_mist_tools.py\`
-          at release time before tagging."
-          git push origin main
+            Tool regeneration not run by this workflow — maintainer runs
+            `uv run python scripts/regenerate_mist_tools.py`
+            at release time before tagging.
+          title: "chore(vendor): sync Mist OpenAPI to ${{ steps.validate.outputs.version }}"
+          body: |
+            Automated daily sync of the upstream Mist OpenAPI spec.
+
+            - **Spec version**: `${{ steps.validate.outputs.version }}`
+            - **Upstream blob SHA**: `${{ steps.sha.outputs.sha }}`
+            - **Upstream**: https://github.com/mistsys/mist_openapi
+
+            Tool regeneration is **not** triggered by this PR — the maintainer
+            runs `uv run python scripts/regenerate_mist_tools.py` at release
+            time before tagging so tool-surface changes are reviewed before
+            shipping.
+
+            This PR has auto-merge enabled and will merge once required status
+            checks pass.
+
+      - name: Enable auto-merge on the sync PR
+        if: steps.cpr.outputs.pull-request-number
+        run: gh pr merge --auto --squash "${{ steps.cpr.outputs.pull-request-number }}"
+        env:
+          GH_TOKEN: ${{ secrets.MIST_SYNC_PAT }}
 
       - name: File issue on validation failure
         if: failure() && steps.validate.outcome == 'failure'
