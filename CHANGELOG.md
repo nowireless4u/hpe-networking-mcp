@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.3.5] - 2026-05-29
+
+**Patch — `central_show_commands` now accepts `aps` (executes AP show commands).** An operator investigating AI-derived AP thresholds (auth-req-thresh / local-probe-req-thresh) tried to run `show ap client-match-refused`, `show ap arm config`, `show ap debug client-match`, and `show log rssi-to-cloud clientrssi` against an AP. Discovery via `central_list_supported_show_commands(device_family="aps", ...)` correctly returned a 686-command catalogue — but the executor `central_show_commands` rejected `device_type="aps"` because the parameter was typed `Literal["aos-s", "cx", "gateways"]` (APs omitted). The tool's docstring already incorrectly claimed AP support — so the AI agent reading the tool description believed APs were supported and then hit a Pydantic validation error at call time.
+
+Pure wrapper gap. Verified live: pycentral's `Troubleshooting.run_show_commands` already validates `device_type` against `subset=["aps", "gateways", "cx", "aos-s"]` and its docstring states "Supported device type includes AOS-S, AP, CX, and GATEWAY." The `_resolve_if_switch` helper at lines 11-19 already short-circuits cleanly for non-switch types (returns the serial unchanged), so APs flow through without needing any other change.
+
+Fix:
+- [`src/hpe_networking_mcp/platforms/central/tools/troubleshooting.py`](src/hpe_networking_mcp/platforms/central/tools/troubleshooting.py): widened `device_type` Literal from `["aos-s", "cx", "gateways"]` to `["aos-s", "aps", "cx", "gateways"]`. Corrected the docstring (which already lied) to match. Added a pointer to `central_list_supported_show_commands` for discovering the per-device catalogue — the AP catalogue is the broadest at hundreds of `show ap ...` commands.
+- [`docs/TOOLS.md`](docs/TOOLS.md): tool-page parameter table updated to list `aps`.
+
+No tool-count change. Closes #395.
+
 ## [3.2.3.4] - 2026-05-28
 
 **Patch — `central-qos-policy` Path picker + wrong-primitive detection (POLICY_QOS `association` field).** An operator hit a failure mode the skill didn't catch: a CNX role-based policy (POLICY_QOS with `association: ASSOCIATION_ROLE`) was created, then the AI was asked to SVI-bind it. The AI tried the device-rendered `sys_policy_pap_<role>` name, got `HTTP 400 "Cannot find in library"`, and concluded "no Central API path exists for this" — which was wrong in two ways: (a) a path absolutely exists, and (b) the skill we ship documents it. The skill simply never disambiguated POLICY_QOS's two `association` flavors, so the AI didn't see the off-ramp.
