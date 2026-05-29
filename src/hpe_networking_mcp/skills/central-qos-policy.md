@@ -16,6 +16,24 @@ description: |
   "qos schedule-profile", "apply qos queue-profile … schedule-profile …",
   "qos dscp-map", "factory-default schedule-profile".
 
+  ALSO TRIGGER on wrong-primitive symptoms — when the operator has built a
+  CNX role-based policy and is trying to SVI-bind it: "sys_policy_pap_*",
+  "sys_pap_*", "port-access role", "role-based policy", "role-based policy
+  won't apply to VLAN", "apply role policy to SVI", "Cannot find in library
+  'sys_policy_pap_…'", "Role-based Policies cannot be mapped to
+  ScopeTypes.DEVICE", "the CNX UI won't let me apply the policy to a VLAN".
+
+  ALSO TRIGGER on direct CLI-paste apply requests targeting an SVI policy
+  bind — these are the exact wordings operators use when they paste config
+  lines and say "just apply this": "apply policy sys_policy_pap_",
+  "apply policy <NAME> routed-in", "apply policy <NAME> in on interface
+  vlan", "interface vlan <N> apply policy", "push this to my switch:
+  interface vlan … apply policy …", "MCP, do this: interface vlan … apply
+  policy …".
+
+  The operator chose the wrong primitive; the skill detects and pivots — see
+  "Path picker" below.
+
   Switch QoS in Central decomposes into two halves that meet on the
   local-priority integer:
    • INGRESS / per-class — (1) traffic classes = `named-condition`,
@@ -55,6 +73,16 @@ tools:
   - central_manage_qos_schedule
   - central_get_qos_global
   - central_manage_qos_global
+  # Wrong-primitive detection + verification
+  - central_get_role_with_policy
+  - central_manage_role
+  - central_get_policy_groups
+  - central_manage_policy_group_entry
+  - central_get_config_assignments
+  - central_manage_config_assignment
+  - central_get_effective_config
+  - central_get_devices_config_health
+  - central_show_commands
 ---
 
 # Aruba Central switch QoS policy build
@@ -116,7 +144,7 @@ E (schedule-profile) → F (apply + dscp-map via qos-global) cover the egress /
 system-wide half. G is the update-an-applied-profile automated ritual. The two
 halves are orthogonal — operators commonly push only one or the other.
 
-## The three rules that prevent silent failure
+## The five rules that prevent silent failure
 
 1. **Some required fields are UNDOCUMENTED — carry the exact shapes below.**
    `central_get_tool_schema`'s `payload_schema` helps, but it CANNOT show
@@ -136,6 +164,25 @@ halves are orthogonal — operators commonly push only one or the other.
    one-line description says "firewall policy" but `/policies` is unified. Don't
    conclude "no QoS tool exists" and fall back to a CLI template.
 
+4. **POLICY_QOS has TWO associations; pick `ASSOCIATION_INTERFACE` for SVI bind.**
+   The `policy` object's `association` field is `ASSOCIATION_INTERFACE` (traditional,
+   SVI-bindable, renders device-side as `policy <name>`) or `ASSOCIATION_ROLE`
+   (port-access role-based, renders as `port-access policy sys_policy_pap_<role>`,
+   **only enforced on authenticated client sessions on access ports — never on
+   SVI transit traffic**). If the operator handed you an existing role-based
+   policy and wants SVI marking, see "Path picker — wrong primitive" below; do
+   not try to bind it to an SVI.
+
+5. **`SYNCHRONIZED` is not proof of correctness — verify with `show` commands.**
+   When you bind a role-based policy by its CNX library name to an SVI at SITE
+   scope, Central accepts with `HTTP 200`, lists it in the device-scope effective
+   config, pushes a partial config to the device, **silently skips the role-based
+   policy render**, and reports the device as `SYNCHRONIZED` with `activeIssues: []`.
+   No error anywhere. After every device-touching push, call `central_show_commands`
+   for `show port-access policy` / `show class ip` / the relevant `show running-config`
+   subset and confirm the artifacts you expected actually rendered. `config-health`
+   alone will lie to you on this path.
+
 ## Prerequisites
 
 - `ENABLE_CENTRAL_WRITE_TOOLS` on (else build + show payloads only, don't write). The first `central_get_tool_schema` / create call surfaces any reachability problem — no separate health pre-flight needed.
@@ -144,6 +191,122 @@ halves are orthogonal — operators commonly push only one or the other.
 - Switch OS is CX in the verified shapes below (`count`, `subnet-address`,
   `access-group-vlan-in` are CX). `device_types` tags in `payload_schema` are
   advisory/inconsistent — don't hard-gate on them.
+
+## Path picker — POLICY_QOS comes in two flavors
+
+Both go through `central_manage_policy`. The differentiator is one field — `association`. Same tool, two completely different deployment models.
+
+| `association` | Device-side render | Where it enforces | SVI-bindable? | Use for |
+|---|---|---|---|---|
+| `ASSOCIATION_INTERFACE` | `policy <NAME>` (traditional classifier policy) + `class ip <NAME>` | Any port/SVI it's attached to via `policy.access-group-vlan-in` etc. | **Yes** | Marking transit traffic on a VLAN/interface. **This is what the rest of the skill assumes.** |
+| `ASSOCIATION_ROLE` | `port-access policy sys_policy_pap_<ROLE-NAME>` + `class ip sys_pap_<ROLE-NAME>_ip_allow_N` (auto-prefixed, derived from the **role** name, not the policy name) | Only on authenticated client sessions hitting a port-access role — does NOT touch SVI transit traffic | **No** | Per-role enforcement under port-access auth. Out of scope for this skill — that's the AAA / NAC workflow. |
+
+### Detecting the wrong primitive (live-verified error catalogue)
+
+When an operator arrives having built `ASSOCIATION_ROLE` and wants SVI marking, you'll see one of these — quote the symptom from the operator's message and match against this table:
+
+| Operator's symptom | What they tried | Central response (verified live on a 6100) |
+|---|---|---|
+| `"Cannot find in library 'sys_policy_pap_X' of type 'aruba-policy' referred in '<vlan-id>' of type 'aruba-interface-vlan'"` | Bound the device-rendered `sys_policy_pap_<ROLE>` to an SVI via `policy.access-group-vlan-in`. The device-side name never exists in Central's policy library by design — it's auto-generated at render time. | HTTP 400 — pure library-membership check, identical format for any unknown name. |
+| `"Validation failure: Role-based Policies cannot be mapped to ScopeTypes.DEVICE."` (or `ScopeTypes.DEVICE_COLLECTION`) | Tried to scope-assign the `ASSOCIATION_ROLE` policy at a device or device-group scope. | HTTP 400 — explicit semantic guard. Role-based policies can only be assigned at SITE scope or higher. |
+| `"Cannot find object 'X' of module 'aruba-policy'"` | Created the SVI bind directly at a DEVICE or DEVICE_COLLECTION scope referencing the policy by its CNX name, but the policy isn't *directly* assigned at that scope (effective-config inheritance doesn't count for transitive validation). | HTTP 500 (structured payload). |
+| "the CNX UI won't let me apply the policy to a VLAN" / "Central UI accepts it but the QoS marking doesn't happen on the switch" | Created the SVI bind at SITE scope referencing the policy by its CNX library name. Central accepts with HTTP 200, lists everything in effective config, pushes the layer2 VLAN successfully, **silently skips the role-based policy at device-render time**, and reports `SYNCHRONIZED`. No error anywhere. | HTTP 200 — silent-skip-with-success-indication. The worst failure mode in the catalogue. |
+| `"Validation failure: Policies {'X'} still part of Policy Group."` | Tried to delete the policy while it was still in the policy-group-list. | HTTP 400 — order-of-operations: remove from policy-group first. |
+
+### Wrong-primitive runbook — diagnose and pivot
+
+If the operator's symptom matches any row above, **stop. Don't try to make the role-based policy work for SVI marking — it can't, by design.** Run this block to confirm the diagnosis, then pivot:
+
+```python
+# Diagnose whether the policy the operator referenced is role-based.
+policy_name = "QOS-P-marker"  # the name from the operator's CLI / Central UI
+
+# Strip any device-rendered prefix the operator may have copied
+candidate = policy_name
+for prefix in ("sys_policy_pap_", "sys_pap_"):
+    if candidate.startswith(prefix):
+        candidate = candidate[len(prefix):]
+        break
+
+pol = await call_tool("central_invoke_tool", {
+    "name": "central_get_policies", "params": {"name": candidate}})
+data = pol.get("data", {})
+if isinstance(data, dict) and "data" in data:
+    data = data["data"]
+
+diagnosis = {
+    "raw_name_operator_gave":  policy_name,
+    "normalized_lookup_name":  candidate,
+    "found_in_library":        bool(data),
+    "type":                    data.get("type") if isinstance(data, dict) else None,
+    "association":             data.get("association") if isinstance(data, dict) else None,
+}
+
+if not diagnosis["found_in_library"]:
+    diagnosis["verdict"] = (
+        f"No policy named {candidate!r} exists in the library. If the operator "
+        f"saw {policy_name!r} on the switch with a sys_policy_pap_ prefix, the "
+        "non-prefixed name is what would be in the library."
+    )
+elif diagnosis["association"] == "ASSOCIATION_ROLE":
+    diagnosis["verdict"] = (
+        f"Policy {candidate!r} is ASSOCIATION_ROLE — port-access role-based. "
+        "It CANNOT be SVI-bound. The CLI 'apply policy <name> routed-in' on an "
+        "interface vlan expects ASSOCIATION_INTERFACE. The role-based policy "
+        "renders as 'port-access policy sys_policy_pap_<role>' on the switch "
+        "and only enforces on authenticated port-access sessions — never on "
+        "SVI transit traffic."
+    )
+    diagnosis["remediation"] = (
+        "1) DELETE the existing ASSOCIATION_ROLE policy (and the associated "
+        "role + role-based policy-group-entry) — they were never going to work "
+        "for transit marking.\n"
+        "2) REBUILD as ASSOCIATION_INTERFACE using sections A (named-condition) "
+        "+ B (POLICY_QOS with association: ASSOCIATION_INTERFACE) + C (SVI bind "
+        "via central_manage_interface_vlan policy.access-group-vlan-in).\n"
+        "3) SCOPE-ASSIGN the layer2-vlan + vlan-interfaces objects at the "
+        "scope containing the target devices (the policy itself does NOT need "
+        "explicit assignment when bound through the SVI — Central pulls it in "
+        "transitively).\n"
+        "4) AFTER push: run central_show_commands for 'show port-access policy' "
+        "and 'show class ip' to confirm the artifacts rendered. SYNCHRONIZED "
+        "alone is not enough."
+    )
+elif diagnosis["association"] == "ASSOCIATION_INTERFACE":
+    diagnosis["verdict"] = (
+        f"Policy {candidate!r} is already ASSOCIATION_INTERFACE — correct "
+        "primitive for SVI bind. Proceed to section C; bind it via "
+        "interface-vlan policy.access-group-vlan-in."
+    )
+else:
+    diagnosis["verdict"] = (
+        f"Policy {candidate!r} found but association is "
+        f"{diagnosis['association']!r} — neither standard branch. Read the "
+        "full policy via central_get_policies and confirm with the operator "
+        "before any write."
+    )
+
+diagnosis
+```
+
+The `remediation` block above is the pivot to the existing sections A/B/C. **Do not attempt to keep the role-based artifacts** — even if you got the SVI bind to take at the API layer (it will at SITE scope), the device-side render will silently no-op and Central will lie about the sync state. Delete and rebuild.
+
+### One more wrinkle — policy-group membership
+
+If the operator's setup involves direct scope-assignment of a `policy` object (rare for traditional SVI-bound policies but required for role-based ones), the policy must first appear in the singleton `policy-group`'s `policy-group-list`. The CNX UI does this implicitly when the operator creates a role-based policy in the UI; via tool calls it's:
+
+```python
+await call_tool("central_manage_policy_group_entry", {
+    "name": "<policy-name>",
+    "action_type": "update",   # NOT 'create' — the container exists; 'create' returns
+                                # "Cannot create duplicate config, Module = Policy Group already exists"
+    "payload": {"name": "<policy-name>", "position": 100},
+    "confirmed": True,
+})
+```
+
+And on cleanup: remove the policy-group-list entry BEFORE deleting the policy itself, or `central_manage_policy(action_type='delete')` returns
+`"Validation failure: Policies {'<name>'} still part of Policy Group."`
 
 ## Exact shapes (live-verified)
 
@@ -222,6 +385,7 @@ Field notes:
 ```
 
 Field notes:
+- **`association`: MUST be `"ASSOCIATION_INTERFACE"`** for SVI bind. The alternative `"ASSOCIATION_ROLE"` produces a port-access role-based policy that renders as `port-access policy sys_policy_pap_<role>` on the device and cannot be SVI-bound (see the "Path picker" section above). If the operator's source config came from a CNX role-based policy, REBUILD with this field set to `ASSOCIATION_INTERFACE` — don't try to convert in place.
 - **class reference**: `condition.named-condition.condition-reference` = the
   `named-condition` name. (This field is undocumented — do not look for it in
   `payload_schema`; do NOT use `condition.name`, which is rejected.)
@@ -240,6 +404,16 @@ Field notes:
    action_type="create", payload={"id": "<id>", "policy": {"access-group-vlan-in": "<policy>"}})`.
    `access-group-vlan-in` = the **routed-in** direction on a CX SVI (`access-group-in`
    is plain `in`/bridged; `service-policy-in` is PVOS).
+3. **For a device-touching scope assignment**, both the layer2-vlan and the vlan-interfaces objects get scope-assigned (`central_manage_config_assignment` with `profile_type: 'layer2-vlan'` and `'vlan-interfaces'`, `device_function: 'ACCESS_SWITCH'`). Where the bound policy is `ASSOCIATION_INTERFACE`, Central pulls it through transitively. **Where the bound policy is `ASSOCIATION_ROLE`, Central will accept the create but silently no-op the bind on the device — see rule 5 and the Path picker.**
+4. **Verify on the device** — call `central_show_commands(device_type='cx', commands='show running-config interface vlan <id>')` (and `show vlan <id>`, `show class ip`, `show policy` where allowed) and assert the bind appears. `central_get_devices_config_health` reporting `SYNCHRONIZED` is NOT sufficient — it stays `SYNCHRONIZED` even when the role-based-policy case silently drops the render.
+
+Quick error→cause table for the bind step:
+
+| Error | What it means | Fix |
+|---|---|---|
+| HTTP 400 `"Cannot find in library 'X' of type 'aruba-policy' referred in '<vlan-id>' of type 'aruba-interface-vlan'"` | The policy name isn't in Central's policy library at any scope visible to the validation. Typically: the operator copied a device-rendered `sys_policy_pap_<X>` name (auto-generated, never in the library). | Strip `sys_policy_pap_` / `sys_pap_` prefix and re-check via `central_get_policies(name=…)`. If still missing, the policy needs creating first. |
+| HTTP 500 `"Cannot find object 'X' of module 'aruba-policy'"` | You're creating the SVI at a DEVICE or DEVICE_COLLECTION scope and the referenced policy isn't *directly assigned* at that scope (effective-config inheritance doesn't satisfy this validator). | Either create at SITE scope (where the policy is directly assigned) OR assign the policy at the same narrower scope first. |
+| HTTP 200 + device shows VLAN but no policy render + `SYNCHRONIZED` | You pointed an `ASSOCIATION_ROLE` policy at the SVI. Pivot per the Path picker. | Don't try to convert; rebuild as `ASSOCIATION_INTERFACE`. |
 
 If the config has no `apply policy …` line, skip this section entirely.
 
@@ -487,6 +661,14 @@ The remaining exposure window: edit fails AND restore also fails. Surface
 system half (6–9) are independent — if the operator's intent only covers one,
 skip the other.
 
+**Step 0 — Wrong-primitive check (run when ANY of the symptoms in "Detecting
+the wrong primitive" match).** If the operator referenced a name starting with
+`sys_policy_pap_` or `sys_pap_`, OR they hit any of the five error patterns,
+OR their last AI session ended with "no Central API path exists for this," run
+the **Wrong-primitive runbook** code block first. Pivot per its `remediation`
+output. **Do not proceed to step 1 with the role-based artifacts still in
+play** — the rebuild step in the remediation is required.
+
 Ingress / marking half (sections A–C):
 
 1. **Pull schemas** for `central_manage_named_condition` + `central_manage_policy`
@@ -501,7 +683,13 @@ Ingress / marking half (sections A–C):
 4. **Build the `POLICY_QOS` marker policy** (section B), read it back, assert
    every rule's `condition-reference` + `local-queue-priority` + `dscp` persisted.
 5. **Bind to the VLAN** (section C) if applicable, read back the SVI, assert
-   `policy.access-group-vlan-in` == the policy name.
+   `policy.access-group-vlan-in` == the policy name. **Then run the device-side
+   verification:** `central_show_commands` for `show running-config interface
+   vlan <id>`, `show class ip`, and `show policy` (where allowed). Assert the
+   policy and class actually rendered on the box. Skipping this step lets the
+   silent-skip-with-success-indication failure mode (rule 5) through undetected.
+   `central_get_devices_config_health` alone is NOT sufficient — it stays
+   `SYNCHRONIZED` even when the role-based-policy case silently drops the bind.
 
 Egress / system-wide half (sections D–F):
 
