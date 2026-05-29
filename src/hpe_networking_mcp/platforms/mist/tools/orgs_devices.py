@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
-This file was emitted by ``scripts/_mist_generator.py``
-from ``vendor/mist_openapi.json``. Regenerate via:
+This file was emitted by ``scripts/_mist_generator.py`` from
+``vendor/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -208,7 +208,7 @@ async def mist_get_org_juniper_devices_command(
 
 @_mcp_tool(
     name="mist_list_org_aps_macs",
-    description="GET /api/v1/orgs/{org_id}/devices/radio_macs\n\nlistOrgApsMacs\n\nFor some scenarios like E911 or security systems, the BSSIDs are required to identify which AP the client is connecting to. Then the location of the AP can be used as the approximate location of the client.\n\nEach radio MAC can have 16 BSSIDs (enumerate the last octet from 0-F)",
+    description="GET /api/v1/orgs/{org_id}/devices/radio_macs\n\nlistOrgApsMacs\n\nFor some scenarios like E911 or security systems, the BSSIDs are required to identify which AP the client is connecting to. Then the location of the AP can be used as the approximate location of the client.\n\nEach radio MAC can have up to 16 BSSIDs. These are derived by incrementing the least significant hexadecimal digit (last nibble) of the MAC address from 0 to F, while keeping the remaining bits unchanged.",
     tags={"mist"},
     annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
 )

@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
-This file was emitted by ``scripts/_mist_generator.py``
-from ``vendor/mist_openapi.json``. Regenerate via:
+This file was emitted by ``scripts/_mist_generator.py`` from
+``vendor/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -65,7 +65,7 @@ async def mist_get_org_sky_atp_integration(
 
 @_mcp_tool(
     name="mist_setup_org_atp_integration",
-    description="POST /api/v1/orgs/{org_id}/setting/skyatp/setup\n\nsetupOrgAtpIntegration\n\n1. Login to the Sky ATP realm through the Mist UI by providing the realm, username and password.\n2. Sky ATP API is invoked which creates the realm using above details.\n3. Sky ATP by default will provide functionality for Security-Intelligence and Advanced Anti Malware.\n4. Security Intelligence will provide configuration for CC, DNS Feeds, Infected Host, Blocklists and Allowlists.",
+    description="POST /api/v1/orgs/{org_id}/setting/skyatp/setup\n\nsetupOrgAtpIntegration\n\n1. Login to the Sky ATP realm through the Mist UI by providing the realm, username and password.\n2. Sky ATP API is invoked which creates the realm using above details.\n3. Sky ATP by default will provide functionality for Security-Intelligence and Advanced Anti Malware.\n4. SecIntel will provide configuration for CC, DNS Feeds, Infected Host, Blocklists and Allowlists.",
     tags={"mist", "mist_write"},
     annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
 )

@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
-This file was emitted by ``scripts/_mist_generator.py``
-from ``vendor/mist_openapi.json``. Regenerate via:
+This file was emitted by ``scripts/_mist_generator.py`` from
+``vendor/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 

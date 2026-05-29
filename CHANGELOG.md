@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.3.6] - 2026-05-29
+
+**Patch — regen sync: Mist tools against vendored spec 2604.1.2 + Central payload-schemas artifact against refreshed `api-endpoints/central/config/` snapshot.** Routine maintenance bump landing the regen output from the maintainer's release-time ritual (`uv run python scripts/regenerate_mist_tools.py` + `uv run python scripts/distill_central_config_schemas.py`). Tool count unchanged: still **1037 Mist tools**, still **613 Central tools**.
+
+Mist surface delta (1037 unchanged):
+- One real upstream description tweak: `mist_list_applications` description rephrased "Juniper-Mist APs" → "Juniper-Mist Devices" (Mist's own copy edit in 2604.1.2).
+- Everything else in the 209-file `mist/tools/` diff is auto-generator header-docstring rewraps (cosmetic — `from \`\`vendor/mist_openapi.json\`\`. Regenerate via:` collapsed onto the previous line). Not behavioral.
+- Distilled request-body schema artifact (`mist/_request_body_schemas.json`) refreshed: 352 body-bearing ops, 209 distinct component schemas, **+47 bytes** vs prior artifact — essentially noise.
+
+Central distill delta (drives `central_get_tool_schema`'s `payload_schema` output for config-model tools — see [project_config_model_payload_schema](docs/INTERNALS.md) ledger):
+- Maintainer refreshed `api-endpoints/central/config/` from upstream on 2026-05-29 (215 spec files, up from 197 + 15 hand-tuned = 212 last sync).
+- Re-ran `scripts/distill_central_config_schemas.py` (safe; data-artifact only, never touches tool `.py` files).
+- 212 config objects distilled (3 had no request schema and were skipped), 421 tool-name → schema entries indexed.
+- `central/_config_payload_schemas.json` refreshed: **+576 bytes** vs prior. Driven by Jon's snapshot refresh — small drift in field sets / enums / `x-supportedDeviceType` annotations on existing types.
+
+Sync workflow infrastructure (separate PR landed earlier in the same session, #397): the daily Mist OpenAPI sync (`.github/workflows/sync-mist-openapi.yml`) was silently broken on every actual upstream drift since `main` got branch-protected — the workflow tried to `git push origin main` and got rejected by required-status-checks. Replaced with `peter-evans/create-pull-request@v6` + repo-level auto-merge so the bot opens a PR, CI gates it, and it self-merges. Validated end-to-end: PR #398 (`chore(vendor): sync Mist OpenAPI to 2604.1.2`) opened, all 4 required checks passed in 22s, auto-merged. Drives the vendored spec freshness this very regen consumes.
+
 ## [3.2.3.5] - 2026-05-29
 
 **Patch — `central_show_commands` now accepts `aps` (executes AP show commands).** An operator investigating AI-derived AP thresholds (auth-req-thresh / local-probe-req-thresh) tried to run `show ap client-match-refused`, `show ap arm config`, `show ap debug client-match`, and `show log rssi-to-cloud clientrssi` against an AP. Discovery via `central_list_supported_show_commands(device_family="aps", ...)` correctly returned a 686-command catalogue — but the executor `central_show_commands` rejected `device_type="aps"` because the parameter was typed `Literal["aos-s", "cx", "gateways"]` (APs omitted). The tool's docstring already incorrectly claimed AP support — so the AI agent reading the tool description believed APs were supported and then hit a Pydantic validation error at call time.

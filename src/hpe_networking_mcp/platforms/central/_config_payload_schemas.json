@@ -2479,7 +2479,8 @@
         },
         "host-ipv6-address": {
          "device_types": [
-          "Gateway"
+          "Gateway",
+          "Access Point"
          ],
          "format": "ipv6-address",
          "type": "string"
@@ -2767,7 +2768,8 @@
         },
         "network-ipv6-address": {
          "device_types": [
-          "Gateway"
+          "Gateway",
+          "Access Point"
          ],
          "format": "ipv6-prefix",
          "type": "string"
@@ -41556,7 +41558,8 @@
           },
           "host-ipv6-address": {
            "device_types": [
-            "Gateway"
+            "Gateway",
+            "Access Point"
            ],
            "format": "ipv6-address",
            "type": "string"
@@ -41598,7 +41601,8 @@
           },
           "network-ipv6-address": {
            "device_types": [
-            "Gateway"
+            "Gateway",
+            "Access Point"
            ],
            "format": "ipv6-prefix",
            "type": "string"
@@ -41644,7 +41648,8 @@
             },
             "host-ipv6-address": {
              "device_types": [
-              "Gateway"
+              "Gateway",
+              "Access Point"
              ],
              "format": "ipv6-address",
              "type": "string"
@@ -41672,7 +41677,8 @@
             },
             "network-ipv6-address": {
              "device_types": [
-              "Gateway"
+              "Gateway",
+              "Access Point"
              ],
              "format": "ipv6-prefix",
              "type": "string"
@@ -42176,7 +42182,8 @@
           },
           "host-ipv6-address": {
            "device_types": [
-            "Gateway"
+            "Gateway",
+            "Access Point"
            ],
            "format": "ipv6-address",
            "type": "string"
@@ -42212,7 +42219,8 @@
           },
           "network-ipv6-address": {
            "device_types": [
-            "Gateway"
+            "Gateway",
+            "Access Point"
            ],
            "format": "ipv6-prefix",
            "type": "string"
@@ -42258,7 +42266,8 @@
             },
             "host-ipv6-address": {
              "device_types": [
-              "Gateway"
+              "Gateway",
+              "Access Point"
              ],
              "format": "ipv6-address",
              "type": "string"
@@ -42286,7 +42295,8 @@
             },
             "network-ipv6-address": {
              "device_types": [
-              "Gateway"
+              "Gateway",
+              "Access Point"
              ],
              "format": "ipv6-prefix",
              "type": "string"
@@ -50809,7 +50819,8 @@
           "address-family": {
            "device_types": [
             "Switch CX",
-            "Gateway"
+            "Gateway",
+            "Access Point"
            ],
            "enum": [
             "IPV4",
@@ -50872,7 +50883,8 @@
               },
               "host-ipv6-address": {
                "device_types": [
-                "Gateway"
+                "Gateway",
+                "Access Point"
                ],
                "format": "ipv6-address",
                "type": "string"
@@ -50914,7 +50926,8 @@
               },
               "network-ipv6-address": {
                "device_types": [
-                "Gateway"
+                "Gateway",
+                "Access Point"
                ],
                "format": "ipv6-prefix",
                "type": "string"
@@ -50960,7 +50973,8 @@
                 },
                 "host-ipv6-address": {
                  "device_types": [
-                  "Gateway"
+                  "Gateway",
+                  "Access Point"
                  ],
                  "format": "ipv6-address",
                  "type": "string"
@@ -50988,7 +51002,8 @@
                 },
                 "network-ipv6-address": {
                  "device_types": [
-                  "Gateway"
+                  "Gateway",
+                  "Access Point"
                  ],
                  "format": "ipv6-prefix",
                  "type": "string"
@@ -51579,7 +51594,8 @@
               },
               "host-ipv6-address": {
                "device_types": [
-                "Gateway"
+                "Gateway",
+                "Access Point"
                ],
                "format": "ipv6-address",
                "type": "string"
@@ -51615,7 +51631,8 @@
               },
               "network-ipv6-address": {
                "device_types": [
-                "Gateway"
+                "Gateway",
+                "Access Point"
                ],
                "format": "ipv6-prefix",
                "type": "string"
@@ -51661,7 +51678,8 @@
                 },
                 "host-ipv6-address": {
                  "device_types": [
-                  "Gateway"
+                  "Gateway",
+                  "Access Point"
                  ],
                  "format": "ipv6-address",
                  "type": "string"
@@ -51689,7 +51707,8 @@
                 },
                 "network-ipv6-address": {
                  "device_types": [
-                  "Gateway"
+                  "Gateway",
+                  "Access Point"
                  ],
                  "format": "ipv6-prefix",
                  "type": "string"
