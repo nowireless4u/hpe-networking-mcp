@@ -172,18 +172,20 @@ async def central_cable_test(
 async def central_show_commands(
     ctx: Context,
     serial_number: str,
-    device_type: Literal["aos-s", "cx", "gateways"],
+    device_type: Literal["aos-s", "aps", "cx", "gateways"],
     commands: str,
 ) -> dict | str:
     """
     Execute show commands on a device and return the output.
 
-    Supports AP, CX switch, and gateway devices. Use for
-    detailed device diagnostics.
+    Supports AOS-S switch, AP, CX switch, and gateway devices. Use for
+    detailed device diagnostics. Use ``central_list_supported_show_commands``
+    to discover which show commands a given device accepts (the AP catalogue
+    is the broadest — hundreds of AP-specific ``show ap ...`` commands).
 
     Parameters:
         serial_number: Device serial number (required).
-        device_type: Device type — "aos-s", "cx", or "gateways" (required).
+        device_type: Device type — "aos-s", "aps", "cx", or "gateways" (required).
         commands: Comma-separated show commands, e.g. "show version,show interfaces" (required).
     """
     conn = ctx.lifespan_context["central_conn"]

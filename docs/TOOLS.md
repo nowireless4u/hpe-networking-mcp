@@ -1199,8 +1199,8 @@ Rule shape:
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | serial_number | str | Yes | Device serial number. |
-| device_type | str | Yes | `aos-s`, `cx`, or `gateways`. |
-| commands | str | Yes | Comma-separated show commands (e.g. `show version,show interfaces`). |
+| device_type | str | Yes | `aos-s`, `aps`, `cx`, or `gateways`. |
+| commands | str | Yes | Comma-separated show commands (e.g. `show version,show interfaces`). Use `central_list_supported_show_commands` to discover what a device accepts — the AP catalogue is the broadest. |
 
 #### `central_disconnect_users_ssid`
 
