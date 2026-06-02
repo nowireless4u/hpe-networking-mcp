@@ -32,4 +32,5 @@ TOOLS: dict[str, list[str]] = {
         "greenlake_get_workspace",
         "greenlake_get_workspace_details",
     ],
+    "bulk_add": ["greenlake_bulk_add_devices"],
 }
