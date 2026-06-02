@@ -127,6 +127,7 @@ class ServerConfig:
     enable_axis_write_tools: bool = False
     enable_aos8_write_tools: bool = False
     enable_uxi_write_tools: bool = False
+    enable_greenlake_write_tools: bool = False
     disable_elicitation: bool = False
     debug: bool = False
     log_file: str | None = None
@@ -488,6 +489,7 @@ def load_config() -> ServerConfig:
     enable_axis_write = os.getenv("ENABLE_AXIS_WRITE_TOOLS", "false").lower() in _truthy
     enable_aos8_write = os.getenv("ENABLE_AOS8_WRITE_TOOLS", "false").lower() in _truthy
     enable_uxi_write = os.getenv("ENABLE_UXI_WRITE_TOOLS", "false").lower() in _truthy
+    enable_greenlake_write = os.getenv("ENABLE_GREENLAKE_WRITE_TOOLS", "false").lower() in _truthy
     disable_elicit = os.getenv("DISABLE_ELICITATION", "false").lower() in _truthy
     debug = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
     log_file = os.getenv("LOG_FILE") or None
@@ -558,6 +560,7 @@ def load_config() -> ServerConfig:
         enable_axis_write_tools=enable_axis_write,
         enable_aos8_write_tools=enable_aos8_write,
         enable_uxi_write_tools=enable_uxi_write,
+        enable_greenlake_write_tools=enable_greenlake_write,
         disable_elicitation=disable_elicit,
         debug=debug,
         log_file=log_file,

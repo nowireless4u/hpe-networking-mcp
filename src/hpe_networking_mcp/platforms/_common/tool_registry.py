@@ -68,7 +68,7 @@ _WRITE_TAG_BY_PLATFORM: dict[str, set[str]] = {
     "axis": {"axis_write", "axis_write_delete"},
     "central": {"central_write_delete"},
     "clearpass": {"clearpass_write_delete"},
-    "greenlake": set(),  # GreenLake is read-only today.
+    "greenlake": {"greenlake_write"},
     "mist": {"mist_write", "mist_write_delete"},
     "uxi": {"uxi_write", "uxi_write_delete"},
     "_template": {"_template_write", "_template_write_delete"},
@@ -80,7 +80,7 @@ _GATE_CONFIG_ATTR: dict[str, str | None] = {
     "axis": "enable_axis_write_tools",
     "central": "enable_central_write_tools",
     "clearpass": "enable_clearpass_write_tools",
-    "greenlake": None,
+    "greenlake": "enable_greenlake_write_tools",
     "mist": "enable_mist_write_tools",
     "uxi": "enable_uxi_write_tools",
     "_template": None,  # Never instantiated at runtime; gating attr unused.

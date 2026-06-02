@@ -48,8 +48,16 @@ class ElicitationMiddleware(Middleware):
         axis_write = config.enable_axis_write_tools
         aos8_write = config.enable_aos8_write_tools
         uxi_write = config.enable_uxi_write_tools
+        greenlake_write = config.enable_greenlake_write_tools
         any_write = (
-            mist_write or central_write or clearpass_write or apstra_write or axis_write or aos8_write or uxi_write
+            mist_write
+            or central_write
+            or clearpass_write
+            or apstra_write
+            or axis_write
+            or aos8_write
+            or uxi_write
+            or greenlake_write
         )
 
         if not any_write:
@@ -93,8 +101,11 @@ class ElicitationMiddleware(Middleware):
             await ctx.enable_components(tags={"aos8_write", "aos8_write_delete"}, components={"tool"})
         if uxi_write:
             await ctx.enable_components(tags={"uxi_write", "uxi_write_delete"}, components={"tool"})
+        if greenlake_write:
+            await ctx.enable_components(tags={"greenlake_write"}, components={"tool"})
         logger.info(
-            "Elicitation: write tools enabled (mist=%s, central=%s, clearpass=%s, apstra=%s, axis=%s, aos8=%s, uxi=%s)",
+            "Elicitation: write tools enabled "
+            "(mist=%s, central=%s, clearpass=%s, apstra=%s, axis=%s, aos8=%s, uxi=%s, greenlake=%s)",
             mist_write,
             central_write,
             clearpass_write,
@@ -102,6 +113,7 @@ class ElicitationMiddleware(Middleware):
             axis_write,
             aos8_write,
             uxi_write,
+            greenlake_write,
         )
 
         return result  # type: ignore[return-value]

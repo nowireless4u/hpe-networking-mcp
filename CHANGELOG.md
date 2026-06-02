@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.2.0] - 2026-06-02
+
+**Minor — GreenLake bulk device onboarding write tool.** Adds `greenlake_bulk_add_devices`, the first GreenLake write tool, enabling an AI assistant to onboard up to 10,000 devices from a CSV file in a single call with full rate-limiting, resume-on-failure, and optional subscription/service/location/tags assignment.
+
+### Added
+- `greenlake_bulk_add_devices` — bulk-add GreenLake devices from a local CSV path or inline CSV text. Processes 5 devices/batch at 5 POST/min; enrichment PATCHes at 20/min. Resumes from a `.cache.json` checkpoint on re-invocation. Returns an 18-field envelope with per-phase counts and per-row failure reasons.
+- `ENABLE_GREENLAKE_WRITE_TOOLS` environment variable — gates `greenlake_bulk_add_devices` (default `false`). Wired into `ElicitationMiddleware` and `Visibility` transform alongside all other platforms.
+- `aiolimiter>=1.2.1` dependency for async rate limiting.
+
+### Technical details
+- Write gate: `ENABLE_GREENLAKE_WRITE_TOOLS=true` required; `confirm_write` elicitation called with device count before any API call. The `acknowledged` boolean self-attestation parameter has been removed in favour of the standard human-in-the-loop `confirm_write` flow.
+- `ToolError` used on all input/precondition failure paths (was: `return "Error: ..."` strings, which the envelope middleware wrapped as `ok: True`).
+- `AsyncLimiter` instantiated per coroutine invocation (not at module level) to avoid `RuntimeWarning: This AsyncLimiter instance is being re-used across loops`.
+- Return envelope: manual `"ok": True` removed — let `response_envelope.py` wrap the dict.
+- `bulk_add.py` refactored from 542 to 452 lines by extracting `setup_resume` / `build_result_envelope` / `make_patch_limiter` into `_bulk_assignment.py`.
+
+GreenLake: 10 → 11 tools. Server-wide unchanged (tool is hidden until `ENABLE_GREENLAKE_WRITE_TOOLS=true`). Updated README, docs/TOOLS.md, INSTRUCTIONS.md. 136 new unit tests.
+
 ## [3.2.1.9] - 2026-05-21
 
 **Patch — add per-entry policy-group tools.** Follow-up to the v3.2.1.8 spec review, which found the `policy-group` spec exposes a per-entry item path (`/policy-groups/policy-group/policy-group-list/{name}`, full CRUD) that the hand-curated tools didn't wrap — they only managed at the collection level, and a docstring incorrectly claimed "there is no per-name path."

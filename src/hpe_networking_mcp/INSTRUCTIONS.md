@@ -556,8 +556,17 @@ After reading the report, drill down into specific issues using the exact tool c
 - **Subscriptions**: greenlake_get_subscriptions, greenlake_get_subscription_details
 - **Users**: greenlake_get_users, greenlake_get_user_details
 - **Workspaces**: greenlake_get_workspace, greenlake_get_workspace_details
+- **Bulk Onboarding** *(write — requires `ENABLE_GREENLAKE_WRITE_TOOLS=true`)*: greenlake_bulk_add_devices
 
-All GreenLake tools are read-only in v2.0. Use the standard dynamic-mode discovery pattern (`greenlake_list_tools`, `greenlake_get_tool_schema`, `greenlake_invoke_tool`) — these replaced the v1.x endpoint-dispatch tools (`greenlake_list_endpoints`, `greenlake_get_endpoint_schema`, `greenlake_invoke_endpoint`), which are gone.
+Use the standard dynamic-mode discovery pattern (`greenlake_list_tools`, `greenlake_get_tool_schema`, `greenlake_invoke_tool`) — these replaced the v1.x endpoint-dispatch tools (`greenlake_list_endpoints`, `greenlake_get_endpoint_schema`, `greenlake_invoke_endpoint`), which are gone.
+
+## Write Tools — Bulk Device Onboarding
+
+`greenlake_bulk_add_devices` accepts a local CSV path (`csv_path`) or inline CSV text (`csv_text`). Mandatory columns: `serialNumber` and `macAddress`. Optional columns: `partNumber`, `service`, `subscriptionKey`, `location`, `tags`. Column headers are case-insensitive; many aliases are recognized (e.g. `serial`, `sn`, `mac`, `mac_address`).
+
+The tool runs in batches of 5 at 5 POST/min; assignment/enrichment PATCHes run at 20/min. For large CSVs (>100 rows) this can take several minutes — use `ctx.report_progress` events to monitor. A `.cache.json` checkpoint is written after each batch; re-invoking the same CSV resumes from the last checkpoint.
+
+**Requires `ENABLE_GREENLAKE_WRITE_TOOLS=true`.** The `confirm_write` elicitation step fires before any API call — the user must accept before devices are added.
 
 ---
 
