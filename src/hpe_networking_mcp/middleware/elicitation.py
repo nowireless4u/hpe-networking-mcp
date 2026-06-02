@@ -82,6 +82,7 @@ class ElicitationMiddleware(Middleware):
         axis_write = config.enable_axis_write_tools
         aos8_write = config.enable_aos8_write_tools
         uxi_write = config.enable_uxi_write_tools
+        greenlake_write = config.enable_greenlake_write_tools
         edgeconnect_write = config.enable_edgeconnect_write_tools
         any_write = (
             mist_write
@@ -91,6 +92,7 @@ class ElicitationMiddleware(Middleware):
             or axis_write
             or aos8_write
             or uxi_write
+            or greenlake_write
             or edgeconnect_write
         )
 
@@ -115,11 +117,13 @@ class ElicitationMiddleware(Middleware):
             await ctx.enable_components(tags={"aos8_write", "aos8_write_delete"}, components={"tool"})
         if uxi_write:
             await ctx.enable_components(tags={"uxi_write", "uxi_write_delete"}, components={"tool"})
+        if greenlake_write:
+            await ctx.enable_components(tags={"greenlake_write"}, components={"tool"})
         if edgeconnect_write:
             await ctx.enable_components(tags={"edgeconnect_write", "edgeconnect_write_delete"}, components={"tool"})
         logger.info(
             "Elicitation: write tools enabled (mist=%s, central=%s, clearpass=%s, "
-            "apstra=%s, axis=%s, aos8=%s, uxi=%s, edgeconnect=%s)",
+            "apstra=%s, axis=%s, aos8=%s, uxi=%s, greenlake=%s, edgeconnect=%s)",
             mist_write,
             central_write,
             clearpass_write,
@@ -127,6 +131,7 @@ class ElicitationMiddleware(Middleware):
             axis_write,
             aos8_write,
             uxi_write,
+            greenlake_write,
             edgeconnect_write,
         )
 

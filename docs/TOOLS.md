@@ -110,7 +110,7 @@ The `static` mode was REMOVED in v3.0.0.0 — at 3177 tools / ~64K tokens it was
 | Aruba Central | 63 | 20 | 12 | 95 |
 | Aruba ClearPass | 67 | 75 | -- | 142 |
 | Juniper Apstra | 12 | 7 | -- | 19 |
-| HPE GreenLake | 10 | -- | -- | 10 |
+| HPE GreenLake | 10 | 1 | -- | 11 |
 | Axis Atmos Cloud | 12 | 13 | -- | 25 |
 | Aruba OS 8 | 26 | 12 | 9 | 47 |
 | HPE UXI | 11 | 10 | -- | 21 |
@@ -1761,11 +1761,11 @@ Tools that span multiple platforms. Each replaces several individual tool calls 
 
 ---
 
-## HPE GreenLake (10 tools)
+## HPE GreenLake (11 tools — 10 read + 1 write)
 
-GreenLake uses the same dynamic-mode meta-tool pattern as every other platform since v2.0.0.0. In the default `MCP_TOOL_MODE=dynamic`, the AI sees `greenlake_list_tools`, `greenlake_get_tool_schema`, and `greenlake_invoke_tool` and discovers the 10 underlying tools below through them. The v1.x endpoint-dispatch tools (`greenlake_list_endpoints`, `greenlake_get_endpoint_schema`, `greenlake_invoke_endpoint`) are **removed** in v2.0.
+GreenLake uses the same dynamic-mode meta-tool pattern as every other platform since v2.0.0.0. In the default `MCP_TOOL_MODE=dynamic`, the AI sees `greenlake_list_tools`, `greenlake_get_tool_schema`, and `greenlake_invoke_tool` and discovers the 11 underlying tools below through them. The v1.x endpoint-dispatch tools (`greenlake_list_endpoints`, `greenlake_get_endpoint_schema`, `greenlake_invoke_endpoint`) are **removed** in v2.0.
 
-All 10 GreenLake tools are read-only today. Write tools would follow the same gating pattern as the other platforms (tag + `ENABLE_GREENLAKE_WRITE_TOOLS`) when/if they're added.
+The 10 read tools are always available. The 1 write tool (`greenlake_bulk_add_devices`) requires `ENABLE_GREENLAKE_WRITE_TOOLS=true`.
 
 #### `greenlake_get_audit_logs`
 
@@ -1862,6 +1862,17 @@ All 10 GreenLake tools are read-only today. Write tools would follow the same ga
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | workspaceId | str | Yes | Workspace ID. |
+
+#### `greenlake_bulk_add_devices` *(write — requires `ENABLE_GREENLAKE_WRITE_TOOLS=true`)*
+
+> Bulk-add HPE GreenLake devices from a CSV file or inline CSV text. POSTs in batches of 5 at 5/min; enrichment PATCHes at 20/min. Resumes from a `.cache.json` checkpoint on re-invocation. Returns an 18-field envelope with per-phase counts and per-row failure reasons.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| csv_path | str | No | Absolute path to a local CSV file. Mutually exclusive with `csv_text`. |
+| csv_text | str | No | Raw CSV text as a string. Mutually exclusive with `csv_path`. |
+
+Mandatory CSV columns: `serialNumber` (aliases: `serial`, `sn`, `serial_number`) and `macAddress` (aliases: `mac`, `mac_address`). Optional: `partNumber`, `service`, `subscriptionKey`, `location`, `tags`.
 
 ---
 

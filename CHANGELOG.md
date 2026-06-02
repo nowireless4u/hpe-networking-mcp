@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.5.9] - 2026-06-28
+
+**Minor — GreenLake bulk device onboarding write tool.** Adds `greenlake_bulk_add_devices`, the first GreenLake write tool, enabling an AI assistant to onboard up to 10,000 devices from a CSV file in a single call with full rate-limiting, resume-on-failure, and optional subscription/service/location/tags assignment.
+
+### Added
+- `greenlake_bulk_add_devices` — bulk-add GreenLake devices from a local CSV path or inline CSV text. Processes 5 devices/batch at 5 POST/min; enrichment PATCHes at 20/min. Resumes from a `.cache.json` checkpoint on re-invocation. Returns an 18-field envelope with per-phase counts and per-row failure reasons.
+- `ENABLE_GREENLAKE_WRITE_TOOLS` environment variable — gates `greenlake_bulk_add_devices` (default `false`). Wired into `ElicitationMiddleware` and `Visibility` transform alongside all other platforms.
+- `aiolimiter>=1.2.1` dependency for async rate limiting.
+
+### Fixed
+- **Resume cache stale-row filtering** — `setup_resume()` now filters the loaded cache to only serials present in the current CSV run before computing pending rows and building the result envelope. Previously, editing the CSV between runs (removing rows, retrying with a smaller file) would leave stale entries that inflated succeeded/failed counts and prevented cache deletion.
+- **Optional CSV columns now truly case-insensitive** — `location`, `tags`, and `region` added to `ALIASES` so `Location`, `LOCATION`, `Tags`, `TAGS`, etc. all resolve to the canonical key that enrichment reads. `sub_key` alias corrected: `normalize_header` strips underscores so the lookup key is `"subkey"`, not `"sub_key"`.
+- **`post_raw` / `patch_raw` missing `await`** — `_get_auth_headers()` was called without `await` in both raw HTTP helpers, returning a coroutine instead of the auth dict and breaking all authenticated POST/PATCH calls at runtime.
+- **Inline CSV cache key now hashes full content** — was hashing only the first 1000 characters, causing collisions for generated CSVs with identical prefixes.
+
+### Technical details
+- Write gate: `ENABLE_GREENLAKE_WRITE_TOOLS=true` required; `confirm_gated_invoke` elicitation called with device count before any API call.
+- `ToolError` used on all input/precondition failure paths (was: `return "Error: ..."` strings, which the envelope middleware wrapped as `ok: True`).
+- `AsyncLimiter` instantiated per coroutine invocation (not at module level) to avoid `RuntimeWarning: This AsyncLimiter instance is being re-used across loops`.
+- Return envelope: manual `"ok": True` removed — let `response_envelope.py` wrap the dict.
+- `bulk_add.py` refactored from 542 to 452 lines by extracting `setup_resume` / `build_result_envelope` / `make_patch_limiter` into `_bulk_assignment.py`.
+
+GreenLake: 10 → 11 tools. Server-wide unchanged (tool is hidden until `ENABLE_GREENLAKE_WRITE_TOOLS=true`). Updated README, docs/TOOLS.md, INSTRUCTIONS.md. 154 unit tests.
+
 ## [3.4.5.8] - 2026-06-26
 
 **Patch — feat(discovery): safety metadata in discovery output + accurate `tags` behavior (#526, #527).** Final group of the small-model robustness backlog — completes the code-mode discovery story now that Mist is visible (#524).
@@ -854,7 +878,6 @@ All are input-validation failures → `status_code: 400`. No behavior change bey
 Updated `tests/unit/test_central_gateway_clusters.py` to assert the structured payload; added `tests/unit/test_central_aos8_toolerror_contract.py` locking the two shared helpers. Full suite green (1484 passed, 1 skipped); ruff/format/mypy clean.
 
 > Note: one more site of the same class exists in **Mist** (`_client.py` org_id guard), left out of this patch because the cleanup was scoped to Central + AOS 8.
-
 ## [3.2.1.9] - 2026-05-21
 
 **Patch — add per-entry policy-group tools.** Follow-up to the v3.2.1.8 spec review, which found the `policy-group` spec exposes a per-entry item path (`/policy-groups/policy-group/policy-group-list/{name}`, full CRUD) that the hand-curated tools didn't wrap — they only managed at the collection level, and a docstring incorrectly claimed "there is no per-name path."

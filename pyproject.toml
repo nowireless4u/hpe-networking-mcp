@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hpe-networking-mcp"
-version = "3.4.5.8"
+version = "3.4.5.9"
 description = "Unofficial, community-driven MCP server for Juniper Mist, Aruba Central, HPE GreenLake, and ClearPass. Not affiliated with HPE, Aruba, or Juniper."
 readme = "README.md"
 license = "MIT"
@@ -17,6 +17,8 @@ dependencies = [
     # (was opt-in via the fastmcp[code-mode] extra in v2.x); the extra is
     # now a hard requirement.
     "fastmcp[code-mode,apps]>=3.4.0",
+    # Async rate limiter -- used by greenlake bulk_add.py batch loop
+    "aiolimiter>=1.2.1",
     # MCP protocol — GreenLake requires >=1.20.0
     "mcp[cli]>=1.20.0",
     # Async HTTP client — used by all platforms (Central since v3.3.11.0,
@@ -83,6 +85,10 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]
 # AOS 8 show-table test fixtures replicate real fixed-width tables verbatim;
 # the rows are legitimately wider than 120 chars and must not be reflowed.
 "tests/unit/test_aos8_show_parser.py" = ["E501"]
+
+# GreenLake bulk-add tests use camelCase names that mirror API field names
+# (serialNumber, macAddress, partNumber, resourceUri, deviceId) for readability.
+"tests/unit/test_greenlake_bulk_add.py" = ["N802"]
 
 # Mypy configuration
 [tool.mypy]

@@ -557,7 +557,7 @@ Set `ENABLE_UXI_WRITE_TOOLS=true` to expose the 10 UXI write tools (gated by eli
 
 Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) are supported with safety controls:
 
-- **Disabled by default** — enable per-platform with `ENABLE_MIST_WRITE_TOOLS=true`, `ENABLE_CENTRAL_WRITE_TOOLS=true`, `ENABLE_CLEARPASS_WRITE_TOOLS=true`, `ENABLE_APSTRA_WRITE_TOOLS=true`, `ENABLE_AXIS_WRITE_TOOLS=true`, or `ENABLE_AOS8_WRITE_TOOLS=true`
+- **Disabled by default** — enable per-platform with `ENABLE_MIST_WRITE_TOOLS=true`, `ENABLE_CENTRAL_WRITE_TOOLS=true`, `ENABLE_CLEARPASS_WRITE_TOOLS=true`, `ENABLE_APSTRA_WRITE_TOOLS=true`, `ENABLE_AXIS_WRITE_TOOLS=true`, `ENABLE_AOS8_WRITE_TOOLS=true`, or `ENABLE_GREENLAKE_WRITE_TOOLS=true`
 - **Elicitation required** — write tools prompt for user confirmation before executing
 - **Annotation-based** — all tools carry MCP annotations (`readOnlyHint`, `destructiveHint`, etc.)
 
@@ -570,6 +570,7 @@ Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) ar
 | `ENABLE_AXIS_WRITE_TOOLS` | `false` | Enable Axis Atmos Cloud write/mutation tools (every write stages — call `axis_commit_changes` to apply) |
 | `ENABLE_AOS8_WRITE_TOOLS` | `false` | Enable AOS8 write tools (12 tools; every write returns `requires_write_memory_for` — call `aos8_write_memory` explicitly) |
 | `ENABLE_UXI_WRITE_TOOLS` | `false` | Enable UXI write tools (10 tools: sensor/agent/group/assignment mutations) |
+| `ENABLE_GREENLAKE_WRITE_TOOLS` | `false` | Enable GreenLake write tools (`greenlake_bulk_add_devices` — bulk CSV device onboarding) |
 | `MCP_APP_ENABLE` | `false` | Single switch for all MCP-Apps capabilities. Registers the FastMCP `FileUpload` provider (`file_manager` drag/pick upload UI + `list_files` / `read_file`) **and** the `GenerativeUI` provider (`generate_prefab_ui` — the model writes a live Prefab dashboard from data it collected — + `search_prefab_components`). All UIs render only in MCP-Apps hosts (e.g. Claude Desktop / ChatGPT / claude.ai). |
 | `DISABLE_ELICITATION` | `false` | Skip user confirmation for write tools (**use with caution**) |
 
@@ -610,6 +611,7 @@ The retry logic detects transient failures in two patterns: response-dict (Mist/
 | `ENABLE_AXIS_WRITE_TOOLS` | `false` | Enable Axis write/mutation tools (staged; commit with `axis_commit_changes`) |
 | `ENABLE_AOS8_WRITE_TOOLS` | `false` | Enable AOS8 write tools (call `aos8_write_memory` after each change to persist) |
 | `ENABLE_UXI_WRITE_TOOLS` | `false` | Enable UXI write tools (sensor/agent/group/assignment mutations) |
+| `ENABLE_GREENLAKE_WRITE_TOOLS` | `false` | Enable GreenLake write tools (`greenlake_bulk_add_devices` — bulk CSV device onboarding) |
 | `DISABLE_ELICITATION` | `false` | Disable write confirmation prompts |
 | `MCP_TOOL_MODE` | `code` | Tool exposure: `code` (default since v3.0.0.0 — 6 tools at top level: `execute` + 5 discovery; all 3177 underlying tools reachable via `call_tool()` inside the sandbox) or `dynamic` (24 tools — 4 cross-platform + 21 per-platform meta-tools + 2 skills tools; underlying tools hidden until invoked via `<platform>_invoke_tool`). The `static` value was REMOVED in v3.0.0.0 |
 | `RETRY_MAX_ATTEMPTS` | `3` | Max retry attempts on transient failures (5xx reads, 429 reads+writes). Set to `1` to disable retry |
@@ -680,7 +682,7 @@ hpe-networking-mcp/
 │       ├── health.py            # Cross-platform health probe tool
 │       ├── mist/                # 1037 Mist tools (spec-driven) + 2 prompts + API client
 │       ├── central/             # 659 Central tools + 12 prompts + API client
-│       ├── greenlake/           # 10 GreenLake tools + OAuth2 client
+│       ├── greenlake/           # 11 GreenLake tools (10 read + 1 write) + OAuth2 client
 │       ├── clearpass/           # 142 ClearPass tools + async httpx client
 │       ├── apstra/              # 19 Apstra tools + async httpx client
 │       ├── axis/                # 25 Axis Atmos Cloud tools + httpx client (JWT bearer)

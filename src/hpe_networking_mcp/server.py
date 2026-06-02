@@ -503,6 +503,8 @@ def create_server(config: ServerConfig) -> FastMCP:
         mcp.add_transform(Visibility(False, tags={"aos8_write", "aos8_write_delete"}, components={"tool"}))
     if not config.enable_uxi_write_tools:
         mcp.add_transform(Visibility(False, tags={"uxi_write", "uxi_write_delete"}, components={"tool"}))
+    if not config.enable_greenlake_write_tools:
+        mcp.add_transform(Visibility(False, tags={"greenlake_write"}, components={"tool"}))
     if not config.enable_edgeconnect_write_tools:
         mcp.add_transform(
             Visibility(False, tags={"edgeconnect_write", "edgeconnect_write_delete"}, components={"tool"})
