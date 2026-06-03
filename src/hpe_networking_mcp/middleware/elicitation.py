@@ -107,6 +107,44 @@ class ElicitationMiddleware(Middleware):
         return result  # type: ignore[return-value]
 
 
+async def _resolve_elicitation_mode(ctx: Context) -> str:
+    """Resolve the active elicitation mode, robust to code mode.
+
+    ``ElicitationMiddleware.on_initialize`` stores the mode in FastMCP
+    *request-scoped* state. In code mode a write tool runs inside a **nested**
+    ``call_tool`` context dispatched from the Monty sandbox; that context does
+    not inherit the ``initialize`` request's state, so ``get_state`` returns
+    ``None``. Left unhandled, a ``None`` mode meant the tool never surfaced a
+    prompt yet still reported ``"Action declined by user."`` — a decline the
+    user never made (the AI then spins, believing it was vetoed).
+
+    When state is missing we re-derive the mode from ``config`` (always
+    reachable via ``lifespan_context``) and default to ``chat_confirm``: an
+    interactive ``elicit()`` cannot round-trip out of the sandbox, so the AI
+    must confirm with the user in chat and re-call with ``confirmed=true``.
+    The resolved value is written back into request state so callers that
+    re-read ``elicitation_mode`` (the inline write tools) route consistently.
+
+    Args:
+        ctx: FastMCP context.
+
+    Returns:
+        One of ``"disabled"``, ``"prompt"``, or ``"chat_confirm"``.
+    """
+    mode = await ctx.get_state("elicitation_mode")
+    if mode in ("disabled", "prompt", "chat_confirm"):
+        return mode  # type: ignore[return-value]
+
+    try:
+        config = ctx.lifespan_context.get("config")
+    except Exception:
+        config = None
+    resolved = "disabled" if (config is not None and config.disable_elicitation) else "chat_confirm"
+    await ctx.set_state("elicitation_mode", resolved)
+    logger.debug("Elicitation: mode state absent (code mode?) — resolved to {}", resolved)
+    return resolved
+
+
 async def confirm_write(
     ctx: Context,
     message: str,
@@ -159,7 +197,7 @@ async def elicitation_handler(message: str, ctx: Context) -> ElicitResult:
         On "decline" when chat confirmation is needed, the calling tool
         should return a confirmation request message to the AI.
     """
-    mode = await ctx.get_state("elicitation_mode")
+    mode = await _resolve_elicitation_mode(ctx)
 
     # DISABLE_ELICITATION=true — skip all confirmation
     if mode == "disabled":
@@ -181,8 +219,14 @@ async def elicitation_handler(message: str, ctx: Context) -> ElicitResult:
                 case _:
                     return ElicitResult(action="cancel")
         except Exception:
-            logger.warning("Elicitation: prompt failed, falling through to chat confirm")
+            # The prompt never reached the user — do NOT report a decline they
+            # never made. Degrade to chat-confirm so the caller returns a
+            # confirmation_required result and the AI confirms in chat.
+            logger.warning("Elicitation: prompt failed, degrading to chat confirm")
+            await ctx.set_state("elicitation_mode", "chat_confirm")
 
-    # Client lacks elicitation — tell AI to ask the user in chat
+    # Client lacks elicitation (or prompt failed to surface) — tell the AI to
+    # ask the user in chat. Callers map this decline to confirmation_required
+    # by re-reading the (now chat_confirm) mode.
     logger.debug("Elicitation: chat confirmation required — {}", message)
     return ElicitResult(action="decline")
