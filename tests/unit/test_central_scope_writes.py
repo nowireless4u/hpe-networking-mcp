@@ -10,12 +10,26 @@ ungated.
 
 from __future__ import annotations
 
+import importlib
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.tool_registry import REGISTRIES
+
 pytestmark = pytest.mark.unit
+
+
+@pytest.fixture
+def central_registry():
+    """Reload sites.py so its @tool decorators re-record into the central
+    registry — robust against other tests that reload/clear the registry."""
+    import hpe_networking_mcp.platforms.central.tools.sites as sites_mod
+
+    importlib.reload(sites_mod)
+    return REGISTRIES["central"]
+
 
 _CONFIRM = "hpe_networking_mcp.platforms.central.tools.sites.confirm_write"
 _CMD = "hpe_networking_mcp.platforms.central.tools.sites.retry_central_command"
@@ -38,15 +52,12 @@ def _ctx() -> MagicMock:
 
 
 class TestGatingTag:
-    def test_all_write_tools_carry_central_write_delete(self):
-        # Importing the module records the tools into the central registry.
-        import hpe_networking_mcp.platforms.central.tools.sites  # noqa: F401
-        from hpe_networking_mcp.platforms._common.tool_registry import REGISTRIES
-
-        central = REGISTRIES["central"]
+    def test_all_write_tools_carry_central_write_delete(self, central_registry):
         for name in WRITE_TOOLS:
-            assert name in central, f"{name} not recorded in central registry"
-            assert "central_write_delete" in central[name].tags, f"{name} missing central_write_delete gating tag"
+            assert name in central_registry, f"{name} not recorded in central registry"
+            assert "central_write_delete" in central_registry[name].tags, (
+                f"{name} missing central_write_delete gating tag"
+            )
 
 
 class TestMembershipWrites:
