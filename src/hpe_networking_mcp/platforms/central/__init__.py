@@ -169,6 +169,7 @@ TOOLS = {
         "central_manage_cda_portal_skin_profile",
         "central_get_cda_static_tag",
         "central_manage_cda_static_tag",
+        "central_get_cnac_job_status",
     ],
     "config_management": [
         "central_get_config_checkpoint",

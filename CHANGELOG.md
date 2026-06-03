@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.3.8] - 2026-06-02
+
+**Patch — Central NAC: add `central_get_cnac_job_status` read tool.** Wraps `GET network-config/v1alpha1/cnac-job/{job-id}/status` (Central NAC Service) to poll a CDA import/export job by id. Follows the `ToolError` structured-error contract; registered under `TOOLS["central_nac"]`; covered by `tests/unit/test_central_cnac_job_status.py`. The job's image/input/error file-stream download endpoints are intentionally **not** wrapped here pending a stream-handling decision (tracked in #405). Surfaced by the Central OAS coverage audit; references #405.
+
 ## [3.2.3.7] - 2026-06-02
 
 **Patch — Central scope: add `central_get_global_scope` + `central_get_hierarchy` read tools.** Wraps the New Central Scope Management reads `GET network-config/v1/global` (tenant-root `scopeId`) and `GET network-config/v1/hierarchy` (child-scope tree for a given `scope_id` + `scope_type`: org / site-collection / site / device-group / device). Both follow the `ToolError` structured-error contract (raise on non-2xx, success returns the response body). Registered under `TOOLS["sites"]`; covered by `tests/unit/test_central_scope_hierarchy.py`. Surfaced by an OpenAPI coverage audit of the vendored Central specs (closes #402).

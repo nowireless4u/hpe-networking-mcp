@@ -18,6 +18,7 @@ hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
@@ -30,6 +31,7 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _get_resource,
     _manage_resource,
 )
+from hpe_networking_mcp.platforms.central.utils import retry_central_command
 
 WRITE_DELETE = ToolAnnotations(
     readOnlyHint=False,
@@ -630,3 +632,39 @@ async def central_manage_cda_static_tag(
         device_function,
         confirmed,
     )
+
+
+# ----- cnac-job (Central NAC Service) -----
+
+
+@tool(annotations=READ_ONLY)
+async def central_get_cnac_job_status(
+    ctx: Context,
+    job_id: Annotated[
+        str,
+        Field(
+            description="Job ID returned by a Central NAC import or export operation (OpenAPI path param: ``job-id``)."
+        ),
+    ],
+) -> dict | str:
+    """Get the status of a Central NAC (CDA) import/export job.
+
+    Wraps ``GET network-config/v1alpha1/cnac-job/{job-id}/status``. Poll with the
+    ``job_id`` returned by an import/export operation to track its progress and
+    outcome. (The job's image/input/error file downloads are separate stream
+    endpoints, not yet wrapped — see issue #405.)
+    """
+    conn = ctx.lifespan_context["central_conn"]
+    response = retry_central_command(
+        central_conn=conn,
+        api_method="GET",
+        api_path=f"network-config/v1alpha1/cnac-job/{job_id}/status",
+        api_params={},
+    )
+    code = response.get("code", 0)
+    if not 200 <= code < 300:
+        msg = response.get("msg", "unknown error")
+        raise ToolError(
+            {"status_code": code or 502, "message": f"Failed to fetch CDA job status for {job_id!r}: {msg}"}
+        )
+    return response.get("msg", {})
