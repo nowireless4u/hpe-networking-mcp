@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.3.9] - 2026-06-02
+
+**Patch — Central scope write tools: device-group/site membership + bulk deletes (7 tools).** Membership mutations `central_add_devices_to_device_group`, `central_remove_devices_from_device_group`, `central_create_device_group_with_devices`, `central_add_devices_to_site`; destructive bulk deletes `central_bulk_delete_device_groups`, `central_bulk_delete_sites`, `central_bulk_delete_site_collections` (Scope Management API, `network-config/v1`). All carry the `central_write_delete` gating tag (gated by `ENABLE_CENTRAL_WRITE_TOOLS`) and fire elicitation confirmation through a shared `_scope_write` helper; raise `ToolError` on non-2xx. Note: Central gates writes on `central_write_delete` only — a bare `central_write` tag gates nothing on this platform. Covered by `tests/unit/test_central_scope_writes.py` (incl. a gating-tag assertion across all seven). Closes #403, #404.
+
 ## [3.2.3.8] - 2026-06-02
 
 **Patch — Central NAC: add `central_get_cnac_job_status` read tool.** Wraps `GET network-config/v1alpha1/cnac-job/{job-id}/status` (Central NAC Service) to poll a CDA import/export job by id. Follows the `ToolError` structured-error contract; registered under `TOOLS["central_nac"]`; covered by `tests/unit/test_central_cnac_job_status.py`. The job's image/input/error file-stream download endpoints are intentionally **not** wrapped here pending a stream-handling decision (tracked in #405). Surfaced by the Central OAS coverage audit; references #405.

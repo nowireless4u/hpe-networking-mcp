@@ -2,9 +2,11 @@ from typing import Annotated
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
+from mcp.types import ToolAnnotations
 from pycentral.new_monitoring import MonitoringSites
 from pydantic import Field
 
+from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.models import SiteData
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
@@ -14,6 +16,42 @@ from hpe_networking_mcp.platforms.central.utils import (
     normalize_site_name_filter,
     retry_central_command,
 )
+
+# Write annotations. Central's elicitation middleware enables the
+# ``central_write_delete`` tag when ENABLE_CENTRAL_WRITE_TOOLS=true, so ALL
+# central write tools carry that tag regardless of destructiveness.
+_WRITE = ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True)
+_WRITE_DELETE = ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True)
+_CONFIRMED_FIELD = Field(default=False, description="Set to true when the user has confirmed the operation in chat.")
+
+
+async def _scope_write(
+    ctx: Context,
+    *,
+    method: str,
+    path: str,
+    body: dict,
+    action_message: str,
+    confirmed: bool,
+) -> dict | str:
+    """Shared confirm-then-write helper for scope mutation tools.
+
+    Fires elicitation confirmation (unless ``confirmed``); on accept, issues the
+    request and returns the response body, raising ``ToolError`` on non-2xx.
+    Returns the elicitation guard dict (confirmation_required / declined /
+    cancelled) when the user does not accept.
+    """
+    if not confirmed:
+        guard = await confirm_write(ctx, message=action_message)
+        if guard is not None:
+            return guard
+    conn = ctx.lifespan_context["central_conn"]
+    response = retry_central_command(central_conn=conn, api_method=method, api_path=path, api_data=body)
+    code = response.get("code", 0)
+    if not 200 <= code < 300:
+        msg = response.get("msg", "unknown error")
+        raise ToolError({"status_code": code or 502, "message": f"{action_message} failed: {msg}"})
+    return response.get("msg", {})
 
 
 @tool(annotations=READ_ONLY)
@@ -198,3 +236,156 @@ async def central_get_hierarchy(
         detail = f"Failed to fetch scope hierarchy for {scope_type} {scope_id!r}: {msg}"
         raise ToolError({"status_code": code or 502, "message": detail})
     return response.get("msg", {})
+
+
+# ---------------------------------------------------------------------------
+# Scope membership writes (device-group / site device assignment)
+# ---------------------------------------------------------------------------
+
+_DEVICES_FIELD = Field(description="List of device serial numbers to act on.")
+
+
+@tool(annotations=_WRITE, tags={"central_write_delete"})
+async def central_add_devices_to_device_group(
+    ctx: Context,
+    dest_scope_id: Annotated[
+        str, Field(description="scopeId of the destination device-group. Get it from central_get_hierarchy.")
+    ],
+    devices: Annotated[list[str], _DEVICES_FIELD],
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Add devices to a device-group (POST network-config/v1/device-groups-add-devices)."""
+    return await _scope_write(
+        ctx,
+        method="POST",
+        path="network-config/v1/device-groups-add-devices",
+        body={"desScopeId": dest_scope_id, "devices": devices},
+        action_message=f"Add {len(devices)} device(s) to device-group {dest_scope_id}",
+        confirmed=confirmed,
+    )
+
+
+@tool(annotations=_WRITE, tags={"central_write_delete"})
+async def central_remove_devices_from_device_group(
+    ctx: Context,
+    devices: Annotated[list[str], _DEVICES_FIELD],
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Remove devices from their device-group (POST network-config/v1/device-groups-remove-devices)."""
+    return await _scope_write(
+        ctx,
+        method="POST",
+        path="network-config/v1/device-groups-remove-devices",
+        body={"devices": devices},
+        action_message=f"Remove {len(devices)} device(s) from their device-group",
+        confirmed=confirmed,
+    )
+
+
+@tool(annotations=_WRITE, tags={"central_write_delete"})
+async def central_create_device_group_with_devices(
+    ctx: Context,
+    scope_name: Annotated[str, Field(description="Name for the new device-group.")],
+    devices: Annotated[list[str], _DEVICES_FIELD],
+    description: Annotated[str | None, Field(description="Optional description for the device-group.")] = None,
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Create a device-group and add its devices in one call.
+
+    POST network-config/v1/device-groups-create-and-add-devices.
+    """
+    body: dict = {"scopeName": scope_name, "devices": devices}
+    if description is not None:
+        body["description"] = description
+    return await _scope_write(
+        ctx,
+        method="POST",
+        path="network-config/v1/device-groups-create-and-add-devices",
+        body=body,
+        action_message=f"Create device-group {scope_name!r} with {len(devices)} device(s)",
+        confirmed=confirmed,
+    )
+
+
+@tool(annotations=_WRITE, tags={"central_write_delete"})
+async def central_add_devices_to_site(
+    ctx: Context,
+    dest_scope_id: Annotated[
+        str, Field(description="scopeId of the destination site. Get it from central_get_hierarchy.")
+    ],
+    devices: Annotated[list[str], _DEVICES_FIELD],
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Add devices to a site (POST network-config/v1/site-add-devices)."""
+    return await _scope_write(
+        ctx,
+        method="POST",
+        path="network-config/v1/site-add-devices",
+        body={"desScopeId": dest_scope_id, "devices": devices},
+        action_message=f"Add {len(devices)} device(s) to site {dest_scope_id}",
+        confirmed=confirmed,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Scope bulk deletes (destructive)
+# ---------------------------------------------------------------------------
+
+_BULK_ITEMS_FIELD = Field(
+    description=(
+        "List of objects identifying the scopes to delete (each typically "
+        "carries the scope `id`). Inspect existing scopes via "
+        "central_get_sites / central_get_hierarchy first."
+    )
+)
+
+
+@tool(annotations=_WRITE_DELETE, tags={"central_write_delete"})
+async def central_bulk_delete_device_groups(
+    ctx: Context,
+    items: Annotated[list[dict], _BULK_ITEMS_FIELD],
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Bulk-delete device-groups (DELETE network-config/v1/device-groups/bulk). Destructive."""
+    return await _scope_write(
+        ctx,
+        method="DELETE",
+        path="network-config/v1/device-groups/bulk",
+        body={"items": items},
+        action_message=f"Bulk-delete {len(items)} device-group(s)",
+        confirmed=confirmed,
+    )
+
+
+@tool(annotations=_WRITE_DELETE, tags={"central_write_delete"})
+async def central_bulk_delete_sites(
+    ctx: Context,
+    items: Annotated[list[dict], _BULK_ITEMS_FIELD],
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Bulk-delete sites (DELETE network-config/v1/sites/bulk). Destructive."""
+    return await _scope_write(
+        ctx,
+        method="DELETE",
+        path="network-config/v1/sites/bulk",
+        body={"items": items},
+        action_message=f"Bulk-delete {len(items)} site(s)",
+        confirmed=confirmed,
+    )
+
+
+@tool(annotations=_WRITE_DELETE, tags={"central_write_delete"})
+async def central_bulk_delete_site_collections(
+    ctx: Context,
+    items: Annotated[list[dict], _BULK_ITEMS_FIELD],
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Bulk-delete site-collections (DELETE network-config/v1/site-collections/bulk). Destructive."""
+    return await _scope_write(
+        ctx,
+        method="DELETE",
+        path="network-config/v1/site-collections/bulk",
+        body={"items": items},
+        action_message=f"Bulk-delete {len(items)} site-collection(s)",
+        confirmed=confirmed,
+    )

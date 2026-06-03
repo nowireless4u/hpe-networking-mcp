@@ -17,7 +17,7 @@ Tools are namespaced by platform:
 
 Two modes are supported (the `static` mode was removed in v3.0.0.0):
 
-- **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 1918 underlying tools are reachable from inside a sandboxed Python `execute()` block via `await call_tool("<platform>_invoke_tool", {"name": "<tool>", "params": {...}})` — see the in-sandbox dispatch note below; the ~1000 spec-driven Mist tools are reachable **only** through `mist_invoke_tool`, not by direct name. The smallest initial surface; best for orchestrators driving small / local LLMs.
+- **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 1925 underlying tools are reachable from inside a sandboxed Python `execute()` block via `await call_tool("<platform>_invoke_tool", {"name": "<tool>", "params": {...}})` — see the in-sandbox dispatch note below; the ~1000 spec-driven Mist tools are reachable **only** through `mist_invoke_tool`, not by direct name. The smallest initial surface; best for orchestrators driving small / local LLMs.
 - **`MCP_TOOL_MODE=dynamic`** (opt-in since v3.0.0.0; was the v2.x default) — 24 tools visible:
     - **4 cross-platform tools**: `health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`
     - **3 meta-tools per platform × 7 platforms** = 21: `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`
@@ -375,6 +375,7 @@ When asked to create a new site based on an existing site:
 - **Scope**: central_get_global_scope, central_get_hierarchy
   - Use `central_get_global_scope` to get the tenant-root `scopeId` (top of the scope tree).
   - Use `central_get_hierarchy(scope_id, scope_type)` to walk the child scopes (site-collections, sites, device-groups, devices) under a given scope. `scope_type` is one of `org`, `site-collection`, `site`, `device-group`, `device`.
+  - **Scope writes** (require `ENABLE_CENTRAL_WRITE_TOOLS`, fire elicitation confirmation): `central_add_devices_to_device_group`, `central_remove_devices_from_device_group`, `central_create_device_group_with_devices`, `central_add_devices_to_site`; destructive bulk deletes `central_bulk_delete_device_groups`, `central_bulk_delete_sites`, `central_bulk_delete_site_collections`.
 - **AP Monitoring**: central_get_aps, central_get_ap_wlans
   - Use `central_get_aps` for filtered AP listing (status, model, firmware, deployment, site). More AP-specific filters than `central_get_devices`.
   - Use `central_get_ap_wlans` to see which WLANs a specific AP is broadcasting (by serial number).
