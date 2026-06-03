@@ -9,7 +9,7 @@ name: Sync Mist OpenAPI
 # Branch protection on `main` requires PRs + 4 status checks; the default
 # GITHUB_TOKEN cannot trigger downstream workflows on a PR it opens, so
 # this workflow uses a fine-grained PAT (secret: MIST_SYNC_PAT) to open
-# the PR and enable auto-merge. See vendor/mist_openapi.SOURCE.md for the
+# the PR and enable auto-merge. See vendor/mist/mist_openapi.SOURCE.md for the
 # PAT-setup instructions.
 
 on:
@@ -76,12 +76,12 @@ jobs:
         id: diff
         run: |
           set -euo pipefail
-          if [ ! -f vendor/mist_openapi.json ]; then
+          if [ ! -f vendor/mist/mist_openapi.json ]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
             echo "First-time vendor; will commit"
             exit 0
           fi
-          if cmp -s /tmp/mist.openapi.json vendor/mist_openapi.json; then
+          if cmp -s /tmp/mist.openapi.json vendor/mist/mist_openapi.json; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No changes; exit silently"
           else
@@ -103,14 +103,14 @@ jobs:
         if: steps.diff.outputs.changed == 'true'
         run: |
           set -euo pipefail
-          cp /tmp/mist.openapi.json vendor/mist_openapi.json
+          cp /tmp/mist.openapi.json vendor/mist/mist_openapi.json
 
           # Refresh the "Current sync" block in SOURCE.md.
           python3 - <<'PY'
           import re
           import subprocess
           from pathlib import Path
-          src = Path("vendor/mist_openapi.SOURCE.md").read_text(encoding="utf-8")
+          src = Path("vendor/mist/mist_openapi.SOURCE.md").read_text(encoding="utf-8")
           version = "${{ steps.validate.outputs.version }}"
           sha = "${{ steps.sha.outputs.sha }}"
           today = subprocess.check_output(["date", "-u", "+%Y-%m-%d"]).decode().strip()
@@ -126,7 +126,7 @@ jobs:
               src,
               count=1,
           )
-          Path("vendor/mist_openapi.SOURCE.md").write_text(new_text, encoding="utf-8")
+          Path("vendor/mist/mist_openapi.SOURCE.md").write_text(new_text, encoding="utf-8")
           PY
 
       - name: Create or update sync PR
@@ -138,8 +138,8 @@ jobs:
           branch: chore/sync-mist-openapi
           delete-branch: true
           add-paths: |
-            vendor/mist_openapi.json
-            vendor/mist_openapi.SOURCE.md
+            vendor/mist/mist_openapi.json
+            vendor/mist/mist_openapi.SOURCE.md
           commit-message: |
             chore(vendor): sync Mist OpenAPI to ${{ steps.validate.outputs.version }} (auto)
 
@@ -183,7 +183,7 @@ jobs:
           - Network failure mid-download
           - Schema structure changed in a way our validator doesn't recognize
 
-          Action: re-run the workflow once upstream stabilizes, or investigate the validator if upstream is intact. See \`vendor/mist_openapi.SOURCE.md\` for sync design notes." \
+          Action: re-run the workflow once upstream stabilizes, or investigate the validator if upstream is intact. See \`vendor/mist/mist_openapi.SOURCE.md\` for sync design notes." \
             --label "mist,openapi-sync"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

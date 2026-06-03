@@ -5,7 +5,7 @@ Run from the repo root as:
     uv run python scripts/regenerate_mist_tools.py
 
 This is intended to run **at release time** by the maintainer. The
-vendored spec (``vendor/mist_openapi.json``) is auto-synced daily by
+vendored spec (``vendor/mist/mist_openapi.json``) is auto-synced daily by
 ``.github/workflows/sync-mist-openapi.yml``, but regeneration happens
 deliberately so the maintainer can review the tool diff before tagging.
 
@@ -57,7 +57,7 @@ def _repo_root() -> Path:
 def main() -> int:
     """Entry point for ``uv run python scripts/regenerate_mist_tools.py``."""
     root = _repo_root()
-    spec_path = root / "vendor" / "mist_openapi.json"
+    spec_path = root / "vendor" / "mist" / "mist_openapi.json"
     tools_dir = root / "src" / "hpe_networking_mcp" / "platforms" / "mist" / "tools"
 
     if not spec_path.exists():

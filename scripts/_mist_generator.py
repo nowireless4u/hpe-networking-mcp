@@ -1,6 +1,6 @@
 """Mist OpenAPI → tool function source generator.
 
-Reads ``vendor/mist_openapi.json`` (the upstream Juniper Mist OpenAPI 3.1
+Reads ``vendor/mist/mist_openapi.json`` (the upstream Juniper Mist OpenAPI 3.1
 spec) and emits one Python file per OpenAPI tag under
 ``src/hpe_networking_mcp/platforms/mist/tools/``. Each emitted module is
 a list of decorated async functions that proxy to ``mist_request`` in
@@ -305,7 +305,7 @@ def resolve_operation(
 _FILE_HEADER_BASE = '''"""Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 

@@ -13,7 +13,7 @@ useDefault = true
 # ---------------------------------------------------------------------------
 # Vendored upstream OpenAPI specs
 # ---------------------------------------------------------------------------
-# vendor/mist_openapi.json (MIT-licensed, from mistsys/mist_openapi) carries
+# vendor/mist/mist_openapi.json (MIT-licensed, from mistsys/mist_openapi) carries
 # illustrative example payloads inside endpoint documentation — Twilio Auth
 # Tokens, Azure AD client secrets, root passwords, JWTs, recaptcha site keys,
 # referer-invite tokens, etc. These are documented sample values, not real
@@ -29,6 +29,6 @@ paths = [
     # verbatim from the OpenAPI spec, so they trip the same rules as the
     # source spec.  These files are auto-emitted by
     # scripts/_mist_generator.py; regenerating from a current spec produces
-    # fresh examples.  See vendor/mist_openapi.SOURCE.md.
+    # fresh examples.  See vendor/mist/mist_openapi.SOURCE.md.
     '''src/hpe_networking_mcp/platforms/mist/tools/.*\.py$''',
 ]
