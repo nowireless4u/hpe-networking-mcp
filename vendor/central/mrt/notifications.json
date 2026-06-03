@@ -1,0 +1,1649 @@
+{
+  "components": {
+    "headers": {
+      "XRateLimitLimit": {
+        "description": "Request limit per hour.",
+        "schema": {
+          "format": "int64",
+          "maximum": 9223372036854776000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "XRateLimitRemaining": {
+        "description": "The number of requests left for the time window.",
+        "schema": {
+          "format": "int64",
+          "maximum": 9223372036854776000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "XRateLimitReset": {
+        "description": "The date-time (RFC 3339 timestamp in UTC+0) at which the current rate limit window resets.",
+        "schema": {
+          "format": "date-time",
+          "maxLength": 20,
+          "type": "string"
+        }
+      }
+    },
+    "responses": {
+      "AlertActionResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AlertActionResponseBody"
+            }
+          }
+        },
+        "description": "Accepted response for asynchronous alert action operations.\n",
+        "headers": {
+          "Location": {
+            "description": "URL to check the status of the asynchronous operation.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "AlertActionStatusResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AlertActionStatusResponseBody"
+            }
+          }
+        },
+        "description": "Status of an asynchronous alert operation.\n",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "AlertListResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AlertListResponse"
+            }
+          }
+        },
+        "description": "List of alerts, along with alert details and associated pagination information.\n",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "AlertsClassificationResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AlertsClassificationResponseBody"
+            }
+          }
+        },
+        "description": "Classification of alerts grouped by the specified type.\n",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "BadRequestError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/BadRequestErrorDetails"
+            }
+          }
+        },
+        "description": "Invalid input received.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "Forbidden": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ForbiddenErrorDetails"
+            }
+          }
+        },
+        "description": "Forbidden. Access is denied.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "InternalServerError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/InternalServerErrorDetails"
+            }
+          }
+        },
+        "description": "Internal server error.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "NotFoundError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/NotFoundError"
+            }
+          }
+        },
+        "description": "Not Found error",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "SourceRecommendationsResponse": {
+        "content": {
+          "application/json": {
+            "examples": {
+              "globalLevel": {
+                "summary": "Global recommendations when site-id is omitted",
+                "value": {
+                  "count": 1,
+                  "id": "network-notifications/v1/insights",
+                  "items": [
+                    {
+                      "category": "Wireless",
+                      "description": "New firmware recommendation available for 9 access point(s). These upgrades provide new features and bug fixes.",
+                      "id": "c539f92800ea11edbc10aa7fd39913ac_-1_702_5482_7_1770855661666",
+                      "impactedSites": [
+                        {
+                          "impactedClientCount": 0,
+                          "impactedDeviceCount": 0,
+                          "siteId": "165678616917",
+                          "siteName": "Bengaluru (BLR) - Campus"
+                        }
+                      ],
+                      "insightId": "702",
+                      "recordId": "c539f92800ea11edbc10aa7fd39913ac_-1_702_5482_7_1770855661666",
+                      "siteId": "-1",
+                      "tenantId": "c539f92800ea11edbc10aa7fd39913ac",
+                      "timestamp": "1770858000000",
+                      "title": "Access Point Firmware Recommendation",
+                      "type": "network-notifications/insight"
+                    }
+                  ],
+                  "message": {
+                    "info": "For site-level recommendations, siteId is required. For full recommendation, insight id is required.",
+                    "type": "WARNING"
+                  },
+                  "type": "collection"
+                }
+              },
+              "siteLevelDetailed": {
+                "summary": "Site-level with insight filter and detailed payload",
+                "value": {
+                  "count": 1,
+                  "id": "network-notifications/v1/insights",
+                  "items": [
+                    {
+                      "category": "Wireless",
+                      "data": "{\"analyzer_id\":\"c539f92800ea11edbc10aa7fd39913ac_6985764272_702_8646_4_1770855661607\"}",
+                      "description": "New firmware recommendation available for 3 access point(s) in the site. These upgrades provide new features and bug fixes.",
+                      "id": "c539f92800ea11edbc10aa7fd39913ac_6985764272_702_8646_4_1770855661607",
+                      "insightId": "702",
+                      "recordId": "c539f92800ea11edbc10aa7fd39913ac_6985764272_702_8646_4_1770855661607",
+                      "siteId": "6985764272",
+                      "tenantId": "c539f92800ea11edbc10aa7fd39913ac",
+                      "timestamp": "1770858000000",
+                      "title": "Access Point Firmware Recommendation",
+                      "type": "network-notifications/insight"
+                    }
+                  ],
+                  "message": {
+                    "info": "Successfully fetched. For global-level recommendations, omit siteId",
+                    "type": "WARNING"
+                  },
+                  "type": "collection"
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/components/schemas/AIOpsSourceRecommendationsResult"
+            }
+          }
+        },
+        "description": "Source recommendations list response.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "TooManyRequests": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/TooManyRequestsErrorDetails"
+            }
+          }
+        },
+        "description": "Too many requests. Rate limit exceeded.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "Unauthorized": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UnauthorizedErrorDetails"
+            }
+          }
+        },
+        "description": "Unauthorized request.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      }
+    },
+    "schemas": {
+      "AIOpsGenericMessage": {
+        "properties": {
+          "info": {
+            "example": "Successfully fetched.",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "INFO",
+              "WARNING",
+              "ERROR"
+            ],
+            "example": "WARNING",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "AIOpsGlobalSites": {
+        "properties": {
+          "impactedClientCount": {
+            "example": 0,
+            "type": "integer"
+          },
+          "impactedDeviceCount": {
+            "example": 0,
+            "type": "integer"
+          },
+          "siteId": {
+            "example": "165678616917",
+            "type": "string"
+          },
+          "siteName": {
+            "example": "Bengaluru (BLR) - Campus",
+            "type": "string"
+          }
+        },
+        "required": [
+          "siteId",
+          "siteName",
+          "impactedDeviceCount",
+          "impactedClientCount"
+        ],
+        "type": "object"
+      },
+      "AIOpsSourceRecommendations": {
+        "properties": {
+          "category": {
+            "example": "Wireless",
+            "type": "string"
+          },
+          "data": {
+            "example": "{\"analyzer_id\":\"c539f92800ea11edbc10aa7fd39913ac_6985764272_702_8646_4_1770855661607\"}",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "description": {
+            "example": "New firmware recommendation available for 3 access point(s) in the site. These upgrades provide new features and bug fixes.",
+            "type": "string"
+          },
+          "id": {
+            "example": "c539f92800ea11edbc10aa7fd39913ac_6985764272_702_8646_4_1770855661607",
+            "type": "string"
+          },
+          "impactedSites": {
+            "items": {
+              "$ref": "#/components/schemas/AIOpsGlobalSites"
+            },
+            "type": "array"
+          },
+          "insightId": {
+            "example": "702",
+            "type": "string"
+          },
+          "recordId": {
+            "example": "c539f92800ea11edbc10aa7fd39913ac_6985764272_702_8646_4_1770855661607",
+            "type": "string"
+          },
+          "siteId": {
+            "example": "6985764272",
+            "type": "string"
+          },
+          "tenantId": {
+            "example": "c539f92800ea11edbc10aa7fd39913ac",
+            "type": "string"
+          },
+          "timestamp": {
+            "example": "1770858000000",
+            "type": "string"
+          },
+          "title": {
+            "example": "Access Point Firmware Recommendation",
+            "type": "string"
+          },
+          "type": {
+            "example": "network-notifications/insight",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "timestamp",
+          "tenantId",
+          "siteId",
+          "title",
+          "description",
+          "category",
+          "insightId",
+          "recordId"
+        ],
+        "type": "object"
+      },
+      "AIOpsSourceRecommendationsResult": {
+        "properties": {
+          "count": {
+            "example": 1,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "id": {
+            "example": "network-notifications/v1/insights",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AIOpsSourceRecommendations"
+            },
+            "type": "array"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AIOpsGenericMessage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "type": {
+            "example": "collection",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "items",
+          "count"
+        ],
+        "type": "object"
+      },
+      "Alert": {
+        "description": "Alert details.\n",
+        "properties": {
+          "category": {
+            "description": "Category of the alert.\n",
+            "type": "string"
+          },
+          "clearedReason": {
+            "description": "The reason an alert is cleared. This will be populated only when the status is cleared.\n",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "Timestamp when the alert was created.\n",
+            "format": "date-time",
+            "type": "string"
+          },
+          "deviceType": {
+            "description": "Type of device associated with the alert.\n",
+            "type": "string"
+          },
+          "id": {
+            "description": "Unique identifier for the alert.\n",
+            "type": "string"
+          },
+          "key": {
+            "description": "Alert key.\n",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the alert.\n",
+            "type": "string"
+          },
+          "priority": {
+            "description": "Priority level of the alert.\n",
+            "type": "string"
+          },
+          "severity": {
+            "description": "Severity level of the alert.\n",
+            "type": "string"
+          },
+          "status": {
+            "description": "Current status of the alert.\n",
+            "type": "string"
+          },
+          "summary": {
+            "description": "Summary description of the alert.\n",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of the resource.\n",
+            "type": "string"
+          },
+          "typeId": {
+            "description": "Type identifier of the alert.\n",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Timestamp when the alert was last updated.\n",
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedBy": {
+            "description": "Identifier of the user who last updated the alert.\n",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "category",
+          "typeId",
+          "name",
+          "severity",
+          "priority",
+          "status",
+          "summary",
+          "createdAt",
+          "updatedAt",
+          "updatedBy",
+          "type",
+          "deviceType",
+          "clearedReason"
+        ],
+        "type": "object"
+      },
+      "AlertActionResponseBody": {
+        "description": "Response body for alert action operations.\n",
+        "properties": {
+          "location": {
+            "description": "URL to check the status of the asynchronous operation.\n",
+            "example": "/network-notifications/v1/alerts/async-operations/abc123-def456-ghi789",
+            "type": "string"
+          },
+          "response": {
+            "description": "Response message indicating the action was accepted.\n",
+            "example": "Request accepted",
+            "type": "string"
+          },
+          "taskId": {
+            "description": "Unique task identifier for tracking the asynchronous operation.\n",
+            "example": "abc123-def456-ghi789",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "AlertActionStatusResponseBody": {
+        "description": "Response body for alert action status.\n",
+        "properties": {
+          "endedAt": {
+            "description": "Timestamp when the operation ended.\n",
+            "example": "2026-02-23T10:31:00Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "error": {
+            "$ref": "#/components/schemas/AsyncOperationError"
+          },
+          "logMessages": {
+            "description": "Log messages associated with the operation.\n",
+            "items": {
+              "$ref": "#/components/schemas/LogMessage"
+            },
+            "type": "array"
+          },
+          "progressPercent": {
+            "description": "The progress percentage of the operation.\n",
+            "example": 100,
+            "maximum": 100,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "sourceResourceUri": {
+            "description": "The URI of the source resource associated with this operation.\n",
+            "example": "/network-notifications/v1/alerts/clear",
+            "type": "string"
+          },
+          "startedAt": {
+            "description": "Timestamp when the operation started.\n",
+            "example": "2026-02-23T10:30:00Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "state": {
+            "description": "The current state of the asynchronous operation.\n",
+            "enum": [
+              "PENDING",
+              "IN_PROGRESS",
+              "SUCCEEDED",
+              "FAILED"
+            ],
+            "example": "SUCCEEDED",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "AlertListResponse": {
+        "example": {
+          "count": 2,
+          "items": [
+            {
+              "category": "System",
+              "clearedReason": null,
+              "createdAt": "2025-12-10T07:04:33.352Z",
+              "deviceType": "Access Point",
+              "id": "22071893000:47765082406",
+              "key": "ad4c9f5b-25d2-37f9-a4ed-fc0e6b0f5825",
+              "name": "Insufficient PoE Received",
+              "priority": "Very High",
+              "severity": "Critical",
+              "status": "Cleared",
+              "summary": "AP LUHR000001 did not receive the requested PoE power which may limit its functions.",
+              "type": "network-notifications/alerts",
+              "updatedAt": "2025-12-10T08:37:02.475Z",
+              "updatedBy": null
+            },
+            {
+              "category": "System",
+              "clearedReason": null,
+              "createdAt": "2025-12-10T08:31:36.710Z",
+              "deviceType": "Access Point",
+              "id": "22071893000:47764775046",
+              "key": "ad4c9f5b-25d2-37f9-a4ed-fc0e6b0f5825",
+              "name": "USB Device Removed from AP",
+              "priority": "Medium",
+              "severity": "Minor",
+              "status": "Active",
+              "summary": "A USB device was removed from the AP LUHR000012's USB port.",
+              "type": "network-notifications/alerts",
+              "updatedAt": "",
+              "updatedBy": null
+            }
+          ],
+          "next": "2",
+          "total": 85
+        },
+        "properties": {
+          "count": {
+            "description": "Number of alerts returned in the current response.\n",
+            "example": 1,
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of alerts.\n",
+            "items": {
+              "$ref": "#/components/schemas/Alert"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "Specifies the pagination cursor for the next page of resources. Null if there are no further pages.\n",
+            "example": [
+              null,
+              1,
+              2,
+              3
+            ],
+            "type": "string"
+          },
+          "total": {
+            "description": "Total number of alerts matching the query criteria.\n",
+            "example": 1,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "AlertsClassificationResponseBody": {
+        "description": "Response body for alerts classification.\n",
+        "properties": {
+          "classificationData": {
+            "description": "List of classification data entries.\n",
+            "items": {
+              "$ref": "#/components/schemas/ClassificationDataItem"
+            },
+            "type": "array"
+          },
+          "type": {
+            "description": "The type of classification used.\n",
+            "example": "category",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "AsyncOperationError": {
+        "description": "Error details for a failed async operation.\n",
+        "properties": {
+          "code": {
+            "description": "The error code.\n",
+            "example": "HPE_GL_ERROR_OPERATION_FAILED",
+            "type": "string"
+          },
+          "details": {
+            "description": "Additional details about the error.\n",
+            "example": "Alert ID not found",
+            "type": "string"
+          },
+          "message": {
+            "description": "The error message.\n",
+            "example": "The operation failed due to an internal error.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "BadRequestErrorDetails": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "enum": [
+              "HPE_GL_NETWORKING_ERROR_INVALID_INPUT"
+            ],
+            "example": "HPE_GL_NETWORKING_ERROR_INVALID_INPUT",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "example": 400,
+            "maximum": 400,
+            "minimum": 400,
+            "type": "integer"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ErrorMessage"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "ClassificationDataItem": {
+        "description": "A single classification data entry.\n",
+        "properties": {
+          "count": {
+            "description": "The number of alerts in this classification group.\n",
+            "example": 25,
+            "type": "integer"
+          },
+          "name": {
+            "description": "The name of the classification group.\n",
+            "example": "System",
+            "type": "string"
+          },
+          "typeId": {
+            "description": "The type identifier for this classification group.\n",
+            "example": "102",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ClearAlertsRequest": {
+        "description": "Request body for clearing alerts.\n",
+        "properties": {
+          "keys": {
+            "description": "List of alert keys to clear.\n",
+            "example": [
+              "22071893000:47765082406",
+              "22071893000:47764775046"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "notes": {
+            "description": "Additional notes about clearing the alerts.\n",
+            "example": "Firmware updated to version 10.4.0",
+            "type": "string"
+          },
+          "reason": {
+            "description": "The reason for clearing the alerts.\n",
+            "enum": [
+              "Problem was resolved",
+              "False Positive",
+              "Insufficient information for troubleshooting",
+              "Alert is not important",
+              "Other"
+            ],
+            "example": "Problem was resolved",
+            "type": "string"
+          }
+        },
+        "required": [
+          "keys"
+        ],
+        "type": "object"
+      },
+      "DebugId": {
+        "description": "Unique identifier for debugging purposes. This ID can be used to trace the error in server logs.",
+        "maxLength": 256,
+        "type": "string"
+      },
+      "DeferAlertsRequest": {
+        "description": "Request body for deferring alerts.\n",
+        "properties": {
+          "deferUntil": {
+            "description": "The date-time until which the alerts should be deferred.\n",
+            "example": "2026-03-01T00:00:00Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "keys": {
+            "description": "List of alert keys to defer.\n",
+            "example": [
+              "22071893000:47765082406",
+              "22071893000:47764775046"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "keys",
+          "deferUntil"
+        ],
+        "type": "object"
+      },
+      "ErrorMessage": {
+        "description": "Error message providing additional details about the error.",
+        "maxLength": 512,
+        "type": "string"
+      },
+      "ForbiddenErrorDetails": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "Error code indicating the reason for access denial.",
+            "example": "HPE_GL_NETWORKING_ERROR_FORBIDDEN",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "example": 403,
+            "maximum": 403,
+            "minimum": 403,
+            "type": "integer"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ErrorMessage"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "InternalServerErrorDetails": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "example": "HPE_GL_NETWORKING_ERROR_INTERNAL_SERVER_ERROR",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "example": 500,
+            "maximum": 500,
+            "minimum": 500,
+            "type": "integer"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ErrorMessage"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "LogMessage": {
+        "description": "A log message entry.\n",
+        "properties": {
+          "message": {
+            "description": "The log message content.\n",
+            "example": "Alert cleared successfully",
+            "type": "string"
+          },
+          "timestamp": {
+            "description": "Timestamp when the log message was recorded.\n",
+            "example": "2026-02-23T10:30:30Z",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "NotFoundError": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "example": "HPE_GL_NETWORKING_ERROR_NOT_FOUND",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "example": 404,
+            "maximum": 404,
+            "minimum": 404,
+            "type": "integer"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ErrorMessage"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "SetActiveAlertsRequest": {
+        "description": "Request body for setting alerts to active status.\n",
+        "properties": {
+          "keys": {
+            "description": "List of alert keys to set to active.\n",
+            "example": [
+              "22071893000:47765082406",
+              "22071893000:47764775046"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "keys"
+        ],
+        "type": "object"
+      },
+      "SetPriorityAlertsRequest": {
+        "description": "Request body for setting alert priority.\n",
+        "properties": {
+          "keys": {
+            "description": "List of alert keys to update priority.\n",
+            "example": [
+              "ad4c9f5b-25d2-37f9-a4ed-fc0e6b0f5825",
+              "bd5c9f5b-35d2-47f9-b4ed-fc0e6b0f5826"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "priority": {
+            "description": "The priority level to set for the alerts.\n",
+            "enum": [
+              "Very High",
+              "High",
+              "Medium",
+              "Low",
+              "Very Low"
+            ],
+            "example": "High",
+            "type": "string"
+          }
+        },
+        "required": [
+          "keys",
+          "priority"
+        ],
+        "type": "object"
+      },
+      "TooManyRequestsErrorDetails": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "example": "HPE_GL_NETWORKING_ERROR_TOO_MANY_REQUESTS",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "example": 429,
+            "maximum": 429,
+            "minimum": 429,
+            "type": "integer"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ErrorMessage"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "UnauthorizedErrorDetails": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "example": "HPE_GL_NETWORKING_ERROR_UNAUTHORIZED",
+            "maxLength": 256,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "example": 401,
+            "maximum": 401,
+            "minimum": 401,
+            "type": "integer"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ErrorMessage"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "OAuth2": {
+        "description": "OAuth 2.0 authentication with client credentials flow. You can also use your own access token.",
+        "flows": {
+          "clientCredentials": {
+            "scopes": {},
+            "tokenUrl": "https://sso.common.cloud.hpe.com/as/token.oauth2"
+          }
+        },
+        "type": "oauth2"
+      }
+    }
+  },
+  "info": {
+    "description": "This is a v1 release of the Alerts-Framework APIs.",
+    "license": {
+      "name": "HPE",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "title": "Notifications",
+    "version": "0.0.1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/network-notifications/v1/alerts": {
+      "get": {
+        "description": "This API endpoint retrieves the list of Alerts based on the query parameters provided. The alerts list includes details such as name, type, category, severity, status, etc. The query parameters allow you to filter results that meet specific criteria, ensuring you receive only relevant data.\n",
+        "operationId": "getAlertListV1",
+        "parameters": [
+          {
+            "description": "OData Version 4.0 filter string (limited functionality). Supports only 'and' conjunction ('or' and 'not' are NOT supported). Supported fields and operators are in the table below. \n\n| Field | Operators |\n| --------- | -------- |\n| `siteId` | `eq` and `in` |\n| `typeId` | `eq` and `in` |\n| `status` | `eq` and `in` |\n| `category` | `eq` and `in` |\n| `deviceType` | `eq` and `in`|\n\n**The operators are implemented as follows:**\n\n* `eq`: Only values exactly matching the given value are returned.\n* `in`: Only values present in the given list are returned.\n\n**List of applicable filters for field and terms:**\n\n| Field | Applicable Terms |\n| --------- | -------- |\n|  `siteId` | `string` |\n| `typeId` | `string` |\n| `status` | `[\"Active\", \"Deferred\", \"Cleared\"]` |\n| `deviceType` | `[\"Access Point\", \"Gateway\", \"Switch\", \"Bridge\", \"Access Point, Switch\", \"Switch, Switch\"]` |\n| `category` | `[\"Clients\", \"System\", \"LAN\", \"WLAN\", \"WAN\", \"Cluster\", \"Routing\", \"Security\"]` |\n\n",
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "example": "typeId in ('102', '4') and siteId eq '1234567'",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort field followed by a direction indicator ASC (ascending) or DESC (descending). Supported fields are `createdAt`,`severity`,`status`,`name`,`priority`. `createdAt` field is used by default. \n",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "example": "status asc",
+              "format": "const",
+              "maxLength": 256,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Specifies the pagination cursor for the next page of resources. Minimum value is 1.\n",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "default": 1,
+              "example": "1",
+              "minimum": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of alerts to be retrieved. Allowed range is 1 to 100.\n",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AlertListResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "List all alerts",
+        "tags": [
+          "Alerts"
+        ]
+      }
+    },
+    "/network-notifications/v1/alerts/active": {
+      "post": {
+        "description": "This API endpoint sets the specified alerts to active status. This can be used to reactivate deferred alerts.\n",
+        "operationId": "setActiveAlerts",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetActiveAlertsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "$ref": "#/components/responses/AlertActionResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Set alerts to active",
+        "tags": [
+          "Alerts"
+        ]
+      }
+    },
+    "/network-notifications/v1/alerts/async-operations/{task-id}": {
+      "get": {
+        "description": "This API endpoint retrieves the status of an asynchronous alert operation using the task ID returned from alert action endpoints (clear, defer, active, priority).\n",
+        "operationId": "alertActionStatus",
+        "parameters": [
+          {
+            "description": "The unique task identifier returned from an alert action request.\n",
+            "in": "path",
+            "name": "task-id",
+            "required": true,
+            "schema": {
+              "example": "abc123-def456-ghi789",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AlertActionStatusResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get async operation status",
+        "tags": [
+          "Alerts"
+        ]
+      }
+    },
+    "/network-notifications/v1/alerts/classification": {
+      "get": {
+        "description": "This API endpoint retrieves the classification of alerts based on the specified type. The classification provides aggregated counts of alerts grouped by the specified criteria.\n",
+        "operationId": "alertsClassification",
+        "parameters": [
+          {
+            "description": "The type of classification to retrieve. This determines how alerts are grouped. \nPossible values are `severity`, `status`, `priority`, `category`, `device_type`, `impacted_devices`\n",
+            "in": "query",
+            "name": "type",
+            "required": true,
+            "schema": {
+              "example": "category",
+              "type": "string"
+            }
+          },
+          {
+            "description": "OData Version 4.0 filter string to filter the alerts before classification.\n",
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "example": "siteId eq '1234567'",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Search string to filter alerts by name or summary before classification.\n",
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "example": "PoE",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AlertsClassificationResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get alerts classification",
+        "tags": [
+          "Alerts"
+        ]
+      }
+    },
+    "/network-notifications/v1/alerts/clear": {
+      "post": {
+        "description": "This API endpoint clears the specified alerts. Clearing an alert marks it as resolved with an optional reason and notes.\n",
+        "operationId": "clearAlerts",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClearAlertsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "$ref": "#/components/responses/AlertActionResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Clear alerts",
+        "tags": [
+          "Alerts"
+        ]
+      }
+    },
+    "/network-notifications/v1/alerts/defer": {
+      "post": {
+        "description": "This API endpoint defers the specified alerts until a specified time. Deferred alerts will not generate notifications until the deferral period expires.\n",
+        "operationId": "deferAlerts",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeferAlertsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "$ref": "#/components/responses/AlertActionResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Defer alerts",
+        "tags": [
+          "Alerts"
+        ]
+      }
+    },
+    "/network-notifications/v1/alerts/priority": {
+      "post": {
+        "description": "This API endpoint sets the priority level for the specified alerts.\n",
+        "operationId": "setPriorityAlerts",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPriorityAlertsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "$ref": "#/components/responses/AlertActionResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Set alert priority",
+        "tags": [
+          "Alerts"
+        ]
+      }
+    },
+    "/network-notifications/v1/insights": {
+      "get": {
+        "description": "Returns AI powered recommendations for optimizing performance. For site level granularity `site-id` and `id` filter shall be provided and for global recommendations `site-id` and `id` filter shall be omitted. At global level api returns global recommendations (across all sites) along with siteId and insightId.",
+        "operationId": "getSourceRecommendationsV1",
+        "parameters": [
+          {
+            "description": "Site identifier. Omit site-id to retrieve global recommendations across all sites. For site level recommendations site-id can be obtained from the same api from global recommendations through the field `siteId.",
+            "in": "query",
+            "name": "site-id",
+            "schema": {
+              "example": "6985764272",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Insight identifier. Id is insightId which is used to filter recommendations, id can be obtained from the same api from global level recommendations through the field 'insightId'.",
+            "in": "query",
+            "name": "id",
+            "schema": {
+              "example": "702",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SourceRecommendationsResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "List source recommendations",
+        "tags": [
+          "Insights"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "description": "eu",
+      "url": "https://de1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "eucentral2",
+      "url": "https://de2.api.central.arubanetworks.com"
+    },
+    {
+      "description": "eucentral3",
+      "url": "https://de3.api.central.arubanetworks.com"
+    },
+    {
+      "description": "ukwest2",
+      "url": "https://gb1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "prod",
+      "url": "https://us1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "central-prod2",
+      "url": "https://us2.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uswest4",
+      "url": "https://us4.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uswest5",
+      "url": "https://us5.api.central.arubanetworks.com"
+    },
+    {
+      "description": "us-east-1",
+      "url": "https://us6.api.central.arubanetworks.com"
+    },
+    {
+      "description": "starman",
+      "url": "https://ca1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apac",
+      "url": "https://in1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apaceast",
+      "url": "https://jp1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apacsouth",
+      "url": "https://au1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uaenorth1",
+      "url": "https://ae1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "china-prod",
+      "url": "https://cn1.api.central.arubanetworks.com.cn"
+    },
+    {
+      "description": "internal2",
+      "url": "https://internal.api.central.arubanetworks.com"
+    }
+  ],
+  "tags": [
+    {
+      "description": "APIs for managing alerts.",
+      "name": "Alerts"
+    },
+    {
+      "description": "APIs for retrieving source recommendations.",
+      "name": "Insights"
+    }
+  ],
+  "x-readme": {
+    "explorer-enabled": true,
+    "proxy-enabled": true
+  }
+}

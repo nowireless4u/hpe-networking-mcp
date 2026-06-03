@@ -1,0 +1,3165 @@
+{
+  "components": {
+    "headers": {
+      "X-RateLimit-Limit": {
+        "description": "Request limit per hour.",
+        "schema": {
+          "description": "Request limit per hour.",
+          "format": "int64",
+          "maximum": 9223372036854776000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "X-RateLimit-Remaining": {
+        "description": "The number of requests left for the time window.",
+        "schema": {
+          "description": "The number of requests left for the time window.",
+          "format": "int64",
+          "maximum": 9223372036854776000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "X-RateLimit-Reset": {
+        "description": "The UTC date/time at which the current rate limit window resets.",
+        "schema": {
+          "description": "The UTC date/time at which the current rate limit window resets.",
+          "format": "date-time",
+          "maxLength": 20,
+          "type": "string"
+        }
+      }
+    },
+    "parameters": {
+      "delete_device_function": {
+        "description": "Device function for which the local object needs to be deleted. Mandatory if object_type = LOCAL. Should not be provided for object_type = SHARED.",
+        "in": "query",
+        "name": "device-function",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "delete_object_type": {
+        "description": "LOCAL - To delete local objects. SHARED - To delete shared objects. Default - Defaults to SHARED if not provided",
+        "in": "query",
+        "name": "object-type",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "delete_scope_id": {
+        "description": "Scope at which local object needs to be deleted. Mandatory if object-type = LOCAL. Should not be provided for object-type = SHARED.",
+        "in": "query",
+        "name": "scope-id",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "detailed": {
+        "description": "True - Includes annotations in the returned json to indicate the type of object, scope, and device function. False - Returns only config objects without annotations.",
+        "in": "query",
+        "name": "detailed",
+        "schema": {
+          "type": "boolean"
+        }
+      },
+      "effective": {
+        "description": "True - Returns effective configuration (i.e hierarchically merged configuration). False - Returns committed configuration at a given scope.",
+        "in": "query",
+        "name": "effective",
+        "schema": {
+          "type": "boolean"
+        }
+      },
+      "get_device_function": {
+        "description": "Filters configuration specific to given device-function type. If not provided and view_type = LOCAL, then defaults to all device-function's.",
+        "in": "query",
+        "name": "device-function",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "get_object_type": {
+        "description": "Retrieves LOCAL or SHARED or both(default) configuration objects.",
+        "in": "query",
+        "name": "object-type",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "get_scope_id": {
+        "description": "Configuration at a given scope. Mandatory for view-type = LOCAL.",
+        "in": "query",
+        "name": "scope-id",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "limit": {
+        "description": "Limit for pagination.",
+        "in": "query",
+        "name": "limit",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "offset": {
+        "description": "Offset for pagination.",
+        "in": "query",
+        "name": "offset",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "patch_device_function": {
+        "description": "Device function for which the local object needs to be updated. Mandatory if object_type = LOCAL. Should not be provided for object_type = SHARED.",
+        "in": "query",
+        "name": "device-function",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "patch_object_type": {
+        "description": "LOCAL - To update local objects. SHARED - To update shared objects. Default - Defaults to SHARED if not provided",
+        "in": "query",
+        "name": "object-type",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "patch_scope_id": {
+        "description": "Scope at which local object needs to be updated. Mandatory if object-type = LOCAL. Should not be provided for object-type = SHARED.",
+        "in": "query",
+        "name": "scope-id",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "post_device_function": {
+        "description": "Device function for which the local object needs to be created. Mandatory if object_type = LOCAL. Should not be provided for object_type = SHARED.",
+        "in": "query",
+        "name": "device-function",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "post_object_type": {
+        "description": "LOCAL - To create local objects. SHARED - To create shared objects. Default - Defaults to SHARED if not provided",
+        "in": "query",
+        "name": "object-type",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "post_scope_id": {
+        "description": "Scope at which local object needs to be created. Mandatory if object-type = LOCAL. Should not be provided for object-type = SHARED.",
+        "in": "query",
+        "name": "scope-id",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "view_type": {
+        "description": "LIBRARY - Returns shared objects in library. For LIBRARY, all other parameters listed below, except 'detailed' , will be ignored. LOCAL - Returns configurations for a scope and one or more device function based on parameters below.",
+        "in": "query",
+        "name": "view-type",
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "requestBodies": {
+      "ArubaInterfaceTunnelGroup_TunnelGroupsgroupSchema": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ArubaInterfaceTunnelGroup_TunnelGroupsgroupSchema"
+            }
+          }
+        },
+        "description": "groupbody object"
+      },
+      "ArubaInterfaceTunnel_TunnelinterfaceSchema": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ArubaInterfaceTunnel_TunnelinterfaceSchema"
+            }
+          }
+        },
+        "description": "interfacebody object"
+      }
+    },
+    "responses": {
+      "200": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Successful200"
+            }
+          }
+        },
+        "description": "Successful Operation",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "400": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error400"
+            }
+          }
+        },
+        "description": "Bad Request",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "401": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error401"
+            }
+          }
+        },
+        "description": "Unauthorized Access",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "403": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error403"
+            }
+          }
+        },
+        "description": "Forbidden",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "404": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error404"
+            }
+          }
+        },
+        "description": "Not Found",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "406": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error406"
+            }
+          }
+        },
+        "description": "Not Acceptable",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "408": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error408"
+            }
+          }
+        },
+        "description": "Request Timeout",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "412": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error412"
+            }
+          }
+        },
+        "description": "Precondition Failed",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "429": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error429"
+            }
+          }
+        },
+        "description": "Rate limit exceeded",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "500": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error500"
+            }
+          }
+        },
+        "description": "Internal Server Error",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      }
+    },
+    "schemas": {
+      "ArubaInterfaceTunnelGroup_TunnelGroupConfigGet": {
+        "description": "Grouping for Tunnel-group configuration",
+        "properties": {
+          "group": {
+            "description": "List of Tunnel-groups.",
+            "items": {
+              "properties": {
+                "description": {
+                  "description": "Tunnel-group description",
+                  "format": "const",
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Tunnel-group name",
+                  "format": "const",
+                  "maxLength": 20,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ]
+                },
+                "payload-type": {
+                  "description": "Payload-type of tunnels that are part of the tunnel-group.\nAll tunnels in the group must have the same payload-type.\nIf payload-type is L2, all tunnels in the group must have the same vlan configuration.",
+                  "enum": [
+                    "L2",
+                    "L3"
+                  ],
+                  "format": "enum",
+                  "type": "string",
+                  "x-enumDescriptions": {
+                    "L2": "GRE payload is an Ethernet frame.",
+                    "L3": "GRE payload is an IPv4/IPv6 frame."
+                  },
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ],
+                  "x-typeDescription": "GRE payload type."
+                },
+                "preemptive-failover": {
+                  "default": "true",
+                  "description": "Use pre-emptive failover.\n\nIf this is enabled, when a tunnel with higher precedence than current\nactive tunnel comes up, that will be set as the active tunnel immediately\neven if the current active tunnel did not go down. Precedence is decided\nby the order of 'tunnels' list.",
+                  "type": "boolean",
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ]
+                },
+                "tunnels": {
+                  "items": {
+                    "description": "List of tunnels in the tunnel-group.\nOne tunnel-group can have up to 5 tunnels.",
+                    "format": "int64",
+                    "maximum": 4294967295,
+                    "minimum": 0,
+                    "type": "integer",
+                    "x-path": "/ac-if-tunnel:tunnel/ac-if-tunnel:interface/ac-if-tunnel:id",
+                    "x-supportedDeviceType": [
+                      "Gateway"
+                    ]
+                  },
+                  "maxItems": 2147483647,
+                  "type": "array"
+                }
+              }
+            },
+            "maxItems": 2147483647,
+            "type": "array",
+            "x-key": [
+              "name"
+            ]
+          }
+        }
+      },
+      "ArubaInterfaceTunnelGroup_TunnelGroupsSchemaGET": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArubaInterfaceTunnelGroup_TunnelGroupConfigGet"
+          }
+        ],
+        "description": "Configure GRE Tunnel-groups.\n\nTunnel-group provides redundancy for Layer-2 and Layer-3 GRE Tunnels.\n\nUp to 5 tunnels can be added to a group. One of them would be selected\nas the active tunnel. Only that tunnel would be used for carrying\ndata traffic. If the active tunnel fails, another member would be\nselected as the new active tunnel. Keepalive should be enabled on the\ntunnels to detect failures.\n\nIPv6 tunnels are not supported in a tunnel-group.",
+        "x-supportedDeviceType": [
+          "Gateway"
+        ]
+      },
+      "ArubaInterfaceTunnelGroup_TunnelGroupsgroupSchema": {
+        "properties": {
+          "description": {
+            "description": "Tunnel-group description",
+            "format": "const",
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string"
+          },
+          "name": {
+            "description": "Tunnel-group name",
+            "format": "const",
+            "maxLength": 20,
+            "minLength": 1,
+            "type": "string",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "payload-type": {
+            "description": "Payload-type of tunnels that are part of the tunnel-group.\nAll tunnels in the group must have the same payload-type.\nIf payload-type is L2, all tunnels in the group must have the same vlan configuration.",
+            "enum": [
+              "L2",
+              "L3"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "L2": "GRE payload is an Ethernet frame.",
+              "L3": "GRE payload is an IPv4/IPv6 frame."
+            },
+            "x-supportedDeviceType": [
+              "Gateway"
+            ],
+            "x-typeDescription": "GRE payload type."
+          },
+          "preemptive-failover": {
+            "default": "true",
+            "description": "Use pre-emptive failover.\n\nIf this is enabled, when a tunnel with higher precedence than current\nactive tunnel comes up, that will be set as the active tunnel immediately\neven if the current active tunnel did not go down. Precedence is decided\nby the order of 'tunnels' list.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "tunnels": {
+            "items": {
+              "description": "List of tunnels in the tunnel-group.\nOne tunnel-group can have up to 5 tunnels.",
+              "format": "int64",
+              "maximum": 4294967295,
+              "minimum": 0,
+              "type": "integer",
+              "x-path": "/ac-if-tunnel:tunnel/ac-if-tunnel:interface/ac-if-tunnel:id",
+              "x-supportedDeviceType": [
+                "Gateway"
+              ]
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          }
+        }
+      },
+      "ArubaInterfaceTunnelGroup_TunnelGroupsgroupSchemaGet": {
+        "properties": {
+          "description": {
+            "description": "Tunnel-group description",
+            "format": "const",
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string"
+          },
+          "name": {
+            "description": "Tunnel-group name",
+            "format": "const",
+            "maxLength": 20,
+            "minLength": 1,
+            "type": "string",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "payload-type": {
+            "description": "Payload-type of tunnels that are part of the tunnel-group.\nAll tunnels in the group must have the same payload-type.\nIf payload-type is L2, all tunnels in the group must have the same vlan configuration.",
+            "enum": [
+              "L2",
+              "L3"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "L2": "GRE payload is an Ethernet frame.",
+              "L3": "GRE payload is an IPv4/IPv6 frame."
+            },
+            "x-supportedDeviceType": [
+              "Gateway"
+            ],
+            "x-typeDescription": "GRE payload type."
+          },
+          "preemptive-failover": {
+            "default": "true",
+            "description": "Use pre-emptive failover.\n\nIf this is enabled, when a tunnel with higher precedence than current\nactive tunnel comes up, that will be set as the active tunnel immediately\neven if the current active tunnel did not go down. Precedence is decided\nby the order of 'tunnels' list.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "tunnels": {
+            "items": {
+              "description": "List of tunnels in the tunnel-group.\nOne tunnel-group can have up to 5 tunnels.",
+              "format": "int64",
+              "maximum": 4294967295,
+              "minimum": 0,
+              "type": "integer",
+              "x-path": "/ac-if-tunnel:tunnel/ac-if-tunnel:interface/ac-if-tunnel:id",
+              "x-supportedDeviceType": [
+                "Gateway"
+              ]
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          }
+        }
+      },
+      "ArubaInterfaceTunnel_Acl": {
+        "description": "Grouping for ACL config for tunnel interface.",
+        "properties": {
+          "direction-in": {
+            "description": "Apply the ACL to traffic whose direction is inbound to\nthe switch and outbound from the tunnel.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Switch PVOS"
+            ]
+          },
+          "direction-out": {
+            "description": "Apply the ACL to traffic whose direction is outbound to\nthe switch and inbound from the tunnel.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Switch PVOS"
+            ]
+          },
+          "name": {
+            "description": "Configure ACL for the Tunnel interface.",
+            "format": "const",
+            "maxLength": 144,
+            "minLength": 1,
+            "type": "string",
+            "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
+            "x-supportedDeviceType": [
+              "Switch PVOS",
+              "Switch CX",
+              "Gateway"
+            ]
+          }
+        }
+      },
+      "ArubaInterfaceTunnel_AclGet": {
+        "description": "Grouping for ACL config for tunnel interface.",
+        "properties": {
+          "direction-in": {
+            "description": "Apply the ACL to traffic whose direction is inbound to\nthe switch and outbound from the tunnel.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Switch PVOS"
+            ]
+          },
+          "direction-out": {
+            "description": "Apply the ACL to traffic whose direction is outbound to\nthe switch and inbound from the tunnel.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Switch PVOS"
+            ]
+          },
+          "name": {
+            "description": "Configure ACL for the Tunnel interface.",
+            "format": "const",
+            "maxLength": 144,
+            "minLength": 1,
+            "type": "string",
+            "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
+            "x-supportedDeviceType": [
+              "Switch PVOS",
+              "Switch CX",
+              "Gateway"
+            ]
+          }
+        }
+      },
+      "ArubaInterfaceTunnel_GreConfig": {
+        "description": "Grouping for GRE Tunnel specific configuration.",
+        "properties": {
+          "acl": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ArubaInterfaceTunnel_Acl"
+              }
+            ],
+            "description": "ACL for GRE tunnel interface.",
+            "x-supportedDeviceType": [
+              "Switch CX",
+              "Gateway"
+            ]
+          },
+          "allowed-vlans": {
+            "items": {
+              "description": "List of allowed VLANs.\nThis configuration is valid for L2 tunnels only.",
+              "format": "pattern",
+              "maxLength": 9999,
+              "type": "string",
+              "x-patternSources": "vlan-range",
+              "x-patterns": "'((((409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{1,2}|[1-9])\\-(409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{1,2}|[1-9]))|(409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{1,2}|[1-9])))'",
+              "x-supportedDeviceType": [
+                "Access Point",
+                "Gateway"
+              ],
+              "x-typeDescription": "VLANs or only single-tagged VLANs or both. A range is\nspecified as x-y where x and y are valid VLAN IDs\n(1 <= vlan-id <= 4094). The range is assumed to be inclusive,\nsuch that any VLAN-ID matching x <= VLAN-ID <= y falls within\nthe range."
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          },
+          "inter-tunnel-flood": {
+            "default": "true",
+            "description": "Enable inter-tunnel flooding.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "keepalive": {
+            "description": "Tunnel keepalive configuration.",
+            "properties": {
+              "cisco": {
+                "description": "Use 0 as the protocol number in GRE header of keepalive packets to enable interop with Cisco.\nThis configuration is valid for L3 tunnels only.",
+                "type": "boolean",
+                "x-supportedDeviceType": [
+                  "Gateway"
+                ]
+              },
+              "enable-gre": {
+                "description": "Enable keepalive (type GRE).",
+                "type": "boolean",
+                "x-supportedDeviceType": [
+                  "Gateway"
+                ]
+              },
+              "enable-icmp": {
+                "description": "Enable keepalive (type ICMP).\n'icmp-destination' must be specified. 'icmp-nexthop' must be specified for L2 GRE tunnels.\nICMP keepalive is not supported for IPv6 tunnels",
+                "type": "boolean",
+                "x-supportedDeviceType": [
+                  "Gateway"
+                ]
+              },
+              "icmp-destination": {
+                "description": "Ping destination for ICMP keepalive.",
+                "format": "pattern",
+                "maxLength": 9999,
+                "type": "string",
+                "x-patternSources": "ipv4-address",
+                "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+                "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
+              },
+              "icmp-nexthop": {
+                "description": "Next-hop IP for ICMP keepalive.\nThis configuration is valid for L2 tunnels only.",
+                "format": "pattern",
+                "maxLength": 9999,
+                "type": "string",
+                "x-patternSources": "ipv4-address",
+                "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+                "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
+              },
+              "interval": {
+                "default": "10",
+                "description": "Keepalive interval in seconds.",
+                "format": "int64",
+                "maximum": 86400,
+                "minimum": 1,
+                "type": "integer",
+                "x-supportedDeviceType": [
+                  "Gateway"
+                ]
+              },
+              "retries": {
+                "default": "3",
+                "description": "Number of keepalive retries.",
+                "format": "int64",
+                "maximum": 1024,
+                "minimum": 1,
+                "type": "integer",
+                "x-supportedDeviceType": [
+                  "Gateway"
+                ]
+              }
+            },
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "openflow-enable": {
+            "description": "Enable Openflow on tunnel.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "payload-type": {
+            "description": "GRE payload type.",
+            "enum": [
+              "L2",
+              "L3"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "L2": "GRE payload is an Ethernet frame.",
+              "L3": "GRE payload is an IPv4/IPv6 frame."
+            },
+            "x-supportedDeviceType": [
+              "Gateway"
+            ],
+            "x-typeDescription": "GRE payload type."
+          },
+          "protocol": {
+            "description": "Protocol number to be used in GRE header for L2 tunnels.\nRecommended values for Gateway: 25944, 1 to 15.",
+            "format": "int32",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "trusted": {
+            "default": "false",
+            "description": "Mark as a trusted interface.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "trusted-vlans": {
+            "items": {
+              "default": "1-4094",
+              "description": "List of trusted VLANs.\nThis configuration is valid for L2 tunnels only.",
+              "format": "pattern",
+              "maxLength": 9999,
+              "type": "string",
+              "x-patternSources": "vlan-range",
+              "x-patterns": "'((((409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{1,2}|[1-9])\\-(409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{1,2}|[1-9]))|(409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{1,2}|[1-9])))'",
+              "x-supportedDeviceType": [
+                "Gateway"
+              ],
+              "x-typeDescription": "VLANs or only single-tagged VLANs or both. A range is\nspecified as x-y where x and y are valid VLAN IDs\n(1 <= vlan-id <= 4094). The range is assumed to be inclusive,\nsuch that any VLAN-ID matching x <= VLAN-ID <= y falls within\nthe range."
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          }
+        }
+      },
+      "ArubaInterfaceTunnel_GreConfigGet": {
+        "description": "Grouping for GRE Tunnel specific configuration.",
+        "properties": {
+          "acl": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ArubaInterfaceTunnel_AclGet"
+              }
+            ],
+            "description": "ACL for GRE tunnel interface.",
+            "x-supportedDeviceType": [
+              "Switch CX",
+              "Gateway"
+            ]
+          },
+          "allowed-vlans": {
+            "items": {
+              "description": "List of allowed VLANs.\nThis configuration is valid for L2 tunnels only.",
+              "format": "pattern",
+              "maxLength": 9999,
+              "type": "string",
+              "x-patternSources": "vlan-range",
+              "x-patterns": "'((((409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{1,2}|[1-9])\\-(409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{1,2}|[1-9]))|(409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{1,2}|[1-9])))'",
+              "x-supportedDeviceType": [
+                "Access Point",
+                "Gateway"
+              ],
+              "x-typeDescription": "VLANs or only single-tagged VLANs or both. A range is\nspecified as x-y where x and y are valid VLAN IDs\n(1 <= vlan-id <= 4094). The range is assumed to be inclusive,\nsuch that any VLAN-ID matching x <= VLAN-ID <= y falls within\nthe range."
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          },
+          "inter-tunnel-flood": {
+            "default": "true",
+            "description": "Enable inter-tunnel flooding.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "keepalive": {
+            "description": "Tunnel keepalive configuration.",
+            "properties": {
+              "cisco": {
+                "description": "Use 0 as the protocol number in GRE header of keepalive packets to enable interop with Cisco.\nThis configuration is valid for L3 tunnels only.",
+                "type": "boolean",
+                "x-supportedDeviceType": [
+                  "Gateway"
+                ]
+              },
+              "enable-gre": {
+                "description": "Enable keepalive (type GRE).",
+                "type": "boolean",
+                "x-supportedDeviceType": [
+                  "Gateway"
+                ]
+              },
+              "enable-icmp": {
+                "description": "Enable keepalive (type ICMP).\n'icmp-destination' must be specified. 'icmp-nexthop' must be specified for L2 GRE tunnels.\nICMP keepalive is not supported for IPv6 tunnels",
+                "type": "boolean",
+                "x-supportedDeviceType": [
+                  "Gateway"
+                ]
+              },
+              "icmp-destination": {
+                "description": "Ping destination for ICMP keepalive.",
+                "format": "pattern",
+                "maxLength": 9999,
+                "type": "string",
+                "x-patternSources": "ipv4-address",
+                "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+                "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
+              },
+              "icmp-nexthop": {
+                "description": "Next-hop IP for ICMP keepalive.\nThis configuration is valid for L2 tunnels only.",
+                "format": "pattern",
+                "maxLength": 9999,
+                "type": "string",
+                "x-patternSources": "ipv4-address",
+                "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+                "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
+              },
+              "interval": {
+                "default": "10",
+                "description": "Keepalive interval in seconds.",
+                "format": "int64",
+                "maximum": 86400,
+                "minimum": 1,
+                "type": "integer",
+                "x-supportedDeviceType": [
+                  "Gateway"
+                ]
+              },
+              "retries": {
+                "default": "3",
+                "description": "Number of keepalive retries.",
+                "format": "int64",
+                "maximum": 1024,
+                "minimum": 1,
+                "type": "integer",
+                "x-supportedDeviceType": [
+                  "Gateway"
+                ]
+              }
+            },
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "openflow-enable": {
+            "description": "Enable Openflow on tunnel.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "payload-type": {
+            "description": "GRE payload type.",
+            "enum": [
+              "L2",
+              "L3"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "L2": "GRE payload is an Ethernet frame.",
+              "L3": "GRE payload is an IPv4/IPv6 frame."
+            },
+            "x-supportedDeviceType": [
+              "Gateway"
+            ],
+            "x-typeDescription": "GRE payload type."
+          },
+          "protocol": {
+            "description": "Protocol number to be used in GRE header for L2 tunnels.\nRecommended values for Gateway: 25944, 1 to 15.",
+            "format": "int32",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "trusted": {
+            "default": "false",
+            "description": "Mark as a trusted interface.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "trusted-vlans": {
+            "items": {
+              "default": "1-4094",
+              "description": "List of trusted VLANs.\nThis configuration is valid for L2 tunnels only.",
+              "format": "pattern",
+              "maxLength": 9999,
+              "type": "string",
+              "x-patternSources": "vlan-range",
+              "x-patterns": "'((((409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{1,2}|[1-9])\\-(409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{1,2}|[1-9]))|(409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{1,2}|[1-9])))'",
+              "x-supportedDeviceType": [
+                "Gateway"
+              ],
+              "x-typeDescription": "VLANs or only single-tagged VLANs or both. A range is\nspecified as x-y where x and y are valid VLAN IDs\n(1 <= vlan-id <= 4094). The range is assumed to be inclusive,\nsuch that any VLAN-ID matching x <= VLAN-ID <= y falls within\nthe range."
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          }
+        }
+      },
+      "ArubaInterfaceTunnel_TtlConfig": {
+        "description": "Time-to-Live (TTL) for the tunnel.",
+        "properties": {
+          "copy": {
+            "description": "Copy TTL value from the encapsulating IPv6 header.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Switch PVOS"
+            ]
+          },
+          "value": {
+            "description": "Configure TTL value for the Tunnel interface.\nOn AOS-CX, TTL is not applicable for IPsec and VXLAN Tunnels.",
+            "format": "int32",
+            "maximum": 255,
+            "minimum": 1,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Switch PVOS",
+              "Switch CX"
+            ]
+          }
+        }
+      },
+      "ArubaInterfaceTunnel_TtlConfigGet": {
+        "description": "Time-to-Live (TTL) for the tunnel.",
+        "properties": {
+          "copy": {
+            "description": "Copy TTL value from the encapsulating IPv6 header.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Switch PVOS"
+            ]
+          },
+          "value": {
+            "description": "Configure TTL value for the Tunnel interface.\nOn AOS-CX, TTL is not applicable for IPsec and VXLAN Tunnels.",
+            "format": "int32",
+            "maximum": 255,
+            "minimum": 1,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Switch PVOS",
+              "Switch CX"
+            ]
+          }
+        }
+      },
+      "ArubaInterfaceTunnel_TunnelCommonConfig": {
+        "description": "Grouping for common configurations across tunnels.",
+        "properties": {
+          "description": {
+            "description": "Configure user description for the Tunnel interface.",
+            "format": "const",
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string",
+            "x-supportedDeviceType": [
+              "Switch PVOS",
+              "Switch CX",
+              "Gateway"
+            ]
+          },
+          "dst": {
+            "description": "Configure destination address for the Tunnel interface.\nDestination address can be IPv4 or IPv6 based on ip-version of the Tunnel interface.",
+            "oneOf": [
+              {
+                "format": "pattern",
+                "maxLength": 9999,
+                "type": "string",
+                "x-patternSources": "ipv4-address",
+                "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+                "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
+              },
+              {
+                "format": "pattern",
+                "maxLength": 9999,
+                "type": "string",
+                "x-patternSources": "ipv6-address",
+                "x-patterns": "'(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))'",
+                "x-typeDescription": "An IPv6 address represented as either a full address; shortened\nor mixed-shortened formats, using the default zone."
+              }
+            ],
+            "x-supportedDeviceType": [
+              "Switch CX",
+              "Access Point",
+              "Switch PVOS",
+              "Gateway"
+            ]
+          },
+          "enabled": {
+            "default": "false",
+            "description": "Enable or disable Tunnel interface.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Switch PVOS",
+              "Switch CX",
+              "Gateway"
+            ]
+          },
+          "ip-version": {
+            "description": "Configure IPv4 or IPv6 Tunnel type.\nBy default, V6_IN_V4 operates with IPv4 version, while V6_IN_V6 with IPv6 which is implict.",
+            "enum": [
+              "UNKNOWN",
+              "IPV4",
+              "IPV6"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "IPV4": "The IPv4 protocol as defined in RFC 791.",
+              "IPV6": "The IPv6 protocol as defined in RFC 2460.",
+              "UNKNOWN": "An unknown or unspecified version of the Internet\nprotocol."
+            },
+            "x-mandatory": true,
+            "x-typeDescription": "This value represents the version of the IP protocol.\nNote that integer representation of the enumerated values\nare not specified, and are not required to follow the\nInetVersion textual convention in SMIv2."
+          },
+          "ipv4-prefix": {
+            "description": "Configure IPv4 prefix for the Tunnel interface.\nIPv4 Prefix is applicable only for GRE IPv4 Tunnel.",
+            "format": "pattern",
+            "maxLength": 9999,
+            "type": "string",
+            "x-patternSources": "ipv4-prefix",
+            "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}/([0-9]|[12][0-9]|3[0-2])'",
+            "x-supportedDeviceType": [
+              "Switch CX",
+              "Gateway"
+            ],
+            "x-typeDescription": "An IPv4 prefix represented in dotted quad notation followed by\na slash and a CIDR mask (0 <= mask <= 32)."
+          },
+          "ipv6-address": {
+            "description": "IPv6 address of Tunnel Interface.",
+            "format": "pattern",
+            "maxLength": 9999,
+            "type": "string",
+            "x-patternSources": "ipv6-address",
+            "x-patterns": "'(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))'",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ],
+            "x-typeDescription": "An IPv6 address represented as either a full address; shortened\nor mixed-shortened formats, using the default zone."
+          },
+          "ipv6-prefix": {
+            "items": {
+              "description": "Configure IPv6 prefix for the Tunnel interface.\nIPv6 prefix is applicable for GRE, V6_IN_V4 and V6_IN_V6 Tunnel.",
+              "format": "pattern",
+              "maxLength": 9999,
+              "type": "string",
+              "x-patternSources": "ipv6-prefix",
+              "x-patterns": "'(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))/(12[0-8]|1[0-1][0-9]|[1-9][0-9]|[0-9])'",
+              "x-supportedDeviceType": [
+                "Switch CX",
+                "Switch PVOS"
+              ],
+              "x-typeDescription": "An IPv6 prefix represented in full, shortened, or mixed\nshortened format followed by a slash and CIDR mask\n(0 <= mask <= 128)."
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          },
+          "l3-counters": {
+            "description": "Enable transmit and receive counters for the Tunnel interface.\nl3-counters is applicable for GRE, V6_IN_V4 and V6_IN_V6 Tunnel.",
+            "enum": [
+              "TX",
+              "RX",
+              "RX_TX"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "RX": "Rx L3 counters.",
+              "RX_TX": "Rx and Tx L3 counters.",
+              "TX": "Tx L3 counters."
+            },
+            "x-supportedDeviceType": [
+              "Switch CX"
+            ],
+            "x-typeDescription": "Enable Rx and Tx L3 counters on Tunnel interface."
+          },
+          "mode": {
+            "description": "Configure Tunnel interface mode.",
+            "enum": [
+              "UNSPECIFIED",
+              "VXLAN",
+              "GRE",
+              "V6_IN_V4",
+              "V6_IN_V6",
+              "IPSEC"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "GRE": "GRE (Generic Routing Encapsulation) tunnel mode for the interface.\nGRE tunnels can encapsulate traffic and creates point to point\nlinks over an IP network",
+              "IPSEC": "IPsec (IP security) tunnel mode for the interface.\nIPsec tunnel encrypts the entire original IP packet and encapsulates\nwith an additional IP header.",
+              "UNSPECIFIED": "The tunnel to be an unspecified tunnel.",
+              "V6_IN_V4": "IPv6 in IPv4 tunnel mode for the interface.\nIP6in4 tunnel encapsulates IPV6 traffic over an IPV4 network.",
+              "V6_IN_V6": "IPv6 in IPv6 tunnel mode for the interface.\nIP6in6 tunnel encapsulates IPV6 traffic over an IPV6 network.",
+              "VXLAN": "Static VXLAN(Virtual Extensible LAN) tunnel mode for the interface.\nStatically configure source and destination virtual tunnel endpoints (VTEPs)\nDEPRECATED: This enum value is deprecated and will be removed in a future release."
+            },
+            "x-mandatory": true,
+            "x-supportedDeviceType": [
+              "Switch PVOS",
+              "Switch CX"
+            ],
+            "x-typeDescription": "Tunnel mode."
+          },
+          "mtu": {
+            "default": "1500",
+            "description": "Configure MTU (maximum transmission unit) for the Tunnel interface.\nMTU is the largest IP packet that can be sent or received by the Tunnel interface.",
+            "format": "int64",
+            "maximum": 9216,
+            "minimum": 1024,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Switch CX",
+              "Switch PVOS",
+              "Access Point",
+              "Gateway"
+            ]
+          },
+          "secondary-ipv4-prefix": {
+            "items": {
+              "description": "List of secondary IPv4 prefix of Tunnel Interface.",
+              "format": "pattern",
+              "maxLength": 9999,
+              "type": "string",
+              "x-patternSources": "ipv4-prefix",
+              "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}/([0-9]|[12][0-9]|3[0-2])'",
+              "x-supportedDeviceType": [
+                "Switch CX"
+              ],
+              "x-typeDescription": "An IPv4 prefix represented in dotted quad notation followed by\na slash and a CIDR mask (0 <= mask <= 32)."
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          },
+          "src": {
+            "description": "Configure source address for the Tunnel interface.\nSource address can be IPv4 or IPv6 based on ip-version of the Tunnel interface.\n\nIn addition to IPv4 or IPv6 address, Gateway supports following inputs as well:\n  \"SWITCH_IP\" - Use Controller IPv4 or IPv6 address as tunnel source.\n  \"LOOPBACK_IP\" - Use loopback interface's IPv4 or IPv6 address as tunnel source.\n  <vlan-id> - Use IPv4 or IPv6 address of a VLAN interface as tunnel source.",
+            "oneOf": [
+              {
+                "enum": [
+                  "SWITCH_IP",
+                  "LOOPBACK_IP"
+                ],
+                "format": "enum",
+                "type": "string",
+                "x-enumDescriptions": {
+                  "LOOPBACK_IP": "Use loopback interface's IPv4 or IPv6 address as tunnel source",
+                  "SWITCH_IP": "Use Controller IPv4 or IPv6 address as tunnel source"
+                },
+                "x-typeDescription": "Switch_IP and Loopback_IP options for tunnel source."
+              },
+              {
+                "format": "int32",
+                "maximum": 4094,
+                "minimum": 1,
+                "type": "integer",
+                "x-typeDescription": "Type definition representing a single-tagged VLAN"
+              },
+              {
+                "format": "pattern",
+                "maxLength": 9999,
+                "type": "string",
+                "x-patternSources": "ipv4-address",
+                "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+                "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
+              },
+              {
+                "format": "pattern",
+                "maxLength": 9999,
+                "type": "string",
+                "x-patternSources": "ipv6-address",
+                "x-patterns": "'(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))'",
+                "x-typeDescription": "An IPv6 address represented as either a full address; shortened\nor mixed-shortened formats, using the default zone."
+              }
+            ],
+            "x-supportedDeviceType": [
+              "Switch CX",
+              "Switch PVOS",
+              "Gateway"
+            ]
+          },
+          "ttl": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ArubaInterfaceTunnel_TtlConfig"
+              }
+            ],
+            "description": "Configure TTL (Time-to-Live) for the Tunnel interface\nto use on the outgoing tunneled packets.",
+            "x-supportedDeviceType": [
+              "Switch CX",
+              "Switch PVOS"
+            ]
+          },
+          "vrf-forwarding": {
+            "description": "Configure VRF for the Tunnel Interface.\nVRF is not applicable for Static VXLAN Tunnel.",
+            "format": "pattern",
+            "maxLength": 9999,
+            "type": "string",
+            "x-path": "/ac-vrf:vrfs/ac-vrf:vrf/ac-vrf:name",
+            "x-patternSources": "name-type",
+            "x-patterns": "'([^\\\\/ ]+)'",
+            "x-supportedDeviceType": [
+              "Switch CX"
+            ],
+            "x-typeDescription": "Type definition for 'name', should be alphanumeric. Special characters such as '\\', '/' and space are not allowed."
+          }
+        },
+        "required": [
+          "mode",
+          "ip-version"
+        ]
+      },
+      "ArubaInterfaceTunnel_TunnelCommonConfigGet": {
+        "description": "Grouping for common configurations across tunnels.",
+        "properties": {
+          "description": {
+            "description": "Configure user description for the Tunnel interface.",
+            "format": "const",
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string",
+            "x-supportedDeviceType": [
+              "Switch PVOS",
+              "Switch CX",
+              "Gateway"
+            ]
+          },
+          "dst": {
+            "description": "Configure destination address for the Tunnel interface.\nDestination address can be IPv4 or IPv6 based on ip-version of the Tunnel interface.",
+            "oneOf": [
+              {
+                "format": "pattern",
+                "maxLength": 9999,
+                "type": "string",
+                "x-patternSources": "ipv4-address",
+                "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+                "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
+              },
+              {
+                "format": "pattern",
+                "maxLength": 9999,
+                "type": "string",
+                "x-patternSources": "ipv6-address",
+                "x-patterns": "'(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))'",
+                "x-typeDescription": "An IPv6 address represented as either a full address; shortened\nor mixed-shortened formats, using the default zone."
+              }
+            ],
+            "x-supportedDeviceType": [
+              "Switch CX",
+              "Access Point",
+              "Switch PVOS",
+              "Gateway"
+            ]
+          },
+          "enabled": {
+            "default": "false",
+            "description": "Enable or disable Tunnel interface.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Switch PVOS",
+              "Switch CX",
+              "Gateway"
+            ]
+          },
+          "ip-version": {
+            "description": "Configure IPv4 or IPv6 Tunnel type.\nBy default, V6_IN_V4 operates with IPv4 version, while V6_IN_V6 with IPv6 which is implict.",
+            "enum": [
+              "UNKNOWN",
+              "IPV4",
+              "IPV6"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "IPV4": "The IPv4 protocol as defined in RFC 791.",
+              "IPV6": "The IPv6 protocol as defined in RFC 2460.",
+              "UNKNOWN": "An unknown or unspecified version of the Internet\nprotocol."
+            },
+            "x-mandatory": true,
+            "x-typeDescription": "This value represents the version of the IP protocol.\nNote that integer representation of the enumerated values\nare not specified, and are not required to follow the\nInetVersion textual convention in SMIv2."
+          },
+          "ipv4-prefix": {
+            "description": "Configure IPv4 prefix for the Tunnel interface.\nIPv4 Prefix is applicable only for GRE IPv4 Tunnel.",
+            "format": "pattern",
+            "maxLength": 9999,
+            "type": "string",
+            "x-patternSources": "ipv4-prefix",
+            "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}/([0-9]|[12][0-9]|3[0-2])'",
+            "x-supportedDeviceType": [
+              "Switch CX",
+              "Gateway"
+            ],
+            "x-typeDescription": "An IPv4 prefix represented in dotted quad notation followed by\na slash and a CIDR mask (0 <= mask <= 32)."
+          },
+          "ipv6-address": {
+            "description": "IPv6 address of Tunnel Interface.",
+            "format": "pattern",
+            "maxLength": 9999,
+            "type": "string",
+            "x-patternSources": "ipv6-address",
+            "x-patterns": "'(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))'",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ],
+            "x-typeDescription": "An IPv6 address represented as either a full address; shortened\nor mixed-shortened formats, using the default zone."
+          },
+          "ipv6-prefix": {
+            "items": {
+              "description": "Configure IPv6 prefix for the Tunnel interface.\nIPv6 prefix is applicable for GRE, V6_IN_V4 and V6_IN_V6 Tunnel.",
+              "format": "pattern",
+              "maxLength": 9999,
+              "type": "string",
+              "x-patternSources": "ipv6-prefix",
+              "x-patterns": "'(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))/(12[0-8]|1[0-1][0-9]|[1-9][0-9]|[0-9])'",
+              "x-supportedDeviceType": [
+                "Switch CX",
+                "Switch PVOS"
+              ],
+              "x-typeDescription": "An IPv6 prefix represented in full, shortened, or mixed\nshortened format followed by a slash and CIDR mask\n(0 <= mask <= 128)."
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          },
+          "l3-counters": {
+            "description": "Enable transmit and receive counters for the Tunnel interface.\nl3-counters is applicable for GRE, V6_IN_V4 and V6_IN_V6 Tunnel.",
+            "enum": [
+              "TX",
+              "RX",
+              "RX_TX"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "RX": "Rx L3 counters.",
+              "RX_TX": "Rx and Tx L3 counters.",
+              "TX": "Tx L3 counters."
+            },
+            "x-supportedDeviceType": [
+              "Switch CX"
+            ],
+            "x-typeDescription": "Enable Rx and Tx L3 counters on Tunnel interface."
+          },
+          "mode": {
+            "description": "Configure Tunnel interface mode.",
+            "enum": [
+              "UNSPECIFIED",
+              "VXLAN",
+              "GRE",
+              "V6_IN_V4",
+              "V6_IN_V6",
+              "IPSEC"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "GRE": "GRE (Generic Routing Encapsulation) tunnel mode for the interface.\nGRE tunnels can encapsulate traffic and creates point to point\nlinks over an IP network",
+              "IPSEC": "IPsec (IP security) tunnel mode for the interface.\nIPsec tunnel encrypts the entire original IP packet and encapsulates\nwith an additional IP header.",
+              "UNSPECIFIED": "The tunnel to be an unspecified tunnel.",
+              "V6_IN_V4": "IPv6 in IPv4 tunnel mode for the interface.\nIP6in4 tunnel encapsulates IPV6 traffic over an IPV4 network.",
+              "V6_IN_V6": "IPv6 in IPv6 tunnel mode for the interface.\nIP6in6 tunnel encapsulates IPV6 traffic over an IPV6 network.",
+              "VXLAN": "Static VXLAN(Virtual Extensible LAN) tunnel mode for the interface.\nStatically configure source and destination virtual tunnel endpoints (VTEPs)\nDEPRECATED: This enum value is deprecated and will be removed in a future release."
+            },
+            "x-mandatory": true,
+            "x-supportedDeviceType": [
+              "Switch PVOS",
+              "Switch CX"
+            ],
+            "x-typeDescription": "Tunnel mode."
+          },
+          "mtu": {
+            "default": "1500",
+            "description": "Configure MTU (maximum transmission unit) for the Tunnel interface.\nMTU is the largest IP packet that can be sent or received by the Tunnel interface.",
+            "format": "int64",
+            "maximum": 9216,
+            "minimum": 1024,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Switch CX",
+              "Switch PVOS",
+              "Access Point",
+              "Gateway"
+            ]
+          },
+          "secondary-ipv4-prefix": {
+            "items": {
+              "description": "List of secondary IPv4 prefix of Tunnel Interface.",
+              "format": "pattern",
+              "maxLength": 9999,
+              "type": "string",
+              "x-patternSources": "ipv4-prefix",
+              "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}/([0-9]|[12][0-9]|3[0-2])'",
+              "x-supportedDeviceType": [
+                "Switch CX"
+              ],
+              "x-typeDescription": "An IPv4 prefix represented in dotted quad notation followed by\na slash and a CIDR mask (0 <= mask <= 32)."
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          },
+          "src": {
+            "description": "Configure source address for the Tunnel interface.\nSource address can be IPv4 or IPv6 based on ip-version of the Tunnel interface.\n\nIn addition to IPv4 or IPv6 address, Gateway supports following inputs as well:\n  \"SWITCH_IP\" - Use Controller IPv4 or IPv6 address as tunnel source.\n  \"LOOPBACK_IP\" - Use loopback interface's IPv4 or IPv6 address as tunnel source.\n  <vlan-id> - Use IPv4 or IPv6 address of a VLAN interface as tunnel source.",
+            "oneOf": [
+              {
+                "enum": [
+                  "SWITCH_IP",
+                  "LOOPBACK_IP"
+                ],
+                "format": "enum",
+                "type": "string",
+                "x-enumDescriptions": {
+                  "LOOPBACK_IP": "Use loopback interface's IPv4 or IPv6 address as tunnel source",
+                  "SWITCH_IP": "Use Controller IPv4 or IPv6 address as tunnel source"
+                },
+                "x-typeDescription": "Switch_IP and Loopback_IP options for tunnel source."
+              },
+              {
+                "format": "int32",
+                "maximum": 4094,
+                "minimum": 1,
+                "type": "integer",
+                "x-typeDescription": "Type definition representing a single-tagged VLAN"
+              },
+              {
+                "format": "pattern",
+                "maxLength": 9999,
+                "type": "string",
+                "x-patternSources": "ipv4-address",
+                "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+                "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
+              },
+              {
+                "format": "pattern",
+                "maxLength": 9999,
+                "type": "string",
+                "x-patternSources": "ipv6-address",
+                "x-patterns": "'(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))'",
+                "x-typeDescription": "An IPv6 address represented as either a full address; shortened\nor mixed-shortened formats, using the default zone."
+              }
+            ],
+            "x-supportedDeviceType": [
+              "Switch CX",
+              "Switch PVOS",
+              "Gateway"
+            ]
+          },
+          "ttl": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ArubaInterfaceTunnel_TtlConfigGet"
+              }
+            ],
+            "description": "Configure TTL (Time-to-Live) for the Tunnel interface\nto use on the outgoing tunneled packets.",
+            "x-supportedDeviceType": [
+              "Switch CX",
+              "Switch PVOS"
+            ]
+          },
+          "vrf-forwarding": {
+            "description": "Configure VRF for the Tunnel Interface.\nVRF is not applicable for Static VXLAN Tunnel.",
+            "format": "pattern",
+            "maxLength": 9999,
+            "type": "string",
+            "x-path": "/ac-vrf:vrfs/ac-vrf:vrf/ac-vrf:name",
+            "x-patternSources": "name-type",
+            "x-patterns": "'([^\\\\/ ]+)'",
+            "x-supportedDeviceType": [
+              "Switch CX"
+            ],
+            "x-typeDescription": "Type definition for 'name', should be alphanumeric. Special characters such as '\\', '/' and space are not allowed."
+          }
+        },
+        "required": [
+          "mode",
+          "ip-version"
+        ]
+      },
+      "ArubaInterfaceTunnel_TunnelConfigGet": {
+        "description": "Tunnel Interfaces grouping.",
+        "properties": {
+          "interface": {
+            "description": "Tunnel Interface(s) configuration.\nOn AOS-CX, VXLAN operates with IPv4 or IPv6 version and GRE, IPsec operate with IPv4 version.",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ArubaInterfaceTunnel_TunnelCommonConfigGet"
+                },
+                {
+                  "properties": {
+                    "gre": {
+                      "allOf": [
+                        {
+                          "$ref": "#/components/schemas/ArubaInterfaceTunnel_GreConfigGet"
+                        }
+                      ],
+                      "description": "Configure parameters specific to GRE Tunnel."
+                    },
+                    "id": {
+                      "description": "Configure Tunnel interface id.",
+                      "format": "int64",
+                      "maximum": 4294967295,
+                      "minimum": 0,
+                      "type": "integer",
+                      "x-supportedDeviceType": [
+                        "Switch PVOS",
+                        "Switch CX",
+                        "Access Point",
+                        "Gateway"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "maxItems": 2147483647,
+            "type": "array",
+            "x-key": [
+              "id"
+            ],
+            "x-supportedDeviceType": [
+              "Switch CX",
+              "Switch PVOS"
+            ]
+          }
+        }
+      },
+      "ArubaInterfaceTunnel_TunnelSchemaGET": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArubaInterfaceTunnel_TunnelConfigGet"
+          }
+        ],
+        "description": "Configure Tunnel Interface. Tunnel creates virtual point to point\nlink between two devices encapsulating various protocols within\nan IP network. Supported modes for tunnels are\nGRE, IP6in4, IP6in6, IPsec and VXLAN."
+      },
+      "ArubaInterfaceTunnel_TunnelinterfaceSchema": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArubaInterfaceTunnel_TunnelCommonConfig"
+          },
+          {
+            "properties": {
+              "gre": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ArubaInterfaceTunnel_GreConfig"
+                  }
+                ],
+                "description": "Configure parameters specific to GRE Tunnel."
+              },
+              "id": {
+                "description": "Configure Tunnel interface id.",
+                "format": "int64",
+                "maximum": 4294967295,
+                "minimum": 0,
+                "type": "integer",
+                "x-supportedDeviceType": [
+                  "Switch PVOS",
+                  "Switch CX",
+                  "Access Point",
+                  "Gateway"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "ArubaInterfaceTunnel_TunnelinterfaceSchemaGet": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArubaInterfaceTunnel_TunnelCommonConfigGet"
+          },
+          {
+            "properties": {
+              "gre": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ArubaInterfaceTunnel_GreConfigGet"
+                  }
+                ],
+                "description": "Configure parameters specific to GRE Tunnel."
+              },
+              "id": {
+                "description": "Configure Tunnel interface id.",
+                "format": "int64",
+                "maximum": 4294967295,
+                "minimum": 0,
+                "type": "integer",
+                "x-supportedDeviceType": [
+                  "Switch PVOS",
+                  "Switch CX",
+                  "Access Point",
+                  "Gateway"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "Error400": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_AP001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "400",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Bad request. Invalid values supplied in request.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error401": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_R001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "401",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Unauthorized. Authentication Failure.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error403": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_CN001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "403",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Forbidden. Capability Rule fail.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error404": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_CN003",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "404",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Not found. Yang / Corresponding Rule is missing.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error406": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_AP003",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "406",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Not Acceptable. Invalid data format.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error408": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_K001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "408",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Request Timeout.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error412": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_LY002",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "412",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Precondition Failed.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error429": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_AJ001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "429",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Too Many Requests.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error500": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_C001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "500",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Internal server error. Invalid scope.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Successful200": {
+        "description": "Success response returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Success code.",
+            "example": "SUCC_001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "200",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of successful response.\n",
+            "example": "Success.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "OAuth2": {
+        "description": "OAuth 2.0 authentication with client credentials flow. You can also use your own access token.",
+        "flows": {
+          "clientCredentials": {
+            "scopes": {},
+            "tokenUrl": "https://sso.common.cloud.hpe.com/as/token.oauth2"
+          }
+        },
+        "type": "oauth2"
+      }
+    }
+  },
+  "info": {
+    "title": "Tunnels",
+    "version": "v1alpha1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/network-config/v1alpha1/tunnel": {
+      "get": {
+        "description": "Configure Tunnel Interface. Tunnel creates virtual point to point\nlink between two devices encapsulating various protocols within\nan IP network. Supported modes for tunnels are\nGRE, IP6in4, IP6in6, IPsec and VXLAN.",
+        "operationId": "readTunnel",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/view_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/get_device_function"
+          },
+          {
+            "$ref": "#/components/parameters/effective"
+          },
+          {
+            "$ref": "#/components/parameters/detailed"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArubaInterfaceTunnel_TunnelSchemaGET"
+                }
+              }
+            },
+            "description": "Successful operation",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Read configured Tunnel Interface",
+        "tags": [
+          "Interface Tunnel"
+        ],
+        "x-cliParam": {
+          "commandName": "readTunnelCmd",
+          "commandUse": "tunnel",
+          "parentCommand": "readCmd",
+          "pathToPrint": "/tunnel/",
+          "summary": "Read operation for tunnel"
+        }
+      }
+    },
+    "/network-config/v1alpha1/tunnel-groups": {
+      "get": {
+        "description": "Configure GRE Tunnel-groups.\n\nTunnel-group provides redundancy for Layer-2 and Layer-3 GRE Tunnels.\n\nUp to 5 tunnels can be added to a group. One of them would be selected\nas the active tunnel. Only that tunnel would be used for carrying\ndata traffic. If the active tunnel fails, another member would be\nselected as the new active tunnel. Keepalive should be enabled on the\ntunnels to detect failures.\n\nIPv6 tunnels are not supported in a tunnel-group.",
+        "operationId": "readTunnelGroups",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/view_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/get_device_function"
+          },
+          {
+            "$ref": "#/components/parameters/effective"
+          },
+          {
+            "$ref": "#/components/parameters/detailed"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArubaInterfaceTunnelGroup_TunnelGroupsSchemaGET"
+                }
+              }
+            },
+            "description": "Successful operation",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Read configured GRE Tunnel-groups",
+        "tags": [
+          "Interface Tunnel Group"
+        ],
+        "x-cliParam": {
+          "commandName": "readTunnelGroupsCmd",
+          "commandUse": "tunnel-groups",
+          "parentCommand": "readCmd",
+          "pathToPrint": "/tunnel-groups/",
+          "summary": "Read operation for tunnel-groups"
+        }
+      }
+    },
+    "/network-config/v1alpha1/tunnel-groups/{name}": {
+      "delete": {
+        "description": "List of Tunnel-groups.",
+        "operationId": "deleteTunnelGroupsGroupByID",
+        "parameters": [
+          {
+            "description": "Tunnel-group name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/delete_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/delete_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/delete_device_function"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Delete GRE tunnel-group",
+        "tags": [
+          "Interface Tunnel Group"
+        ],
+        "x-cliParam": {
+          "commandName": "deleteTunnelGroupsGroupCmd",
+          "commandUse": "group",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "deleteTunnelGroupsCmd",
+          "pathToPrint": "/tunnel-groups/group/%s/",
+          "summary": "Delete operation for group",
+          "totParams": 1
+        }
+      },
+      "get": {
+        "description": "List of Tunnel-groups.",
+        "operationId": "readTunnelGroupsGroupByID",
+        "parameters": [
+          {
+            "description": "Tunnel-group name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/view_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/get_device_function"
+          },
+          {
+            "$ref": "#/components/parameters/effective"
+          },
+          {
+            "$ref": "#/components/parameters/detailed"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArubaInterfaceTunnelGroup_TunnelGroupsgroupSchemaGet"
+                }
+              }
+            },
+            "description": "Successful operation",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Read existing GRE tunnel-group configurations",
+        "tags": [
+          "Interface Tunnel Group"
+        ],
+        "x-cliParam": {
+          "commandName": "readTunnelGroupsGroupCmd",
+          "commandUse": "group",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "readTunnelGroupsCmd",
+          "pathToPrint": "/tunnel-groups/group/%s/",
+          "summary": "Read operation for group",
+          "totParams": 1
+        }
+      },
+      "patch": {
+        "description": "List of Tunnel-groups.",
+        "operationId": "updateTunnelGroupsGroupByID",
+        "parameters": [
+          {
+            "description": "Tunnel-group name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/patch_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/patch_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/patch_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaInterfaceTunnelGroup_TunnelGroupsgroupSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update existing GRE tunnel-group configurations",
+        "tags": [
+          "Interface Tunnel Group"
+        ],
+        "x-cliParam": {
+          "commandName": "updateTunnelGroupsGroupCmd",
+          "commandUse": "group",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "updateTunnelGroupsCmd",
+          "pathToPrint": "/tunnel-groups/group/%s/",
+          "summary": "Update operation for group",
+          "totParams": 1
+        }
+      },
+      "post": {
+        "description": "List of Tunnel-groups.",
+        "operationId": "createTunnelGroupsGroupByID",
+        "parameters": [
+          {
+            "description": "Tunnel-group name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaInterfaceTunnelGroup_TunnelGroupsgroupSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create a new GRE tunnel-group",
+        "tags": [
+          "Interface Tunnel Group"
+        ],
+        "x-cliParam": {
+          "commandName": "createTunnelGroupsGroupCmd",
+          "commandUse": "group",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "createTunnelGroupsCmd",
+          "pathToPrint": "/tunnel-groups/group/%s/",
+          "summary": "Create operation for group",
+          "totParams": 1
+        }
+      }
+    },
+    "/network-config/v1alpha1/tunnel/{id}": {
+      "delete": {
+        "description": "Tunnel Interface(s) configuration.\nOn AOS-CX, VXLAN operates with IPv4 or IPv6 version and GRE, IPsec operate with IPv4 version.",
+        "operationId": "deleteTunnelInterfaceByID",
+        "parameters": [
+          {
+            "description": "Configure Tunnel interface id.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/delete_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/delete_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/delete_device_function"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Delete a Tunnel interface",
+        "tags": [
+          "Interface Tunnel"
+        ],
+        "x-cliParam": {
+          "commandName": "deleteTunnelInterfaceCmd",
+          "commandUse": "interface",
+          "paramKeys": [
+            {
+              "key": "id"
+            }
+          ],
+          "parentCommand": "deleteTunnelCmd",
+          "pathToPrint": "/tunnel/interface/%s/",
+          "summary": "Delete operation for interface",
+          "totParams": 1
+        }
+      },
+      "get": {
+        "description": "Tunnel Interface(s) configuration.\nOn AOS-CX, VXLAN operates with IPv4 or IPv6 version and GRE, IPsec operate with IPv4 version.",
+        "operationId": "readTunnelInterfaceByID",
+        "parameters": [
+          {
+            "description": "Configure Tunnel interface id.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/view_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/get_device_function"
+          },
+          {
+            "$ref": "#/components/parameters/effective"
+          },
+          {
+            "$ref": "#/components/parameters/detailed"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArubaInterfaceTunnel_TunnelinterfaceSchemaGet"
+                }
+              }
+            },
+            "description": "Successful operation",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Read existing Tunnel interface configurations",
+        "tags": [
+          "Interface Tunnel"
+        ],
+        "x-cliParam": {
+          "commandName": "readTunnelInterfaceCmd",
+          "commandUse": "interface",
+          "paramKeys": [
+            {
+              "key": "id"
+            }
+          ],
+          "parentCommand": "readTunnelCmd",
+          "pathToPrint": "/tunnel/interface/%s/",
+          "summary": "Read operation for interface",
+          "totParams": 1
+        }
+      },
+      "patch": {
+        "description": "Tunnel Interface(s) configuration.\nOn AOS-CX, VXLAN operates with IPv4 or IPv6 version and GRE, IPsec operate with IPv4 version.",
+        "operationId": "updateTunnelInterfaceByID",
+        "parameters": [
+          {
+            "description": "Configure Tunnel interface id.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/patch_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/patch_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/patch_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaInterfaceTunnel_TunnelinterfaceSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update existing Tunnel interface configurations",
+        "tags": [
+          "Interface Tunnel"
+        ],
+        "x-cliParam": {
+          "commandName": "updateTunnelInterfaceCmd",
+          "commandUse": "interface",
+          "paramKeys": [
+            {
+              "key": "id"
+            }
+          ],
+          "parentCommand": "updateTunnelCmd",
+          "pathToPrint": "/tunnel/interface/%s/",
+          "summary": "Update operation for interface",
+          "totParams": 1
+        }
+      },
+      "post": {
+        "description": "Tunnel Interface(s) configuration.\nOn AOS-CX, VXLAN operates with IPv4 or IPv6 version and GRE, IPsec operate with IPv4 version.",
+        "operationId": "createTunnelInterfaceByID",
+        "parameters": [
+          {
+            "description": "Configure Tunnel interface id.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaInterfaceTunnel_TunnelinterfaceSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create a new Tunnel interface by unique id",
+        "tags": [
+          "Interface Tunnel"
+        ],
+        "x-cliParam": {
+          "commandName": "createTunnelInterfaceCmd",
+          "commandUse": "interface",
+          "paramKeys": [
+            {
+              "key": "id"
+            }
+          ],
+          "parentCommand": "createTunnelCmd",
+          "pathToPrint": "/tunnel/interface/%s/",
+          "summary": "Create operation for interface",
+          "totParams": 1
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "AccessToken": []
+    }
+  ],
+  "servers": [
+    {
+      "description": "eu",
+      "url": "https://de1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "eucentral2",
+      "url": "https://de2.api.central.arubanetworks.com"
+    },
+    {
+      "description": "eucentral3",
+      "url": "https://de3.api.central.arubanetworks.com"
+    },
+    {
+      "description": "ukwest2",
+      "url": "https://gb1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "prod",
+      "url": "https://us1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "central-prod2",
+      "url": "https://us2.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uswest4",
+      "url": "https://us4.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uswest5",
+      "url": "https://us5.api.central.arubanetworks.com"
+    },
+    {
+      "description": "us-east-1",
+      "url": "https://us6.api.central.arubanetworks.com"
+    },
+    {
+      "description": "starman",
+      "url": "https://ca1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apac",
+      "url": "https://in1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apaceast",
+      "url": "https://jp1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apacsouth",
+      "url": "https://au1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uaenorth1",
+      "url": "https://ae1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "china-prod",
+      "url": "https://cn1.api.central.arubanetworks.com.cn"
+    },
+    {
+      "description": "internal2",
+      "url": "https://internal.api.central.arubanetworks.com"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Interface Tunnel"
+    },
+    {
+      "name": "Interface Tunnel Group"
+    }
+  ],
+  "x-readme": {
+    "explorer-enabled": true,
+    "proxy-enabled": true
+  }
+}

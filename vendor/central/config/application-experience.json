@@ -1,0 +1,2738 @@
+{
+  "components": {
+    "headers": {
+      "X-RateLimit-Limit": {
+        "description": "Request limit per hour.",
+        "schema": {
+          "description": "Request limit per hour.",
+          "format": "int64",
+          "maximum": 9223372036854776000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "X-RateLimit-Remaining": {
+        "description": "The number of requests left for the time window.",
+        "schema": {
+          "description": "The number of requests left for the time window.",
+          "format": "int64",
+          "maximum": 9223372036854776000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "X-RateLimit-Reset": {
+        "description": "The UTC date/time at which the current rate limit window resets.",
+        "schema": {
+          "description": "The UTC date/time at which the current rate limit window resets.",
+          "format": "date-time",
+          "maxLength": 20,
+          "type": "string"
+        }
+      }
+    },
+    "parameters": {
+      "delete_device_function": {
+        "description": "Device function for which the local object needs to be deleted. Mandatory if object_type = LOCAL. Should not be provided for object_type = SHARED.",
+        "in": "query",
+        "name": "device-function",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "delete_object_type": {
+        "description": "LOCAL - To delete local objects. SHARED - To delete shared objects. Default - Defaults to SHARED if not provided",
+        "in": "query",
+        "name": "object-type",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "delete_scope_id": {
+        "description": "Scope at which local object needs to be deleted. Mandatory if object-type = LOCAL. Should not be provided for object-type = SHARED.",
+        "in": "query",
+        "name": "scope-id",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "detailed": {
+        "description": "True - Includes annotations in the returned json to indicate the type of object, scope, and device function. False - Returns only config objects without annotations.",
+        "in": "query",
+        "name": "detailed",
+        "schema": {
+          "type": "boolean"
+        }
+      },
+      "effective": {
+        "description": "True - Returns effective configuration (i.e hierarchically merged configuration). False - Returns committed configuration at a given scope.",
+        "in": "query",
+        "name": "effective",
+        "schema": {
+          "type": "boolean"
+        }
+      },
+      "get_device_function": {
+        "description": "Filters configuration specific to given device-function type. If not provided and view_type = LOCAL, then defaults to all device-function's.",
+        "in": "query",
+        "name": "device-function",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "get_object_type": {
+        "description": "Retrieves LOCAL or SHARED or both(default) configuration objects.",
+        "in": "query",
+        "name": "object-type",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "get_scope_id": {
+        "description": "Configuration at a given scope. Mandatory for view-type = LOCAL.",
+        "in": "query",
+        "name": "scope-id",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "limit": {
+        "description": "Limit for pagination.",
+        "in": "query",
+        "name": "limit",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "offset": {
+        "description": "Offset for pagination.",
+        "in": "query",
+        "name": "offset",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "patch_device_function": {
+        "description": "Device function for which the local object needs to be updated. Mandatory if object_type = LOCAL. Should not be provided for object_type = SHARED.",
+        "in": "query",
+        "name": "device-function",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "patch_object_type": {
+        "description": "LOCAL - To update local objects. SHARED - To update shared objects. Default - Defaults to SHARED if not provided",
+        "in": "query",
+        "name": "object-type",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "patch_scope_id": {
+        "description": "Scope at which local object needs to be updated. Mandatory if object-type = LOCAL. Should not be provided for object-type = SHARED.",
+        "in": "query",
+        "name": "scope-id",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "post_device_function": {
+        "description": "Device function for which the local object needs to be created. Mandatory if object_type = LOCAL. Should not be provided for object_type = SHARED.",
+        "in": "query",
+        "name": "device-function",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "post_object_type": {
+        "description": "LOCAL - To create local objects. SHARED - To create shared objects. Default - Defaults to SHARED if not provided",
+        "in": "query",
+        "name": "object-type",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "post_scope_id": {
+        "description": "Scope at which local object needs to be created. Mandatory if object-type = LOCAL. Should not be provided for object-type = SHARED.",
+        "in": "query",
+        "name": "scope-id",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "view_type": {
+        "description": "LIBRARY - Returns shared objects in library. For LIBRARY, all other parameters listed below, except 'detailed' , will be ignored. LOCAL - Returns configurations for a scope and one or more device function based on parameters below.",
+        "in": "query",
+        "name": "view-type",
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "requestBodies": {
+      "ArubaAppBandwidthContract_AppBandwidthContractsprofilesSchema": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ArubaAppBandwidthContract_AppBandwidthContractsprofilesSchema"
+            }
+          }
+        },
+        "description": "profilesbody object"
+      },
+      "ArubaAppRecogControl_ArcprofileSchema": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ArubaAppRecogControl_ArcprofileSchema"
+            }
+          }
+        },
+        "description": "profilebody object"
+      }
+    },
+    "responses": {
+      "200": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Successful200"
+            }
+          }
+        },
+        "description": "Successful Operation",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "400": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error400"
+            }
+          }
+        },
+        "description": "Bad Request",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "401": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error401"
+            }
+          }
+        },
+        "description": "Unauthorized Access",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "403": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error403"
+            }
+          }
+        },
+        "description": "Forbidden",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "404": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error404"
+            }
+          }
+        },
+        "description": "Not Found",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "406": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error406"
+            }
+          }
+        },
+        "description": "Not Acceptable",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "408": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error408"
+            }
+          }
+        },
+        "description": "Request Timeout",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "412": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error412"
+            }
+          }
+        },
+        "description": "Precondition Failed",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "429": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error429"
+            }
+          }
+        },
+        "description": "Rate limit exceeded",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "500": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error500"
+            }
+          }
+        },
+        "description": "Internal Server Error",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      }
+    },
+    "schemas": {
+      "ArubaAppBandwidthContract_AppBandwidthContractsSchemaGET": {
+        "description": "App Bandwidth Contracts. This container holds named profiles that define\ndirectional (UPSTREAM/DOWNSTREAM) bandwidth limits for application traffic.\nEach profile can include four different contract types: DPI application based\ncontracts (app), DPI application category based contracts (app-category), WebCC\nreputation score/risk based contracts (web-reputation), and WebCC category based\ncontracts (web-category). Each contract entry uses a composite key leaf that\ncombines the identifier and direction. Bandwidth limits are configured by\nselecting bandwidth units (kbits/s or mbits/s) and specifying a bit-rate; the\nbit-rate is validated by a YANG must constraint with unit-specific ranges\n(256..2000000 for KBITS_PER_SEC and 1..2000 for MBITS_PER_SEC).\nThe combined total number of entries across all four contract lists (app,\napp-category, web-reputation, and web-category) within a single profile\nmust not exceed 32.",
+        "properties": {
+          "profiles": {
+            "description": "List of App Bandwidth Contract profiles. Each profile is identified by a\nunique name and groups up to four types of directional bandwidth contracts:\nDPI application (app), DPI application category (app-category), WebCC\nreputation score (web-reputation), and WebCC category (web-category).\nThe combined total number of entries across all four contract lists within\na single profile must not exceed 32.",
+            "items": {
+              "properties": {
+                "app": {
+                  "description": "List of bandwidth contracts keyed by DPI application name and traffic direction.\nEach entry maps a specific application (e.g. facebook, youtube, zoom) to a\nbandwidth contract for either upstream or downstream traffic. The application\nname must be a valid DPI application type and the direction must be specified.\nBandwidth limits are configured via the bwc-units and bit-rate leaves.",
+                  "items": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/ArubaAppBandwidthContract_BwcRateGet"
+                      },
+                      {
+                        "properties": {
+                          "app-name-direction": {
+                            "description": "Key combination of DPI Application and direction separated by '~'.",
+                            "format": "const",
+                            "maxLength": 9999,
+                            "type": "string"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "maxItems": 2147483647,
+                  "type": "array",
+                  "x-key": [
+                    "appNameDirection"
+                  ],
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ]
+                },
+                "app-category": {
+                  "description": "List of bandwidth contracts keyed by DPI application category and traffic direction.\nEach entry maps a broad application category (e.g. STREAMING, GAMING,\nSOCIAL-NETWORKING) to a bandwidth contract for either upstream or downstream\ntraffic. This allows bandwidth policies to be applied at the category level\nrather than per individual application. Bandwidth limits are configured via\nthe bwc-units and bit-rate leaves.",
+                  "items": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/ArubaAppBandwidthContract_BwcRateGet"
+                      },
+                      {
+                        "properties": {
+                          "app-category-name-direction": {
+                            "description": "Key combination of DPI Application Category and direction separated by '~'.",
+                            "format": "const",
+                            "maxLength": 9999,
+                            "type": "string"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "maxItems": 2147483647,
+                  "type": "array",
+                  "x-key": [
+                    "appCategoryNameDirection"
+                  ],
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ]
+                },
+                "description": {
+                  "description": "App Bandwidth Contract profile description.",
+                  "format": "const",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "name": {
+                  "description": "App bandwidth Contract profile name.",
+                  "format": "const",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "web-category": {
+                  "description": "List of bandwidth contracts keyed by WebCC category and traffic direction.\nWebCC classifies web destinations into categories (e.g. BUSINESS-ECONOMY,\nGAMES, EDUCATIONAL-INSTITUTIONS, SOCIAL-NETWORKING). Each entry maps one\nWebCC category to a bandwidth contract for either upstream or downstream\ntraffic, enabling bandwidth policies based on the type of web content being\naccessed. There can be at most one contract per category per direction.",
+                  "items": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/ArubaAppBandwidthContract_BwcRateGet"
+                      },
+                      {
+                        "properties": {
+                          "web-category-name-direction": {
+                            "description": "Key combination of WebCC category and direction separated by '~'.",
+                            "format": "const",
+                            "maxLength": 9999,
+                            "type": "string"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "maxItems": 2147483647,
+                  "type": "array",
+                  "x-key": [
+                    "webCategoryNameDirection"
+                  ],
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ]
+                },
+                "web-reputation": {
+                  "description": "List of bandwidth contracts keyed by WebCC reputation score range and traffic\ndirection. WebCC assigns a reputation score to each URL upon classification and\ngroups scores into the following risk levels: TRUSTWORTHY (81-100),\nLOW_RISK (61-80), MODERATE_RISK (41-60), SUSPICIOUS (21-40), and\nHIGH_RISK (1-20). Each entry maps one risk level to a bandwidth contract for\neither upstream or downstream traffic, allowing differentiated bandwidth\ntreatment based on the trustworthiness of web destinations. There can be at\nmost one contract per risk level per direction.",
+                  "items": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/ArubaAppBandwidthContract_BwcRateGet"
+                      },
+                      {
+                        "properties": {
+                          "web-rep-score-direction": {
+                            "description": "Key combination of WebCC reputation score and direction separated by '~'.",
+                            "format": "const",
+                            "maxLength": 9999,
+                            "type": "string"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "maxItems": 2147483647,
+                  "type": "array",
+                  "x-key": [
+                    "webRepScoreDirection"
+                  ],
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ]
+                }
+              }
+            },
+            "maxItems": 2147483647,
+            "type": "array",
+            "x-key": [
+              "name"
+            ],
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          }
+        },
+        "x-supportedDeviceType": [
+          "Gateway"
+        ]
+      },
+      "ArubaAppBandwidthContract_AppBandwidthContractsprofilesSchema": {
+        "properties": {
+          "app": {
+            "description": "List of bandwidth contracts keyed by DPI application name and traffic direction.\nEach entry maps a specific application (e.g. facebook, youtube, zoom) to a\nbandwidth contract for either upstream or downstream traffic. The application\nname must be a valid DPI application type and the direction must be specified.\nBandwidth limits are configured via the bwc-units and bit-rate leaves.",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ArubaAppBandwidthContract_BwcRate"
+                },
+                {
+                  "properties": {
+                    "app-name-direction": {
+                      "description": "Key combination of DPI Application and direction separated by '~'.",
+                      "format": "const",
+                      "maxLength": 9999,
+                      "type": "string"
+                    }
+                  }
+                }
+              ]
+            },
+            "maxItems": 2147483647,
+            "type": "array",
+            "x-key": [
+              "appNameDirection"
+            ],
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "app-category": {
+            "description": "List of bandwidth contracts keyed by DPI application category and traffic direction.\nEach entry maps a broad application category (e.g. STREAMING, GAMING,\nSOCIAL-NETWORKING) to a bandwidth contract for either upstream or downstream\ntraffic. This allows bandwidth policies to be applied at the category level\nrather than per individual application. Bandwidth limits are configured via\nthe bwc-units and bit-rate leaves.",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ArubaAppBandwidthContract_BwcRate"
+                },
+                {
+                  "properties": {
+                    "app-category-name-direction": {
+                      "description": "Key combination of DPI Application Category and direction separated by '~'.",
+                      "format": "const",
+                      "maxLength": 9999,
+                      "type": "string"
+                    }
+                  }
+                }
+              ]
+            },
+            "maxItems": 2147483647,
+            "type": "array",
+            "x-key": [
+              "appCategoryNameDirection"
+            ],
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "description": {
+            "description": "App Bandwidth Contract profile description.",
+            "format": "const",
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "name": {
+            "description": "App bandwidth Contract profile name.",
+            "format": "const",
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "web-category": {
+            "description": "List of bandwidth contracts keyed by WebCC category and traffic direction.\nWebCC classifies web destinations into categories (e.g. BUSINESS-ECONOMY,\nGAMES, EDUCATIONAL-INSTITUTIONS, SOCIAL-NETWORKING). Each entry maps one\nWebCC category to a bandwidth contract for either upstream or downstream\ntraffic, enabling bandwidth policies based on the type of web content being\naccessed. There can be at most one contract per category per direction.",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ArubaAppBandwidthContract_BwcRate"
+                },
+                {
+                  "properties": {
+                    "web-category-name-direction": {
+                      "description": "Key combination of WebCC category and direction separated by '~'.",
+                      "format": "const",
+                      "maxLength": 9999,
+                      "type": "string"
+                    }
+                  }
+                }
+              ]
+            },
+            "maxItems": 2147483647,
+            "type": "array",
+            "x-key": [
+              "webCategoryNameDirection"
+            ],
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "web-reputation": {
+            "description": "List of bandwidth contracts keyed by WebCC reputation score range and traffic\ndirection. WebCC assigns a reputation score to each URL upon classification and\ngroups scores into the following risk levels: TRUSTWORTHY (81-100),\nLOW_RISK (61-80), MODERATE_RISK (41-60), SUSPICIOUS (21-40), and\nHIGH_RISK (1-20). Each entry maps one risk level to a bandwidth contract for\neither upstream or downstream traffic, allowing differentiated bandwidth\ntreatment based on the trustworthiness of web destinations. There can be at\nmost one contract per risk level per direction.",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ArubaAppBandwidthContract_BwcRate"
+                },
+                {
+                  "properties": {
+                    "web-rep-score-direction": {
+                      "description": "Key combination of WebCC reputation score and direction separated by '~'.",
+                      "format": "const",
+                      "maxLength": 9999,
+                      "type": "string"
+                    }
+                  }
+                }
+              ]
+            },
+            "maxItems": 2147483647,
+            "type": "array",
+            "x-key": [
+              "webRepScoreDirection"
+            ],
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          }
+        }
+      },
+      "ArubaAppBandwidthContract_AppBandwidthContractsprofilesSchemaGet": {
+        "properties": {
+          "app": {
+            "description": "List of bandwidth contracts keyed by DPI application name and traffic direction.\nEach entry maps a specific application (e.g. facebook, youtube, zoom) to a\nbandwidth contract for either upstream or downstream traffic. The application\nname must be a valid DPI application type and the direction must be specified.\nBandwidth limits are configured via the bwc-units and bit-rate leaves.",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ArubaAppBandwidthContract_BwcRateGet"
+                },
+                {
+                  "properties": {
+                    "app-name-direction": {
+                      "description": "Key combination of DPI Application and direction separated by '~'.",
+                      "format": "const",
+                      "maxLength": 9999,
+                      "type": "string"
+                    }
+                  }
+                }
+              ]
+            },
+            "maxItems": 2147483647,
+            "type": "array",
+            "x-key": [
+              "appNameDirection"
+            ],
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "app-category": {
+            "description": "List of bandwidth contracts keyed by DPI application category and traffic direction.\nEach entry maps a broad application category (e.g. STREAMING, GAMING,\nSOCIAL-NETWORKING) to a bandwidth contract for either upstream or downstream\ntraffic. This allows bandwidth policies to be applied at the category level\nrather than per individual application. Bandwidth limits are configured via\nthe bwc-units and bit-rate leaves.",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ArubaAppBandwidthContract_BwcRateGet"
+                },
+                {
+                  "properties": {
+                    "app-category-name-direction": {
+                      "description": "Key combination of DPI Application Category and direction separated by '~'.",
+                      "format": "const",
+                      "maxLength": 9999,
+                      "type": "string"
+                    }
+                  }
+                }
+              ]
+            },
+            "maxItems": 2147483647,
+            "type": "array",
+            "x-key": [
+              "appCategoryNameDirection"
+            ],
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "description": {
+            "description": "App Bandwidth Contract profile description.",
+            "format": "const",
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "name": {
+            "description": "App bandwidth Contract profile name.",
+            "format": "const",
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "web-category": {
+            "description": "List of bandwidth contracts keyed by WebCC category and traffic direction.\nWebCC classifies web destinations into categories (e.g. BUSINESS-ECONOMY,\nGAMES, EDUCATIONAL-INSTITUTIONS, SOCIAL-NETWORKING). Each entry maps one\nWebCC category to a bandwidth contract for either upstream or downstream\ntraffic, enabling bandwidth policies based on the type of web content being\naccessed. There can be at most one contract per category per direction.",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ArubaAppBandwidthContract_BwcRateGet"
+                },
+                {
+                  "properties": {
+                    "web-category-name-direction": {
+                      "description": "Key combination of WebCC category and direction separated by '~'.",
+                      "format": "const",
+                      "maxLength": 9999,
+                      "type": "string"
+                    }
+                  }
+                }
+              ]
+            },
+            "maxItems": 2147483647,
+            "type": "array",
+            "x-key": [
+              "webCategoryNameDirection"
+            ],
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "web-reputation": {
+            "description": "List of bandwidth contracts keyed by WebCC reputation score range and traffic\ndirection. WebCC assigns a reputation score to each URL upon classification and\ngroups scores into the following risk levels: TRUSTWORTHY (81-100),\nLOW_RISK (61-80), MODERATE_RISK (41-60), SUSPICIOUS (21-40), and\nHIGH_RISK (1-20). Each entry maps one risk level to a bandwidth contract for\neither upstream or downstream traffic, allowing differentiated bandwidth\ntreatment based on the trustworthiness of web destinations. There can be at\nmost one contract per risk level per direction.",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ArubaAppBandwidthContract_BwcRateGet"
+                },
+                {
+                  "properties": {
+                    "web-rep-score-direction": {
+                      "description": "Key combination of WebCC reputation score and direction separated by '~'.",
+                      "format": "const",
+                      "maxLength": 9999,
+                      "type": "string"
+                    }
+                  }
+                }
+              ]
+            },
+            "maxItems": 2147483647,
+            "type": "array",
+            "x-key": [
+              "webRepScoreDirection"
+            ],
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          }
+        }
+      },
+      "ArubaAppBandwidthContract_BwcRate": {
+        "description": "Bandwidth contract upstream/downstream rate in kbps or mbps.",
+        "properties": {
+          "bit-rate": {
+            "description": "Bandwidth in kbits per second or mbits per second.",
+            "format": "int64",
+            "maximum": 2000000,
+            "minimum": 1,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "bwc-units": {
+            "description": "Select method to specify bandwidth units - either kbits or mbits per second.\nThis configuration is mandatory.",
+            "enum": [
+              "KBITS_PER_SEC",
+              "MBITS_PER_SEC",
+              "LINK_PERCENT"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "KBITS_PER_SEC": "Kbits/sec.",
+              "LINK_PERCENT": "Percentage of link capacity.",
+              "MBITS_PER_SEC": "Mbits/sec."
+            },
+            "x-mandatory": true,
+            "x-supportedDeviceType": [
+              "Gateway"
+            ],
+            "x-typeDescription": "Bandwidth units."
+          }
+        },
+        "required": [
+          "bwc-units"
+        ]
+      },
+      "ArubaAppBandwidthContract_BwcRateGet": {
+        "description": "Bandwidth contract upstream/downstream rate in kbps or mbps.",
+        "properties": {
+          "bit-rate": {
+            "description": "Bandwidth in kbits per second or mbits per second.",
+            "format": "int64",
+            "maximum": 2000000,
+            "minimum": 1,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "bwc-units": {
+            "description": "Select method to specify bandwidth units - either kbits or mbits per second.\nThis configuration is mandatory.",
+            "enum": [
+              "KBITS_PER_SEC",
+              "MBITS_PER_SEC",
+              "LINK_PERCENT"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "KBITS_PER_SEC": "Kbits/sec.",
+              "LINK_PERCENT": "Percentage of link capacity.",
+              "MBITS_PER_SEC": "Mbits/sec."
+            },
+            "x-mandatory": true,
+            "x-supportedDeviceType": [
+              "Gateway"
+            ],
+            "x-typeDescription": "Bandwidth units."
+          }
+        },
+        "required": [
+          "bwc-units"
+        ]
+      },
+      "ArubaAppRecogControl_ArcSchemaGET": {
+        "description": "Configuration of Application Recognition & Control (ARC) global profile(s).\nThese APIs are applicable to AP, Gateway & CX-Switch devices only.",
+        "properties": {
+          "profile": {
+            "description": "Global profile for ARC Configurations",
+            "items": {
+              "properties": {
+                "cache-state": {
+                  "default": "true",
+                  "description": "Enable DPI classification cache. Applicable to AP only.",
+                  "type": "boolean",
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ]
+                },
+                "description": {
+                  "description": "Configure a profile description. Only alphanumeric characters, space, hyphen, underscore, hash, and period are allowed.",
+                  "format": "pattern",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-patternSources": "description",
+                  "x-patterns": "'[A-Za-z0-9 _#.\\-]+'"
+                },
+                "firewall-visibility": {
+                  "description": "Enable Firewall visibility feature for monitoring. Applicable to Gateways only.",
+                  "type": "boolean",
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ]
+                },
+                "limit-exceed-action": {
+                  "description": "Apply Application Based Policy, session limit exceed action. Applicable to CX-Switch only.",
+                  "enum": [
+                    "DROP_NEW_FLOWS",
+                    "LOG_ONLY"
+                  ],
+                  "format": "enum",
+                  "type": "string",
+                  "x-enumDescriptions": {
+                    "DROP_NEW_FLOWS": "Drop all new flows associated with clients that have an Application\nBased Policy configured when the session table is full.",
+                    "LOG_ONLY": "Log new flows for which session table entries could not be created\nand forward traffic without Application Based Policy inspection. "
+                  },
+                  "x-supportedDeviceType": [
+                    "Switch CX"
+                  ],
+                  "x-typeDescription": "Application Based Policy, session limit exceed action types."
+                },
+                "name": {
+                  "description": "Configure a profile name. Only alphanumeric characters, space, hyphen, underscore, hash, and period are allowed.",
+                  "format": "pattern",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-patternSources": "name",
+                  "x-patterns": "'[A-Za-z0-9 _#.\\-]+'",
+                  "x-supportedDeviceType": [
+                    "Switch CX"
+                  ]
+                },
+                "recog-types": {
+                  "description": "App recognition types and parameter configurations.",
+                  "properties": {
+                    "app-perf-monitoring": {
+                      "description": "Enabling Application performance monitoring. This option is applicable only APs, GWs",
+                      "type": "boolean",
+                      "x-supportedDeviceType": [
+                        "Access Point",
+                        "Gateway"
+                      ]
+                    },
+                    "dpi-enable": {
+                      "description": "Enable App Recognition features. This field enables Deep Packet Inspection (DPI) for AP, Gateway and CX Switches.\nIt also implicitly enables Web Content Classification (WebCC) for AP and Gateway only.\nThis is enabled by default for Microbranch & Campus APs, Mobility and Branch Gateways.\nDPI uses Qosmos for classifying traffic into application & application category types.",
+                      "type": "boolean",
+                      "x-supportedDeviceType": [
+                        "Access Point",
+                        "Switch CX",
+                        "Gateway"
+                      ]
+                    },
+                    "webcc-cache-miss-drop": {
+                      "description": "WebCC caches classification data of a URL when it encounters it for the first time.\nEnable this feature to drop session packets until a cache entry is found for the URL, i.e. until a WebCC\ncategory or reputation score classification is available in the internal WebCC cache.\nThis feature is applicable to Gateway only. It is disabled by default.",
+                      "type": "boolean",
+                      "x-supportedDeviceType": [
+                        "Gateway"
+                      ]
+                    },
+                    "webcc-enable": {
+                      "description": "Enable Web Content Classification (WebCC) feature for AP and Gateway.\nThis is enabled by default for Microbranch & Campus APs, Mobility and Branch Gateways.\nIt is mandatory to enable DPI to use WebCC.  WebCC feature uses the Brightcloud® URL database of categorie and\nreputation risk scores to classify web traffic. An IP name server must be configured for this feature to work.",
+                      "type": "boolean",
+                      "x-supportedDeviceType": [
+                        "Access Point",
+                        "Gateway"
+                      ]
+                    }
+                  },
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ]
+                },
+                "redirect-url": {
+                  "description": "Configure URL to redirect session to when users access a URL that matches a WebCC deny rule.\nThe URL must be prefixed with http:// or https:// . Permitted length is 5-250 characters.\nApplicable to Gateway only.",
+                  "format": "pattern",
+                  "maxLength": 9999,
+                  "type": "string",
+                  "x-patternSources": "redirect-url",
+                  "x-patterns": "'https?://(([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\\.?)|(((25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\\.){3}(25[0-5]|2[0-4][0-9]|1?[0-9]{1,2}))|(\\[[0-9a-fA-F:]+\\]))[^\\s]*'",
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ],
+                  "x-typeDescription": "An ASCII-encoded Uniform Resource Locator (URL) as defined\nin RFC 3986, section 1.1.3"
+                },
+                "url-visibility": {
+                  "default": "false",
+                  "description": "Enable the URL visibility feature. Applicable to AP only.",
+                  "type": "boolean",
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ]
+                },
+                "webcc-connectiontype-ipv6": {
+                  "description": "Enable to force WebCC to use IPv6 for communicating with vendor service.\nThis configuration is disabled by default.\nDisabling it makes WebCC fall back to dual-stack mode with IPv4 preferred.\nThis feature is applicable to Gateways only.",
+                  "type": "boolean",
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ]
+                }
+              }
+            },
+            "maxItems": 2147483647,
+            "type": "array",
+            "x-key": [
+              "name"
+            ],
+            "x-supportedDeviceType": [
+              "Gateway",
+              "Access Point"
+            ]
+          }
+        },
+        "x-supportedDeviceType": [
+          "Access Point",
+          "Gateway",
+          "Switch CX"
+        ]
+      },
+      "ArubaAppRecogControl_ArcprofileSchema": {
+        "properties": {
+          "cache-state": {
+            "default": "true",
+            "description": "Enable DPI classification cache. Applicable to AP only.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "description": {
+            "description": "Configure a profile description. Only alphanumeric characters, space, hyphen, underscore, hash, and period are allowed.",
+            "format": "pattern",
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string",
+            "x-patternSources": "description",
+            "x-patterns": "'[A-Za-z0-9 _#.\\-]+'"
+          },
+          "firewall-visibility": {
+            "description": "Enable Firewall visibility feature for monitoring. Applicable to Gateways only.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "limit-exceed-action": {
+            "description": "Apply Application Based Policy, session limit exceed action. Applicable to CX-Switch only.",
+            "enum": [
+              "DROP_NEW_FLOWS",
+              "LOG_ONLY"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "DROP_NEW_FLOWS": "Drop all new flows associated with clients that have an Application\nBased Policy configured when the session table is full.",
+              "LOG_ONLY": "Log new flows for which session table entries could not be created\nand forward traffic without Application Based Policy inspection. "
+            },
+            "x-supportedDeviceType": [
+              "Switch CX"
+            ],
+            "x-typeDescription": "Application Based Policy, session limit exceed action types."
+          },
+          "name": {
+            "description": "Configure a profile name. Only alphanumeric characters, space, hyphen, underscore, hash, and period are allowed.",
+            "format": "pattern",
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string",
+            "x-patternSources": "name",
+            "x-patterns": "'[A-Za-z0-9 _#.\\-]+'",
+            "x-supportedDeviceType": [
+              "Switch CX"
+            ]
+          },
+          "recog-types": {
+            "description": "App recognition types and parameter configurations.",
+            "properties": {
+              "app-perf-monitoring": {
+                "description": "Enabling Application performance monitoring. This option is applicable only APs, GWs",
+                "type": "boolean",
+                "x-supportedDeviceType": [
+                  "Access Point",
+                  "Gateway"
+                ]
+              },
+              "dpi-enable": {
+                "description": "Enable App Recognition features. This field enables Deep Packet Inspection (DPI) for AP, Gateway and CX Switches.\nIt also implicitly enables Web Content Classification (WebCC) for AP and Gateway only.\nThis is enabled by default for Microbranch & Campus APs, Mobility and Branch Gateways.\nDPI uses Qosmos for classifying traffic into application & application category types.",
+                "type": "boolean",
+                "x-supportedDeviceType": [
+                  "Access Point",
+                  "Switch CX",
+                  "Gateway"
+                ]
+              },
+              "webcc-cache-miss-drop": {
+                "description": "WebCC caches classification data of a URL when it encounters it for the first time.\nEnable this feature to drop session packets until a cache entry is found for the URL, i.e. until a WebCC\ncategory or reputation score classification is available in the internal WebCC cache.\nThis feature is applicable to Gateway only. It is disabled by default.",
+                "type": "boolean",
+                "x-supportedDeviceType": [
+                  "Gateway"
+                ]
+              },
+              "webcc-enable": {
+                "description": "Enable Web Content Classification (WebCC) feature for AP and Gateway.\nThis is enabled by default for Microbranch & Campus APs, Mobility and Branch Gateways.\nIt is mandatory to enable DPI to use WebCC.  WebCC feature uses the Brightcloud® URL database of categorie and\nreputation risk scores to classify web traffic. An IP name server must be configured for this feature to work.",
+                "type": "boolean",
+                "x-supportedDeviceType": [
+                  "Access Point",
+                  "Gateway"
+                ]
+              }
+            },
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "redirect-url": {
+            "description": "Configure URL to redirect session to when users access a URL that matches a WebCC deny rule.\nThe URL must be prefixed with http:// or https:// . Permitted length is 5-250 characters.\nApplicable to Gateway only.",
+            "format": "pattern",
+            "maxLength": 9999,
+            "type": "string",
+            "x-patternSources": "redirect-url",
+            "x-patterns": "'https?://(([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\\.?)|(((25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\\.){3}(25[0-5]|2[0-4][0-9]|1?[0-9]{1,2}))|(\\[[0-9a-fA-F:]+\\]))[^\\s]*'",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ],
+            "x-typeDescription": "An ASCII-encoded Uniform Resource Locator (URL) as defined\nin RFC 3986, section 1.1.3"
+          },
+          "url-visibility": {
+            "default": "false",
+            "description": "Enable the URL visibility feature. Applicable to AP only.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "webcc-connectiontype-ipv6": {
+            "description": "Enable to force WebCC to use IPv6 for communicating with vendor service.\nThis configuration is disabled by default.\nDisabling it makes WebCC fall back to dual-stack mode with IPv4 preferred.\nThis feature is applicable to Gateways only.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          }
+        }
+      },
+      "ArubaAppRecogControl_ArcprofileSchemaGet": {
+        "properties": {
+          "cache-state": {
+            "default": "true",
+            "description": "Enable DPI classification cache. Applicable to AP only.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "description": {
+            "description": "Configure a profile description. Only alphanumeric characters, space, hyphen, underscore, hash, and period are allowed.",
+            "format": "pattern",
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string",
+            "x-patternSources": "description",
+            "x-patterns": "'[A-Za-z0-9 _#.\\-]+'"
+          },
+          "firewall-visibility": {
+            "description": "Enable Firewall visibility feature for monitoring. Applicable to Gateways only.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "limit-exceed-action": {
+            "description": "Apply Application Based Policy, session limit exceed action. Applicable to CX-Switch only.",
+            "enum": [
+              "DROP_NEW_FLOWS",
+              "LOG_ONLY"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "DROP_NEW_FLOWS": "Drop all new flows associated with clients that have an Application\nBased Policy configured when the session table is full.",
+              "LOG_ONLY": "Log new flows for which session table entries could not be created\nand forward traffic without Application Based Policy inspection. "
+            },
+            "x-supportedDeviceType": [
+              "Switch CX"
+            ],
+            "x-typeDescription": "Application Based Policy, session limit exceed action types."
+          },
+          "name": {
+            "description": "Configure a profile name. Only alphanumeric characters, space, hyphen, underscore, hash, and period are allowed.",
+            "format": "pattern",
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string",
+            "x-patternSources": "name",
+            "x-patterns": "'[A-Za-z0-9 _#.\\-]+'",
+            "x-supportedDeviceType": [
+              "Switch CX"
+            ]
+          },
+          "recog-types": {
+            "description": "App recognition types and parameter configurations.",
+            "properties": {
+              "app-perf-monitoring": {
+                "description": "Enabling Application performance monitoring. This option is applicable only APs, GWs",
+                "type": "boolean",
+                "x-supportedDeviceType": [
+                  "Access Point",
+                  "Gateway"
+                ]
+              },
+              "dpi-enable": {
+                "description": "Enable App Recognition features. This field enables Deep Packet Inspection (DPI) for AP, Gateway and CX Switches.\nIt also implicitly enables Web Content Classification (WebCC) for AP and Gateway only.\nThis is enabled by default for Microbranch & Campus APs, Mobility and Branch Gateways.\nDPI uses Qosmos for classifying traffic into application & application category types.",
+                "type": "boolean",
+                "x-supportedDeviceType": [
+                  "Access Point",
+                  "Switch CX",
+                  "Gateway"
+                ]
+              },
+              "webcc-cache-miss-drop": {
+                "description": "WebCC caches classification data of a URL when it encounters it for the first time.\nEnable this feature to drop session packets until a cache entry is found for the URL, i.e. until a WebCC\ncategory or reputation score classification is available in the internal WebCC cache.\nThis feature is applicable to Gateway only. It is disabled by default.",
+                "type": "boolean",
+                "x-supportedDeviceType": [
+                  "Gateway"
+                ]
+              },
+              "webcc-enable": {
+                "description": "Enable Web Content Classification (WebCC) feature for AP and Gateway.\nThis is enabled by default for Microbranch & Campus APs, Mobility and Branch Gateways.\nIt is mandatory to enable DPI to use WebCC.  WebCC feature uses the Brightcloud® URL database of categorie and\nreputation risk scores to classify web traffic. An IP name server must be configured for this feature to work.",
+                "type": "boolean",
+                "x-supportedDeviceType": [
+                  "Access Point",
+                  "Gateway"
+                ]
+              }
+            },
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "redirect-url": {
+            "description": "Configure URL to redirect session to when users access a URL that matches a WebCC deny rule.\nThe URL must be prefixed with http:// or https:// . Permitted length is 5-250 characters.\nApplicable to Gateway only.",
+            "format": "pattern",
+            "maxLength": 9999,
+            "type": "string",
+            "x-patternSources": "redirect-url",
+            "x-patterns": "'https?://(([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\\.?)|(((25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})\\.){3}(25[0-5]|2[0-4][0-9]|1?[0-9]{1,2}))|(\\[[0-9a-fA-F:]+\\]))[^\\s]*'",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ],
+            "x-typeDescription": "An ASCII-encoded Uniform Resource Locator (URL) as defined\nin RFC 3986, section 1.1.3"
+          },
+          "url-visibility": {
+            "default": "false",
+            "description": "Enable the URL visibility feature. Applicable to AP only.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "webcc-connectiontype-ipv6": {
+            "description": "Enable to force WebCC to use IPv6 for communicating with vendor service.\nThis configuration is disabled by default.\nDisabling it makes WebCC fall back to dual-stack mode with IPv4 preferred.\nThis feature is applicable to Gateways only.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          }
+        }
+      },
+      "Error400": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_AP001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "400",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Bad request. Invalid values supplied in request.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error401": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_R001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "401",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Unauthorized. Authentication Failure.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error403": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_CN001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "403",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Forbidden. Capability Rule fail.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error404": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_CN003",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "404",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Not found. Yang / Corresponding Rule is missing.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error406": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_AP003",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "406",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Not Acceptable. Invalid data format.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error408": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_K001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "408",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Request Timeout.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error412": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_LY002",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "412",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Precondition Failed.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error429": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_AJ001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "429",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Too Many Requests.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error500": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_C001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "500",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Internal server error. Invalid scope.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Successful200": {
+        "description": "Success response returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Success code.",
+            "example": "SUCC_001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "200",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of successful response.\n",
+            "example": "Success.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "OAuth2": {
+        "description": "OAuth 2.0 authentication with client credentials flow. You can also use your own access token.",
+        "flows": {
+          "clientCredentials": {
+            "scopes": {},
+            "tokenUrl": "https://sso.common.cloud.hpe.com/as/token.oauth2"
+          }
+        },
+        "type": "oauth2"
+      }
+    }
+  },
+  "info": {
+    "title": "Application Experience",
+    "version": "v1alpha1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/network-config/v1alpha1/app-bandwidth-contracts": {
+      "get": {
+        "description": "App Bandwidth Contracts. This container holds named profiles that define\ndirectional (UPSTREAM/DOWNSTREAM) bandwidth limits for application traffic.\nEach profile can include four different contract types: DPI application based\ncontracts (app), DPI application category based contracts (app-category), WebCC\nreputation score/risk based contracts (web-reputation), and WebCC category based\ncontracts (web-category). Each contract entry uses a composite key leaf that\ncombines the identifier and direction. Bandwidth limits are configured by\nselecting bandwidth units (kbits/s or mbits/s) and specifying a bit-rate; the\nbit-rate is validated by a YANG must constraint with unit-specific ranges\n(256..2000000 for KBITS_PER_SEC and 1..2000 for MBITS_PER_SEC).\nThe combined total number of entries across all four contract lists (app,\napp-category, web-reputation, and web-category) within a single profile\nmust not exceed 32.",
+        "operationId": "readAppBandwidthContracts",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/view_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/get_device_function"
+          },
+          {
+            "$ref": "#/components/parameters/effective"
+          },
+          {
+            "$ref": "#/components/parameters/detailed"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArubaAppBandwidthContract_AppBandwidthContractsSchemaGET"
+                }
+              }
+            },
+            "description": "Successful operation",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Read existing app bandwidth contracts",
+        "tags": [
+          "App Bandwidth Contract"
+        ],
+        "x-cliParam": {
+          "commandName": "readAppBandwidthContractsCmd",
+          "commandUse": "app-bandwidth-contracts",
+          "parentCommand": "readCmd",
+          "pathToPrint": "/app-bandwidth-contracts/",
+          "summary": "Read operation for app-bandwidth-contracts"
+        }
+      }
+    },
+    "/network-config/v1alpha1/app-bandwidth-contracts/{name}": {
+      "delete": {
+        "description": "List of App Bandwidth Contract profiles. Each profile is identified by a\nunique name and groups up to four types of directional bandwidth contracts:\nDPI application (app), DPI application category (app-category), WebCC\nreputation score (web-reputation), and WebCC category (web-category).\nThe combined total number of entries across all four contract lists within\na single profile must not exceed 32.",
+        "operationId": "deleteAppBandwidthContractsProfilesByID",
+        "parameters": [
+          {
+            "description": "App bandwidth Contract profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/delete_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/delete_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/delete_device_function"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Delete app bandwidth contract profile",
+        "tags": [
+          "App Bandwidth Contract"
+        ],
+        "x-cliParam": {
+          "commandName": "deleteAppBandwidthContractsProfilesCmd",
+          "commandUse": "profiles",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "deleteAppBandwidthContractsCmd",
+          "pathToPrint": "/app-bandwidth-contracts/profiles/%s/",
+          "summary": "Delete operation for profiles",
+          "totParams": 1
+        }
+      },
+      "get": {
+        "description": "List of App Bandwidth Contract profiles. Each profile is identified by a\nunique name and groups up to four types of directional bandwidth contracts:\nDPI application (app), DPI application category (app-category), WebCC\nreputation score (web-reputation), and WebCC category (web-category).\nThe combined total number of entries across all four contract lists within\na single profile must not exceed 32.",
+        "operationId": "readAppBandwidthContractsProfilesByID",
+        "parameters": [
+          {
+            "description": "App bandwidth Contract profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/view_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/get_device_function"
+          },
+          {
+            "$ref": "#/components/parameters/effective"
+          },
+          {
+            "$ref": "#/components/parameters/detailed"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArubaAppBandwidthContract_AppBandwidthContractsprofilesSchemaGet"
+                }
+              }
+            },
+            "description": "Successful operation",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Read existing app bandwidth contract profile",
+        "tags": [
+          "App Bandwidth Contract"
+        ],
+        "x-cliParam": {
+          "commandName": "readAppBandwidthContractsProfilesCmd",
+          "commandUse": "profiles",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "readAppBandwidthContractsCmd",
+          "pathToPrint": "/app-bandwidth-contracts/profiles/%s/",
+          "summary": "Read operation for profiles",
+          "totParams": 1
+        }
+      },
+      "patch": {
+        "description": "List of App Bandwidth Contract profiles. Each profile is identified by a\nunique name and groups up to four types of directional bandwidth contracts:\nDPI application (app), DPI application category (app-category), WebCC\nreputation score (web-reputation), and WebCC category (web-category).\nThe combined total number of entries across all four contract lists within\na single profile must not exceed 32.",
+        "operationId": "updateAppBandwidthContractsProfilesByID",
+        "parameters": [
+          {
+            "description": "App bandwidth Contract profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/patch_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/patch_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/patch_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAppBandwidthContract_AppBandwidthContractsprofilesSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update app bandwidth contract profile",
+        "tags": [
+          "App Bandwidth Contract"
+        ],
+        "x-cliParam": {
+          "commandName": "updateAppBandwidthContractsProfilesCmd",
+          "commandUse": "profiles",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "updateAppBandwidthContractsCmd",
+          "pathToPrint": "/app-bandwidth-contracts/profiles/%s/",
+          "summary": "Update operation for profiles",
+          "totParams": 1
+        }
+      },
+      "post": {
+        "description": "List of App Bandwidth Contract profiles. Each profile is identified by a\nunique name and groups up to four types of directional bandwidth contracts:\nDPI application (app), DPI application category (app-category), WebCC\nreputation score (web-reputation), and WebCC category (web-category).\nThe combined total number of entries across all four contract lists within\na single profile must not exceed 32.",
+        "operationId": "createAppBandwidthContractsProfilesByID",
+        "parameters": [
+          {
+            "description": "App bandwidth Contract profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAppBandwidthContract_AppBandwidthContractsprofilesSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create a new app bandwidth contract profile by unique name",
+        "tags": [
+          "App Bandwidth Contract"
+        ],
+        "x-cliParam": {
+          "commandName": "createAppBandwidthContractsProfilesCmd",
+          "commandUse": "profiles",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "createAppBandwidthContractsCmd",
+          "pathToPrint": "/app-bandwidth-contracts/profiles/%s/",
+          "summary": "Create operation for profiles",
+          "totParams": 1
+        }
+      }
+    },
+    "/network-config/v1alpha1/arc": {
+      "get": {
+        "description": "Configuration of Application Recognition & Control (ARC) global profile(s).\nThese APIs are applicable to AP, Gateway & CX-Switch devices only.",
+        "operationId": "readArc",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/view_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/get_device_function"
+          },
+          {
+            "$ref": "#/components/parameters/effective"
+          },
+          {
+            "$ref": "#/components/parameters/detailed"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArubaAppRecogControl_ArcSchemaGET"
+                }
+              }
+            },
+            "description": "Successful operation",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Read existing ARC Configuration",
+        "tags": [
+          "App Recog Control"
+        ],
+        "x-cliParam": {
+          "commandName": "readArcCmd",
+          "commandUse": "arc",
+          "parentCommand": "readCmd",
+          "pathToPrint": "/arc/",
+          "summary": "Read operation for arc"
+        }
+      }
+    },
+    "/network-config/v1alpha1/arc/{name}": {
+      "delete": {
+        "description": "Global profile for ARC Configurations",
+        "operationId": "deleteArcProfileByID",
+        "parameters": [
+          {
+            "description": "Configure a profile name. Only alphanumeric characters, space, hyphen, underscore, hash, and period are allowed.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/delete_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/delete_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/delete_device_function"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Delete ARC profile of {name}",
+        "tags": [
+          "App Recog Control"
+        ],
+        "x-cliParam": {
+          "commandName": "deleteArcProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "deleteArcCmd",
+          "pathToPrint": "/arc/profile/%s/",
+          "summary": "Delete operation for profile",
+          "totParams": 1
+        }
+      },
+      "get": {
+        "description": "Global profile for ARC Configurations",
+        "operationId": "readArcProfileByID",
+        "parameters": [
+          {
+            "description": "Configure a profile name. Only alphanumeric characters, space, hyphen, underscore, hash, and period are allowed.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/view_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/get_device_function"
+          },
+          {
+            "$ref": "#/components/parameters/effective"
+          },
+          {
+            "$ref": "#/components/parameters/detailed"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArubaAppRecogControl_ArcprofileSchemaGet"
+                }
+              }
+            },
+            "description": "Successful operation",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Read existing ARC profile of {name}",
+        "tags": [
+          "App Recog Control"
+        ],
+        "x-cliParam": {
+          "commandName": "readArcProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "readArcCmd",
+          "pathToPrint": "/arc/profile/%s/",
+          "summary": "Read operation for profile",
+          "totParams": 1
+        }
+      },
+      "patch": {
+        "description": "Global profile for ARC Configurations",
+        "operationId": "updateArcProfileByID",
+        "parameters": [
+          {
+            "description": "Configure a profile name. Only alphanumeric characters, space, hyphen, underscore, hash, and period are allowed.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/patch_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/patch_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/patch_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAppRecogControl_ArcprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update existing ARC profile of {name}",
+        "tags": [
+          "App Recog Control"
+        ],
+        "x-cliParam": {
+          "commandName": "updateArcProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "updateArcCmd",
+          "pathToPrint": "/arc/profile/%s/",
+          "summary": "Update operation for profile",
+          "totParams": 1
+        }
+      },
+      "post": {
+        "description": "Global profile for ARC Configurations",
+        "operationId": "createArcProfileByID",
+        "parameters": [
+          {
+            "description": "Configure a profile name. Only alphanumeric characters, space, hyphen, underscore, hash, and period are allowed.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAppRecogControl_ArcprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create new ARC profile of {name}",
+        "tags": [
+          "App Recog Control"
+        ],
+        "x-cliParam": {
+          "commandName": "createArcProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "createArcCmd",
+          "pathToPrint": "/arc/profile/%s/",
+          "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "AccessToken": []
+    }
+  ],
+  "servers": [
+    {
+      "description": "eu",
+      "url": "https://de1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "eucentral2",
+      "url": "https://de2.api.central.arubanetworks.com"
+    },
+    {
+      "description": "eucentral3",
+      "url": "https://de3.api.central.arubanetworks.com"
+    },
+    {
+      "description": "ukwest2",
+      "url": "https://gb1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "prod",
+      "url": "https://us1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "central-prod2",
+      "url": "https://us2.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uswest4",
+      "url": "https://us4.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uswest5",
+      "url": "https://us5.api.central.arubanetworks.com"
+    },
+    {
+      "description": "us-east-1",
+      "url": "https://us6.api.central.arubanetworks.com"
+    },
+    {
+      "description": "starman",
+      "url": "https://ca1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apac",
+      "url": "https://in1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apaceast",
+      "url": "https://jp1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apacsouth",
+      "url": "https://au1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uaenorth1",
+      "url": "https://ae1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "china-prod",
+      "url": "https://cn1.api.central.arubanetworks.com.cn"
+    },
+    {
+      "description": "internal2",
+      "url": "https://internal.api.central.arubanetworks.com"
+    }
+  ],
+  "tags": [
+    {
+      "name": "App Bandwidth Contract"
+    },
+    {
+      "name": "App Recog Control"
+    }
+  ],
+  "x-readme": {
+    "explorer-enabled": true,
+    "proxy-enabled": true
+  }
+}

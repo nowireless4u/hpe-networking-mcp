@@ -1,0 +1,968 @@
+{
+  "components": {
+    "headers": {
+      "XRateLimitLimitHeader": {
+        "description": "Request limit per hour.",
+        "schema": {
+          "format": "int64",
+          "maximum": 9223372036854776000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "XRateLimitRemainingHeader": {
+        "description": "The number of requests left for the time window.",
+        "schema": {
+          "format": "int64",
+          "maximum": 9223372036854776000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "XRateLimitResetHeader": {
+        "description": "The UTC date/time at which the current rate limit window resets.",
+        "schema": {
+          "format": "date-time",
+          "maxLength": 20,
+          "type": "string"
+        }
+      }
+    },
+    "responses": {
+      "BadRequestError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "description": "Error details returned from the server.\n",
+              "properties": {
+                "debugId": {
+                  "description": "This can be used to help with troubleshooting\n",
+                  "example": "abc-123-456",
+                  "format": "const",
+                  "maxLength": 50,
+                  "type": "string"
+                },
+                "errorCode": {
+                  "description": "Bad Request.\n",
+                  "example": "HPE_GL_ERROR_BAD_REQUEST",
+                  "format": "const",
+                  "maxLength": 32,
+                  "type": "string"
+                },
+                "httpStatusCode": {
+                  "description": "HTTP status code.\n",
+                  "example": 400,
+                  "maximum": 400,
+                  "minimum": 400,
+                  "type": "integer"
+                },
+                "message": {
+                  "description": "Error message indicating the cause of the failure.\n",
+                  "example": "Authentication error - the token was expired",
+                  "format": "const",
+                  "maxLength": 512,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "httpStatusCode",
+                "errorCode",
+                "message",
+                "debugId"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "description": "Invalid input received.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimitHeader"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemainingHeader"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitResetHeader"
+          }
+        }
+      },
+      "Forbidden": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "description": "Error details returned from the server.\n",
+              "properties": {
+                "debugId": {
+                  "description": "Internal debug id.\n",
+                  "example": [
+                    "e5b61232-83c8-401a-8e14-a4c75b4fb745"
+                  ],
+                  "format": "const",
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "errorCode": {
+                  "description": "Internal error code.\n",
+                  "enum": [
+                    "HPE_GL_ERROR_FORBIDDEN"
+                  ],
+                  "example": [
+                    "HPE_GL_ERROR_FORBIDDEN"
+                  ],
+                  "maxLength": 32,
+                  "type": "string"
+                },
+                "httpStatusCode": {
+                  "description": "HTTP status code.\n",
+                  "example": [
+                    403
+                  ],
+                  "maximum": 403,
+                  "minimum": 403,
+                  "type": "integer"
+                },
+                "message": {
+                  "description": "Error message indicating the cause of the failure.\n",
+                  "example": [
+                    "Forbidden"
+                  ],
+                  "format": "const",
+                  "maxLength": 512,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "errorCode",
+                "message",
+                "debugId",
+                "httpStatusCode"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "description": "Forbidden.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimitHeader"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemainingHeader"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitResetHeader"
+          }
+        }
+      },
+      "InternalServerError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "description": "Error details returned from the server.\n",
+              "properties": {
+                "debugId": {
+                  "description": "Internal debug id.\n",
+                  "example": [
+                    "e5b61232-83c8-401a-8e14-a4c75b4fb745"
+                  ],
+                  "format": "const",
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "errorCode": {
+                  "description": "Internal error code.\n",
+                  "enum": [
+                    "HPE_GL_ERROR_INTERNAL_SERVER_ERROR"
+                  ],
+                  "example": [
+                    "HPE_GL_ERROR_INTERNAL_SERVER_ERROR"
+                  ],
+                  "maxLength": 32,
+                  "type": "string"
+                },
+                "httpStatusCode": {
+                  "description": "HTTP status code.\n",
+                  "example": [
+                    500
+                  ],
+                  "maximum": 500,
+                  "minimum": 500,
+                  "type": "integer"
+                },
+                "message": {
+                  "description": "Error message indicating the cause of the failure.\n",
+                  "example": [
+                    "com.arangodb.ArangoDBException: Cannot contact any host!"
+                  ],
+                  "format": "const",
+                  "maxLength": 512,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "errorCode",
+                "message",
+                "debugId",
+                "httpStatusCode"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "description": "Internal Server Error.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimitHeader"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemainingHeader"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitResetHeader"
+          }
+        }
+      },
+      "TooManyRequests": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "description": "Error details returned from the server.\n",
+              "properties": {
+                "debugId": {
+                  "description": "Internal debug id.\n",
+                  "example": [
+                    "e5b61232-83c8-401a-8e14-a4c75b4fb745"
+                  ],
+                  "format": "const",
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "errorCode": {
+                  "description": "Internal error code.\n",
+                  "enum": [
+                    "HPE_GL_ERROR_TOO_MANY_REQUESTS"
+                  ],
+                  "example": [
+                    "HPE_GL_ERROR_TOO_MANY_REQUESTS"
+                  ],
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "httpStatusCode": {
+                  "description": "HTTP status code.\n",
+                  "example": [
+                    429
+                  ],
+                  "maximum": 429,
+                  "minimum": 429,
+                  "type": "integer"
+                },
+                "message": {
+                  "description": "Error message indicating the cause of the failure.\n",
+                  "example": [
+                    "Too Many Requests"
+                  ],
+                  "format": "const",
+                  "maxLength": 512,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "errorCode",
+                "message",
+                "debugId",
+                "httpStatusCode"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "description": "Too Many Requests. Rate limit exceeded.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimitHeader"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemainingHeader"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitResetHeader"
+          }
+        }
+      },
+      "Unauthorized": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "description": "Error details returned from the server.\n",
+              "properties": {
+                "debugId": {
+                  "description": "Internal debug id.\n",
+                  "example": [
+                    "e5b61232-83c8-401a-8e14-a4c75b4fb745"
+                  ],
+                  "format": "const",
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "errorCode": {
+                  "description": "Internal error code.\n",
+                  "enum": [
+                    "HPE_GL_ERROR_UNAUTHORIZED"
+                  ],
+                  "example": [
+                    "HPE_GL_ERROR_UNAUTHORIZED"
+                  ],
+                  "maxLength": 32,
+                  "type": "string"
+                },
+                "httpStatusCode": {
+                  "description": "HTTP status code.\n",
+                  "example": [
+                    401
+                  ],
+                  "maximum": 401,
+                  "minimum": 401,
+                  "type": "integer"
+                },
+                "message": {
+                  "description": "Error message indicating the cause of the failure.\n",
+                  "example": [
+                    "Unauthorized Request"
+                  ],
+                  "format": "const",
+                  "maxLength": 512,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "errorCode",
+                "message",
+                "debugId",
+                "httpStatusCode"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "description": "Unauthorized request.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimitHeader"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemainingHeader"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitResetHeader"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "OAuth2": {
+        "description": "OAuth 2.0 authentication with client credentials flow. You can also use your own access token.",
+        "flows": {
+          "clientCredentials": {
+            "scopes": {},
+            "tokenUrl": "https://sso.common.cloud.hpe.com/as/token.oauth2"
+          }
+        },
+        "type": "oauth2"
+      }
+    }
+  },
+  "info": {
+    "description": "This is release of the Aruba Network Configuration APIs.",
+    "license": {
+      "name": "HPE",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "title": "Configuration Health",
+    "version": "0.0.1"
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/network-config/v1alpha1/config-health/active-issue": {
+      "get": {
+        "description": "This API is used to fetch active configuration issues for a device.",
+        "operationId": "getActiveIssues",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "configPullFailures": {
+                      "description": "Configuration import failures.",
+                      "items": {
+                        "properties": {
+                          "id": {
+                            "description": "Unique identifier for the import issue.",
+                            "nullable": false,
+                            "type": "string"
+                          },
+                          "issue": {
+                            "description": "Error description.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "issueType": {
+                            "description": "Type of the event.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "recommendedAction": {
+                            "description": "Recommended action to resolve the issue.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "timestamp": {
+                            "description": "Time the issue occurred at.",
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "nullable": true,
+                      "type": "array"
+                    },
+                    "configPushFailures": {
+                      "description": "Configuration distribution failures.",
+                      "items": {
+                        "properties": {
+                          "id": {
+                            "description": "Unique identifier for the distribution issue.",
+                            "nullable": false,
+                            "type": "string"
+                          },
+                          "issue": {
+                            "description": "Error description.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "recommendedAction": {
+                            "description": "Recommended action to resolve the issue.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "timestamp": {
+                            "description": "Time the issue occurred at.",
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "nullable": true,
+                      "type": "array"
+                    },
+                    "filteredConfig": {
+                      "description": "Capability validation issues.",
+                      "items": {
+                        "properties": {
+                          "assignedScope": {
+                            "description": "Scope the profile is assigned to.",
+                            "nullable": false,
+                            "type": "string"
+                          },
+                          "assignedScopeType": {
+                            "description": "Scope type the profile is assigned to.",
+                            "enum": [
+                              "SCOPE_TYPE_UNSPECIFIED",
+                              "SCOPE_TYPE_DEVICE",
+                              "SCOPE_TYPE_DEVICE_COLLECTION",
+                              "SCOPE_TYPE_SITE",
+                              "SCOPE_TYPE_SITE_COLLECTION",
+                              "SCOPE_TYPE_GLOBAL",
+                              "SCOPE_TYPE_LIBRARY"
+                            ],
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "id": {
+                            "description": "Unique identifier for the validation issue.",
+                            "nullable": false,
+                            "type": "string"
+                          },
+                          "issueCategory": {
+                            "description": "Category of the issue.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "issueDescription": {
+                            "description": "Detailed description of the issue.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "profileName": {
+                            "description": "Name of the profile.",
+                            "nullable": false,
+                            "type": "string"
+                          },
+                          "profileType": {
+                            "description": "Type of the profile.",
+                            "nullable": false,
+                            "type": "string"
+                          },
+                          "recommendedAction": {
+                            "description": "Recommended action to resolve the issue.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "timestamp": {
+                            "description": "Time the issue occurred at.",
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "nullable": true,
+                      "type": "array"
+                    },
+                    "invalidConfig": {
+                      "description": "Capacity validation issues.",
+                      "items": {
+                        "properties": {
+                          "assignedScope": {
+                            "description": "Scope the profile is assigned to.",
+                            "nullable": false,
+                            "type": "string"
+                          },
+                          "assignedScopeType": {
+                            "description": "Scope type the profile is assigned to.",
+                            "enum": [
+                              "SCOPE_TYPE_UNSPECIFIED",
+                              "SCOPE_TYPE_DEVICE",
+                              "SCOPE_TYPE_DEVICE_COLLECTION",
+                              "SCOPE_TYPE_SITE",
+                              "SCOPE_TYPE_SITE_COLLECTION",
+                              "SCOPE_TYPE_GLOBAL",
+                              "SCOPE_TYPE_LIBRARY"
+                            ],
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "id": {
+                            "description": "Unique identifier for the validation issue.",
+                            "nullable": false,
+                            "type": "string"
+                          },
+                          "issueCategory": {
+                            "description": "Category of the issue.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "issueDescription": {
+                            "description": "Detailed description of the issue.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "profileName": {
+                            "description": "Name of the profile.",
+                            "nullable": false,
+                            "type": "string"
+                          },
+                          "profileType": {
+                            "description": "Type of the profile.",
+                            "nullable": false,
+                            "type": "string"
+                          },
+                          "recommendedAction": {
+                            "description": "Recommended action to resolve the issue.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "timestamp": {
+                            "description": "Time the issue occurred at.",
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "nullable": true,
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "response",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Returns active configuration issues for a device.",
+        "tags": [
+          "Configuration Health"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/config-health/devices": {
+      "get": {
+        "description": "This API is used to fetch configuration health information for all devices.",
+        "operationId": "getConfigHealthDevices",
+        "parameters": [
+          {
+            "description": "Number of devices that needs to be fetched.",
+            "in": "query",
+            "name": "limit",
+            "required": true,
+            "schema": {
+              "default": 100,
+              "example": 100,
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Offset from where the devices need to be fetched",
+            "in": "query",
+            "name": "offset",
+            "required": true,
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Sort by one of `name`, `serial`, `type`, `siteName`, `configStatus`, `deviceFunction`, `lastConfigTimestamp`, `model`, `deviceGroupName`, `topPriorityIssue`, `recommendedAction`, `role`, `deployment`, `activeIssues` in ascending(`asc`) or descending(`desc`) order.",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "example": "name desc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "OData 4.0 filter supports filtering on fields `name` `deviceFunction`, `configStatus`, `type`, `model`, `serial`, `deviceGroupName`, `activeIssues`",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "example": "deviceGroupName eq 'device-group1'",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Partial or Full String Free text search on `name`, `serial`, `siteName`, `topPriorityIssue` and `recommendedAction` fields",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "example": "device-group1",
+              "maxLength": 128,
+              "minLength": 3,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "count": {
+                      "description": "Number of devices satisfying the applied filter.",
+                      "nullable": false,
+                      "type": "integer"
+                    },
+                    "devices": {
+                      "description": "List of all devices that are part of configuration.",
+                      "items": {
+                        "properties": {
+                          "activeIssues": {
+                            "description": "List of active issues with the device configuration.",
+                            "items": {
+                              "nullable": true,
+                              "properties": {
+                                "activeIssue": {
+                                  "description": "Active issue for the device configuration",
+                                  "enum": [
+                                    "CONFIG_PULL_FAILURES",
+                                    "CONFIG_PUSH_FAILURES",
+                                    "INVALID_CONFIG",
+                                    "FILTERED_CONFIG"
+                                  ],
+                                  "nullable": true,
+                                  "type": "string"
+                                }
+                              },
+                              "type": "string"
+                            },
+                            "nullable": true,
+                            "type": "array"
+                          },
+                          "configStatus": {
+                            "description": "Configuration status of the device.",
+                            "enum": [
+                              "SYNCHRONIZED",
+                              "OUT_OF_SYNC",
+                              "UPDATE_IN_PROGRESS",
+                              "SYNC_WITH_LIMITATIONS",
+                              "UNKNOWN"
+                            ],
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "deployment": {
+                            "description": "The device is deployed as.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "deviceFunction": {
+                            "description": "Device function of the device.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "deviceGroupName": {
+                            "description": "Name of the device group the device is assigned to.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "filteredConfig": {
+                            "description": "Indicates if the device configuration is filtered due to non-blocking issues.",
+                            "nullable": true,
+                            "type": "boolean"
+                          },
+                          "lastConfigTimestamp": {
+                            "description": "Time when last config pushed to the device in ms. from epoch",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "model": {
+                            "description": "Model of the device.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "Hostname of the device.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "recommendedAction": {
+                            "description": "Recommended action to fix the highest priority issue with the device configuration.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "role": {
+                            "description": "Role of the device is the network.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "serial": {
+                            "description": "Serial of the device.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "siteCollectionName": {
+                            "description": "Name of the site collection the device is assigned to.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "siteName": {
+                            "description": "Name of the site the device is assigned to.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "topPriorityIssue": {
+                            "description": "Highest priority issue with the device configuration.",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "type": {
+                            "description": "Type of the device.",
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "nullable": false,
+                      "type": "array"
+                    },
+                    "offset": {
+                      "description": "Offset for pagination.",
+                      "nullable": false,
+                      "type": "integer"
+                    },
+                    "total": {
+                      "description": "Total number of devices present.",
+                      "nullable": false,
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "response",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Returns summary of configuration health for devices.",
+        "tags": [
+          "Configuration Health"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "AccessToken": []
+    }
+  ],
+  "servers": [
+    {
+      "description": "eu",
+      "url": "https://de1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "eucentral2",
+      "url": "https://de2.api.central.arubanetworks.com"
+    },
+    {
+      "description": "eucentral3",
+      "url": "https://de3.api.central.arubanetworks.com"
+    },
+    {
+      "description": "ukwest2",
+      "url": "https://gb1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "prod",
+      "url": "https://us1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "central-prod2",
+      "url": "https://us2.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uswest4",
+      "url": "https://us4.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uswest5",
+      "url": "https://us5.api.central.arubanetworks.com"
+    },
+    {
+      "description": "us-east-1",
+      "url": "https://us6.api.central.arubanetworks.com"
+    },
+    {
+      "description": "starman",
+      "url": "https://ca1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apac",
+      "url": "https://in1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apaceast",
+      "url": "https://jp1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apacsouth",
+      "url": "https://au1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uaenorth1",
+      "url": "https://ae1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "china-prod",
+      "url": "https://cn1.api.central.arubanetworks.com.cn"
+    },
+    {
+      "description": "internal2",
+      "url": "https://internal.api.central.arubanetworks.com"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Configuration Health APIs - To get details about configuration status for devices and issues with devices",
+      "name": "Configuration Health"
+    }
+  ],
+  "x-readme": {
+    "explorer-enabled": true,
+    "proxy-enabled": true
+  }
+}

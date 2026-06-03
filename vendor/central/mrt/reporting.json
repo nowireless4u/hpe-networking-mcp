@@ -1,0 +1,1287 @@
+{
+  "components": {
+    "headers": {
+      "X-Rate-Limit-Limit": {
+        "description": "Request limit per hour.",
+        "schema": {
+          "format": "int64",
+          "maximum": 9223372036854776000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "X-Rate-Limit-Remaining": {
+        "description": "The number of requests left for the time window.",
+        "schema": {
+          "format": "int64",
+          "maximum": 9223372036854776000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "X-Rate-Limit-Reset": {
+        "description": "The UTC date/time at which the current rate limit window resets.",
+        "schema": {
+          "format": "date-time",
+          "maxLength": 20,
+          "type": "string"
+        }
+      }
+    },
+    "responses": {
+      "BadRequestError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/BadRequestError"
+            }
+          }
+        },
+        "description": "Invalid input received.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-Rate-Limit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-Rate-Limit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-Rate-Limit-Reset"
+          }
+        }
+      },
+      "Forbidden": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ForbiddenError"
+            }
+          }
+        },
+        "description": "Forbidden: Access is denied.\n",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-Rate-Limit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-Rate-Limit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-Rate-Limit-Reset"
+          }
+        }
+      },
+      "InternalServerError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/InternalServerError"
+            }
+          }
+        },
+        "description": "Internal server error.\n",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-Rate-Limit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-Rate-Limit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-Rate-Limit-Reset"
+          }
+        }
+      },
+      "ListReportRunsResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ListReportRuns"
+            }
+          }
+        },
+        "description": "List Report runs Response \n",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-Rate-Limit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-Rate-Limit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-Rate-Limit-Reset"
+          }
+        }
+      },
+      "ListReportsResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ListReports"
+            }
+          }
+        },
+        "description": "List Report Response \n",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-Rate-Limit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-Rate-Limit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-Rate-Limit-Reset"
+          }
+        }
+      },
+      "NotFoundError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/NotFoundError"
+            }
+          }
+        },
+        "description": "Not Found error",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-Rate-Limit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-Rate-Limit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-Rate-Limit-Reset"
+          }
+        }
+      },
+      "TooManyRequests": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/TooManyRequestsError"
+            }
+          }
+        },
+        "description": "Too Many Requests. Rate limit exceeded.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-Rate-Limit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-Rate-Limit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-Rate-Limit-Reset"
+          }
+        }
+      },
+      "Unauthorized": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UnauthorizedError"
+            }
+          }
+        },
+        "description": "Unauthorized request.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-Rate-Limit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-Rate-Limit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-Rate-Limit-Reset"
+          }
+        }
+      }
+    },
+    "schemas": {
+      "BadRequestError": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "Error code\n",
+            "enum": [
+              "HPE_GL_NETWORK_REPORTING_INVALID_INPUT"
+            ],
+            "examples": [
+              "HPE_GL_NETWORK_REPORTING_INVALID_INPUT"
+            ],
+            "maxLength": 128,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP status code.\n",
+            "examples": [
+              400
+            ],
+            "maximum": 400,
+            "minimum": 400,
+            "type": "integer"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ErrorMessage"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "CreatedAt": {
+        "description": "Specifies the report creation time stamp in UTC+0 timezone (RFC 3339 format).",
+        "examples": [
+          "2019-10-12T07:20:50Z"
+        ],
+        "format": "date-time",
+        "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+        "type": "string"
+      },
+      "CreatedBy": {
+        "description": "The user who saved the report.",
+        "examples": [
+          "user1@mail.com"
+        ],
+        "type": "string"
+      },
+      "DebugId": {
+        "description": "A unique identifier used for troubleshooting and debugging purposes.\n",
+        "examples": [
+          "78f002e32e0cefba3d8cc94fa8179342"
+        ],
+        "format": "const",
+        "maxLength": 512,
+        "type": "string"
+      },
+      "Email": {
+        "description": "Specifies the particular user email",
+        "examples": [
+          "user1@mail.com"
+        ],
+        "format": "email",
+        "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+        "type": "string"
+      },
+      "Emails": {
+        "description": "Specifies the user emails",
+        "examples": [
+          [
+            "user1@mail.com",
+            "user2@mail.com"
+          ]
+        ],
+        "items": {
+          "$ref": "#/components/schemas/Email"
+        },
+        "type": "array"
+      },
+      "ErrorMessage": {
+        "description": "Error message indicating the cause of the failure.\n",
+        "examples": [
+          "Error message indicating the cause of the failure."
+        ],
+        "format": "const",
+        "maxLength": 512,
+        "type": "string"
+      },
+      "ExportDetail": {
+        "properties": {
+          "exportType": {
+            "$ref": "#/components/schemas/ReportFormat"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ExportStatus"
+          }
+        },
+        "type": "object"
+      },
+      "ExportStatus": {
+        "description": "Specifies the report export status as New, In Progress, Completed, or Failed",
+        "enum": [
+          "NEW",
+          "IN_PROGRESS",
+          "COMPLETED",
+          "FAILED"
+        ],
+        "examples": [
+          "COMPLETED"
+        ],
+        "type": "string"
+      },
+      "ForbiddenError": {
+        "description": "Forbidden error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "* A unique machine-friendly, but human-readable identifier for the error. It has prefix HPE_GL_.\n* For more details regarding error please refer to error message\n",
+            "examples": [
+              "HPE_GL_ERROR_FORBIDDEN"
+            ],
+            "maxLength": 256,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP status code.\n",
+            "examples": [
+              403
+            ],
+            "maximum": 403,
+            "minimum": 403,
+            "type": "integer"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ErrorMessage"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "InternalServerError": {
+        "description": "Internal server error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "* A unique machine-friendly, but human-readable identifier for the error. It has prefix HPE_GL_.\n* For more details regarding error please refer to error message\n",
+            "enum": [
+              "HPE_GL_NETWORK_REPORTING_INTERNAL_SERVER_ERROR"
+            ],
+            "examples": [
+              "HPE_GL_NETWORK_REPORTING_INTERNAL_SERVER_ERROR"
+            ],
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP status code.",
+            "examples": [
+              500
+            ],
+            "maximum": 500,
+            "minimum": 500,
+            "type": "integer"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ErrorMessage"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "LastModifiedAt": {
+        "description": "Specifies the report modified time stamp in UTC+0 timezone (RFC 3339 format).",
+        "examples": [
+          "2019-10-12T07:20:50Z"
+        ],
+        "format": "date-time",
+        "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+        "type": "string"
+      },
+      "LastModifiedBy": {
+        "description": "The user who modified the report / report schedule.",
+        "examples": [
+          "user1@mail.com"
+        ],
+        "type": "string"
+      },
+      "LastRunStatus": {
+        "description": "Specifies the run status as New, Active, Paused, Stopped, Completed, or Error",
+        "enum": [
+          "NEW",
+          "ACTIVE",
+          "PAUSED",
+          "STOPPED",
+          "COMPLETED",
+          "ERROR"
+        ],
+        "examples": [
+          "COMPLETED"
+        ],
+        "type": "string"
+      },
+      "LastRunTs": {
+        "description": "Specifies the timestamp of the last report run in UTC+0 timezone (RFC 3339 format).",
+        "examples": [
+          "2019-10-12T07:20:50Z"
+        ],
+        "format": "date-time",
+        "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+        "type": "string"
+      },
+      "ListReportRuns": {
+        "description": "List of report runs response",
+        "properties": {
+          "count": {
+            "description": "The number of report runs",
+            "examples": [
+              1,
+              10,
+              100
+            ],
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of report run objects.",
+            "items": {
+              "$ref": "#/components/schemas/ReportRun"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "Specifies the pagination cursor for the next page of resources. null if there are no further pages.",
+            "examples": [
+              "1",
+              "2",
+              "3"
+            ],
+            "type": "string"
+          },
+          "report": {
+            "$ref": "#/components/schemas/Report"
+          },
+          "total": {
+            "description": "The total number of report runs.",
+            "examples": [
+              1,
+              10,
+              100
+            ],
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count"
+        ],
+        "type": "object"
+      },
+      "ListReports": {
+        "description": "List of reports response.",
+        "examples": [],
+        "properties": {
+          "count": {
+            "description": "The number of reports after filtering.",
+            "examples": [
+              1,
+              10,
+              100
+            ],
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of report objects.",
+            "items": {
+              "$ref": "#/components/schemas/Report"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "Specifies the pagination cursor for the next page of resources. null if there are no further pages.",
+            "examples": [
+              "1",
+              "2",
+              "3"
+            ],
+            "type": "string"
+          },
+          "total": {
+            "description": "The total number of reports.",
+            "examples": [
+              1,
+              10,
+              100
+            ],
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count"
+        ],
+        "type": "object"
+      },
+      "Name": {
+        "description": "Specifies the name of report or widgets",
+        "examples": [
+          "Inventory Report"
+        ],
+        "type": "string"
+      },
+      "NextRunTs": {
+        "description": "Specifies the report period next run time stamp in UTC+0 timezone (RFC 3339 format).",
+        "examples": [
+          "2019-10-12T07:20:50Z"
+        ],
+        "format": "date-time",
+        "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+        "type": "string"
+      },
+      "NotFoundError": {
+        "description": "Not Found error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "* A unique machine-friendly, but human-readable identifier for the error. It has prefix HPE_GL_.\n* For more details regarding error please refer to error message\n",
+            "enum": [
+              "HPE_GL_NETWORK_REPORTING_NOT_FOUND"
+            ],
+            "examples": [
+              "HPE_GL_NETWORK_REPORTING_NOT_FOUND"
+            ],
+            "format": "const",
+            "maxLength": 256,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP status code.\n",
+            "examples": [
+              404
+            ],
+            "maximum": 404,
+            "minimum": 404,
+            "type": "integer"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ErrorMessage"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Report": {
+        "properties": {
+          "createdAt": {
+            "$ref": "#/components/schemas/CreatedAt"
+          },
+          "createdBy": {
+            "$ref": "#/components/schemas/CreatedBy"
+          },
+          "id": {
+            "$ref": "#/components/schemas/ReportID"
+          },
+          "lastModifiedAt": {
+            "$ref": "#/components/schemas/LastModifiedAt"
+          },
+          "lastModifiedBy": {
+            "$ref": "#/components/schemas/LastModifiedBy"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Name"
+          },
+          "reportSchedule": {
+            "$ref": "#/components/schemas/ReportSchedule"
+          },
+          "reportScope": {
+            "$ref": "#/components/schemas/ReportScope"
+          },
+          "reportType": {
+            "$ref": "#/components/schemas/ReportType"
+          },
+          "type": {
+            "description": "Type of the resource.",
+            "examples": [
+              "Report"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object"
+      },
+      "ReportFormat": {
+        "description": "Specifies the Export Type",
+        "enum": [
+          "CSV",
+          "PDF"
+        ],
+        "examples": [
+          "CSV"
+        ],
+        "type": "string"
+      },
+      "ReportFormats": {
+        "description": "Specifies the Export Preferences",
+        "examples": [
+          [
+            "CSV",
+            "PDF"
+          ]
+        ],
+        "items": {
+          "$ref": "#/components/schemas/ReportFormat"
+        },
+        "type": "array"
+      },
+      "ReportID": {
+        "examples": [
+          "24833497"
+        ],
+        "format": "const",
+        "type": "string"
+      },
+      "ReportRun": {
+        "properties": {
+          "exportDetails": {
+            "description": "Specifies the Export Details",
+            "items": {
+              "$ref": "#/components/schemas/ExportDetail"
+            },
+            "type": "array"
+          },
+          "fromTs": {
+            "description": "Specifies the report run start time stamp in UTC+0 timezone (RFC 3339 format).",
+            "examples": [
+              "2019-10-12T07:20:50Z"
+            ],
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/ReportID"
+          },
+          "modifiedAt": {
+            "description": "Specifies the report run modified time stamp in UTC+0 timezone (RFC 3339 format).",
+            "examples": [
+              "2019-10-12T07:20:50Z"
+            ],
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/runStatus"
+          },
+          "toTs": {
+            "description": "Specifies the report run end time stamp in UTC+0 timezone (RFC 3339 format).",
+            "examples": [
+              "2019-10-12T07:20:50Z"
+            ],
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of the resource.",
+            "examples": [
+              "ReportRun"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object"
+      },
+      "ReportSchedule": {
+        "description": "Specifies the report Schedule",
+        "properties": {
+          "completedRuns": {
+            "description": "Total number of completed runs for the report schedule.",
+            "examples": [
+              91
+            ],
+            "type": "integer"
+          },
+          "lastRunStatus": {
+            "$ref": "#/components/schemas/LastRunStatus"
+          },
+          "lastRunTs": {
+            "$ref": "#/components/schemas/LastRunTs"
+          },
+          "nextRunTs": {
+            "$ref": "#/components/schemas/NextRunTs"
+          },
+          "scheduleEnd": {
+            "$ref": "#/components/schemas/ScheduleEnd"
+          },
+          "scheduleType": {
+            "$ref": "#/components/schemas/ScheduleType"
+          },
+          "totalRuns": {
+            "description": "Total number of runs that the report schedule has executed.",
+            "examples": [
+              181
+            ],
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ReportScope": {
+        "description": "Specifies the scope type and target values for the report",
+        "properties": {
+          "scopeType": {
+            "examples": [
+              "sites",
+              "global"
+            ],
+            "type": "string"
+          },
+          "values": {
+            "examples": [
+              [
+                "1234567",
+                "7554321"
+              ],
+              [
+                "7554321"
+              ]
+            ],
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ReportType": {
+        "description": "Specifies the particular report type like inventory, client session etc.",
+        "examples": [
+          "inventory"
+        ],
+        "pattern": "^[a-z]+(?:_[a-z]+)*$",
+        "type": "string"
+      },
+      "ScheduleEnd": {
+        "description": "Specifies the scheduled end time stamp in UTC+0 timezone (RFC 3339 format).",
+        "examples": [
+          "2019-10-12T07:20:50Z"
+        ],
+        "format": "date-time",
+        "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+        "type": "string"
+      },
+      "ScheduleType": {
+        "description": "Specifies the Schedule types Once, Every Day, Every Week, Every Month, Every Year, Sliding Window etc.",
+        "enum": [
+          "ONE_TIME",
+          "EVERY_DAY",
+          "EVERY_WEEK",
+          "EVERY_MONTH",
+          "EVERY_YEAR",
+          "SLIDING_WINDOW"
+        ],
+        "examples": [
+          "ONE_TIME"
+        ],
+        "type": "string"
+      },
+      "TooManyRequestsError": {
+        "description": "Too many requests error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "* A unique machine-friendly, but human-readable identifier for the error. It has prefix HPE_GL_.\n* For more details regarding error please refer to error message\n",
+            "examples": [
+              "HPE_GL_ERROR_TOO_MANY_REQUESTS"
+            ],
+            "maxLength": 256,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP status code.\n",
+            "examples": [
+              429
+            ],
+            "maximum": 429,
+            "minimum": 429,
+            "type": "integer"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ErrorMessage"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "UnauthorizedError": {
+        "description": "Unauthorized error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "* A unique machine-friendly, but human-readable identifier for the error. It has prefix HPE_GL_.\n* For more details regarding error please refer to error message\n",
+            "examples": [
+              "HPE_GL_ERROR_UNAUTHORIZED"
+            ],
+            "maxLength": 256,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP status code.\n",
+            "examples": [
+              401
+            ],
+            "maximum": 401,
+            "minimum": 401,
+            "type": "integer"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ErrorMessage"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "runStatus": {
+        "description": "Specifies the report export status as New, In Progress, Completed, or Failed",
+        "enum": [
+          "RUNNING",
+          "EXPORTING",
+          "COMPLETED",
+          "FAILED",
+          "EXPORT_FAILED"
+        ],
+        "examples": [
+          "COMPLETED"
+        ],
+        "type": "string"
+      }
+    },
+    "securitySchemes": {
+      "OAuth2": {
+        "description": "OAuth 2.0 authentication with client credentials flow. You can also use your own access token.",
+        "flows": {
+          "clientCredentials": {
+            "scopes": {},
+            "tokenUrl": "https://sso.common.cloud.hpe.com/as/token.oauth2"
+          }
+        },
+        "type": "oauth2"
+      }
+    }
+  },
+  "info": {
+    "description": "The Reporting APIs for managing `Network Reports`.",
+    "license": {
+      "name": "HPE",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "title": "Reporting",
+    "version": "0.0.1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/network-reporting/v1/reports": {
+      "get": {
+        "description": "This endpoint returns User Reports filtered by the specified query parameters. Each report contains key details such as ID, name, type, and scope. Use the query parameters to filter results and retrieve only data that matches your specific requirements.",
+        "operationId": "listReports",
+        "parameters": [
+          {
+            "description": "Search the Report based on Name, Type, Status and Saved By",
+            "example": "inventory",
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "OData Version 4.0 filter string (limited functionality). Supports only 'and' conjunction ('or' and 'not' are NOT supported). Supported fields and operators are in the table below.\n\n| Field | Operators |\n| --------- | -------- |\n| `status` (last run status) | `eq` and `in` |\n| `scheduleType` (report schedule type) |`eq` and `in` |\n\n**The operators are implemented as follows:**\n\n* `eq`: Only values exactly matching the given value are returned.\n\n* `in`: Only values present in the given list are returned.\n\n",
+            "example": "status in ('ACTIVE', 'COMPLETED', 'FAILED') and scheduleType in ('EVERY_MONTH', 'EVERY_WEEK', 'EVERY_DAY', 'ONE_TIME')",
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort expressions. Each sort expression is a property name optionally followed by a direction indicator asc (ascending) or desc (descending).\n\nIf a direction indicator is omitted the default direction is ascending.\n\nSupported fields are \n\n| Sort Field                          | Description                          |\n| ----------------------------------- | ------------------------------------ |\n| `name`                              | The name of the report.     |\n| `scope`                             | The specific sites where the report applies. |\n| `type`                              | The type or category of the report (e.g., inventory, client). |\n| `createdBy`                           | User who created the report. |\n| `scheduleType`       | Type of schedule for the report (e.g., recurring, one-time). |\n| `scheduleLastRunTs`          | Timestamp of the last time the report was executed. |\n| `scheduleNextRunTs`          | Timestamp of the next scheduled run for the report. |\n| `scheduleTotalRuns`          | Total number of times the report has been run. |\n| `scheduleEnd`        | The end date or timestamp of the report schedule. |\n\n",
+            "example": "scheduleLastRunTs desc",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "examples": [
+                "name asc",
+                "scope asc",
+                "type asc",
+                "scheduleType desc",
+                "scheduleLastRunTs desc",
+                "scheduleNextRunTs desc",
+                "scheduleTotalRuns desc",
+                "scheduleCreatedBy asc",
+                "createdBy asc",
+                "scheduleEnd desc"
+              ],
+              "format": "const",
+              "maxLength": 256,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Specifies the pagination cursor for the next page of resources. Minimum value is 1.",
+            "example": "1",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "default": "1",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of reports to be retrieved. Allowed range is 1 to 100.",
+            "example": 10,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 10,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ListReportsResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "List Reports",
+        "tags": [
+          "Reporting"
+        ]
+      }
+    },
+    "/network-reporting/v1/reports/{report-id}": {
+      "put": {
+        "description": "This API endpoint updates a User Report with a report ID. Report ID can be obtained from **List Reports API**.",
+        "operationId": "updateUserReport",
+        "parameters": [
+          {
+            "description": "The unique identifier of the user report.",
+            "example": 1,
+            "in": "path",
+            "name": "report-id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "email": {
+                    "properties": {
+                      "formats": {
+                        "$ref": "#/components/schemas/ReportFormats"
+                      },
+                      "recipients": {
+                        "$ref": "#/components/schemas/Emails"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": {
+                    "$ref": "#/components/schemas/Name"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "id": {
+                      "examples": [
+                        "1"
+                      ],
+                      "type": "string"
+                    },
+                    "status": {
+                      "examples": [
+                        "Success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successfully updated the report with given report id.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-Rate-Limit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-Rate-Limit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-Rate-Limit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update Report",
+        "tags": [
+          "Reporting"
+        ]
+      }
+    },
+    "/network-reporting/v1/reports/{report-id}/report-runs": {
+      "get": {
+        "description": "This endpoint retrieves report execution history for a specific report ID. Each report run contains execution details including run ID, status, export data, and start/end timestamps. Obtain the required report ID from the List Reports API.",
+        "operationId": "listReportRun",
+        "parameters": [
+          {
+            "description": "The unique identifier of the user report.",
+            "example": 1,
+            "in": "path",
+            "name": "report-id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort expression. Each sort expression is a property name optionally followed by a direction indicator asc (ascending) or desc (descending).\n\n If a direction indicator is omitted the default direction is ascending.\n\nSupported fields are `modifiedAt` and `status`.\n\n The field `modifiedAt` denotes last modified timestamp of the report run and `status` indicates report run current state - New, Running, Failed or Successful.",
+            "example": "modifiedAt desc",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "examples": [
+                "modifiedAt desc, status desc"
+              ],
+              "format": "const",
+              "maxLength": 256,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Specifies the pagination cursor for the next page of resources. Minimum value is 1.",
+            "example": "1",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "default": "1",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of reports to be returned. Allowed range is 1 to 100.",
+            "example": 10,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 10,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ListReportRunsResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "List Report Runs",
+        "tags": [
+          "Reporting"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "description": "eu",
+      "url": "https://de1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "eucentral2",
+      "url": "https://de2.api.central.arubanetworks.com"
+    },
+    {
+      "description": "eucentral3",
+      "url": "https://de3.api.central.arubanetworks.com"
+    },
+    {
+      "description": "ukwest2",
+      "url": "https://gb1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "prod",
+      "url": "https://us1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "central-prod2",
+      "url": "https://us2.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uswest4",
+      "url": "https://us4.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uswest5",
+      "url": "https://us5.api.central.arubanetworks.com"
+    },
+    {
+      "description": "us-east-1",
+      "url": "https://us6.api.central.arubanetworks.com"
+    },
+    {
+      "description": "starman",
+      "url": "https://ca1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apac",
+      "url": "https://in1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apaceast",
+      "url": "https://jp1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apacsouth",
+      "url": "https://au1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uaenorth1",
+      "url": "https://ae1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "china-prod",
+      "url": "https://cn1.api.central.arubanetworks.com.cn"
+    },
+    {
+      "description": "internal2",
+      "url": "https://internal.api.central.arubanetworks.com"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Reporting APIs to manage network reports",
+      "name": "Reporting"
+    }
+  ],
+  "x-readme": {
+    "explorer-enabled": true,
+    "proxy-enabled": true
+  }
+}

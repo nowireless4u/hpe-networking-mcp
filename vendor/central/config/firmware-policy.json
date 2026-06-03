@@ -1,0 +1,1572 @@
+{
+  "components": {
+    "headers": {
+      "X-RateLimit-Limit": {
+        "description": "Request limit per hour.",
+        "schema": {
+          "description": "Request limit per hour.",
+          "format": "int64",
+          "maximum": 9223372036854776000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "X-RateLimit-Remaining": {
+        "description": "The number of requests left for the time window.",
+        "schema": {
+          "description": "The number of requests left for the time window.",
+          "format": "int64",
+          "maximum": 9223372036854776000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "X-RateLimit-Reset": {
+        "description": "The UTC date/time at which the current rate limit window resets.",
+        "schema": {
+          "description": "The UTC date/time at which the current rate limit window resets.",
+          "format": "date-time",
+          "maxLength": 20,
+          "type": "string"
+        }
+      }
+    },
+    "parameters": {
+      "detailed": {
+        "description": "True - Includes annotations in the returned json to indicate the type of object, scope, and device function. False - Returns only config objects without annotations.",
+        "in": "query",
+        "name": "detailed",
+        "schema": {
+          "type": "boolean"
+        }
+      },
+      "effective": {
+        "description": "True - Returns effective configuration (i.e hierarchically merged configuration). False - Returns committed configuration at a given scope.",
+        "in": "query",
+        "name": "effective",
+        "schema": {
+          "type": "boolean"
+        }
+      },
+      "get_device_function": {
+        "description": "Filters configuration specific to given device-function type. If not provided and view_type = LOCAL, then defaults to all device-function's.",
+        "in": "query",
+        "name": "device-function",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "get_object_type": {
+        "description": "Retrieves LOCAL or SHARED or both(default) configuration objects.",
+        "in": "query",
+        "name": "object-type",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "get_scope_id": {
+        "description": "Configuration at a given scope. Mandatory for view-type = LOCAL.",
+        "in": "query",
+        "name": "scope-id",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "limit": {
+        "description": "Limit for pagination.",
+        "in": "query",
+        "name": "limit",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "offset": {
+        "description": "Offset for pagination.",
+        "in": "query",
+        "name": "offset",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "patch_device_function": {
+        "description": "Device function for which the local object needs to be updated. Mandatory if object_type = LOCAL. Should not be provided for object_type = SHARED.",
+        "in": "query",
+        "name": "device-function",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "patch_object_type": {
+        "description": "LOCAL - To update local objects. SHARED - To update shared objects. Default - Defaults to SHARED if not provided",
+        "in": "query",
+        "name": "object-type",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "patch_scope_id": {
+        "description": "Scope at which local object needs to be updated. Mandatory if object-type = LOCAL. Should not be provided for object-type = SHARED.",
+        "in": "query",
+        "name": "scope-id",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "post_device_function": {
+        "description": "Device function for which the local object needs to be created. Mandatory if object_type = LOCAL. Should not be provided for object_type = SHARED.",
+        "in": "query",
+        "name": "device-function",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "post_object_type": {
+        "description": "LOCAL - To create local objects. SHARED - To create shared objects. Default - Defaults to SHARED if not provided",
+        "in": "query",
+        "name": "object-type",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "post_scope_id": {
+        "description": "Scope at which local object needs to be created. Mandatory if object-type = LOCAL. Should not be provided for object-type = SHARED.",
+        "in": "query",
+        "name": "scope-id",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "view_type": {
+        "description": "LIBRARY - Returns shared objects in library. For LIBRARY, all other parameters listed below, except 'detailed' , will be ignored. LOCAL - Returns configurations for a scope and one or more device function based on parameters below.",
+        "in": "query",
+        "name": "view-type",
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "requestBodies": {
+      "ArubaFirmwareCompliance_FirmwareComplianceSchema": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ArubaFirmwareCompliance_FirmwareComplianceSchema"
+            }
+          }
+        },
+        "description": "firmware-compliancebody object"
+      }
+    },
+    "responses": {
+      "200": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Successful200"
+            }
+          }
+        },
+        "description": "Successful Operation",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "400": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error400"
+            }
+          }
+        },
+        "description": "Bad Request",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "401": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error401"
+            }
+          }
+        },
+        "description": "Unauthorized Access",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "403": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error403"
+            }
+          }
+        },
+        "description": "Forbidden",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "404": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error404"
+            }
+          }
+        },
+        "description": "Not Found",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "406": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error406"
+            }
+          }
+        },
+        "description": "Not Acceptable",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "408": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error408"
+            }
+          }
+        },
+        "description": "Request Timeout",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "412": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error412"
+            }
+          }
+        },
+        "description": "Precondition Failed",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "429": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error429"
+            }
+          }
+        },
+        "description": "Rate limit exceeded",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "500": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error500"
+            }
+          }
+        },
+        "description": "Internal Server Error",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      }
+    },
+    "schemas": {
+      "ArubaFirmwareCompliance_FirmwareComplianceSchema": {
+        "description": "Firmware Policy configuration allows centralized control over firmware versions of all devices\nincluding APs, switches, and gateways across various scopes. Firmware upgrade APIs will function consistently\nin Central On-Prem deployments. In Central Cloud, API behavior may vary based on the customer’s deployment mode\nand the device type. Full API support is available for the 5G Bridge device type while support for other\ndevice types may differ.",
+        "properties": {
+          "active-partition": {
+            "default": "PRIMARY",
+            "description": "Partition to upgrade",
+            "enum": [
+              "PRIMARY",
+              "SECONDARY"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "PRIMARY": "Primary partition",
+              "SECONDARY": "Secondary partition"
+            },
+            "x-typeDescription": "Upgrade partition in device"
+          },
+          "allow-unsafe-upgrades": {
+            "default": "false",
+            "description": "Enable non-failsafe module upgrade of CX switches. Ensure that the switch will not lose power, be rebooted again, or have any modules removed until all updates have finished",
+            "type": "boolean"
+          },
+          "description": {
+            "description": "User maintained description for the firmware policy. System does not validate this for duplicates",
+            "format": "const",
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string"
+          },
+          "enable": {
+            "default": "true",
+            "description": "Enable or Disable Firmware Policy configuration. If not enabled, firmware policy configuration\nwill not be inherited from parent scope configuration for this or any scope/device under this scope.",
+            "type": "boolean"
+          },
+          "enforcement-schedule": {
+            "description": "Info related to scheduled firmware upgrade",
+            "properties": {
+              "reboot-schedule": {
+                "description": "Defines the reboot schedule of devices after downloading and installing firmware version",
+                "properties": {
+                  "reboot-schedule-mode": {
+                    "default": "IMMEDIATE",
+                    "description": "Devices will be reboot immediately after downloading and installing firmware version ",
+                    "enum": [
+                      "IMMEDIATE",
+                      "SINCE",
+                      "SCHEDULE_WINDOW",
+                      "NEVER"
+                    ],
+                    "format": "enum",
+                    "type": "string",
+                    "x-enumDescriptions": {
+                      "IMMEDIATE": "Enforce immediately",
+                      "NEVER": "Do not enforce reboot",
+                      "SCHEDULE_WINDOW": "Enforce during maintenance window (NOTE: Currently Unsupported!!!)",
+                      "SINCE": "Enforce after a certain time"
+                    },
+                    "x-typeDescription": "Reboot schedule modes: Immediate, After certain time, Recurring maintenance Window, Never"
+                  },
+                  "since": {
+                    "default": "2024-08-30T07:24:53.923Z",
+                    "description": "Device will be scheduled to reboot after this time once firmware download and installation completes ",
+                    "format": "pattern",
+                    "maxLength": 9999,
+                    "type": "string",
+                    "x-patternSources": "date-and-time",
+                    "x-patterns": "'\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[\\+\\-]\\d{2}:\\d{2})'",
+                    "x-typeDescription": "The date-and-time type is a profile of the ISO 8601\nstandard for representation of dates and times using the\nGregorian calendar.  The profile is defined by the\ndate-time production in Section 5.6 of RFC 3339.\n\nThe date-and-time type is compatible with the dateTime XML\nschema type with the following notable exceptions:\n\n(a) The date-and-time type does not allow negative years.\n\n(b) The date-and-time time-offset -00:00 indicates an unknown\n    time zone (see RFC 3339) while -00:00 and +00:00 and Z\n    all represent the same time zone in dateTime.\n\n(c) The canonical format (see below) of data-and-time values\n    differs from the canonical format used by the dateTime XML\n    schema type, which requires all times to be in UTC using\n    the time-offset 'Z'.\n\nThis type is not equivalent to the DateAndTime textual\nconvention of the SMIv2 since RFC 3339 uses a different\nseparator between full-date and full-time and provides\nhigher resolution of time-secfrac.\n\nThe canonical format for date-and-time values with a known time\nzone uses a numeric time zone offset that is calculated using\nthe device's configured known offset to UTC time.  A change of\nthe device's offset to UTC time will cause date-and-time values\nto change accordingly.  Such changes might happen periodically\nin case a server follows automatically daylight saving time\n(DST) time zone offset changes.  The canonical format for\ndate-and-time values with an unknown time zone (usually\nreferring to the notion of local time) uses the time-offset\n-00:00."
+                  }
+                }
+              },
+              "upgrade-new-devices-immediately": {
+                "default": "false",
+                "description": "When recurring maintenance window is selected, if a new device comes up, upgrade immediately",
+                "type": "boolean"
+              },
+              "upgrade-schedule": {
+                "description": "Defines the upgrade schedule of firmware policy enforcement",
+                "properties": {
+                  "since": {
+                    "default": "2024-08-30T07:24:53.923Z",
+                    "description": "firmware policy will be enforced after this time",
+                    "format": "pattern",
+                    "maxLength": 9999,
+                    "type": "string",
+                    "x-patternSources": "date-and-time",
+                    "x-patterns": "'\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[\\+\\-]\\d{2}:\\d{2})'",
+                    "x-typeDescription": "The date-and-time type is a profile of the ISO 8601\nstandard for representation of dates and times using the\nGregorian calendar.  The profile is defined by the\ndate-time production in Section 5.6 of RFC 3339.\n\nThe date-and-time type is compatible with the dateTime XML\nschema type with the following notable exceptions:\n\n(a) The date-and-time type does not allow negative years.\n\n(b) The date-and-time time-offset -00:00 indicates an unknown\n    time zone (see RFC 3339) while -00:00 and +00:00 and Z\n    all represent the same time zone in dateTime.\n\n(c) The canonical format (see below) of data-and-time values\n    differs from the canonical format used by the dateTime XML\n    schema type, which requires all times to be in UTC using\n    the time-offset 'Z'.\n\nThis type is not equivalent to the DateAndTime textual\nconvention of the SMIv2 since RFC 3339 uses a different\nseparator between full-date and full-time and provides\nhigher resolution of time-secfrac.\n\nThe canonical format for date-and-time values with a known time\nzone uses a numeric time zone offset that is calculated using\nthe device's configured known offset to UTC time.  A change of\nthe device's offset to UTC time will cause date-and-time values\nto change accordingly.  Such changes might happen periodically\nin case a server follows automatically daylight saving time\n(DST) time zone offset changes.  The canonical format for\ndate-and-time values with an unknown time zone (usually\nreferring to the notion of local time) uses the time-offset\n-00:00."
+                  },
+                  "upgrade-schedule-mode": {
+                    "default": "IMMEDIATE",
+                    "description": "firmware policy will enforced immediately",
+                    "enum": [
+                      "IMMEDIATE",
+                      "SINCE",
+                      "SCHEDULE_WINDOW"
+                    ],
+                    "format": "enum",
+                    "type": "string",
+                    "x-enumDescriptions": {
+                      "IMMEDIATE": "Enforce immediately",
+                      "SCHEDULE_WINDOW": "Enforce during maintenance window (NOTE: Currently Unsupported!!!)",
+                      "SINCE": "Enforce after a certain time"
+                    },
+                    "x-typeDescription": "Download schedule modes: Immediate, After certain time, Recurring Upgrade Window"
+                  }
+                }
+              },
+              "use-device-local-time": {
+                "default": "false",
+                "description": "Use date/time with reference to device's local timezone instead of common timezone as specified in firmware compliance.\nWhen setting this to true, only use 2025-02-28T10:00:00.000Z format (without specifying offset) for upgrade-schedule or reboot-schedule",
+                "type": "boolean"
+              }
+            }
+          },
+          "local-image-server-url": {
+            "description": "Local image download server URL to use instead of general image server",
+            "format": "const",
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string"
+          },
+          "name": {
+            "description": "User maintained name for the firmware policy. System does not validate this for duplicates",
+            "format": "const",
+            "maxLength": 63,
+            "minLength": 1,
+            "type": "string"
+          },
+          "upgrade-mode": {
+            "default": "REGULAR",
+            "description": "Hitless/Live upgrade or regular upgrade",
+            "enum": [
+              "REGULAR",
+              "LIVE"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "LIVE": "Live/Hitless Upgrade for AP and Gateway",
+              "REGULAR": "Regular Upgrade"
+            },
+            "x-typeDescription": "Upgrade orchestration modes enumeration"
+          },
+          "version-chart": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ArubaFirmwareCompliance_VersionChart"
+              }
+            ],
+            "description": "Version Chart"
+          }
+        }
+      },
+      "ArubaFirmwareCompliance_FirmwareComplianceSchemaGet": {
+        "description": "Firmware Policy configuration allows centralized control over firmware versions of all devices\nincluding APs, switches, and gateways across various scopes. Firmware upgrade APIs will function consistently\nin Central On-Prem deployments. In Central Cloud, API behavior may vary based on the customer’s deployment mode\nand the device type. Full API support is available for the 5G Bridge device type while support for other\ndevice types may differ.",
+        "properties": {
+          "active-partition": {
+            "default": "PRIMARY",
+            "description": "Partition to upgrade",
+            "enum": [
+              "PRIMARY",
+              "SECONDARY"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "PRIMARY": "Primary partition",
+              "SECONDARY": "Secondary partition"
+            },
+            "x-typeDescription": "Upgrade partition in device"
+          },
+          "allow-unsafe-upgrades": {
+            "default": "false",
+            "description": "Enable non-failsafe module upgrade of CX switches. Ensure that the switch will not lose power, be rebooted again, or have any modules removed until all updates have finished",
+            "type": "boolean"
+          },
+          "description": {
+            "description": "User maintained description for the firmware policy. System does not validate this for duplicates",
+            "format": "const",
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string"
+          },
+          "enable": {
+            "default": "true",
+            "description": "Enable or Disable Firmware Policy configuration. If not enabled, firmware policy configuration\nwill not be inherited from parent scope configuration for this or any scope/device under this scope.",
+            "type": "boolean"
+          },
+          "enforcement-schedule": {
+            "description": "Info related to scheduled firmware upgrade",
+            "properties": {
+              "reboot-schedule": {
+                "description": "Defines the reboot schedule of devices after downloading and installing firmware version",
+                "properties": {
+                  "reboot-schedule-mode": {
+                    "default": "IMMEDIATE",
+                    "description": "Devices will be reboot immediately after downloading and installing firmware version ",
+                    "enum": [
+                      "IMMEDIATE",
+                      "SINCE",
+                      "SCHEDULE_WINDOW",
+                      "NEVER"
+                    ],
+                    "format": "enum",
+                    "type": "string",
+                    "x-enumDescriptions": {
+                      "IMMEDIATE": "Enforce immediately",
+                      "NEVER": "Do not enforce reboot",
+                      "SCHEDULE_WINDOW": "Enforce during maintenance window (NOTE: Currently Unsupported!!!)",
+                      "SINCE": "Enforce after a certain time"
+                    },
+                    "x-typeDescription": "Reboot schedule modes: Immediate, After certain time, Recurring maintenance Window, Never"
+                  },
+                  "since": {
+                    "default": "2024-08-30T07:24:53.923Z",
+                    "description": "Device will be scheduled to reboot after this time once firmware download and installation completes ",
+                    "format": "pattern",
+                    "maxLength": 9999,
+                    "type": "string",
+                    "x-patternSources": "date-and-time",
+                    "x-patterns": "'\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[\\+\\-]\\d{2}:\\d{2})'",
+                    "x-typeDescription": "The date-and-time type is a profile of the ISO 8601\nstandard for representation of dates and times using the\nGregorian calendar.  The profile is defined by the\ndate-time production in Section 5.6 of RFC 3339.\n\nThe date-and-time type is compatible with the dateTime XML\nschema type with the following notable exceptions:\n\n(a) The date-and-time type does not allow negative years.\n\n(b) The date-and-time time-offset -00:00 indicates an unknown\n    time zone (see RFC 3339) while -00:00 and +00:00 and Z\n    all represent the same time zone in dateTime.\n\n(c) The canonical format (see below) of data-and-time values\n    differs from the canonical format used by the dateTime XML\n    schema type, which requires all times to be in UTC using\n    the time-offset 'Z'.\n\nThis type is not equivalent to the DateAndTime textual\nconvention of the SMIv2 since RFC 3339 uses a different\nseparator between full-date and full-time and provides\nhigher resolution of time-secfrac.\n\nThe canonical format for date-and-time values with a known time\nzone uses a numeric time zone offset that is calculated using\nthe device's configured known offset to UTC time.  A change of\nthe device's offset to UTC time will cause date-and-time values\nto change accordingly.  Such changes might happen periodically\nin case a server follows automatically daylight saving time\n(DST) time zone offset changes.  The canonical format for\ndate-and-time values with an unknown time zone (usually\nreferring to the notion of local time) uses the time-offset\n-00:00."
+                  }
+                }
+              },
+              "upgrade-new-devices-immediately": {
+                "default": "false",
+                "description": "When recurring maintenance window is selected, if a new device comes up, upgrade immediately",
+                "type": "boolean"
+              },
+              "upgrade-schedule": {
+                "description": "Defines the upgrade schedule of firmware policy enforcement",
+                "properties": {
+                  "since": {
+                    "default": "2024-08-30T07:24:53.923Z",
+                    "description": "firmware policy will be enforced after this time",
+                    "format": "pattern",
+                    "maxLength": 9999,
+                    "type": "string",
+                    "x-patternSources": "date-and-time",
+                    "x-patterns": "'\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[\\+\\-]\\d{2}:\\d{2})'",
+                    "x-typeDescription": "The date-and-time type is a profile of the ISO 8601\nstandard for representation of dates and times using the\nGregorian calendar.  The profile is defined by the\ndate-time production in Section 5.6 of RFC 3339.\n\nThe date-and-time type is compatible with the dateTime XML\nschema type with the following notable exceptions:\n\n(a) The date-and-time type does not allow negative years.\n\n(b) The date-and-time time-offset -00:00 indicates an unknown\n    time zone (see RFC 3339) while -00:00 and +00:00 and Z\n    all represent the same time zone in dateTime.\n\n(c) The canonical format (see below) of data-and-time values\n    differs from the canonical format used by the dateTime XML\n    schema type, which requires all times to be in UTC using\n    the time-offset 'Z'.\n\nThis type is not equivalent to the DateAndTime textual\nconvention of the SMIv2 since RFC 3339 uses a different\nseparator between full-date and full-time and provides\nhigher resolution of time-secfrac.\n\nThe canonical format for date-and-time values with a known time\nzone uses a numeric time zone offset that is calculated using\nthe device's configured known offset to UTC time.  A change of\nthe device's offset to UTC time will cause date-and-time values\nto change accordingly.  Such changes might happen periodically\nin case a server follows automatically daylight saving time\n(DST) time zone offset changes.  The canonical format for\ndate-and-time values with an unknown time zone (usually\nreferring to the notion of local time) uses the time-offset\n-00:00."
+                  },
+                  "upgrade-schedule-mode": {
+                    "default": "IMMEDIATE",
+                    "description": "firmware policy will enforced immediately",
+                    "enum": [
+                      "IMMEDIATE",
+                      "SINCE",
+                      "SCHEDULE_WINDOW"
+                    ],
+                    "format": "enum",
+                    "type": "string",
+                    "x-enumDescriptions": {
+                      "IMMEDIATE": "Enforce immediately",
+                      "SCHEDULE_WINDOW": "Enforce during maintenance window (NOTE: Currently Unsupported!!!)",
+                      "SINCE": "Enforce after a certain time"
+                    },
+                    "x-typeDescription": "Download schedule modes: Immediate, After certain time, Recurring Upgrade Window"
+                  }
+                }
+              },
+              "use-device-local-time": {
+                "default": "false",
+                "description": "Use date/time with reference to device's local timezone instead of common timezone as specified in firmware compliance.\nWhen setting this to true, only use 2025-02-28T10:00:00.000Z format (without specifying offset) for upgrade-schedule or reboot-schedule",
+                "type": "boolean"
+              }
+            }
+          },
+          "local-image-server-url": {
+            "description": "Local image download server URL to use instead of general image server",
+            "format": "const",
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string"
+          },
+          "name": {
+            "description": "User maintained name for the firmware policy. System does not validate this for duplicates",
+            "format": "const",
+            "maxLength": 63,
+            "minLength": 1,
+            "type": "string"
+          },
+          "upgrade-mode": {
+            "default": "REGULAR",
+            "description": "Hitless/Live upgrade or regular upgrade",
+            "enum": [
+              "REGULAR",
+              "LIVE"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "LIVE": "Live/Hitless Upgrade for AP and Gateway",
+              "REGULAR": "Regular Upgrade"
+            },
+            "x-typeDescription": "Upgrade orchestration modes enumeration"
+          },
+          "version-chart": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ArubaFirmwareCompliance_VersionChartGet"
+              }
+            ],
+            "description": "Version Chart"
+          }
+        }
+      },
+      "ArubaFirmwareCompliance_VersionChart": {
+        "description": "Firmware Version Chart",
+        "properties": {
+          "exception": {
+            "description": "per-exception version specification",
+            "items": {
+              "properties": {
+                "model-info": {
+                  "description": "Specify model prefix/wildcard/string for any other cases",
+                  "format": "const",
+                  "maxLength": 31,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "version": {
+                  "description": "Firmware version",
+                  "format": "const",
+                  "maxLength": 63,
+                  "minLength": 1,
+                  "type": "string"
+                }
+              }
+            },
+            "maxItems": 2147483647,
+            "type": "array",
+            "x-key": [
+              "modelInfo"
+            ]
+          },
+          "version": {
+            "description": "Firmware version",
+            "format": "const",
+            "maxLength": 63,
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      },
+      "ArubaFirmwareCompliance_VersionChartGet": {
+        "description": "Firmware Version Chart",
+        "properties": {
+          "exception": {
+            "description": "per-exception version specification",
+            "items": {
+              "properties": {
+                "model-info": {
+                  "description": "Specify model prefix/wildcard/string for any other cases",
+                  "format": "const",
+                  "maxLength": 31,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "version": {
+                  "description": "Firmware version",
+                  "format": "const",
+                  "maxLength": 63,
+                  "minLength": 1,
+                  "type": "string"
+                }
+              }
+            },
+            "maxItems": 2147483647,
+            "type": "array",
+            "x-key": [
+              "modelInfo"
+            ]
+          },
+          "version": {
+            "description": "Firmware version",
+            "format": "const",
+            "maxLength": 63,
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      },
+      "Error400": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_AP001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "400",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Bad request. Invalid values supplied in request.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error401": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_R001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "401",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Unauthorized. Authentication Failure.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error403": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_CN001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "403",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Forbidden. Capability Rule fail.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error404": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_CN003",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "404",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Not found. Yang / Corresponding Rule is missing.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error406": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_AP003",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "406",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Not Acceptable. Invalid data format.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error408": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_K001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "408",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Request Timeout.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error412": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_LY002",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "412",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Precondition Failed.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error429": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_AJ001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "429",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Too Many Requests.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error500": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_C001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "500",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Internal server error. Invalid scope.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Successful200": {
+        "description": "Success response returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Success code.",
+            "example": "SUCC_001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "200",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of successful response.\n",
+            "example": "Success.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "OAuth2": {
+        "description": "OAuth 2.0 authentication with client credentials flow. You can also use your own access token.",
+        "flows": {
+          "clientCredentials": {
+            "scopes": {},
+            "tokenUrl": "https://sso.common.cloud.hpe.com/as/token.oauth2"
+          }
+        },
+        "type": "oauth2"
+      }
+    }
+  },
+  "info": {
+    "title": "Firmware Policy",
+    "version": "v1alpha1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/network-config/v1alpha1/firmware-compliance": {
+      "delete": {
+        "description": "Firmware Policy configuration allows centralized control over firmware versions of all devices\nincluding APs, switches, and gateways across various scopes. Firmware upgrade APIs will function consistently\nin Central On-Prem deployments. In Central Cloud, API behavior may vary based on the customer’s deployment mode\nand the device type. Full API support is available for the 5G Bridge device type while support for other\ndevice types may differ.",
+        "operationId": "deleteFirmwareCompliance",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Delete firmware policy configuration.",
+        "tags": [
+          "Firmware Compliance"
+        ],
+        "x-cliParam": {
+          "commandName": "deleteFirmwareComplianceCmd",
+          "commandUse": "firmware-compliance",
+          "parentCommand": "deleteCmd",
+          "pathToPrint": "/firmware-compliance/",
+          "summary": "Delete operation for firmware-compliance"
+        }
+      },
+      "get": {
+        "description": "Firmware Policy configuration allows centralized control over firmware versions of all devices\nincluding APs, switches, and gateways across various scopes. Firmware upgrade APIs will function consistently\nin Central On-Prem deployments. In Central Cloud, API behavior may vary based on the customer’s deployment mode\nand the device type. Full API support is available for the 5G Bridge device type while support for other\ndevice types may differ.",
+        "operationId": "readFirmwareCompliance",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/view_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/get_device_function"
+          },
+          {
+            "$ref": "#/components/parameters/effective"
+          },
+          {
+            "$ref": "#/components/parameters/detailed"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArubaFirmwareCompliance_FirmwareComplianceSchemaGet"
+                }
+              }
+            },
+            "description": "Successful operation",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Read firmware policy configuration.",
+        "tags": [
+          "Firmware Compliance"
+        ],
+        "x-cliParam": {
+          "commandName": "readFirmwareComplianceCmd",
+          "commandUse": "firmware-compliance",
+          "parentCommand": "readCmd",
+          "pathToPrint": "/firmware-compliance/",
+          "summary": "Read operation for firmware-compliance"
+        }
+      },
+      "patch": {
+        "description": "Firmware Policy configuration allows centralized control over firmware versions of all devices\nincluding APs, switches, and gateways across various scopes. Firmware upgrade APIs will function consistently\nin Central On-Prem deployments. In Central Cloud, API behavior may vary based on the customer’s deployment mode\nand the device type. Full API support is available for the 5G Bridge device type while support for other\ndevice types may differ.",
+        "operationId": "updateFirmwareCompliance",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/patch_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/patch_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/patch_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaFirmwareCompliance_FirmwareComplianceSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update firmware policy configuration.",
+        "tags": [
+          "Firmware Compliance"
+        ],
+        "x-cliParam": {
+          "commandName": "updateFirmwareComplianceCmd",
+          "commandUse": "firmware-compliance",
+          "parentCommand": "updateCmd",
+          "pathToPrint": "/firmware-compliance/",
+          "summary": "Update operation for firmware-compliance"
+        }
+      },
+      "post": {
+        "description": "Firmware Policy configuration allows centralized control over firmware versions of all devices\nincluding APs, switches, and gateways across various scopes. Firmware upgrade APIs will function consistently\nin Central On-Prem deployments. In Central Cloud, API behavior may vary based on the customer’s deployment mode\nand the device type. Full API support is available for the 5G Bridge device type while support for other\ndevice types may differ.",
+        "operationId": "createFirmwareCompliance",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaFirmwareCompliance_FirmwareComplianceSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create firmware policy configuration.",
+        "tags": [
+          "Firmware Compliance"
+        ],
+        "x-cliParam": {
+          "commandName": "createFirmwareComplianceCmd",
+          "commandUse": "firmware-compliance",
+          "parentCommand": "createCmd",
+          "pathToPrint": "/firmware-compliance/",
+          "summary": "Create operation for firmware-compliance"
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "AccessToken": []
+    }
+  ],
+  "servers": [
+    {
+      "description": "eu",
+      "url": "https://de1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "eucentral2",
+      "url": "https://de2.api.central.arubanetworks.com"
+    },
+    {
+      "description": "eucentral3",
+      "url": "https://de3.api.central.arubanetworks.com"
+    },
+    {
+      "description": "ukwest2",
+      "url": "https://gb1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "prod",
+      "url": "https://us1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "central-prod2",
+      "url": "https://us2.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uswest4",
+      "url": "https://us4.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uswest5",
+      "url": "https://us5.api.central.arubanetworks.com"
+    },
+    {
+      "description": "us-east-1",
+      "url": "https://us6.api.central.arubanetworks.com"
+    },
+    {
+      "description": "starman",
+      "url": "https://ca1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apac",
+      "url": "https://in1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apaceast",
+      "url": "https://jp1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apacsouth",
+      "url": "https://au1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uaenorth1",
+      "url": "https://ae1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "china-prod",
+      "url": "https://cn1.api.central.arubanetworks.com.cn"
+    },
+    {
+      "description": "internal2",
+      "url": "https://internal.api.central.arubanetworks.com"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Firmware Compliance"
+    }
+  ],
+  "x-readme": {
+    "explorer-enabled": true,
+    "proxy-enabled": true
+  }
+}

@@ -1,0 +1,1238 @@
+{
+  "components": {
+    "headers": {
+      "X-RateLimit-Limit": {
+        "description": "Request limit per hour.",
+        "schema": {
+          "description": "Request limit per hour.",
+          "format": "int64",
+          "maximum": 9223372036854776000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "X-RateLimit-Remaining": {
+        "description": "The number of requests left for the time window.",
+        "schema": {
+          "description": "The number of requests left for the time window.",
+          "format": "int64",
+          "maximum": 9223372036854776000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "X-RateLimit-Reset": {
+        "description": "The UTC date/time at which the current rate limit window resets.",
+        "schema": {
+          "description": "The UTC date/time at which the current rate limit window resets.",
+          "format": "date-time",
+          "maxLength": 20,
+          "type": "string"
+        }
+      }
+    },
+    "parameters": {
+      "get_device_function": {
+        "description": "Filters configuration specific to given device-function type. If not provided and view_type = LOCAL, then defaults to all device-function's.",
+        "in": "query",
+        "name": "device-function",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "get_scope_id": {
+        "description": "Configuration at a given scope. Mandatory for view-type = LOCAL.",
+        "in": "query",
+        "name": "scope-id",
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "requestBodies": {
+      "ArubaConfigAssignment_ConfigAssignmentsSchema": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ArubaConfigAssignment_ConfigAssignmentsSchema"
+            }
+          }
+        },
+        "description": "config-assignmentsbody object"
+      }
+    },
+    "responses": {
+      "200": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Successful200"
+            }
+          }
+        },
+        "description": "Successful Operation",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "400": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error400"
+            }
+          }
+        },
+        "description": "Bad Request",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "401": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error401"
+            }
+          }
+        },
+        "description": "Unauthorized Access",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "403": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error403"
+            }
+          }
+        },
+        "description": "Forbidden",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "404": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error404"
+            }
+          }
+        },
+        "description": "Not Found",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "406": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error406"
+            }
+          }
+        },
+        "description": "Not Acceptable",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "408": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error408"
+            }
+          }
+        },
+        "description": "Request Timeout",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "412": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error412"
+            }
+          }
+        },
+        "description": "Precondition Failed",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "429": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error429"
+            }
+          }
+        },
+        "description": "Rate limit exceeded",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "500": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error500"
+            }
+          }
+        },
+        "description": "Internal Server Error",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-RateLimit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-RateLimit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      }
+    },
+    "schemas": {
+      "ArubaConfigAssignment_ConfigAssignmentsSchema": {
+        "description": "Assign a configuration to a scope and device-function. Config profiles may be applied within a specific context, identified by a scope and a device function.\n\nA scope defines the subset of devices in the network infrastructure that the profile is to be applied to.\nThese are the type of scopes: Global, Site Collection, Site, Device Group, Device. Each scope is identified by an id and name.\nDevice function: Access Switch, Branch Gateway, Mobility Gateway, Campus AP, etc are a few examples. These are identified\nusing device function indentifiers like SWITCH, BRANCH_GW, MOBILITY_GW, CAMPUS_AP, etc respectively.\n\nFor example: A certain role can be assigned to a certain Site(a geographical location like a campus) or to a specific device for a Campus AP device function.",
+        "properties": {
+          "config-assignment": {
+            "description": "List of configuration assignments.",
+            "items": {
+              "properties": {
+                "device-function": {
+                  "description": "This is the device function identifier. For example: BRANCH_GW, ACCESS_SWITCH, CAMPUS_AP, etc.",
+                  "enum": [
+                    "MOBILITY_GW",
+                    "BRANCH_GW",
+                    "VPNC",
+                    "CAMPUS_AP",
+                    "MICROBRANCH_AP",
+                    "ACCESS_SWITCH",
+                    "ALL",
+                    "SERVICE_PERSONA",
+                    "BRIDGE",
+                    "IOT",
+                    "HYBRID_NAC",
+                    "CORE_SWITCH",
+                    "AGG_SWITCH",
+                    "AOSS_ACCESS_SWITCH",
+                    "AOSS_CORE_SWITCH",
+                    "AOSS_AGG_SWITCH",
+                    "EC_VPNC",
+                    "EC_BRANCH_GW"
+                  ],
+                  "format": "enum",
+                  "type": "string",
+                  "x-enumDescriptions": {
+                    "ACCESS_SWITCH": "Access Switch. This persona provides Access Switch functionality.",
+                    "AGG_SWITCH": "Aggregation Switch. This persona provides Aggregation Switch functionality.",
+                    "ALL": "ALL. This persona provides ALL devices functionality.",
+                    "AOSS_ACCESS_SWITCH": "AOS-S Access Switch. This persona provides Access Switch functionality.",
+                    "AOSS_AGG_SWITCH": "AOS-S Aggregation Switch. This persona provides Aggregation Switch functionality.",
+                    "AOSS_CORE_SWITCH": "AOS-S Core Switch. This persona provides Core Switch functionality.",
+                    "BRANCH_GW": "Branch gateway. This gateway persona provides Aruba InstantOS and SD-Branch (LAN + WAN) functionality",
+                    "BRIDGE": "Bridge . This persona provides bridge functionality.",
+                    "CAMPUS_AP": "Campus/Branch AP. This AP persona provides WLAN functionality.",
+                    "CORE_SWITCH": "Core Switch. This persona provides Core Switch functionality.",
+                    "EC_BRANCH_GW": "EdgeConnect Branch Gateway",
+                    "EC_VPNC": "EdgeConnect VPNC",
+                    "HYBRID_NAC": "Hybrid NAC Edge VM. This persona provides Hybrid NAC Edge VM functionality.",
+                    "IOT": "IoT Edge VM. This persona provides IoT Edge VM functionality.",
+                    "MICROBRANCH_AP": "Microbranch AP. This AP persona provides SD-WAN-lite functionality in addition to the functions of WLAN AP.",
+                    "MOBILITY_GW": "Mobility Gateway. This gateway persona provides Overlay WLAN and (or) wired LAN functionalities.",
+                    "SERVICE_PERSONA": "Service Persona. This persona provides service functionality.",
+                    "VPNC": "VPN Concentrator."
+                  },
+                  "x-typeDescription": "Persona type."
+                },
+                "profile-instance": {
+                  "description": "Profile instance that is to be assigned.\nExample: If a scope is to be assigned to a role called Role1, the profile instance would be Role1",
+                  "format": "const",
+                  "maxLength": 9999,
+                  "type": "string"
+                },
+                "profile-type": {
+                  "description": "Type of profile that is to be assigned.\nExample: If a scope is to be assigned to a role called Role1, the profile type would be roles. Similary for a policy,\nit would be policies",
+                  "format": "const",
+                  "maxLength": 9999,
+                  "type": "string"
+                },
+                "scope-id": {
+                  "description": "Scope id is an identifier for the scope",
+                  "format": "const",
+                  "maxLength": 9999,
+                  "type": "string"
+                }
+              }
+            },
+            "maxItems": 2147483647,
+            "type": "array",
+            "x-key": [
+              "scopeId",
+              "deviceFunction",
+              "profileType",
+              "profileInstance"
+            ]
+          }
+        }
+      },
+      "ArubaConfigAssignment_ConfigAssignmentsSchemaGET": {
+        "description": "Assign a configuration to a scope and device-function. Config profiles may be applied within a specific context, identified by a scope and a device function.\n\nA scope defines the subset of devices in the network infrastructure that the profile is to be applied to.\nThese are the type of scopes: Global, Site Collection, Site, Device Group, Device. Each scope is identified by an id and name.\nDevice function: Access Switch, Branch Gateway, Mobility Gateway, Campus AP, etc are a few examples. These are identified\nusing device function indentifiers like SWITCH, BRANCH_GW, MOBILITY_GW, CAMPUS_AP, etc respectively.\n\nFor example: A certain role can be assigned to a certain Site(a geographical location like a campus) or to a specific device for a Campus AP device function.",
+        "properties": {
+          "config-assignment": {
+            "description": "List of configuration assignments.",
+            "items": {
+              "properties": {
+                "device-function": {
+                  "description": "This is the device function identifier. For example: BRANCH_GW, ACCESS_SWITCH, CAMPUS_AP, etc.",
+                  "enum": [
+                    "MOBILITY_GW",
+                    "BRANCH_GW",
+                    "VPNC",
+                    "CAMPUS_AP",
+                    "MICROBRANCH_AP",
+                    "ACCESS_SWITCH",
+                    "ALL",
+                    "SERVICE_PERSONA",
+                    "BRIDGE",
+                    "IOT",
+                    "HYBRID_NAC",
+                    "CORE_SWITCH",
+                    "AGG_SWITCH",
+                    "AOSS_ACCESS_SWITCH",
+                    "AOSS_CORE_SWITCH",
+                    "AOSS_AGG_SWITCH",
+                    "EC_VPNC",
+                    "EC_BRANCH_GW"
+                  ],
+                  "format": "enum",
+                  "type": "string",
+                  "x-enumDescriptions": {
+                    "ACCESS_SWITCH": "Access Switch. This persona provides Access Switch functionality.",
+                    "AGG_SWITCH": "Aggregation Switch. This persona provides Aggregation Switch functionality.",
+                    "ALL": "ALL. This persona provides ALL devices functionality.",
+                    "AOSS_ACCESS_SWITCH": "AOS-S Access Switch. This persona provides Access Switch functionality.",
+                    "AOSS_AGG_SWITCH": "AOS-S Aggregation Switch. This persona provides Aggregation Switch functionality.",
+                    "AOSS_CORE_SWITCH": "AOS-S Core Switch. This persona provides Core Switch functionality.",
+                    "BRANCH_GW": "Branch gateway. This gateway persona provides Aruba InstantOS and SD-Branch (LAN + WAN) functionality",
+                    "BRIDGE": "Bridge . This persona provides bridge functionality.",
+                    "CAMPUS_AP": "Campus/Branch AP. This AP persona provides WLAN functionality.",
+                    "CORE_SWITCH": "Core Switch. This persona provides Core Switch functionality.",
+                    "EC_BRANCH_GW": "EdgeConnect Branch Gateway",
+                    "EC_VPNC": "EdgeConnect VPNC",
+                    "HYBRID_NAC": "Hybrid NAC Edge VM. This persona provides Hybrid NAC Edge VM functionality.",
+                    "IOT": "IoT Edge VM. This persona provides IoT Edge VM functionality.",
+                    "MICROBRANCH_AP": "Microbranch AP. This AP persona provides SD-WAN-lite functionality in addition to the functions of WLAN AP.",
+                    "MOBILITY_GW": "Mobility Gateway. This gateway persona provides Overlay WLAN and (or) wired LAN functionalities.",
+                    "SERVICE_PERSONA": "Service Persona. This persona provides service functionality.",
+                    "VPNC": "VPN Concentrator."
+                  },
+                  "x-typeDescription": "Persona type."
+                },
+                "profile-instance": {
+                  "description": "Profile instance that is to be assigned.\nExample: If a scope is to be assigned to a role called Role1, the profile instance would be Role1",
+                  "format": "const",
+                  "maxLength": 9999,
+                  "type": "string"
+                },
+                "profile-type": {
+                  "description": "Type of profile that is to be assigned.\nExample: If a scope is to be assigned to a role called Role1, the profile type would be roles. Similary for a policy,\nit would be policies",
+                  "format": "const",
+                  "maxLength": 9999,
+                  "type": "string"
+                },
+                "scope-id": {
+                  "description": "Scope id is an identifier for the scope",
+                  "format": "const",
+                  "maxLength": 9999,
+                  "type": "string"
+                },
+                "scope-name": {
+                  "description": "Name of the scope",
+                  "format": "const",
+                  "maxLength": 9999,
+                  "type": "string"
+                },
+                "scope-type": {
+                  "description": "Type of the scope. Example: Site, Device, etc.",
+                  "format": "const",
+                  "maxLength": 9999,
+                  "type": "string"
+                }
+              }
+            },
+            "maxItems": 2147483647,
+            "type": "array",
+            "x-key": [
+              "scopeId",
+              "deviceFunction",
+              "profileType",
+              "profileInstance"
+            ]
+          }
+        }
+      },
+      "Error400": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_AP001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "400",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Bad request. Invalid values supplied in request.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error401": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_R001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "401",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Unauthorized. Authentication Failure.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error403": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_CN001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "403",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Forbidden. Capability Rule fail.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error404": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_CN003",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "404",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Not found. Yang / Corresponding Rule is missing.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error406": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_AP003",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "406",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Not Acceptable. Invalid data format.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error408": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_K001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "408",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Request Timeout.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error412": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_LY002",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "412",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Precondition Failed.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error429": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_AJ001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "429",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Too Many Requests.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Error500": {
+        "description": "Error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "example": "ERR_C001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "500",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of error.\n",
+            "example": "Internal server error. Invalid scope.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Successful200": {
+        "description": "Success response returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "description": "Debug ID.",
+            "example": "0d6666a3-23fa-436c-8873-4186fa251ce6",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Success code.",
+            "example": "SUCC_001",
+            "format": "const",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP response status codes.",
+            "example": "200",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Description of successful response.\n",
+            "example": "Success.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "OAuth2": {
+        "description": "OAuth 2.0 authentication with client credentials flow. You can also use your own access token.",
+        "flows": {
+          "clientCredentials": {
+            "scopes": {},
+            "tokenUrl": "https://sso.common.cloud.hpe.com/as/token.oauth2"
+          }
+        },
+        "type": "oauth2"
+      }
+    }
+  },
+  "info": {
+    "title": "Assignments",
+    "version": "v1alpha1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/network-config/v1alpha1/config-assignments": {
+      "get": {
+        "description": "Assign a configuration to a scope and device-function. Config profiles may be applied within a specific context, identified by a scope and a device function.\n\nA scope defines the subset of devices in the network infrastructure that the profile is to be applied to.\nThese are the type of scopes: Global, Site Collection, Site, Device Group, Device. Each scope is identified by an id and name.\nDevice function: Access Switch, Branch Gateway, Mobility Gateway, Campus AP, etc are a few examples. These are identified\nusing device function indentifiers like SWITCH, BRANCH_GW, MOBILITY_GW, CAMPUS_AP, etc respectively.\n\nFor example: A certain role can be assigned to a certain Site(a geographical location like a campus) or to a specific device for a Campus AP device function.",
+        "operationId": "readConfigAssignments",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/get_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/get_device_function"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArubaConfigAssignment_ConfigAssignmentsSchemaGET"
+                }
+              }
+            },
+            "description": "Successful operation",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Read config-assignments",
+        "tags": [
+          "Config Assignment"
+        ],
+        "x-cliParam": {
+          "commandName": "readConfigAssignmentsCmd",
+          "commandUse": "config-assignments",
+          "parentCommand": "readCmd",
+          "pathToPrint": "/config-assignments/",
+          "summary": "Read operation for config-assignments"
+        }
+      },
+      "post": {
+        "description": "Assign a configuration to a scope and device-function. Config profiles may be applied within a specific context, identified by a scope and a device function.\n\nA scope defines the subset of devices in the network infrastructure that the profile is to be applied to.\nThese are the type of scopes: Global, Site Collection, Site, Device Group, Device. Each scope is identified by an id and name.\nDevice function: Access Switch, Branch Gateway, Mobility Gateway, Campus AP, etc are a few examples. These are identified\nusing device function indentifiers like SWITCH, BRANCH_GW, MOBILITY_GW, CAMPUS_AP, etc respectively.\n\nFor example: A certain role can be assigned to a certain Site(a geographical location like a campus) or to a specific device for a Campus AP device function.",
+        "operationId": "createConfigAssignments",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaConfigAssignment_ConfigAssignmentsSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create config-assignments",
+        "tags": [
+          "Config Assignment"
+        ],
+        "x-cliParam": {
+          "commandName": "createConfigAssignmentsCmd",
+          "commandUse": "config-assignments",
+          "parentCommand": "createCmd",
+          "pathToPrint": "/config-assignments/",
+          "summary": "Create operation for config-assignments"
+        }
+      }
+    },
+    "/network-config/v1alpha1/config-assignments/{scope-id}/{device-function}/{profile-type}/{profile-instance}": {
+      "delete": {
+        "description": "List of configuration assignments.",
+        "operationId": "deleteConfigAssignmentsConfigAssignmentByID",
+        "parameters": [
+          {
+            "description": "Scope id is an identifier for the scope",
+            "in": "path",
+            "name": "scope-id",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "description": "This is the device function identifier. For example: BRANCH_GW, ACCESS_SWITCH, CAMPUS_AP, etc.",
+            "in": "path",
+            "name": "device-function",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Type of profile that is to be assigned.\nExample: If a scope is to be assigned to a role called Role1, the profile type would be roles. Similary for a policy,\nit would be policies",
+            "in": "path",
+            "name": "profile-type",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Profile instance that is to be assigned.\nExample: If a scope is to be assigned to a role called Role1, the profile instance would be Role1",
+            "in": "path",
+            "name": "profile-instance",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Delete config-assignment by scope-id, device-function, profile-type, profile-instance",
+        "tags": [
+          "Config Assignment"
+        ],
+        "x-cliParam": {
+          "commandName": "deleteConfigAssignmentsConfigAssignmentCmd",
+          "commandUse": "config-assignment",
+          "paramKeys": [
+            {
+              "key": "scope-id"
+            },
+            {
+              "key": "device-function"
+            },
+            {
+              "key": "profile-type"
+            },
+            {
+              "key": "profile-instance"
+            }
+          ],
+          "parentCommand": "deleteConfigAssignmentsCmd",
+          "pathToPrint": "/config-assignments/config-assignment/%s/%s/%s/%s/",
+          "summary": "Delete operation for config-assignment",
+          "totParams": 4
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "AccessToken": []
+    }
+  ],
+  "servers": [
+    {
+      "description": "eu",
+      "url": "https://de1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "eucentral2",
+      "url": "https://de2.api.central.arubanetworks.com"
+    },
+    {
+      "description": "eucentral3",
+      "url": "https://de3.api.central.arubanetworks.com"
+    },
+    {
+      "description": "ukwest2",
+      "url": "https://gb1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "prod",
+      "url": "https://us1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "central-prod2",
+      "url": "https://us2.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uswest4",
+      "url": "https://us4.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uswest5",
+      "url": "https://us5.api.central.arubanetworks.com"
+    },
+    {
+      "description": "us-east-1",
+      "url": "https://us6.api.central.arubanetworks.com"
+    },
+    {
+      "description": "starman",
+      "url": "https://ca1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apac",
+      "url": "https://in1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apaceast",
+      "url": "https://jp1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apacsouth",
+      "url": "https://au1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uaenorth1",
+      "url": "https://ae1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "china-prod",
+      "url": "https://cn1.api.central.arubanetworks.com.cn"
+    },
+    {
+      "description": "internal2",
+      "url": "https://internal.api.central.arubanetworks.com"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Config Assignment"
+    }
+  ],
+  "x-readme": {
+    "explorer-enabled": true,
+    "proxy-enabled": true
+  }
+}

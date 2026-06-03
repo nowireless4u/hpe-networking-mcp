@@ -1,0 +1,5878 @@
+{
+  "components": {
+    "headers": {
+      "Deprecation": {
+        "description": "Deprecation header indicating deprecation of the API",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "Sunset": {
+        "description": "This API will sunset on Tue, 30 June 2026 23:59:59 GMT",
+        "schema": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "XRateLimitLimitHeader": {
+        "description": "Request limit per hour.",
+        "schema": {
+          "format": "int64",
+          "maximum": 9223372036854776000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "XRateLimitRemainingHeader": {
+        "description": "The number of requests left for the time window.",
+        "schema": {
+          "format": "int64",
+          "maximum": 9223372036854776000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "XRateLimitResetHeader": {
+        "description": "The UTC date/time at which the current rate limit window resets.",
+        "schema": {
+          "format": "date-time",
+          "maxLength": 20,
+          "type": "string"
+        }
+      }
+    },
+    "parameters": {},
+    "responses": {
+      "BadRequestError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "description": "Error details returned from the server.\n",
+              "properties": {
+                "debugId": {
+                  "description": "This can be used to help with troubleshooting\n",
+                  "example": "abc-123-456",
+                  "format": "const",
+                  "maxLength": 50,
+                  "type": "string"
+                },
+                "errorCode": {
+                  "description": "Bad Request.\n",
+                  "example": "HPE_GL_ERROR_BAD_REQUEST",
+                  "format": "const",
+                  "maxLength": 32,
+                  "type": "string"
+                },
+                "httpStatusCode": {
+                  "description": "HTTP status code.\n",
+                  "example": 400,
+                  "maximum": 400,
+                  "minimum": 400,
+                  "type": "integer"
+                },
+                "message": {
+                  "description": "Error message indicating the cause of the failure.\n",
+                  "example": "Invalid input provided for field `limit`. The value must be between 1 and 100.",
+                  "format": "const",
+                  "maxLength": 512,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "httpStatusCode",
+                "errorCode",
+                "message",
+                "debugId"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "description": "Invalid input received.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimitHeader"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemainingHeader"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitResetHeader"
+          }
+        }
+      },
+      "Default": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "description": "Error details returned from the server.\n",
+              "properties": {
+                "debugId": {
+                  "description": "Internal debug id.\n",
+                  "format": "const",
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "errorCode": {
+                  "description": "Internal error code.\n",
+                  "enum": [
+                    "HPE_GL_ERROR_BAD_REQUEST"
+                  ],
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "httpStatusCode": {
+                  "description": "HTTP status code.\n",
+                  "maximum": 400,
+                  "minimum": 400,
+                  "type": "integer"
+                },
+                "message": {
+                  "description": "Error message indicating the cause of the failure.\n",
+                  "format": "const",
+                  "maxLength": 512,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "errorCode",
+                "message",
+                "debugId",
+                "httpStatusCode"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "description": "Unexpected error.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimitHeader"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemainingHeader"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitResetHeader"
+          }
+        }
+      },
+      "Forbidden": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "description": "Error details returned from the server.\n",
+              "properties": {
+                "debugId": {
+                  "description": "Internal debug id.\n",
+                  "format": "const",
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "errorCode": {
+                  "description": "Internal error code.\n",
+                  "enum": [
+                    "HPE_GL_ERROR_FORBIDDEN"
+                  ],
+                  "maxLength": 32,
+                  "type": "string"
+                },
+                "httpStatusCode": {
+                  "description": "HTTP status code.\n",
+                  "maximum": 403,
+                  "minimum": 403,
+                  "type": "integer"
+                },
+                "message": {
+                  "description": "Error message indicating the cause of the failure.\n",
+                  "format": "const",
+                  "maxLength": 512,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "errorCode",
+                "message",
+                "debugId",
+                "httpStatusCode"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "description": "Forbidden.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimitHeader"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemainingHeader"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitResetHeader"
+          }
+        }
+      },
+      "InternalServerError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "description": "Error details returned from the server.\n",
+              "properties": {
+                "debugId": {
+                  "description": "Internal debug id.\n",
+                  "format": "const",
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "errorCode": {
+                  "description": "Internal error code.\n",
+                  "enum": [
+                    "HPE_GL_ERROR_INTERNAL_SERVER_ERROR"
+                  ],
+                  "maxLength": 32,
+                  "type": "string"
+                },
+                "httpStatusCode": {
+                  "description": "HTTP status code.\n",
+                  "maximum": 500,
+                  "minimum": 500,
+                  "type": "integer"
+                },
+                "message": {
+                  "description": "Error message indicating the cause of the failure.\n",
+                  "format": "const",
+                  "maxLength": 512,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "errorCode",
+                "message",
+                "debugId",
+                "httpStatusCode"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "description": "Internal Server Error.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimitHeader"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemainingHeader"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitResetHeader"
+          }
+        }
+      },
+      "NotFound": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "description": "Error details returned from the server.",
+              "properties": {
+                "debugId": {
+                  "description": "Internal debug id.",
+                  "format": "const",
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "errorCode": {
+                  "description": "Internal error code.",
+                  "enum": [
+                    "HPE_GL_ERROR_NOT_FOUND"
+                  ],
+                  "maxLength": 32,
+                  "type": "string"
+                },
+                "httpStatusCode": {
+                  "description": "HTTP status code.",
+                  "maximum": 404,
+                  "minimum": 404,
+                  "type": "integer"
+                },
+                "message": {
+                  "description": "Error message indicating the cause of the failure.",
+                  "format": "const",
+                  "maxLength": 512,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "errorCode",
+                "message",
+                "debugId",
+                "httpStatusCode"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "description": "Resource not found.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimitHeader"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemainingHeader"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitResetHeader"
+          }
+        }
+      },
+      "TooManyRequests": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "description": "Error details returned from the server.\n",
+              "properties": {
+                "debugId": {
+                  "description": "Internal debug id.\n",
+                  "format": "const",
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "errorCode": {
+                  "description": "Internal error code.\n",
+                  "enum": [
+                    "HPE_GL_ERROR_TOO_MANY_REQUESTS"
+                  ],
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "httpStatusCode": {
+                  "description": "HTTP status code.\n",
+                  "maximum": 429,
+                  "minimum": 429,
+                  "type": "integer"
+                },
+                "message": {
+                  "description": "Error message indicating the cause of the failure.\n",
+                  "format": "const",
+                  "maxLength": 512,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "errorCode",
+                "message",
+                "debugId",
+                "httpStatusCode"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "description": "Too Many Requests. Rate limit exceeded.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimitHeader"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemainingHeader"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitResetHeader"
+          }
+        }
+      },
+      "Unauthorized": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "description": "Error details returned from the server.\n",
+              "properties": {
+                "debugId": {
+                  "description": "Internal debug id.\n",
+                  "format": "const",
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                "errorCode": {
+                  "description": "Internal error code.\n",
+                  "enum": [
+                    "HPE_GL_ERROR_UNAUTHORIZED"
+                  ],
+                  "maxLength": 32,
+                  "type": "string"
+                },
+                "httpStatusCode": {
+                  "description": "HTTP status code.\n",
+                  "maximum": 401,
+                  "minimum": 401,
+                  "type": "integer"
+                },
+                "message": {
+                  "description": "Error message indicating the cause of the failure.\n",
+                  "format": "const",
+                  "maxLength": 512,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "errorCode",
+                "message",
+                "debugId",
+                "httpStatusCode"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "description": "Unauthorized request.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimitHeader"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemainingHeader"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitResetHeader"
+          }
+        }
+      }
+    },
+    "schemas": {
+      "AddSitesToCollectionPostRPCInputSchema": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SiteCollectionId"
+          },
+          {
+            "$ref": "#/components/schemas/SiteIds"
+          }
+        ],
+        "properties": {
+          "siteCollectionId": {
+            "description": "site collection id",
+            "type": "string"
+          },
+          "siteIds": {
+            "items": {
+              "description": "site id's",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        }
+      },
+      "AddSitesToCollectionPostRPCOutputSchema": {
+        "description": "Successful added sites to site-collection by scopeId.",
+        "properties": {
+          "code": {
+            "description": "The return code of sites add to site-collection operation.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeIds"
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          },
+          "message": {
+            "description": "The message of sites add to site-collection operation.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "status": {
+            "description": "sites add to site-collection operation status.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "code",
+          "status",
+          "message"
+        ],
+        "type": "object"
+      },
+      "Address": {
+        "properties": {
+          "address": {
+            "description": "address",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "City": {
+        "properties": {
+          "city": {
+            "description": "city",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Country": {
+        "properties": {
+          "country": {
+            "description": "country",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Description": {
+        "properties": {
+          "description": {
+            "description": "name of the scope",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "DeviceCollectionDeleteRPCOutputSchema": {
+        "description": "Successful deletion of device-groups by scopeId.",
+        "properties": {
+          "code": {
+            "description": "The return code of device-groups deletion operation.",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeIds"
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          },
+          "message": {
+            "description": "The message device-groups deletion operation.",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "status": {
+            "description": "device-groups deletion operation status.",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "code",
+          "status",
+          "message"
+        ],
+        "type": "object"
+      },
+      "DeviceCollectionPostRPCInputSchema": {
+        "properties": {
+          "description": {
+            "description": "Description of the device group",
+            "type": "string"
+          },
+          "scopeName": {
+            "description": "Name of the device group",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scopeName"
+        ],
+        "type": "object"
+      },
+      "DeviceCollectionPostRPCOutputSchema": {
+        "description": "Successful creation of device-groups by scopeId.",
+        "properties": {
+          "code": {
+            "description": "The return code of device-groups creation operation.",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeIds"
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          },
+          "message": {
+            "description": "The message device-groups creation operation.",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "status": {
+            "description": "device-groups creation operation status.",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "code",
+          "status",
+          "message"
+        ],
+        "type": "object"
+      },
+      "DeviceCollectionPutRPCInputSchema": {
+        "properties": {
+          "description": {
+            "description": "Description of the device group",
+            "type": "string"
+          },
+          "scopeId": {
+            "description": "Unique identifier for the device group",
+            "type": "string"
+          },
+          "scopeName": {
+            "description": "Name of the device group",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scopeId",
+          "scopeName",
+          "description"
+        ],
+        "type": "object"
+      },
+      "DeviceCollectionPutRPCOutputSchema": {
+        "description": "Successful update of device-groups by scopeId.",
+        "properties": {
+          "code": {
+            "description": "The return code of device-groups update operation.",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeIds"
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          },
+          "message": {
+            "description": "The message device-groups update operation.",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "status": {
+            "description": "device-groups update operation status.",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "code",
+          "status",
+          "message"
+        ],
+        "type": "object"
+      },
+      "DeviceCollectionResponse": {
+        "properties": {
+          "code": {
+            "description": "status code.\n",
+            "example": "SCOPE-device-groups-SUC-001",
+            "format": "const",
+            "maxLength": 32,
+            "type": "string"
+          },
+          "message": {
+            "description": "Descriptive text on the outcome of the operation.\n",
+            "example": "success.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          },
+          "status": {
+            "description": "Final status of operation.\n",
+            "example": "SUCCESS",
+            "format": "const",
+            "maxLength": 20,
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "status",
+          "message"
+        ],
+        "type": "object"
+      },
+      "DeviceGroupGetRPCOutputSchema": {
+        "allOf": [
+          {
+            "description": "List of device-groups with their properties.",
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/DeviceGroupScope"
+                },
+                "maxItems": 9999,
+                "type": "array"
+              },
+              "response": {
+                "$ref": "#/components/schemas/DeviceCollectionResponse"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/PaginationResponseProperties"
+          }
+        ]
+      },
+      "DeviceGroupScope": {
+        "properties": {
+          "description": {
+            "description": "description for the scope",
+            "type": "string"
+          },
+          "deviceCount": {
+            "description": "device count in the site",
+            "readOnly": true,
+            "type": "string"
+          },
+          "id": {
+            "description": "scopeId.\n",
+            "example": "12345",
+            "format": "const",
+            "maxLength": 20,
+            "type": "string"
+          },
+          "scopeId": {
+            "description": "Scope Id for the scope",
+            "readOnly": true,
+            "type": "string"
+          },
+          "scopeName": {
+            "description": "name of the scope",
+            "type": "string"
+          },
+          "type": {
+            "description": "network-config/device-groups.\n",
+            "example": "Sample Site",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "scopeName"
+        ],
+        "type": "object"
+      },
+      "DeviceMoveCollectionSMSchema": {
+        "description": "Successful creation of device-groups by scopeId.",
+        "properties": {
+          "code": {
+            "description": "The return code of device-groups creation operation.",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeIds"
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          },
+          "message": {
+            "description": "The message device-groups creation operation.",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "status": {
+            "description": "device-groups creation operation status.",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "code",
+          "status",
+          "message"
+        ],
+        "type": "object"
+      },
+      "DeviceMoveSiteSMSchema": {
+        "description": "Successful deletion of site-collection by scopeId.",
+        "properties": {
+          "code": {
+            "description": "The return code of site-collection deletion operation.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeIds"
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          },
+          "message": {
+            "description": "The message site-collection deletion operation.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "status": {
+            "description": "site-collection delete operation status.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "code",
+          "status",
+          "message"
+        ],
+        "type": "object"
+      },
+      "Filter": {
+        "description": "OData Version 4.0 filter string (limited functionality).\nSupports only 'eq' operations ('gt', 'ge', 'lt', 'le' and 'in' are NOT supported).\nSupports only 'and' conjunction ('or' and 'not' are NOT supported).\nSupported filter fields are: scopeName, address, city, state, country, zipcode, collectionName\n",
+        "example": "scopeName eq 'Aruba'",
+        "format": "const",
+        "maxLength": 256,
+        "type": "string"
+      },
+      "Hierarchy": {
+        "properties": {
+          "childCount": {
+            "description": "number of child of this scope",
+            "type": "number"
+          },
+          "hostName": {
+            "description": "hostname of the scope",
+            "type": "string"
+          },
+          "scopeId": {
+            "description": "id of the scope",
+            "type": "string"
+          },
+          "scopeName": {
+            "description": "Name of the scope",
+            "type": "string"
+          },
+          "scopeType": {
+            "description": "type of the scope. (site, site_collection, device_collection, org)",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "HierarchyGetRPCOutputSchema": {
+        "allOf": [
+          {
+            "description": "List of hierarchy with their properties.",
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/HierarchyScope"
+                },
+                "maxItems": 9999,
+                "type": "array"
+              },
+              "response": {
+                "$ref": "#/components/schemas/HierarchyResponse"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/PaginationResponseProperties"
+          }
+        ]
+      },
+      "HierarchyResponse": {
+        "properties": {
+          "code": {
+            "description": "status code.\n",
+            "example": "SCOPE-HIERARCHY-SUC-001",
+            "format": "const",
+            "maxLength": 32,
+            "type": "string"
+          },
+          "message": {
+            "description": "Descriptive text on the outcome of the operation.\n",
+            "example": "success.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          },
+          "status": {
+            "description": "Final status of operation.\n",
+            "example": "SUCCESS",
+            "format": "const",
+            "maxLength": 20,
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "status",
+          "message"
+        ],
+        "type": "object"
+      },
+      "HierarchyScope": {
+        "properties": {
+          "Hierarchy": {
+            "items": {
+              "$ref": "#/components/schemas/Hierarchy"
+            },
+            "type": "array"
+          },
+          "id": {
+            "description": "scopeId.\n",
+            "example": "12345",
+            "format": "const",
+            "maxLength": 20,
+            "type": "string"
+          },
+          "type": {
+            "description": "network-config/hierarchy.\n",
+            "example": "Sample Site",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object"
+      },
+      "Latitude": {
+        "properties": {
+          "latitude": {
+            "description": "latitude",
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "LimitParam": {
+        "default": 100,
+        "description": "Specifies the number of results to return. (Default: 100) Maximum limit per query is 100.",
+        "format": "int32",
+        "maximum": 100,
+        "minimum": 1,
+        "type": "integer"
+      },
+      "Longitude": {
+        "properties": {
+          "longitude": {
+            "description": "longitude",
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "Name": {
+        "properties": {
+          "name": {
+            "description": "name of the site scope",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "OffsetParam": {
+        "default": 0,
+        "description": "Specifies the pagination offset for the page of resources.",
+        "format": "int32",
+        "maximum": 2147483647,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "PaginationResponseProperties": {
+        "description": "Fields appended to a list to facilitate paging.\n",
+        "properties": {
+          "count": {
+            "description": "The number of objects returned in the current list.\n",
+            "example": 1,
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "description": "An offset which could be passed in the next query to fetch the next page.\nSet to null when no more pages remain.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "total": {
+            "description": "The total number of objects contained in the datastore.\n",
+            "example": 1,
+            "format": "int64",
+            "maximum": 9223372036854776000,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "count",
+          "total",
+          "offset"
+        ],
+        "type": "object"
+      },
+      "RemoveSitesFromCollectionDeleteRPCOutputSchema": {
+        "description": "Successful removed sites from site-collection by scopeId.",
+        "properties": {
+          "code": {
+            "description": "The return code of sites removal from site-collection operation.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeIds"
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          },
+          "message": {
+            "description": "The message of sites removal from site-collection operation.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "status": {
+            "description": "sites removal from site-collection operation status.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "code",
+          "status",
+          "message"
+        ],
+        "type": "object"
+      },
+      "ScopeId": {
+        "properties": {
+          "scopeId": {
+            "description": "scopeId of the scope",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ScopeIds": {
+        "description": "scope id's",
+        "type": "string"
+      },
+      "ScopeName": {
+        "properties": {
+          "scopeName": {
+            "description": "name of the scope",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Search": {
+        "description": "Partial or Full String Free text search.",
+        "format": "const",
+        "maxLength": 256,
+        "type": "string"
+      },
+      "SiteCollectionDeleteRPCOutputSchema": {
+        "description": "Successful deletion of site-collection by scopeId.",
+        "properties": {
+          "code": {
+            "description": "The return code of site-collection deletion operation.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeIds"
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          },
+          "message": {
+            "description": "The message site-collection deletion operation.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "status": {
+            "description": "site-collection delete operation status.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "code",
+          "status",
+          "message"
+        ],
+        "type": "object"
+      },
+      "SiteCollectionGetRPCOutputSchema": {
+        "allOf": [
+          {
+            "description": "List of site-collection with their properties.",
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/SiteCollectionScope"
+                },
+                "maxItems": 9999,
+                "type": "array"
+              },
+              "response": {
+                "$ref": "#/components/schemas/SiteCollectionResponse"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/PaginationResponseProperties"
+          }
+        ]
+      },
+      "SiteCollectionId": {
+        "properties": {
+          "siteCollectionId": {
+            "description": "site collection id",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SiteCollectionPostRPCInputSchema": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ScopeName"
+          },
+          {
+            "$ref": "#/components/schemas/Description"
+          },
+          {
+            "$ref": "#/components/schemas/SiteIds"
+          }
+        ],
+        "properties": {
+          "description": {
+            "description": "name of the scope",
+            "type": "string"
+          },
+          "scopeName": {
+            "description": "name of the scope",
+            "type": "string"
+          },
+          "siteIds": {
+            "items": {
+              "description": "site id's",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        }
+      },
+      "SiteCollectionPostRPCOutputSchema": {
+        "description": "Successful Creation of Site-Collection.",
+        "properties": {
+          "code": {
+            "description": "The return code of site-collection create operation.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeIds"
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          },
+          "message": {
+            "description": "The message of site-collection create operation.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "status": {
+            "description": "Site-Collection Create operation status.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "code",
+          "status",
+          "message"
+        ],
+        "type": "object"
+      },
+      "SiteCollectionPutRPCInputSchema": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ScopeId"
+          },
+          {
+            "$ref": "#/components/schemas/ScopeName"
+          },
+          {
+            "$ref": "#/components/schemas/Description"
+          }
+        ],
+        "properties": {
+          "description": {
+            "description": "name of the scope",
+            "type": "string"
+          },
+          "scopeId": {
+            "description": "name of the scope",
+            "type": "string"
+          },
+          "scopeName": {
+            "description": "name of the scope",
+            "type": "string"
+          }
+        }
+      },
+      "SiteCollectionPutRPCOutputSchema": {
+        "description": "Successful Updated of SiteCollection by scopeId.",
+        "properties": {
+          "code": {
+            "description": "The return code of site-collection update operation.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeIds"
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          },
+          "message": {
+            "description": "The message of site-collection update operation.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "status": {
+            "description": "Site-Collection Update operation status.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "code",
+          "status",
+          "message"
+        ],
+        "type": "object"
+      },
+      "SiteCollectionResponse": {
+        "properties": {
+          "code": {
+            "description": "status code.\n",
+            "example": "SCOPE-SITE-COLLECTION-SUC-001",
+            "format": "const",
+            "maxLength": 32,
+            "type": "string"
+          },
+          "message": {
+            "description": "Descriptive text on the outcome of the operation.\n",
+            "example": "success.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          },
+          "status": {
+            "description": "Final status of operation.\n",
+            "example": "SUCCESS",
+            "format": "const",
+            "maxLength": 20,
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "status",
+          "message"
+        ],
+        "type": "object"
+      },
+      "SiteCollectionScope": {
+        "properties": {
+          "description": {
+            "description": "description for the scope",
+            "type": "string"
+          },
+          "id": {
+            "description": "scopeId.\n",
+            "example": "12345",
+            "format": "const",
+            "maxLength": 20,
+            "type": "string"
+          },
+          "scopeId": {
+            "description": "Scope Id for the scope",
+            "readOnly": true,
+            "type": "string"
+          },
+          "scopeName": {
+            "description": "name of the scope",
+            "type": "string"
+          },
+          "siteCount": {
+            "description": "site count in the site",
+            "readOnly": true,
+            "type": "string"
+          },
+          "type": {
+            "description": "network-config/site-collection.\n",
+            "example": "Sample Site",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "scopeName"
+        ],
+        "type": "object"
+      },
+      "SiteDeleteRPCOutputSchema": {
+        "description": "Successful Deleted Site scopeIds.",
+        "properties": {
+          "code": {
+            "description": "The return code of delete operation.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeIds"
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          },
+          "message": {
+            "description": "The message of delete operation.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "status": {
+            "description": "Delete operation status.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "code",
+          "status",
+          "message"
+        ],
+        "type": "object"
+      },
+      "SiteGetRPCOutputSchema": {
+        "allOf": [
+          {
+            "description": "List of site with their properties.",
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/SiteScope"
+                },
+                "maxItems": 9999,
+                "type": "array"
+              },
+              "response": {
+                "$ref": "#/components/schemas/SiteResponse"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/PaginationResponseProperties"
+          }
+        ]
+      },
+      "SiteIds": {
+        "properties": {
+          "siteIds": {
+            "items": {
+              "description": "site id's",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "SitePostRPCInputSchema": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Name"
+          },
+          {
+            "$ref": "#/components/schemas/Latitude"
+          },
+          {
+            "$ref": "#/components/schemas/Longitude"
+          },
+          {
+            "$ref": "#/components/schemas/City"
+          },
+          {
+            "$ref": "#/components/schemas/State"
+          },
+          {
+            "$ref": "#/components/schemas/Country"
+          },
+          {
+            "$ref": "#/components/schemas/Zipcode"
+          },
+          {
+            "$ref": "#/components/schemas/Address"
+          },
+          {
+            "$ref": "#/components/schemas/Timezone"
+          },
+          {
+            "$ref": "#/components/schemas/image"
+          }
+        ],
+        "properties": {
+          "address": {
+            "description": "place",
+            "type": "string"
+          },
+          "city": {
+            "description": "place",
+            "type": "string"
+          },
+          "country": {
+            "description": "place",
+            "type": "string"
+          },
+          "latitude": {
+            "description": "latitude",
+            "format": "double",
+            "type": "number"
+          },
+          "longitude": {
+            "description": "longitude",
+            "format": "double",
+            "type": "number"
+          },
+          "name": {
+            "description": "name of the site scope",
+            "type": "string"
+          },
+          "state": {
+            "description": "place",
+            "type": "string"
+          },
+          "zipcode": {
+            "description": "place",
+            "type": "string"
+          }
+        }
+      },
+      "SitePostRPCOutputSchema": {
+        "description": "Successful Creation of Site.",
+        "properties": {
+          "code": {
+            "description": "The return code of site create operation.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeIds"
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          },
+          "message": {
+            "description": "The message of site create operation.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "status": {
+            "description": "Site Create operation status.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "code",
+          "status",
+          "message"
+        ],
+        "type": "object"
+      },
+      "SitePutRPCInputSchema": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ScopeId"
+          },
+          {
+            "$ref": "#/components/schemas/Name"
+          },
+          {
+            "$ref": "#/components/schemas/Latitude"
+          },
+          {
+            "$ref": "#/components/schemas/Longitude"
+          },
+          {
+            "$ref": "#/components/schemas/City"
+          },
+          {
+            "$ref": "#/components/schemas/State"
+          },
+          {
+            "$ref": "#/components/schemas/Country"
+          },
+          {
+            "$ref": "#/components/schemas/Zipcode"
+          },
+          {
+            "$ref": "#/components/schemas/Address"
+          },
+          {
+            "$ref": "#/components/schemas/Timezone"
+          },
+          {
+            "$ref": "#/components/schemas/image"
+          }
+        ],
+        "properties": {
+          "address": {
+            "description": "address",
+            "type": "string"
+          },
+          "city": {
+            "description": "city",
+            "type": "string"
+          },
+          "country": {
+            "description": "country",
+            "type": "string"
+          },
+          "latitude": {
+            "description": "latitude",
+            "format": "double",
+            "type": "number"
+          },
+          "longitude": {
+            "description": "longitude",
+            "format": "double",
+            "type": "number"
+          },
+          "name": {
+            "description": "name of the site scope",
+            "type": "string"
+          },
+          "scopeId": {
+            "description": "scopeId of site",
+            "type": "string"
+          },
+          "state": {
+            "description": "state",
+            "type": "string"
+          },
+          "zipcode": {
+            "description": "zipcode",
+            "type": "string"
+          }
+        }
+      },
+      "SitePutRPCOutputSchema": {
+        "description": "Successful Updated of Site by scopeId.",
+        "properties": {
+          "code": {
+            "description": "The return code of site update operation.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeIds"
+            },
+            "maxItems": 2147483647,
+            "type": "array"
+          },
+          "message": {
+            "description": "The message of site update operation.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "status": {
+            "description": "Site Update operation status.\n",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "code",
+          "status",
+          "message"
+        ],
+        "type": "object"
+      },
+      "SiteResponse": {
+        "properties": {
+          "code": {
+            "description": "status code.\n",
+            "example": "SCOPE-LIST-SITES-SUCCESS-001",
+            "format": "const",
+            "maxLength": 32,
+            "type": "string"
+          },
+          "message": {
+            "description": "Descriptive text on the outcome of the operation.\n",
+            "example": "success.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          },
+          "status": {
+            "description": "Final status of operation.\n",
+            "example": "SUCCESS",
+            "format": "const",
+            "maxLength": 20,
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "status",
+          "message"
+        ],
+        "type": "object"
+      },
+      "SiteScope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Timezone"
+          }
+        ],
+        "properties": {
+          "address": {
+            "description": "address for the site",
+            "type": "string"
+          },
+          "city": {
+            "description": "city for the site",
+            "type": "string"
+          },
+          "collectionId": {
+            "description": "site collection id to which site belongs to",
+            "readOnly": true,
+            "type": "string"
+          },
+          "collectionName": {
+            "description": "site collection Name to which site belongs to",
+            "readOnly": true,
+            "type": "string"
+          },
+          "country": {
+            "description": "country for the site",
+            "type": "string"
+          },
+          "description": {
+            "description": "description for the site",
+            "type": "string"
+          },
+          "deviceCount": {
+            "description": "device count in the site",
+            "readOnly": true,
+            "type": "string"
+          },
+          "id": {
+            "description": "scopeId.\n",
+            "example": "12345",
+            "format": "const",
+            "maxLength": 20,
+            "type": "string"
+          },
+          "latitude": {
+            "description": "latitude of the site",
+            "type": "string"
+          },
+          "longitude": {
+            "description": "longitude",
+            "type": "string"
+          },
+          "scopeId": {
+            "description": "Scope Id for the scope",
+            "readOnly": true,
+            "type": "string"
+          },
+          "scopeName": {
+            "description": "name of the site",
+            "type": "string"
+          },
+          "state": {
+            "description": "state for the site",
+            "type": "string"
+          },
+          "type": {
+            "description": "network-config/site.\n",
+            "example": "Sample Site",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          },
+          "zipcode": {
+            "description": "zipcode for the site",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "address",
+          "city",
+          "country",
+          "scopeName",
+          "state",
+          "zipcode"
+        ],
+        "type": "object"
+      },
+      "Sort": {
+        "description": "Specifies the sort order of the field followed by sort direction.\nSupports ASC and DESC.\nSupported filter fields are: scopeName, address, city, state, country, zipcode, longitude, latitude, deviceCount, collectionName\n. Example: scopeName ASC",
+        "example": "scopeName ASC",
+        "format": "const",
+        "maxLength": 256,
+        "type": "string"
+      },
+      "State": {
+        "properties": {
+          "state": {
+            "description": "state",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Timezone": {
+        "properties": {
+          "timezone": {
+            "properties": {
+              "rawOffset": {
+                "description": "A timezone offset represents the difference in time between a specific timezone and Coordinated Universal Time (UTC), in milliseconds.\n",
+                "type": "number"
+              },
+              "timezoneId": {
+                "description": "A timezone name is a standardized designation for a region of the Earth where the same standard time is used, often based on geopolitical boundaries or geographical features.",
+                "type": "string"
+              },
+              "timezoneName": {
+                "description": "A timezone ID is a unique identifier used to represent a specific timezone, typically following the \"continent/city\" format, allowing for accurate timekeeping and coordination across different locations.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "Zipcode": {
+        "properties": {
+          "zipcode": {
+            "description": "place",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "image": {
+        "properties": {
+          "image": {
+            "properties": {
+              "contentType": {
+                "description": "Image content type ",
+                "type": "string"
+              },
+              "name": {
+                "description": "name of the image file",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "OAuth2": {
+        "description": "OAuth 2.0 authentication with client credentials flow. You can also use your own access token.",
+        "flows": {
+          "clientCredentials": {
+            "scopes": {},
+            "tokenUrl": "https://sso.common.cloud.hpe.com/as/token.oauth2"
+          }
+        },
+        "type": "oauth2"
+      }
+    }
+  },
+  "info": {
+    "description": "This is a release of the Aruba Network Configuration APIs.",
+    "license": {
+      "name": "HPE",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "title": "Scope Management",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/network-config/v1/device-groups": {
+      "get": {
+        "description": "This API will return a list of device-groups, based on the query parameters. Each device-group in the returned list includes details like - deviceCount, id, type, description, scopeId, scopeName.",
+        "operationId": "getDeviceGroupsV1",
+        "parameters": [
+          {
+            "description": "Number of device-groups that need to be fetched. (Default: 100) Maximum limit per query is 100.",
+            "example": 20,
+            "in": "query",
+            "name": "limit",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/LimitParam"
+            }
+          },
+          {
+            "description": "Offset from where the device-groups need to be fetched.",
+            "example": 0,
+            "in": "query",
+            "name": "offset",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OffsetParam"
+            }
+          },
+          {
+            "description": "OData 4.0 filter supports filtering on fields `scopeName`.",
+            "example": "scopeName eq 'Network Devices'",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Filter"
+            }
+          },
+          {
+            "description": "Sort by field. May be one of `scopeName`, `deviceCount`.",
+            "example": "scopeName ASC",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "$ref": "#/components/schemas/Sort"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceGroupGetRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Returns the device-groups list with its properties.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get device-groups",
+        "tags": [
+          "Device Groups"
+        ]
+      },
+      "post": {
+        "description": "This API will create a device group with the specified scope name and description (optional).\n\nImportant: This API is supported only in Central On-Prem and standalone Central accounts. If your Central account has both Classic Central & Central (i.e. if you see the Classic Central toggle in the UI), this API is not supported & will not work.",
+        "operationId": "createDeviceCollectionSMV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceCollectionPostRPCInputSchema"
+              }
+            }
+          },
+          "description": "The device-groups create body.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceCollectionPostRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Device-group creation successful and returns the scopeId of the Device-group created."
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create device-group",
+        "tags": [
+          "Device Groups"
+        ]
+      },
+      "put": {
+        "description": "This API will update the device group name and description (optional) based on the `scopeId`.\n\nImportant: This API is supported only in Central On-Prem and standalone Central accounts. If your Central account has both Classic Central & Central (i.e. if you see the Classic Central toggle in the UI), this API is not supported & will not work.",
+        "operationId": "updateDeviceCollectionByScopeIdV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceCollectionPutRPCInputSchema"
+              }
+            }
+          },
+          "description": "The device-groups update body.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceCollectionPutRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Device-group update successful and returns the scopeId of the Device-group updated."
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update device-group",
+        "tags": [
+          "Device Groups"
+        ]
+      }
+    },
+    "/network-config/v1/device-groups-add-devices": {
+      "post": {
+        "description": "This API will add devices to a device group. \n - `desScopeId` -> ScopeId of the device group to which devices should be associated. \n - `devices` -> Array of device serials that need to be associated. This can be a serial of a device or stackId.\n\nImportant: This API is supported only in Central On-Prem and standalone Central accounts. If your Central account has both Classic Central & Central (i.e. if you see the Classic Central toggle in the UI), this API is not supported & will not work.",
+        "operationId": "addDevicesToDeviceCollectionSMV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "desScopeId": {
+                    "description": "Scope ID of the device-groups to which devices should be associated.",
+                    "type": "string"
+                  },
+                  "devices": {
+                    "description": "An array of device serials that need to be associated.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "desScopeId",
+                  "devices"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "description": "The request body for adding devices to a device group.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceMoveCollectionSMSchema"
+                }
+              }
+            },
+            "description": "Add-devices-to-device-groups successful."
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add devices to device-group",
+        "tags": [
+          "Device Groups"
+        ]
+      }
+    },
+    "/network-config/v1/device-groups-create-and-add-devices": {
+      "post": {
+        "description": "This API creates device group with devices. \n- `scopeName`: Name of the device group to which devices should be added\n- `description`: Optional description for the device group\n- `devices`: List of device serial numbers to be added.\n\nImportant: This API is supported only in Central On-Prem and standalone Central accounts. If your Central account has both Classic Central & Central (i.e. if you see the Classic Central toggle in the UI), this API is not supported & will not work.",
+        "operationId": "device-groups-create-and-add-devicesV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "description": {
+                    "description": "Description of the device group.",
+                    "type": "string"
+                  },
+                  "devices": {
+                    "description": "List of device serial numbers.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "scopeName": {
+                    "description": "Name of the device group.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "scopeName",
+                  "devices"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "description": "Request to add devices to a device group using serials.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceMoveCollectionSMSchema"
+                }
+              }
+            },
+            "description": "Devices added successfully."
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create device-group with devices",
+        "tags": [
+          "Device Groups"
+        ]
+      }
+    },
+    "/network-config/v1/device-groups-remove-devices": {
+      "post": {
+        "description": "This API will remove devices from a device group.\n - `devices` -> Array of device serials that need to be disassociated. This can be a serial of a device or stackId.\n\nImportant: This API is supported only in Central On-Prem and standalone Central accounts. If your Central account has both Classic Central & Central (i.e. if you see the Classic Central toggle in the UI), this API is not supported & will not work.",
+        "operationId": "removeDevicesFromDeviceCollectionSMV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "devices": {
+                    "description": "An array of device serials that need to be disassociated.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "devices"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "description": "The request body for removing devices from a device group.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceMoveCollectionSMSchema"
+                }
+              }
+            },
+            "description": "Remove-devices-from-device-groups successful."
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Remove devices from device-group",
+        "tags": [
+          "Device Groups"
+        ]
+      }
+    },
+    "/network-config/v1/device-groups/bulk": {
+      "delete": {
+        "description": "This API is used to delete one or more existing device groups using a bulk delete operation.\n\nImportant: This API is supported only in Central On-Prem and standalone Central accounts. If your Central account has both Classic Central & Central (i.e. if you see the Classic Central toggle in the UI), this API is not supported & will not work.",
+        "operationId": "deleteDeviceGroupsBulkV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "items": [
+                    {
+                      "id": "scope-id-1"
+                    },
+                    {
+                      "id": "scope-id-2"
+                    },
+                    {
+                      "id": "scope-id-3"
+                    }
+                  ]
+                },
+                "properties": {
+                  "items": {
+                    "description": "An array of device group IDs to delete.",
+                    "items": {
+                      "properties": {
+                        "id": {
+                          "description": "Device group ID to delete.",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "items"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "description": "The request body for bulk deleting device groups.",
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "Response code.",
+                      "type": "string"
+                    },
+                    "items": {
+                      "description": "List of deleted device group IDs.",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "message": {
+                      "description": "Response message.",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Operation status.",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Device-groups deleted successfully.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Bulk delete device-groups",
+        "tags": [
+          "Device Groups"
+        ]
+      }
+    },
+    "/network-config/v1/global": {
+      "get": {
+        "description": "This API is used to fetch the Global Scope ID.",
+        "operationId": "getGlobalScopeIdV1",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "id": {
+                      "description": "scopeId.",
+                      "example": "12345",
+                      "format": "const",
+                      "maxLength": 20,
+                      "type": "string"
+                    },
+                    "scopeId": {
+                      "description": "The ScopeId of the global scope",
+                      "type": "string"
+                    },
+                    "type": {
+                      "description": "network-config/global.",
+                      "example": "Sample Global Scope Type",
+                      "format": "const",
+                      "maxLength": 512,
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Returns the global Scope ID of the customer",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get Global Scope Id",
+        "tags": [
+          "Global"
+        ]
+      }
+    },
+    "/network-config/v1/hierarchy": {
+      "get": {
+        "description": "Returns the hierarchy of the given scopeId and its scopeType.",
+        "operationId": "getHierarchyV1",
+        "parameters": [
+          {
+            "description": "`scopeId` of resource site, site-collection, device-groups, org.",
+            "example": "24833497",
+            "in": "query",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Scope-ID of the entity.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "`type` may be one of scopeType (device, site, site-collection, device-groups, org).",
+            "example": "site",
+            "in": "query",
+            "name": "type",
+            "required": true,
+            "schema": {
+              "description": "Scope-type of the entity.",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HierarchyGetRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Returns the hierarchy list with its scope IDs.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get scope hierarchy",
+        "tags": [
+          "Hierarchy"
+        ]
+      }
+    },
+    "/network-config/v1/site-add-devices": {
+      "post": {
+        "description": "This API will add devices to a site. \n - `desScopeId` -> ScopeId of the site to which devices should be associated.\n - `devices` -> Array of device serials that need to be associated. This can be a serial of a device or stackId.\n\nImportant: This API is supported only in Central On-Prem and standalone Central accounts. If your Central account has both Classic Central & Central (i.e. if you see the Classic Central toggle in the UI), this API is not supported & will not work.",
+        "operationId": "addDevicesToSiteSMV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "desScopeId": {
+                    "description": "ScopeId of the site to which devices should be associated.",
+                    "type": "string"
+                  },
+                  "devices": {
+                    "description": "An array of device serials that need to be associated. This can be a serial of a device or stackId.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "desScopeId",
+                  "devices"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "description": "The request body for adding devices to a site.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceMoveSiteSMSchema"
+                }
+              }
+            },
+            "description": "Add-devices-to-site successful."
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add devices to site",
+        "tags": [
+          "Sites"
+        ]
+      }
+    },
+    "/network-config/v1/site-collection-add-sites": {
+      "post": {
+        "description": "This API is used to add one or more available sites to existing site-collection.",
+        "operationId": "addSiteToSiteCollectionV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddSitesToCollectionPostRPCInputSchema"
+              }
+            }
+          },
+          "description": "Add site to site-collection using scope ID. The site scope ID must exist in the system.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddSitesToCollectionPostRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Returns a successful site association to the site-collection with the `scopeId` of sites which were associated successfully."
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add sites to existing site-collection",
+        "tags": [
+          "Site Collections"
+        ]
+      }
+    },
+    "/network-config/v1/site-collection-remove-sites": {
+      "delete": {
+        "description": "This API is used to remove one or more available sites from the existing site collection.",
+        "operationId": "removeSitesFromSiteCollectionByScopeIdV1",
+        "parameters": [
+          {
+            "description": "Scope IDs of sites to be removed from site-collections.",
+            "example": "24833497,24833498",
+            "in": "query",
+            "name": "site-id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveSitesFromCollectionDeleteRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Returns the list of `scopeId` of Sites which were removed from the site-collection successfully.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Remove sites from site-collection",
+        "tags": [
+          "Site Collections"
+        ]
+      }
+    },
+    "/network-config/v1/site-collections": {
+      "get": {
+        "description": "This API is used to fetch information about all site collections, based on the query parameters provided. Each site collection in the returned list includes - scopeId, scopeName, description, siteCount, deviceCount.",
+        "operationId": "getSiteCollectionsV1",
+        "parameters": [
+          {
+            "description": "Number of site-collections that need to be fetched. (Default: 100) Maximum limit per query is 100.",
+            "example": 20,
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/LimitParam"
+            }
+          },
+          {
+            "description": "Offset from where the site-collections need to be fetched.",
+            "example": 0,
+            "in": "query",
+            "name": "offset",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OffsetParam"
+            }
+          },
+          {
+            "description": "OData 4.0 filter supports filtering on fields `scopeName`, `description`.",
+            "example": "scopeName eq 'Main Building'",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Filter"
+            }
+          },
+          {
+            "description": "Sort by field. May be one of `scopeName`, `description`, `deviceCount`, `siteCount`.",
+            "example": "scopeName ASC",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "$ref": "#/components/schemas/Sort"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteCollectionGetRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Returns the site-collection list with its properties.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get site-collections",
+        "tags": [
+          "Site Collections"
+        ]
+      },
+      "post": {
+        "description": "This API will create site collection with or without sites associated. To create empty site-collection (without any site associated) do not pass `siteIds` list.",
+        "operationId": "createSiteCollectionV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SiteCollectionPostRPCInputSchema"
+              }
+            }
+          },
+          "description": "The site-collection create body.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteCollectionPostRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Site-collection creation successful and returns the scopeId of the Site-collection created."
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create site-collection",
+        "tags": [
+          "Site Collections"
+        ]
+      },
+      "put": {
+        "description": "This API will update the site collection name and description based on the `scopeId`.",
+        "operationId": "updateSiteCollectionByScopeIdV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SiteCollectionPutRPCInputSchema"
+              }
+            }
+          },
+          "description": "The site-collection update body.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteCollectionPutRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Site-collection update successful and returns the scopeId of the Site-collection updated."
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update site-collection",
+        "tags": [
+          "Site Collections"
+        ]
+      }
+    },
+    "/network-config/v1/site-collections/bulk": {
+      "delete": {
+        "description": "This API is used to delete one or more existing site collections using a bulk delete operation.",
+        "operationId": "deleteSiteCollectionsBulkV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "items": [
+                    {
+                      "id": "scope-id-1"
+                    },
+                    {
+                      "id": "scope-id-2"
+                    },
+                    {
+                      "id": "scope-id-3"
+                    }
+                  ]
+                },
+                "properties": {
+                  "items": {
+                    "description": "An array of site collection IDs to delete.",
+                    "items": {
+                      "properties": {
+                        "id": {
+                          "description": "The site collection ID to delete.",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "items"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "description": "The request body for bulk deleting site collections.",
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "Response code.",
+                      "type": "string"
+                    },
+                    "items": {
+                      "description": "List of deleted site collection IDs.",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "message": {
+                      "description": "Response message.",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Operation status.",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Site-collections deleted successfully.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Bulk delete site-collections",
+        "tags": [
+          "Site Collections"
+        ]
+      }
+    },
+    "/network-config/v1/sites": {
+      "get": {
+        "description": "This API is used to fetch information about all sites, based on the query parameters provided. Each site in the returned list includes details like the scopeId, scopeName, collectionId, collectionName, deviceCount, image, the address params and geolocation.",
+        "operationId": "getSitesV1",
+        "parameters": [
+          {
+            "description": "Number of sites that need to be fetched. (Default: 100) Maximum limit per query is 100.",
+            "example": 20,
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/LimitParam"
+            }
+          },
+          {
+            "description": "Offset from where the sites need to be fetched.",
+            "example": 0,
+            "in": "query",
+            "name": "offset",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OffsetParam"
+            }
+          },
+          {
+            "description": "OData 4.0 filter supports filtering on fields `scopeName`, `address`, `city`, `state`, `country`, `zipcode`, `collectionName`.",
+            "example": "scopeName eq 'Building A'",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Filter"
+            }
+          },
+          {
+            "description": "Sort by field. May be one of `scopeName`, `address`, `state`, `country`, `city`, `deviceCount`, `collectionName`, `zipcode`, `timezone`, `longitude`, `latitude`.",
+            "example": "scopeName ASC",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "$ref": "#/components/schemas/Sort"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteGetRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Returns the site list with its properties.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get sites",
+        "tags": [
+          "Sites"
+        ]
+      },
+      "post": {
+        "description": "This API is used to create a site with address, geo coordinates (optional) and image (optional). Image needs to be uploaded first before referencing it here. \n\n `timezone` : Timezone response from Google API for the corresponding geo coordinate.\n - `rawOffset` -> offset value from UTC (in seconds) for the given location from Google Timezone API.\n - `timezoneId` -> Timezone ID from the Google Maps API response\n - `timezoneName` -> long form name for the timezone from Google Maps API response.",
+        "operationId": "createSiteV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SitePostRPCInputSchema"
+              }
+            }
+          },
+          "description": "The site create body.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SitePostRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Site creation successful and returns the scopeId of the site created."
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create site",
+        "tags": [
+          "Sites"
+        ]
+      },
+      "put": {
+        "description": "This API is used to update name, address, geo coordinates or image for existing site based on its scopeId.\nImage needs to be uploaded first before referencing it here. \n\n `timezone` : Timezone response from Google API for the corresponding geo coordinate.\n - `rawOffset` -> offset value from UTC (in seconds) for the given location from Google Timezone API.\n - `timezoneId` -> Timezone ID from the Google Maps API response\n - `timezoneName` -> long form name for the timezone from Google Maps API response.",
+        "operationId": "updateSiteByScopeIdV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SitePutRPCInputSchema"
+              }
+            }
+          },
+          "description": "The site update body.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SitePutRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Site update successful and returns the scopeId of the site updated."
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update site",
+        "tags": [
+          "Sites"
+        ]
+      }
+    },
+    "/network-config/v1/sites/bulk": {
+      "delete": {
+        "description": "This API is used to delete one or more existing sites using a bulk delete operation.",
+        "operationId": "deleteSitesBulkV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "items": [
+                    {
+                      "id": "scope-id-1"
+                    },
+                    {
+                      "id": "scope-id-2"
+                    },
+                    {
+                      "id": "scope-id-3"
+                    }
+                  ]
+                },
+                "properties": {
+                  "items": {
+                    "description": "An array of site IDs to delete.",
+                    "items": {
+                      "properties": {
+                        "id": {
+                          "description": "The site ID to delete.",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "items"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "description": "The request body for bulk deleting sites.",
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "Response code.",
+                      "type": "string"
+                    },
+                    "items": {
+                      "description": "The list of deleted site IDs.",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "message": {
+                      "description": "Response message.",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Operation status.",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Site deleted successfully and returns the scopeId of the site deleted.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Bulk delete sites",
+        "tags": [
+          "Sites"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/device-collection-add-devices": {
+      "post": {
+        "deprecated": true,
+        "description": "(Deprecated) This API will add devices to a device collection. Use /network-config/v1alpha1/device-groups-add-devices instead.",
+        "operationId": "addDevicesToDeviceCollection",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "desScopeId": {
+                    "description": "ScopeId of the device-collection to which devices should be associated",
+                    "type": "string"
+                  },
+                  "devices": {
+                    "description": "Array of device serials that need to be associated",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "desScopeId",
+                  "devices"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "description": "Request body for adding devices to a device collection",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceMoveCollectionSMSchema"
+                }
+              }
+            },
+            "description": "add-devices-to-device-collection successful"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add devices to device-collection",
+        "tags": [
+          "Device Groups"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/device-collection-create-and-add-devices": {
+      "post": {
+        "deprecated": true,
+        "description": "(Deprecated) This API creates device collection with devices. Use /network-config/v1alpha1/device-groups-create-and-add-devices instead.",
+        "operationId": "device-collection-create-and-add-devices",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "description": {
+                    "description": "Description of the device collection",
+                    "type": "string"
+                  },
+                  "devices": {
+                    "description": "List of device serial numbers",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "scopeName": {
+                    "description": "Name of the device collection",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "scopeName",
+                  "devices"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "description": "Request to add devices to a device collection using serials",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceMoveCollectionSMSchema"
+                }
+              }
+            },
+            "description": "Devices added successfully"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create device-collection with devices",
+        "tags": [
+          "Device Groups"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/device-collection-remove-devices": {
+      "post": {
+        "deprecated": true,
+        "description": "(Deprecated) This API will remove devices from a device collection. Use /network-config/v1alpha1/device-groups-remove-devices instead.",
+        "operationId": "removeDevicesFromDeviceCollection",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "devices": {
+                    "description": "Array of device serials that need to be disassociated",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "devices"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "description": "Request body for removing devices from a device collection",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceMoveCollectionSMSchema"
+                }
+              }
+            },
+            "description": "remove-devices-from-device-collection successful"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Remove devices from device-collection",
+        "tags": [
+          "Device Groups"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/device-collections": {
+      "delete": {
+        "deprecated": true,
+        "description": "(Deprecated) This API deletes one or more existing device collections. Send the scope IDs in a JSON list in the request body. Use /network-config/v1alpha1/device-groups/bulk instead.",
+        "operationId": "deleteDeviceCollectionByScopeId",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "scopeIds": {
+                    "description": "List of scope IDs to delete",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "scopeIds"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceCollectionDeleteRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Device-Collection deleted successfully and returns the ScopeId of the deleted device collections"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Delete device-collection by scopeId",
+        "tags": [
+          "Device Groups"
+        ]
+      },
+      "get": {
+        "deprecated": true,
+        "description": "(Deprecated) This API will return a list of device-collections, based on query parameters. Each device-collection in the returned list includes details like - deviceCount, id, type, description, scopeId, scopeName. Use /network-config/v1alpha1/device-groups instead.",
+        "operationId": "getDeviceCollections",
+        "parameters": [
+          {
+            "description": "number of device-collections that needs to be fetched. (Default: 100) Maximum limit per query is 100",
+            "example": 20,
+            "in": "query",
+            "name": "limit",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "offset from where the device-collections need to be fetched",
+            "example": 0,
+            "in": "query",
+            "name": "offset",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "OData 4.0 filter supports filtering on fields `scopeName`",
+            "example": "scopeName eq 'Legacy Devices'",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Filter"
+            }
+          },
+          {
+            "description": "Partial or Full String Free text search",
+            "example": "router",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Search"
+            }
+          },
+          {
+            "description": "sort by field may be one of `scopeName`, `deviceCount`",
+            "example": "deviceCount DESC",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "$ref": "#/components/schemas/Sort"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceGroupGetRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Returned device-collections list with its properties",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get device-collections",
+        "tags": [
+          "Device Groups"
+        ]
+      },
+      "post": {
+        "deprecated": true,
+        "description": "(Deprecated) This API will create a device collection with the specified scope name and description (optional). Use /network-config/v1alpha1/device-groups instead.",
+        "operationId": "createDeviceCollection",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceCollectionPostRPCInputSchema"
+              }
+            }
+          },
+          "description": "device-collections create body",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceCollectionPostRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Device-collection creation successful and returns the scopeId of the Device-collection created."
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create device-collection",
+        "tags": [
+          "Device Groups"
+        ]
+      },
+      "put": {
+        "deprecated": true,
+        "description": "(Deprecated) This API will update the device collection name and description(optional) based on the `scopeId`. Use /network-config/v1alpha1/device-groups instead.",
+        "operationId": "updateDeviceCollection",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceCollectionPutRPCInputSchema"
+              }
+            }
+          },
+          "description": "device-collections update body",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceCollectionPutRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Device-collection update successful and returns scopeId of the Device-collection updated."
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update device-collection",
+        "tags": [
+          "Device Groups"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/device-collections/bulk": {
+      "delete": {
+        "deprecated": true,
+        "description": "(Deprecated) This API is used to delete one or more existing device collections using a bulk delete operation. Use /network-config/v1alpha1/device-groups/bulk instead.",
+        "operationId": "deleteDeviceCollectionsBulk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "scopeIds": {
+                    "description": "List of scope IDs to delete",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "scopeIds"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceCollectionDeleteRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Device-collections deleted successfully and returns the scopeId of the deleted device collections"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Bulk delete device-collections",
+        "tags": [
+          "Device Groups"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/device-groups": {
+      "get": {
+        "deprecated": true,
+        "description": "(Deprecated) This API will return a list of device-groups, based on query parameters. Each device-group in the returned list includes details like - deviceCount, id, type, description, scopeId, scopeName. Use /network-config/v1/device-groups instead.",
+        "operationId": "getDeviceGroups",
+        "parameters": [
+          {
+            "description": "number of device-groups that needs to be fetched. (Default: 100) Maximum limit per query is 100",
+            "example": 20,
+            "in": "query",
+            "name": "limit",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "offset from where the device-groups need to be fetched",
+            "example": 0,
+            "in": "query",
+            "name": "offset",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "OData 4.0 filter supports filtering on fields `scopeName`",
+            "example": "scopeName eq 'Network Devices'",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Filter"
+            }
+          },
+          {
+            "description": "Partial or Full String Free text search",
+            "example": "switch",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Search"
+            }
+          },
+          {
+            "description": "sort by field may be one of `scopeName`, `deviceCount`",
+            "example": "scopeName ASC",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "$ref": "#/components/schemas/Sort"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceGroupGetRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Returned device-groups list with its properties",
+            "headers": {
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get device-groups",
+        "tags": [
+          "Device Groups"
+        ]
+      },
+      "post": {
+        "deprecated": true,
+        "description": "(Deprecated) This API will create a device group with the specified scope name and description (optional).  Use /network-config/v1/device-groups instead.\n\nImportant: This API is supported only in Central On-Prem and standalone Central accounts. If your Central account has both Classic Central & Central (i.e. if you see the Classic Central toggle in the UI), this API is not supported & will not work.",
+        "operationId": "createDeviceCollectionSM",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceCollectionPostRPCInputSchema"
+              }
+            }
+          },
+          "description": "device-groups create body",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceCollectionPostRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Device-group creation successful and returns the scopeId of the Device-group created.",
+            "headers": {
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create device-group",
+        "tags": [
+          "Device Groups"
+        ]
+      },
+      "put": {
+        "deprecated": true,
+        "description": "(Deprecated) This API will update the device group name and description (optional) based on the `scopeId`. Use /network-config/v1/device-groups instead. \n\nImportant: This API is supported only in Central On-Prem and standalone Central accounts. If your Central account has both Classic Central & Central (i.e. if you see the Classic Central toggle in the UI), this API is not supported & will not work.",
+        "operationId": "updateDeviceCollectionByScopeId",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceCollectionPutRPCInputSchema"
+              }
+            }
+          },
+          "description": "device-groups update body",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceCollectionPutRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Device-group update successful and returns scopeId of the Device-group updated.",
+            "headers": {
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update device-group",
+        "tags": [
+          "Device Groups"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/device-groups-add-devices": {
+      "post": {
+        "deprecated": true,
+        "description": "(Deprecated) This API will add devices to a device group. \n - `desScopeId` -> ScopeId of the device group to which devices should be associated. \n - `devices` -> Array of device serials that need to be associated. This can be a serial of a device or stackId.  Use /network-config/v1/device-groups-add-devices instead.\n\nImportant: This API is supported only in Central On-Prem and standalone Central accounts. If your Central account has both Classic Central & Central (i.e. if you see the Classic Central toggle in the UI), this API is not supported & will not work.",
+        "operationId": "addDevicesToDeviceCollectionSM",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "desScopeId": {
+                    "description": "ScopeId of the device-groups to which devices should be associated",
+                    "type": "string"
+                  },
+                  "devices": {
+                    "description": "Array of device serials that need to be associated",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "desScopeId",
+                  "devices"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "description": "Request body for adding devices to a device group",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceMoveCollectionSMSchema"
+                }
+              }
+            },
+            "description": "add-devices-to-device-groups successful"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add devices to device-group",
+        "tags": [
+          "Device Groups"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/device-groups-create-and-add-devices": {
+      "post": {
+        "deprecated": true,
+        "description": "(Deprecated) This API creates device group with devices. \n- `scopeName`: Name of the device group to which devices should be added\n- `description`: Optional description for the device group\n- `devices`: List of device serial numbers to be added. Use /network-config/v1/device-groups-create-and-add-devices instead.\n\nImportant: This API is supported only in Central On-Prem and standalone Central accounts. If your Central account has both Classic Central & Central (i.e. if you see the Classic Central toggle in the UI), this API is not supported & will not work.",
+        "operationId": "device-groups-create-and-add-devices",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "description": {
+                    "description": "Description of the device group",
+                    "type": "string"
+                  },
+                  "devices": {
+                    "description": "List of device serial numbers",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "scopeName": {
+                    "description": "Name of the device group",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "scopeName",
+                  "devices"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "description": "Request to add devices to a device group using serials",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceMoveCollectionSMSchema"
+                }
+              }
+            },
+            "description": "Devices added successfully"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create device-group with devices",
+        "tags": [
+          "Device Groups"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/device-groups-remove-devices": {
+      "post": {
+        "deprecated": true,
+        "description": "(Deprecated)This API will remove devices from a device group.\n - `devices` -> Array of device serials that need to be disassociated. This can be a serial of a device or stackId. Use /network-config/v1/device-groups-remove-devices instead.\n\nImportant: This API is supported only in Central On-Prem and standalone Central accounts. If your Central account has both Classic Central & Central (i.e. if you see the Classic Central toggle in the UI), this API is not supported & will not work.",
+        "operationId": "removeDevicesFromDeviceCollectionSM",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "devices": {
+                    "description": "Array of device serials that need to be disassociated",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "devices"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "description": "Request body for removing devices from a device group",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceMoveCollectionSMSchema"
+                }
+              }
+            },
+            "description": "remove-devices-from-device-groups successful"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Remove devices from device-group",
+        "tags": [
+          "Device Groups"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/device-groups/bulk": {
+      "delete": {
+        "deprecated": true,
+        "description": "(Deprecated) This API is used to delete one or more existing device groups using a bulk delete operation. Use /network-config/v1/device-groups/bulk instead. \n\nImportant: This API is supported only in Central On-Prem and standalone Central accounts. If your Central account has both Classic Central & Central (i.e. if you see the Classic Central toggle in the UI), this API is not supported & will not work.",
+        "operationId": "deleteDeviceGroupsBulk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "items": [
+                    {
+                      "id": "scope-id-1"
+                    },
+                    {
+                      "id": "scope-id-2"
+                    },
+                    {
+                      "id": "scope-id-3"
+                    }
+                  ]
+                },
+                "properties": {
+                  "items": {
+                    "description": "Array of device group IDs to delete",
+                    "items": {
+                      "properties": {
+                        "id": {
+                          "description": "Device group ID to delete",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "items"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "description": "Request body for bulk deleting device groups",
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "Response code",
+                      "type": "string"
+                    },
+                    "items": {
+                      "description": "List of deleted device group IDs",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "message": {
+                      "description": "Response message",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Operation status",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Device-groups deleted successfully",
+            "headers": {
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Bulk delete device-groups",
+        "tags": [
+          "Device Groups"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/hierarchy": {
+      "get": {
+        "deprecated": true,
+        "description": "(Deprecated) Returns the hierarchy of the given scopeId and its scopeType. Use /network-config/v1/hierarchy instead.",
+        "operationId": "getHierarchy",
+        "parameters": [
+          {
+            "description": "`scopeId` of resource site, site-collection, device-groups, org",
+            "example": "24833497",
+            "in": "query",
+            "name": "scope-id",
+            "required": true,
+            "schema": {
+              "description": "scope-id of entity",
+              "type": "string"
+            }
+          },
+          {
+            "description": "`scopeType` may be one of device, site, site-collection, device-groups, org",
+            "example": "site",
+            "in": "query",
+            "name": "scope-type",
+            "required": true,
+            "schema": {
+              "description": "scope-type of entity",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HierarchyGetRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Returned hierarchy list with its scopeIds",
+            "headers": {
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get scope hierarchy",
+        "tags": [
+          "Hierarchy"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/site-add-devices": {
+      "post": {
+        "deprecated": true,
+        "description": "(Deprecated) This API will add devices to a site. \n - `desScopeId` -> ScopeId of the site to which devices should be associated.\n - `devices` -> Array of device serials that need to be associated. This can be a serial of a device or stackId.  Use /network-config/v1/site-add-devices instead.\n\nImportant: This API is supported only in Central On-Prem and standalone Central accounts. If your Central account has both Classic Central & Central (i.e. if you see the Classic Central toggle in the UI), this API is not supported & will not work.",
+        "operationId": "addDevicesToSiteSM",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "desScopeId": {
+                    "description": "ScopeId of the site to which devices should be associated.",
+                    "type": "string"
+                  },
+                  "devices": {
+                    "description": "Array of device serials that need to be associated. This can be a serial of a device or stackId",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "desScopeId",
+                  "devices"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "description": "Request body for adding devices to a site",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceMoveSiteSMSchema"
+                }
+              }
+            },
+            "description": "add-devices-to-site successful",
+            "headers": {
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add devices to site",
+        "tags": [
+          "Sites"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/site-collection-add-sites": {
+      "post": {
+        "deprecated": true,
+        "description": "(Deprecated) This API is used to add one or more available sites to existing site-collection. Use /network-config/v1/site-collection-add-sites instead.",
+        "operationId": "addSiteToSiteCollection",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddSitesToCollectionPostRPCInputSchema"
+              }
+            }
+          },
+          "description": "Add site to site-collection using scopeId. The site scopeId must exist in system.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddSitesToCollectionPostRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Returned Sites association to site-collection successful with the `scopeId` of sites which associated successfully."
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add sites to existing site-collection",
+        "tags": [
+          "Site Collections"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/site-collection-remove-sites": {
+      "delete": {
+        "deprecated": true,
+        "description": "(Deprecated) This API is used to remove one or more available sites from the existing site collection. Use /network-config/v1/site-collection-remove-sites instead.",
+        "operationId": "removeSitesFromSiteCollectionByScopeId",
+        "parameters": [
+          {
+            "description": "scope ids of sites to be removed from site-collections",
+            "example": "24833497,24833498",
+            "in": "query",
+            "name": "site-ids",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveSitesFromCollectionDeleteRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Returns list of `scopeId` of Sites which was removed from site-collection successfully",
+            "headers": {
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Remove sites from site-collection",
+        "tags": [
+          "Site Collections"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/site-collections": {
+      "delete": {
+        "deprecated": true,
+        "description": "(Deprecated) This API will delete one or more existing site collections. To delete multiple site collections send scopeIds in comma-separated values. Use /network-config/v1alpha1/site-collections/bulk instead.",
+        "operationId": "deleteSiteCollectionByScopeId",
+        "parameters": [
+          {
+            "description": "scope ids of site-collections to be deleted",
+            "example": "scopeId1,scopeId2",
+            "in": "query",
+            "name": "scope-id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteCollectionDeleteRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Site-Collection deleted successfully and returns the ScopeId of the deleted site-collections",
+            "headers": {
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Delete site-collection by scopeId",
+        "tags": [
+          "Site Collections"
+        ]
+      },
+      "get": {
+        "deprecated": true,
+        "description": "(Deprecated) This API is used to fetch information of all site collections, based on the query parameters provided. Each site collection in the returned list includes - scopeId, scopeName, description, siteCount, deviceCount. Use /network-config/v1/site-collections instead.",
+        "operationId": "getSiteCollections",
+        "parameters": [
+          {
+            "description": "number of site-collections that needs to be fetched. (Default: 100) Maximum limit per query is 100",
+            "example": 20,
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "offset from where the site-collections need to be fetched",
+            "example": 0,
+            "in": "query",
+            "name": "offset",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "OData 4.0 filter supports filtering on fields `scopeName`, `description`",
+            "example": "scopeName eq 'Main Building'",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Filter"
+            }
+          },
+          {
+            "description": "Partial or Full String Free text search",
+            "example": "building",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Search"
+            }
+          },
+          {
+            "description": "sort by field may be one of `scopeName`, `description`, `deviceCount`, `siteCount`",
+            "example": "scopeName ASC",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "$ref": "#/components/schemas/Sort"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteCollectionGetRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Returned site-collection list with its properties",
+            "headers": {
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get site-collections",
+        "tags": [
+          "Site Collections"
+        ]
+      },
+      "post": {
+        "deprecated": true,
+        "description": "(Deprecated) This API will create site collection with or without sites associated. To create empty site-collection (without any site associated) do not pass `siteIds` list. Use /network-config/v1/site-collections instead.",
+        "operationId": "createSiteCollection",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SiteCollectionPostRPCInputSchema"
+              }
+            }
+          },
+          "description": "site-collection create body",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteCollectionPostRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Site-collection creation successful and returns the scopeId of the Site-collection created.",
+            "headers": {
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create site-collection",
+        "tags": [
+          "Site Collections"
+        ]
+      },
+      "put": {
+        "deprecated": true,
+        "description": "(Deprecated) This API will update the site collection name and description based on the `scopeId`. Use /network-config/v1/site-collections instead.",
+        "operationId": "updateSiteCollectionByScopeId",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SiteCollectionPutRPCInputSchema"
+              }
+            }
+          },
+          "description": "site-collection update body",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteCollectionPutRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Site-collection update successful and returns the scopeId of the Site-collection updated.",
+            "headers": {
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update site-collection",
+        "tags": [
+          "Site Collections"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/site-collections/bulk": {
+      "delete": {
+        "deprecated": true,
+        "description": "(Deprecated) This API is used to delete one or more existing site collections using a bulk delete operation. Use /network-config/v1/site-collections/bulk instead.",
+        "operationId": "deleteSiteCollectionsBulk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "items": [
+                    {
+                      "id": "scope-id-1"
+                    },
+                    {
+                      "id": "scope-id-2"
+                    },
+                    {
+                      "id": "scope-id-3"
+                    }
+                  ]
+                },
+                "properties": {
+                  "items": {
+                    "description": "Array of site collection IDs to delete",
+                    "items": {
+                      "properties": {
+                        "id": {
+                          "description": "Site collection ID to delete",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "items"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "description": "Request body for bulk deleting site collections",
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "Response code",
+                      "type": "string"
+                    },
+                    "items": {
+                      "description": "List of deleted site collection IDs",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "message": {
+                      "description": "Response message",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Operation status",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Site-collections deleted successfully",
+            "headers": {
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Bulk delete site-collections",
+        "tags": [
+          "Site Collections"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/sites": {
+      "delete": {
+        "deprecated": true,
+        "description": "(Deprecated) Site Deletion. This API is used to delete one or more existing sites based on their scopeId. Use /network-config/v1alpha1/sites/bulk instead.",
+        "operationId": "deleteSiteByScopeId",
+        "parameters": [
+          {
+            "description": "scope ids of sites to be deleted",
+            "example": "24833497",
+            "in": "query",
+            "name": "scope-id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteDeleteRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Site deleted successfully",
+            "headers": {
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Delete site by scopeId",
+        "tags": [
+          "Sites"
+        ]
+      },
+      "get": {
+        "deprecated": true,
+        "description": "(Deprecated) This API is used to fetch information of all sites, based on the query parameters provided. Each site in the returned list includes details like - scopeId, scopeName, collectionId, collectionName, deviceCount, image, address params and geolocation. Use /network-config/v1/sites instead.",
+        "operationId": "getSites",
+        "parameters": [
+          {
+            "description": "number of sites that need to be fetched. (Default: 100) Maximum limit per query is 100",
+            "example": 20,
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "offset from where the sites need to be fetched",
+            "example": 0,
+            "in": "query",
+            "name": "offset",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "OData 4.0 filter supports filtering on fields `scopeName`, `address`, `city`, `state`, `country`, `zipcode`, `collectionName`",
+            "example": "scopeName eq 'Building A'",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Filter"
+            }
+          },
+          {
+            "description": "Partial or Full String Free text search",
+            "example": "office",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Search"
+            }
+          },
+          {
+            "description": "sort by field may be one of `scopeName`, `address`, `state`, `country`, `city`, `deviceCount`, `collectionName`, `zipcode`, `timezone`, `longitude`, `latitude`",
+            "example": "scopeName ASC",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "$ref": "#/components/schemas/Sort"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteGetRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Returned site list with its properties",
+            "headers": {
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get sites",
+        "tags": [
+          "Sites"
+        ]
+      },
+      "post": {
+        "deprecated": true,
+        "description": "(Deprecated) This API is used to create a site with address, geo coordinates (optional) and image (optional). Image needs to be uploaded first before referencing it here. \n\n `timezone` : Timezone response from Google API for the corresponding geo coordinate.\n - `rawOffset` -> offset value from UTC (in seconds) for the given location from Google Timezone API.\n - `timezoneId` -> Timezone ID from the Google Maps API response\n - `timezoneName` -> long form name for the timezone from Google Maps API response. Use /network-config/v1/sites instead.",
+        "operationId": "createSite",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SitePostRPCInputSchema"
+              }
+            }
+          },
+          "description": "site create body",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SitePostRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Site creation successful and returns the scopeId of the site created.",
+            "headers": {
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create site",
+        "tags": [
+          "Sites"
+        ]
+      },
+      "put": {
+        "deprecated": true,
+        "description": "(Deprecated) This API is used to update name, address, geo coordinates or image for existing site based on its scopeId.\nImage needs to be uploaded first before referencing it here. \n\n `timezone` : Timezone response from Google API for the corresponding geo coordinate.\n - `rawOffset` -> offset value from UTC (in seconds) for the given location from Google Timezone API.\n - `timezoneId` -> Timezone ID from the Google Maps API response\n - `timezoneName` -> long form name for the timezone from Google Maps API response. Use /network-config/v1/sites instead.",
+        "operationId": "updateSiteByScopeId",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SitePutRPCInputSchema"
+              }
+            }
+          },
+          "description": "site update body",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SitePutRPCOutputSchema"
+                }
+              }
+            },
+            "description": "Site update successful and returns the scopeId of the site updated.",
+            "headers": {
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update site",
+        "tags": [
+          "Sites"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/sites/bulk": {
+      "delete": {
+        "deprecated": true,
+        "description": "(Deprecated) This API is used to delete one or more existing sites using a bulk delete operation. Use /network-config/v1/sites/bulk instead.",
+        "operationId": "deleteSitesBulk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "items": [
+                    {
+                      "id": "scope-id-1"
+                    },
+                    {
+                      "id": "scope-id-2"
+                    },
+                    {
+                      "id": "scope-id-3"
+                    }
+                  ]
+                },
+                "properties": {
+                  "items": {
+                    "description": "Array of site IDs to delete",
+                    "items": {
+                      "properties": {
+                        "id": {
+                          "description": "Site ID to delete",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "items"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "description": "Request body for bulk deleting sites",
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "code": {
+                      "description": "Response code",
+                      "type": "string"
+                    },
+                    "items": {
+                      "description": "List of deleted site IDs",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "message": {
+                      "description": "Response message",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Operation status",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Site deleted successfully and returns the scopeId of the site deleted.",
+            "headers": {
+              "Deprecation": {
+                "$ref": "#/components/headers/Deprecation"
+              },
+              "Sunset": {
+                "$ref": "#/components/headers/Sunset"
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "default": {
+            "$ref": "#/components/responses/Default"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Bulk delete sites",
+        "tags": [
+          "Sites"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "AccessToken": []
+    }
+  ],
+  "servers": [
+    {
+      "description": "eu",
+      "url": "https://de1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "eucentral2",
+      "url": "https://de2.api.central.arubanetworks.com"
+    },
+    {
+      "description": "eucentral3",
+      "url": "https://de3.api.central.arubanetworks.com"
+    },
+    {
+      "description": "ukwest2",
+      "url": "https://gb1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "prod",
+      "url": "https://us1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "central-prod2",
+      "url": "https://us2.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uswest4",
+      "url": "https://us4.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uswest5",
+      "url": "https://us5.api.central.arubanetworks.com"
+    },
+    {
+      "description": "us-east-1",
+      "url": "https://us6.api.central.arubanetworks.com"
+    },
+    {
+      "description": "starman",
+      "url": "https://ca1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apac",
+      "url": "https://in1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apaceast",
+      "url": "https://jp1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apacsouth",
+      "url": "https://au1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uaenorth1",
+      "url": "https://ae1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "china-prod",
+      "url": "https://cn1.api.central.arubanetworks.com.cn"
+    },
+    {
+      "description": "internal2",
+      "url": "https://internal.api.central.arubanetworks.com"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Device group management APIs for creating, updating, deleting device groups and managing devices within groups.",
+      "name": "Device Groups"
+    },
+    {
+      "description": "Hierarchy APIs for retrieving scope hierarchy information.",
+      "name": "Hierarchy"
+    },
+    {
+      "description": "Site collection management APIs for creating, updating, deleting site collections and managing sites within collections.",
+      "name": "Site Collections"
+    },
+    {
+      "description": "Site management APIs for creating, updating, deleting sites and managing devices within sites.",
+      "name": "Sites"
+    }
+  ],
+  "x-readme": {
+    "explorer-enabled": true,
+    "proxy-enabled": true
+  }
+}

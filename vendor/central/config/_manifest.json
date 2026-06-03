@@ -1,0 +1,183 @@
+{
+  "definition_count": 25,
+  "definitions": [
+    {
+      "id": "69f88816a9420387bcecadf8",
+      "path_count": 4,
+      "slug": "application-experience",
+      "title": "Application Experience",
+      "version": "v1alpha1"
+    },
+    {
+      "id": "69f8881ac7c95fb8a5477f69",
+      "path_count": 2,
+      "slug": "assignments",
+      "title": "Assignments",
+      "version": "v1alpha1"
+    },
+    {
+      "id": "69f8881e473b6119d0cd74ac",
+      "path_count": 22,
+      "slug": "central-nac",
+      "title": "Central NAC",
+      "version": "v1alpha1"
+    },
+    {
+      "id": "69f88811655efbea290429b7",
+      "path_count": 25,
+      "slug": "central-nac-service",
+      "title": "Central NAC Service",
+      "version": "1.0.0"
+    },
+    {
+      "id": "69f88824c4d36d9b3e8d2246",
+      "path_count": 5,
+      "slug": "config-management",
+      "title": "Config Management",
+      "version": "v1alpha1"
+    },
+    {
+      "id": "69f8880d9a972ebfd0911f6b",
+      "path_count": 2,
+      "slug": "configuration-health",
+      "title": "Configuration Health",
+      "version": "0.0.1"
+    },
+    {
+      "id": "69f88828246c52d17016a577",
+      "path_count": 6,
+      "slug": "extensions",
+      "title": "Extensions",
+      "version": "v1alpha1"
+    },
+    {
+      "id": "69f8882c5ea616617d81cdba",
+      "path_count": 1,
+      "slug": "firmware-policy",
+      "title": "Firmware Policy",
+      "version": "v1alpha1"
+    },
+    {
+      "id": "69f888304e8e2ec806295883",
+      "path_count": 2,
+      "slug": "gateway-clustering-orchestration",
+      "title": "Gateway Clustering Orchestration",
+      "version": "v1alpha1"
+    },
+    {
+      "id": "69f888349eb2fd9c153b45d6",
+      "path_count": 8,
+      "slug": "high-availability",
+      "title": "High Availability",
+      "version": "v1alpha1"
+    },
+    {
+      "id": "69f8883a756ab67d2dfdbf2b",
+      "path_count": 43,
+      "slug": "interfaces",
+      "title": "Interfaces",
+      "version": "v1alpha1"
+    },
+    {
+      "id": "69f888469a5dfa5aed7e9b98",
+      "path_count": 2,
+      "slug": "iot",
+      "title": "IoT",
+      "version": "v1alpha1"
+    },
+    {
+      "id": "69f8884a97942841021f49c9",
+      "path_count": 12,
+      "slug": "miscellaneous",
+      "title": "Miscellaneous",
+      "version": "v1alpha1"
+    },
+    {
+      "id": "69f88850efbaad252edbb18f",
+      "path_count": 6,
+      "slug": "named-object",
+      "title": "Named Object",
+      "version": "v1alpha1"
+    },
+    {
+      "id": "69f8885692435a98713507b1",
+      "path_count": 44,
+      "slug": "network-services",
+      "title": "Network Services",
+      "version": "v1alpha1"
+    },
+    {
+      "id": "69f8886171b9b9735c52a43b",
+      "path_count": 12,
+      "slug": "roles-policy",
+      "title": "Roles & Policy",
+      "version": "v1alpha1"
+    },
+    {
+      "id": "69f8886a71b9b9735c52a765",
+      "path_count": 44,
+      "slug": "routing-overlays",
+      "title": "Routing & Overlays",
+      "version": "v1alpha1"
+    },
+    {
+      "id": "69f888084e8e2ec8062955cf",
+      "path_count": 32,
+      "slug": "scope-management",
+      "title": "Scope Management",
+      "version": "1.0.0"
+    },
+    {
+      "id": "69f888748a93bc881dd41f3e",
+      "path_count": 64,
+      "slug": "security",
+      "title": "Security",
+      "version": "v1alpha1"
+    },
+    {
+      "id": "69f88880c9178b6ab2cb6736",
+      "path_count": 9,
+      "slug": "services",
+      "title": "Services",
+      "version": "v1alpha1"
+    },
+    {
+      "id": "69f8888674446d6d3c14c469",
+      "path_count": 70,
+      "slug": "system",
+      "title": "System",
+      "version": "v1alpha1"
+    },
+    {
+      "id": "69f88895fca32ee3f44e2126",
+      "path_count": 18,
+      "slug": "telemetry",
+      "title": "Telemetry",
+      "version": "v1alpha1"
+    },
+    {
+      "id": "69f8889a3c9ac42f98f8993b",
+      "path_count": 4,
+      "slug": "tunnels",
+      "title": "Tunnels",
+      "version": "v1alpha1"
+    },
+    {
+      "id": "69f8889f767569c6f9bdb2d1",
+      "path_count": 23,
+      "slug": "vlans-networks",
+      "title": "VLANs & Networks",
+      "version": "v1alpha1"
+    },
+    {
+      "id": "69f888a5473b6119d0cd7b3c",
+      "path_count": 14,
+      "slug": "wireless",
+      "title": "Wireless",
+      "version": "v1alpha1"
+    }
+  ],
+  "project": "new-central-config",
+  "source": "https://developer.arubanetworks.com/new-central-config/openapi/<apiSetting-id>",
+  "total_paths": 474
+}

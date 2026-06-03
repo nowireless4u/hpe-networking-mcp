@@ -1,0 +1,57 @@
+{
+  "definition_count": 7,
+  "definitions": [
+    {
+      "id": "69d3cd181de8c8a7eed9937a",
+      "path_count": 1,
+      "slug": "authorization",
+      "title": "Authorization",
+      "version": "1.0.0"
+    },
+    {
+      "id": "69e98d48627a85ab8be180f1",
+      "path_count": 131,
+      "slug": "monitoring",
+      "title": "Monitoring",
+      "version": "0.0.1"
+    },
+    {
+      "id": "69e98d50a1ad6d66e9dedd74",
+      "path_count": 1,
+      "slug": "msp",
+      "title": "MSP",
+      "version": "0.0.1"
+    },
+    {
+      "id": "69e98d52d2e6001dd467891e",
+      "path_count": 8,
+      "slug": "notifications",
+      "title": "Notifications",
+      "version": "0.0.1"
+    },
+    {
+      "id": "69e98d558ac1e1a8a42260ff",
+      "path_count": 3,
+      "slug": "reporting",
+      "title": "Reporting",
+      "version": "0.0.1"
+    },
+    {
+      "id": "69e98d578411987e76961819",
+      "path_count": 18,
+      "slug": "services",
+      "title": "Services",
+      "version": "0.0.1"
+    },
+    {
+      "id": "69e98d5b93f42308a4e1a168",
+      "path_count": 95,
+      "slug": "troubleshooting",
+      "title": "Troubleshooting",
+      "version": "0.0.1"
+    }
+  ],
+  "project": "new-central",
+  "source": "https://developer.arubanetworks.com/new-central/openapi/<apiSetting-id>",
+  "total_paths": 257
+}

@@ -1,0 +1,5856 @@
+{
+  "components": {
+    "schemas": {
+      "BadRequestError": {
+        "properties": {
+          "debugId": {
+            "description": "A unique identifier used for troubleshooting and debugging purposes.",
+            "example": "78f002e32e0cefba3d8cc94fa8179342",
+            "maxLength": 512,
+            "type": "string",
+            "x-go-name": "DebugID"
+          },
+          "errorCode": {
+            "description": "Error code representing the specific error condition.",
+            "enum": [
+              "HPE_GL_ERROR_BAD_REQUEST",
+              "HPE_GL_ERROR_MISSING_IDENTIFIER",
+              "HPE_GL_ERROR_INSUFFICIENT_PARAMS"
+            ],
+            "example": "HPE_GL_ERROR_BAD_REQUEST",
+            "maxLength": 128,
+            "type": "string",
+            "x-go-name": "ErrorCode"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP status code indicating the error type (e.g., 400 for Bad Request).",
+            "example": 400,
+            "format": "int64",
+            "maximum": 400,
+            "minimum": 400,
+            "type": "integer",
+            "x-go-name": "HTTPStatusCode"
+          },
+          "message": {
+            "description": "Error message providing more details about the error.",
+            "example": "Reason for the error",
+            "maxLength": 512,
+            "type": "string",
+            "x-go-name": "Message"
+          }
+        },
+        "required": [
+          "debugId",
+          "errorCode",
+          "httpStatusCode",
+          "message"
+        ],
+        "type": "object",
+        "x-go-package": "cdaservice/nbapi"
+      },
+      "CdaCertInfoObj": {
+        "properties": {
+          "certIssuerDer": {
+            "description": "Certificate Issuer Der",
+            "type": "string",
+            "x-go-name": "CertIssuerDer"
+          },
+          "certSerialNum": {
+            "description": "Certificate serial num",
+            "type": "string",
+            "x-go-name": "CertSerialNum"
+          },
+          "certSubjectDer": {
+            "description": "Certificate subject Der",
+            "type": "string",
+            "x-go-name": "CertSubjectDer"
+          }
+        },
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaChangeNotificationValues": {
+        "type": "string",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaDppRegCreateInput": {
+        "description": "Input type for mutation createCdaDppReg",
+        "properties": {
+          "uri": {
+            "description": "DPP uri.",
+            "type": "string",
+            "x-go-name": "URI"
+          }
+        },
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaDppRegCreateResponse": {
+        "description": "Represents the response for mutation createCdaDppReg",
+        "properties": {
+          "id": {
+            "description": "ID of the DPP registraton.",
+            "type": "string",
+            "x-go-name": "ID"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaDppRegListResponse": {
+        "description": "Represents the response for query listCdaDppRegs",
+        "properties": {
+          "count": {
+            "description": "Count of items returned.",
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "Count"
+          },
+          "items": {
+            "description": "List of DPP Registrations.",
+            "items": {
+              "$ref": "#/components/schemas/CdaDppRegResponse"
+            },
+            "type": "array",
+            "x-go-name": "Items"
+          },
+          "next": {
+            "description": "Cursor to the next page.",
+            "type": "string",
+            "x-go-name": "Next"
+          }
+        },
+        "required": [
+          "count",
+          "items"
+        ],
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaDppRegResponse": {
+        "description": "Represents Information about one DPP registration",
+        "properties": {
+          "id": {
+            "description": "ID of the DPP registration",
+            "type": "string",
+            "x-go-name": "ID"
+          },
+          "uri": {
+            "description": "DPP uri.",
+            "type": "string",
+            "x-go-name": "URI"
+          }
+        },
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaDppRegUpdateInput": {
+        "description": "Input type for mutation updateCdaDppReg",
+        "properties": {
+          "id": {
+            "description": "ID of the DPP resgistration.",
+            "type": "string",
+            "x-go-name": "ID"
+          },
+          "uri": {
+            "description": "DPP uri.",
+            "type": "string",
+            "x-go-name": "URI"
+          }
+        },
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaImageListResponse": {
+        "properties": {
+          "count": {
+            "description": "Count of items returned.",
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "Count"
+          },
+          "items": {
+            "description": "List of Images.",
+            "items": {
+              "$ref": "#/components/schemas/CdaImageResponse"
+            },
+            "type": "array",
+            "x-go-name": "Items"
+          }
+        },
+        "title": "Represents the response for query listCdaImage.",
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaImageResponse": {
+        "properties": {
+          "description": {
+            "description": "Description of the image.",
+            "type": "string",
+            "x-go-name": "Description"
+          },
+          "fileName": {
+            "description": "Name of the uploaded file, including its extension.",
+            "type": "string",
+            "x-go-name": "FileName"
+          },
+          "filePath": {
+            "description": "Name of the uploaded file, including its extension.",
+            "type": "string",
+            "x-go-name": "FilePath"
+          },
+          "fileSize": {
+            "description": "Size of the file in bytes.",
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "FileSize"
+          },
+          "imageID": {
+            "description": "Unique identifier for the image ID",
+            "type": "string",
+            "x-go-name": "ImageID"
+          },
+          "mimeType": {
+            "description": "MIME type of the file, e.g., image/jpeg or image/png.",
+            "type": "string",
+            "x-go-name": "MimeType"
+          },
+          "referencedBy": {
+            "description": "A list of entities (by ID or name) that reference or use this image.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "x-go-name": "ReferencedBy"
+          },
+          "uploadedAt": {
+            "description": "Timestamp of when the image was uploaded.",
+            "type": "string",
+            "x-go-name": "UploadedAt"
+          },
+          "uploadedBy": {
+            "description": "Identifier of the user who uploaded the image.",
+            "type": "string",
+            "x-go-name": "UploadedBy"
+          }
+        },
+        "title": "Represents Information about an image.",
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaJobResponse": {
+        "description": "Represents Information about a job",
+        "properties": {
+          "completedAt": {
+            "description": "Timestamp when the job was completed (ISO 8601 format)",
+            "type": "string",
+            "x-go-name": "CompletedAt"
+          },
+          "createdAt": {
+            "description": "Timestamp when the job was created (ISO 8601 format)",
+            "type": "string",
+            "x-go-name": "CreatedAt"
+          },
+          "duplicateCount": {
+            "description": "Number of duplicate records",
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "DuplicateCount"
+          },
+          "errorArgs": {
+            "description": "Error args to format error string",
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "x-go-name": "ErrorArgs"
+          },
+          "errorCode": {
+            "description": "Error code for the job",
+            "type": "string",
+            "x-go-name": "ErrorCode"
+          },
+          "errorCount": {
+            "description": "Number of records that encountered errors",
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "ErrorCount"
+          },
+          "errorMessage": {
+            "description": "Error message for the job",
+            "type": "string",
+            "x-go-name": "ErrorMessage"
+          },
+          "id": {
+            "description": "Unique identifier for the job",
+            "type": "string",
+            "x-go-name": "ID"
+          },
+          "identityStoreID": {
+            "description": "Identity store associated with the Named MPSK authentication profile",
+            "type": "string",
+            "x-go-name": "IdentityStoreID"
+          },
+          "lastUpdatedAt": {
+            "description": "Timestamp when the job was last updated (ISO 8601 format)",
+            "type": "string",
+            "x-go-name": "LastUpdatedAt"
+          },
+          "progressPercentage": {
+            "description": "Indicates the progress of the job",
+            "format": "double",
+            "type": "number",
+            "x-go-name": "ProgressPercentage"
+          },
+          "status": {
+            "$ref": "#/components/schemas/CdaJobStatus"
+          },
+          "successCount": {
+            "description": "Number of records that have been processed successfully",
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "SuccessCount"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CdaJobType"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaJobStatus": {
+        "description": "Represents status of a job",
+        "type": "string",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaJobType": {
+        "description": "Supported cda job types",
+        "type": "string",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaJobsResponse": {
+        "description": "Represents the response for query listCdaJobs",
+        "properties": {
+          "count": {
+            "description": "Count of items returned.",
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "Count"
+          },
+          "items": {
+            "description": "List of Jobs.",
+            "items": {
+              "$ref": "#/components/schemas/CdaJobResponse"
+            },
+            "type": "array",
+            "x-go-name": "Items"
+          },
+          "next": {
+            "description": "Cursor to the next page.",
+            "type": "string",
+            "x-go-name": "Next"
+          },
+          "total": {
+            "description": "Total items available.",
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "Total"
+          }
+        },
+        "required": [
+          "count",
+          "items"
+        ],
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaMacRegInput": {
+        "description": "Input type for mutation createCdaMacReg",
+        "properties": {
+          "displayName": {
+            "description": "MAC Registration display Name",
+            "type": "string",
+            "x-go-name": "DisplayName"
+          },
+          "enable": {
+            "description": "Enable or disable the created mac account",
+            "type": "boolean",
+            "x-go-name": "Enable"
+          },
+          "macAddress": {
+            "description": "Mac address of the MAC Registration.",
+            "type": "string",
+            "x-go-name": "MacAddress"
+          },
+          "staticTags": {
+            "description": "List of static tag names associated with this MAC registration.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "x-go-name": "StaticTags"
+          }
+        },
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaMacRegResponse": {
+        "description": "Represents the response for mutation createCdaMacReg & updateCdaMacReg",
+        "properties": {
+          "autoCreated": {
+            "description": "Whether the MAC was created by system(true) or admin(false).",
+            "type": "boolean",
+            "x-go-name": "AutoCreated"
+          },
+          "createdAt": {
+            "description": "Creation time of the MAC address entity.",
+            "type": "string",
+            "x-go-name": "CreatedAt"
+          },
+          "displayName": {
+            "description": "MAC Registration display name.",
+            "type": "string",
+            "x-go-name": "DisplayName"
+          },
+          "enable": {
+            "description": "Whether the MAC account is enabled or disabled.",
+            "type": "boolean",
+            "x-go-name": "Enable"
+          },
+          "id": {
+            "description": "ID of the MAC registraton.",
+            "type": "string",
+            "x-go-name": "ID"
+          },
+          "macAddress": {
+            "description": "MAC address of the MAC Registration.",
+            "type": "string",
+            "x-go-name": "MacAddress"
+          },
+          "modifiedAt": {
+            "description": "Modification time of the MAC address entity.",
+            "type": "string",
+            "x-go-name": "ModifiedAt"
+          },
+          "staticTags": {
+            "description": "List of static tag names associated with this MAC registration.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "x-go-name": "StaticTags"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CdaResourceType"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaMacRegUpdateInput": {
+        "description": "Input type for mutation updateCdaMacReg",
+        "properties": {
+          "displayName": {
+            "description": "Display Name of the Mac device",
+            "type": "string",
+            "x-go-name": "DisplayName"
+          },
+          "enable": {
+            "description": "Enable or disable the Mac device",
+            "type": "boolean",
+            "x-go-name": "Enable"
+          },
+          "id": {
+            "description": "ID of the Mac device.",
+            "type": "string",
+            "x-go-name": "ID"
+          },
+          "macAddress": {
+            "description": "Mac address of the Mac device.",
+            "type": "string",
+            "x-go-name": "MacAddress"
+          },
+          "staticTags": {
+            "description": "List of static tag names associated with this MAC registration.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "x-go-name": "StaticTags"
+          }
+        },
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaMacRegsResponse": {
+        "description": "Represents the response for query listCdaMacRegs",
+        "properties": {
+          "count": {
+            "description": "Count of items returned.",
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "Count"
+          },
+          "items": {
+            "description": "List of MAC Registrations.",
+            "items": {
+              "$ref": "#/components/schemas/CdaMacRegResponse"
+            },
+            "type": "array",
+            "x-go-name": "Items"
+          },
+          "macs": {
+            "description": "List of MAC Registrations.",
+            "items": {
+              "$ref": "#/components/schemas/CdaMacRegResponse"
+            },
+            "type": "array",
+            "x-go-name": "Macs"
+          },
+          "next": {
+            "description": "Cursor to the next page.",
+            "type": "string",
+            "x-go-name": "Next"
+          },
+          "page": {
+            "$ref": "#/components/schemas/CdaPage"
+          },
+          "total": {
+            "description": "Total items available.",
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "Total"
+          }
+        },
+        "required": [
+          "count",
+          "items"
+        ],
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaNamedMpskInput": {
+        "description": "CreateNamedMPSKInput represents the input for creating a Named MPSK",
+        "properties": {
+          "enable": {
+            "description": "Status of this named MPSK configuration. Can only be enabled or disabled.",
+            "type": "boolean",
+            "x-go-name": "Enable"
+          },
+          "name": {
+            "description": "Name to identify the MPSK (e.g., example@domain.com)",
+            "type": "string",
+            "x-go-name": "Name"
+          },
+          "network": {
+            "description": "Network ssid of the named MPSK configuration",
+            "type": "string",
+            "x-go-name": "Network"
+          },
+          "passwordPolicy": {
+            "description": "The password policy for the named MPSK configuration",
+            "enum": [
+              "WORDS",
+              "ALPHANUMERIC"
+            ],
+            "type": "string",
+            "x-go-name": "PasswordPolicy"
+          },
+          "userRole": {
+            "description": "Aruba Role to be assigned to device connected using this MPSK password.",
+            "type": "string",
+            "x-go-name": "UserRole"
+          }
+        },
+        "type": "object",
+        "x-go-name": "CreateNamedMPSKInput",
+        "x-go-package": "cdaservice/nbapi"
+      },
+      "CdaNamedMpskResponse": {
+        "description": "Response type for mutation createCdaNamedMpsk & updateCdaNamedMpsk",
+        "properties": {
+          "createdAt": {
+            "description": "Creation time of the MPSK entity.",
+            "type": "string",
+            "x-go-name": "CreatedAt"
+          },
+          "enable": {
+            "description": "Status of this named MPSK configuration. Can only be enabled or disabled.",
+            "type": "boolean",
+            "x-go-name": "Enable"
+          },
+          "id": {
+            "description": "ID of the named MPSK.",
+            "type": "string",
+            "x-go-name": "ID"
+          },
+          "modifiedAt": {
+            "description": "Modification time of the MPSK entity.",
+            "type": "string",
+            "x-go-name": "ModifiedAt"
+          },
+          "mpsk": {
+            "description": "The password to be used to connect.",
+            "type": "string",
+            "x-go-name": "Mpsk"
+          },
+          "name": {
+            "description": "Name of mpsk entity",
+            "type": "string",
+            "x-go-name": "Name"
+          },
+          "network": {
+            "description": "Name of the CG network, this named MPSK belongs to.",
+            "type": "string",
+            "x-go-name": "Network"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CdaResourceType"
+          },
+          "userRole": {
+            "description": "Aruba Role to be assigned to device connected using this MPSK",
+            "type": "string",
+            "x-go-name": "UserRole"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaNamedMpskUpdateInput": {
+        "description": "Input type for mutation updateCdaNamedMpsk",
+        "properties": {
+          "enable": {
+            "description": "Status of this named MPSK configuration. Can only be enabled or disabled.",
+            "type": "boolean",
+            "x-go-name": "Enable"
+          },
+          "id": {
+            "description": "ID of NamedMpsk entity",
+            "type": "string",
+            "x-go-name": "ID"
+          },
+          "name": {
+            "description": "Name to identify the mpsk",
+            "type": "string",
+            "x-go-name": "Name"
+          },
+          "userRole": {
+            "description": "Aruba Role to be assigned to device connected using this MPSK password.",
+            "type": "string",
+            "x-go-name": "UserRole"
+          }
+        },
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaNamedMpsksResponse": {
+        "description": "Represents the response for query listCdaNamedMpsk",
+        "properties": {
+          "count": {
+            "description": "Count of items returned.",
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "Count"
+          },
+          "items": {
+            "description": "List of Named MPSKs.",
+            "items": {
+              "$ref": "#/components/schemas/CdaNamedMpskResponse"
+            },
+            "type": "array",
+            "x-go-name": "Items"
+          },
+          "mpsks": {
+            "description": "List of MPSK's.",
+            "items": {
+              "$ref": "#/components/schemas/CdaNamedMpskResponse"
+            },
+            "type": "array",
+            "x-go-name": "Mpsks"
+          },
+          "next": {
+            "description": "Cursor to the next page.",
+            "type": "string",
+            "x-go-name": "Next"
+          },
+          "page": {
+            "$ref": "#/components/schemas/CdaPage"
+          },
+          "total": {
+            "description": "Total items available.",
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "Total"
+          }
+        },
+        "required": [
+          "count",
+          "items"
+        ],
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaPage": {
+        "description": "Deprecated: Please use the fields found on the root level of response instead\nof the these fields nested in CdaPage.",
+        "properties": {
+          "count": {
+            "description": "Number of returned items",
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "Count"
+          },
+          "cursor": {
+            "description": "A cursor that points to a specific position in the dataset, used for pagination",
+            "type": "string",
+            "x-go-name": "Cursor"
+          },
+          "limit": {
+            "description": "Specifies the number of results to be returned",
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "Limit"
+          }
+        },
+        "title": "Represents a CdaPage structure.",
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaPolicyRuleUsage": {
+        "description": "Represents a policy, rule, and optionally a condition where a static tag is used",
+        "properties": {
+          "conditionID": {
+            "description": "Optional: Condition ID",
+            "type": "string",
+            "x-go-name": "ConditionID"
+          },
+          "policyID": {
+            "description": "Optional: Policy ID",
+            "type": "string",
+            "x-go-name": "PolicyID"
+          },
+          "policyName": {
+            "description": "Name of the policy",
+            "type": "string",
+            "x-go-name": "PolicyName"
+          },
+          "ruleID": {
+            "description": "Optional: Rule ID",
+            "type": "string",
+            "x-go-name": "RuleID"
+          },
+          "ruleName": {
+            "description": "Name of the rule within the policy",
+            "type": "string",
+            "x-go-name": "RuleName"
+          }
+        },
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaResourceType": {
+        "title": "Available resource types that are served by CDA's Service APIs.",
+        "type": "string",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaRevokeCertInput": {
+        "properties": {
+          "certs": {
+            "description": "List of certs having single or more than one cert objects",
+            "items": {
+              "$ref": "#/components/schemas/CdaCertInfoObj"
+            },
+            "type": "array",
+            "x-go-name": "Certs"
+          },
+          "upn": {
+            "description": "User principal name",
+            "type": "string",
+            "x-go-name": "Upn"
+          }
+        },
+        "title": "Input type for revokeCert.",
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaRevokeCertResponse": {
+        "description": "Represents the response for revoking a single cert",
+        "properties": {
+          "certIssuerDer": {
+            "description": "Certificate Issuer Der",
+            "type": "string",
+            "x-go-name": "CertIssuerDer"
+          },
+          "certSerialNum": {
+            "description": "Certificate serial num",
+            "type": "string",
+            "x-go-name": "CertSerialNum"
+          },
+          "certSubjectDer": {
+            "description": "Certificate subject Der",
+            "type": "string",
+            "x-go-name": "CertSubjectDer"
+          },
+          "revoked": {
+            "description": "revoked is true if the cert was freshly revoked. Will be false if the cert was already revoked.",
+            "type": "boolean",
+            "x-go-name": "Revoked"
+          }
+        },
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaRevokeCertsResponse": {
+        "description": "Represents the response for revoking a list of certs",
+        "properties": {
+          "count": {
+            "description": "Count of items returned.",
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "Count"
+          },
+          "items": {
+            "description": "List of revoke cert responses",
+            "items": {
+              "$ref": "#/components/schemas/CdaRevokeCertResponse"
+            },
+            "type": "array",
+            "x-go-name": "Items"
+          }
+        },
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaStaticTagUsage": {
+        "description": "Represents usage of a single static tag",
+        "properties": {
+          "isUsed": {
+            "description": "Whether this tag is used in any policy",
+            "type": "boolean",
+            "x-go-name": "IsUsed"
+          },
+          "macDeviceCount": {
+            "description": "Number of MAC devices associated with this tag",
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "MacDeviceCount"
+          },
+          "tagName": {
+            "description": "Name of the static tag",
+            "type": "string",
+            "x-go-name": "TagName"
+          },
+          "usages": {
+            "description": "List of policy-rule combinations using this tag",
+            "items": {
+              "$ref": "#/components/schemas/CdaPolicyRuleUsage"
+            },
+            "type": "array",
+            "x-go-name": "Usages"
+          }
+        },
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaStaticTagsUsageInput": {
+        "description": "Input for checking if static tags are used in any policy rules",
+        "properties": {
+          "includeMacDeviceCounts": {
+            "description": "Whether to include MAC device counts from Cloud Guest.\nIf neither includePolicyUsage nor includeMacDeviceCounts is specified, both are returned by default.",
+            "type": "boolean",
+            "x-go-name": "IncludeMacDeviceCounts"
+          },
+          "includePolicyUsage": {
+            "description": "Whether to include policy usage information\nIf neither includePolicyUsage nor includeMacDeviceCounts is specified, both are returned by default.",
+            "type": "boolean",
+            "x-go-name": "IncludePolicyUsage"
+          },
+          "tagNames": {
+            "description": "Static tag name list to check static tags usage",
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "x-go-name": "TagNames"
+          }
+        },
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaStaticTagsUsageResponse": {
+        "description": "Maps tag names to their usage in policies and rules.",
+        "properties": {
+          "tagUsages": {
+            "description": "List of static tag usages",
+            "items": {
+              "$ref": "#/components/schemas/CdaStaticTagUsage"
+            },
+            "type": "array",
+            "x-go-name": "TagUsages"
+          },
+          "tagsInUse": {
+            "description": "Number of tags that are used in policies",
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "TagsInUse"
+          }
+        },
+        "title": "Response for static tag validation query.",
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaUserCertResponse": {
+        "description": "Represents the response for query listCdaUserCerts",
+        "properties": {
+          "deviceDescription": {
+            "description": "A short description of the device this certificate was issued to.",
+            "type": "string",
+            "x-go-name": "DeviceDescription"
+          },
+          "deviceIdentifier": {
+            "description": "Unique identifier for the device this certificate was issued to.",
+            "type": "string",
+            "x-go-name": "DeviceIdentifier"
+          },
+          "id": {
+            "description": "ID of the certificate.",
+            "type": "string",
+            "x-go-name": "ID"
+          },
+          "issuer": {
+            "description": "User certificate issuer name.",
+            "type": "string",
+            "x-go-name": "Issuer"
+          },
+          "issuerDer": {
+            "description": "User certificate issuer in DER form, hex encoded.",
+            "type": "string",
+            "x-go-name": "IssuerDer"
+          },
+          "revokedAt": {
+            "description": "Time when the user certificate was revoked",
+            "type": "string",
+            "x-go-name": "RevokedAt"
+          },
+          "revokedBy": {
+            "description": "User certificate revoked by whom.",
+            "type": "string",
+            "x-go-name": "RevokedBy"
+          },
+          "serial": {
+            "description": "User certificate serial number.",
+            "type": "string",
+            "x-go-name": "Serial"
+          },
+          "subject": {
+            "description": "User certificate subject name.",
+            "type": "string",
+            "x-go-name": "Subject"
+          },
+          "subjectDer": {
+            "description": "User certificate subject in DER form, hex encoded.",
+            "type": "string",
+            "x-go-name": "SubjectDer"
+          },
+          "validFrom": {
+            "description": "User certificate valid from.",
+            "type": "string",
+            "x-go-name": "ValidFrom"
+          },
+          "validTo": {
+            "description": "User certificate valid till.",
+            "type": "string",
+            "x-go-name": "ValidTo"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaUserCertsResponse": {
+        "description": "Represents the response for query listCdaUserCerts",
+        "properties": {
+          "count": {
+            "description": "Count of items returned.",
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "Count"
+          },
+          "items": {
+            "description": "List of User Certificates.",
+            "items": {
+              "$ref": "#/components/schemas/CdaUserCertResponse"
+            },
+            "type": "array",
+            "x-go-name": "Items"
+          }
+        },
+        "required": [
+          "count",
+          "items"
+        ],
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaUserInput": {
+        "description": "Input type for mutation createCdaUser",
+        "properties": {
+          "authSource": {
+            "description": "Authentication source for the account",
+            "type": "string",
+            "x-go-name": "AuthSource"
+          },
+          "changeNotification": {
+            "$ref": "#/components/schemas/CdaChangeNotificationValues"
+          },
+          "companyName": {
+            "description": "The company name to associate with this account",
+            "type": "string",
+            "x-go-name": "CompanyName"
+          },
+          "displayName": {
+            "description": "User display Name",
+            "type": "string",
+            "x-go-name": "DisplayName"
+          },
+          "email": {
+            "description": "User email address",
+            "type": "string",
+            "x-go-name": "Email"
+          },
+          "enable": {
+            "description": "Enable or disable the user",
+            "type": "boolean",
+            "x-go-name": "Enable"
+          },
+          "expireAt": {
+            "description": "The date and time at which the system should expire the account by disabling it",
+            "type": "string",
+            "x-go-name": "ExpireAt"
+          },
+          "name": {
+            "description": "User name",
+            "type": "string",
+            "x-go-name": "Name"
+          },
+          "phone": {
+            "description": "User phone number in international format (ITU E.164 with \"+\" prefix; e.g. +14082345678)",
+            "type": "string",
+            "x-go-name": "Phone"
+          },
+          "vestaPasswordMethod": {
+            "$ref": "#/components/schemas/CdaVestaPasswordMethodValues"
+          },
+          "vestaPasswordParameter": {
+            "description": "Parameter to pass code generation",
+            "type": "string",
+            "x-go-name": "VestaPasswordParameter"
+          }
+        },
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaUserResponse": {
+        "description": "Response type for mutation createCdaUser & updateCdaUser",
+        "properties": {
+          "authSource": {
+            "description": "Authentication source for the account",
+            "type": "string",
+            "x-go-name": "AuthSource"
+          },
+          "companyName": {
+            "description": "The company name to associate with this account",
+            "type": "string",
+            "x-go-name": "CompanyName"
+          },
+          "createdAt": {
+            "description": "Creation time of the user account.",
+            "type": "string",
+            "x-go-name": "CreatedAt"
+          },
+          "displayName": {
+            "description": "User display name",
+            "type": "string",
+            "x-go-name": "DisplayName"
+          },
+          "email": {
+            "description": "User email address",
+            "type": "string",
+            "x-go-name": "Email"
+          },
+          "enable": {
+            "description": "Enable or disable the account",
+            "type": "boolean",
+            "x-go-name": "Enable"
+          },
+          "expireAt": {
+            "description": "The date and time at which the system should expire the account by disabling it",
+            "type": "string",
+            "x-go-name": "ExpireAt"
+          },
+          "id": {
+            "description": "ID of the user.",
+            "type": "string",
+            "x-go-name": "ID"
+          },
+          "modifiedAt": {
+            "description": "Modification time of the user account.",
+            "type": "string",
+            "x-go-name": "ModifiedAt"
+          },
+          "name": {
+            "description": "User name",
+            "type": "string",
+            "x-go-name": "Name"
+          },
+          "phone": {
+            "description": "User phone number in international format (ITU E.164 with \"+\" prefix; e.g. +14082345678)",
+            "type": "string",
+            "x-go-name": "Phone"
+          },
+          "status": {
+            "description": "Status for the account",
+            "type": "string",
+            "x-go-name": "Status"
+          }
+        },
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaUserUpdateInput": {
+        "description": "Input type for mutation updateCdaUser",
+        "properties": {
+          "authSource": {
+            "description": "Authentication source for the account",
+            "type": "string",
+            "x-go-name": "AuthSource"
+          },
+          "changeNotification": {
+            "$ref": "#/components/schemas/CdaChangeNotificationValues"
+          },
+          "companyName": {
+            "description": "The company name to associate with this account",
+            "type": "string",
+            "x-go-name": "CompanyName"
+          },
+          "displayName": {
+            "description": "Display Name of the account",
+            "type": "string",
+            "x-go-name": "DisplayName"
+          },
+          "email": {
+            "description": "User email address",
+            "type": "string",
+            "x-go-name": "Email"
+          },
+          "enable": {
+            "description": "Enable or disable the account",
+            "type": "boolean",
+            "x-go-name": "Enable"
+          },
+          "expireAt": {
+            "description": "The date and time at which the system should expire the account by disabling it",
+            "type": "string",
+            "x-go-name": "ExpireAt"
+          },
+          "id": {
+            "description": "ID of User",
+            "type": "string",
+            "x-go-name": "ID"
+          },
+          "name": {
+            "description": "User name",
+            "type": "string",
+            "x-go-name": "Name"
+          },
+          "phone": {
+            "description": "User phone number in international format (ITU E.164 with \"+\" prefix; e.g. +14082345678)",
+            "type": "string",
+            "x-go-name": "Phone"
+          },
+          "vestaPasswordMethod": {
+            "$ref": "#/components/schemas/CdaVestaPasswordMethodValues"
+          },
+          "vestaPasswordParameter": {
+            "description": "Parameter to pass code generation",
+            "type": "string",
+            "x-go-name": "VestaPasswordParameter"
+          }
+        },
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaUsersResponse": {
+        "description": "Represents the response for query listCdaUser",
+        "properties": {
+          "count": {
+            "description": "Count of items returned.",
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "Count"
+          },
+          "items": {
+            "description": "List of Users.",
+            "items": {
+              "$ref": "#/components/schemas/CdaUserResponse"
+            },
+            "type": "array",
+            "x-go-name": "Items"
+          },
+          "next": {
+            "description": "Cursor to the next page.",
+            "type": "string",
+            "x-go-name": "Next"
+          },
+          "total": {
+            "description": "Total items available.",
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "Total"
+          }
+        },
+        "required": [
+          "count",
+          "items"
+        ],
+        "type": "object",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "CdaVestaPasswordMethodValues": {
+        "type": "string",
+        "x-go-package": "cdaservice/graphql/models"
+      },
+      "ConflictError": {
+        "properties": {
+          "debugId": {
+            "description": "A unique identifier used for troubleshooting and debugging purposes.",
+            "example": "78f002e32e0cefba3d8cc94fa8179342",
+            "maxLength": 512,
+            "type": "string",
+            "x-go-name": "DebugID"
+          },
+          "errorCode": {
+            "description": "Error code representing the specific error condition.",
+            "enum": [
+              "HPE_GL_ERROR_CONFLICT"
+            ],
+            "example": "HPE_GL_ERROR_CONFLICT",
+            "maxLength": 128,
+            "type": "string",
+            "x-go-name": "ErrorCode"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP status code indicating the error type (e.g., 400 for Bad Request).",
+            "example": 409,
+            "format": "int64",
+            "maximum": 409,
+            "minimum": 409,
+            "type": "integer",
+            "x-go-name": "HTTPStatusCode"
+          },
+          "message": {
+            "description": "Error message providing more details about the error.",
+            "example": "Reason for the error",
+            "maxLength": 512,
+            "type": "string",
+            "x-go-name": "Message"
+          }
+        },
+        "required": [
+          "debugId",
+          "errorCode",
+          "httpStatusCode",
+          "message"
+        ],
+        "type": "object",
+        "x-go-package": "cdaservice/nbapi"
+      },
+      "ForbiddenError": {
+        "properties": {
+          "debugId": {
+            "description": "A unique identifier used for troubleshooting and debugging purposes.",
+            "example": "78f002e32e0cefba3d8cc94fa8179342",
+            "maxLength": 512,
+            "type": "string",
+            "x-go-name": "DebugID"
+          },
+          "errorCode": {
+            "description": "Error code representing the specific error condition.",
+            "enum": [
+              "HPE_GL_ERROR_FORBIDDEN"
+            ],
+            "example": "HPE_GL_ERROR_FORBIDDEN",
+            "maxLength": 256,
+            "type": "string",
+            "x-go-name": "ErrorCode"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP status code indicating the error type (e.g., 403 for Forbidden).",
+            "example": 403,
+            "format": "int64",
+            "maximum": 403,
+            "minimum": 403,
+            "type": "integer",
+            "x-go-name": "HTTPStatusCode"
+          },
+          "message": {
+            "description": "Error message providing more details about the error.",
+            "example": "Reason for the error",
+            "maxLength": 512,
+            "type": "string",
+            "x-go-name": "Message"
+          }
+        },
+        "required": [
+          "debugId",
+          "errorCode",
+          "httpStatusCode",
+          "message"
+        ],
+        "type": "object",
+        "x-go-package": "cdaservice/nbapi"
+      },
+      "ImageUploadResource": {
+        "properties": {
+          "file_id": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "x-go-name": "FileID"
+          }
+        },
+        "type": "object",
+        "x-go-package": "cdaservice/nbapi"
+      },
+      "InternalServerError": {
+        "properties": {
+          "debugId": {
+            "description": "A unique identifier used for troubleshooting and debugging purposes.",
+            "example": "78f002e32e0cefba3d8cc94fa8179342",
+            "maxLength": 512,
+            "type": "string",
+            "x-go-name": "DebugID"
+          },
+          "errorCode": {
+            "description": "Error code representing the specific error condition.",
+            "enum": [
+              "HPE_GL_ERROR_INTERNAL_SERVER_ERROR"
+            ],
+            "example": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+            "maxLength": 256,
+            "type": "string",
+            "x-go-name": "ErrorCode"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP status code indicating the error type (e.g., 500 for InternalServerError).",
+            "example": 500,
+            "format": "int64",
+            "maximum": 500,
+            "minimum": 500,
+            "type": "integer",
+            "x-go-name": "HTTPStatusCode"
+          },
+          "message": {
+            "description": "Error message providing more details about the error.",
+            "example": "Reason for the error",
+            "maxLength": 512,
+            "type": "string",
+            "x-go-name": "Message"
+          }
+        },
+        "required": [
+          "debugId",
+          "errorCode",
+          "httpStatusCode",
+          "message"
+        ],
+        "type": "object",
+        "x-go-package": "cdaservice/nbapi"
+      },
+      "JobResponse": {
+        "properties": {
+          "jobid": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "x-go-name": "JobIDs"
+          }
+        },
+        "type": "object",
+        "x-go-package": "cdaservice/nbapi"
+      },
+      "NotFoundError": {
+        "properties": {
+          "debugId": {
+            "description": "A unique identifier used for troubleshooting and debugging purposes.",
+            "example": "78f002e32e0cefba3d8cc94fa8179342",
+            "maxLength": 512,
+            "type": "string",
+            "x-go-name": "DebugID"
+          },
+          "errorCode": {
+            "description": "Error code representing the specific error condition.",
+            "enum": [
+              "HPE_GL_ERROR_NOT_FOUND"
+            ],
+            "example": "HPE_GL_ERROR_NOT_FOUND",
+            "maxLength": 256,
+            "type": "string",
+            "x-go-name": "ErrorCode"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP status code indicating the error type (e.g., 404 for NotFound).",
+            "example": 404,
+            "format": "int64",
+            "maximum": 404,
+            "minimum": 404,
+            "type": "integer",
+            "x-go-name": "HTTPStatusCode"
+          },
+          "message": {
+            "description": "Error message providing more details about the error.",
+            "example": "Reason for the error",
+            "maxLength": 512,
+            "type": "string",
+            "x-go-name": "Message"
+          }
+        },
+        "required": [
+          "debugId",
+          "errorCode",
+          "httpStatusCode",
+          "message"
+        ],
+        "type": "object",
+        "x-go-package": "cdaservice/nbapi"
+      },
+      "PreconditionFailedError": {
+        "properties": {
+          "debugId": {
+            "description": "A unique identifier used for troubleshooting and debugging purposes.",
+            "example": "78f002e32e0cefba3d8cc94fa8179342",
+            "maxLength": 512,
+            "type": "string",
+            "x-go-name": "DebugID"
+          },
+          "errorCode": {
+            "description": "Error code representing the specific error condition.",
+            "enum": [
+              "HPE_GL_ERROR_PRECONDITION_FAILED"
+            ],
+            "example": "HPE_GL_ERROR_PRECONDITION_FAILED",
+            "maxLength": 128,
+            "type": "string",
+            "x-go-name": "ErrorCode"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP status code indicating the error type (e.g., 400 for Bad Request).",
+            "example": 412,
+            "format": "int64",
+            "maximum": 412,
+            "minimum": 412,
+            "type": "integer",
+            "x-go-name": "HTTPStatusCode"
+          },
+          "message": {
+            "description": "Error message providing more details about the error.",
+            "example": "Reason for the error",
+            "maxLength": 512,
+            "type": "string",
+            "x-go-name": "Message"
+          }
+        },
+        "required": [
+          "debugId",
+          "errorCode",
+          "httpStatusCode",
+          "message"
+        ],
+        "type": "object",
+        "x-go-package": "cdaservice/nbapi"
+      },
+      "ServiceUnavailableError": {
+        "properties": {
+          "debugId": {
+            "description": "A unique identifier used for troubleshooting and debugging purposes.",
+            "example": "78f002e32e0cefba3d8cc94fa8179342",
+            "maxLength": 512,
+            "type": "string",
+            "x-go-name": "DebugID"
+          },
+          "errorCode": {
+            "description": "Error code representing the specific error condition.",
+            "enum": [
+              "HPE_GL_ERROR_SERVICE_UNAVAILABLE"
+            ],
+            "example": "HPE_GL_ERROR_SERVICE_UNAVAILABLE",
+            "maxLength": 256,
+            "type": "string",
+            "x-go-name": "ErrorCode"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP status code indicating the error type (e.g., 503 for ServiceUnavailableError).",
+            "example": 503,
+            "format": "int64",
+            "maximum": 503,
+            "minimum": 503,
+            "type": "integer",
+            "x-go-name": "HTTPStatusCode"
+          },
+          "message": {
+            "description": "Error message providing more details about the error.",
+            "example": "Reason for the error",
+            "maxLength": 512,
+            "type": "string",
+            "x-go-name": "Message"
+          }
+        },
+        "required": [
+          "debugId",
+          "errorCode",
+          "httpStatusCode",
+          "message"
+        ],
+        "type": "object",
+        "x-go-package": "cdaservice/nbapi"
+      },
+      "TooManyRequestsError": {
+        "properties": {
+          "debugId": {
+            "description": "A unique identifier used for troubleshooting and debugging purposes.",
+            "example": "78f002e32e0cefba3d8cc94fa8179342",
+            "maxLength": 512,
+            "type": "string",
+            "x-go-name": "DebugID"
+          },
+          "errorCode": {
+            "description": "Error code representing the specific error condition.",
+            "enum": [
+              "HPE_GL_ERROR_TOO_MANY_REQUESTS"
+            ],
+            "example": "HPE_GL_ERROR_TOO_MANY_REQUESTS",
+            "maxLength": 256,
+            "type": "string",
+            "x-go-name": "ErrorCode"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP status code indicating the error type (e.g., 429 for TooManyRequests).",
+            "example": 429,
+            "format": "int64",
+            "maximum": 429,
+            "minimum": 429,
+            "type": "integer",
+            "x-go-name": "HTTPStatusCode"
+          },
+          "message": {
+            "description": "Error message providing more details about the error.",
+            "example": "Reason for the error",
+            "maxLength": 512,
+            "type": "string",
+            "x-go-name": "Message"
+          }
+        },
+        "required": [
+          "debugId",
+          "errorCode",
+          "httpStatusCode",
+          "message"
+        ],
+        "type": "object",
+        "x-go-package": "cdaservice/nbapi"
+      },
+      "UnauthorizedError": {
+        "properties": {
+          "debugId": {
+            "description": "A unique identifier used for troubleshooting and debugging purposes.",
+            "example": "78f002e32e0cefba3d8cc94fa8179342",
+            "maxLength": 512,
+            "type": "string",
+            "x-go-name": "DebugID"
+          },
+          "errorCode": {
+            "description": "Error code representing the specific error condition.",
+            "enum": [
+              "HPE_GL_ERROR_UNAUTHORIZED"
+            ],
+            "example": "HPE_GL_ERROR_UNAUTHORIZED",
+            "maxLength": 256,
+            "type": "string",
+            "x-go-name": "ErrorCode"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP status code indicating the error type (e.g., 401 for Unauthorized).",
+            "example": 401,
+            "format": "int64",
+            "maximum": 401,
+            "minimum": 401,
+            "type": "integer",
+            "x-go-name": "HTTPStatusCode"
+          },
+          "message": {
+            "description": "Error message providing more details about the error.",
+            "example": "Reason for the error",
+            "maxLength": 512,
+            "type": "string",
+            "x-go-name": "Message"
+          }
+        },
+        "required": [
+          "debugId",
+          "errorCode",
+          "httpStatusCode",
+          "message"
+        ],
+        "type": "object",
+        "x-go-package": "cdaservice/nbapi"
+      },
+      "UploadImageFile_request": {
+        "properties": {
+          "file": {
+            "description": "The file to be uploaded",
+            "format": "binary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "type": "object"
+      },
+      "createDppRegistration_request": {
+        "properties": {
+          "input": {
+            "$ref": "#/components/schemas/CdaDppRegCreateInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "type": "object"
+      },
+      "createMacRegistration_request": {
+        "properties": {
+          "input": {
+            "$ref": "#/components/schemas/CdaMacRegInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "type": "object"
+      },
+      "createNamedMPSK_request": {
+        "properties": {
+          "input": {
+            "$ref": "#/components/schemas/CdaNamedMpskInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "type": "object"
+      },
+      "createVisitor_request": {
+        "properties": {
+          "input": {
+            "$ref": "#/components/schemas/CdaUserInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "type": "object"
+      },
+      "getStaticTagsUsage_request": {
+        "properties": {
+          "input": {
+            "$ref": "#/components/schemas/CdaStaticTagsUsageInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "type": "object"
+      },
+      "importMacCsvFile_request": {
+        "properties": {
+          "file": {
+            "description": "The file to be imported",
+            "format": "binary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "type": "object"
+      },
+      "revokeCertificates_request": {
+        "properties": {
+          "input": {
+            "$ref": "#/components/schemas/CdaRevokeCertInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "type": "object"
+      },
+      "updateDppRegistration_request": {
+        "properties": {
+          "input": {
+            "$ref": "#/components/schemas/CdaDppRegUpdateInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "type": "object"
+      },
+      "updateMacRegistration_request": {
+        "properties": {
+          "input": {
+            "$ref": "#/components/schemas/CdaMacRegUpdateInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "type": "object"
+      },
+      "updateNamedMPSK_request": {
+        "properties": {
+          "input": {
+            "$ref": "#/components/schemas/CdaNamedMpskUpdateInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "type": "object"
+      },
+      "updateVisitor_request": {
+        "properties": {
+          "input": {
+            "$ref": "#/components/schemas/CdaUserUpdateInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "OAuth2": {
+        "description": "OAuth 2.0 authentication with client credentials flow. You can also use your own access token.",
+        "flows": {
+          "clientCredentials": {
+            "scopes": {},
+            "tokenUrl": "https://sso.common.cloud.hpe.com/as/token.oauth2"
+          }
+        },
+        "type": "oauth2"
+      }
+    }
+  },
+  "info": {
+    "description": "The Central NAC Service APIs are used for managing network access control policies.",
+    "license": {
+      "name": "HPE",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "title": "Central NAC Service",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/network-config/v1alpha1/cnac-certificate": {
+      "get": {
+        "description": "This API retrieves a list of all user certificates based on the UPN. It requires a UPN as query parameter, which is a required input parameter.",
+        "operationId": "certificates",
+        "parameters": [
+          {
+            "description": "A User Principal Name (UPN) used to uniquely identify a user. (e.g. john.smith@demo.onmicrosoft.com, john.smith@okta.com)",
+            "in": "query",
+            "name": "upn",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CdaUserCertsResponse"
+                }
+              }
+            },
+            "description": "Success: The user certificates have been retrieved."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request: The request is malformed or invalid input was received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
+                }
+              }
+            },
+            "description": "Conflict. The resource already exists."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "List user certificates",
+        "tags": [
+          "User Certificate"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/cnac-certificate/revoke": {
+      "post": {
+        "description": "This API revokes one or more certificates based on certificate details or a UPN (User Principal Name).\nIf certificate details are provided, each certificate must include the issuer, serial number, and subject,\nand only the specified certificates will be revoked. Alternatively, if a UPN is provided, all certificates\nassociated with that UPN will be revoked.\n",
+        "operationId": "revokeCertificates",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/revokeCertificates_request"
+              }
+            }
+          },
+          "description": "The input object containing either the certificate details or UPN. Provide either the list of certificate\ndetails (e.g., issuer: \"CN=RootCA\", serial: \"1234567890ABCDEF\", subject: \"CN=john.doe@example.com\") to\nrevoke specific certificates or the UPN (e.g., \"john.doe@example.com\") to revoke all certificates\nassociated with that UPN. Only one of these should be provided per request.\n",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CdaRevokeCertsResponse"
+                }
+              }
+            },
+            "description": "Success. The user certificates have been revoked."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request: The request is malformed or invalid input was received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
+                }
+              }
+            },
+            "description": "Conflict. The resource already exists."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Revoke user certificates",
+        "tags": [
+          "User Certificate"
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/network-config/v1alpha1/cnac-dpp-reg": {
+      "get": {
+        "description": "This API retrieves a list of DPP registrations. The request may contain optional query parameters:\nlimit, next, offset, and search.\nThe response returns at most one page size of DPP registrations, each DPP registration is comprised\nof a DPP registration ID and DPP URI. The count and next cursor is also returned.\n",
+        "operationId": "listDppRegistrations",
+        "parameters": [
+          {
+            "description": "Maximum number of DPP registrations to return in one page.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "A pagination cursor to retrieve the next page of DPP registrations. Either next or offset can be provided, but not both. If both are provided, next takes precedence.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "An offset from the beginning of the result set to retrieve the next page of DPP registrations. Either next or offset can be provided, but not both. If both are provided, next takes precedence.",
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "A MAC address or MAC address substring with which to filter the DPP registrations.",
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CdaDppRegListResponse"
+                }
+              }
+            },
+            "description": "Success: Returns a list of DPP registrations, along with the count of DPP registrations\nreturned, and the cursor for the next page.\n"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreconditionFailedError"
+                }
+              }
+            },
+            "description": "Precondition Failed. The request has an invalid query parameter."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "List DPP registrations",
+        "tags": [
+          "DPP Registration"
+        ]
+      },
+      "post": {
+        "description": "This API registers a new DPP URI. The request contains the required DPP URI. The response returns the new DPP registration ID.",
+        "operationId": "createDppRegistration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/createDppRegistration_request"
+              }
+            }
+          },
+          "description": "An input object containing the DPP registration URI.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CdaDppRegCreateResponse"
+                }
+              }
+            },
+            "description": "Success. The DPP registration has been created. The new DPP registration ID is returned."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
+                }
+              }
+            },
+            "description": "Conflict. The DPP registration already exists for MAC address."
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreconditionFailedError"
+                }
+              }
+            },
+            "description": "Precondition Failed. The request has an invalid DPP URI."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add DPP registration",
+        "tags": [
+          "DPP Registration"
+        ],
+        "x-codegen-request-body-name": "body"
+      },
+      "put": {
+        "description": "This API updates an existing DPP registration. The request contains the required DPP registration ID to update and the required new DPP URI. The response returns the DPP registration ID and DPP URI.",
+        "operationId": "updateDppRegistration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/updateDppRegistration_request"
+              }
+            }
+          },
+          "description": "The input object containing the DPP registration ID to update and the new DPP URI.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CdaDppRegResponse"
+                }
+              }
+            },
+            "description": "Success. The DPP registration has been updated. The DPP registration ID and updated DPP URI are returned."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            },
+            "description": "DPP registration not found."
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreconditionFailedError"
+                }
+              }
+            },
+            "description": "Precondition Failed. The request has an invalid DPP registration ID or DPP URI."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update DPP registration",
+        "tags": [
+          "DPP Registration"
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/network-config/v1alpha1/cnac-dpp-reg/{id}": {
+      "delete": {
+        "description": "This API deletes a DPP registration. The request contains the required DPP registration ID to delete.",
+        "operationId": "deleteDppRegistration",
+        "parameters": [
+          {
+            "description": "A DPP registration ID to delete.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "*/*": {
+                "example": "204 No Content"
+              }
+            },
+            "description": "Success. The DPP registration has been deleted."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreconditionFailedError"
+                }
+              }
+            },
+            "description": "Precondition Failed. The request has an invalid DPP registration ID."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Delete DPP registration",
+        "tags": [
+          "DPP Registration"
+        ]
+      },
+      "get": {
+        "description": "This API retrieves a DPP registration. The request contains the required DPP registration ID to retrieve. The response returns the DPP registration ID and DPP URI.",
+        "operationId": "getDppRegistration",
+        "parameters": [
+          {
+            "description": "A DPP registration ID to retrieve.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CdaDppRegResponse"
+                }
+              }
+            },
+            "description": "Success. The DPP registration has been retrieved."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            },
+            "description": "DPP registration not found."
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreconditionFailedError"
+                }
+              }
+            },
+            "description": "Precondition Failed. The request has an invalid DPP registration ID."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get a DPP registration",
+        "tags": [
+          "DPP Registration"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/cnac-image": {
+      "get": {
+        "description": "This API lists all uploaded images.",
+        "operationId": "ListImages",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CdaImageListResponse"
+                }
+              }
+            },
+            "description": "Success. List of images with metadata retrieved."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "List images",
+        "tags": [
+          "Image"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/cnac-image/download/{image-id}": {
+      "get": {
+        "description": "This API downloads an image from Central NAC.",
+        "operationId": "StreamDownloadImageFile",
+        "parameters": [
+          {
+            "description": "The ID of the image to be downloaded",
+            "in": "path",
+            "name": "image-id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Success. The image file has been downloaded."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            },
+            "description": "File not found."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Download image file",
+        "tags": [
+          "Image"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/cnac-image/upload": {
+      "post": {
+        "description": "This API uploads an image to Central NAC. This image can be used to customize Web Portals. Maximum size is 5MB.",
+        "operationId": "UploadImageFile",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadImageFile_request"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageUploadResource"
+                }
+              }
+            },
+            "description": "Success. The image file has been uploaded."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Upload image file",
+        "tags": [
+          "Image"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/cnac-image/{image-id}": {
+      "get": {
+        "description": "This API retrieves the metadata of an uploaded image.",
+        "operationId": "GetImageMetadata",
+        "parameters": [
+          {
+            "description": "Image ID.",
+            "in": "path",
+            "name": "image-id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "A file name suggestion for the downloaded file",
+            "in": "query",
+            "name": "suggest-name",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CdaImageListResponse"
+                }
+              }
+            },
+            "description": "Success. The image metadata has been retrieved."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            },
+            "description": "File not found."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get image details",
+        "tags": [
+          "Image"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/cnac-job": {
+      "get": {
+        "description": "This API lists import/export jobs with optional filters.",
+        "operationId": "ListCdaJobs",
+        "parameters": [
+          {
+            "description": "A type of job to filter on.",
+            "in": "query",
+            "name": "jobtype",
+            "schema": {
+              "enum": [
+                "MAC_EXPORT",
+                "MAC_IMPORT",
+                "MPSK_EXPORT",
+                "MPSK_IMPORT",
+                "VISITOR_EXPORT"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of registered jobs to be returned. Allowed range is 1 to 30.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 30,
+              "maximum": 30,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "A pagination cursor for the next page of resources.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "A zero-based resource offset from which to start the response.",
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "A search value to filter job results.",
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The sort expression is a field name followed by a direction indicator asc (ascending) or desc (descending).\nThe first value in the expression defines the sort field and the second defines the sort order. If\nexpression is not specified, the default expression is 'createdAt desc'.\nSupported fields are macAddress, name, enable, userRole, displayName, createdAt and modifiedAt.\nExample: macAddress asc\n",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CdaJobsResponse"
+                }
+              }
+            },
+            "description": "Success. The job details have been retrieved."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            },
+            "description": "Job was not found."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "List jobs",
+        "tags": [
+          "Job"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/cnac-job/{job-id}": {
+      "delete": {
+        "description": "This API deletes and terminates an import or export job.",
+        "operationId": "deleteCdaJob",
+        "parameters": [
+          {
+            "description": "A job ID from an import or export operation.",
+            "in": "path",
+            "name": "job-id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "*/*": {
+                "example": "204 No Content"
+              }
+            },
+            "description": "Success. The job has been deleted."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Authorization information is missing or invalid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            },
+            "description": "Job was not found."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Terminate job",
+        "tags": [
+          "Job"
+        ]
+      },
+      "get": {
+        "description": "\nThis API is used to start the download of the result file from a prior export operation.\n",
+        "operationId": "StreamDownloadResultFile",
+        "parameters": [
+          {
+            "description": "The job id from a prior export operation.",
+            "in": "path",
+            "name": "job-id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The file name suggestion for downloaded file",
+            "in": "query",
+            "name": "suggest-name",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Success. The result file has been downloaded."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request - the request is malformed or invalid."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Authorization information is missing or invalid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden - not permitted to perform this action."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            },
+            "description": "File not found."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "API rate limit exceeded - too many requests in a given period."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error - unexpected error occurred on the server."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable - the server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Download result file",
+        "tags": [
+          "Job"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/cnac-job/{job-id}/error": {
+      "get": {
+        "description": "\nThis API is used to start the download of the error file from a prior import operation.\n",
+        "operationId": "StreamDownloadErrorFile",
+        "parameters": [
+          {
+            "description": "The job id from a prior import operation.",
+            "in": "path",
+            "name": "job-id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The file name suggestion for downloaded file",
+            "in": "query",
+            "name": "suggest-name",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Success. The error file has been downloaded."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request - the request is malformed or invalid."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Authorization information is missing or invalid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden - not permitted to perform this action."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            },
+            "description": "File not found."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "API rate limit exceeded - too many requests in a given period."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error - unexpected error occurred on the server."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable - the server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Download error file",
+        "tags": [
+          "Job"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/cnac-job/{job-id}/input": {
+      "get": {
+        "description": "\nThis API is used to start the download of the input file from a prior import operation.\n",
+        "operationId": "StreamDownloadInputFile",
+        "parameters": [
+          {
+            "description": "The job id from a prior import operation.",
+            "in": "path",
+            "name": "job-id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The file name suggestion for downloaded file",
+            "in": "query",
+            "name": "suggest-name",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Success. The input file has been downloaded."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request - the request is malformed or invalid."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Authorization information is missing or invalid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden - not permitted to perform this action."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            },
+            "description": "File not found."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "API rate limit exceeded - too many requests in a given period."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error - unexpected error occurred on the server."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable - the server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Download input file",
+        "tags": [
+          "Job"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/cnac-job/{job-id}/status": {
+      "get": {
+        "description": "This API is used to get the detail of an import or export operation based on job id.",
+        "operationId": "getCdaJob",
+        "parameters": [
+          {
+            "description": "A job ID from an import or export operation.",
+            "in": "path",
+            "name": "job-id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CdaJobsResponse"
+                }
+              }
+            },
+            "description": "Success. The job details have been retrieved."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request - the request is malformed or invalid."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Authorization information is missing or invalid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden - not permitted to perform this action."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            },
+            "description": "Job was not found."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "API rate limit exceeded - too many requests in a given period."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error - unexpected error occurred on the server."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable - the server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get job status",
+        "tags": [
+          "Job"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/cnac-mac-reg": {
+      "get": {
+        "description": "This API retrieves a list of MAC registrations.",
+        "operationId": "getMacRegistrations",
+        "parameters": [
+          {
+            "description": "Denotes the maximum number of registered macs returned in the response. The default value is 50.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 50,
+              "maximum": 1000,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the pagination cursor for the next page of resources.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The zero-based resource offset to start the response from.",
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The search value to filter the results on MAC registrations.",
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The sort expression is a field name followed by a direction indicator asc (ascending) or desc (descending).\nThe first value in the expression defines the sort field and the second defines the sort order. If\nexpression is not specified, the default expression is 'createdAt asc'.\nSupported fields are macAddress, displayName, createdAt and modifiedAt.\nExample: macAddress asc\n",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CdaMacRegsResponse"
+                }
+              }
+            },
+            "description": "Success. Returns list of registered MACs along with their details and associated pagination information."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "List MAC registrations",
+        "tags": [
+          "MAC Registration"
+        ]
+      },
+      "post": {
+        "description": "This API registers a new MAC address to allow network access.",
+        "operationId": "createMacRegistration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/createMacRegistration_request"
+              }
+            }
+          },
+          "description": "The input object containing the MAC registration details.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CdaMacRegResponse"
+                }
+              }
+            },
+            "description": "Success. The MAC registration has been created."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
+                }
+              }
+            },
+            "description": "Conflict. The resource already exists."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add MAC registration",
+        "tags": [
+          "MAC Registration"
+        ],
+        "x-codegen-request-body-name": "body"
+      },
+      "put": {
+        "description": "This API updates the display name for the registered MAC address.",
+        "operationId": "updateMacRegistration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/updateMacRegistration_request"
+              }
+            }
+          },
+          "description": "The input object containing the display name for MAC address.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CdaMacRegResponse"
+                }
+              }
+            },
+            "description": "Success. The MAC registration has been updated."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update MAC registration",
+        "tags": [
+          "MAC Registration"
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/network-config/v1alpha1/cnac-mac-reg/export": {
+      "get": {
+        "description": "This API exports the MAC csv file from Central NAC.",
+        "operationId": "exportMacCsvFile",
+        "parameters": [
+          {
+            "description": "The sort expression is a field name followed by a direction indicator asc (ascending) or desc (descending).\nThe first value in the expression defines the sort field and the second defines the sort order. If\nexpression is not specified, the default expression is 'createdAt asc'.\nSupported fields are macAddress, displayName, createdAt and modifiedAt.\nExample: macAddress asc\n",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The search string to filter the results.",
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Success. The file has been downloaded."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            },
+            "description": "File not found."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Export MAC csv file",
+        "tags": [
+          "MAC Registration"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/cnac-mac-reg/import": {
+      "post": {
+        "description": "This API imports MAC csv file into Central NAC.",
+        "operationId": "importMacCsvFile",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/importMacCsvFile_request"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            },
+            "description": "Success. The file has been imported and the import job has started."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            },
+            "description": "File not found."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          },
+          "default": {
+            "content": {},
+            "description": "Unexpected error - An unspecified error occurred."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Import MAC csv file",
+        "tags": [
+          "MAC Registration"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/cnac-mac-reg/{id}": {
+      "delete": {
+        "description": "This API deletes the registered MAC address to disallow network access.",
+        "operationId": "deleteMacRegistration",
+        "parameters": [
+          {
+            "description": "The ID of the MAC Address",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "*/*": {
+                "example": "204 No Content"
+              }
+            },
+            "description": "Success. The MAC address has been deleted."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            },
+            "description": "Client not found."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Delete MAC registration",
+        "tags": [
+          "MAC Registration"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/cnac-named-mpsk-reg": {
+      "get": {
+        "description": "This API retrieves a list of Named MPSK registrations.",
+        "operationId": "getNamedMPSK",
+        "parameters": [
+          {
+            "description": "Denotes the maximum number of registered named MPSKs to be returned. The default value is 50.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 50,
+              "maximum": 1000,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the pagination cursor for the next page of resources.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The zero-based resource offset to start the response from.",
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The network SSID of the named MPSK configuration.",
+            "in": "query",
+            "name": "network",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The search value to filter the results on Named MPSK registrations.",
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The sort expression is a field name followed by a direction indicator asc (ascending) or desc (descending).\nThe first value in the expression defines the sort field and the second defines the sort order. If\nexpression is not specified, the default expression is 'createdAt asc'.\nSupported fields are name, enable, userRole, createdAt and modifiedAt.\nExample: name asc\n",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CdaNamedMpsksResponse"
+                }
+              }
+            },
+            "description": "Success. Returns list of registered named MPSKs along with their details and associated\npagination information.\n"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "List Named MPSK registrations",
+        "tags": [
+          "MPSK Registration"
+        ]
+      },
+      "post": {
+        "description": "This API registers a Named MPSK configuration to allow network access.",
+        "operationId": "createNamedMPSK",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/createNamedMPSK_request"
+              }
+            }
+          },
+          "description": "The input object containing the Named MPSK config details.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CdaNamedMpskResponse"
+                }
+              }
+            },
+            "description": "Success. The Named MPSK configuration has been created."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
+                }
+              }
+            },
+            "description": "Conflict. The resource already exists."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add Named MPSK registration",
+        "tags": [
+          "MPSK Registration"
+        ],
+        "x-codegen-request-body-name": "body"
+      },
+      "put": {
+        "description": "This API updates the name, user role, and enable status for the registered NamedMPSK.",
+        "operationId": "updateNamedMPSK",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/updateNamedMPSK_request"
+              }
+            }
+          },
+          "description": "The input object containing the id for named MPSK.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CdaNamedMpskResponse"
+                }
+              }
+            },
+            "description": "Success. The Named MPSK registration has been updated."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update Named MPSK registration",
+        "tags": [
+          "MPSK Registration"
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/network-config/v1alpha1/cnac-named-mpsk-reg/export": {
+      "get": {
+        "description": "This API exports the Named MPSK csv file from Central NAC.",
+        "operationId": "exportNamedMPSKCsvFile",
+        "parameters": [
+          {
+            "description": "This field is mandatory for MPSK import.\nIt is used to retrieve the network and the password policy.\n",
+            "in": "query",
+            "name": "identity-store-id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The sort expression is a field name followed by a direction indicator asc (ascending) or desc (descending).\nThe first value in the expression defines the sort field and the second defines the sort order. If\nexpression is not specified, the default expression is 'createdAt asc'.\nSupported fields are name, enable, userRole, createdAt and modifiedAt.\nExample: name asc\n",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The search string to filter the results.",
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Success. The file has been exported."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            },
+            "description": "File not found."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Export Named MPSK csv file",
+        "tags": [
+          "MPSK Registration"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/cnac-named-mpsk-reg/import": {
+      "post": {
+        "description": "This API imports the Named MPSK csv file into Central NAC.",
+        "operationId": "importNamedMPSKCsvFile",
+        "parameters": [
+          {
+            "description": "This field is mandatory for MPSK import. It is used to retrieve the network and the password policy.",
+            "in": "query",
+            "name": "identity-store-id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/importMacCsvFile_request"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            },
+            "description": "Success. The file has been uploaded and the import job has started."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            },
+            "description": "File not found."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Import Named MPSK csv file",
+        "tags": [
+          "MPSK Registration"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/cnac-named-mpsk-reg/{id}": {
+      "delete": {
+        "description": "This API deletes the registered NamedMPSK to disallow network access.",
+        "operationId": "deleteNamedMPSK",
+        "parameters": [
+          {
+            "description": "The ID of the Named MPSK",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "*/*": {
+                "example": "204 No Content"
+              }
+            },
+            "description": "Success. The Named MPSK has been deleted."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            },
+            "description": "Client not found."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Delete Named MPSK registration",
+        "tags": [
+          "MPSK Registration"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/cnac-static-tags/usage": {
+      "post": {
+        "description": "This API retrieves usage information for static tags, including policy usage and MAC device counts.",
+        "operationId": "getStaticTagsUsage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/getStaticTagsUsage_request"
+              }
+            }
+          },
+          "description": "The input object containing the static tags usage query parameters.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CdaStaticTagsUsageResponse"
+                }
+              }
+            },
+            "description": "Success. Returns usage information for the requested static tags."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get static tags usage information",
+        "tags": [
+          "Static Tags"
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/network-config/v1alpha1/cnac-visitor": {
+      "get": {
+        "description": "This API retrieves a list of Visitor accounts.",
+        "operationId": "getVisitors",
+        "parameters": [
+          {
+            "description": "Denotes the maximum number of registered visitors to be returned. The default value is 50.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 50,
+              "maximum": 1000,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the pagination cursor for the next page of resources.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The zero-based resource offset to start the response from.",
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The search value to filter the results on Visitor accounts.",
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The sort expression is a field name followed by a direction indicator asc (ascending) or desc (descending).\nThe first value in the expression defines the sort field and the second defines the sort order. If\nexpression is not specified, the default expression is 'createdAt asc'.\nSupported fields are name, displayName, createdAt and modifiedAt.\nExample: name asc\n",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CdaUsersResponse"
+                }
+              }
+            },
+            "description": "Success. Returns list of registered visitors along with their details and\nassociated pagination information.\n"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "List visitor accounts",
+        "tags": [
+          "Visitor"
+        ]
+      },
+      "post": {
+        "description": "This API creates a new Visitor account.",
+        "operationId": "createVisitor",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/createVisitor_request"
+              }
+            }
+          },
+          "description": "The input object containing the Visitor details.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CdaUserResponse"
+                }
+              }
+            },
+            "description": "Success. The Visitor account has been created."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
+                }
+              }
+            },
+            "description": "Conflict. The resource already exists."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add visitor account",
+        "tags": [
+          "Visitor"
+        ],
+        "x-codegen-request-body-name": "body"
+      },
+      "put": {
+        "description": "This API updates fields for a given Visitor account.",
+        "operationId": "updateVisitor",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/updateVisitor_request"
+              }
+            }
+          },
+          "description": "The input object containing the attributes for the visitor account.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CdaUserResponse"
+                }
+              }
+            },
+            "description": "Success. The Visitor account has been updated."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update visitor account",
+        "tags": [
+          "Visitor"
+        ],
+        "x-codegen-request-body-name": "body"
+      }
+    },
+    "/network-config/v1alpha1/cnac-visitor/export": {
+      "get": {
+        "description": "This API exports the visitor csv file from Central NAC.",
+        "operationId": "exportVisitorCsvFile",
+        "parameters": [
+          {
+            "description": "This field is optional for Visitor export.",
+            "in": "query",
+            "name": "identity-store-id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The sort expression is a field name followed by a direction indicator asc (ascending) or desc (descending).\nThe first value in the expression defines the sort field and the second defines the sort order. If\nexpression is not specified, the default expression is 'createdAt asc'.\nSupported fields are name, displayName, createdAt and modifiedAt.\nExample: name asc\n",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The search string to filter the results.",
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Success. The file has been downloaded."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            },
+            "description": "File not found."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Export visitor csv file",
+        "tags": [
+          "Visitor"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/cnac-visitor/{id}": {
+      "delete": {
+        "description": "This API deletes the specific Visitor account.",
+        "operationId": "deleteVisitor",
+        "parameters": [
+          {
+            "description": "The ID of the Visitor",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "*/*": {
+                "example": "204 No Content"
+              }
+            },
+            "description": "Success. The Visitor account has been deleted."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BadRequestError"
+                }
+              }
+            },
+            "description": "Bad request. The request is malformed or invalid input received."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            },
+            "description": "Unauthorized access."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            },
+            "description": "Forbidden. Access is denied."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            },
+            "description": "Visitor account not found."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TooManyRequestsError"
+                }
+              }
+            },
+            "description": "Too many requests. Rate limit exceeded."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerError"
+                }
+              }
+            },
+            "description": "Internal server error."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            },
+            "description": "Service unavailable. The server is temporarily unavailable."
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Delete visitor account",
+        "tags": [
+          "Visitor"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "AccessToken": []
+    }
+  ],
+  "servers": [
+    {
+      "description": "eu",
+      "url": "https://de1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "eucentral2",
+      "url": "https://de2.api.central.arubanetworks.com"
+    },
+    {
+      "description": "eucentral3",
+      "url": "https://de3.api.central.arubanetworks.com"
+    },
+    {
+      "description": "ukwest2",
+      "url": "https://gb1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "prod",
+      "url": "https://us1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "central-prod2",
+      "url": "https://us2.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uswest4",
+      "url": "https://us4.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uswest5",
+      "url": "https://us5.api.central.arubanetworks.com"
+    },
+    {
+      "description": "us-east-1",
+      "url": "https://us6.api.central.arubanetworks.com"
+    },
+    {
+      "description": "starman",
+      "url": "https://ca1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apac",
+      "url": "https://in1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apaceast",
+      "url": "https://jp1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "apacsouth",
+      "url": "https://au1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "uaenorth1",
+      "url": "https://ae1.api.central.arubanetworks.com"
+    },
+    {
+      "description": "china-prod",
+      "url": "https://cn1.api.central.arubanetworks.com.cn"
+    },
+    {
+      "description": "internal2",
+      "url": "https://internal.api.central.arubanetworks.com"
+    }
+  ],
+  "tags": [
+    {
+      "description": "To manage MAC address operations",
+      "name": "MAC Registration"
+    },
+    {
+      "description": "To manage named MPSK operations",
+      "name": "MPSK Registration"
+    },
+    {
+      "description": "To manage visitor account operations",
+      "name": "Visitor"
+    },
+    {
+      "description": "To manage job operations",
+      "name": "Job"
+    },
+    {
+      "description": "To manage image operations",
+      "name": "Image"
+    },
+    {
+      "description": "To manage user certificate operations",
+      "name": "User Certificate"
+    },
+    {
+      "description": "To manage DPP registration operations",
+      "name": "DPP Registration"
+    },
+    {
+      "description": "To manage static tag operations",
+      "name": "Static Tags"
+    }
+  ],
+  "x-original-swagger-version": "2.0",
+  "x-readme": {
+    "explorer-enabled": true,
+    "proxy-enabled": true
+  }
+}

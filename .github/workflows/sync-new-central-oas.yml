@@ -1,0 +1,109 @@
+name: Sync New Central OAS
+
+# Pulls the Aruba New Central OpenAPI definitions from the developer hub daily
+# and opens an auto-merge PR with the refreshed vendored copies if they changed.
+#
+# Source: developer.arubanetworks.com is a ReadMe-hosted hub. Each project's API
+# reference is split across many uploaded definitions, each served as raw JSON at
+# https://developer.arubanetworks.com/<project>/openapi/<apiSetting-id>.
+# .github/scripts/fetch_aruba_oas.py discovers the ids, fetches + validates each
+# definition, and writes them under vendor/central/{mrt,config}/. **Tool
+# regeneration does NOT happen here** — the maintainer re-runs the Central
+# importer at release time so tool-surface changes are reviewed before tagging.
+#
+# Branch protection on `main` requires PRs + status checks, and the default
+# GITHUB_TOKEN cannot trigger downstream workflows on a PR it opens, so this
+# uses a fine-grained PAT (secret: MIST_SYNC_PAT — shared with the Mist sync;
+# rename to a generic OAS_SYNC_PAT and update both workflows if preferred) to
+# open the PR and enable auto-merge.
+
+on:
+  schedule:
+    # Daily at 07:00 UTC (staggered one hour after the Mist sync).
+    - cron: "0 7 * * *"
+  workflow_dispatch: # manual run via the Actions UI
+
+permissions:
+  contents: write # peter-evans needs this to push the sync branch
+  pull-requests: write # to open / update the sync PR
+  issues: write # to file an issue if the sync fails
+
+concurrency:
+  group: sync-new-central-oas
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.MIST_SYNC_PAT }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch + validate New Central OAS
+        run: python3 .github/scripts/fetch_aruba_oas.py
+
+      - name: Stamp UTC date
+        id: date
+        run: echo "today=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update sync PR
+        id: cpr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.MIST_SYNC_PAT }}
+          branch: chore/sync-new-central-oas
+          delete-branch: true
+          add-paths: |
+            vendor/central/**
+          commit-message: |
+            chore(vendor): sync New Central OAS (${{ steps.date.outputs.today }}) (auto)
+
+            Source: https://developer.arubanetworks.com (ReadMe /openapi/<id>)
+
+            Tool regeneration not run by this workflow — maintainer re-runs the
+            Central importer at release time before tagging.
+          title: "chore(vendor): sync New Central OAS"
+          body: |
+            Automated daily sync of the Aruba New Central OpenAPI definitions.
+
+            - **Source**: https://developer.arubanetworks.com (ReadMe `/openapi/<id>`)
+            - **Vendored to**: `vendor/central/mrt/` and `vendor/central/config/`
+            - Per-definition counts and provenance are in each project's
+              `_manifest.json`.
+
+            Tool regeneration is **not** triggered by this PR — the maintainer
+            re-runs the Central importer at release time so tool-surface changes
+            are reviewed before shipping.
+
+            This PR has auto-merge enabled and will merge once required status
+            checks pass.
+
+      - name: Enable auto-merge on the sync PR
+        if: steps.cpr.outputs.pull-request-number
+        run: gh pr merge --auto --squash "${{ steps.cpr.outputs.pull-request-number }}"
+        env:
+          GH_TOKEN: ${{ secrets.MIST_SYNC_PAT }}
+
+      - name: File issue on sync failure
+        if: failure()
+        run: |
+          gh issue create \
+            --title "New Central OAS sync failed on $(date -u +%Y-%m-%d)" \
+            --body "The scheduled New Central OAS sync failed today. The vendored copies under \`vendor/central/\` were NOT updated.
+
+          Possible causes:
+          - The developer hub changed how it serves definitions (the \`/openapi/<id>\` endpoint or the \`apiSetting\` discovery markers moved)
+          - A definition count dropped vs the committed \`_manifest.json\` (regression guard tripped — could be a transient fetch miss or a real upstream removal)
+          - Network failure mid-sync
+
+          Action: re-run the workflow once the hub is stable, or inspect \`.github/scripts/fetch_aruba_oas.py\` if the portal structure changed." \
+            --label "openapi-sync,central"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
