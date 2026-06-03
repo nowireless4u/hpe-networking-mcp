@@ -17,7 +17,7 @@ Tools are namespaced by platform:
 
 Two modes are supported (the `static` mode was removed in v3.0.0.0):
 
-- **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 1915 underlying tools are reachable from inside a sandboxed Python `execute()` block via `await call_tool("<platform>_invoke_tool", {"name": "<tool>", "params": {...}})` — see the in-sandbox dispatch note below; the ~1000 spec-driven Mist tools are reachable **only** through `mist_invoke_tool`, not by direct name. The smallest initial surface; best for orchestrators driving small / local LLMs.
+- **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 1917 underlying tools are reachable from inside a sandboxed Python `execute()` block via `await call_tool("<platform>_invoke_tool", {"name": "<tool>", "params": {...}})` — see the in-sandbox dispatch note below; the ~1000 spec-driven Mist tools are reachable **only** through `mist_invoke_tool`, not by direct name. The smallest initial surface; best for orchestrators driving small / local LLMs.
 - **`MCP_TOOL_MODE=dynamic`** (opt-in since v3.0.0.0; was the v2.x default) — 24 tools visible:
     - **4 cross-platform tools**: `health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`
     - **3 meta-tools per platform × 7 platforms** = 21: `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`
@@ -372,6 +372,9 @@ When asked to create a new site based on an existing site:
 - **Sites**: central_get_sites, central_get_site_health, central_get_site_name_id_mapping
   - Use `central_get_sites` for site configuration data (address, timezone, scopeName). Supports OData filter on scopeName, address, city, state, country, zipcode, collectionName.
   - Use `central_get_site_health` for health metrics and device/client counts. Pass `site_name` (string or list) to filter.
+- **Scope**: central_get_global_scope, central_get_hierarchy
+  - Use `central_get_global_scope` to get the tenant-root `scopeId` (top of the scope tree).
+  - Use `central_get_hierarchy(scope_id, scope_type)` to walk the child scopes (site-collections, sites, device-groups, devices) under a given scope. `scope_type` is one of `org`, `site-collection`, `site`, `device-group`, `device`.
 - **AP Monitoring**: central_get_aps, central_get_ap_wlans
   - Use `central_get_aps` for filtered AP listing (status, model, firmware, deployment, site). More AP-specific filters than `central_get_devices`.
   - Use `central_get_ap_wlans` to see which WLANs a specific AP is broadcasting (by serial number).

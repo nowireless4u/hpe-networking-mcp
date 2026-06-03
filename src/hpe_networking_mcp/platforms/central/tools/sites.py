@@ -1,5 +1,9 @@
+from typing import Annotated
+
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 from pycentral.new_monitoring import MonitoringSites
+from pydantic import Field
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.models import SiteData
@@ -130,3 +134,67 @@ async def central_get_site_name_id_mapping(ctx: Context) -> dict:
         )
     )
     return mapping
+
+
+@tool(annotations=READ_ONLY)
+async def central_get_global_scope(ctx: Context) -> dict | str:
+    """Get the Global scope id for the tenant.
+
+    Returns the root/global ``scopeId`` — the top of the Central scope hierarchy.
+    Use it as the ``scope_id`` (with ``scope_type='org'``) when rooting
+    ``central_get_hierarchy`` at the tenant root.
+    """
+    conn = ctx.lifespan_context["central_conn"]
+    response = retry_central_command(
+        central_conn=conn,
+        api_method="GET",
+        api_path="network-config/v1/global",
+        api_params={},
+    )
+    code = response.get("code", 0)
+    if not 200 <= code < 300:
+        msg = response.get("msg", "unknown error")
+        raise ToolError({"status_code": code or 502, "message": f"Failed to fetch global scope id: {msg}"})
+    return response.get("msg", {})
+
+
+@tool(annotations=READ_ONLY)
+async def central_get_hierarchy(
+    ctx: Context,
+    scope_id: Annotated[
+        str,
+        Field(
+            description=(
+                "scopeId of the resource to root the hierarchy at (site, "
+                "site-collection, device-group, or org). Get the tenant-root id "
+                "from central_get_global_scope."
+            ),
+        ),
+    ],
+    scope_type: Annotated[
+        str,
+        Field(
+            description=(
+                "Scope type of scope_id — one of 'org', 'site-collection', 'site', 'device-group', or 'device'."
+            ),
+        ),
+    ],
+) -> dict | str:
+    """Get the scope hierarchy rooted at a given scope.
+
+    Returns the tree of child scopes (site-collections, sites, device-groups,
+    devices) beneath the resource identified by ``scope_id`` + ``scope_type``.
+    """
+    conn = ctx.lifespan_context["central_conn"]
+    response = retry_central_command(
+        central_conn=conn,
+        api_method="GET",
+        api_path="network-config/v1/hierarchy",
+        api_params={"id": scope_id, "type": scope_type},
+    )
+    code = response.get("code", 0)
+    if not 200 <= code < 300:
+        msg = response.get("msg", "unknown error")
+        detail = f"Failed to fetch scope hierarchy for {scope_type} {scope_id!r}: {msg}"
+        raise ToolError({"status_code": code or 502, "message": detail})
+    return response.get("msg", {})

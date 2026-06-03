@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.3.7] - 2026-06-02
+
+**Patch — Central scope: add `central_get_global_scope` + `central_get_hierarchy` read tools.** Wraps the New Central Scope Management reads `GET network-config/v1/global` (tenant-root `scopeId`) and `GET network-config/v1/hierarchy` (child-scope tree for a given `scope_id` + `scope_type`: org / site-collection / site / device-group / device). Both follow the `ToolError` structured-error contract (raise on non-2xx, success returns the response body). Registered under `TOOLS["sites"]`; covered by `tests/unit/test_central_scope_hierarchy.py`. Surfaced by an OpenAPI coverage audit of the vendored Central specs (closes #402).
+
 ## [3.2.3.6] - 2026-05-29
 
 **Patch — regen sync: Mist tools against vendored spec 2604.1.2 + Central payload-schemas artifact against refreshed `api-endpoints/central/config/` snapshot.** Routine maintenance bump landing the regen output from the maintainer's release-time ritual (`uv run python scripts/regenerate_mist_tools.py` + `uv run python scripts/distill_central_config_schemas.py`). Tool count unchanged: still **1037 Mist tools**, still **613 Central tools**.
