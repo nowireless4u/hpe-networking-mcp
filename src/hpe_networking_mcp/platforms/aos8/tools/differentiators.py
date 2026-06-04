@@ -19,8 +19,8 @@ from typing import Any
 
 from fastmcp import Context
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.aos8._registry import tool
-from hpe_networking_mcp.platforms.aos8.tools import READ_ONLY
 from hpe_networking_mcp.platforms.aos8.tools._helpers import (
     format_aos8_error,
     get_object,
@@ -45,7 +45,7 @@ __all__ = [
 # ---------------------------------------------------------------------------
 
 
-@tool(name="aos8_get_md_hierarchy", annotations=READ_ONLY)
+@tool(name="aos8_get_md_hierarchy", capability=Capability.READ)
 async def aos8_get_md_hierarchy(ctx: Context) -> dict[str, Any] | str:
     """Return the Conductor → Managed Device hierarchy with config_path values.
 
@@ -68,7 +68,7 @@ async def aos8_get_md_hierarchy(ctx: Context) -> dict[str, Any] | str:
 # ---------------------------------------------------------------------------
 
 
-@tool(name="aos8_get_effective_config", annotations=READ_ONLY)
+@tool(name="aos8_get_effective_config", capability=Capability.READ)
 async def aos8_get_effective_config(
     ctx: Context,
     object_name: str,
@@ -109,7 +109,7 @@ async def aos8_get_effective_config(
 # ---------------------------------------------------------------------------
 
 
-@tool(name="aos8_get_pending_changes", annotations=READ_ONLY)
+@tool(name="aos8_get_pending_changes", capability=Capability.READ)
 async def aos8_get_pending_changes(ctx: Context) -> dict[str, Any] | str:
     """Return staged config changes not yet persisted via ``write_memory``.
 
@@ -131,7 +131,7 @@ async def aos8_get_pending_changes(ctx: Context) -> dict[str, Any] | str:
 # ---------------------------------------------------------------------------
 
 
-@tool(name="aos8_get_rf_neighbors", annotations=READ_ONLY)
+@tool(name="aos8_get_rf_neighbors", capability=Capability.READ)
 async def aos8_get_rf_neighbors(
     ctx: Context,
     ap_name: str,
@@ -163,7 +163,7 @@ async def aos8_get_rf_neighbors(
 # ---------------------------------------------------------------------------
 
 
-@tool(name="aos8_get_cluster_state", annotations=READ_ONLY)
+@tool(name="aos8_get_cluster_state", capability=Capability.READ)
 async def aos8_get_cluster_state(ctx: Context) -> dict[str, Any] | str:
     """Return AP cluster membership and master/standby state.
 
@@ -185,7 +185,7 @@ async def aos8_get_cluster_state(ctx: Context) -> dict[str, Any] | str:
 # ---------------------------------------------------------------------------
 
 
-@tool(name="aos8_get_air_monitors", annotations=READ_ONLY)
+@tool(name="aos8_get_air_monitors", capability=Capability.READ)
 async def aos8_get_air_monitors(ctx: Context) -> dict[str, Any] | str:
     """Return APs operating in air-monitor mode.
 
@@ -207,7 +207,7 @@ async def aos8_get_air_monitors(ctx: Context) -> dict[str, Any] | str:
 # ---------------------------------------------------------------------------
 
 
-@tool(name="aos8_get_ap_wired_ports", annotations=READ_ONLY)
+@tool(name="aos8_get_ap_wired_ports", capability=Capability.READ)
 async def aos8_get_ap_wired_ports(
     ctx: Context,
     ap_name: str,
@@ -233,7 +233,7 @@ async def aos8_get_ap_wired_ports(
 # ---------------------------------------------------------------------------
 
 
-@tool(name="aos8_get_ipsec_tunnels", annotations=READ_ONLY)
+@tool(name="aos8_get_ipsec_tunnels", capability=Capability.READ)
 async def aos8_get_ipsec_tunnels(ctx: Context) -> dict[str, Any] | str:
     """Return site-to-site and Remote AP IPsec tunnel state.
 
@@ -255,7 +255,7 @@ async def aos8_get_ipsec_tunnels(ctx: Context) -> dict[str, Any] | str:
 # ---------------------------------------------------------------------------
 
 
-@tool(name="aos8_get_md_health_check", annotations=READ_ONLY)
+@tool(name="aos8_get_md_health_check", capability=Capability.READ)
 async def aos8_get_md_health_check(
     ctx: Context,
     config_path: str,

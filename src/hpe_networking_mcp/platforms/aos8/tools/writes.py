@@ -1,8 +1,11 @@
 """AOS8 write tools (WRITE-01..12).
 
-All tools are gated behind ENABLE_AOS8_WRITE_TOOLS=true via the
-{"aos8_write", "aos8_write_delete"} tag set. Every tool runs through
-the elicitation middleware (confirm_write) before executing.
+Classified via ``capability=`` (see ``docs/tool-annotation-rubric.md``): the 9
+``aos8_manage_*`` tools are WRITE_DELETE; ``aos8_disconnect_client`` /
+``aos8_reboot_ap`` / ``aos8_write_memory`` are OPERATIONAL with
+``enable_gated=True``. All carry the derived ``aos8_write_delete`` enable tag,
+so all are gated behind ENABLE_AOS8_WRITE_TOOLS=true, and every tool runs
+through the elicitation middleware (confirm_write) before executing.
 
 Every tool except aos8_write_memory returns:
     {"result": <api response>, "requires_write_memory_for": [<config_path>]}
@@ -19,16 +22,13 @@ import httpx
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.aos8._registry import tool
 from hpe_networking_mcp.platforms.aos8.client import AOS8APIError, AOS8AuthError
 from hpe_networking_mcp.platforms.aos8.tools._helpers import format_aos8_error, post_object, strip_meta
-
-WRITE_DELETE = ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True)
-WRITE = ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True)
 
 _ACTION_MAP = {"create": "add", "update": "modify", "delete": "delete"}
 
@@ -88,7 +88,7 @@ async def _post_managed_object(
     return {"result": result, "requires_write_memory_for": [config_path]}
 
 
-@tool(name="aos8_manage_ssid_profile", annotations=WRITE_DELETE, tags={"aos8_write", "aos8_write_delete"})
+@tool(name="aos8_manage_ssid_profile", capability=Capability.WRITE_DELETE)
 async def aos8_manage_ssid_profile(
     ctx: Context,
     config_path: _ConfigPath,
@@ -116,7 +116,7 @@ async def aos8_manage_ssid_profile(
     )
 
 
-@tool(name="aos8_manage_virtual_ap", annotations=WRITE_DELETE, tags={"aos8_write", "aos8_write_delete"})
+@tool(name="aos8_manage_virtual_ap", capability=Capability.WRITE_DELETE)
 async def aos8_manage_virtual_ap(
     ctx: Context,
     config_path: _ConfigPath,
@@ -140,7 +140,7 @@ async def aos8_manage_virtual_ap(
     )
 
 
-@tool(name="aos8_manage_ap_group", annotations=WRITE_DELETE, tags={"aos8_write", "aos8_write_delete"})
+@tool(name="aos8_manage_ap_group", capability=Capability.WRITE_DELETE)
 async def aos8_manage_ap_group(
     ctx: Context,
     config_path: _ConfigPath,
@@ -164,7 +164,7 @@ async def aos8_manage_ap_group(
     )
 
 
-@tool(name="aos8_manage_user_role", annotations=WRITE_DELETE, tags={"aos8_write", "aos8_write_delete"})
+@tool(name="aos8_manage_user_role", capability=Capability.WRITE_DELETE)
 async def aos8_manage_user_role(
     ctx: Context,
     config_path: _ConfigPath,
@@ -188,7 +188,7 @@ async def aos8_manage_user_role(
     )
 
 
-@tool(name="aos8_manage_vlan", annotations=WRITE_DELETE, tags={"aos8_write", "aos8_write_delete"})
+@tool(name="aos8_manage_vlan", capability=Capability.WRITE_DELETE)
 async def aos8_manage_vlan(
     ctx: Context,
     config_path: _ConfigPath,
@@ -212,7 +212,7 @@ async def aos8_manage_vlan(
     )
 
 
-@tool(name="aos8_manage_aaa_server", annotations=WRITE_DELETE, tags={"aos8_write", "aos8_write_delete"})
+@tool(name="aos8_manage_aaa_server", capability=Capability.WRITE_DELETE)
 async def aos8_manage_aaa_server(
     ctx: Context,
     config_path: _ConfigPath,
@@ -261,7 +261,7 @@ async def aos8_manage_aaa_server(
     )
 
 
-@tool(name="aos8_manage_aaa_server_group", annotations=WRITE_DELETE, tags={"aos8_write", "aos8_write_delete"})
+@tool(name="aos8_manage_aaa_server_group", capability=Capability.WRITE_DELETE)
 async def aos8_manage_aaa_server_group(
     ctx: Context,
     config_path: _ConfigPath,
@@ -285,7 +285,7 @@ async def aos8_manage_aaa_server_group(
     )
 
 
-@tool(name="aos8_manage_acl", annotations=WRITE_DELETE, tags={"aos8_write", "aos8_write_delete"})
+@tool(name="aos8_manage_acl", capability=Capability.WRITE_DELETE)
 async def aos8_manage_acl(
     ctx: Context,
     config_path: _ConfigPath,
@@ -309,7 +309,7 @@ async def aos8_manage_acl(
     )
 
 
-@tool(name="aos8_manage_netdestination", annotations=WRITE_DELETE, tags={"aos8_write", "aos8_write_delete"})
+@tool(name="aos8_manage_netdestination", capability=Capability.WRITE_DELETE)
 async def aos8_manage_netdestination(
     ctx: Context,
     config_path: _ConfigPath,
@@ -333,7 +333,7 @@ async def aos8_manage_netdestination(
     )
 
 
-@tool(name="aos8_disconnect_client", annotations=WRITE, tags={"aos8_write"})
+@tool(name="aos8_disconnect_client", capability=Capability.OPERATIONAL, enable_gated=True)
 async def aos8_disconnect_client(
     ctx: Context,
     mac: Annotated[str, Field(description="Client MAC address (e.g. 'aa:bb:cc:dd:ee:ff').")],
@@ -362,7 +362,7 @@ async def aos8_disconnect_client(
     return {"result": result, "requires_write_memory_for": []}
 
 
-@tool(name="aos8_reboot_ap", annotations=WRITE, tags={"aos8_write"})
+@tool(name="aos8_reboot_ap", capability=Capability.OPERATIONAL, enable_gated=True)
 async def aos8_reboot_ap(
     ctx: Context,
     ap_name: Annotated[str, Field(description="AP hostname (as shown by aos8_get_ap_database).")],
@@ -388,7 +388,7 @@ async def aos8_reboot_ap(
     return {"result": result, "requires_write_memory_for": []}
 
 
-@tool(name="aos8_write_memory", annotations=WRITE, tags={"aos8_write"})
+@tool(name="aos8_write_memory", capability=Capability.OPERATIONAL, enable_gated=True)
 async def aos8_write_memory(
     ctx: Context,
     config_path: Annotated[

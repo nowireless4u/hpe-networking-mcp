@@ -18,8 +18,8 @@ from typing import Any
 
 from fastmcp import Context
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.aos8._registry import tool
-from hpe_networking_mcp.platforms.aos8.tools import READ_ONLY
 from hpe_networking_mcp.platforms.aos8.tools._helpers import (
     format_aos8_error,
     run_show,
@@ -32,7 +32,7 @@ __all__ = [
 ]
 
 
-@tool(name="aos8_get_alarms", annotations=READ_ONLY)
+@tool(name="aos8_get_alarms", capability=Capability.READ)
 async def aos8_get_alarms(ctx: Context, config_path: str = "/md") -> dict[str, Any] | str:
     """List active alarms reported by the AOS8 controller.
 
@@ -53,7 +53,7 @@ async def aos8_get_alarms(ctx: Context, config_path: str = "/md") -> dict[str, A
         return format_aos8_error(exc, "list alarms")
 
 
-@tool(name="aos8_get_audit_trail", annotations=READ_ONLY)
+@tool(name="aos8_get_audit_trail", capability=Capability.READ)
 async def aos8_get_audit_trail(ctx: Context) -> dict[str, Any] | str:
     """Fetch the AOS8 controller-wide audit trail.
 
@@ -72,7 +72,7 @@ async def aos8_get_audit_trail(ctx: Context) -> dict[str, Any] | str:
         return format_aos8_error(exc, "fetch audit trail")
 
 
-@tool(name="aos8_get_events", annotations=READ_ONLY)
+@tool(name="aos8_get_events", capability=Capability.READ)
 async def aos8_get_events(ctx: Context, config_path: str = "/md") -> dict[str, Any] | str:
     """Fetch recent events logged by the AOS8 controller.
 

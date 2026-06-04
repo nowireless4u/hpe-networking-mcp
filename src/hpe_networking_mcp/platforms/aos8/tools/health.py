@@ -14,15 +14,15 @@ from typing import Any
 
 from fastmcp import Context
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.aos8._registry import tool
-from hpe_networking_mcp.platforms.aos8.tools import READ_ONLY
 from hpe_networking_mcp.platforms.aos8.tools._helpers import (
     format_aos8_error,
     run_show,
 )
 
 
-@tool(name="aos8_get_controllers", annotations=READ_ONLY)
+@tool(name="aos8_get_controllers", capability=Capability.READ)
 async def aos8_get_controllers(ctx: Context) -> dict[str, Any] | str:
     """Return the list of controllers known to the Mobility Conductor.
 
@@ -42,7 +42,7 @@ async def aos8_get_controllers(ctx: Context) -> dict[str, Any] | str:
         return format_aos8_error(exc, "list controllers")
 
 
-@tool(name="aos8_get_ap_database", annotations=READ_ONLY)
+@tool(name="aos8_get_ap_database", capability=Capability.READ)
 async def aos8_get_ap_database(ctx: Context, config_path: str = "/md") -> dict[str, Any] | str:
     """Return the AP database for a hierarchy node.
 
@@ -62,7 +62,7 @@ async def aos8_get_ap_database(ctx: Context, config_path: str = "/md") -> dict[s
         return format_aos8_error(exc, "fetch AP database")
 
 
-@tool(name="aos8_get_active_aps", annotations=READ_ONLY)
+@tool(name="aos8_get_active_aps", capability=Capability.READ)
 async def aos8_get_active_aps(ctx: Context, config_path: str = "/md") -> dict[str, Any] | str:
     """Return the active AP table for a hierarchy node.
 
@@ -82,7 +82,7 @@ async def aos8_get_active_aps(ctx: Context, config_path: str = "/md") -> dict[st
         return format_aos8_error(exc, "list active APs")
 
 
-@tool(name="aos8_get_ap_detail", annotations=READ_ONLY)
+@tool(name="aos8_get_ap_detail", capability=Capability.READ)
 async def aos8_get_ap_detail(
     ctx: Context,
     ap_name: str | None = None,
@@ -113,7 +113,7 @@ async def aos8_get_ap_detail(
         return format_aos8_error(exc, "fetch AP details")
 
 
-@tool(name="aos8_get_bss_table", annotations=READ_ONLY)
+@tool(name="aos8_get_bss_table", capability=Capability.READ)
 async def aos8_get_bss_table(ctx: Context, config_path: str = "/md") -> dict[str, Any] | str:
     """Return the BSS table for a hierarchy node.
 
@@ -133,7 +133,7 @@ async def aos8_get_bss_table(ctx: Context, config_path: str = "/md") -> dict[str
         return format_aos8_error(exc, "fetch BSS table")
 
 
-@tool(name="aos8_get_radio_summary", annotations=READ_ONLY)
+@tool(name="aos8_get_radio_summary", capability=Capability.READ)
 async def aos8_get_radio_summary(ctx: Context, config_path: str = "/md") -> dict[str, Any] | str:
     """Return the radio summary for a hierarchy node.
 
@@ -153,7 +153,7 @@ async def aos8_get_radio_summary(ctx: Context, config_path: str = "/md") -> dict
         return format_aos8_error(exc, "fetch radio summary")
 
 
-@tool(name="aos8_get_version", annotations=READ_ONLY)
+@tool(name="aos8_get_version", capability=Capability.READ)
 async def aos8_get_version(ctx: Context) -> dict[str, Any] | str:
     """Return the running software version of the Mobility Conductor.
 
@@ -172,7 +172,7 @@ async def aos8_get_version(ctx: Context) -> dict[str, Any] | str:
         return format_aos8_error(exc, "fetch software version")
 
 
-@tool(name="aos8_get_licenses", annotations=READ_ONLY)
+@tool(name="aos8_get_licenses", capability=Capability.READ)
 async def aos8_get_licenses(ctx: Context) -> dict[str, Any] | str:
     """Return installed licenses on the Mobility Conductor.
 

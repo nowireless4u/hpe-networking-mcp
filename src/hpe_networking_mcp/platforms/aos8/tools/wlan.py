@@ -17,8 +17,8 @@ from typing import Any
 
 from fastmcp import Context
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.aos8._registry import tool
-from hpe_networking_mcp.platforms.aos8.tools import READ_ONLY
 from hpe_networking_mcp.platforms.aos8.tools._helpers import (
     format_aos8_error,
     get_object,
@@ -32,7 +32,7 @@ __all__ = [
 ]
 
 
-@tool(name="aos8_get_ssid_profiles", annotations=READ_ONLY)
+@tool(name="aos8_get_ssid_profiles", capability=Capability.READ)
 async def aos8_get_ssid_profiles(ctx: Context, config_path: str = "/md") -> dict[str, Any] | str:
     """Fetch SSID profiles defined at the given configuration node.
 
@@ -53,7 +53,7 @@ async def aos8_get_ssid_profiles(ctx: Context, config_path: str = "/md") -> dict
         return format_aos8_error(exc, "fetch SSID profiles")
 
 
-@tool(name="aos8_get_virtual_aps", annotations=READ_ONLY)
+@tool(name="aos8_get_virtual_aps", capability=Capability.READ)
 async def aos8_get_virtual_aps(ctx: Context, config_path: str = "/md") -> dict[str, Any] | str:
     """Fetch virtual-AP profiles defined at the given configuration node.
 
@@ -74,7 +74,7 @@ async def aos8_get_virtual_aps(ctx: Context, config_path: str = "/md") -> dict[s
         return format_aos8_error(exc, "fetch virtual APs")
 
 
-@tool(name="aos8_get_ap_groups", annotations=READ_ONLY)
+@tool(name="aos8_get_ap_groups", capability=Capability.READ)
 async def aos8_get_ap_groups(ctx: Context, config_path: str = "/md") -> dict[str, Any] | str:
     """Fetch AP-group definitions at the given configuration node.
 
@@ -95,7 +95,7 @@ async def aos8_get_ap_groups(ctx: Context, config_path: str = "/md") -> dict[str
         return format_aos8_error(exc, "fetch AP groups")
 
 
-@tool(name="aos8_get_user_roles", annotations=READ_ONLY)
+@tool(name="aos8_get_user_roles", capability=Capability.READ)
 async def aos8_get_user_roles(ctx: Context, config_path: str = "/md") -> dict[str, Any] | str:
     """Fetch user-role definitions at the given configuration node.
 

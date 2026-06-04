@@ -19,15 +19,15 @@ from typing import Any
 
 from fastmcp import Context
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.aos8._registry import tool
-from hpe_networking_mcp.platforms.aos8.tools import READ_ONLY
 from hpe_networking_mcp.platforms.aos8.tools._helpers import (
     format_aos8_error,
     run_show,
 )
 
 
-@tool(name="aos8_get_clients", annotations=READ_ONLY)
+@tool(name="aos8_get_clients", capability=Capability.READ)
 async def aos8_get_clients(ctx: Context, config_path: str = "/md") -> dict[str, Any] | str:
     """List all clients in the AOS8 user-table.
 
@@ -45,7 +45,7 @@ async def aos8_get_clients(ctx: Context, config_path: str = "/md") -> dict[str, 
         return format_aos8_error(exc, "list clients")
 
 
-@tool(name="aos8_find_client", annotations=READ_ONLY)
+@tool(name="aos8_find_client", capability=Capability.READ)
 async def aos8_find_client(
     ctx: Context,
     mac: str | None = None,
@@ -88,7 +88,7 @@ async def aos8_find_client(
         return format_aos8_error(exc, "find client")
 
 
-@tool(name="aos8_get_client_detail", annotations=READ_ONLY)
+@tool(name="aos8_get_client_detail", capability=Capability.READ)
 async def aos8_get_client_detail(
     ctx: Context,
     mac: str,
@@ -115,7 +115,7 @@ async def aos8_get_client_detail(
         return format_aos8_error(exc, "fetch client detail")
 
 
-@tool(name="aos8_get_client_history", annotations=READ_ONLY)
+@tool(name="aos8_get_client_history", capability=Capability.READ)
 async def aos8_get_client_history(ctx: Context, mac: str) -> dict[str, Any] | str:
     """Fetch AP association history for a client by MAC.
 

@@ -21,8 +21,8 @@ from typing import Any
 
 from fastmcp import Context
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.aos8._registry import tool
-from hpe_networking_mcp.platforms.aos8.tools import READ_ONLY
 from hpe_networking_mcp.platforms.aos8.tools._helpers import (
     format_aos8_error,
     run_show,
@@ -40,7 +40,7 @@ __all__ = [
 ]
 
 
-@tool(name="aos8_ping", annotations=READ_ONLY)
+@tool(name="aos8_ping", capability=Capability.DIAGNOSTIC)
 async def aos8_ping(ctx: Context, dest: str) -> dict[str, Any] | str:
     """Ping a target from the controller via the showcommand endpoint.
 
@@ -60,7 +60,7 @@ async def aos8_ping(ctx: Context, dest: str) -> dict[str, Any] | str:
         return format_aos8_error(exc, "ping target")
 
 
-@tool(name="aos8_traceroute", annotations=READ_ONLY)
+@tool(name="aos8_traceroute", capability=Capability.DIAGNOSTIC)
 async def aos8_traceroute(ctx: Context, dest: str) -> dict[str, Any] | str:
     """Traceroute to a target from the controller via the showcommand endpoint.
 
@@ -80,7 +80,7 @@ async def aos8_traceroute(ctx: Context, dest: str) -> dict[str, Any] | str:
         return format_aos8_error(exc, "traceroute target")
 
 
-@tool(name="aos8_show_command", annotations=READ_ONLY)
+@tool(name="aos8_show_command", capability=Capability.READ)
 async def aos8_show_command(ctx: Context, command: str) -> dict[str, Any] | str:
     """Execute an arbitrary AOS8 ``show`` command via the showcommand endpoint.
 
@@ -119,7 +119,7 @@ async def aos8_show_command(ctx: Context, command: str) -> dict[str, Any] | str:
     return strip_meta(body)
 
 
-@tool(name="aos8_get_logs", annotations=READ_ONLY)
+@tool(name="aos8_get_logs", capability=Capability.READ)
 async def aos8_get_logs(ctx: Context, count: int = 100) -> dict[str, Any] | str:
     """Return the last ``count`` lines of the controller system log.
 
@@ -144,7 +144,7 @@ async def aos8_get_logs(ctx: Context, count: int = 100) -> dict[str, Any] | str:
         return format_aos8_error(exc, "fetch system logs")
 
 
-@tool(name="aos8_get_controller_stats", annotations=READ_ONLY)
+@tool(name="aos8_get_controller_stats", capability=Capability.READ)
 async def aos8_get_controller_stats(ctx: Context) -> dict[str, Any] | str:
     """Aggregate CPU, memory, and uptime stats from the controller.
 
@@ -171,7 +171,7 @@ async def aos8_get_controller_stats(ctx: Context) -> dict[str, Any] | str:
         return format_aos8_error(exc, "fetch controller stats")
 
 
-@tool(name="aos8_get_arm_history", annotations=READ_ONLY)
+@tool(name="aos8_get_arm_history", capability=Capability.READ)
 async def aos8_get_arm_history(ctx: Context, config_path: str = "/md") -> dict[str, Any] | str:
     """Fetch ARM (Adaptive Radio Management) channel/power change history.
 
@@ -192,7 +192,7 @@ async def aos8_get_arm_history(ctx: Context, config_path: str = "/md") -> dict[s
         return format_aos8_error(exc, "fetch ARM history")
 
 
-@tool(name="aos8_get_rf_monitor", annotations=READ_ONLY)
+@tool(name="aos8_get_rf_monitor", capability=Capability.READ)
 async def aos8_get_rf_monitor(ctx: Context, config_path: str = "/md") -> dict[str, Any] | str:
     """Fetch RF monitor statistics across the AP fleet.
 

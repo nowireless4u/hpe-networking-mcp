@@ -636,46 +636,32 @@ async def test_elicitation_disabled_state_auto_accepts():
 # ---------------------------------------------------------------------------
 
 
-def test_all_write_tools_carry_aos8_write_tag():
-    """All 12 write tools must have the aos8_write tag for gating."""
+def test_all_write_tools_enable_gated_and_confirmation_tagged():
+    """All 12 write tools must be enable-gated (aos8_write_delete) and carry
+    the requires_confirmation gate tag (derived from capability=)."""
+    from hpe_networking_mcp.platforms._common.annotations import REQUIRES_CONFIRMATION
     from hpe_networking_mcp.platforms._common.tool_registry import REGISTRIES
     from hpe_networking_mcp.platforms.aos8.tools import writes  # noqa: F401
 
     aos8 = REGISTRIES["aos8"]
     for name in EXPECTED_WRITE_TOOLS:
         assert name in aos8, f"{name} not registered in REGISTRIES['aos8']"
-        assert "aos8_write" in aos8[name].tags, f"{name} missing aos8_write tag"
+        assert "aos8_write_delete" in aos8[name].tags, f"{name} missing aos8_write_delete enable tag"
+        assert REQUIRES_CONFIRMATION in aos8[name].tags, f"{name} missing requires_confirmation tag"
 
 
-def test_manage_tools_carry_aos8_write_delete_tag():
-    """WRITE-01..09 must carry aos8_write_delete; WRITE-10..12 must not."""
+def test_write_tool_capability_classification():
+    """The 9 manage_* tools classify as WRITE_DELETE; the three operational
+    tools (disconnect / reboot / write_memory) classify as OPERATIONAL."""
+    from hpe_networking_mcp.platforms._common.annotations import Capability
     from hpe_networking_mcp.platforms._common.tool_registry import REGISTRIES
     from hpe_networking_mcp.platforms.aos8.tools import writes  # noqa: F401
 
     aos8 = REGISTRIES["aos8"]
     for name in MANAGE_TOOLS:
-        assert "aos8_write_delete" in aos8[name].tags, f"{name} missing aos8_write_delete tag"
-
+        assert aos8[name].capability is Capability.WRITE_DELETE, name
     for name in {"aos8_disconnect_client", "aos8_reboot_ap", "aos8_write_memory"}:
-        assert "aos8_write_delete" not in aos8[name].tags, f"{name} should NOT have aos8_write_delete tag"
-
-
-# ---------------------------------------------------------------------------
-# Cross-cut: WRITE and WRITE_DELETE annotation constants
-# ---------------------------------------------------------------------------
-
-
-def test_writes_module_has_write_and_write_delete_constants():
-    from hpe_networking_mcp.platforms.aos8.tools.writes import WRITE, WRITE_DELETE
-
-    assert WRITE_DELETE.destructiveHint is True
-    assert WRITE.destructiveHint is False
-    assert WRITE_DELETE.readOnlyHint is False
-    assert WRITE.readOnlyHint is False
-    assert WRITE_DELETE.idempotentHint is False
-    assert WRITE.idempotentHint is False
-    assert WRITE_DELETE.openWorldHint is True
-    assert WRITE.openWorldHint is True
+        assert aos8[name].capability is Capability.OPERATIONAL, name
 
 
 # ---------------------------------------------------------------------------
