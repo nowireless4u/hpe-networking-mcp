@@ -112,12 +112,34 @@ class TestAxisModuleImports:
 
         assert callable(tool)
 
-    def test_annotation_constants_exposed(self):
-        from hpe_networking_mcp.platforms.axis.tools import READ_ONLY, WRITE, WRITE_DELETE
+    def test_capability_classification(self, axis_registry_populated):
+        """Tools classify via ``capability=``; that derives the gate tag,
+        enable tag, and capability facet (no hand-written ToolAnnotations)."""
+        from hpe_networking_mcp.platforms._common.annotations import (
+            REQUIRES_CONFIRMATION,
+            Capability,
+        )
 
-        assert READ_ONLY.readOnlyHint is True
-        assert WRITE.readOnlyHint is False
-        assert WRITE_DELETE.destructiveHint is True
+        reg = axis_registry_populated
+
+        # READ — no gate tag, no enable tag.
+        read = reg["axis_get_users"]
+        assert read.capability is Capability.READ
+        assert REQUIRES_CONFIRMATION not in read.tags
+        assert not (read.tags & {"axis_write", "axis_write_delete"})
+
+        # WRITE_DELETE (multi-action manage) — gated + enable-gated.
+        manage = reg["axis_manage_user"]
+        assert manage.capability is Capability.WRITE_DELETE
+        assert REQUIRES_CONFIRMATION in manage.tags
+        assert "axis_write_delete" in manage.tags
+
+        # OPERATIONAL + enable_gated — gated AND kept behind the write flag.
+        for op_name in ("axis_commit_changes", "axis_regenerate_connector"):
+            op = reg[op_name]
+            assert op.capability is Capability.OPERATIONAL, op_name
+            assert REQUIRES_CONFIRMATION in op.tags, op_name
+            assert "axis_write_delete" in op.tags, op_name
 
     def test_client_module_importable(self):
         # AxisClient + get_axis_client + format_http_error are all needed by

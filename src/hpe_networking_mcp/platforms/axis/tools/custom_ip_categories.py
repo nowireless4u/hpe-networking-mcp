@@ -7,13 +7,13 @@ from typing import Any
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.axis._registry import tool
 from hpe_networking_mcp.platforms.axis.client import format_http_error, get_axis_client
-from hpe_networking_mcp.platforms.axis.tools import READ_ONLY, WRITE_DELETE
 from hpe_networking_mcp.platforms.axis.tools._manage import manage_entity
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def axis_get_custom_ip_categories(
     ctx: Context,
     custom_ip_category_id: str | None = None,
@@ -40,7 +40,7 @@ async def axis_get_custom_ip_categories(
         raise ToolError({"status_code": 502, "message": f"Error fetching custom IP categories: {detail}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"axis_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def axis_manage_custom_ip_category(
     ctx: Context,
     action_type: str,

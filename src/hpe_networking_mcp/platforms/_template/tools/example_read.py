@@ -10,12 +10,12 @@ from typing import Any
 
 from fastmcp import Context
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms._template._registry import tool
 from hpe_networking_mcp.platforms._template.client import format_http_error, get_template_client
-from hpe_networking_mcp.platforms._template.tools import READ_ONLY
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def template_get_example(ctx: Context) -> list[dict[str, Any]] | str:
     """Get a list of example things from the template platform.
 

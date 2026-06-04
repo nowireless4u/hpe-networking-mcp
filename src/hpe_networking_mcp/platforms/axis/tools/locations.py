@@ -11,13 +11,13 @@ from typing import Any
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.axis._registry import tool
 from hpe_networking_mcp.platforms.axis.client import format_http_error, get_axis_client
-from hpe_networking_mcp.platforms.axis.tools import READ_ONLY, WRITE_DELETE
 from hpe_networking_mcp.platforms.axis.tools._manage import manage_entity
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def axis_get_locations(
     ctx: Context,
     location_id: str | None = None,
@@ -41,7 +41,7 @@ async def axis_get_locations(
         raise ToolError({"status_code": 502, "message": f"Error fetching locations: {detail}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def axis_get_sub_locations(
     ctx: Context,
     location_id: str,
@@ -71,7 +71,7 @@ async def axis_get_sub_locations(
         raise ToolError({"status_code": 502, "message": f"Error fetching sub-locations: {detail}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"axis_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def axis_manage_location(
     ctx: Context,
     action_type: str,
@@ -100,7 +100,7 @@ async def axis_manage_location(
     )
 
 
-@tool(annotations=WRITE_DELETE, tags={"axis_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def axis_manage_sub_location(
     ctx: Context,
     action_type: str,

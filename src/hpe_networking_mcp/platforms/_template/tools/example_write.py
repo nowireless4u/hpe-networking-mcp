@@ -21,12 +21,12 @@ from typing import Any, Literal
 from fastmcp import Context
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms._template._registry import tool
 from hpe_networking_mcp.platforms._template.client import format_http_error, get_template_client
-from hpe_networking_mcp.platforms._template.tools import WRITE, WRITE_DELETE
 
 
-@tool(annotations=WRITE_DELETE, tags={"_template_write", "_template_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def template_manage_example(
     ctx: Context,
     action_type: Literal["create", "update", "delete"],
@@ -45,16 +45,11 @@ async def template_manage_example(
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action_type == "create":
-        annotations = WRITE
         prompt = f"Template: create thing '{name}'. Confirm?"
     elif action_type == "update":
-        annotations = WRITE
         prompt = f"Template: update thing {thing_id}. Confirm?"
     else:  # delete
-        annotations = WRITE_DELETE
         prompt = f"Template: permanently DELETE thing {thing_id}. Cannot be undone. Confirm?"
-
-    _ = annotations  # variable kept for documentation symmetry; unused at runtime
 
     if not confirmed:
         decline = await confirm_write(ctx, prompt)

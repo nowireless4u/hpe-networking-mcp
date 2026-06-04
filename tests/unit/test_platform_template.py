@@ -30,21 +30,28 @@ class TestTemplateImportable:
 
         assert callable(tool)
 
-    def test_annotation_constants_exposed(self):
-        from hpe_networking_mcp.platforms._template.tools import READ_ONLY, WRITE, WRITE_DELETE
+    def test_example_tools_classified_by_capability(self):
+        """Example tools use ``capability=`` — the classification derives the
+        ToolSpec capability + the ``requires_confirmation`` gate tag."""
+        from hpe_networking_mcp.platforms._common.annotations import (
+            REQUIRES_CONFIRMATION,
+            Capability,
+        )
+        from hpe_networking_mcp.platforms._common.tool_registry import REGISTRIES
+        from hpe_networking_mcp.platforms._template.tools import (  # noqa: F401
+            example_read,
+            example_write,
+        )
 
-        # READ_ONLY is read-only, idempotent, non-destructive.
-        assert READ_ONLY.readOnlyHint is True
-        assert READ_ONLY.idempotentHint is True
-        assert READ_ONLY.destructiveHint is False
+        reg = REGISTRIES["_template"]
+        read_spec = reg["template_get_example"]
+        assert read_spec.capability is Capability.READ
+        assert REQUIRES_CONFIRMATION not in read_spec.tags
 
-        # WRITE is mutating but non-destructive.
-        assert WRITE.readOnlyHint is False
-        assert WRITE.destructiveHint is False
-
-        # WRITE_DELETE is mutating AND destructive.
-        assert WRITE_DELETE.readOnlyHint is False
-        assert WRITE_DELETE.destructiveHint is True
+        write_spec = reg["template_manage_example"]
+        assert write_spec.capability is Capability.WRITE_DELETE
+        assert REQUIRES_CONFIRMATION in write_spec.tags
+        assert "_template_write_delete" in write_spec.tags
 
     def test_example_tool_modules_importable(self):
         # The example tools are reference patterns — they must at least

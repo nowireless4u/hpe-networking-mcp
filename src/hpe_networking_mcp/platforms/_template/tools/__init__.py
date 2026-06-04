@@ -1,29 +1,8 @@
-"""Shared ToolAnnotations constants for tools in this platform.
+"""Tool modules for the template platform.
 
-Apply via the @tool decorator's ``annotations`` kwarg. MCP clients use
-these hints to decide UX (e.g. Claude Desktop's confirmation dialog
-fires for ``destructiveHint=True`` tools).
+Tools are classified with the ``capability=`` kwarg on the ``@tool`` decorator
+(see ``platforms/_template/tools/example_read.py``). That single classification
+derives the MCP annotations, the ``<platform>_write[_delete]`` enable tag, and
+the ``requires_confirmation`` gate tag — there are no hand-written
+``ToolAnnotations`` constants. See ``docs/tool-annotation-rubric.md``.
 """
-
-from mcp.types import ToolAnnotations
-
-READ_ONLY = ToolAnnotations(
-    readOnlyHint=True,
-    destructiveHint=False,
-    idempotentHint=True,
-    openWorldHint=True,
-)
-
-WRITE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=False,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)

@@ -13,12 +13,12 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.axis._registry import tool
 from hpe_networking_mcp.platforms.axis.client import format_http_error, get_axis_client
-from hpe_networking_mcp.platforms.axis.tools import READ_ONLY
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def axis_get_status(
     ctx: Context,
     entity_type: Annotated[str, Field(description="Either 'connector' or 'tunnel'.")],

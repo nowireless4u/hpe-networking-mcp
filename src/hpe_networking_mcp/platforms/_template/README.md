@@ -144,8 +144,8 @@ These patterns are uniform across every existing platform — change them in the
 
 | Concern | File | Why it's templated |
 |---|---|---|
-| Tool registry shim with `dynamic_managed` tag | `_registry.py` | Visibility transform requires this tag on every dynamic-mode tool |
-| Per-tool ToolAnnotations (`READ_ONLY` / `WRITE` / `WRITE_DELETE`) | `tools/__init__.py` | MCP clients use these to render confirmation UX |
+| Tool registry shim (built by the shared `make_tool_decorator` factory) | `_registry.py` | One shared shim — `mcp` holder + `tool = make_tool_decorator("<platform>", lambda: mcp)`. No per-platform logic to drift. |
+| Capability classification (`@tool(capability=Capability.X)`) | `tools/*.py` | One classification derives the MCP annotations, the `<platform>_write[_delete]` enable tag, and the `requires_confirmation` gate tag. See `docs/tool-annotation-rubric.md`. |
 | `register_tools(mcp, config)` + importlib loop | `__init__.py` | Single-source registration so meta-tools and Visibility both work |
 | `format_http_error` helper | `client.py` | Consistent error shape across tools |
 | `get_<platform>_client()` ctx accessor with 503 on missing client | `client.py` | Fail-fast when the platform isn't configured |
@@ -164,7 +164,7 @@ These vary legitimately and are left as comments / extension points in `client.p
 The template stays honest because `tests/unit/test_platform_template.py` imports it and asserts:
 
 - The `@tool` decorator is exported from `_registry.py`
-- `READ_ONLY`, `WRITE`, `WRITE_DELETE` are exported from `tools/__init__.py`
+- The example tools classify via `capability=` (deriving the gate tag + capability facet)
 - `register_tools(mcp, config)` exists and is callable
 - The example tool files import successfully (no broken references)
 

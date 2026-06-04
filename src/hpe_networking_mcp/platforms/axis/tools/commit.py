@@ -16,14 +16,14 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.axis._registry import tool
 from hpe_networking_mcp.platforms.axis.client import format_http_error, get_axis_client
-from hpe_networking_mcp.platforms.axis.tools import WRITE_DELETE
 
 _COMMIT_TIMEOUT = 60.0
 
 
-@tool(annotations=WRITE_DELETE, tags={"axis_write_delete"})
+@tool(capability=Capability.OPERATIONAL, enable_gated=True)
 async def axis_commit_changes(
     ctx: Context,
     confirmed: bool = False,
