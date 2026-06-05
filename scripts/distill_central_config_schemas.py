@@ -88,6 +88,9 @@ HAND_CURATED_TOOL_NAMES: dict[str, list[str]] = {
 # tool; map to the real hand-curated names instead so the schema still indexes.
 HAND_CURATED_SEGMENT_TOOL_NAMES: dict[str, list[str]] = {
     "config-assignments": ["central_get_config_assignments", "central_manage_config_assignment"],
+    # wlan-ssids lives in wireless.json (a domain file) and is hand-curated as
+    # the wlan-profile tool pair, so the generated plural formula won't reach it.
+    "wlan-ssids": ["central_get_wlan_profiles", "central_manage_wlan_profile"],
 }
 
 # Cap recursion so a self-referential or pathological schema can't blow the

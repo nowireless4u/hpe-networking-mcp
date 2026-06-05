@@ -1342,7 +1342,7 @@ to translate between Central's named/aliased config and Mist's inline config.
 |-----------|------|----------|-------------|
 | name | str | No | Specific server group name. If omitted, returns all groups. |
 
-#### `central_get_named_vlans`
+#### `central_get_named_vlan`
 
 > Get named VLAN configurations. Resolve a named VLAN (from a WLAN profile's vlan-name field) to its actual VLAN ID.
 
@@ -1478,7 +1478,7 @@ Six read-only tools for inspecting the Central scope hierarchy (Global → Site 
 |-----------|------|----------|-------------|
 | name | str | No | Specific role name. If omitted, returns all roles. |
 
-#### `central_manage_role`
+#### `central_manage_roles`
 
 > Create, update, or delete a role. Requires `ENABLE_CENTRAL_WRITE_TOOLS=true`. Roles can be shared (library) or local (scoped to a site/collection).
 
@@ -1497,45 +1497,45 @@ All tools below follow the same CRUD pattern. Read tools accept an optional `nam
 resource or omit for all. Write tools accept `name`, `action_type` (create/update/delete), `payload`,
 and optional `scope_id` + `device_function` for local (scoped) objects.
 
-#### `central_get_net_groups` / `central_manage_net_group`
+#### `central_get_net_groups` / `central_manage_net_groups`
 
 > Network groups (netdestinations) — reusable named objects defining hosts, FQDNs, subnets, IP ranges, VLANs, ports for use in ACLs and policies.
 
-#### `central_get_net_services` / `central_manage_net_service`
+#### `central_get_net_services` / `central_manage_net_services`
 
 > Network service definitions — protocol and port combinations (TCP/443, UDP/53, etc.) for identifying traffic types in policies.
 
-#### `central_get_object_groups` / `central_manage_object_group`
+#### `central_get_object_groups` / `central_manage_object_groups`
 
 > Object groups — named collections of addresses, services, or other objects for ACL references.
 
-#### `central_get_role_acls` / `central_manage_role_acl`
+#### `central_get_role_acls` / `central_manage_role_acls`
 
 > Role ACLs — access control lists with ordered permit/deny rules referencing net-groups and net-services.
 
-#### `central_get_policies` / `central_manage_policy`
+#### `central_get_policies` / `central_manage_policies`
 
 > Firewall policies — ordered rule sets that match traffic and apply actions (permit, deny, NAT, redirect, policy-based routing).
 
-#### `central_get_policy_groups` / `central_manage_policy_group`
+#### `central_get_policy_groups` / `central_manage_policy_groups`
 
-> Policy groups — define the evaluation sequence for all firewall policies. Collection-level: `central_manage_policy_group` replaces the entire evaluation order wholesale. API: `network-config/v1alpha1/policy-groups`.
+> Policy groups — define the evaluation sequence for all firewall policies. Collection-level: `central_manage_policy_groups` replaces the entire evaluation order wholesale. API: `network-config/v1alpha1/policy-groups`.
 
-#### `central_get_policy_group_entry` / `central_manage_policy_group_entry`
+#### `central_get_policy_group_list` / `central_manage_policy_group_list`
 
 > Per-entry counterparts to the collection tools above — get or create/update/delete a single policy-group-list entry by name without rewriting the whole list. Manage tool gated by `ENABLE_CENTRAL_WRITE_TOOLS=true`. API: `network-config/v1alpha1/policy-groups/policy-group/policy-group-list/{name}`.
 
-#### `central_get_role_gpids` / `central_manage_role_gpid`
+#### `central_get_role_gpids` / `central_manage_role_gpids`
 
 > Role GPIDs — map roles to policy group IDs. Controls which policy group is assigned to each role.
 
 ### Gateway Clustering (since v2.5.2.0)
 
-#### `central_get_gateway_cluster_intent_profiles` / `central_manage_gateway_cluster_intent_profile`
+#### `central_get_gw_cluster_intent_config` / `central_manage_gw_cluster_intent_config`
 
 > Read or manage Gateway Cluster Intent (GCIS) profiles — the policy/intent layer for AOS 10 gateway clusters. An intent profile bound at a scope (Global / Site Collection / Site) declares cluster behavior and Central auto-forms realized cluster profiles per the intent. Key field: `cluster-mode` (`CM_SITE` for auto-clustering at Site level, or `CM_MANUAL` to disable auto-formation). Other fields: `device-type` (persona — MOBILITY_GW, BRANCH_GW, VPNC, CAMPUS_AP, MICROBRANCH_AP, etc.), `multicast-vlan`, `heartbeat-threshold`, `coa-vrrp`, `default-gateway-mode` (1:1 redundancy), `uplink-tracking`, `uplink-sharing`, `ipv6-enable`. The realized cluster profiles for CM_SITE intents are auto-created with `auto_*` naming. Manage tool gated by `ENABLE_CENTRAL_WRITE_TOOLS=true`. API: `network-config/v1alpha1/gw-cluster-intent-config`.
 
-#### `central_get_gateway_clusters` / `central_manage_gateway_cluster`
+#### `central_get_gateway_clusters` / `central_manage_gateway_clusters`
 
 > Read or manage realized gateway cluster profiles. Each profile contains the actual member gateways (keyed by MAC, not IP — up to 12 per profile, fewer on some platforms) and runtime configuration (heartbeat, multicast VLAN, CoA-VRRP, redundancy mode). For GCIS-managed CM_SITE clusters, Central creates and maintains realized profiles automatically (`auto_*` naming). For manual (CM_MANUAL) clusters, operators create them directly here with explicit member MACs. Key field: `auto-cluster` (false for manual clusters; true is reserved for GCIS-managed). Manual cluster names cannot start with `auto_` or contain spaces. `ipv6-enable` is set-once at creation. Manage tool gated by `ENABLE_CENTRAL_WRITE_TOOLS=true`. API: `network-config/v1alpha1/gateway-clusters`.
 

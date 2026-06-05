@@ -15,7 +15,7 @@ description: |
   Policy Design + Policy Deploy).
 platforms: [central]
 tags: [central, audit, configuration, scope, drift-detection, vsg]
-tools: [central_get_scope_tree, central_get_scope_resources, central_get_effective_config, central_get_devices_in_scope, central_get_scope_diagram, central_get_config_assignments, central_get_wlan_profiles, central_get_wlans, central_get_roles, central_get_role_acls, central_get_role_gpids, central_get_policies, central_get_policy_groups, central_get_object_groups, central_get_net_services, central_get_net_groups, central_get_aliases, central_get_server_groups, central_get_named_vlans, central_get_devices, central_get_aps, central_get_sites]
+tools: [central_get_scope_tree, central_get_scope_resources, central_get_effective_config, central_get_devices_in_scope, central_get_scope_diagram, central_get_config_assignments, central_get_wlan_profiles, central_get_wlans, central_get_roles, central_get_role_acls, central_get_role_gpids, central_get_policies, central_get_policy_groups, central_get_object_groups, central_get_net_services, central_get_net_groups, central_get_aliases, central_get_server_groups, central_get_named_vlan, central_get_devices, central_get_aps, central_get_sites]
 ---
 
 # Aruba Central VSG-anchored configuration scope audit
@@ -284,7 +284,7 @@ The two-layer model (DEFINITION at Global/Collection/Site, VALUE assigned per-de
 **Tools:**
 - `central_get_wlan_profiles()` — WLAN library
 - `central_get_wlans()` — operational WLANs (sanity check)
-- `central_get_named_vlans()` — named VLAN catalog
+- `central_get_named_vlan()` — named VLAN catalog
 
 **VSG-recommended scope:** **Site** for the SMALL-CAMPUS-SITE deployment example. Larger orgs may push WLAN profiles to **Site Collection** (template-by-collection) or **Global** (all sites get the same SSID).
 

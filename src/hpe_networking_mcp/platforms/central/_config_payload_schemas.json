@@ -48607,7 +48607,7 @@
     }
    }
   },
-  "radios": {
+  "radio": {
    "fields": {
     "additional-rf-connectors-or-loss": {
      "type": "boolean"
@@ -69378,7 +69378,7 @@
   "central_get_qos_queues": "qos_queues",
   "central_get_qos_schedules": "qos_schedules",
   "central_get_qos_thresholds": "qos_thresholds",
-  "central_get_radios": "radios",
+  "central_get_radio": "radio",
   "central_get_radius_modifiers": "radius_modifiers",
   "central_get_remote_management": "remote_management",
   "central_get_rip": "rip",
@@ -69431,6 +69431,7 @@
   "central_get_vsx_config": "vsx_config",
   "central_get_vsx_profiles": "vsx_profiles",
   "central_get_vxlan": "vxlan",
+  "central_get_wlan_profiles": "wlan_ssids",
   "central_manage_aaa_profile": "aaa_profile",
   "central_manage_advanced_intelligent_forwarding": "advanced_intelligent_forwarding",
   "central_manage_airgroup_policies": "airgroup_policies",
@@ -69595,7 +69596,7 @@
   "central_manage_qos_queues": "qos_queues",
   "central_manage_qos_schedules": "qos_schedules",
   "central_manage_qos_thresholds": "qos_thresholds",
-  "central_manage_radios": "radios",
+  "central_manage_radio": "radio",
   "central_manage_radius_modifiers": "radius_modifiers",
   "central_manage_remote_management": "remote_management",
   "central_manage_rip": "rip",
@@ -69647,6 +69648,7 @@
   "central_manage_vsphere_instances": "vsphere_instances",
   "central_manage_vsx_config": "vsx_config",
   "central_manage_vsx_profiles": "vsx_profiles",
-  "central_manage_vxlan": "vxlan"
+  "central_manage_vxlan": "vxlan",
+  "central_manage_wlan_profile": "wlan_ssids"
  }
 }

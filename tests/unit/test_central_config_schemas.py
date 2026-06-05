@@ -27,9 +27,9 @@ class TestArtifact:
 
     def test_named_condition_schema_is_correct(self):
         """The exact values the failed session guessed wrong must be present."""
-        schema = lookup_payload_schema("central_manage_named_condition")
+        schema = lookup_payload_schema("central_manage_named_conditions")
         assert schema is not None
-        assert schema["object"] == "named-condition"
+        assert schema["object"] == "named_conditions"
         fields = schema["fields"]
         # rules-type real enum (model guessed ipv4/ip/acl — all wrong)
         assert "NAMED_CONDITION_IP" in fields["rules-type"]["enum"]
@@ -42,8 +42,8 @@ class TestArtifact:
         assert "dscp" in item["ip-header"]["properties"]
 
     def test_get_and_manage_share_the_same_schema(self):
-        get_schema = lookup_payload_schema("central_get_named_condition")
-        manage_schema = lookup_payload_schema("central_manage_named_condition")
+        get_schema = lookup_payload_schema("central_get_named_conditions")
+        manage_schema = lookup_payload_schema("central_manage_named_conditions")
         assert get_schema == manage_schema
 
     def test_subnet_mask_field_carries_format_hint(self):
@@ -52,17 +52,17 @@ class TestArtifact:
         network-subnet-address is dotted-mask (ipv4-subnet-mask), NOT CIDR — the
         bare `type: string` can't convey that; the format hint must.
         """
-        schema = lookup_payload_schema("central_manage_named_condition")
+        schema = lookup_payload_schema("central_manage_named_conditions")
         assert schema is not None
         item = schema["fields"]["condition-rule"]["items"]
         nsa = item["destination"]["properties"]["subnet-address"]["properties"]["network-subnet-address"]
         assert "ipv4-subnet-mask" in (nsa.get("format") or ""), nsa
 
     def test_policy_exposes_qos_type(self):
-        """central_manage_policy is unified — its type enum includes POLICY_QOS."""
-        schema = lookup_payload_schema("central_manage_policy")
+        """central_manage_policies is unified — its type enum includes POLICY_QOS."""
+        schema = lookup_payload_schema("central_manage_policies")
         assert schema is not None
-        assert schema["object"] == "policy"
+        assert schema["object"] == "policies"
         # `type` lives on the policy object (possibly nested via allOf merge)
         type_field = schema["fields"].get("type")
         assert type_field is not None
@@ -70,7 +70,7 @@ class TestArtifact:
 
     def test_long_enums_are_capped_with_count(self):
         """Catalog-sized enums are truncated but record their true length."""
-        schema = lookup_payload_schema("central_manage_policy")
+        schema = lookup_payload_schema("central_manage_policies")
         assert schema is not None
 
         def _find_capped(node):
@@ -101,7 +101,7 @@ class TestLookup:
 
     def test_hand_curated_tool_is_indexed(self):
         # policy is a hand-curated (skip-list) object; it must still resolve.
-        assert lookup_payload_schema("central_manage_policy") is not None
+        assert lookup_payload_schema("central_manage_policies") is not None
         assert lookup_payload_schema("central_get_policies") is not None
 
     @pytest.mark.parametrize(
@@ -109,13 +109,13 @@ class TestLookup:
         [
             # The hand-curated gap closed in #386 — these diverge from the
             # importer naming formula and must be explicitly mapped.
-            "central_manage_role",
+            "central_manage_roles",
             "central_manage_wlan_profile",
             "central_manage_config_assignment",
-            "central_manage_gateway_cluster",
-            "central_manage_gateway_cluster_intent_profile",
+            "central_manage_gateway_clusters",
+            "central_manage_gw_cluster_intent_config",
             # read-only hand-curated objects (GET tool maps to the schema)
-            "central_get_named_vlans",
+            "central_get_named_vlan",
             "central_get_aliases",
             "central_get_server_groups",
         ],

@@ -124,7 +124,7 @@ server, check if the host (FQDN or IP) uses an alias — if so, call \
 `central_get_aliases(alias_name=<alias>)` to resolve to the actual address.
    d. **Accounting servers**: same resolution for acct-server-group.
    e. **VLAN**: if vlan-name is set, call \
-`central_get_named_vlans(name=<vlan_name>)` to resolve the VLAN ID. \
+`central_get_named_vlan(name=<vlan_name>)` to resolve the VLAN ID. \
 If the named VLAN uses an alias, resolve via `central_get_aliases`.
 4. Call `mist_get_self(action_type=account_info)` to get org_id.
 5. For each Central WLAN profile:
@@ -187,7 +187,7 @@ call `central_get_aliases(alias_name=<alias>)` to get passphrase values.
 or acct-server-group, call `central_get_server_groups(name=<group>)` to \
 get server lists. Resolve any aliased server hosts via `central_get_aliases`.
    d. **Central named VLANs**: for profiles with vlan-name, call \
-`central_get_named_vlans(name=<vlan>)` to get VLAN IDs. Resolve any \
+`central_get_named_vlan(name=<vlan>)` to get VLAN IDs. Resolve any \
 aliased VLAN IDs via `central_get_aliases`.
    e. **Mist template variables**: for Mist WLANs with `{{variable}}` \
 patterns in auth_servers/acct_servers host fields, call \

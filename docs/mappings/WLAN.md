@@ -51,7 +51,7 @@ Central uses named VLANs. Mist uses VLAN IDs. Resolution workflow:
 
 **Central → Mist:**
 1. Get `vlan-name` from WLAN profile (e.g. "USER-VLAN")
-2. Call `central_get_named_vlans(name="USER-VLAN")` to get the named VLAN config
+2. Call `central_get_named_vlan(name="USER-VLAN")` to get the named VLAN config
 3. If the named VLAN has a VLAN ID directly → use that ID
 4. If the named VLAN uses an alias → call `central_get_aliases(alias_name=...)` to resolve
 5. In Mist: set `vlan_enabled=true`, `dynamic_vlan.enabled=true`,
@@ -407,7 +407,7 @@ platform during sync. They are not modified or deleted.
 
 1. **RADIUS server groups** — Resolved via `central_get_server_groups` tool
    (`GET /network-config/v1alpha1/server-groups/{name}`)
-2. **VLAN name→ID** — Resolved via `central_get_named_vlans` tool
+2. **VLAN name→ID** — Resolved via `central_get_named_vlan` tool
    (`GET /network-config/v1alpha1/named-vlan/{name}`). If the named VLAN
    uses an alias, resolve via `central_get_aliases`.
 3. **Captive portal** — Deferred to a future release. Portal SSIDs will be

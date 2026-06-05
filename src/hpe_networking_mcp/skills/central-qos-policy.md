@@ -59,25 +59,25 @@ tools:
   - central_list_tools
   - central_get_tool_schema
   - central_invoke_tool
-  - central_get_named_condition
-  - central_manage_named_condition
+  - central_get_named_conditions
+  - central_manage_named_conditions
   - central_get_policies
-  - central_manage_policy
-  - central_get_vlan
-  - central_manage_vlan
-  - central_get_interface_vlan
-  - central_manage_interface_vlan
-  - central_get_qos_queue
-  - central_manage_qos_queue
-  - central_get_qos_schedule
-  - central_manage_qos_schedule
+  - central_manage_policies
+  - central_get_layer2_vlan
+  - central_manage_layer2_vlan
+  - central_get_vlan_interfaces
+  - central_manage_vlan_interfaces
+  - central_get_qos_queues
+  - central_manage_qos_queues
+  - central_get_qos_schedules
+  - central_manage_qos_schedules
   - central_get_qos_global
   - central_manage_qos_global
   # Wrong-primitive detection + verification
   - central_get_role_with_policy
-  - central_manage_role
+  - central_manage_roles
   - central_get_policy_groups
-  - central_manage_policy_group_entry
+  - central_manage_policy_group_list
   - central_get_config_assignments
   - central_manage_config_assignment
   - central_get_effective_config
@@ -127,12 +127,12 @@ qos dscp-map 47 local-priority 7 color green
 
 | CLI construct | Central object | Tool |
 |---|---|---|
-| `class ip <name>` + `match`/`ignore` lines | traffic class (`named-condition`) | `central_manage_named_condition` |
-| `policy <name>` + `class … action …` | QoS marker policy (`policy`, `type: POLICY_QOS`) | `central_manage_policy` |
-| `interface vlan <id>` (the VLAN itself) | layer2 VLAN | `central_manage_vlan` |
-| `apply policy <name> routed-in` on the SVI | VLAN-interface policy bind | `central_manage_interface_vlan` |
-| `qos queue-profile <name>` + `map queue Q local-priority LP` | queue-profile (`qos-queue`) | `central_manage_qos_queue` |
-| `qos schedule-profile <name>` + `dwrr` / `wfq` / `strict` queue lines | schedule-profile (`qos-schedule`) | `central_manage_qos_schedule` |
+| `class ip <name>` + `match`/`ignore` lines | traffic class (`named-condition`) | `central_manage_named_conditions` |
+| `policy <name>` + `class … action …` | QoS marker policy (`policy`, `type: POLICY_QOS`) | `central_manage_policies` |
+| `interface vlan <id>` (the VLAN itself) | layer2 VLAN | `central_manage_layer2_vlan` |
+| `apply policy <name> routed-in` on the SVI | VLAN-interface policy bind | `central_manage_vlan_interfaces` |
+| `qos queue-profile <name>` + `map queue Q local-priority LP` | queue-profile (`qos-queue`) | `central_manage_qos_queues` |
+| `qos schedule-profile <name>` + `dwrr` / `wfq` / `strict` queue lines | schedule-profile (`qos-schedule`) | `central_manage_qos_schedules` |
 | `apply qos queue-profile X schedule-profile Y` + `qos dscp-map …` | system-wide apply + DSCP-map (`qos-global` — one named library object) | `central_manage_qos_global` |
 
 **This is a write workflow** — every create fires elicitation unless
@@ -160,7 +160,7 @@ halves are orthogonal — operators commonly push only one or the other.
    references actually persisted. A create that "succeeded" but dropped all the
    IPs is the #1 failure mode here.
 
-3. **The marker policy IS `central_manage_policy`** (`type: POLICY_QOS`) — its
+3. **The marker policy IS `central_manage_policies`** (`type: POLICY_QOS`) — its
    one-line description says "firewall policy" but `/policies` is unified. Don't
    conclude "no QoS tool exists" and fall back to a CLI template.
 
@@ -194,7 +194,7 @@ halves are orthogonal — operators commonly push only one or the other.
 
 ## Path picker — POLICY_QOS comes in two flavors
 
-Both go through `central_manage_policy`. The differentiator is one field — `association`. Same tool, two completely different deployment models.
+Both go through `central_manage_policies`. The differentiator is one field — `association`. Same tool, two completely different deployment models.
 
 | `association` | Device-side render | Where it enforces | SVI-bindable? | Use for |
 |---|---|---|---|---|
@@ -263,7 +263,7 @@ elif diagnosis["association"] == "ASSOCIATION_ROLE":
         "for transit marking.\n"
         "2) REBUILD as ASSOCIATION_INTERFACE using sections A (named-condition) "
         "+ B (POLICY_QOS with association: ASSOCIATION_INTERFACE) + C (SVI bind "
-        "via central_manage_interface_vlan policy.access-group-vlan-in).\n"
+        "via central_manage_vlan_interfaces policy.access-group-vlan-in).\n"
         "3) SCOPE-ASSIGN the layer2-vlan + vlan-interfaces objects at the "
         "scope containing the target devices (the policy itself does NOT need "
         "explicit assignment when bound through the SVI — Central pulls it in "
@@ -296,7 +296,7 @@ The `remediation` block above is the pivot to the existing sections A/B/C. **Do 
 If the operator's setup involves direct scope-assignment of a `policy` object (rare for traditional SVI-bound policies but required for role-based ones), the policy must first appear in the singleton `policy-group`'s `policy-group-list`. The CNX UI does this implicitly when the operator creates a role-based policy in the UI; via tool calls it's:
 
 ```python
-await call_tool("central_manage_policy_group_entry", {
+await call_tool("central_manage_policy_group_list", {
     "name": "<policy-name>",
     "action_type": "update",   # NOT 'create' — the container exists; 'create' returns
                                 # "Cannot create duplicate config, Module = Policy Group already exists"
@@ -305,12 +305,12 @@ await call_tool("central_manage_policy_group_entry", {
 })
 ```
 
-And on cleanup: remove the policy-group-list entry BEFORE deleting the policy itself, or `central_manage_policy(action_type='delete')` returns
+And on cleanup: remove the policy-group-list entry BEFORE deleting the policy itself, or `central_manage_policies(action_type='delete')` returns
 `"Validation failure: Policies {'<name>'} still part of Policy Group."`
 
 ## Exact shapes (live-verified)
 
-### A. Traffic class — `central_manage_named_condition`
+### A. Traffic class — `central_manage_named_conditions`
 
 `payload = {"rules-type": "NAMED_CONDITION_IP", "condition-rule": [ <rule>, … ]}`
 
@@ -359,7 +359,7 @@ Field notes:
 - `comment` lines are labels — skip them (they don't classify traffic).
 - `count` (CX) vs `log` (PVOS): use `count: true` on CX.
 
-### B. Marker policy — `central_manage_policy`
+### B. Marker policy — `central_manage_policies`
 
 ```jsonc
 {
@@ -398,9 +398,9 @@ Field notes:
 ### C. Interface/VLAN bind (only if the config has `apply policy …`)
 
 `apply policy <name> routed-in` on `interface vlan <id>`:
-1. **Create the layer2 VLAN if missing** — `central_get_vlan(vlan="<id>")`; if absent,
-   `central_manage_vlan(vlan="<id>", action_type="create", payload={"vlan": <id>})`.
-2. **Apply the policy on the SVI** — `central_manage_interface_vlan(id="<id>",
+1. **Create the layer2 VLAN if missing** — `central_get_layer2_vlan(vlan="<id>")`; if absent,
+   `central_manage_layer2_vlan(vlan="<id>", action_type="create", payload={"vlan": <id>})`.
+2. **Apply the policy on the SVI** — `central_manage_vlan_interfaces(id="<id>",
    action_type="create", payload={"id": "<id>", "policy": {"access-group-vlan-in": "<policy>"}})`.
    `access-group-vlan-in` = the **routed-in** direction on a CX SVI (`access-group-in`
    is plain `in`/bridged; `service-policy-in` is PVOS).
@@ -417,7 +417,7 @@ Quick error→cause table for the bind step:
 
 If the config has no `apply policy …` line, skip this section entirely.
 
-### D. Queue-profile — `central_manage_qos_queue`
+### D. Queue-profile — `central_manage_qos_queues`
 
 Maps local-priority (the marker's output) → hardware queue. The CLI form
 `map queue Q local-priority LP` becomes one entry per queue in a `priority`
@@ -455,7 +455,7 @@ Distiller note: `payload_schema` annotates `priority` as Switch PVOS only, but
 the inner item fields list both CX and PVOS and the API accepts the shape on CX
 (round-trip verified). Ignore the top-level annotation; trust the shape.
 
-### E. Schedule-profile — `central_manage_qos_schedule`
+### E. Schedule-profile — `central_manage_qos_schedules`
 
 Per-queue scheduling algorithm + weight (or strict + optional rate cap). The
 CLI forms `dwrr queue Q weight W` and `wfq queue Q weight W` both collapse
@@ -614,7 +614,7 @@ if ritual_needed:
 
 # 4) Edit the profile
 if status["ok"]:
-    edit_tool  = "central_manage_qos_queue" if profile_kind == "queue" else "central_manage_qos_schedule"
+    edit_tool  = "central_manage_qos_queues" if profile_kind == "queue" else "central_manage_qos_schedules"
     edit_param = "q_profile_name" if profile_kind == "queue" else "sched_profile_name"
     edit = await call_tool(edit_tool, {
         edit_param: profile_name, "action_type": "update",
@@ -671,7 +671,7 @@ play** — the rebuild step in the remediation is required.
 
 Ingress / marking half (sections A–C):
 
-1. **Pull schemas** for `central_manage_named_condition` + `central_manage_policy`
+1. **Pull schemas** for `central_manage_named_conditions` + `central_manage_policies`
    (`central_get_tool_schema`) — confirms surrounding fields/enums. The exact
    shapes above are authoritative for the parts the schema omits.
 2. **Build + validate ONE class**, then **read it back and assert** the
@@ -693,11 +693,11 @@ Ingress / marking half (sections A–C):
 
 Egress / system-wide half (sections D–F):
 
-6. **Build the queue-profile** (section D) — `central_manage_qos_queue`, read
+6. **Build the queue-profile** (section D) — `central_manage_qos_queues`, read
    back, assert every queue 0–7 is present and every local-priority 0–7 appears
    exactly once across `priorities` arrays. If the operator wants to use the
    factory queue-profile, skip this step and reference `"DEFAULT"` in step 8.
-7. **Build the schedule-profile** (section E) — `central_manage_qos_schedule`,
+7. **Build the schedule-profile** (section E) — `central_manage_qos_schedules`,
    read back, assert all queues from the queue-profile are present, the
    single-algorithm rule (only the highest-numbered queue may be `STRICT`) holds,
    and any `STRICT` queue with a cap carries either `max-bandwidth-kbps` or

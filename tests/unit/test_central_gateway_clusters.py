@@ -3,7 +3,12 @@
 Covers the read + manage tools for both the GCIS intent profiles
 (/gw-cluster-intent-config) and the realized cluster profiles
 (/gateway-clusters). Pins the API path, query-param shape (object-type +
-scope-id + device-function), and method-per-action contract.
+scope-id + device-function on writes), and method-per-action contract.
+
+These tools were regenerated from the vendor OAS as thin delegators to
+the shared ``_get_resource`` / ``_manage_resource`` helpers (which live
+in ``security_policy.py``); the patch target is therefore that shared
+module, not the per-tool module.
 """
 
 from __future__ import annotations
@@ -13,6 +18,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 pytestmark = pytest.mark.unit
+
+# Shared helpers issue the actual HTTP call; patch retry there.
+_HELPER_RETRY = "hpe_networking_mcp.platforms.central.tools.security_policy.retry_central_command"
 
 
 def _ctx() -> MagicMock:
@@ -27,65 +35,52 @@ def _ok(msg: object | None = None) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# central_get_gateway_cluster_intent_profiles
+# central_get_gw_cluster_intent_config
 # ---------------------------------------------------------------------------
 
 
 class TestGetGwClusterIntentProfiles:
-    @patch("hpe_networking_mcp.platforms.central.tools.gateway_cluster_intent.retry_central_command")
+    @patch(_HELPER_RETRY)
     async def test_list_all(self, mock_retry):
-        from hpe_networking_mcp.platforms.central.tools.gateway_cluster_intent import (
-            central_get_gateway_cluster_intent_profiles,
+        from hpe_networking_mcp.platforms.central.tools.gateway_clustering_orchestration import (
+            central_get_gw_cluster_intent_config,
         )
 
         mock_retry.return_value = _ok({"profile": [{"name": "site-default"}]})
-        await central_get_gateway_cluster_intent_profiles(_ctx())
+        await central_get_gw_cluster_intent_config(_ctx())
 
         kwargs = mock_retry.call_args.kwargs
         assert kwargs["api_method"] == "GET"
         assert kwargs["api_path"] == "network-config/v1alpha1/gw-cluster-intent-config"
-        # No name → no scope_id → no api_params
-        assert kwargs.get("api_params") is None
 
-    @patch("hpe_networking_mcp.platforms.central.tools.gateway_cluster_intent.retry_central_command")
+    @patch(_HELPER_RETRY)
     async def test_single_profile_by_name(self, mock_retry):
-        from hpe_networking_mcp.platforms.central.tools.gateway_cluster_intent import (
-            central_get_gateway_cluster_intent_profiles,
+        from hpe_networking_mcp.platforms.central.tools.gateway_clustering_orchestration import (
+            central_get_gw_cluster_intent_config,
         )
 
         mock_retry.return_value = _ok({"name": "site-default"})
-        await central_get_gateway_cluster_intent_profiles(_ctx(), name="site-default")
+        await central_get_gw_cluster_intent_config(_ctx(), name="site-default")
 
         assert (
             mock_retry.call_args.kwargs["api_path"] == "network-config/v1alpha1/gw-cluster-intent-config/site-default"
         )
 
-    @patch("hpe_networking_mcp.platforms.central.tools.gateway_cluster_intent.retry_central_command")
-    async def test_with_scope_id(self, mock_retry):
-        from hpe_networking_mcp.platforms.central.tools.gateway_cluster_intent import (
-            central_get_gateway_cluster_intent_profiles,
-        )
-
-        mock_retry.return_value = _ok([])
-        await central_get_gateway_cluster_intent_profiles(_ctx(), scope_id="123-abc")
-
-        assert mock_retry.call_args.kwargs["api_params"] == {"scope-id": "123-abc"}
-
 
 # ---------------------------------------------------------------------------
-# central_manage_gateway_cluster_intent_profile
+# central_manage_gw_cluster_intent_config
 # ---------------------------------------------------------------------------
 
 
 class TestManageGwClusterIntentProfile:
-    @patch("hpe_networking_mcp.platforms.central.tools.gateway_cluster_intent.retry_central_command")
+    @patch(_HELPER_RETRY)
     async def test_create_uses_post(self, mock_retry):
-        from hpe_networking_mcp.platforms.central.tools.gateway_cluster_intent import (
-            central_manage_gateway_cluster_intent_profile,
+        from hpe_networking_mcp.platforms.central.tools.gateway_clustering_orchestration import (
+            central_manage_gw_cluster_intent_config,
         )
 
         mock_retry.return_value = _ok()
-        result = await central_manage_gateway_cluster_intent_profile(
+        result = await central_manage_gw_cluster_intent_config(
             _ctx(),
             name="site-default",
             action_type="create",
@@ -101,14 +96,14 @@ class TestManageGwClusterIntentProfile:
         assert kwargs["api_path"] == "network-config/v1alpha1/gw-cluster-intent-config/site-default"
         assert kwargs["api_data"] == {"cluster-mode": "CM_SITE", "device-type": "MOBILITY_GW"}
 
-    @patch("hpe_networking_mcp.platforms.central.tools.gateway_cluster_intent.retry_central_command")
+    @patch(_HELPER_RETRY)
     async def test_update_uses_patch(self, mock_retry):
-        from hpe_networking_mcp.platforms.central.tools.gateway_cluster_intent import (
-            central_manage_gateway_cluster_intent_profile,
+        from hpe_networking_mcp.platforms.central.tools.gateway_clustering_orchestration import (
+            central_manage_gw_cluster_intent_config,
         )
 
         mock_retry.return_value = _ok()
-        await central_manage_gateway_cluster_intent_profile(
+        await central_manage_gw_cluster_intent_config(
             _ctx(),
             name="site-default",
             action_type="update",
@@ -120,14 +115,14 @@ class TestManageGwClusterIntentProfile:
 
         assert mock_retry.call_args.kwargs["api_method"] == "PATCH"
 
-    @patch("hpe_networking_mcp.platforms.central.tools.gateway_cluster_intent.retry_central_command")
+    @patch(_HELPER_RETRY)
     async def test_delete_uses_delete_no_payload(self, mock_retry):
-        from hpe_networking_mcp.platforms.central.tools.gateway_cluster_intent import (
-            central_manage_gateway_cluster_intent_profile,
+        from hpe_networking_mcp.platforms.central.tools.gateway_clustering_orchestration import (
+            central_manage_gw_cluster_intent_config,
         )
 
         mock_retry.return_value = _ok()
-        await central_manage_gateway_cluster_intent_profile(
+        await central_manage_gw_cluster_intent_config(
             _ctx(),
             name="site-default",
             action_type="delete",
@@ -141,14 +136,14 @@ class TestManageGwClusterIntentProfile:
         assert kwargs["api_method"] == "DELETE"
         assert kwargs.get("api_data") is None
 
-    @patch("hpe_networking_mcp.platforms.central.tools.gateway_cluster_intent.retry_central_command")
+    @patch(_HELPER_RETRY)
     async def test_scope_id_with_device_function_emits_local_params(self, mock_retry):
-        from hpe_networking_mcp.platforms.central.tools.gateway_cluster_intent import (
-            central_manage_gateway_cluster_intent_profile,
+        from hpe_networking_mcp.platforms.central.tools.gateway_clustering_orchestration import (
+            central_manage_gw_cluster_intent_config,
         )
 
         mock_retry.return_value = _ok()
-        await central_manage_gateway_cluster_intent_profile(
+        await central_manage_gw_cluster_intent_config(
             _ctx(),
             name="campus-east",
             action_type="create",
@@ -167,12 +162,12 @@ class TestManageGwClusterIntentProfile:
     async def test_invalid_action_type_raises(self):
         from fastmcp.exceptions import ToolError
 
-        from hpe_networking_mcp.platforms.central.tools.gateway_cluster_intent import (
-            central_manage_gateway_cluster_intent_profile,
+        from hpe_networking_mcp.platforms.central.tools.gateway_clustering_orchestration import (
+            central_manage_gw_cluster_intent_config,
         )
 
         with pytest.raises(ToolError) as exc_info:
-            await central_manage_gateway_cluster_intent_profile(
+            await central_manage_gw_cluster_intent_config(
                 _ctx(),
                 name="x",
                 action_type="bogus",
@@ -192,9 +187,9 @@ class TestManageGwClusterIntentProfile:
 
 
 class TestGetGatewayClusters:
-    @patch("hpe_networking_mcp.platforms.central.tools.gateway_clusters.retry_central_command")
+    @patch(_HELPER_RETRY)
     async def test_list_all(self, mock_retry):
-        from hpe_networking_mcp.platforms.central.tools.gateway_clusters import (
+        from hpe_networking_mcp.platforms.central.tools.high_availability import (
             central_get_gateway_clusters,
         )
 
@@ -205,9 +200,9 @@ class TestGetGatewayClusters:
         assert kwargs["api_method"] == "GET"
         assert kwargs["api_path"] == "network-config/v1alpha1/gateway-clusters"
 
-    @patch("hpe_networking_mcp.platforms.central.tools.gateway_clusters.retry_central_command")
+    @patch(_HELPER_RETRY)
     async def test_single_cluster_by_name(self, mock_retry):
-        from hpe_networking_mcp.platforms.central.tools.gateway_clusters import (
+        from hpe_networking_mcp.platforms.central.tools.high_availability import (
             central_get_gateway_clusters,
         )
 
@@ -218,19 +213,19 @@ class TestGetGatewayClusters:
 
 
 # ---------------------------------------------------------------------------
-# central_manage_gateway_cluster
+# central_manage_gateway_clusters
 # ---------------------------------------------------------------------------
 
 
 class TestManageGatewayCluster:
-    @patch("hpe_networking_mcp.platforms.central.tools.gateway_clusters.retry_central_command")
+    @patch(_HELPER_RETRY)
     async def test_create_manual_cluster(self, mock_retry):
-        from hpe_networking_mcp.platforms.central.tools.gateway_clusters import (
-            central_manage_gateway_cluster,
+        from hpe_networking_mcp.platforms.central.tools.high_availability import (
+            central_manage_gateway_clusters,
         )
 
         mock_retry.return_value = _ok()
-        result = await central_manage_gateway_cluster(
+        result = await central_manage_gateway_clusters(
             _ctx(),
             name="DMZ-MGW-Cluster",
             action_type="create",
@@ -251,14 +246,14 @@ class TestManageGatewayCluster:
         assert kwargs["api_data"]["auto-cluster"] is False
         assert len(kwargs["api_data"]["ipv4-gateways"]) == 2
 
-    @patch("hpe_networking_mcp.platforms.central.tools.gateway_clusters.retry_central_command")
+    @patch(_HELPER_RETRY)
     async def test_update_uses_patch(self, mock_retry):
-        from hpe_networking_mcp.platforms.central.tools.gateway_clusters import (
-            central_manage_gateway_cluster,
+        from hpe_networking_mcp.platforms.central.tools.high_availability import (
+            central_manage_gateway_clusters,
         )
 
         mock_retry.return_value = _ok()
-        await central_manage_gateway_cluster(
+        await central_manage_gateway_clusters(
             _ctx(),
             name="DMZ-MGW-Cluster",
             action_type="update",
@@ -270,14 +265,14 @@ class TestManageGatewayCluster:
 
         assert mock_retry.call_args.kwargs["api_method"] == "PATCH"
 
-    @patch("hpe_networking_mcp.platforms.central.tools.gateway_clusters.retry_central_command")
+    @patch(_HELPER_RETRY)
     async def test_delete_uses_delete_no_payload(self, mock_retry):
-        from hpe_networking_mcp.platforms.central.tools.gateway_clusters import (
-            central_manage_gateway_cluster,
+        from hpe_networking_mcp.platforms.central.tools.high_availability import (
+            central_manage_gateway_clusters,
         )
 
         mock_retry.return_value = _ok()
-        await central_manage_gateway_cluster(
+        await central_manage_gateway_clusters(
             _ctx(),
             name="DMZ-MGW-Cluster",
             action_type="delete",
@@ -291,14 +286,14 @@ class TestManageGatewayCluster:
         assert kwargs["api_method"] == "DELETE"
         assert kwargs.get("api_data") is None
 
-    @patch("hpe_networking_mcp.platforms.central.tools.gateway_clusters.retry_central_command")
+    @patch(_HELPER_RETRY)
     async def test_error_response_returns_error_status(self, mock_retry):
-        from hpe_networking_mcp.platforms.central.tools.gateway_clusters import (
-            central_manage_gateway_cluster,
+        from hpe_networking_mcp.platforms.central.tools.high_availability import (
+            central_manage_gateway_clusters,
         )
 
         mock_retry.return_value = {"code": 400, "msg": "Cluster name 'auto_x' is reserved"}
-        result = await central_manage_gateway_cluster(
+        result = await central_manage_gateway_clusters(
             _ctx(),
             name="auto_x",
             action_type="create",

@@ -26,12 +26,12 @@ def _ctx() -> MagicMock:
 
 class TestCentralManageResourceContract:
     async def test_bad_action_type_raises_structured_400(self):
-        from hpe_networking_mcp.platforms.central.tools.security_policy import (
-            central_manage_net_group,
+        from hpe_networking_mcp.platforms.central.tools.security import (
+            central_manage_net_groups,
         )
 
         with pytest.raises(ToolError) as exc_info:
-            await central_manage_net_group(
+            await central_manage_net_groups(
                 _ctx(),
                 name="x",
                 action_type="bogus",

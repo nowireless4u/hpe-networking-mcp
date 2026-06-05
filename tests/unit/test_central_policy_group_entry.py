@@ -1,6 +1,6 @@
 """Unit tests for the per-entry policy-group tools (v3.2.1.9).
 
-``central_get_policy_group_entry`` / ``central_manage_policy_group_entry``
+``central_get_policy_group_list`` / ``central_manage_policy_group_list``
 wrap the nested item path
 ``network-config/v1alpha1/policy-groups/policy-group/policy-group-list/{name}``
 via the shared ``_get_resource`` / ``_manage_resource`` helpers in
@@ -28,12 +28,12 @@ def _ctx() -> MagicMock:
 class TestGetPolicyGroupEntry:
     @patch("hpe_networking_mcp.platforms.central.tools.security_policy.retry_central_command")
     async def test_builds_nested_item_path(self, mock_cmd):
-        from hpe_networking_mcp.platforms.central.tools.security_policy_ext import (
-            central_get_policy_group_entry,
+        from hpe_networking_mcp.platforms.central.tools.roles_policy import (
+            central_get_policy_group_list,
         )
 
         mock_cmd.return_value = {"code": 200, "msg": {"name": "web-rules", "position": 1}}
-        result = await central_get_policy_group_entry(_ctx(), name="web-rules")
+        result = await central_get_policy_group_list(_ctx(), name="web-rules")
 
         kwargs = mock_cmd.call_args.kwargs
         assert kwargs["api_method"] == "GET"
@@ -44,13 +44,13 @@ class TestGetPolicyGroupEntry:
 class TestManagePolicyGroupEntry:
     @patch("hpe_networking_mcp.platforms.central.tools.security_policy.retry_central_command")
     async def test_create_posts_to_nested_item_path(self, mock_cmd):
-        from hpe_networking_mcp.platforms.central.tools.security_policy_ext import (
-            central_manage_policy_group_entry,
+        from hpe_networking_mcp.platforms.central.tools.roles_policy import (
+            central_manage_policy_group_list,
         )
 
         mock_cmd.return_value = {"code": 200, "msg": {}}
         # action_type="create" does not trigger elicitation.
-        await central_manage_policy_group_entry(
+        await central_manage_policy_group_list(
             _ctx(),
             name="web-rules",
             action_type="create",
@@ -64,13 +64,13 @@ class TestManagePolicyGroupEntry:
 
     @patch("hpe_networking_mcp.platforms.central.tools.security_policy.retry_central_command")
     async def test_delete_uses_delete_method(self, mock_cmd):
-        from hpe_networking_mcp.platforms.central.tools.security_policy_ext import (
-            central_manage_policy_group_entry,
+        from hpe_networking_mcp.platforms.central.tools.roles_policy import (
+            central_manage_policy_group_list,
         )
 
         mock_cmd.return_value = {"code": 200, "msg": {}}
         # confirmed=True bypasses the elicitation prompt for non-create actions.
-        await central_manage_policy_group_entry(
+        await central_manage_policy_group_list(
             _ctx(),
             name="web-rules",
             action_type="delete",

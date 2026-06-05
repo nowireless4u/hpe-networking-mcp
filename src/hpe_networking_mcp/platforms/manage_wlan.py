@@ -110,7 +110,7 @@ b. If personal-security.wpa-passphrase-alias is set, resolve via \
 c. If auth-server-group is set, call `central_get_server_groups(name=\
 <group>)` to get RADIUS servers. Resolve any aliased hosts via \
 `central_get_aliases`.
-d. If vlan-name is set, call `central_get_named_vlans(name=<vlan>)` \
+d. If vlan-name is set, call `central_get_named_vlan(name=<vlan>)` \
 to resolve the VLAN ID.
 
 **STEP 3** — Call `mist_get_self(action_type=account_info)` to get \
