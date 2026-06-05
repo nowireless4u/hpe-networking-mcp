@@ -5,7 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.2.3.12] - 2026-06-04
+## [3.3.0.0] - 2026-06-05
+
+**Minor — Central config tool surface regenerated from the vendor OAS (BREAKING tool renames).** The Aruba Central config tool surface is now generated directly from the vendored Central OpenAPI specs (auto-synced from the developer hub into `vendor/`) rather than from the previous local snapshot. Net result: **660 Central tools** (up from 613), bringing the full registered surface to **1961 tools across 8 platforms** (1037 Mist + 660 Central + 10 GreenLake + 142 ClearPass + 19 Apstra + 25 Axis + 47 AOS8 + 21 UXI).
+
+- **BREAKING — config tool renames.** Every generated config tool is now named after its OAS path segment (e.g. the resource type as it appears in the spec) instead of the previous ad-hoc names. Clients that pinned the old generated tool names must update to the OAS-segment names. The hand-curated keep-set tools (custom scope, WLAN, health, and config-assignment tools) keep their tuned names and behavior.
+- **Generator reworked.** The Central config generator now emits multiple objects per source spec file, prefers `v1` over `v1alpha1` when both define the same resource, adds a dedicated operation emitter, and honors a keep-set so the custom scope / WLAN / health / config-assignment tools are never clobbered by regeneration.
+- **+47 net Central tools**, including new `cnac-*` (Central NAC) tools, device-collections, and sites reads, plus a config write surface for aliases, named-VLAN, and server-groups.
+- **Shared helpers raise `ToolError`.** The shared CRUD and operation helpers backing the generated tools now raise `ToolError` (structured payload) on any non-2xx upstream response, matching the project-wide error contract.
+- **`get_role_with_policy` back-reference resolution.** The role-with-policy read now resolves the `role.policies[]` back-reference so the returned role carries its associated policy bodies.
+- **Spec repoint.** The Central spec source moved from the old `api-endpoints/` snapshot to the vendored `vendor/` specs (auto-synced from devhub).
+
+
 
 **Patch — refactor: migrate AOS 8 to capability classification (PR 2 of N).** Second platform onto the `capability=` model from #417. AOS8's `_registry.py` shim is now the shared `make_tool_decorator` factory; its hand-written `READ_ONLY`/`WRITE`/`WRITE_DELETE` `ToolAnnotations` constants are removed. All AOS8 tools reclassified: reads → `READ`; the 9 `aos8_manage_*` → `WRITE_DELETE`; `aos8_disconnect_client` / `aos8_reboot_ap` / `aos8_write_memory` → `OPERATIONAL` (`enable_gated=True`, preserving their behind-the-write-flag gating); and `aos8_ping` / `aos8_traceroute` → `DIAGNOSTIC` (active probes that POST but make no persistent change — first use of the DIAGNOSTIC category). Behaviour-preserving: the derived `aos8_write_delete` enable tag keeps every write tool gated by `ENABLE_AOS8_WRITE_TOOLS`, and the existing `confirm_write` elicitation is unchanged; the `requires_confirmation` tag stays inert until the universal-gate PR. Note: write tools now carry only `aos8_write_delete` (the dual `aos8_write`+`aos8_write_delete` tagging is collapsed to the single derived enable tag). Covered by updated `tests/unit/test_aos8_write.py` (capability + enable-tag + confirmation assertions).
 
