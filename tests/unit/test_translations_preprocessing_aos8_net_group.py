@@ -70,7 +70,7 @@ def test_netdst_host_entry_maps_to_host_type() -> None:
         ],
     }
     out = preprocess_net_group(source, {})
-    assert out["_central_items"] == [{"type": "HOST", "address": "192.168.20.70"}]
+    assert out["_central_items"] == [{"type": "HOST", "address": "192.168.20.70", "index": 1}]
 
 
 def test_netdst_network_entry_maps_to_network_with_cidr_prefix() -> None:
@@ -83,8 +83,8 @@ def test_netdst_network_entry_maps_to_network_with_cidr_prefix() -> None:
     }
     out = preprocess_net_group(source, {})
     assert out["_central_items"] == [
-        {"type": "NETWORK", "prefix": "10.0.0.0/8"},
-        {"type": "NETWORK", "prefix": "192.168.1.0/24"},
+        {"type": "NETWORK", "prefix": "10.0.0.0/8", "index": 1},
+        {"type": "NETWORK", "prefix": "192.168.1.0/24", "index": 2},
     ]
 
 
@@ -94,7 +94,7 @@ def test_netdst_name_entry_maps_to_fqdn() -> None:
         "netdst__entry": [{"_objname": "netdst__name", "host_name": "cppm.example.com"}],
     }
     out = preprocess_net_group(source, {})
-    assert out["_central_items"] == [{"type": "FQDN", "fqdn": "cppm.example.com"}]
+    assert out["_central_items"] == [{"type": "FQDN", "fqdn": "cppm.example.com", "index": 1}]
 
 
 def test_mixed_entry_types_preserve_source_order() -> None:
@@ -109,9 +109,9 @@ def test_mixed_entry_types_preserve_source_order() -> None:
     }
     out = preprocess_net_group(source, {})
     assert out["_central_items"] == [
-        {"type": "HOST", "address": "192.168.20.70"},
-        {"type": "NETWORK", "prefix": "10.10.0.0/16"},
-        {"type": "FQDN", "fqdn": "cppm.example.com"},
+        {"type": "HOST", "address": "192.168.20.70", "index": 1},
+        {"type": "NETWORK", "prefix": "10.10.0.0/16", "index": 2},
+        {"type": "FQDN", "fqdn": "cppm.example.com", "index": 3},
     ]
 
 
@@ -125,7 +125,7 @@ def test_unknown_objname_silently_skipped() -> None:
         ],
     }
     out = preprocess_net_group(source, {})
-    assert out["_central_items"] == [{"type": "HOST", "address": "10.0.0.1"}]
+    assert out["_central_items"] == [{"type": "HOST", "address": "10.0.0.1", "index": 1}]
 
 
 def test_entry_missing_required_field_is_dropped() -> None:
@@ -140,7 +140,7 @@ def test_entry_missing_required_field_is_dropped() -> None:
         ],
     }
     out = preprocess_net_group(source, {})
-    assert out["_central_items"] == [{"type": "HOST", "address": "10.0.0.1"}]
+    assert out["_central_items"] == [{"type": "HOST", "address": "10.0.0.1", "index": 1}]
 
 
 def test_non_dict_entry_silently_skipped() -> None:
@@ -153,7 +153,7 @@ def test_non_dict_entry_silently_skipped() -> None:
         ],
     }
     out = preprocess_net_group(source, {})
-    assert out["_central_items"] == [{"type": "HOST", "address": "10.0.0.1"}]
+    assert out["_central_items"] == [{"type": "HOST", "address": "10.0.0.1", "index": 1}]
 
 
 # --------------------------------------------------------------------------- #
@@ -171,7 +171,7 @@ def test_entry_with_default_flag_filtered() -> None:
         ],
     }
     out = preprocess_net_group(source, {})
-    assert out["_central_items"] == [{"type": "HOST", "address": "10.0.0.2"}]
+    assert out["_central_items"] == [{"type": "HOST", "address": "10.0.0.2", "index": 1}]
 
 
 def test_entry_with_system_flag_filtered() -> None:
@@ -183,7 +183,7 @@ def test_entry_with_system_flag_filtered() -> None:
         ],
     }
     out = preprocess_net_group(source, {})
-    assert out["_central_items"] == [{"type": "HOST", "address": "10.0.0.2"}]
+    assert out["_central_items"] == [{"type": "HOST", "address": "10.0.0.2", "index": 1}]
 
 
 def test_entry_with_inherited_flag_passes_through() -> None:
@@ -198,7 +198,7 @@ def test_entry_with_inherited_flag_passes_through() -> None:
         ],
     }
     out = preprocess_net_group(source, {})
-    assert out["_central_items"] == [{"type": "HOST", "address": "10.0.0.1"}]
+    assert out["_central_items"] == [{"type": "HOST", "address": "10.0.0.1", "index": 1}]
 
 
 # --------------------------------------------------------------------------- #
@@ -212,7 +212,7 @@ def test_netdst6_host_entry_maps_to_host() -> None:
         "netdst6__entry": [{"_objname": "netdst6__host", "address": "2001:db8::1"}],
     }
     out = preprocess_net_group(source, {})
-    assert out["_central_items"] == [{"type": "HOST", "address": "2001:db8::1"}]
+    assert out["_central_items"] == [{"type": "HOST", "address": "2001:db8::1", "index": 1}]
 
 
 def test_netdst6_network_with_cidr_already_in_address() -> None:
@@ -222,19 +222,56 @@ def test_netdst6_network_with_cidr_already_in_address() -> None:
         "netdst6__entry": [{"_objname": "netdst6__network", "address": "2001:db8::/32"}],
     }
     out = preprocess_net_group(source, {})
-    assert out["_central_items"] == [{"type": "NETWORK", "prefix": "2001:db8::/32"}]
+    assert out["_central_items"] == [{"type": "NETWORK", "prefix": "2001:db8::/32", "index": 1}]
 
 
-def test_netdst6_network_without_cidr_defaults_to_128() -> None:
-    """Defensive default: v6 NETWORK entry without '/' falls back to /128.
-    First live verification will refine this if needed.
+def test_netdst6_network_prefix_from_prefix_length_field() -> None:
+    """v6 NETWORK entry with a separate prefix-length field builds the CIDR from
+    that length — real supernets are preserved, NOT collapsed to /128 (issue #419).
+    """
+    source = {
+        "dstname": "ula",
+        "netdst6__entry": [{"_objname": "netdst6__network", "address": "fc00::", "prefix_len": 7}],
+    }
+    out = preprocess_net_group(source, {})
+    assert out["_central_items"] == [{"type": "NETWORK", "prefix": "fc00::/7", "index": 1}]
+
+
+def test_netdst6_network_without_prefix_length_passes_address_through() -> None:
+    """v6 NETWORK entry with no '/' and no prefix-length field passes the address
+    through UNCHANGED rather than inventing a /128 host route (issue #419).
     """
     source = {
         "dstname": "x6",
         "netdst6__entry": [{"_objname": "netdst6__network", "address": "2001:db8::1"}],
     }
     out = preprocess_net_group(source, {})
-    assert out["_central_items"] == [{"type": "NETWORK", "prefix": "2001:db8::1/128"}]
+    assert out["_central_items"] == [{"type": "NETWORK", "prefix": "2001:db8::1", "index": 1}]
+
+
+# --------------------------------------------------------------------------- #
+# invert clause
+# --------------------------------------------------------------------------- #
+
+
+def test_invert_truthy_surfaces_invert_flag() -> None:
+    source = {
+        "dstname": "x",
+        "invert": True,
+        "netdst__entry": [{"_objname": "netdst__host", "address": "10.0.0.1"}],
+    }
+    out = preprocess_net_group(source, {})
+    assert out["_invert"] is True
+
+
+def test_invert_falsy_omits_invert_flag() -> None:
+    """Absent / false invert → no _invert key (Central absent == false shape)."""
+    source = {
+        "dstname": "x",
+        "netdst__entry": [{"_objname": "netdst__host", "address": "10.0.0.1"}],
+    }
+    out = preprocess_net_group(source, {})
+    assert "_invert" not in out
 
 
 # --------------------------------------------------------------------------- #

@@ -41,6 +41,8 @@ VALID_DEVICE_FUNCTIONS = {
     "BRANCH_GW",
     "MOBILITY_GW",
     "VPNC",
+    "EC_VPNC",
+    "EC_BRANCH_GW",
     "ALL",
     "SERVICE_PERSONA",
     "BRIDGE",

@@ -69,7 +69,7 @@
       "query_params": {},
       "body_template": {
         "config-assignment": [
-          "{one entry per device_function in target_meta.device_functions: { scope-id, device-function, profile-type='role', profile-instance='{name}' }}"
+          "{one entry per device_function in target_meta.device_functions: { scope-id, device-function, profile-type='roles', profile-instance='{name}' }}"
         ]
       },
       "iteration": "once",
@@ -320,7 +320,7 @@
     }
   },
   "draft_notes": [
-    "v1 translation, Gateway-targeted. Two-step Central CNX flow (role SHARED create + multi-DF config-assignments). Every body field is Gateway-supported per the Central role schema (verified via api-endpoints/central/role.json's x-supportedDeviceType annotations).",
+    "v1 translation, Gateway-targeted. Two-step Central CNX flow (role SHARED create + multi-DF config-assignments). Every body field is Gateway-supported per the Central role schema (verified via vendor/central/config/roles-policy.json's x-supportedDeviceType annotations).",
     "Live-verified source field names across 55 roles in the operator's tenant including a purpose-configured 'parent' role with all Tier 1 flag features + reauthentication-interval-seconds + per-app / per-appcategory / per-web-cc-category / per-web-cc-reputation bandwidth contracts + bw-contract exclude (app + appcategory), and the 'blacklisted' role with the basic per-role bandwidth contract. All seven bw-contract sub-shapes are mapped (basic per-role + per-app + per-appcategory + per-web-cc-category + per-web-cc-reputation + exclude-app + exclude-appcategory).",
     "Bandwidth-contract source shape: AOS 8 stores three discriminated source arrays: 'role__bwc_app' carries per-app + per-appcategory entries (discriminator 'app_type'), 'role__bwc_web' carries per-web-cc-category + per-web-cc-reputation entries (discriminator 'web_opt'), and 'role__bwc_ex' carries exclude-app + exclude-appcategory entries (also using 'app_type'). Plus the basic per-role 'role__bwc'. Central has SEVEN distinct body schemas; each AOS 8 array fans out to two Central body fields via paired filter-and-transform key_mappings.",
     "INVERSION CALL-OUT: AOS 8 carries the role->ACL binding inside the role record (role__acl array). Central inverts the relationship — policies reference roles via policy-rule[].condition.source.role, and Central back-fills role.policies[] from those references. This translation does NOT send policies[] in the role body. ACL->role binding is owned by the future central:policy translation.",

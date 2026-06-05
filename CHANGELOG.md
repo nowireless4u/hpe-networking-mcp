@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0.1] - 2026-06-05
+
+**Patch — AOS 8 → Central policy/net-group translation drift fixes.** Corrects spec-confirmed mismatches in the AOS 8 `acl_sess` / `netdst` → Central CNX translation, validated against Central's live built-in policies.
+
+- **Netdestination references (Design A):** `ADDRESS_ALIAS` rules now emit a top-level `net-group: <name>` (the net-group namespace we actually create) instead of the wrong `host-address.host-address-alias` (an alias-namespace reference).
+- **Actions:** AOS 8 `captive` → `ACTION_CAPTIVE_PORTAL` (was silently `ACTION_ALLOW`); `mirror` → `ACTION_MIRROR`; `blacklist` → `secondary-actions.denylist`.
+- **`validuser`** (interface ACL) now emits `association: ASSOCIATION_INTERFACE` instead of `ASSOCIATION_ROLE`.
+- **RA-guard / ICMPv6** rules emit `RULE_PROTOCOL` + `ip-header.protocol: IPV6_ICMP` instead of an invalid `net-service: "icmpv6"`.
+- **NAT / redirect shapes:** destination-nat uses `port` / `ip-address`; dual-nat uses the required `nat-pool` / `port`; redirect uses the `destination` discriminator + `tunnel` / `tunnel-group`.
+- **Net-groups:** IPv6 prefixes are preserved (no more `/128` collapse); `invert` is now mapped (emit-when-true); a per-item `index` is added; the assignment `profile-type` is the plural `net-groups`.
+- **config-assignment** `VALID_DEVICE_FUNCTIONS` gains `EC_VPNC` / `EC_BRANCH_GW`.
+
 ## [3.3.0.0] - 2026-06-05
 
 **Minor — Central config tool surface regenerated from the vendor OAS (BREAKING tool renames).** The Aruba Central config tool surface is now generated directly from the vendored Central OpenAPI specs (auto-synced from the developer hub into `vendor/`) rather than from the previous local snapshot. Net result: **660 Central tools** (up from 613), bringing the full registered surface to **1961 tools across 8 platforms** (1037 Mist + 660 Central + 10 GreenLake + 142 ClearPass + 19 Apstra + 25 Axis + 47 AOS8 + 21 UXI).

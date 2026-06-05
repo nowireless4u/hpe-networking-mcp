@@ -72,9 +72,21 @@ def preprocess_net_group(source_data: dict[str, Any], runtime_values: dict[str, 
             continue
         built = _build_item(entry, family)
         if built is not None:
+            # Central items[] carry a 1-based `index` (the schema x-key); every
+            # live built-in item has it. Number in source order after filtering.
+            built["index"] = len(items) + 1
             items.append(built)
 
-    return {**source_data, "_address_family": family, "_central_items": items}
+    augmented: dict[str, Any] = {
+        **source_data,
+        "_address_family": family,
+        "_central_items": items,
+    }
+    # AOS 8 netdestinations carry an `invert` clause. Central's built-in shape
+    # omits the key when false (absent == false), so only surface it when truthy.
+    if source_data.get("invert"):
+        augmented["_invert"] = True
+    return augmented
 
 
 def _build_item(entry: dict[str, Any], family: str) -> dict[str, Any] | None:
@@ -96,12 +108,18 @@ def _build_item(entry: dict[str, Any], family: str) -> dict[str, Any] | None:
         if not address:
             return None
         if family == "IPV6_ONLY":
-            # IPv6 networks carry the prefix length directly (e.g. as 'prefix-length' or
-            # in the address itself). Trust the operator-supplied address; if it already
-            # carries '/', pass through, otherwise default to the value plus assumed
-            # full-host length (128) — corrected on first live-verification.
-            prefix = str(address) if "/" in str(address) else f"{address}/128"
-            return {"type": "NETWORK", "prefix": prefix}
+            # IPv6 networks carry the prefix length separately (mirror of the IPv4
+            # dotted-quad path). If the address already embeds '/', pass through.
+            # Otherwise build the prefix from the entry's prefix-length field. A
+            # hardcoded /128 fallback would collapse real supernets (e.g. fc00::/7
+            # → /128), so when no prefix-length is present, pass the address through
+            # UNCHANGED rather than inventing a host route.
+            if "/" in str(address):
+                return {"type": "NETWORK", "prefix": str(address)}
+            v6_prefix = _ipv6_prefix_length(entry)
+            if v6_prefix is None:
+                return {"type": "NETWORK", "prefix": str(address)}
+            return {"type": "NETWORK", "prefix": f"{address}/{v6_prefix}"}
         # IPv4: netmask is dotted-quad; convert to CIDR prefix length.
         netmask = entry.get("netmask")
         if not netmask:
@@ -115,6 +133,28 @@ def _build_item(entry: dict[str, Any], family: str) -> dict[str, Any] | None:
             return None
         return {"type": "FQDN", "fqdn": str(host_name)}
 
+    return None
+
+
+def _ipv6_prefix_length(entry: dict[str, Any]) -> int | None:
+    """Extract an IPv6 prefix length from a netdst6 network entry, or None.
+
+    The netdst6 entry shape isn't live-verified (zero records in the maintainer's
+    tenant), so probe the candidate AOS 8 field names. ``netmask`` carries the
+    prefix length for IPv6 entries in some schema variants (an integer rather
+    than a dotted-quad). Returns None when no prefix-length field is present so
+    the caller can pass the address through unchanged.
+    """
+    for field in ("prefix_len", "prefixlen", "prefix-length", "prefix", "netmask"):
+        value = entry.get(field)
+        if value is None or value == "":
+            continue
+        try:
+            length = int(str(value))
+        except (TypeError, ValueError):
+            continue
+        if 0 <= length <= 128:
+            return length
     return None
 
 

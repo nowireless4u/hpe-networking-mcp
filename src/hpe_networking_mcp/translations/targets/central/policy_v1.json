@@ -14,7 +14,7 @@
       "body": {
         "name":        "{name}",
         "type":        "POLICY_TYPE_SECURITY",
-        "association": "ASSOCIATION_ROLE",
+        "association": "{association}",
         "security-policy": {
           "type":        "SECURITY_POLICY_TYPE_DEFAULT",
           "policy-rule": "{policy_rules}"
@@ -33,7 +33,7 @@
       "query_params": {},
       "body_template": {
         "config-assignment": [
-          "{one entry per device_function in target_meta.device_functions: { scope-id, device-function, profile-type='policy', profile-instance='{name}' }}"
+          "{one entry per device_function in target_meta.device_functions: { scope-id, device-function, profile-type='policies', profile-instance='{name}' }}"
         ]
       },
       "iteration": "once",
@@ -57,10 +57,10 @@
       "depends_on":  "central:role (the roles referenced by the ACL must already exist in Central before policies referencing them are POSTed)",
       "depended_by": [
         {
-          "target_id": "role.policies[]",
-          "field":     "policies[]",
-          "relation":  "Central back-fills the role's policies[] array from policy.policy-rule[].condition.source.role-list automatically — this translation INVERTS the AOS 8 role->ACL binding direction.",
-          "notes":     "AOS 8 has role.role__acl[] referencing ACL names; Central has policy.policy-rule[].condition.source.role-list referencing role names. Migration creates policies that reference roles, and Central derives the role->policies back-reference."
+          "target_id": "role (implicit linkage)",
+          "field":     "(none — no back-reference on the role object)",
+          "relation":  "The role->policy linkage is IMPLICIT, not stored on the role. Verified live: central_get_role_with_policy returns policy:null and the role record carries no policies[]. A policy binds to a role via its own policy-rule[].condition.source.role-list PLUS co-assignment of the role and the policy at the same scope/device-function.",
+          "notes":     "AOS 8 has role.role__acl[] referencing ACL names; Central does NOT invert this into a role.policies[] array. Do not expect Central to back-fill a role->policies reference (issue #419). NOTE: assigning the policy ALSO requires it to be registered as a policy-group entry first — see issue #420; this spec's step 2 (direct config-assignment) is incomplete until that lands."
         }
       ]
     }
@@ -112,6 +112,12 @@
           "transform": "direct",
           "optional":  true,
           "notes":     "Pre-computed by the preprocessing function (declared in the top-level preprocessing field). Result is the full Central policy-rule[] array — engine substitutes verbatim into the body wherever {policy_rules} appears. Empty / no-rules ACLs return [] which the body keeps as an empty array; consumer should typically filter ACLs with empty rule lists from migration before calling emit_calls."
+        },
+        "association": {
+          "from":      "_association",
+          "to":        "Central policy body 'association' (enum: ASSOCIATION_ROLE / ASSOCIATION_INTERFACE)",
+          "transform": "direct_str",
+          "notes":     "Pre-computed by the preprocessing function. AOS 8 'validuser' (and any other interface-ACL name in _INTERFACE_ACL_NAMES) is an INTERFACE ACL → ASSOCIATION_INTERFACE; every other ACL is role-applied → ASSOCIATION_ROLE."
         }
       },
       "unmapped_fields": [

@@ -14,6 +14,7 @@
       "body": {
         "name":                "{name}",
         "netdestination-type": "{netdestination_type}",
+        "invert":              "{invert}",
         "items":               "{items}"
       },
       "iteration": "once",
@@ -29,7 +30,7 @@
       "query_params": {},
       "body_template": {
         "config-assignment": [
-          "{one entry per device_function in target_meta.device_functions: { scope-id, device-function, profile-type='net-group', profile-instance='{name}' }}"
+          "{one entry per device_function in target_meta.device_functions: { scope-id, device-function, profile-type='net-groups', profile-instance='{name}' }}"
         ]
       },
       "iteration": "once",
@@ -106,7 +107,14 @@
           "from":      "_central_items",
           "to":        "Central net-group body 'items[]' array",
           "transform": "direct",
-          "notes":     "Pre-computed by the preprocessing function. Each AOS 8 __entry maps to one Central items[] element with the discriminator-appropriate fields: netdst__host -> {type: HOST, address}; netdst__network -> {type: NETWORK, prefix=address/netmask_to_prefix(netmask)}; netdst__name -> {type: FQDN, fqdn}. Engine substitutes the array verbatim."
+          "notes":     "Pre-computed by the preprocessing function. Each AOS 8 __entry maps to one Central items[] element with the discriminator-appropriate fields plus a 1-based 'index' (the schema x-key): netdst__host -> {type: HOST, address, index}; netdst__network -> {type: NETWORK, prefix=address/netmask_to_prefix(netmask), index}; netdst__name -> {type: FQDN, fqdn, index}. Engine substitutes the array verbatim."
+        },
+        "invert": {
+          "from":      "_invert",
+          "to":        "Central net-group body 'invert' (bool)",
+          "transform": "direct",
+          "optional":  true,
+          "notes":     "Pre-computed by the preprocessing function. AOS 8 netdestinations carry an 'invert' clause; when truthy the function sets _invert=true and the body emits invert=true. When the source invert is false/absent, _invert is omitted entirely and the optional-field path drops the body key (Central treats absent == false for its built-in shape)."
         }
       },
       "unmapped_fields": [
@@ -121,8 +129,8 @@
           "severity_rule":   "non_empty_regression"
         },
         {
-          "from":            "Central net-group 'description' / 'invert' / 'exclude' / 'preemptive-failover'",
-          "reason":          "Optional Central body fields with no AOS 8 source-side counterpart in netdst / netdst6 records. Leaving body keys unset = Central defaults apply (invert=false, no exclude, etc.). Operator can override via overrides post-translation.",
+          "from":            "Central net-group 'description' / 'exclude' / 'preemptive-failover'",
+          "reason":          "Optional Central body fields with no AOS 8 source-side counterpart in netdst / netdst6 records. Leaving body keys unset = Central defaults apply (no exclude, etc.). Operator can override via overrides post-translation. NOTE: 'invert' IS mapped (AOS 8 netdestinations carry an invert clause) — see key_mappings.invert.",
           "severity_rule":   "always_operator_map"
         }
       ],
