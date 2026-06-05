@@ -1,13 +1,14 @@
-"""Aruba Central ``Routing & Overlays`` config-model tools.
+"""Aruba Central ``routing-overlays`` config-model tools.
 
 Initial import emitted by ``scripts/import_central_config_tools.py``
-from a snapshot of ``api-endpoints/central/config/``. The import is
+from a snapshot of ``vendor/central/config/``. The import is
 **one-shot**: this file is hand-curated going forward — edit freely,
 refine docstrings, add per-type schema knobs, split into smaller files
 as needed. Re-running the script will overwrite this file, so only do
 so before any hand edits or with care.
 
-Covers config objects in the ``Routing & Overlays`` OpenAPI tag-group. Wrappers
+Covers config objects sourced from the ``routing-overlays.json`` vendor
+spec file. Wrappers
 delegate to ``_get_resource`` / ``_manage_resource`` in
 ``security_policy.py`` — the same shared helpers used by the
 hand-curated Roles & Policy tools.
@@ -96,38 +97,38 @@ async def central_manage_advanced_intelligent_forwarding(
     )
 
 
-# ----- aspath-list -----
+# ----- aspath-lists -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_aspath_list(
+async def central_get_aspath_lists(
     ctx: Context,
     aspath_list_name: str | None = None,
 ) -> dict | list | str:
-    """Get ``aspath-list`` configurations from Central.
+    """Get ``aspath-lists`` configurations from Central.
 
-    AS Path Lists configuration. The AS Path is the sequence of Autonomous System numbers traversed by a BGP route announcement. This container manages AS Path Lists for filtering and controlling BGP routes based on path characteristics using permit/deny actions and regular expression patterns.
+    Container for all AIF configurations.
 
     Parameters:
-        aspath_list_name: Specific ``aspath-list`` identifier (OpenAPI path param: ``aspath-list-name``). If omitted, returns all.
+        aspath_list_name: Specific ``aspath-lists`` identifier (OpenAPI path param: ``aspath-list-name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "aspath-lists", aspath_list_name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_aspath_list(
+async def central_manage_aspath_lists(
     ctx: Context,
     aspath_list_name: Annotated[
-        str, Field(description="``aspath-list`` identifier (OpenAPI path param: ``aspath-list-name``).")
+        str, Field(description="``aspath-lists`` identifier (OpenAPI path param: ``aspath-list-name``).")
     ],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``aspath-list`` object. "
+                "Payload for the ``aspath-lists`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_aspath_list`` to "
+                "field set; use ``central_get_aspath_lists`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -137,14 +138,14 @@ async def central_manage_aspath_list(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``aspath-list`` configuration in Central.
+    """Create, update, or delete a ``aspath-lists`` configuration in Central.
 
-    AS Path Lists configuration. The AS Path is the sequence of Autonomous System numbers traversed by a BGP route announcement. This container manages AS Path Lists for filtering and controlling BGP routes based on path characteristics using permit/deny actions and regular expression patterns.
+    Container for all AIF configurations.
     """
     return await _manage_resource(
         ctx,
         "aspath-lists",
-        "aspath-list",
+        "aspath-lists",
         aspath_list_name,
         action_type,
         payload,
@@ -164,7 +165,7 @@ async def central_get_bfd(
 ) -> dict | list | str:
     """Get ``bfd`` configurations from Central.
 
-    BFD global configuration. Bidirectional Forwarding Detection (BFD) is a protocol intended to detect faults in the bidirectional path between two forwarding engines, including interfaces, data link(s), and to the extent possible the forwarding engines themselves, with potentially very low latency. It operates independently of media, data protocols, and routing protocols.
+    Container for all AIF configurations.
 
     Parameters:
         name: Specific ``bfd`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -195,7 +196,7 @@ async def central_manage_bfd(
 ) -> dict | str:
     """Create, update, or delete a ``bfd`` configuration in Central.
 
-    BFD global configuration. Bidirectional Forwarding Detection (BFD) is a protocol intended to detect faults in the bidirectional path between two forwarding engines, including interfaces, data link(s), and to the extent possible the forwarding engines themselves, with potentially very low latency. It operates independently of media, data protocols, and routing protocols.
+    Container for all AIF configurations.
     """
     return await _manage_resource(
         ctx,
@@ -220,7 +221,7 @@ async def central_get_bgp(
 ) -> dict | list | str:
     """Get ``bgp`` configurations from Central.
 
-    Border Gateway Protocol (BGP) is the standard exterior gateway protocol (RFC 4271) for exchanging routing information between autonomous systems on the Internet and enterprise networks. BGP supports IPv4/IPv6 unicast, EVPN (Ethernet VPN), and multicast address families with advanced features including route reflection, confederation, graceful restart, and multi-path load balancing. Configure BGP global parameters, neighbor relationships, route redistribution, and address family-specific policies. Requires route map, prefix list, keychain, and community list configurations for routing policy enforcement. Use this API to retrieve BGP configuration.
+    Container for all AIF configurations.
 
     Parameters:
         name: Specific ``bgp`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -251,7 +252,7 @@ async def central_manage_bgp(
 ) -> dict | str:
     """Create, update, or delete a ``bgp`` configuration in Central.
 
-    Border Gateway Protocol (BGP) is the standard exterior gateway protocol (RFC 4271) for exchanging routing information between autonomous systems on the Internet and enterprise networks. BGP supports IPv4/IPv6 unicast, EVPN (Ethernet VPN), and multicast address families with advanced features including route reflection, confederation, graceful restart, and multi-path load balancing. Configure BGP global parameters, neighbor relationships, route redistribution, and address family-specific policies. Requires route map, prefix list, keychain, and community list configurations for routing policy enforcement. Use this API to retrieve BGP configuration.
+    Container for all AIF configurations.
     """
     return await _manage_resource(
         ctx,
@@ -266,31 +267,31 @@ async def central_manage_bgp(
     )
 
 
-# ----- community-list -----
+# ----- community-lists -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_community_list(
+async def central_get_community_lists(
     ctx: Context,
     community_list_name_community_type: str | None = None,
 ) -> dict | list | str:
-    """Get ``community-list`` configurations from Central.
+    """Get ``community-lists`` configurations from Central.
 
-    BGP Community Lists configuration. A BGP Community is a 32-bit value used to classify and group routes for policy application. This container manages three types of Community Lists: Standard (specific community values), Expanded (regular expression patterns), and Extended (route targets and extended community formats). Each list contains ordered entries with permit or deny actions for route classification and policy enforcement.
+    Container for all AIF configurations.
 
     Parameters:
-        community_list_name_community_type: Specific ``community-list`` identifier (OpenAPI path param: ``community-list-name-community-type``). If omitted, returns all.
+        community_list_name_community_type: Specific ``community-lists`` identifier (OpenAPI path param: ``community-list-name-community-type``). If omitted, returns all.
     """
     return await _get_resource(ctx, "community-lists", community_list_name_community_type)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_community_list(
+async def central_manage_community_lists(
     ctx: Context,
     community_list_name_community_type: Annotated[
         str,
         Field(
-            description="``community-list`` identifier (OpenAPI path param: ``community-list-name-community-type``)."
+            description="``community-lists`` identifier (OpenAPI path param: ``community-list-name-community-type``)."
         ),
     ],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
@@ -298,9 +299,9 @@ async def central_manage_community_list(
         dict,
         Field(
             description=(
-                "Payload for the ``community-list`` object. "
+                "Payload for the ``community-lists`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_community_list`` to "
+                "field set; use ``central_get_community_lists`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -310,14 +311,14 @@ async def central_manage_community_list(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``community-list`` configuration in Central.
+    """Create, update, or delete a ``community-lists`` configuration in Central.
 
-    BGP Community Lists configuration. A BGP Community is a 32-bit value used to classify and group routes for policy application. This container manages three types of Community Lists: Standard (specific community values), Expanded (regular expression patterns), and Extended (route targets and extended community formats). Each list contains ordered entries with permit or deny actions for route classification and policy enforcement.
+    Container for all AIF configurations.
     """
     return await _manage_resource(
         ctx,
         "community-lists",
-        "community-list",
+        "community-lists",
         community_list_name_community_type,
         action_type,
         payload,
@@ -337,7 +338,7 @@ async def central_get_evpn(
 ) -> dict | list | str:
     """Get ``evpn`` configurations from Central.
 
-    Ethernet Virtual Private Network (EVPN) container. EVPN provides Layer 2 and Layer 3 VPN services using BGP control plane and VXLAN/MPLS data plane encapsulation for seamless multi-site connectivity.
+    Container for all AIF configurations.
 
     Parameters:
         name: Specific ``evpn`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -368,7 +369,7 @@ async def central_manage_evpn(
 ) -> dict | str:
     """Create, update, or delete a ``evpn`` configuration in Central.
 
-    Ethernet Virtual Private Network (EVPN) container. EVPN provides Layer 2 and Layer 3 VPN services using BGP control plane and VXLAN/MPLS data plane encapsulation for seamless multi-site connectivity.
+    Container for all AIF configurations.
     """
     return await _manage_resource(
         ctx,
@@ -393,7 +394,7 @@ async def central_get_ip_routing(
 ) -> dict | list | str:
     """Get ``ip-routing`` configurations from Central.
 
-    IP routing configuration.
+    Container for all AIF configurations.
 
     Parameters:
         name: Specific ``ip-routing`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -424,7 +425,7 @@ async def central_manage_ip_routing(
 ) -> dict | str:
     """Create, update, or delete a ``ip-routing`` configuration in Central.
 
-    IP routing configuration.
+    Container for all AIF configurations.
     """
     return await _manage_resource(
         ctx,
@@ -449,7 +450,7 @@ async def central_get_l3_route(
 ) -> dict | list | str:
     """Get ``l3-route`` configurations from Central.
 
-    L3 route.
+    Container for all AIF configurations.
 
     Parameters:
         name: Specific ``l3-route`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -480,7 +481,7 @@ async def central_manage_l3_route(
 ) -> dict | str:
     """Create, update, or delete a ``l3-route`` configuration in Central.
 
-    L3 route.
+    Container for all AIF configurations.
     """
     return await _manage_resource(
         ctx,
@@ -505,7 +506,7 @@ async def central_get_mpls(
 ) -> dict | list | str:
     """Get ``mpls`` configurations from Central.
 
-    MPLS global configuration.
+    Container for all AIF configurations.
 
     Parameters:
         name: Specific ``mpls`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -536,7 +537,7 @@ async def central_manage_mpls(
 ) -> dict | str:
     """Create, update, or delete a ``mpls`` configuration in Central.
 
-    MPLS global configuration.
+    Container for all AIF configurations.
     """
     return await _manage_resource(
         ctx,
@@ -561,7 +562,7 @@ async def central_get_msdp(
 ) -> dict | list | str:
     """Get ``msdp`` configurations from Central.
 
-    Multicast Source Discovery Protocol Router configurations. When MSDP is configured in a network, Rendezvous Points(RP) running MSDP exchange source information with MSDP enabled RPs in other domains. An RP can join the interdomain source tree for sources that are sending to groups for which it has multicast receivers.
+    Container for all AIF configurations.
 
     Parameters:
         name: Specific ``msdp`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -592,7 +593,7 @@ async def central_manage_msdp(
 ) -> dict | str:
     """Create, update, or delete a ``msdp`` configuration in Central.
 
-    Multicast Source Discovery Protocol Router configurations. When MSDP is configured in a network, Rendezvous Points(RP) running MSDP exchange source information with MSDP enabled RPs in other domains. An RP can join the interdomain source tree for sources that are sending to groups for which it has multicast receivers.
+    Container for all AIF configurations.
     """
     return await _manage_resource(
         ctx,
@@ -607,36 +608,36 @@ async def central_manage_msdp(
     )
 
 
-# ----- multicast -----
+# ----- multicast-global -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_multicast(
+async def central_get_multicast_global(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``multicast`` configurations from Central.
+    """Get ``multicast-global`` configurations from Central.
 
-    Multicast Global Configurations.
+    Container for all AIF configurations.
 
     Parameters:
-        name: Specific ``multicast`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``multicast-global`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "multicast-global", name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_multicast(
+async def central_manage_multicast_global(
     ctx: Context,
-    name: Annotated[str, Field(description="``multicast`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``multicast-global`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``multicast`` object. "
+                "Payload for the ``multicast-global`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_multicast`` to "
+                "field set; use ``central_get_multicast_global`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -646,14 +647,14 @@ async def central_manage_multicast(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``multicast`` configuration in Central.
+    """Create, update, or delete a ``multicast-global`` configuration in Central.
 
-    Multicast Global Configurations.
+    Container for all AIF configurations.
     """
     return await _manage_resource(
         ctx,
         "multicast-global",
-        "multicast",
+        "multicast-global",
         name,
         action_type,
         payload,
@@ -673,7 +674,7 @@ async def central_get_multicast_static_route(
 ) -> dict | list | str:
     """Get ``multicast-static-route`` configurations from Central.
 
-    Multicast Static Route configuration. Multicast static routes are used to configure a static multicast flow and program it directly into the IP multicast forwarding table instead of learning multicast routes using dynamic multicast protocols.
+    Container for all AIF configurations.
 
     Parameters:
         name: Specific ``multicast-static-route`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -704,7 +705,7 @@ async def central_manage_multicast_static_route(
 ) -> dict | str:
     """Create, update, or delete a ``multicast-static-route`` configuration in Central.
 
-    Multicast Static Route configuration. Multicast static routes are used to configure a static multicast flow and program it directly into the IP multicast forwarding table instead of learning multicast routes using dynamic multicast protocols.
+    Container for all AIF configurations.
     """
     return await _manage_resource(
         ctx,
@@ -719,36 +720,36 @@ async def central_manage_multicast_static_route(
     )
 
 
-# ----- nexthop-group -----
+# ----- nexthop-groups -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_nexthop_group(
+async def central_get_nexthop_groups(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``nexthop-group`` configurations from Central.
+    """Get ``nexthop-groups`` configurations from Central.
 
-    Nexthop groups.
+    Container for all AIF configurations.
 
     Parameters:
-        name: Specific ``nexthop-group`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``nexthop-groups`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "nexthop-groups", name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_nexthop_group(
+async def central_manage_nexthop_groups(
     ctx: Context,
-    name: Annotated[str, Field(description="``nexthop-group`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``nexthop-groups`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``nexthop-group`` object. "
+                "Payload for the ``nexthop-groups`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_nexthop_group`` to "
+                "field set; use ``central_get_nexthop_groups`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -758,14 +759,14 @@ async def central_manage_nexthop_group(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``nexthop-group`` configuration in Central.
+    """Create, update, or delete a ``nexthop-groups`` configuration in Central.
 
-    Nexthop groups.
+    Container for all AIF configurations.
     """
     return await _manage_resource(
         ctx,
         "nexthop-groups",
-        "nexthop-group",
+        "nexthop-groups",
         name,
         action_type,
         payload,
@@ -785,7 +786,7 @@ async def central_get_ospfv2(
 ) -> dict | list | str:
     """Get ``ospfv2`` configurations from Central.
 
-    OSPFv2 (Open Shortest Path First version 2) is a routing protocol which is described in RFC2328 entitled OSPF Version 2. It is a Link State-based IGP(Interior Gateway Protocol) routing protocol. It is widely used in medium to large-sized enterprise networks. The characteristics of OSPFv2 are: - Provides a loop free topology using SPF algorithm. - Allows hierarchical routing using area 0 (backbone area) as the top of the hierarchy. - Supports load balancing with equal cost routes for same destination. - OSPFv2 is a classless protocol and allows for a hierarchical design with VLSM(Variable length subnet masking) and route summarization. - Provides authentication of routing messages. - Scales enterprise size network easily with area concept. - Provides fast convergence with triggered, incremental updates via Link State Advertisements (LSAs).
+    Container for all AIF configurations.
 
     Parameters:
         name: Specific ``ospfv2`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -816,7 +817,7 @@ async def central_manage_ospfv2(
 ) -> dict | str:
     """Create, update, or delete a ``ospfv2`` configuration in Central.
 
-    OSPFv2 (Open Shortest Path First version 2) is a routing protocol which is described in RFC2328 entitled OSPF Version 2. It is a Link State-based IGP(Interior Gateway Protocol) routing protocol. It is widely used in medium to large-sized enterprise networks. The characteristics of OSPFv2 are: - Provides a loop free topology using SPF algorithm. - Allows hierarchical routing using area 0 (backbone area) as the top of the hierarchy. - Supports load balancing with equal cost routes for same destination. - OSPFv2 is a classless protocol and allows for a hierarchical design with VLSM(Variable length subnet masking) and route summarization. - Provides authentication of routing messages. - Scales enterprise size network easily with area concept. - Provides fast convergence with triggered, incremental updates via Link State Advertisements (LSAs).
+    Container for all AIF configurations.
     """
     return await _manage_resource(
         ctx,
@@ -841,7 +842,7 @@ async def central_get_ospfv3(
 ) -> dict | list | str:
     """Get ``ospfv3`` configurations from Central.
 
-    OSPFv3 (Open Shortest Path First version 3) is a routing protocol which is described in RFC5340 entitled OSPF for IPv6. It is a Link State-based IGP (Interior Gateway Protocol) routing protocol. It is widely used with medium to large-sized enterprise networks. The characteristics of OSPFv3 are: - Provides a loop free topology using SPF algorithm. - Allows hierarchical routing using area 0 (backbone area) as the top of the hierarchy. - Supports load balancing with equal cost routes for same destination. - OSPFv3 is a classless protocol and allows for a hierarchical design with VLSM (Variable Length Subnet Masking) and route summarization. - Scales enterprise size network easily with area concept. - Provides fast convergence with triggered, incremental updates via Link State Advertisements (LSAs).
+    Container for all AIF configurations.
 
     Parameters:
         name: Specific ``ospfv3`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -872,7 +873,7 @@ async def central_manage_ospfv3(
 ) -> dict | str:
     """Create, update, or delete a ``ospfv3`` configuration in Central.
 
-    OSPFv3 (Open Shortest Path First version 3) is a routing protocol which is described in RFC5340 entitled OSPF for IPv6. It is a Link State-based IGP (Interior Gateway Protocol) routing protocol. It is widely used with medium to large-sized enterprise networks. The characteristics of OSPFv3 are: - Provides a loop free topology using SPF algorithm. - Allows hierarchical routing using area 0 (backbone area) as the top of the hierarchy. - Supports load balancing with equal cost routes for same destination. - OSPFv3 is a classless protocol and allows for a hierarchical design with VLSM (Variable Length Subnet Masking) and route summarization. - Scales enterprise size network easily with area concept. - Provides fast convergence with triggered, incremental updates via Link State Advertisements (LSAs).
+    Container for all AIF configurations.
     """
     return await _manage_resource(
         ctx,
@@ -887,36 +888,36 @@ async def central_manage_ospfv3(
     )
 
 
-# ----- pim -----
+# ----- pim-router -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_pim(
+async def central_get_pim_router(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``pim`` configurations from Central.
+    """Get ``pim-router`` configurations from Central.
 
-    Configure Protocol Independent Multicast. In a network, IP multicast traffic transmitted for multimedia applications is blocked at routed interface boundaries unless a multicast routing protocol is running. Protocol Independent Multicast (PIM) is a family of routing protocols. It forms multicast trees to forward traffic from multicast sources to the clients requesting for traffic.
+    Container for all AIF configurations.
 
     Parameters:
-        name: Specific ``pim`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``pim-router`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "pim-router", name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_pim(
+async def central_manage_pim_router(
     ctx: Context,
-    name: Annotated[str, Field(description="``pim`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``pim-router`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``pim`` object. "
+                "Payload for the ``pim-router`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_pim`` to "
+                "field set; use ``central_get_pim_router`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -926,14 +927,14 @@ async def central_manage_pim(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``pim`` configuration in Central.
+    """Create, update, or delete a ``pim-router`` configuration in Central.
 
-    Configure Protocol Independent Multicast. In a network, IP multicast traffic transmitted for multimedia applications is blocked at routed interface boundaries unless a multicast routing protocol is running. Protocol Independent Multicast (PIM) is a family of routing protocols. It forms multicast trees to forward traffic from multicast sources to the clients requesting for traffic.
+    Container for all AIF configurations.
     """
     return await _manage_resource(
         ctx,
         "pim-router",
-        "pim",
+        "pim-router",
         name,
         action_type,
         payload,
@@ -943,38 +944,38 @@ async def central_manage_pim(
     )
 
 
-# ----- prefix-list -----
+# ----- prefix-lists -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_prefix_list(
+async def central_get_prefix_lists(
     ctx: Context,
     prefix_list_name_address_family: str | None = None,
 ) -> dict | list | str:
-    """Get ``prefix-list`` configurations from Central.
+    """Get ``prefix-lists`` configurations from Central.
 
-    Prefix Lists are standard routing filters (RFC 4632) used to permit or deny network routes based on IP address prefixes in CIDR notation. Configure IPv4 and IPv6 prefix lists for granular route control in BGP and OSPF routing policies. Each list contains sequential entries with permit/deny actions and optional prefix length matching constraints for flexible route filtering across multi-site networks. Device Limits: Gateway restricts prefix list names to 1-50 characters. Use this API to retrieve the list of prefix list configurations.
+    Container for all AIF configurations.
 
     Parameters:
-        prefix_list_name_address_family: Specific ``prefix-list`` identifier (OpenAPI path param: ``prefix-list-name-address-family``). If omitted, returns all.
+        prefix_list_name_address_family: Specific ``prefix-lists`` identifier (OpenAPI path param: ``prefix-list-name-address-family``). If omitted, returns all.
     """
     return await _get_resource(ctx, "prefix-lists", prefix_list_name_address_family)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_prefix_list(
+async def central_manage_prefix_lists(
     ctx: Context,
     prefix_list_name_address_family: Annotated[
-        str, Field(description="``prefix-list`` identifier (OpenAPI path param: ``prefix-list-name-address-family``).")
+        str, Field(description="``prefix-lists`` identifier (OpenAPI path param: ``prefix-list-name-address-family``).")
     ],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``prefix-list`` object. "
+                "Payload for the ``prefix-lists`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_prefix_list`` to "
+                "field set; use ``central_get_prefix_lists`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -984,14 +985,14 @@ async def central_manage_prefix_list(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``prefix-list`` configuration in Central.
+    """Create, update, or delete a ``prefix-lists`` configuration in Central.
 
-    Prefix Lists are standard routing filters (RFC 4632) used to permit or deny network routes based on IP address prefixes in CIDR notation. Configure IPv4 and IPv6 prefix lists for granular route control in BGP and OSPF routing policies. Each list contains sequential entries with permit/deny actions and optional prefix length matching constraints for flexible route filtering across multi-site networks. Device Limits: Gateway restricts prefix list names to 1-50 characters. Use this API to retrieve the list of prefix list configurations.
+    Container for all AIF configurations.
     """
     return await _manage_resource(
         ctx,
         "prefix-lists",
-        "prefix-list",
+        "prefix-lists",
         prefix_list_name_address_family,
         action_type,
         payload,
@@ -1011,7 +1012,7 @@ async def central_get_rip(
 ) -> dict | list | str:
     """Get ``rip`` configurations from Central.
 
-    Routing Information Protocol (RIP) is a distance-vector interior gateway protocol (IGP) using hop count as the routing metric with a maximum of 15 hops (RFC 2453). RIP supports RIPv1 and RIPv2 for IPv4 networks with features including route redistribution, authentication, route filtering, and configurable timers. Configure RIP router instances with administrative distance, maximum paths, timers (update, timeout, garbage-collection), route redistribution from other protocols, and interface-specific parameters. Use this API to retrieve the list of RIP profiles.
+    Container for all AIF configurations.
 
     Parameters:
         name: Specific ``rip`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -1042,7 +1043,7 @@ async def central_manage_rip(
 ) -> dict | str:
     """Create, update, or delete a ``rip`` configuration in Central.
 
-    Routing Information Protocol (RIP) is a distance-vector interior gateway protocol (IGP) using hop count as the routing metric with a maximum of 15 hops (RFC 2453). RIP supports RIPv1 and RIPv2 for IPv4 networks with features including route redistribution, authentication, route filtering, and configurable timers. Configure RIP router instances with administrative distance, maximum paths, timers (update, timeout, garbage-collection), route redistribution from other protocols, and interface-specific parameters. Use this API to retrieve the list of RIP profiles.
+    Container for all AIF configurations.
     """
     return await _manage_resource(
         ctx,
@@ -1057,38 +1058,38 @@ async def central_manage_rip(
     )
 
 
-# ----- routemap -----
+# ----- route-maps -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_routemap(
+async def central_get_route_maps(
     ctx: Context,
     route_map_name: str | None = None,
 ) -> dict | list | str:
-    """Get ``routemap`` configurations from Central.
+    """Get ``route-maps`` configurations from Central.
 
-    Route Maps provide advanced routing policy control by manipulating route attributes during redistribution between routing protocols (BGP, OSPF, RIP, static routes). Route maps use match conditions (IP prefix lists, community lists, AS path lists) and set actions (metric modification, next-hop changes, AS path prepending) to filter and transform routing information. Configure route map sequences with permit/deny actions to implement complex routing policies for traffic engineering and route aggregation. Requires prefix-list, community-list, and AS path-list configurations for match conditions. Device Limits: Gateway restricts route map names to 1-50 characters. Use this API to retrieve the list of route map configurations.
+    Container for all AIF configurations.
 
     Parameters:
-        route_map_name: Specific ``routemap`` identifier (OpenAPI path param: ``route-map-name``). If omitted, returns all.
+        route_map_name: Specific ``route-maps`` identifier (OpenAPI path param: ``route-map-name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "route-maps", route_map_name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_routemap(
+async def central_manage_route_maps(
     ctx: Context,
     route_map_name: Annotated[
-        str, Field(description="``routemap`` identifier (OpenAPI path param: ``route-map-name``).")
+        str, Field(description="``route-maps`` identifier (OpenAPI path param: ``route-map-name``).")
     ],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``routemap`` object. "
+                "Payload for the ``route-maps`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_routemap`` to "
+                "field set; use ``central_get_route_maps`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -1098,14 +1099,14 @@ async def central_manage_routemap(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``routemap`` configuration in Central.
+    """Create, update, or delete a ``route-maps`` configuration in Central.
 
-    Route Maps provide advanced routing policy control by manipulating route attributes during redistribution between routing protocols (BGP, OSPF, RIP, static routes). Route maps use match conditions (IP prefix lists, community lists, AS path lists) and set actions (metric modification, next-hop changes, AS path prepending) to filter and transform routing information. Configure route map sequences with permit/deny actions to implement complex routing policies for traffic engineering and route aggregation. Requires prefix-list, community-list, and AS path-list configurations for match conditions. Device Limits: Gateway restricts route map names to 1-50 characters. Use this API to retrieve the list of route map configurations.
+    Container for all AIF configurations.
     """
     return await _manage_resource(
         ctx,
         "route-maps",
-        "routemap",
+        "route-maps",
         route_map_name,
         action_type,
         payload,
@@ -1125,7 +1126,7 @@ async def central_get_static_route(
 ) -> dict | list | str:
     """Get ``static-route`` configurations from Central.
 
-    Static routing is a type of network routing technique. Static routing is not a routing protocol; instead, it is the manual configuration and selection of a network route, usually managed by the network administrator. It is employed in scenarios where the network routing parameters are not expected to change often.
+    Container for all AIF configurations.
 
     Parameters:
         name: Specific ``static-route`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -1156,7 +1157,7 @@ async def central_manage_static_route(
 ) -> dict | str:
     """Create, update, or delete a ``static-route`` configuration in Central.
 
-    Static routing is a type of network routing technique. Static routing is not a routing protocol; instead, it is the manual configuration and selection of a network route, usually managed by the network administrator. It is employed in scenarios where the network routing parameters are not expected to change often.
+    Container for all AIF configurations.
     """
     return await _manage_resource(
         ctx,
@@ -1171,36 +1172,38 @@ async def central_manage_static_route(
     )
 
 
-# ----- track-object -----
+# ----- tracking-object -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_track_object(
+async def central_get_tracking_object(
     ctx: Context,
     identifier: str | None = None,
 ) -> dict | list | str:
-    """Get ``track-object`` configurations from Central.
+    """Get ``tracking-object`` configurations from Central.
 
-    Tracking object configurations.
+    Container for all AIF configurations.
 
     Parameters:
-        identifier: Specific ``track-object`` identifier (OpenAPI path param: ``identifier``). If omitted, returns all.
+        identifier: Specific ``tracking-object`` identifier (OpenAPI path param: ``identifier``). If omitted, returns all.
     """
     return await _get_resource(ctx, "tracking-object", identifier)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_track_object(
+async def central_manage_tracking_object(
     ctx: Context,
-    identifier: Annotated[str, Field(description="``track-object`` identifier (OpenAPI path param: ``identifier``).")],
+    identifier: Annotated[
+        str, Field(description="``tracking-object`` identifier (OpenAPI path param: ``identifier``).")
+    ],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``track-object`` object. "
+                "Payload for the ``tracking-object`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_track_object`` to "
+                "field set; use ``central_get_tracking_object`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -1210,14 +1213,14 @@ async def central_manage_track_object(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``track-object`` configuration in Central.
+    """Create, update, or delete a ``tracking-object`` configuration in Central.
 
-    Tracking object configurations.
+    Container for all AIF configurations.
     """
     return await _manage_resource(
         ctx,
         "tracking-object",
-        "track-object",
+        "tracking-object",
         identifier,
         action_type,
         payload,
@@ -1227,36 +1230,36 @@ async def central_manage_track_object(
     )
 
 
-# ----- vrf -----
+# ----- vrfs -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_vrf(
+async def central_get_vrfs(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``vrf`` configurations from Central.
+    """Get ``vrfs`` configurations from Central.
 
-    Virtual Routing Forwarding (VRF) container. A VRF is a logical partition of a network device's routing infrastructure that enables multiple independent routing tables on a single device. This container manages VRF instances, each with isolated routing domains, independent routing policies, route targets, and address families (IPv4, IPv6). VRFs support multi-tenancy, network segregation, and route leaking capabilities (IVRL - Inter-VRF Route Leaking) for complex network architectures.
+    Container for all AIF configurations.
 
     Parameters:
-        name: Specific ``vrf`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``vrfs`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "vrfs", name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_vrf(
+async def central_manage_vrfs(
     ctx: Context,
-    name: Annotated[str, Field(description="``vrf`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``vrfs`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``vrf`` object. "
+                "Payload for the ``vrfs`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_vrf`` to "
+                "field set; use ``central_get_vrfs`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -1266,14 +1269,14 @@ async def central_manage_vrf(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``vrf`` configuration in Central.
+    """Create, update, or delete a ``vrfs`` configuration in Central.
 
-    Virtual Routing Forwarding (VRF) container. A VRF is a logical partition of a network device's routing infrastructure that enables multiple independent routing tables on a single device. This container manages VRF instances, each with isolated routing domains, independent routing policies, route targets, and address families (IPv4, IPv6). VRFs support multi-tenancy, network segregation, and route leaking capabilities (IVRL - Inter-VRF Route Leaking) for complex network architectures.
+    Container for all AIF configurations.
     """
     return await _manage_resource(
         ctx,
         "vrfs",
-        "vrf",
+        "vrfs",
         name,
         action_type,
         payload,

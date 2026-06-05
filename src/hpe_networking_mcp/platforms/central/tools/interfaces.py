@@ -1,13 +1,14 @@
-"""Aruba Central ``Interfaces`` config-model tools.
+"""Aruba Central ``interfaces`` config-model tools.
 
 Initial import emitted by ``scripts/import_central_config_tools.py``
-from a snapshot of ``api-endpoints/central/config/``. The import is
+from a snapshot of ``vendor/central/config/``. The import is
 **one-shot**: this file is hand-curated going forward — edit freely,
 refine docstrings, add per-type schema knobs, split into smaller files
 as needed. Re-running the script will overwrite this file, so only do
 so before any hand edits or with care.
 
-Covers config objects in the ``Interfaces`` OpenAPI tag-group. Wrappers
+Covers config objects sourced from the ``interfaces.json`` vendor
+spec file. Wrappers
 delegate to ``_get_resource`` / ``_manage_resource`` in
 ``security_policy.py`` — the same shared helpers used by the
 hand-curated Roles & Policy tools.
@@ -38,38 +39,38 @@ WRITE_DELETE = ToolAnnotations(
     openWorldHint=True,
 )
 
-# ----- ap-port-profile -----
+# ----- ap-port-profiles -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_ap_port_profile(
+async def central_get_ap_port_profiles(
     ctx: Context,
     profile_name: str | None = None,
 ) -> dict | list | str:
-    """Get ``ap-port-profile`` configurations from Central.
+    """Get ``ap-port-profiles`` configurations from Central.
 
     Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
 
     Parameters:
-        profile_name: Specific ``ap-port-profile`` identifier (OpenAPI path param: ``profile-name``). If omitted, returns all.
+        profile_name: Specific ``ap-port-profiles`` identifier (OpenAPI path param: ``profile-name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "ap-port-profiles", profile_name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_ap_port_profile(
+async def central_manage_ap_port_profiles(
     ctx: Context,
     profile_name: Annotated[
-        str, Field(description="``ap-port-profile`` identifier (OpenAPI path param: ``profile-name``).")
+        str, Field(description="``ap-port-profiles`` identifier (OpenAPI path param: ``profile-name``).")
     ],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``ap-port-profile`` object. "
+                "Payload for the ``ap-port-profiles`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_ap_port_profile`` to "
+                "field set; use ``central_get_ap_port_profiles`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -79,14 +80,14 @@ async def central_manage_ap_port_profile(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``ap-port-profile`` configuration in Central.
+    """Create, update, or delete a ``ap-port-profiles`` configuration in Central.
 
     Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
     """
     return await _manage_resource(
         ctx,
         "ap-port-profiles",
-        "ap-port-profile",
+        "ap-port-profiles",
         profile_name,
         action_type,
         payload,
@@ -96,36 +97,36 @@ async def central_manage_ap_port_profile(
     )
 
 
-# ----- ap-uplink -----
+# ----- ap-uplinks -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_ap_uplink(
+async def central_get_ap_uplinks(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``ap-uplink`` configurations from Central.
+    """Get ``ap-uplinks`` configurations from Central.
 
-    AP uplink profile, configure the uplink parameters, such like ethernet uplink, cellular uplink, preemption parameters, management VLAN, etc.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
 
     Parameters:
-        name: Specific ``ap-uplink`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``ap-uplinks`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "ap-uplinks", name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_ap_uplink(
+async def central_manage_ap_uplinks(
     ctx: Context,
-    name: Annotated[str, Field(description="``ap-uplink`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``ap-uplinks`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``ap-uplink`` object. "
+                "Payload for the ``ap-uplinks`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_ap_uplink`` to "
+                "field set; use ``central_get_ap_uplinks`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -135,14 +136,14 @@ async def central_manage_ap_uplink(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``ap-uplink`` configuration in Central.
+    """Create, update, or delete a ``ap-uplinks`` configuration in Central.
 
-    AP uplink profile, configure the uplink parameters, such like ethernet uplink, cellular uplink, preemption parameters, management VLAN, etc.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
     """
     return await _manage_resource(
         ctx,
         "ap-uplinks",
-        "ap-uplink",
+        "ap-uplinks",
         name,
         action_type,
         payload,
@@ -162,7 +163,7 @@ async def central_get_cdp(
 ) -> dict | list | str:
     """Get ``cdp`` configurations from Central.
 
-    Cisco Discovery Protocol (CDP) configuration.CDP is used for collecting directly connected neighbor device information like hardware,software,device name details etc.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
 
     Parameters:
         name: Specific ``cdp`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -193,7 +194,7 @@ async def central_manage_cdp(
 ) -> dict | str:
     """Create, update, or delete a ``cdp`` configuration in Central.
 
-    Cisco Discovery Protocol (CDP) configuration.CDP is used for collecting directly connected neighbor device information like hardware,software,device name details etc.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
     """
     return await _manage_resource(
         ctx,
@@ -218,7 +219,7 @@ async def central_get_device_profile(
 ) -> dict | list | str:
     """Get ``device-profile`` configurations from Central.
 
-    Device-Profile allows automatic discovery and configuration of other devices such as APs, IP phones, Security cameras, Printers etc.. on the network. The discovery is done via LLDP, CDP or MAC match.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
 
     Parameters:
         name: Specific ``device-profile`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -249,7 +250,7 @@ async def central_manage_device_profile(
 ) -> dict | str:
     """Create, update, or delete a ``device-profile`` configuration in Central.
 
-    Device-Profile allows automatic discovery and configuration of other devices such as APs, IP phones, Security cameras, Printers etc.. on the network. The discovery is done via LLDP, CDP or MAC match.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
     """
     return await _manage_resource(
         ctx,
@@ -274,7 +275,7 @@ async def central_get_dhcp_client(
 ) -> dict | list | str:
     """Get ``dhcp-client`` configurations from Central.
 
-    Dynamic Host Configuration Protocol Client Options Configuration. The main purpose of this feature is to enable DHCP client on the preferred VLAN. The DHCP client feature allows VLAN to act as a host requesting configuration parameters such as IP address, DNS IPs, ZTP information etc.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
 
     Parameters:
         name: Specific ``dhcp-client`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -305,12 +306,68 @@ async def central_manage_dhcp_client(
 ) -> dict | str:
     """Create, update, or delete a ``dhcp-client`` configuration in Central.
 
-    Dynamic Host Configuration Protocol Client Options Configuration. The main purpose of this feature is to enable DHCP client on the preferred VLAN. The DHCP client feature allows VLAN to act as a host requesting configuration parameters such as IP address, DNS IPs, ZTP information etc.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
     """
     return await _manage_resource(
         ctx,
         "dhcp-client",
         "dhcp-client",
+        name,
+        action_type,
+        payload,
+        scope_id,
+        device_function,
+        confirmed,
+    )
+
+
+# ----- ethernet-interfaces -----
+
+
+@tool(annotations=READ_ONLY)
+async def central_get_ethernet_interfaces(
+    ctx: Context,
+    name: str | None = None,
+) -> dict | list | str:
+    """Get ``ethernet-interfaces`` configurations from Central.
+
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
+
+    Parameters:
+        name: Specific ``ethernet-interfaces`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+    """
+    return await _get_resource(ctx, "ethernet-interfaces", name)
+
+
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+async def central_manage_ethernet_interfaces(
+    ctx: Context,
+    name: Annotated[str, Field(description="``ethernet-interfaces`` identifier (OpenAPI path param: ``name``).")],
+    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
+    payload: Annotated[
+        dict,
+        Field(
+            description=(
+                "Payload for the ``ethernet-interfaces`` object. "
+                "Consult the Aruba Central config-model OpenAPI schema for the "
+                "field set; use ``central_get_ethernet_interfaces`` to "
+                "inspect an existing object for reference. "
+                "For ``delete``, ``payload`` is ignored."
+            )
+        ),
+    ],
+    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Create, update, or delete a ``ethernet-interfaces`` configuration in Central.
+
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
+    """
+    return await _manage_resource(
+        ctx,
+        "ethernet-interfaces",
+        "ethernet-interfaces",
         name,
         action_type,
         payload,
@@ -330,7 +387,7 @@ async def central_get_fault_monitor(
 ) -> dict | list | str:
     """Get ``fault-monitor`` configurations from Central.
 
-    Fault monitor top level configuration.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
 
     Parameters:
         name: Specific ``fault-monitor`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -361,7 +418,7 @@ async def central_manage_fault_monitor(
 ) -> dict | str:
     """Create, update, or delete a ``fault-monitor`` configuration in Central.
 
-    Fault monitor top level configuration.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
     """
     return await _manage_resource(
         ctx,
@@ -376,38 +433,38 @@ async def central_manage_fault_monitor(
     )
 
 
-# ----- gw-port-profile -----
+# ----- gw-port-profiles -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_gw_port_profile(
+async def central_get_gw_port_profiles(
     ctx: Context,
     profile_name: str | None = None,
 ) -> dict | list | str:
-    """Get ``gw-port-profile`` configurations from Central.
+    """Get ``gw-port-profiles`` configurations from Central.
 
-    To configure and manage port profiles. A port-profile can be used to configure ethernet interface. Same profile can be applied to multiple interfaces and avoids repeating same configuration for interfaces. Gigabit ethernet config, LLDP, spanning-tree, switch-port configuration, etc can be applied using the port-profile.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
 
     Parameters:
-        profile_name: Specific ``gw-port-profile`` identifier (OpenAPI path param: ``profile-name``). If omitted, returns all.
+        profile_name: Specific ``gw-port-profiles`` identifier (OpenAPI path param: ``profile-name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "gw-port-profiles", profile_name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_gw_port_profile(
+async def central_manage_gw_port_profiles(
     ctx: Context,
     profile_name: Annotated[
-        str, Field(description="``gw-port-profile`` identifier (OpenAPI path param: ``profile-name``).")
+        str, Field(description="``gw-port-profiles`` identifier (OpenAPI path param: ``profile-name``).")
     ],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``gw-port-profile`` object. "
+                "Payload for the ``gw-port-profiles`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_gw_port_profile`` to "
+                "field set; use ``central_get_gw_port_profiles`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -417,14 +474,14 @@ async def central_manage_gw_port_profile(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``gw-port-profile`` configuration in Central.
+    """Create, update, or delete a ``gw-port-profiles`` configuration in Central.
 
-    To configure and manage port profiles. A port-profile can be used to configure ethernet interface. Same profile can be applied to multiple interfaces and avoids repeating same configuration for interfaces. Gigabit ethernet config, LLDP, spanning-tree, switch-port configuration, etc can be applied using the port-profile.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
     """
     return await _manage_resource(
         ctx,
         "gw-port-profiles",
-        "gw-port-profile",
+        "gw-port-profiles",
         profile_name,
         action_type,
         payload,
@@ -434,260 +491,36 @@ async def central_manage_gw_port_profile(
     )
 
 
-# ----- interface-ethernet -----
+# ----- interface-profiles -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_interface_ethernet(
+async def central_get_interface_profiles(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``interface-ethernet`` configurations from Central.
+    """Get ``interface-profiles`` configurations from Central.
 
-    Ethernet interfaces provide physical connectivity for network devices including switches, gateways, access points, and bridges. This module supports configuration of interface properties, port profiles, link aggregation, Power over Ethernet (PoE), security features (AAA, port-security, LLDP), Layer 3 routing capabilities, and advanced features like PIM multicast, flow telemetry, and port monitoring. Supported scopes: Device. This configuration relies on Port Profile configurations (sw-profile for switches, gw-profile for gateways, ap-profile for access points, br-profile for bridges) for template-based settings. Interface names follow device-specific patterns (e.g., gateway model GW_7005 supports 0/0/[0-3], GW_7205 supports 0/0/[0-5]). Use this API to retrieve the list of Ethernet Interface configurations.
-
-    Parameters:
-        name: Specific ``interface-ethernet`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
-    """
-    return await _get_resource(ctx, "ethernet-interfaces", name)
-
-
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_interface_ethernet(
-    ctx: Context,
-    name: Annotated[str, Field(description="``interface-ethernet`` identifier (OpenAPI path param: ``name``).")],
-    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
-    payload: Annotated[
-        dict,
-        Field(
-            description=(
-                "Payload for the ``interface-ethernet`` object. "
-                "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_interface_ethernet`` to "
-                "inspect an existing object for reference. "
-                "For ``delete``, ``payload`` is ignored."
-            )
-        ),
-    ],
-    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
-    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
-    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
-) -> dict | str:
-    """Create, update, or delete a ``interface-ethernet`` configuration in Central.
-
-    Ethernet interfaces provide physical connectivity for network devices including switches, gateways, access points, and bridges. This module supports configuration of interface properties, port profiles, link aggregation, Power over Ethernet (PoE), security features (AAA, port-security, LLDP), Layer 3 routing capabilities, and advanced features like PIM multicast, flow telemetry, and port monitoring. Supported scopes: Device. This configuration relies on Port Profile configurations (sw-profile for switches, gw-profile for gateways, ap-profile for access points, br-profile for bridges) for template-based settings. Interface names follow device-specific patterns (e.g., gateway model GW_7005 supports 0/0/[0-3], GW_7205 supports 0/0/[0-5]). Use this API to retrieve the list of Ethernet Interface configurations.
-    """
-    return await _manage_resource(
-        ctx,
-        "ethernet-interfaces",
-        "interface-ethernet",
-        name,
-        action_type,
-        payload,
-        scope_id,
-        device_function,
-        confirmed,
-    )
-
-
-# ----- interface-loopback -----
-
-
-@tool(annotations=READ_ONLY)
-async def central_get_interface_loopback(
-    ctx: Context,
-    id: str | None = None,
-) -> dict | list | str:
-    """Get ``interface-loopback`` configurations from Central.
-
-    Placeholder for loopback interface(s) configuration. A loopback interface is a virtual interface that is always up and support IPv4/IPv6 address configurations.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
 
     Parameters:
-        id: Specific ``interface-loopback`` identifier (OpenAPI path param: ``id``). If omitted, returns all.
-    """
-    return await _get_resource(ctx, "loopback-interfaces", id)
-
-
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_interface_loopback(
-    ctx: Context,
-    id: Annotated[str, Field(description="``interface-loopback`` identifier (OpenAPI path param: ``id``).")],
-    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
-    payload: Annotated[
-        dict,
-        Field(
-            description=(
-                "Payload for the ``interface-loopback`` object. "
-                "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_interface_loopback`` to "
-                "inspect an existing object for reference. "
-                "For ``delete``, ``payload`` is ignored."
-            )
-        ),
-    ],
-    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
-    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
-    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
-) -> dict | str:
-    """Create, update, or delete a ``interface-loopback`` configuration in Central.
-
-    Placeholder for loopback interface(s) configuration. A loopback interface is a virtual interface that is always up and support IPv4/IPv6 address configurations.
-    """
-    return await _manage_resource(
-        ctx,
-        "loopback-interfaces",
-        "interface-loopback",
-        id,
-        action_type,
-        payload,
-        scope_id,
-        device_function,
-        confirmed,
-    )
-
-
-# ----- interface-management -----
-
-
-@tool(annotations=READ_ONLY)
-async def central_get_interface_management(
-    ctx: Context,
-    name: str | None = None,
-) -> dict | list | str:
-    """Get ``interface-management`` configurations from Central.
-
-    Configuration for the Management Interface. The device is configured or monitored through the Management interface on mgmt VRF. All management traffic such as device ssh, snmp, tftp and so on, goes through the Management interface.
-
-    Parameters:
-        name: Specific ``interface-management`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
-    """
-    return await _get_resource(ctx, "mgmt-interfaces", name)
-
-
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_interface_management(
-    ctx: Context,
-    name: Annotated[str, Field(description="``interface-management`` identifier (OpenAPI path param: ``name``).")],
-    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
-    payload: Annotated[
-        dict,
-        Field(
-            description=(
-                "Payload for the ``interface-management`` object. "
-                "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_interface_management`` to "
-                "inspect an existing object for reference. "
-                "For ``delete``, ``payload`` is ignored."
-            )
-        ),
-    ],
-    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
-    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
-    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
-) -> dict | str:
-    """Create, update, or delete a ``interface-management`` configuration in Central.
-
-    Configuration for the Management Interface. The device is configured or monitored through the Management interface on mgmt VRF. All management traffic such as device ssh, snmp, tftp and so on, goes through the Management interface.
-    """
-    return await _manage_resource(
-        ctx,
-        "mgmt-interfaces",
-        "interface-management",
-        name,
-        action_type,
-        payload,
-        scope_id,
-        device_function,
-        confirmed,
-    )
-
-
-# ----- interface-portchannel -----
-
-
-@tool(annotations=READ_ONLY)
-async def central_get_interface_portchannel(
-    ctx: Context,
-    name: str | None = None,
-) -> dict | list | str:
-    """Get ``interface-portchannel`` configurations from Central.
-
-    Port Channel (Link Aggregation Group/LAG) interfaces combine multiple physical Ethernet links into a single logical interface for increased bandwidth, load balancing, and redundancy per IEEE 802.3ad. Port channels support static aggregation and dynamic LACP negotiation with features including VLAN trunking, routing protocols, access control, and QoS policies. Configure port channel member interfaces, LACP parameters, VLAN assignments, IP addressing, and link protection settings. Supported scopes: Device. Device Limits: Gateway supports port channels 0-7 (8 total). Use this API to retrieve the list of port channel interfaces.
-
-    Parameters:
-        name: Specific ``interface-portchannel`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
-    """
-    return await _get_resource(ctx, "portchannels", name)
-
-
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_interface_portchannel(
-    ctx: Context,
-    name: Annotated[str, Field(description="``interface-portchannel`` identifier (OpenAPI path param: ``name``).")],
-    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
-    payload: Annotated[
-        dict,
-        Field(
-            description=(
-                "Payload for the ``interface-portchannel`` object. "
-                "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_interface_portchannel`` to "
-                "inspect an existing object for reference. "
-                "For ``delete``, ``payload`` is ignored."
-            )
-        ),
-    ],
-    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
-    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
-    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
-) -> dict | str:
-    """Create, update, or delete a ``interface-portchannel`` configuration in Central.
-
-    Port Channel (Link Aggregation Group/LAG) interfaces combine multiple physical Ethernet links into a single logical interface for increased bandwidth, load balancing, and redundancy per IEEE 802.3ad. Port channels support static aggregation and dynamic LACP negotiation with features including VLAN trunking, routing protocols, access control, and QoS policies. Configure port channel member interfaces, LACP parameters, VLAN assignments, IP addressing, and link protection settings. Supported scopes: Device. Device Limits: Gateway supports port channels 0-7 (8 total). Use this API to retrieve the list of port channel interfaces.
-    """
-    return await _manage_resource(
-        ctx,
-        "portchannels",
-        "interface-portchannel",
-        name,
-        action_type,
-        payload,
-        scope_id,
-        device_function,
-        confirmed,
-    )
-
-
-# ----- interface-profile -----
-
-
-@tool(annotations=READ_ONLY)
-async def central_get_interface_profile(
-    ctx: Context,
-    name: str | None = None,
-) -> dict | list | str:
-    """Get ``interface-profile`` configurations from Central.
-
-    List of Interface Profile configuration. Interface Profile is bundle of interface configuration for devices with specific sku/model. Defined for set of uplink/downlink ports for given models. Interface Profile can be defined for stacks/chassis for fixed/automatic set of members/LineCards. Interface Profile can be defined for custom stack/chassis size. One Interface Profile can have port-profile config for uplink + downlink + custom ports for given model/device type. In case of stacks, Interface Profile will not be applied VSF link ports, if they are part of automatic/custom Interface Profile model+ports.
-
-    Parameters:
-        name: Specific ``interface-profile`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``interface-profiles`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "interface-profiles", name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_interface_profile(
+async def central_manage_interface_profiles(
     ctx: Context,
-    name: Annotated[str, Field(description="``interface-profile`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``interface-profiles`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``interface-profile`` object. "
+                "Payload for the ``interface-profiles`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_interface_profile`` to "
+                "field set; use ``central_get_interface_profiles`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -697,129 +530,15 @@ async def central_manage_interface_profile(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``interface-profile`` configuration in Central.
+    """Create, update, or delete a ``interface-profiles`` configuration in Central.
 
-    List of Interface Profile configuration. Interface Profile is bundle of interface configuration for devices with specific sku/model. Defined for set of uplink/downlink ports for given models. Interface Profile can be defined for stacks/chassis for fixed/automatic set of members/LineCards. Interface Profile can be defined for custom stack/chassis size. One Interface Profile can have port-profile config for uplink + downlink + custom ports for given model/device type. In case of stacks, Interface Profile will not be applied VSF link ports, if they are part of automatic/custom Interface Profile model+ports.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
     """
     return await _manage_resource(
         ctx,
         "interface-profiles",
-        "interface-profile",
+        "interface-profiles",
         name,
-        action_type,
-        payload,
-        scope_id,
-        device_function,
-        confirmed,
-    )
-
-
-# ----- interface-subinterface -----
-
-
-@tool(annotations=READ_ONLY)
-async def central_get_interface_subinterface(
-    ctx: Context,
-    parent_name_id: str | None = None,
-) -> dict | list | str:
-    """Get ``interface-subinterface`` configurations from Central.
-
-    Sub Interfaces.
-
-    Parameters:
-        parent_name_id: Specific ``interface-subinterface`` identifier (OpenAPI path param: ``parent-name-id``). If omitted, returns all.
-    """
-    return await _get_resource(ctx, "sub-interfaces", parent_name_id)
-
-
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_interface_subinterface(
-    ctx: Context,
-    parent_name_id: Annotated[
-        str, Field(description="``interface-subinterface`` identifier (OpenAPI path param: ``parent-name-id``).")
-    ],
-    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
-    payload: Annotated[
-        dict,
-        Field(
-            description=(
-                "Payload for the ``interface-subinterface`` object. "
-                "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_interface_subinterface`` to "
-                "inspect an existing object for reference. "
-                "For ``delete``, ``payload`` is ignored."
-            )
-        ),
-    ],
-    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
-    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
-    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
-) -> dict | str:
-    """Create, update, or delete a ``interface-subinterface`` configuration in Central.
-
-    Sub Interfaces.
-    """
-    return await _manage_resource(
-        ctx,
-        "sub-interfaces",
-        "interface-subinterface",
-        parent_name_id,
-        action_type,
-        payload,
-        scope_id,
-        device_function,
-        confirmed,
-    )
-
-
-# ----- interface-vlan -----
-
-
-@tool(annotations=READ_ONLY)
-async def central_get_interface_vlan(
-    ctx: Context,
-    id: str | None = None,
-) -> dict | list | str:
-    """Get ``interface-vlan`` configurations from Central.
-
-    Layer 3 VLAN (Switched Virtual Interface/SVI) configurations provide IP routing functionality for VLANs, enabling inter-VLAN routing and gateway services. VLAN interfaces support IPv4/IPv6 addressing, DHCP relay, routing protocol participation (OSPF, BGP, RIP), VRRP for high availability, and access control policies. Configure VLAN interface IP addresses, DHCP servers/relay agents, multicast protocols, routing parameters, and security policies. Device Limits: Gateway supports max 3 IPv6 addresses, 16 IPv4 helper addresses, and 3 IPv6 helper addresses per VLAN interface. Use this API to retrieve the list of VLAN interfaces.
-
-    Parameters:
-        id: Specific ``interface-vlan`` identifier (OpenAPI path param: ``id``). If omitted, returns all.
-    """
-    return await _get_resource(ctx, "vlan-interfaces", id)
-
-
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_interface_vlan(
-    ctx: Context,
-    id: Annotated[str, Field(description="``interface-vlan`` identifier (OpenAPI path param: ``id``).")],
-    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
-    payload: Annotated[
-        dict,
-        Field(
-            description=(
-                "Payload for the ``interface-vlan`` object. "
-                "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_interface_vlan`` to "
-                "inspect an existing object for reference. "
-                "For ``delete``, ``payload`` is ignored."
-            )
-        ),
-    ],
-    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
-    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
-    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
-) -> dict | str:
-    """Create, update, or delete a ``interface-vlan`` configuration in Central.
-
-    Layer 3 VLAN (Switched Virtual Interface/SVI) configurations provide IP routing functionality for VLANs, enabling inter-VLAN routing and gateway services. VLAN interfaces support IPv4/IPv6 addressing, DHCP relay, routing protocol participation (OSPF, BGP, RIP), VRRP for high availability, and access control policies. Configure VLAN interface IP addresses, DHCP servers/relay agents, multicast protocols, routing parameters, and security policies. Device Limits: Gateway supports max 3 IPv6 addresses, 16 IPv4 helper addresses, and 3 IPv6 helper addresses per VLAN interface. Use this API to retrieve the list of VLAN interfaces.
-    """
-    return await _manage_resource(
-        ctx,
-        "vlan-interfaces",
-        "interface-vlan",
-        id,
         action_type,
         payload,
         scope_id,
@@ -837,7 +556,7 @@ async def central_get_lacp(
 ) -> dict | list | str:
     """Get the ``lacp`` singleton configuration from Central.
 
-    Link Aggregation Control Protocol (LACP) dynamically negotiates and manages link aggregation groups (LAGs/Port Channels) per IEEE 802.3ad/802.1AX standards. LACP provides automatic failover, load distribution across member links, and detection of misconfigured aggregation. Configure system-level LACP priority, hashing algorithms, and interface-specific parameters including active/passive modes, heartbeat rates (fast/slow), and minimum active link thresholds. Use this API to retrieve LACP system configuration.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
     """
     return await _get_resource(ctx, "lacp", None)
 
@@ -863,7 +582,7 @@ async def central_manage_lacp(
 ) -> dict | str:
     """Create, update, or delete the singleton ``lacp`` configuration in Central.
 
-    Link Aggregation Control Protocol (LACP) dynamically negotiates and manages link aggregation groups (LAGs/Port Channels) per IEEE 802.3ad/802.1AX standards. LACP provides automatic failover, load distribution across member links, and detection of misconfigured aggregation. Configure system-level LACP priority, hashing algorithms, and interface-specific parameters including active/passive modes, heartbeat rates (fast/slow), and minimum active link thresholds. Use this API to retrieve LACP system configuration.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
     """
     return await _manage_resource(
         ctx,
@@ -888,7 +607,7 @@ async def central_get_lldp(
 ) -> dict | list | str:
     """Get ``lldp`` configurations from Central.
 
-    The Link Layer Discovery Protocol (LLDP) is an industry-standard, vendor-neutral method to allow networked devices to advertise capabilities, discover and identify other LLDP enabled devices and gather information in a LAN. LLDP is supported on physical interfaces and Out-Of-Band Management (OOBM) interfaces and it is not supported on logical interfaces.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
 
     Parameters:
         name: Specific ``lldp`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -919,7 +638,7 @@ async def central_manage_lldp(
 ) -> dict | str:
     """Create, update, or delete a ``lldp`` configuration in Central.
 
-    The Link Layer Discovery Protocol (LLDP) is an industry-standard, vendor-neutral method to allow networked devices to advertise capabilities, discover and identify other LLDP enabled devices and gather information in a LAN. LLDP is supported on physical interfaces and Out-Of-Band Management (OOBM) interfaces and it is not supported on logical interfaces.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
     """
     return await _manage_resource(
         ctx,
@@ -934,36 +653,36 @@ async def central_manage_lldp(
     )
 
 
-# ----- mirror -----
+# ----- loopback-interfaces -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_mirror(
+async def central_get_loopback_interfaces(
     ctx: Context,
-    name: str | None = None,
+    id: str | None = None,
 ) -> dict | list | str:
-    """Get ``mirror`` configurations from Central.
+    """Get ``loopback-interfaces`` configurations from Central.
 
-    Mirror Configuration. Mirroring is the ability of a switch to transmit a copy of a packet out another system interface. This allows network administrators to replicate all traffic arriving and/or leaving selected system interfaces for collection/analysis purposes.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
 
     Parameters:
-        name: Specific ``mirror`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        id: Specific ``loopback-interfaces`` identifier (OpenAPI path param: ``id``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "mirrors", name)
+    return await _get_resource(ctx, "loopback-interfaces", id)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_mirror(
+async def central_manage_loopback_interfaces(
     ctx: Context,
-    name: Annotated[str, Field(description="``mirror`` identifier (OpenAPI path param: ``name``).")],
+    id: Annotated[str, Field(description="``loopback-interfaces`` identifier (OpenAPI path param: ``id``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``mirror`` object. "
+                "Payload for the ``loopback-interfaces`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_mirror`` to "
+                "field set; use ``central_get_loopback_interfaces`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -973,14 +692,70 @@ async def central_manage_mirror(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``mirror`` configuration in Central.
+    """Create, update, or delete a ``loopback-interfaces`` configuration in Central.
 
-    Mirror Configuration. Mirroring is the ability of a switch to transmit a copy of a packet out another system interface. This allows network administrators to replicate all traffic arriving and/or leaving selected system interfaces for collection/analysis purposes.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
     """
     return await _manage_resource(
         ctx,
-        "mirrors",
-        "mirror",
+        "loopback-interfaces",
+        "loopback-interfaces",
+        id,
+        action_type,
+        payload,
+        scope_id,
+        device_function,
+        confirmed,
+    )
+
+
+# ----- mgmt-interfaces -----
+
+
+@tool(annotations=READ_ONLY)
+async def central_get_mgmt_interfaces(
+    ctx: Context,
+    name: str | None = None,
+) -> dict | list | str:
+    """Get ``mgmt-interfaces`` configurations from Central.
+
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
+
+    Parameters:
+        name: Specific ``mgmt-interfaces`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+    """
+    return await _get_resource(ctx, "mgmt-interfaces", name)
+
+
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+async def central_manage_mgmt_interfaces(
+    ctx: Context,
+    name: Annotated[str, Field(description="``mgmt-interfaces`` identifier (OpenAPI path param: ``name``).")],
+    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
+    payload: Annotated[
+        dict,
+        Field(
+            description=(
+                "Payload for the ``mgmt-interfaces`` object. "
+                "Consult the Aruba Central config-model OpenAPI schema for the "
+                "field set; use ``central_get_mgmt_interfaces`` to "
+                "inspect an existing object for reference. "
+                "For ``delete``, ``payload`` is ignored."
+            )
+        ),
+    ],
+    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Create, update, or delete a ``mgmt-interfaces`` configuration in Central.
+
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
+    """
+    return await _manage_resource(
+        ctx,
+        "mgmt-interfaces",
+        "mgmt-interfaces",
         name,
         action_type,
         payload,
@@ -1000,7 +775,7 @@ async def central_get_mirror_endpoint(
 ) -> dict | list | str:
     """Get ``mirror-endpoint`` configurations from Central.
 
-    Mirror-Endpoints terminate a remote mirror tunnel. They serve to control packet decapsulation and forwarding to the mirror destinations. Creating a Mirror-Endpoint is independent of the corresponding mirror session, which means there is no ordering requirement for the creation of a mirror session and a Mirror Endpoint.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
 
     Parameters:
         name: Specific ``mirror-endpoint`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -1031,12 +806,124 @@ async def central_manage_mirror_endpoint(
 ) -> dict | str:
     """Create, update, or delete a ``mirror-endpoint`` configuration in Central.
 
-    Mirror-Endpoints terminate a remote mirror tunnel. They serve to control packet decapsulation and forwarding to the mirror destinations. Creating a Mirror-Endpoint is independent of the corresponding mirror session, which means there is no ordering requirement for the creation of a mirror session and a Mirror Endpoint.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
     """
     return await _manage_resource(
         ctx,
         "mirror-endpoint",
         "mirror-endpoint",
+        name,
+        action_type,
+        payload,
+        scope_id,
+        device_function,
+        confirmed,
+    )
+
+
+# ----- mirrors -----
+
+
+@tool(annotations=READ_ONLY)
+async def central_get_mirrors(
+    ctx: Context,
+    name: str | None = None,
+) -> dict | list | str:
+    """Get ``mirrors`` configurations from Central.
+
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
+
+    Parameters:
+        name: Specific ``mirrors`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+    """
+    return await _get_resource(ctx, "mirrors", name)
+
+
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+async def central_manage_mirrors(
+    ctx: Context,
+    name: Annotated[str, Field(description="``mirrors`` identifier (OpenAPI path param: ``name``).")],
+    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
+    payload: Annotated[
+        dict,
+        Field(
+            description=(
+                "Payload for the ``mirrors`` object. "
+                "Consult the Aruba Central config-model OpenAPI schema for the "
+                "field set; use ``central_get_mirrors`` to "
+                "inspect an existing object for reference. "
+                "For ``delete``, ``payload`` is ignored."
+            )
+        ),
+    ],
+    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Create, update, or delete a ``mirrors`` configuration in Central.
+
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
+    """
+    return await _manage_resource(
+        ctx,
+        "mirrors",
+        "mirrors",
+        name,
+        action_type,
+        payload,
+        scope_id,
+        device_function,
+        confirmed,
+    )
+
+
+# ----- portchannels -----
+
+
+@tool(annotations=READ_ONLY)
+async def central_get_portchannels(
+    ctx: Context,
+    name: str | None = None,
+) -> dict | list | str:
+    """Get ``portchannels`` configurations from Central.
+
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
+
+    Parameters:
+        name: Specific ``portchannels`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+    """
+    return await _get_resource(ctx, "portchannels", name)
+
+
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+async def central_manage_portchannels(
+    ctx: Context,
+    name: Annotated[str, Field(description="``portchannels`` identifier (OpenAPI path param: ``name``).")],
+    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
+    payload: Annotated[
+        dict,
+        Field(
+            description=(
+                "Payload for the ``portchannels`` object. "
+                "Consult the Aruba Central config-model OpenAPI schema for the "
+                "field set; use ``central_get_portchannels`` to "
+                "inspect an existing object for reference. "
+                "For ``delete``, ``payload`` is ignored."
+            )
+        ),
+    ],
+    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Create, update, or delete a ``portchannels`` configuration in Central.
+
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
+    """
+    return await _manage_resource(
+        ctx,
+        "portchannels",
+        "portchannels",
         name,
         action_type,
         payload,
@@ -1056,7 +943,7 @@ async def central_get_sflow(
 ) -> dict | list | str:
     """Get ``sflow`` configurations from Central.
 
-    Sampled Flow (sFlow) configuration.sFlow is an industry-standard sampling technology used to sample application-level packet flows and gather interface statistics from network devices.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
 
     Parameters:
         name: Specific ``sflow`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -1087,7 +974,7 @@ async def central_manage_sflow(
 ) -> dict | str:
     """Create, update, or delete a ``sflow`` configuration in Central.
 
-    Sampled Flow (sFlow) configuration.sFlow is an industry-standard sampling technology used to sample application-level packet flows and gather interface statistics from network devices.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
     """
     return await _manage_resource(
         ctx,
@@ -1102,36 +989,36 @@ async def central_manage_sflow(
     )
 
 
-# ----- static-mac -----
+# ----- static-macs -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_static_mac(
+async def central_get_static_macs(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``static-mac`` configurations from Central.
+    """Get ``static-macs`` configurations from Central.
 
-    Static MAC configuration.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
 
     Parameters:
-        name: Specific ``static-mac`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``static-macs`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "static-macs", name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_static_mac(
+async def central_manage_static_macs(
     ctx: Context,
-    name: Annotated[str, Field(description="``static-mac`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``static-macs`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``static-mac`` object. "
+                "Payload for the ``static-macs`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_static_mac`` to "
+                "field set; use ``central_get_static_macs`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -1141,14 +1028,14 @@ async def central_manage_static_mac(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``static-mac`` configuration in Central.
+    """Create, update, or delete a ``static-macs`` configuration in Central.
 
-    Static MAC configuration.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
     """
     return await _manage_resource(
         ctx,
         "static-macs",
-        "static-mac",
+        "static-macs",
         name,
         action_type,
         payload,
@@ -1158,38 +1045,38 @@ async def central_manage_static_mac(
     )
 
 
-# ----- sw-port-profile -----
+# ----- sub-interfaces -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_sw_port_profile(
+async def central_get_sub_interfaces(
     ctx: Context,
-    profile_name: str | None = None,
+    parent_name_id: str | None = None,
 ) -> dict | list | str:
-    """Get ``sw-port-profile`` configurations from Central.
+    """Get ``sub-interfaces`` configurations from Central.
 
-    Configure and manage port profiles. A port profile is a template for configuring ethernet interface configurations. It is a mechanism intended to ease the process of configuring multiple interfaces with same set of configurations. Instead of manually configuring each interface one-by-one, the port profile collects the common configuration settings and allows them to be applied on the interface or a collection of interfaces.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
 
     Parameters:
-        profile_name: Specific ``sw-port-profile`` identifier (OpenAPI path param: ``profile-name``). If omitted, returns all.
+        parent_name_id: Specific ``sub-interfaces`` identifier (OpenAPI path param: ``parent-name-id``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "sw-port-profiles", profile_name)
+    return await _get_resource(ctx, "sub-interfaces", parent_name_id)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_sw_port_profile(
+async def central_manage_sub_interfaces(
     ctx: Context,
-    profile_name: Annotated[
-        str, Field(description="``sw-port-profile`` identifier (OpenAPI path param: ``profile-name``).")
+    parent_name_id: Annotated[
+        str, Field(description="``sub-interfaces`` identifier (OpenAPI path param: ``parent-name-id``).")
     ],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``sw-port-profile`` object. "
+                "Payload for the ``sub-interfaces`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_sw_port_profile`` to "
+                "field set; use ``central_get_sub_interfaces`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -1199,14 +1086,72 @@ async def central_manage_sw_port_profile(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``sw-port-profile`` configuration in Central.
+    """Create, update, or delete a ``sub-interfaces`` configuration in Central.
 
-    Configure and manage port profiles. A port profile is a template for configuring ethernet interface configurations. It is a mechanism intended to ease the process of configuring multiple interfaces with same set of configurations. Instead of manually configuring each interface one-by-one, the port profile collects the common configuration settings and allows them to be applied on the interface or a collection of interfaces.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
+    """
+    return await _manage_resource(
+        ctx,
+        "sub-interfaces",
+        "sub-interfaces",
+        parent_name_id,
+        action_type,
+        payload,
+        scope_id,
+        device_function,
+        confirmed,
+    )
+
+
+# ----- sw-port-profiles -----
+
+
+@tool(annotations=READ_ONLY)
+async def central_get_sw_port_profiles(
+    ctx: Context,
+    profile_name: str | None = None,
+) -> dict | list | str:
+    """Get ``sw-port-profiles`` configurations from Central.
+
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
+
+    Parameters:
+        profile_name: Specific ``sw-port-profiles`` identifier (OpenAPI path param: ``profile-name``). If omitted, returns all.
+    """
+    return await _get_resource(ctx, "sw-port-profiles", profile_name)
+
+
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+async def central_manage_sw_port_profiles(
+    ctx: Context,
+    profile_name: Annotated[
+        str, Field(description="``sw-port-profiles`` identifier (OpenAPI path param: ``profile-name``).")
+    ],
+    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
+    payload: Annotated[
+        dict,
+        Field(
+            description=(
+                "Payload for the ``sw-port-profiles`` object. "
+                "Consult the Aruba Central config-model OpenAPI schema for the "
+                "field set; use ``central_get_sw_port_profiles`` to "
+                "inspect an existing object for reference. "
+                "For ``delete``, ``payload`` is ignored."
+            )
+        ),
+    ],
+    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Create, update, or delete a ``sw-port-profiles`` configuration in Central.
+
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
     """
     return await _manage_resource(
         ctx,
         "sw-port-profiles",
-        "sw-port-profile",
+        "sw-port-profiles",
         profile_name,
         action_type,
         payload,
@@ -1226,7 +1171,7 @@ async def central_get_ufd(
 ) -> dict | list | str:
     """Get ``ufd`` configurations from Central.
 
-    Uplink Failure Detection(UFD) Configurations.UFD monitors (tracks the forwarding state of) the interfaces/LAGs(Link Aggregation) configured as links-to-monitor (LtM) and when all LtM links go down,UFD disables the interfaces/LAGs configured as links-to-disable (LtD). If any of the LtM links come back up, then all the LtD links are brought back up.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
 
     Parameters:
         name: Specific ``ufd`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -1257,13 +1202,69 @@ async def central_manage_ufd(
 ) -> dict | str:
     """Create, update, or delete a ``ufd`` configuration in Central.
 
-    Uplink Failure Detection(UFD) Configurations.UFD monitors (tracks the forwarding state of) the interfaces/LAGs(Link Aggregation) configured as links-to-monitor (LtM) and when all LtM links go down,UFD disables the interfaces/LAGs configured as links-to-disable (LtD). If any of the LtM links come back up, then all the LtD links are brought back up.
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
     """
     return await _manage_resource(
         ctx,
         "ufd",
         "ufd",
         name,
+        action_type,
+        payload,
+        scope_id,
+        device_function,
+        confirmed,
+    )
+
+
+# ----- vlan-interfaces -----
+
+
+@tool(annotations=READ_ONLY)
+async def central_get_vlan_interfaces(
+    ctx: Context,
+    id: str | None = None,
+) -> dict | list | str:
+    """Get ``vlan-interfaces`` configurations from Central.
+
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
+
+    Parameters:
+        id: Specific ``vlan-interfaces`` identifier (OpenAPI path param: ``id``). If omitted, returns all.
+    """
+    return await _get_resource(ctx, "vlan-interfaces", id)
+
+
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+async def central_manage_vlan_interfaces(
+    ctx: Context,
+    id: Annotated[str, Field(description="``vlan-interfaces`` identifier (OpenAPI path param: ``id``).")],
+    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
+    payload: Annotated[
+        dict,
+        Field(
+            description=(
+                "Payload for the ``vlan-interfaces`` object. "
+                "Consult the Aruba Central config-model OpenAPI schema for the "
+                "field set; use ``central_get_vlan_interfaces`` to "
+                "inspect an existing object for reference. "
+                "For ``delete``, ``payload`` is ignored."
+            )
+        ),
+    ],
+    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Create, update, or delete a ``vlan-interfaces`` configuration in Central.
+
+    Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
+    """
+    return await _manage_resource(
+        ctx,
+        "vlan-interfaces",
+        "vlan-interfaces",
+        id,
         action_type,
         payload,
         scope_id,

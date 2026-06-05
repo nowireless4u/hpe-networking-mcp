@@ -1,13 +1,14 @@
-"""Aruba Central ``Network Services`` config-model tools.
+"""Aruba Central ``network-services`` config-model tools.
 
 Initial import emitted by ``scripts/import_central_config_tools.py``
-from a snapshot of ``api-endpoints/central/config/``. The import is
+from a snapshot of ``vendor/central/config/``. The import is
 **one-shot**: this file is hand-curated going forward — edit freely,
 refine docstrings, add per-type schema knobs, split into smaller files
 as needed. Re-running the script will overwrite this file, so only do
 so before any hand edits or with care.
 
-Covers config objects in the ``Network Services`` OpenAPI tag-group. Wrappers
+Covers config objects sourced from the ``network-services.json`` vendor
+spec file. Wrappers
 delegate to ``_get_resource`` / ``_manage_resource`` in
 ``security_policy.py`` — the same shared helpers used by the
 hand-curated Roles & Policy tools.
@@ -104,7 +105,7 @@ async def central_get_dhcp_relay(
 ) -> dict | list | str:
     """Get ``dhcp-relay`` configurations from Central.
 
-    DHCP Relay forwards DHCP requests from clients on one network segment to DHCP servers located on different network segments, enabling centralized IP address management across multiple subnets. DHCP Relay supports DHCPv4 (RFC 2131) and DHCPv6 (RFC 3315) with configurable helper addresses, Option 82 insertion for client identification, hop count control, and smart relay functionality. Configure IPv4 and IPv6 relay parameters including server addresses, source interfaces, and DHCP option handling policies. Use this API to retrieve the list of DHCP relay profiles.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
 
     Parameters:
         name: Specific ``dhcp-relay`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -135,7 +136,7 @@ async def central_manage_dhcp_relay(
 ) -> dict | str:
     """Create, update, or delete a ``dhcp-relay`` configuration in Central.
 
-    DHCP Relay forwards DHCP requests from clients on one network segment to DHCP servers located on different network segments, enabling centralized IP address management across multiple subnets. DHCP Relay supports DHCPv4 (RFC 2131) and DHCPv6 (RFC 3315) with configurable helper addresses, Option 82 insertion for client identification, hop count control, and smart relay functionality. Configure IPv4 and IPv6 relay parameters including server addresses, source interfaces, and DHCP option handling policies. Use this API to retrieve the list of DHCP relay profiles.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
     """
     return await _manage_resource(
         ctx,
@@ -160,7 +161,7 @@ async def central_get_dhcp_server(
 ) -> dict | list | str:
     """Get ``dhcp-server`` configurations from Central.
 
-    Dynamic Host Configuration Protocol server Configurations. DHCPv4 and DHCPv6 server can automatically allocate IPv4/IPv6 addresses and deliver configuration settings to client hosts. This also can be configured to provide various network information like IP addresses of DNS server address, boot-file name, vendor specific options etc.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
 
     Parameters:
         name: Specific ``dhcp-server`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -191,7 +192,7 @@ async def central_manage_dhcp_server(
 ) -> dict | str:
     """Create, update, or delete a ``dhcp-server`` configuration in Central.
 
-    Dynamic Host Configuration Protocol server Configurations. DHCPv4 and DHCPv6 server can automatically allocate IPv4/IPv6 addresses and deliver configuration settings to client hosts. This also can be configured to provide various network information like IP addresses of DNS server address, boot-file name, vendor specific options etc.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
     """
     return await _manage_resource(
         ctx,
@@ -216,7 +217,7 @@ async def central_get_dhcp_snooping(
 ) -> dict | list | str:
     """Get ``dhcp-snooping`` configurations from Central.
 
-    Configuration of DHCP-Snooping. DHCP-Snooping is a security feature to help avoid the "Denial of Service"/"man in the middle" attacks that result from unauthorized users adding a DHCP server to the network that then provides invalid configuration data to other DHCP clients on the network.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
 
     Parameters:
         name: Specific ``dhcp-snooping`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -247,7 +248,7 @@ async def central_manage_dhcp_snooping(
 ) -> dict | str:
     """Create, update, or delete a ``dhcp-snooping`` configuration in Central.
 
-    Configuration of DHCP-Snooping. DHCP-Snooping is a security feature to help avoid the "Denial of Service"/"man in the middle" attacks that result from unauthorized users adding a DHCP server to the network that then provides invalid configuration data to other DHCP clients on the network.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
     """
     return await _manage_resource(
         ctx,
@@ -272,7 +273,7 @@ async def central_get_dhcp_snooping_interface(
 ) -> dict | list | str:
     """Get ``dhcp-snooping-interface`` configurations from Central.
 
-    DHCP-Snooping interface parameters.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
 
     Parameters:
         name: Specific ``dhcp-snooping-interface`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -303,7 +304,7 @@ async def central_manage_dhcp_snooping_interface(
 ) -> dict | str:
     """Create, update, or delete a ``dhcp-snooping-interface`` configuration in Central.
 
-    DHCP-Snooping interface parameters.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
     """
     return await _manage_resource(
         ctx,
@@ -328,7 +329,7 @@ async def central_get_dynamic_arp_inspection_interface(
 ) -> dict | list | str:
     """Get ``dynamic-arp-inspection-interface`` configurations from Central.
 
-    Dynamic ARP Inspection interface level configuration.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
 
     Parameters:
         name: Specific ``dynamic-arp-inspection-interface`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -361,7 +362,7 @@ async def central_manage_dynamic_arp_inspection_interface(
 ) -> dict | str:
     """Create, update, or delete a ``dynamic-arp-inspection-interface`` configuration in Central.
 
-    Dynamic ARP Inspection interface level configuration.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
     """
     return await _manage_resource(
         ctx,
@@ -386,7 +387,7 @@ async def central_get_external_storage(
 ) -> dict | list | str:
     """Get ``external-storage`` configurations from Central.
 
-    External storage volumes accessible from the switch. The feature manages external storage volumes and make them available to system applications and protocols. The storage is used to store and retrieve data files when capacity use pattern is such that external storage is the best choice. The feature supports network attached storage as well as local external storage.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
 
     Parameters:
         name: Specific ``external-storage`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -417,7 +418,7 @@ async def central_manage_external_storage(
 ) -> dict | str:
     """Create, update, or delete a ``external-storage`` configuration in Central.
 
-    External storage volumes accessible from the switch. The feature manages external storage volumes and make them available to system applications and protocols. The storage is used to store and retrieve data files when capacity use pattern is such that external storage is the best choice. The feature supports network attached storage as well as local external storage.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
     """
     return await _manage_resource(
         ctx,
@@ -432,94 +433,36 @@ async def central_manage_external_storage(
     )
 
 
-# ----- ip-binding -----
+# ----- ip-source-lockdown -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_ip_binding(
-    ctx: Context,
-    ip_version_vlan_client_address: str | None = None,
-) -> dict | list | str:
-    """Get ``ip-binding`` configurations from Central.
-
-    Source IP binding configuration. Add a static IPv4 or Ipv6 to MAC binding in the IP Binding database.
-
-    Parameters:
-        ip_version_vlan_client_address: Specific ``ip-binding`` identifier (OpenAPI path param: ``ip-version-vlan-client-address``). If omitted, returns all.
-    """
-    return await _get_resource(ctx, "source-ip-bindings", ip_version_vlan_client_address)
-
-
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_ip_binding(
-    ctx: Context,
-    ip_version_vlan_client_address: Annotated[
-        str, Field(description="``ip-binding`` identifier (OpenAPI path param: ``ip-version-vlan-client-address``).")
-    ],
-    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
-    payload: Annotated[
-        dict,
-        Field(
-            description=(
-                "Payload for the ``ip-binding`` object. "
-                "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_ip_binding`` to "
-                "inspect an existing object for reference. "
-                "For ``delete``, ``payload`` is ignored."
-            )
-        ),
-    ],
-    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
-    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
-    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
-) -> dict | str:
-    """Create, update, or delete a ``ip-binding`` configuration in Central.
-
-    Source IP binding configuration. Add a static IPv4 or Ipv6 to MAC binding in the IP Binding database.
-    """
-    return await _manage_resource(
-        ctx,
-        "source-ip-bindings",
-        "ip-binding",
-        ip_version_vlan_client_address,
-        action_type,
-        payload,
-        scope_id,
-        device_function,
-        confirmed,
-    )
-
-
-# ----- ip-lockdown -----
-
-
-@tool(annotations=READ_ONLY)
-async def central_get_ip_lockdown(
+async def central_get_ip_source_lockdown(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``ip-lockdown`` configurations from Central.
+    """Get ``ip-source-lockdown`` configurations from Central.
 
-    IP source lockdown. IP source lockdown feature is used to prevent IP source address spoofing on a per-port basis. When dynamic IP source lockdown is enabled, IP traffic received on a port are forwarded only if IP address, VLAN, MAC address and Port matches the IP binding entry. The IP binding can either be statically configured or learnt by the DHCP Snooping feature.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
 
     Parameters:
-        name: Specific ``ip-lockdown`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``ip-source-lockdown`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "ip-source-lockdown", name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_ip_lockdown(
+async def central_manage_ip_source_lockdown(
     ctx: Context,
-    name: Annotated[str, Field(description="``ip-lockdown`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``ip-source-lockdown`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``ip-lockdown`` object. "
+                "Payload for the ``ip-source-lockdown`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_ip_lockdown`` to "
+                "field set; use ``central_get_ip_source_lockdown`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -529,14 +472,14 @@ async def central_manage_ip_lockdown(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``ip-lockdown`` configuration in Central.
+    """Create, update, or delete a ``ip-source-lockdown`` configuration in Central.
 
-    IP source lockdown. IP source lockdown feature is used to prevent IP source address spoofing on a per-port basis. When dynamic IP source lockdown is enabled, IP traffic received on a port are forwarded only if IP address, VLAN, MAC address and Port matches the IP binding entry. The IP binding can either be statically configured or learnt by the DHCP Snooping feature.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
     """
     return await _manage_resource(
         ctx,
         "ip-source-lockdown",
-        "ip-lockdown",
+        "ip-source-lockdown",
         name,
         action_type,
         payload,
@@ -546,36 +489,38 @@ async def central_manage_ip_lockdown(
     )
 
 
-# ----- ip-lockdown-interface -----
+# ----- ip-source-lockdown-interface -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_ip_lockdown_interface(
+async def central_get_ip_source_lockdown_interface(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``ip-lockdown-interface`` configurations from Central.
+    """Get ``ip-source-lockdown-interface`` configurations from Central.
 
-    IP source lockdown interface configuration.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
 
     Parameters:
-        name: Specific ``ip-lockdown-interface`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``ip-source-lockdown-interface`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "ip-source-lockdown-interface", name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_ip_lockdown_interface(
+async def central_manage_ip_source_lockdown_interface(
     ctx: Context,
-    name: Annotated[str, Field(description="``ip-lockdown-interface`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[
+        str, Field(description="``ip-source-lockdown-interface`` identifier (OpenAPI path param: ``name``).")
+    ],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``ip-lockdown-interface`` object. "
+                "Payload for the ``ip-source-lockdown-interface`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_ip_lockdown_interface`` to "
+                "field set; use ``central_get_ip_source_lockdown_interface`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -585,14 +530,14 @@ async def central_manage_ip_lockdown_interface(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``ip-lockdown-interface`` configuration in Central.
+    """Create, update, or delete a ``ip-source-lockdown-interface`` configuration in Central.
 
-    IP source lockdown interface configuration.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
     """
     return await _manage_resource(
         ctx,
         "ip-source-lockdown-interface",
-        "ip-lockdown-interface",
+        "ip-source-lockdown-interface",
         name,
         action_type,
         payload,
@@ -612,7 +557,7 @@ async def central_get_ipsla(
 ) -> dict | list | str:
     """Get ``ipsla`` configurations from Central.
 
-    Internet Protocol Service Level Agreement (IPSLA) configuration. IPSLA as a feature enables measuring network performance between two nodes in a network for different service level agreement parameters such as round trip time (RTT), one way delay, jitter, reachability, packet loss, voice quality scores etc.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
 
     Parameters:
         name: Specific ``ipsla`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -643,7 +588,7 @@ async def central_manage_ipsla(
 ) -> dict | str:
     """Create, update, or delete a ``ipsla`` configuration in Central.
 
-    Internet Protocol Service Level Agreement (IPSLA) configuration. IPSLA as a feature enables measuring network performance between two nodes in a network for different service level agreement parameters such as round trip time (RTT), one way delay, jitter, reachability, packet loss, voice quality scores etc.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
     """
     return await _manage_resource(
         ctx,
@@ -658,36 +603,36 @@ async def central_manage_ipsla(
     )
 
 
-# ----- mgmd -----
+# ----- mgmd-global -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_mgmd(
+async def central_get_mgmd_global(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``mgmd`` configurations from Central.
+    """Get ``mgmd-global`` configurations from Central.
 
-    Multicast Group Membership Discovery (MGMD) manages multicast group membership using IGMP (Internet Group Management Protocol) for IPv4 and MLD (Multicast Listener Discovery) for IPv6 networks. MGMD enables efficient multicast traffic delivery by controlling group membership, reducing unnecessary flooding, and conserving network bandwidth. Configure IGMP snooping, MLD snooping, querier functionality, fast-leave processing, static groups, proxy domains, and query intervals for multicast optimization. Use this API to retrieve the list of MGMD profiles.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
 
     Parameters:
-        name: Specific ``mgmd`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``mgmd-global`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "mgmd-global", name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_mgmd(
+async def central_manage_mgmd_global(
     ctx: Context,
-    name: Annotated[str, Field(description="``mgmd`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``mgmd-global`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``mgmd`` object. "
+                "Payload for the ``mgmd-global`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_mgmd`` to "
+                "field set; use ``central_get_mgmd_global`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -697,14 +642,14 @@ async def central_manage_mgmd(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``mgmd`` configuration in Central.
+    """Create, update, or delete a ``mgmd-global`` configuration in Central.
 
-    Multicast Group Membership Discovery (MGMD) manages multicast group membership using IGMP (Internet Group Management Protocol) for IPv4 and MLD (Multicast Listener Discovery) for IPv6 networks. MGMD enables efficient multicast traffic delivery by controlling group membership, reducing unnecessary flooding, and conserving network bandwidth. Configure IGMP snooping, MLD snooping, querier functionality, fast-leave processing, static groups, proxy domains, and query intervals for multicast optimization. Use this API to retrieve the list of MGMD profiles.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
     """
     return await _manage_resource(
         ctx,
         "mgmd-global",
-        "mgmd",
+        "mgmd-global",
         name,
         action_type,
         payload,
@@ -724,7 +669,7 @@ async def central_get_multicast_dns(
 ) -> dict | list | str:
     """Get ``multicast-dns`` configurations from Central.
 
-    Multicast DNS configuration. Multicast DNS (mDNS) gateway helps users to discover various services such as printers and Apple TV, across VLANs.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
 
     Parameters:
         name: Specific ``multicast-dns`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -755,7 +700,7 @@ async def central_manage_multicast_dns(
 ) -> dict | str:
     """Create, update, or delete a ``multicast-dns`` configuration in Central.
 
-    Multicast DNS configuration. Multicast DNS (mDNS) gateway helps users to discover various services such as printers and Apple TV, across VLANs.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
     """
     return await _manage_resource(
         ctx,
@@ -780,7 +725,7 @@ async def central_get_nae_lite(
 ) -> dict | list | str:
     """Get ``nae-lite`` configurations from Central.
 
-    NAE Lite parameters.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
 
     Parameters:
         name: Specific ``nae-lite`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -811,7 +756,7 @@ async def central_manage_nae_lite(
 ) -> dict | str:
     """Create, update, or delete a ``nae-lite`` configuration in Central.
 
-    NAE Lite parameters.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
     """
     return await _manage_resource(
         ctx,
@@ -836,7 +781,7 @@ async def central_get_nd_snooping(
 ) -> dict | list | str:
     """Get ``nd-snooping`` configurations from Central.
 
-    Configuration of ND-Snooping. Enabling the ND-Snooping feature on your switches prevents ND attacks. ND-Snooping does not just snoop but also detect attacks by default. ND-Snooping drops invalid ND packets and, together with DIPLDv6, blocks data traffic from invalid hosts.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
 
     Parameters:
         name: Specific ``nd-snooping`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -867,7 +812,7 @@ async def central_manage_nd_snooping(
 ) -> dict | str:
     """Create, update, or delete a ``nd-snooping`` configuration in Central.
 
-    Configuration of ND-Snooping. Enabling the ND-Snooping feature on your switches prevents ND attacks. ND-Snooping does not just snoop but also detect attacks by default. ND-Snooping drops invalid ND packets and, together with DIPLDv6, blocks data traffic from invalid hosts.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
     """
     return await _manage_resource(
         ctx,
@@ -892,7 +837,7 @@ async def central_get_nd_snooping_interface(
 ) -> dict | list | str:
     """Get ``nd-snooping-interface`` configurations from Central.
 
-    Configuration of ND-Snooping on interface.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
 
     Parameters:
         name: Specific ``nd-snooping-interface`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -923,7 +868,7 @@ async def central_manage_nd_snooping_interface(
 ) -> dict | str:
     """Create, update, or delete a ``nd-snooping-interface`` configuration in Central.
 
-    Configuration of ND-Snooping on interface.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
     """
     return await _manage_resource(
         ctx,
@@ -948,7 +893,7 @@ async def central_get_ptp(
 ) -> dict | list | str:
     """Get ``ptp`` configurations from Central.
 
-    Precision Time Protocol (PTP) is defined in the IEEE 1588 standard. Standard for a Precision Clock Synchronization Protocol for Networked Measurement and Control Systems.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
 
     Parameters:
         name: Specific ``ptp`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -979,7 +924,7 @@ async def central_manage_ptp(
 ) -> dict | str:
     """Create, update, or delete a ``ptp`` configuration in Central.
 
-    Precision Time Protocol (PTP) is defined in the IEEE 1588 standard. Standard for a Precision Clock Synchronization Protocol for Networked Measurement and Control Systems.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
     """
     return await _manage_resource(
         ctx,
@@ -1004,7 +949,7 @@ async def central_get_qos_global(
 ) -> dict | list | str:
     """Get ``qos-global`` configurations from Central.
 
-    Global QoS configuration.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
 
     Parameters:
         name: Specific ``qos-global`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -1035,7 +980,7 @@ async def central_manage_qos_global(
 ) -> dict | str:
     """Create, update, or delete a ``qos-global`` configuration in Central.
 
-    Global QoS configuration.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
     """
     return await _manage_resource(
         ctx,
@@ -1050,38 +995,38 @@ async def central_manage_qos_global(
     )
 
 
-# ----- qos-queue -----
+# ----- qos-queues -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_qos_queue(
+async def central_get_qos_queues(
     ctx: Context,
     q_profile_name: str | None = None,
 ) -> dict | list | str:
-    """Get ``qos-queue`` configurations from Central.
+    """Get ``qos-queues`` configurations from Central.
 
-    QoS queue parameters.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
 
     Parameters:
-        q_profile_name: Specific ``qos-queue`` identifier (OpenAPI path param: ``q-profile-name``). If omitted, returns all.
+        q_profile_name: Specific ``qos-queues`` identifier (OpenAPI path param: ``q-profile-name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "qos-queues", q_profile_name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_qos_queue(
+async def central_manage_qos_queues(
     ctx: Context,
     q_profile_name: Annotated[
-        str, Field(description="``qos-queue`` identifier (OpenAPI path param: ``q-profile-name``).")
+        str, Field(description="``qos-queues`` identifier (OpenAPI path param: ``q-profile-name``).")
     ],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``qos-queue`` object. "
+                "Payload for the ``qos-queues`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_qos_queue`` to "
+                "field set; use ``central_get_qos_queues`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -1091,14 +1036,14 @@ async def central_manage_qos_queue(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``qos-queue`` configuration in Central.
+    """Create, update, or delete a ``qos-queues`` configuration in Central.
 
-    QoS queue parameters.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
     """
     return await _manage_resource(
         ctx,
         "qos-queues",
-        "qos-queue",
+        "qos-queues",
         q_profile_name,
         action_type,
         payload,
@@ -1108,38 +1053,38 @@ async def central_manage_qos_queue(
     )
 
 
-# ----- qos-schedule -----
+# ----- qos-schedules -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_qos_schedule(
+async def central_get_qos_schedules(
     ctx: Context,
     sched_profile_name: str | None = None,
 ) -> dict | list | str:
-    """Get ``qos-schedule`` configurations from Central.
+    """Get ``qos-schedules`` configurations from Central.
 
-    QoS schedule parameters.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
 
     Parameters:
-        sched_profile_name: Specific ``qos-schedule`` identifier (OpenAPI path param: ``sched-profile-name``). If omitted, returns all.
+        sched_profile_name: Specific ``qos-schedules`` identifier (OpenAPI path param: ``sched-profile-name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "qos-schedules", sched_profile_name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_qos_schedule(
+async def central_manage_qos_schedules(
     ctx: Context,
     sched_profile_name: Annotated[
-        str, Field(description="``qos-schedule`` identifier (OpenAPI path param: ``sched-profile-name``).")
+        str, Field(description="``qos-schedules`` identifier (OpenAPI path param: ``sched-profile-name``).")
     ],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``qos-schedule`` object. "
+                "Payload for the ``qos-schedules`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_qos_schedule`` to "
+                "field set; use ``central_get_qos_schedules`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -1149,14 +1094,14 @@ async def central_manage_qos_schedule(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``qos-schedule`` configuration in Central.
+    """Create, update, or delete a ``qos-schedules`` configuration in Central.
 
-    QoS schedule parameters.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
     """
     return await _manage_resource(
         ctx,
         "qos-schedules",
-        "qos-schedule",
+        "qos-schedules",
         sched_profile_name,
         action_type,
         payload,
@@ -1166,38 +1111,38 @@ async def central_manage_qos_schedule(
     )
 
 
-# ----- qos-threshold-profile -----
+# ----- qos-thresholds -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_qos_threshold_profile(
+async def central_get_qos_thresholds(
     ctx: Context,
     thresh_profile_name: str | None = None,
 ) -> dict | list | str:
-    """Get ``qos-threshold-profile`` configurations from Central.
+    """Get ``qos-thresholds`` configurations from Central.
 
-    QoS threshold profile parameters.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
 
     Parameters:
-        thresh_profile_name: Specific ``qos-threshold-profile`` identifier (OpenAPI path param: ``thresh-profile-name``). If omitted, returns all.
+        thresh_profile_name: Specific ``qos-thresholds`` identifier (OpenAPI path param: ``thresh-profile-name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "qos-thresholds", thresh_profile_name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_qos_threshold_profile(
+async def central_manage_qos_thresholds(
     ctx: Context,
     thresh_profile_name: Annotated[
-        str, Field(description="``qos-threshold-profile`` identifier (OpenAPI path param: ``thresh-profile-name``).")
+        str, Field(description="``qos-thresholds`` identifier (OpenAPI path param: ``thresh-profile-name``).")
     ],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``qos-threshold-profile`` object. "
+                "Payload for the ``qos-thresholds`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_qos_threshold_profile`` to "
+                "field set; use ``central_get_qos_thresholds`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -1207,14 +1152,14 @@ async def central_manage_qos_threshold_profile(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``qos-threshold-profile`` configuration in Central.
+    """Create, update, or delete a ``qos-thresholds`` configuration in Central.
 
-    QoS threshold profile parameters.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
     """
     return await _manage_resource(
         ctx,
         "qos-thresholds",
-        "qos-threshold-profile",
+        "qos-thresholds",
         thresh_profile_name,
         action_type,
         payload,
@@ -1224,36 +1169,41 @@ async def central_manage_qos_threshold_profile(
     )
 
 
-# ----- udp-broadcast-forwarder -----
+# ----- source-ip-bindings -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_udp_broadcast_forwarder(
+async def central_get_source_ip_bindings(
     ctx: Context,
-    name: str | None = None,
+    ip_version_vlan_client_address: str | None = None,
 ) -> dict | list | str:
-    """Get ``udp-broadcast-forwarder`` configurations from Central.
+    """Get ``source-ip-bindings`` configurations from Central.
 
-    Configure UDP Broadcast Forwarder globally. The routers by default do not forward broadcast packets. However, there are situations where it is desirable to forward certain broadcast packets. The UDP (User Datagram Protocol) broadcast forwarder takes the client's UDP broadcast packets and forwards to the configured server(s) in a different subnet. UDP broadcast forwarding is supported only for IPv4 addresses.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
 
     Parameters:
-        name: Specific ``udp-broadcast-forwarder`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        ip_version_vlan_client_address: Specific ``source-ip-bindings`` identifier (OpenAPI path param: ``ip-version-vlan-client-address``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "udp-broadcast-forwarders", name)
+    return await _get_resource(ctx, "source-ip-bindings", ip_version_vlan_client_address)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_udp_broadcast_forwarder(
+async def central_manage_source_ip_bindings(
     ctx: Context,
-    name: Annotated[str, Field(description="``udp-broadcast-forwarder`` identifier (OpenAPI path param: ``name``).")],
+    ip_version_vlan_client_address: Annotated[
+        str,
+        Field(
+            description="``source-ip-bindings`` identifier (OpenAPI path param: ``ip-version-vlan-client-address``)."
+        ),
+    ],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``udp-broadcast-forwarder`` object. "
+                "Payload for the ``source-ip-bindings`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_udp_broadcast_forwarder`` to "
+                "field set; use ``central_get_source_ip_bindings`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -1263,14 +1213,70 @@ async def central_manage_udp_broadcast_forwarder(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``udp-broadcast-forwarder`` configuration in Central.
+    """Create, update, or delete a ``source-ip-bindings`` configuration in Central.
 
-    Configure UDP Broadcast Forwarder globally. The routers by default do not forward broadcast packets. However, there are situations where it is desirable to forward certain broadcast packets. The UDP (User Datagram Protocol) broadcast forwarder takes the client's UDP broadcast packets and forwards to the configured server(s) in a different subnet. UDP broadcast forwarding is supported only for IPv4 addresses.
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
+    """
+    return await _manage_resource(
+        ctx,
+        "source-ip-bindings",
+        "source-ip-bindings",
+        ip_version_vlan_client_address,
+        action_type,
+        payload,
+        scope_id,
+        device_function,
+        confirmed,
+    )
+
+
+# ----- udp-broadcast-forwarders -----
+
+
+@tool(annotations=READ_ONLY)
+async def central_get_udp_broadcast_forwarders(
+    ctx: Context,
+    name: str | None = None,
+) -> dict | list | str:
+    """Get ``udp-broadcast-forwarders`` configurations from Central.
+
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
+
+    Parameters:
+        name: Specific ``udp-broadcast-forwarders`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+    """
+    return await _get_resource(ctx, "udp-broadcast-forwarders", name)
+
+
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+async def central_manage_udp_broadcast_forwarders(
+    ctx: Context,
+    name: Annotated[str, Field(description="``udp-broadcast-forwarders`` identifier (OpenAPI path param: ``name``).")],
+    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
+    payload: Annotated[
+        dict,
+        Field(
+            description=(
+                "Payload for the ``udp-broadcast-forwarders`` object. "
+                "Consult the Aruba Central config-model OpenAPI schema for the "
+                "field set; use ``central_get_udp_broadcast_forwarders`` to "
+                "inspect an existing object for reference. "
+                "For ``delete``, ``payload`` is ignored."
+            )
+        ),
+    ],
+    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Create, update, or delete a ``udp-broadcast-forwarders`` configuration in Central.
+
+    Dynamic Host Configuration Protocol (DHCP) pool profiles automate IP address assignment and network configuration delivery to client devices joining the network. DHCP servers use pools to manage IPv4/IPv6 address ranges, DNS settings, gateway information, lease durations, and vendor-specific options (DHCP Options 43, 60, etc.). This module supports DHCPv4 and DHCPv6 with static bindings, DDNS integration, and network boot configuration. Requires DDNS profiles for dynamic DNS updates. Device Limits: Gateway supports up to 256 DHCPv4 static reservations, 1 IP address per DHCPv4 option code. Use this API to retrieve the list of DHCP pool profiles.
     """
     return await _manage_resource(
         ctx,
         "udp-broadcast-forwarders",
-        "udp-broadcast-forwarder",
+        "udp-broadcast-forwarders",
         name,
         action_type,
         payload,

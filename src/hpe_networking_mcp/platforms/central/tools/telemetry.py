@@ -1,13 +1,14 @@
-"""Aruba Central ``Telemetry`` config-model tools.
+"""Aruba Central ``telemetry`` config-model tools.
 
 Initial import emitted by ``scripts/import_central_config_tools.py``
-from a snapshot of ``api-endpoints/central/config/``. The import is
+from a snapshot of ``vendor/central/config/``. The import is
 **one-shot**: this file is hand-curated going forward — edit freely,
 refine docstrings, add per-type schema knobs, split into smaller files
 as needed. Re-running the script will overwrite this file, so only do
 so before any hand edits or with care.
 
-Covers config objects in the ``Telemetry`` OpenAPI tag-group. Wrappers
+Covers config objects sourced from the ``telemetry.json`` vendor
+spec file. Wrappers
 delegate to ``_get_resource`` / ``_manage_resource`` in
 ``security_policy.py`` — the same shared helpers used by the
 hand-curated Roles & Policy tools.
@@ -104,7 +105,7 @@ async def central_get_client_iptracker(
 ) -> dict | list | str:
     """Get ``client-iptracker`` configurations from Central.
 
-    The Client IP tracking feature will learn and update the IP address of the access devices and clients connected to the switch. It can track the IP addresses of directly connected clients and clients connected to a downstream device such as a wireless access point. This feature is applicable to AOS-CX and AOS-S Switches.
+    Configuration of Client-Insight. This feature aims at capturing L2, L3 and L4 stage on-boarding detail of the clients. The details published by client insight feature are consumed by HPE Aruba Networking (HPE ANW) Central to provide better insights into client activities.
 
     Parameters:
         name: Specific ``client-iptracker`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -135,7 +136,7 @@ async def central_manage_client_iptracker(
 ) -> dict | str:
     """Create, update, or delete a ``client-iptracker`` configuration in Central.
 
-    The Client IP tracking feature will learn and update the IP address of the access devices and clients connected to the switch. It can track the IP addresses of directly connected clients and clients connected to a downstream device such as a wireless access point. This feature is applicable to AOS-CX and AOS-S Switches.
+    Configuration of Client-Insight. This feature aims at capturing L2, L3 and L4 stage on-boarding detail of the clients. The details published by client insight feature are consumed by HPE Aruba Networking (HPE ANW) Central to provide better insights into client activities.
     """
     return await _manage_resource(
         ctx,
@@ -160,7 +161,7 @@ async def central_get_client_iptracker_interface(
 ) -> dict | list | str:
     """Get ``client-iptracker-interface`` configurations from Central.
 
-    The Client IP tracking feature will learn and update the IP address of the access devices and clients connected to the interface. This feature is applicable to AOS-CX and AOS-S Switches.
+    Configuration of Client-Insight. This feature aims at capturing L2, L3 and L4 stage on-boarding detail of the clients. The details published by client insight feature are consumed by HPE Aruba Networking (HPE ANW) Central to provide better insights into client activities.
 
     Parameters:
         name: Specific ``client-iptracker-interface`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -193,7 +194,7 @@ async def central_manage_client_iptracker_interface(
 ) -> dict | str:
     """Create, update, or delete a ``client-iptracker-interface`` configuration in Central.
 
-    The Client IP tracking feature will learn and update the IP address of the access devices and clients connected to the interface. This feature is applicable to AOS-CX and AOS-S Switches.
+    Configuration of Client-Insight. This feature aims at capturing L2, L3 and L4 stage on-boarding detail of the clients. The details published by client insight feature are consumed by HPE Aruba Networking (HPE ANW) Central to provide better insights into client activities.
     """
     return await _manage_resource(
         ctx,
@@ -218,7 +219,7 @@ async def central_get_devicefingerprinting(
 ) -> dict | list | str:
     """Get ``devicefingerprinting`` configurations from Central.
 
-    Device fingerprinting (DFP) collects the set of LLDP/CDP TLVs, DHCP options & HTTP user-agent details from the devices connected to the AOS-CX or AOS-S switches. These details are used to classify the end devices for device-type, vendor and operating systems using the fingerprinting database.
+    Configuration of Client-Insight. This feature aims at capturing L2, L3 and L4 stage on-boarding detail of the clients. The details published by client insight feature are consumed by HPE Aruba Networking (HPE ANW) Central to provide better insights into client activities.
 
     Parameters:
         name: Specific ``devicefingerprinting`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -249,7 +250,7 @@ async def central_manage_devicefingerprinting(
 ) -> dict | str:
     """Create, update, or delete a ``devicefingerprinting`` configuration in Central.
 
-    Device fingerprinting (DFP) collects the set of LLDP/CDP TLVs, DHCP options & HTTP user-agent details from the devices connected to the AOS-CX or AOS-S switches. These details are used to classify the end devices for device-type, vendor and operating systems using the fingerprinting database.
+    Configuration of Client-Insight. This feature aims at capturing L2, L3 and L4 stage on-boarding detail of the clients. The details published by client insight feature are consumed by HPE Aruba Networking (HPE ANW) Central to provide better insights into client activities.
     """
     return await _manage_resource(
         ctx,
@@ -274,7 +275,7 @@ async def central_get_devicefingerprinting_interface(
 ) -> dict | list | str:
     """Get ``devicefingerprinting-interface`` configurations from Central.
 
-    Device Fingerprinting Interface configuration of Aruba AOS-S and AOS-CX Switches.
+    Configuration of Client-Insight. This feature aims at capturing L2, L3 and L4 stage on-boarding detail of the clients. The details published by client insight feature are consumed by HPE Aruba Networking (HPE ANW) Central to provide better insights into client activities.
 
     Parameters:
         name: Specific ``devicefingerprinting-interface`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -307,7 +308,7 @@ async def central_manage_devicefingerprinting_interface(
 ) -> dict | str:
     """Create, update, or delete a ``devicefingerprinting-interface`` configuration in Central.
 
-    Device Fingerprinting Interface configuration of Aruba AOS-S and AOS-CX Switches.
+    Configuration of Client-Insight. This feature aims at capturing L2, L3 and L4 stage on-boarding detail of the clients. The details published by client insight feature are consumed by HPE Aruba Networking (HPE ANW) Central to provide better insights into client activities.
     """
     return await _manage_resource(
         ctx,
@@ -332,7 +333,7 @@ async def central_get_devicefingerprinting_profile(
 ) -> dict | list | str:
     """Get ``devicefingerprinting-profile`` configurations from Central.
 
-    To enable DFP on a port, users need to configure a DFP profile with the set of protocol data that needs to be collected and associate it to the desired port or set of ports. Once the profile is applied on a port, switch will start monitoring the required packets from all the clients on that port and collects the configured protocol and their attributes.
+    Configuration of Client-Insight. This feature aims at capturing L2, L3 and L4 stage on-boarding detail of the clients. The details published by client insight feature are consumed by HPE Aruba Networking (HPE ANW) Central to provide better insights into client activities.
 
     Parameters:
         name: Specific ``devicefingerprinting-profile`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -365,7 +366,7 @@ async def central_manage_devicefingerprinting_profile(
 ) -> dict | str:
     """Create, update, or delete a ``devicefingerprinting-profile`` configuration in Central.
 
-    To enable DFP on a port, users need to configure a DFP profile with the set of protocol data that needs to be collected and associate it to the desired port or set of ports. Once the profile is applied on a port, switch will start monitoring the required packets from all the clients on that port and collects the configured protocol and their attributes.
+    Configuration of Client-Insight. This feature aims at capturing L2, L3 and L4 stage on-boarding detail of the clients. The details published by client insight feature are consumed by HPE Aruba Networking (HPE ANW) Central to provide better insights into client activities.
     """
     return await _manage_resource(
         ctx,
@@ -390,7 +391,7 @@ async def central_get_flow_tracking(
 ) -> dict | list | str:
     """Get ``flow-tracking`` configurations from Central.
 
-    Flow Tracking is a common infrastructure to manage the IP Flow table . IP Flow table is used for session management of TCP/UDP/ICMP flows, which helps to create application aware network.
+    Configuration of Client-Insight. This feature aims at capturing L2, L3 and L4 stage on-boarding detail of the clients. The details published by client insight feature are consumed by HPE Aruba Networking (HPE ANW) Central to provide better insights into client activities.
 
     Parameters:
         name: Specific ``flow-tracking`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -421,7 +422,7 @@ async def central_manage_flow_tracking(
 ) -> dict | str:
     """Create, update, or delete a ``flow-tracking`` configuration in Central.
 
-    Flow Tracking is a common infrastructure to manage the IP Flow table . IP Flow table is used for session management of TCP/UDP/ICMP flows, which helps to create application aware network.
+    Configuration of Client-Insight. This feature aims at capturing L2, L3 and L4 stage on-boarding detail of the clients. The details published by client insight feature are consumed by HPE Aruba Networking (HPE ANW) Central to provide better insights into client activities.
     """
     return await _manage_resource(
         ctx,
@@ -446,7 +447,7 @@ async def central_get_ipfix_flow_exporter(
 ) -> dict | list | str:
     """Get ``ipfix-flow-exporter`` configurations from Central.
 
-    IP Flow Information Export (IPFIX) flow exporter configurations. IPFIX is an embedded network flow analysis tool that compiles characteristic and measured properties of flows and sends flow reports to internal or external flow collectors.
+    Configuration of Client-Insight. This feature aims at capturing L2, L3 and L4 stage on-boarding detail of the clients. The details published by client insight feature are consumed by HPE Aruba Networking (HPE ANW) Central to provide better insights into client activities.
 
     Parameters:
         name: Specific ``ipfix-flow-exporter`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -477,7 +478,7 @@ async def central_manage_ipfix_flow_exporter(
 ) -> dict | str:
     """Create, update, or delete a ``ipfix-flow-exporter`` configuration in Central.
 
-    IP Flow Information Export (IPFIX) flow exporter configurations. IPFIX is an embedded network flow analysis tool that compiles characteristic and measured properties of flows and sends flow reports to internal or external flow collectors.
+    Configuration of Client-Insight. This feature aims at capturing L2, L3 and L4 stage on-boarding detail of the clients. The details published by client insight feature are consumed by HPE Aruba Networking (HPE ANW) Central to provide better insights into client activities.
     """
     return await _manage_resource(
         ctx,
@@ -502,7 +503,7 @@ async def central_get_traffic_insight(
 ) -> dict | list | str:
     """Get ``traffic-insight`` configurations from Central.
 
-    Configuration of Traffic Insight. Traffic insight allows to monitor large amount of data that it collects from various flow exporters like IPFIX and provides the ability to filter, aggregate and sort the data based on user flow monitor requests. Traffic insight tracks different monitor requests simultaneously and provides monitor reports per request. Enables flow monitoring on a traffic insight instance. A traffic insight instance consists of different monitor types. Following flow monitor types are supported: topN-flows - Monitors IP traffic flowing through the switch and captures topN volume flows. application-flows - Monitors client application flows and provides application level rx/tx counters, and also brings application visibility. raw-flows - Raw-flows Flow monitor provides uni-direction flow details for all apps or clients to CNX on-demand basis. It is used by CNX for trouble-shooting work-flow. dns-average-latency - Monitors dns request and response flows and provides average dns-latency details per client. dns-onboarding-latency - Monitors dns request and response flows and provides onboarding dns-latency details per client. workload-flows - Monitors unicast traffic flows and provides the rx/tx counters along with action for the flow. flows - Monitors unicast traffic flows and provides the rx/tx counters along with action for the flow.
+    Configuration of Client-Insight. This feature aims at capturing L2, L3 and L4 stage on-boarding detail of the clients. The details published by client insight feature are consumed by HPE Aruba Networking (HPE ANW) Central to provide better insights into client activities.
 
     Parameters:
         name: Specific ``traffic-insight`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -533,7 +534,7 @@ async def central_manage_traffic_insight(
 ) -> dict | str:
     """Create, update, or delete a ``traffic-insight`` configuration in Central.
 
-    Configuration of Traffic Insight. Traffic insight allows to monitor large amount of data that it collects from various flow exporters like IPFIX and provides the ability to filter, aggregate and sort the data based on user flow monitor requests. Traffic insight tracks different monitor requests simultaneously and provides monitor reports per request. Enables flow monitoring on a traffic insight instance. A traffic insight instance consists of different monitor types. Following flow monitor types are supported: topN-flows - Monitors IP traffic flowing through the switch and captures topN volume flows. application-flows - Monitors client application flows and provides application level rx/tx counters, and also brings application visibility. raw-flows - Raw-flows Flow monitor provides uni-direction flow details for all apps or clients to CNX on-demand basis. It is used by CNX for trouble-shooting work-flow. dns-average-latency - Monitors dns request and response flows and provides average dns-latency details per client. dns-onboarding-latency - Monitors dns request and response flows and provides onboarding dns-latency details per client. workload-flows - Monitors unicast traffic flows and provides the rx/tx counters along with action for the flow. flows - Monitors unicast traffic flows and provides the rx/tx counters along with action for the flow.
+    Configuration of Client-Insight. This feature aims at capturing L2, L3 and L4 stage on-boarding detail of the clients. The details published by client insight feature are consumed by HPE Aruba Networking (HPE ANW) Central to provide better insights into client activities.
     """
     return await _manage_resource(
         ctx,

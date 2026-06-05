@@ -1,13 +1,14 @@
-"""Aruba Central ``High Availability`` config-model tools.
+"""Aruba Central ``high-availability`` config-model tools.
 
 Initial import emitted by ``scripts/import_central_config_tools.py``
-from a snapshot of ``api-endpoints/central/config/``. The import is
+from a snapshot of ``vendor/central/config/``. The import is
 **one-shot**: this file is hand-curated going forward — edit freely,
 refine docstrings, add per-type schema knobs, split into smaller files
 as needed. Re-running the script will overwrite this file, so only do
 so before any hand edits or with care.
 
-Covers config objects in the ``High Availability`` OpenAPI tag-group. Wrappers
+Covers config objects sourced from the ``high-availability.json`` vendor
+spec file. Wrappers
 delegate to ``_get_resource`` / ``_manage_resource`` in
 ``security_policy.py`` — the same shared helpers used by the
 hand-curated Roles & Policy tools.
@@ -38,36 +39,92 @@ WRITE_DELETE = ToolAnnotations(
     openWorldHint=True,
 )
 
-# ----- switch-stack -----
+# ----- gateway-clusters -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_switch_stack(
+async def central_get_gateway_clusters(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``switch-stack`` configurations from Central.
+    """Get ``gateway-clusters`` configurations from Central.
 
-    Configure and Manage switch stacks. Switch Stack OR Virtual Switching Framework(VSF), defines a virtual switch, comprising multiple individual physical switches, inter-connected through standard Ethernet links. These physical switches will operate with one control plane, thereby visible to the peers as a virtual switch stack. Within the stack, one switch is the Conductor switch, which runs all the control plane software and manages the ASICs of all the stack members. A second switch can be configured as the Standby switch, which will take over as Conductor if the conductor fails. It is strongly recommended to configure a secondary member in the stack, since a stack with a standby offers resiliency and high-availability.
+    A Gateway cluster is a combination of multiple Aruba Gateways operating as a single entity to provide high availability and service continuity to the WLAN clients in a network. Gateway clusters provide full redundancy to APs and WLAN clients in the event of a failover. This API can be used to add/delete gateways into a cluster profile or setting the cluster profile configurations.
 
     Parameters:
-        name: Specific ``switch-stack`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``gateway-clusters`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+    """
+    return await _get_resource(ctx, "gateway-clusters", name)
+
+
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+async def central_manage_gateway_clusters(
+    ctx: Context,
+    name: Annotated[str, Field(description="``gateway-clusters`` identifier (OpenAPI path param: ``name``).")],
+    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
+    payload: Annotated[
+        dict,
+        Field(
+            description=(
+                "Payload for the ``gateway-clusters`` object. "
+                "Consult the Aruba Central config-model OpenAPI schema for the "
+                "field set; use ``central_get_gateway_clusters`` to "
+                "inspect an existing object for reference. "
+                "For ``delete``, ``payload`` is ignored."
+            )
+        ),
+    ],
+    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Create, update, or delete a ``gateway-clusters`` configuration in Central.
+
+    A Gateway cluster is a combination of multiple Aruba Gateways operating as a single entity to provide high availability and service continuity to the WLAN clients in a network. Gateway clusters provide full redundancy to APs and WLAN clients in the event of a failover. This API can be used to add/delete gateways into a cluster profile or setting the cluster profile configurations.
+    """
+    return await _manage_resource(
+        ctx,
+        "gateway-clusters",
+        "gateway-clusters",
+        name,
+        action_type,
+        payload,
+        scope_id,
+        device_function,
+        confirmed,
+    )
+
+
+# ----- stacks -----
+
+
+@tool(annotations=READ_ONLY)
+async def central_get_stacks(
+    ctx: Context,
+    name: str | None = None,
+) -> dict | list | str:
+    """Get ``stacks`` configurations from Central.
+
+    A Gateway cluster is a combination of multiple Aruba Gateways operating as a single entity to provide high availability and service continuity to the WLAN clients in a network. Gateway clusters provide full redundancy to APs and WLAN clients in the event of a failover. This API can be used to add/delete gateways into a cluster profile or setting the cluster profile configurations.
+
+    Parameters:
+        name: Specific ``stacks`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "stacks", name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_switch_stack(
+async def central_manage_stacks(
     ctx: Context,
-    name: Annotated[str, Field(description="``switch-stack`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``stacks`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``switch-stack`` object. "
+                "Payload for the ``stacks`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_switch_stack`` to "
+                "field set; use ``central_get_stacks`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -77,14 +134,14 @@ async def central_manage_switch_stack(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``switch-stack`` configuration in Central.
+    """Create, update, or delete a ``stacks`` configuration in Central.
 
-    Configure and Manage switch stacks. Switch Stack OR Virtual Switching Framework(VSF), defines a virtual switch, comprising multiple individual physical switches, inter-connected through standard Ethernet links. These physical switches will operate with one control plane, thereby visible to the peers as a virtual switch stack. Within the stack, one switch is the Conductor switch, which runs all the control plane software and manages the ASICs of all the stack members. A second switch can be configured as the Standby switch, which will take over as Conductor if the conductor fails. It is strongly recommended to configure a secondary member in the stack, since a stack with a standby offers resiliency and high-availability.
+    A Gateway cluster is a combination of multiple Aruba Gateways operating as a single entity to provide high availability and service continuity to the WLAN clients in a network. Gateway clusters provide full redundancy to APs and WLAN clients in the event of a failover. This API can be used to add/delete gateways into a cluster profile or setting the cluster profile configurations.
     """
     return await _manage_resource(
         ctx,
         "stacks",
-        "switch-stack",
+        "stacks",
         name,
         action_type,
         payload,
@@ -94,36 +151,36 @@ async def central_manage_switch_stack(
     )
 
 
-# ----- vsf-template -----
+# ----- vsf-templates -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_vsf_template(
+async def central_get_vsf_templates(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``vsf-template`` configurations from Central.
+    """Get ``vsf-templates`` configurations from Central.
 
-    VSF template offers a standardized framework for provisioning multiple, similar stacks. It enables centralized management of stacks at a global or site level, allowing a single template to configure and maintain multiple stacks efficiently. Instead of managing each stack individually, changes made to the template are automatically applied to all stacks that are in sync with it. A stack may become out of sync with the template if: 1. A user manually modifies the stack configuration directly, bypassing the template. 2. Configuration changes are applied locally within the stack instead of through the central template.
+    A Gateway cluster is a combination of multiple Aruba Gateways operating as a single entity to provide high availability and service continuity to the WLAN clients in a network. Gateway clusters provide full redundancy to APs and WLAN clients in the event of a failover. This API can be used to add/delete gateways into a cluster profile or setting the cluster profile configurations.
 
     Parameters:
-        name: Specific ``vsf-template`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``vsf-templates`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "vsf-templates", name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_vsf_template(
+async def central_manage_vsf_templates(
     ctx: Context,
-    name: Annotated[str, Field(description="``vsf-template`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``vsf-templates`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``vsf-template`` object. "
+                "Payload for the ``vsf-templates`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_vsf_template`` to "
+                "field set; use ``central_get_vsf_templates`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -133,14 +190,14 @@ async def central_manage_vsf_template(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``vsf-template`` configuration in Central.
+    """Create, update, or delete a ``vsf-templates`` configuration in Central.
 
-    VSF template offers a standardized framework for provisioning multiple, similar stacks. It enables centralized management of stacks at a global or site level, allowing a single template to configure and maintain multiple stacks efficiently. Instead of managing each stack individually, changes made to the template are automatically applied to all stacks that are in sync with it. A stack may become out of sync with the template if: 1. A user manually modifies the stack configuration directly, bypassing the template. 2. Configuration changes are applied locally within the stack instead of through the central template.
+    A Gateway cluster is a combination of multiple Aruba Gateways operating as a single entity to provide high availability and service continuity to the WLAN clients in a network. Gateway clusters provide full redundancy to APs and WLAN clients in the event of a failover. This API can be used to add/delete gateways into a cluster profile or setting the cluster profile configurations.
     """
     return await _manage_resource(
         ctx,
         "vsf-templates",
-        "vsf-template",
+        "vsf-templates",
         name,
         action_type,
         payload,
@@ -150,36 +207,36 @@ async def central_manage_vsf_template(
     )
 
 
-# ----- vsx -----
+# ----- vsx-profiles -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_vsx(
+async def central_get_vsx_profiles(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``vsx`` configurations from Central.
+    """Get ``vsx-profiles`` configurations from Central.
 
-    Aruba Virtual Switching Extension (VSX). VSX is a link aggregation technique, where two or more links across two switches are aggregated together to form a LAG which will act as a single logical interface. The IEEE standard 802.3ad, is limited to aggregating links on a single switch or device. The Virtual Switching Extension (VSX) feature uses a new proprietary technology to overcome this limitation and supports link aggregation for the links spanning across multiple switches in the same VRF. The two switches are connected through an inter switch link (ISL). VSX provides node-level redundancy in a network when one of the switches fails. The downstream device is configured as a 802.3ad LAG interface. Though the LAG is connected to two separate devices they are seen as a single device. The downstream devices can be any device that supports 802.3ad. In VSX, one device acts as primary and the other device acts as secondary.
+    A Gateway cluster is a combination of multiple Aruba Gateways operating as a single entity to provide high availability and service continuity to the WLAN clients in a network. Gateway clusters provide full redundancy to APs and WLAN clients in the event of a failover. This API can be used to add/delete gateways into a cluster profile or setting the cluster profile configurations.
 
     Parameters:
-        name: Specific ``vsx`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``vsx-profiles`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "vsx-profiles", name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_vsx(
+async def central_manage_vsx_profiles(
     ctx: Context,
-    name: Annotated[str, Field(description="``vsx`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``vsx-profiles`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``vsx`` object. "
+                "Payload for the ``vsx-profiles`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_vsx`` to "
+                "field set; use ``central_get_vsx_profiles`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -189,14 +246,14 @@ async def central_manage_vsx(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``vsx`` configuration in Central.
+    """Create, update, or delete a ``vsx-profiles`` configuration in Central.
 
-    Aruba Virtual Switching Extension (VSX). VSX is a link aggregation technique, where two or more links across two switches are aggregated together to form a LAG which will act as a single logical interface. The IEEE standard 802.3ad, is limited to aggregating links on a single switch or device. The Virtual Switching Extension (VSX) feature uses a new proprietary technology to overcome this limitation and supports link aggregation for the links spanning across multiple switches in the same VRF. The two switches are connected through an inter switch link (ISL). VSX provides node-level redundancy in a network when one of the switches fails. The downstream device is configured as a 802.3ad LAG interface. Though the LAG is connected to two separate devices they are seen as a single device. The downstream devices can be any device that supports 802.3ad. In VSX, one device acts as primary and the other device acts as secondary.
+    A Gateway cluster is a combination of multiple Aruba Gateways operating as a single entity to provide high availability and service continuity to the WLAN clients in a network. Gateway clusters provide full redundancy to APs and WLAN clients in the event of a failover. This API can be used to add/delete gateways into a cluster profile or setting the cluster profile configurations.
     """
     return await _manage_resource(
         ctx,
         "vsx-profiles",
-        "vsx",
+        "vsx-profiles",
         name,
         action_type,
         payload,

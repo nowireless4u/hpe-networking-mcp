@@ -1,4 +1,4 @@
-"""Aruba Central ``iot`` config-model tools.
+"""Aruba Central ``gateway-clustering-orchestration`` config-model tools.
 
 Initial import emitted by ``scripts/import_central_config_tools.py``
 from a snapshot of ``vendor/central/config/``. The import is
@@ -7,7 +7,7 @@ refine docstrings, add per-type schema knobs, split into smaller files
 as needed. Re-running the script will overwrite this file, so only do
 so before any hand edits or with care.
 
-Covers config objects sourced from the ``iot.json`` vendor
+Covers config objects sourced from the ``gateway-clustering-orchestration.json`` vendor
 spec file. Wrappers
 delegate to ``_get_resource`` / ``_manage_resource`` in
 ``security_policy.py`` — the same shared helpers used by the
@@ -39,36 +39,36 @@ WRITE_DELETE = ToolAnnotations(
     openWorldHint=True,
 )
 
-# ----- usb -----
+# ----- gw-cluster-intent-config -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_usb(
+async def central_get_gw_cluster_intent_config(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``usb`` configurations from Central.
+    """Get ``gw-cluster-intent-config`` configurations from Central.
 
-    Config the global profile for USB parameters. Including a usb profile list and the acl rule profiles detail. a AP USB ACL profile policy including a acl-name and a rule list. The rule includes a USB vendor name and its related action is deny or permit. Such as vendor is Alcatel-L800, action is deny, it means the Alcatel-L800 USB dongle's data will be denied by AP.
+    Gateway Cluster Intent Service (GCIS) enables policy-driven orchestration of gateway clusters across organizational scopes such as global and site levels. Unlike manual cluster configuration, GCIS automatically forms clusters based on scope hierarchy and cluster-mode settings. This API can be used to create, modify, or delete cluster intent profiles with configurations for cluster-mode, multicast VLAN, heartbeat thresholds, IPv6 enablement, and CoA-VRRP settings.
 
     Parameters:
-        name: Specific ``usb`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``gw-cluster-intent-config`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "usb", name)
+    return await _get_resource(ctx, "gw-cluster-intent-config", name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_usb(
+async def central_manage_gw_cluster_intent_config(
     ctx: Context,
-    name: Annotated[str, Field(description="``usb`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``gw-cluster-intent-config`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``usb`` object. "
+                "Payload for the ``gw-cluster-intent-config`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_usb`` to "
+                "field set; use ``central_get_gw_cluster_intent_config`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -78,14 +78,14 @@ async def central_manage_usb(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``usb`` configuration in Central.
+    """Create, update, or delete a ``gw-cluster-intent-config`` configuration in Central.
 
-    Config the global profile for USB parameters. Including a usb profile list and the acl rule profiles detail. a AP USB ACL profile policy including a acl-name and a rule list. The rule includes a USB vendor name and its related action is deny or permit. Such as vendor is Alcatel-L800, action is deny, it means the Alcatel-L800 USB dongle's data will be denied by AP.
+    Gateway Cluster Intent Service (GCIS) enables policy-driven orchestration of gateway clusters across organizational scopes such as global and site levels. Unlike manual cluster configuration, GCIS automatically forms clusters based on scope hierarchy and cluster-mode settings. This API can be used to create, modify, or delete cluster intent profiles with configurations for cluster-mode, multicast VLAN, heartbeat thresholds, IPv6 enablement, and CoA-VRRP settings.
     """
     return await _manage_resource(
         ctx,
-        "usb",
-        "usb",
+        "gw-cluster-intent-config",
+        "gw-cluster-intent-config",
         name,
         action_type,
         payload,

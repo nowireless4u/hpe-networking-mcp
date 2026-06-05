@@ -1,8 +1,8 @@
 """AOS 8 source form -> Central CNX enum value lookup tables.
 
 Extracted from ``x-enumDescriptions`` annotations in the Central CNX
-OpenAPI schema (``api-endpoints/central/policy.json``, gitignored
-working artifact). The schema annotation maps Central enum value ->
+OpenAPI schema (``vendor/central/config/roles-policy.json``, auto-synced
+from upstream). The schema annotation maps Central enum value ->
 prose/AOS 8 form; the tables below invert that to give the
 AOS 8-form -> Central-enum direction needed at translation time.
 

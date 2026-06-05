@@ -1,9 +1,10 @@
 # ruff: noqa: E501
 """Distill Central config-model payload schemas into a committed runtime artifact.
 
-The OpenAPI specs under ``api-endpoints/central/config/`` are gitignored and
-**never** shipped in the runtime image (the production Dockerfile only copies
-``src/``). That leaves every ``central_manage_*`` / ``central_get_*`` config-model
+The OpenAPI specs under ``vendor/central/config/`` are committed (auto-synced
+from upstream Aruba Central by a GitHub Action) but **never** shipped in the
+runtime image (the production Dockerfile only copies ``src/``). That leaves
+every ``central_manage_*`` / ``central_get_*`` config-model
 tool exposing an opaque ``payload: dict`` whose only guidance is "consult the
 OpenAPI schema" — which an AI client driving the tool cannot see at runtime. So
 it guesses field names and enum values against the live tenant (see issue #384).
@@ -41,10 +42,11 @@ from typing import Any
 # Reuse the importer's spec-parsing + naming so tool names match exactly.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from import_central_config_tools import (  # noqa: E402
+    HAND_CURATED_SEGMENTS,
     SKIP_FILENAMES,
-    _name_param_in_path,
+    ConfigObject,
     _to_snake_case,
-    parse_spec,
+    parse_spec_objects,
 )
 
 # ---------------------------------------------------------------------------
@@ -78,6 +80,16 @@ HAND_CURATED_TOOL_NAMES: dict[str, list[str]] = {
     "auth-server-group": ["central_get_server_groups"],
 }
 
+# Hand-curated tool names keyed by resource SEGMENT (not file stem) for
+# segments in ``HAND_CURATED_SEGMENTS``. These segments live in domain-grouped
+# files (e.g. config-assignments is inside ``assignments.json``), so the
+# stem-keyed map above can't reach them. The generated formula would mint a
+# wrong plural (``central_manage_config_assignments``) that doesn't exist as a
+# tool; map to the real hand-curated names instead so the schema still indexes.
+HAND_CURATED_SEGMENT_TOOL_NAMES: dict[str, list[str]] = {
+    "config-assignments": ["central_get_config_assignments", "central_manage_config_assignment"],
+}
+
 # Cap recursion so a self-referential or pathological schema can't blow the
 # artifact size or hang. Config-model objects nest ~3-4 deep in practice.
 _MAX_DEPTH = 8
@@ -107,13 +119,15 @@ def _resolve_ref(spec: dict[str, Any], ref: str) -> dict[str, Any]:
     return node if isinstance(node, dict) else {}
 
 
-def _find_request_schema(spec: dict[str, Any]) -> dict[str, Any] | None:
-    """Locate the single-object request-body schema for a config-model spec.
+def _find_request_schema(spec: dict[str, Any], obj: ConfigObject) -> dict[str, Any] | None:
+    """Locate the request-body schema for one CRUD object within a spec.
 
-    The item path (``/<segment>/{name}``) carries a ``post`` whose
-    ``requestBody`` is a ``$ref`` into ``components/requestBodies``, which in
-    turn references ``components/schemas``. Falls back to the collection path
-    for singletons.
+    The vendor specs are domain-grouped (many objects per file), so this
+    resolves the schema for the **specific** object's item/collection paths
+    rather than the first write op anywhere in the file. The item path
+    (``/<prefix>/<segment>/{name}``) carries a ``post``/``patch`` whose
+    ``requestBody`` ``$ref``s into ``components/schemas``; falls back to the
+    collection path for singletons.
     """
     paths = spec.get("paths") or {}
 
@@ -130,9 +144,11 @@ def _find_request_schema(spec: dict[str, Any]) -> dict[str, Any] | None:
                 return sch
         return None
 
-    # Prefer the item ({name}) path, then the collection path.
-    ordered = sorted(paths.items(), key=lambda kv: _name_param_in_path(kv[0]) is None)
-    for _path, methods in ordered:
+    coll = f"/{obj.path_prefix}/{obj.path_segment}" if obj.path_prefix else f"/{obj.path_segment}"
+    item = f"{coll}/{{{obj.name_param}}}"
+    # Prefer the item ({name}) path, then the collection path (singletons).
+    for path in (item, coll):
+        methods = paths.get(path) or {}
         for verb in ("post", "patch", "put"):
             op = methods.get(verb)
             if isinstance(op, dict):
@@ -262,7 +278,7 @@ def main() -> int:
 
     here = Path(__file__).resolve()
     root = next(p for p in here.parents if (p / "pyproject.toml").exists())
-    specs_dir = args.specs_dir or (root / "api-endpoints" / "central" / "config")
+    specs_dir = args.specs_dir or (root / "vendor" / "central" / "config")
     output = args.output or (
         root / "src" / "hpe_networking_mcp" / "platforms" / "central" / "_config_payload_schemas.json"
     )
@@ -277,49 +293,50 @@ def main() -> int:
     skipped_no_schema = 0
 
     for fp in sorted(specs_dir.glob("*.json")):
-        spec = json.loads(fp.read_text(encoding="utf-8"))
-        obj = parse_spec(fp)
-        if obj is None:
+        if fp.name == "_manifest.json":
             continue
-        raw = _find_request_schema(spec)
-        if not raw:
-            skipped_no_schema += 1
-            continue
-        fields = _distill(raw, spec)
-        if not fields:
-            skipped_no_schema += 1
-            continue
-
         stem = fp.stem
-        schemas[stem] = {"fields": fields}
-        distilled += 1
+        spec = json.loads(fp.read_text(encoding="utf-8"))
+        objects, _operations = parse_spec_objects(fp)
+        for obj in objects:
+            # Only write-capable objects have an authorable payload worth indexing.
+            if not (obj.has_create or obj.has_update or obj.has_delete):
+                continue
+            raw = _find_request_schema(spec, obj)
+            if not raw:
+                skipped_no_schema += 1
+                continue
+            fields = _distill(raw, spec)
+            if not fields:
+                skipped_no_schema += 1
+                continue
 
-        # Map tool names → spec stem.
-        if stem in SKIP_FILENAMES:
-            mapped = HAND_CURATED_TOOL_NAMES.get(stem)
-            if not mapped:
-                # A hand-curated object has a real payload schema but no entry
-                # in HAND_CURATED_TOOL_NAMES — its tool(s) won't surface the
-                # schema. Make that visible at regeneration time rather than
-                # letting it silently fall through (the gap closed in #386).
-                print(
-                    f"WARN: skip-list object {stem!r} has a payload schema but no "
-                    f"HAND_CURATED_TOOL_NAMES entry — its tools will NOT surface a "
-                    f"payload_schema. Add it to the map.",
-                    file=sys.stderr,
-                )
-            for tool_name in mapped or []:
-                tool_index[tool_name] = stem
-        else:
+            # Key schemas by the object's snake segment (== tool-name suffix), so
+            # the multi-object domain files don't collide on the file stem.
             snake = _to_snake_case(obj.title)
-            tool_index[f"central_get_{snake}"] = stem
-            tool_index[f"central_manage_{snake}"] = stem
+            schemas[snake] = {"fields": fields}
+            distilled += 1
+
+            # Map tool names → schema key.
+            if obj.path_segment in HAND_CURATED_SEGMENTS:
+                # Hand-curated segment in a domain file — index by the real
+                # (segment-keyed) hand-curated tool names, not the generated
+                # plural formula. Mirrors the importer's HAND_CURATED_SEGMENTS skip.
+                for tool_name in HAND_CURATED_SEGMENT_TOOL_NAMES.get(obj.path_segment, []):
+                    tool_index[tool_name] = snake
+            elif stem in SKIP_FILENAMES:
+                mapped = HAND_CURATED_TOOL_NAMES.get(stem)
+                for tool_name in mapped or []:
+                    tool_index[tool_name] = snake
+            else:
+                tool_index[f"central_get_{snake}"] = snake
+                tool_index[f"central_manage_{snake}"] = snake
 
     artifact = {
         "_comment": (
             "Generated by scripts/distill_central_config_schemas.py from the "
-            "api-endpoints/central/config/ OpenAPI snapshot. Do not edit by hand; "
-            "re-run the distiller instead. See issue #384."
+            "vendor/central/config/ OpenAPI snapshot (auto-synced from upstream). "
+            "Do not edit by hand; re-run the distiller instead. See issue #384."
         ),
         "schemas": schemas,
         "tool_index": tool_index,

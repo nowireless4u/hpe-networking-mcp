@@ -98,3 +98,6 @@ docs/mappings/
 # Local-only inventory of probed-live undocumented Central endpoints.
 # Sourced from non-public material; never tracked or redistributed.
 docs/central-undocumented-endpoints.md
+
+# Pre-regen backup of the Central tool surface (local safety copy, never committed)
+central-tools-backup/

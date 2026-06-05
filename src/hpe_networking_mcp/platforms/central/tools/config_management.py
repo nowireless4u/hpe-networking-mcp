@@ -1,13 +1,14 @@
-"""Aruba Central ``Config Management`` config-model tools.
+"""Aruba Central ``config-management`` config-model tools.
 
 Initial import emitted by ``scripts/import_central_config_tools.py``
-from a snapshot of ``api-endpoints/central/config/``. The import is
+from a snapshot of ``vendor/central/config/``. The import is
 **one-shot**: this file is hand-curated going forward — edit freely,
 refine docstrings, add per-type schema knobs, split into smaller files
 as needed. Re-running the script will overwrite this file, so only do
 so before any hand edits or with care.
 
-Covers config objects in the ``Config Management`` OpenAPI tag-group. Wrappers
+Covers config objects sourced from the ``config-management.json`` vendor
+spec file. Wrappers
 delegate to ``_get_resource`` / ``_manage_resource`` in
 ``security_policy.py`` — the same shared helpers used by the
 hand-curated Roles & Policy tools.
@@ -94,6 +95,24 @@ async def central_manage_config_checkpoint(
     )
 
 
+# ----- device-persona-mapping -----
+
+
+@tool(annotations=READ_ONLY)
+async def central_get_device_persona_mapping(
+    ctx: Context,
+    device_type: str | None = None,
+) -> dict | list | str:
+    """Get ``device-persona-mapping`` configurations from Central.
+
+    Contains configuration elements for configuration checkpoints.
+
+    Parameters:
+        device_type: Specific ``device-persona-mapping`` identifier (OpenAPI path param: ``device-type``). If omitted, returns all.
+    """
+    return await _get_resource(ctx, "device-persona-mapping", device_type)
+
+
 # ----- persona-assignment -----
 
 
@@ -122,7 +141,7 @@ async def central_manage_persona_assignment(
 ) -> dict | str:
     """Create, update, or delete a ``persona-assignment`` configuration in Central.
 
-    Device list to device function mapping.
+    Contains configuration elements for configuration checkpoints.
     """
     return await _manage_resource(
         ctx,
@@ -135,21 +154,3 @@ async def central_manage_persona_assignment(
         device_function,
         confirmed,
     )
-
-
-# ----- persona-mapping -----
-
-
-@tool(annotations=READ_ONLY)
-async def central_get_persona_mapping(
-    ctx: Context,
-    device_type: str | None = None,
-) -> dict | list | str:
-    """Get ``persona-mapping`` configurations from Central.
-
-    Device type to device function mapping.
-
-    Parameters:
-        device_type: Specific ``persona-mapping`` identifier (OpenAPI path param: ``device-type``). If omitted, returns all.
-    """
-    return await _get_resource(ctx, "device-persona-mapping", device_type)

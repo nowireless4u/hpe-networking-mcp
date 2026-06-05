@@ -1,13 +1,14 @@
-"""Aruba Central ``Uncategorized`` config-model tools.
+"""Aruba Central ``roles-policy`` config-model tools.
 
 Initial import emitted by ``scripts/import_central_config_tools.py``
-from a snapshot of ``api-endpoints/central/config/``. The import is
+from a snapshot of ``vendor/central/config/``. The import is
 **one-shot**: this file is hand-curated going forward — edit freely,
 refine docstrings, add per-type schema knobs, split into smaller files
 as needed. Re-running the script will overwrite this file, so only do
 so before any hand edits or with care.
 
-Covers config objects in the ``Uncategorized`` OpenAPI tag-group. Wrappers
+Covers config objects sourced from the ``roles-policy.json`` vendor
+spec file. Wrappers
 delegate to ``_get_resource`` / ``_manage_resource`` in
 ``security_policy.py`` — the same shared helpers used by the
 hand-curated Roles & Policy tools.
@@ -38,92 +39,36 @@ WRITE_DELETE = ToolAnnotations(
     openWorldHint=True,
 )
 
-# ----- db-data-migration -----
+# ----- object-groups -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_db_data_migration(
-    ctx: Context,
-    xpath: str | None = None,
-) -> dict | list | str:
-    """Get ``db-data-migration`` configurations from Central.
-
-    Container to specify node operations.
-
-    Parameters:
-        xpath: Specific ``db-data-migration`` identifier (OpenAPI path param: ``xpath``). If omitted, returns all.
-    """
-    return await _get_resource(ctx, "node-operations", xpath)
-
-
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_db_data_migration(
-    ctx: Context,
-    xpath: Annotated[str, Field(description="``db-data-migration`` identifier (OpenAPI path param: ``xpath``).")],
-    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
-    payload: Annotated[
-        dict,
-        Field(
-            description=(
-                "Payload for the ``db-data-migration`` object. "
-                "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_db_data_migration`` to "
-                "inspect an existing object for reference. "
-                "For ``delete``, ``payload`` is ignored."
-            )
-        ),
-    ],
-    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
-    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
-    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
-) -> dict | str:
-    """Create, update, or delete a ``db-data-migration`` configuration in Central.
-
-    Container to specify node operations.
-    """
-    return await _manage_resource(
-        ctx,
-        "node-operations",
-        "db-data-migration",
-        xpath,
-        action_type,
-        payload,
-        scope_id,
-        device_function,
-        confirmed,
-    )
-
-
-# ----- dsm -----
-
-
-@tool(annotations=READ_ONLY)
-async def central_get_dsm(
+async def central_get_object_groups(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``dsm`` configurations from Central.
+    """Get ``object-groups`` configurations from Central.
 
-    Distributed Services Module(DSM) configuration. DSM provide services such as stateful firewall and flow logging.
+    Configure Object Groups.
 
     Parameters:
-        name: Specific ``dsm`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``object-groups`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "dsm", name)
+    return await _get_resource(ctx, "object-groups", name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_dsm(
+async def central_manage_object_groups(
     ctx: Context,
-    name: Annotated[str, Field(description="``dsm`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``object-groups`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``dsm`` object. "
+                "Payload for the ``object-groups`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_dsm`` to "
+                "field set; use ``central_get_object_groups`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -133,14 +78,14 @@ async def central_manage_dsm(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``dsm`` configuration in Central.
+    """Create, update, or delete a ``object-groups`` configuration in Central.
 
-    Distributed Services Module(DSM) configuration. DSM provide services such as stateful firewall and flow logging.
+    Configure Object Groups.
     """
     return await _manage_resource(
         ctx,
-        "dsm",
-        "dsm",
+        "object-groups",
+        "object-groups",
         name,
         action_type,
         payload,
@@ -150,136 +95,36 @@ async def central_manage_dsm(
     )
 
 
-# ----- feature-property -----
+# ----- policies -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_feature_property(
-    ctx: Context,
-) -> dict | list | str:
-    """Get the ``feature-property`` singleton configuration from Central.
-
-    Features.
-    """
-    return await _get_resource(ctx, "features", None)
-
-
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_feature_property(
-    ctx: Context,
-    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
-    payload: Annotated[
-        dict,
-        Field(
-            description=(
-                "Payload for the singleton ``feature-property`` object. "
-                "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_feature_property`` to "
-                "inspect the current state. For ``delete``, ``payload`` is ignored."
-            )
-        ),
-    ],
-    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
-    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
-    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
-) -> dict | str:
-    """Create, update, or delete the singleton ``feature-property`` configuration in Central.
-
-    Features.
-    """
-    return await _manage_resource(
-        ctx,
-        "features",
-        "feature-property",
-        None,
-        action_type,
-        payload,
-        scope_id,
-        device_function,
-        confirmed,
-    )
-
-
-# ----- firmware-management -----
-
-
-@tool(annotations=READ_ONLY)
-async def central_get_firmware_management(
-    ctx: Context,
-) -> dict | list | str:
-    """Get the ``firmware-management`` singleton configuration from Central.
-
-    Device firmware configuration parameters.
-    """
-    return await _get_resource(ctx, "device-firmware", None)
-
-
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_firmware_management(
-    ctx: Context,
-    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
-    payload: Annotated[
-        dict,
-        Field(
-            description=(
-                "Payload for the singleton ``firmware-management`` object. "
-                "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_firmware_management`` to "
-                "inspect the current state. For ``delete``, ``payload`` is ignored."
-            )
-        ),
-    ],
-    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
-    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
-    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
-) -> dict | str:
-    """Create, update, or delete the singleton ``firmware-management`` configuration in Central.
-
-    Device firmware configuration parameters.
-    """
-    return await _manage_resource(
-        ctx,
-        "device-firmware",
-        "firmware-management",
-        None,
-        action_type,
-        payload,
-        scope_id,
-        device_function,
-        confirmed,
-    )
-
-
-# ----- interface-vxlan -----
-
-
-@tool(annotations=READ_ONLY)
-async def central_get_interface_vxlan(
+async def central_get_policies(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``interface-vxlan`` configurations from Central.
+    """Get ``policies`` configurations from Central.
 
-    Configure VXLAN. Virtual eXtensible Local Access Network (VXLAN) provides a framework for Overlaying Virtualized Layer 2 Networks over Layer 3 networks. In CX it creates a VXLAN Interface.
+    Configure Object Groups.
 
     Parameters:
-        name: Specific ``interface-vxlan`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``policies`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "vxlan", name)
+    return await _get_resource(ctx, "policies", name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_interface_vxlan(
+async def central_manage_policies(
     ctx: Context,
-    name: Annotated[str, Field(description="``interface-vxlan`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``policies`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``interface-vxlan`` object. "
+                "Payload for the ``policies`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_interface_vxlan`` to "
+                "field set; use ``central_get_policies`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -289,14 +134,14 @@ async def central_manage_interface_vxlan(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``interface-vxlan`` configuration in Central.
+    """Create, update, or delete a ``policies`` configuration in Central.
 
-    Configure VXLAN. Virtual eXtensible Local Access Network (VXLAN) provides a framework for Overlaying Virtualized Layer 2 Networks over Layer 3 networks. In CX it creates a VXLAN Interface.
+    Configure Object Groups.
     """
     return await _manage_resource(
         ctx,
-        "vxlan",
-        "interface-vxlan",
+        "policies",
+        "policies",
         name,
         action_type,
         payload,
@@ -306,38 +151,32 @@ async def central_manage_interface_vxlan(
     )
 
 
-# ----- overlay-wlan -----
+# ----- policy-groups -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_overlay_wlan(
+async def central_get_policy_groups(
     ctx: Context,
-    profile: str | None = None,
 ) -> dict | list | str:
-    """Get ``overlay-wlan`` configurations from Central.
+    """Get the ``policy-groups`` singleton configuration from Central.
 
-    Overlay WLAN Services Config.
-
-    Parameters:
-        profile: Specific ``overlay-wlan`` identifier (OpenAPI path param: ``profile``). If omitted, returns all.
+    Configure Object Groups.
     """
-    return await _get_resource(ctx, "overlay-wlan", profile)
+    return await _get_resource(ctx, "policy-groups", None)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_overlay_wlan(
+async def central_manage_policy_groups(
     ctx: Context,
-    profile: Annotated[str, Field(description="``overlay-wlan`` identifier (OpenAPI path param: ``profile``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``overlay-wlan`` object. "
+                "Payload for the singleton ``policy-groups`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_overlay_wlan`` to "
-                "inspect an existing object for reference. "
-                "For ``delete``, ``payload`` is ignored."
+                "field set; use ``central_get_policy_groups`` to "
+                "inspect the current state. For ``delete``, ``payload`` is ignored."
             )
         ),
     ],
@@ -345,15 +184,15 @@ async def central_manage_overlay_wlan(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``overlay-wlan`` configuration in Central.
+    """Create, update, or delete the singleton ``policy-groups`` configuration in Central.
 
-    Overlay WLAN Services Config.
+    Configure Object Groups.
     """
     return await _manage_resource(
         ctx,
-        "overlay-wlan",
-        "overlay-wlan",
-        profile,
+        "policy-groups",
+        "policy-groups",
+        None,
         action_type,
         payload,
         scope_id,
@@ -362,36 +201,36 @@ async def central_manage_overlay_wlan(
     )
 
 
-# ----- vsx-pair -----
+# ----- role-acls -----
 
 
 @tool(annotations=READ_ONLY)
-async def central_get_vsx_pair(
+async def central_get_role_acls(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``vsx-pair`` configurations from Central.
+    """Get ``role-acls`` configurations from Central.
 
-    VSX config for primary or secondary device.
+    Configure Object Groups.
 
     Parameters:
-        name: Specific ``vsx-pair`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``role-acls`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "vsx-config", name)
+    return await _get_resource(ctx, "role-acls", name)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_vsx_pair(
+async def central_manage_role_acls(
     ctx: Context,
-    name: Annotated[str, Field(description="``vsx-pair`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``role-acls`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``vsx-pair`` object. "
+                "Payload for the ``role-acls`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_vsx_pair`` to "
+                "field set; use ``central_get_role_acls`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -401,14 +240,126 @@ async def central_manage_vsx_pair(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``vsx-pair`` configuration in Central.
+    """Create, update, or delete a ``role-acls`` configuration in Central.
 
-    VSX config for primary or secondary device.
+    Configure Object Groups.
     """
     return await _manage_resource(
         ctx,
-        "vsx-config",
-        "vsx-pair",
+        "role-acls",
+        "role-acls",
+        name,
+        action_type,
+        payload,
+        scope_id,
+        device_function,
+        confirmed,
+    )
+
+
+# ----- role-gpids -----
+
+
+@tool(annotations=READ_ONLY)
+async def central_get_role_gpids(
+    ctx: Context,
+    name: str | None = None,
+) -> dict | list | str:
+    """Get ``role-gpids`` configurations from Central.
+
+    Configure Object Groups.
+
+    Parameters:
+        name: Specific ``role-gpids`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+    """
+    return await _get_resource(ctx, "role-gpids", name)
+
+
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+async def central_manage_role_gpids(
+    ctx: Context,
+    name: Annotated[str, Field(description="``role-gpids`` identifier (OpenAPI path param: ``name``).")],
+    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
+    payload: Annotated[
+        dict,
+        Field(
+            description=(
+                "Payload for the ``role-gpids`` object. "
+                "Consult the Aruba Central config-model OpenAPI schema for the "
+                "field set; use ``central_get_role_gpids`` to "
+                "inspect an existing object for reference. "
+                "For ``delete``, ``payload`` is ignored."
+            )
+        ),
+    ],
+    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Create, update, or delete a ``role-gpids`` configuration in Central.
+
+    Configure Object Groups.
+    """
+    return await _manage_resource(
+        ctx,
+        "role-gpids",
+        "role-gpids",
+        name,
+        action_type,
+        payload,
+        scope_id,
+        device_function,
+        confirmed,
+    )
+
+
+# ----- roles -----
+
+
+@tool(annotations=READ_ONLY)
+async def central_get_roles(
+    ctx: Context,
+    name: str | None = None,
+) -> dict | list | str:
+    """Get ``roles`` configurations from Central.
+
+    Configure Object Groups.
+
+    Parameters:
+        name: Specific ``roles`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+    """
+    return await _get_resource(ctx, "roles", name)
+
+
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+async def central_manage_roles(
+    ctx: Context,
+    name: Annotated[str, Field(description="``roles`` identifier (OpenAPI path param: ``name``).")],
+    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
+    payload: Annotated[
+        dict,
+        Field(
+            description=(
+                "Payload for the ``roles`` object. "
+                "Consult the Aruba Central config-model OpenAPI schema for the "
+                "field set; use ``central_get_roles`` to "
+                "inspect an existing object for reference. "
+                "For ``delete``, ``payload`` is ignored."
+            )
+        ),
+    ],
+    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Create, update, or delete a ``roles`` configuration in Central.
+
+    Configure Object Groups.
+    """
+    return await _manage_resource(
+        ctx,
+        "roles",
+        "roles",
         name,
         action_type,
         payload,
