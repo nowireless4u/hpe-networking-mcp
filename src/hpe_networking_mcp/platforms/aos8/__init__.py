@@ -50,6 +50,7 @@ TOOLS: dict[str, list[str]] = {
     "differentiators": [
         "aos8_get_md_hierarchy",
         "aos8_get_effective_config",
+        "aos8_parse_config",
         "aos8_get_pending_changes",
         "aos8_get_rf_neighbors",
         "aos8_get_cluster_state",
