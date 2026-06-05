@@ -124,77 +124,45 @@ cd hpe-networking-mcp
 
 > **No build required.** The `docker-compose.yml` pulls a pre-built image from GitHub Container Registry by default. To build from source instead, edit `docker-compose.yml` and swap `image:` for `build: .`.
 
-### 2. Configure Secrets
+### 2. Configure Credentials
 
-The repo ships with `.example` template files only — **no real secret files**. You create the real files yourself by copying the examples and editing them with your values.
-
-**Important:** `docker-compose.yml` declares every platform's secrets and bind-mounts each of them into the container at startup. If a listed secret file doesn't exist on disk, the container fails immediately with an `invalid mount config` error — **before the app ever runs.** That means you need to pick one of two paths:
-
-- **Path A (most users):** populate every `.example` → real-name pair for every platform listed in the compose file, even the platforms you don't currently use (put dummy content in the unused ones — the app will disable the platform at runtime, see below).
-- **Path B (recommended if you only use some platforms):** create a `docker-compose.override.yml` that removes the unused platforms' secret references so compose stops trying to bind them. See **Disabling platforms you don't use** below.
-
-For the platforms you actually want enabled, copy the templates and edit them with real values:
+Copy the environment template and fill in credentials for the platforms you use:
 
 ```bash
-# Mist (required for this example; do the same for every platform you're using)
-cp secrets/mist_api_token.example secrets/mist_api_token
-cp secrets/mist_host.example secrets/mist_host
-# Edit each file with your real credentials
-
-# Aruba Central
-cp secrets/central_base_url.example secrets/central_base_url
-cp secrets/central_client_id.example secrets/central_client_id
-cp secrets/central_client_secret.example secrets/central_client_secret
-
-# HPE GreenLake
-cp secrets/greenlake_api_base_url.example secrets/greenlake_api_base_url
-cp secrets/greenlake_client_id.example secrets/greenlake_client_id
-cp secrets/greenlake_client_secret.example secrets/greenlake_client_secret
-cp secrets/greenlake_workspace_id.example secrets/greenlake_workspace_id
-
-# ClearPass
-cp secrets/clearpass_server.example secrets/clearpass_server
-cp secrets/clearpass_client_id.example secrets/clearpass_client_id
-cp secrets/clearpass_client_secret.example secrets/clearpass_client_secret
-cp secrets/clearpass_verify_ssl.example secrets/clearpass_verify_ssl
-
-# Juniper Apstra
-cp secrets/apstra_server.example secrets/apstra_server
-cp secrets/apstra_port.example secrets/apstra_port
-cp secrets/apstra_username.example secrets/apstra_username
-cp secrets/apstra_password.example secrets/apstra_password
-cp secrets/apstra_verify_ssl.example secrets/apstra_verify_ssl
-
-# Axis Atmos Cloud
-cp secrets/axis_api_token.example secrets/axis_api_token
+cp .env.example .env
+# Edit .env — uncomment and fill in only the platforms you need
 ```
+
+Only platforms with **all required credentials** set will be enabled. Leave unused platforms commented out or empty — they're automatically disabled. No override file needed.
+
+**Example `.env` for a Mist-only deployment:**
+
+```env
+MIST_API_TOKEN=your-mist-api-token-here
+MIST_HOST=api.mist.com
+```
+
+**Example `.env` for Mist + Central:**
+
+```env
+MIST_API_TOKEN=your-mist-api-token-here
+MIST_HOST=api.mist.com
+CENTRAL_BASE_URL=https://apigw-us5.central.arubanetworks.com
+CENTRAL_CLIENT_ID=your-client-id
+CENTRAL_CLIENT_SECRET=your-client-secret
+```
+
+> **Security:** `.env` is git-ignored and never committed. Restrict file permissions: `chmod 600 .env`. For production deployments where env vars in `docker inspect` are unacceptable, see [Docker Secrets (Production)](#docker-secrets-production) below.
 
 > **Axis token note**: Generate the token in the Axis admin portal at *Settings → Admin API → New API Token*. Pick read or read+write scope and an expiration. The MCP server decodes the JWT's `exp` claim at startup and logs a warning when the token has fewer than 30 days remaining; the `health` tool also surfaces a `token_expires_in_days` countdown when inside that window. There is no refresh — regenerate the token in the portal before it lapses.
 
-Each file contains a single value (e.g., your API token). **Do not leave placeholder contents** (like `apstra.example.com` or `replace-with-real-password`) in a file for a platform you're not using — the server will try to authenticate with those fake values at startup and fill your logs with failed-login errors. If you're not using a platform, use Path B below (override file) or leave the secret file empty — the app treats an empty file as "not configured" and disables the platform.
-
-### 3. Disable platforms you don't use (recommended)
-
-Create a `docker-compose.override.yml` alongside `docker-compose.yml`. Compose auto-merges it at startup, and the committed `docker-compose.yml` stays untouched. A ready-to-copy template is shipped in the repo:
-
-```bash
-cp docker-compose.override.yml.example docker-compose.override.yml
-# edit to match the platforms you actually use
-```
-
-The template shows a Mist-only deployment with `!reset` directives dropping every other platform's secret references — both the service-level `secrets:` list **and** the top-level `secrets:` block, which you need to do both halves of for Compose to stop trying to bind-mount the unused files. Adjust the `secrets: !reset - <names>` under `services:` to keep whichever platforms you need, and `!reset` only the top-level entries you're actually dropping. The template also has examples for per-platform write-tool flags, log level, and tool mode overrides.
-
-`docker-compose.override.yml` is already in `.gitignore`, so your per-deployment tailoring never ends up in git. With the Mist-only override in place, you only need `secrets/mist_api_token` and `secrets/mist_host` on disk — every other secret file can be absent.
-
-> **Compose version required:** `!reset` needs Docker Compose v2.24 or newer. If you're on an older Compose, either upgrade (recommended) or skip the override file and edit `docker-compose.yml` directly, commenting out the unused platform's service-level and top-level secret entries.
-
-### 4. Start
+### 3. Start
 
 ```bash
 docker compose up -d
 ```
 
-### 5. Verify
+### 4. Verify
 
 ```bash
 docker compose logs
@@ -221,7 +189,7 @@ docker pull ghcr.io/nowireless4u/hpe-networking-mcp:latest
 
 ## Platform Auto-Disable
 
-You don't need credentials for all eight platforms. The server detects which platforms have valid secret content at startup and only enables those. A platform is disabled if any of its required secret files is **empty or absent** from `SECRETS_DIR` (inside the container) — which, under Docker Compose, means the file on disk was empty or you used a `docker-compose.override.yml` to drop that platform's secrets entirely (see [Disable platforms you don't use](#3-disable-platforms-you-dont-use-recommended)).
+You don't need credentials for all eight platforms. The server detects which platforms have valid credentials at startup and only enables those. A platform is disabled if any of its required credentials is **empty or absent** — whether provided via environment variable or Docker secret file.
 
 - **All eight platforms configured** → All tools available (Mist + Central + GreenLake + ClearPass + Apstra + Axis + AOS8 + UXI)
 - **Only Mist configured** → Only `mist_*` tools available; other platforms disabled
@@ -229,7 +197,7 @@ You don't need credentials for all eight platforms. The server detects which pla
 - **Only ClearPass configured** → Only `clearpass_*` tools available; other platforms disabled
 - **No valid credentials** → Server refuses to start with a clear error message
 
-Add a platform later by populating its secret files (or removing the override's `!reset` lines) and restarting the container. The server logs which platforms are enabled at startup:
+Add a platform later by setting its credentials in `.env` and restarting the container. The server logs which platforms are enabled at startup:
 
 ```
 Mist: credentials loaded (token: abcd...wxyz, host: api.mist.com)
@@ -239,8 +207,6 @@ AOS8: disabled (missing secrets: aos8_host)
 Enabled platforms: mist
 Tool mode: code
 ```
-
-> **Heads up:** auto-disable triggers on **empty or absent secret content**, not on placeholder/example values. If you copy `apstra_server.example` → `apstra_server` and leave the contents as `apstra.example.com`, the server thinks Apstra is configured and tries to authenticate against the fake host — your logs fill with login errors. Either empty those files, drop the platform via `docker-compose.override.yml`, or fill in real values.
 
 ---
 
@@ -428,79 +394,130 @@ If you put the server behind an authenticating reverse proxy that already valida
 
 ## Secrets
 
-This project uses **Docker Compose secrets** for credential management — the most secure native Docker approach:
+Credentials are loaded via a **two-tier lookup** for each value:
 
-- Each credential is a **separate file** in the `secrets/` directory
-- Files are mounted **read-only** at `/run/secrets/` inside the container
-- Secrets are **never** baked into the Docker image, exposed in `docker inspect`, or stored as environment variables
-- Real secret files are **git-ignored** — only `.example` templates are committed
+1. **Docker secret file** at `SECRETS_DIR/<name>` — highest priority (production)
+2. **Environment variable** with the UPPER_CASE equivalent — fallback (development)
 
-### How It Works
+If both exist, the Docker secret file wins. If neither exists, the platform is disabled.
 
+### Recommended: Environment Variables (`.env` file)
+
+The simplest setup. Create a `.env` file at the project root (see [Quick Start](#2-configure-credentials)):
+
+```bash
+cp .env.example .env
+chmod 600 .env
+# Edit .env with your credentials
 ```
-secrets/
-├── mist_api_token.example      # Template (committed to git)
-├── mist_api_token              # Your real secret (git-ignored)
-├── mist_host.example
-├── mist_host
-└── ...
+
+Docker Compose loads `.env` automatically and passes the variables into the container. This is secure for most use cases — the `.env` file is git-ignored and never leaves your machine.
+
+### Docker Secrets (Production)
+
+For production deployments where credentials must not be visible in `docker inspect` or `/proc/<pid>/environ`, use the Docker secrets overlay:
+
+```bash
+# Create secret files from templates
+cp secrets/mist_api_token.example secrets/mist_api_token
+cp secrets/mist_host.example secrets/mist_host
+# Edit with real values...
+
+# Start with the secrets overlay
+docker compose -f docker-compose.yml -f docker-compose.secrets.yml up -d
 ```
 
-Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside the container. The server reads each file at startup.
+Docker secrets are:
+- Mounted **read-only** at `/run/secrets/` inside the container
+- **Not** visible in `docker inspect` or environment variables
+- **Not** baked into the Docker image
 
-### Platform Credentials
+> **Note:** Only include entries in `docker-compose.secrets.yml` for platforms you use. Comment out or remove entries for unused platforms to avoid "file not found" errors.
+
+### Credential Lookup Reference
+
+| Environment Variable | Docker Secret File | Required | Platform |
+|---------------------|-------------------|----------|----------|
+| `MIST_API_TOKEN` | `mist_api_token` | yes | Mist |
+| `MIST_HOST` | `mist_host` | yes | Mist |
+| `CENTRAL_BASE_URL` | `central_base_url` | yes | Central |
+| `CENTRAL_CLIENT_ID` | `central_client_id` | yes | Central |
+| `CENTRAL_CLIENT_SECRET` | `central_client_secret` | yes | Central |
+| `GREENLAKE_API_BASE_URL` | `greenlake_api_base_url` | yes | GreenLake |
+| `GREENLAKE_CLIENT_ID` | `greenlake_client_id` | yes | GreenLake |
+| `GREENLAKE_CLIENT_SECRET` | `greenlake_client_secret` | yes | GreenLake |
+| `GREENLAKE_WORKSPACE_ID` | `greenlake_workspace_id` | yes | GreenLake |
+| `CLEARPASS_SERVER` | `clearpass_server` | yes | ClearPass |
+| `CLEARPASS_CLIENT_ID` | `clearpass_client_id` | yes | ClearPass |
+| `CLEARPASS_CLIENT_SECRET` | `clearpass_client_secret` | yes | ClearPass |
+| `CLEARPASS_VERIFY_SSL` | `clearpass_verify_ssl` | no (default: `true`) | ClearPass |
+| `APSTRA_SERVER` | `apstra_server` | yes | Apstra |
+| `APSTRA_USERNAME` | `apstra_username` | yes | Apstra |
+| `APSTRA_PASSWORD` | `apstra_password` | yes | Apstra |
+| `APSTRA_PORT` | `apstra_port` | no (default: `443`) | Apstra |
+| `APSTRA_VERIFY_SSL` | `apstra_verify_ssl` | no (default: `true`) | Apstra |
+| `AXIS_API_TOKEN` | `axis_api_token` | yes | Axis |
+| `AOS8_HOST` | `aos8_host` | yes | AOS8 |
+| `AOS8_USERNAME` | `aos8_username` | yes | AOS8 |
+| `AOS8_PASSWORD` | `aos8_password` | yes | AOS8 |
+| `AOS8_PORT` | `aos8_port` | no (default: `4343`) | AOS8 |
+| `AOS8_VERIFY_SSL` | `aos8_verify_ssl` | no (default: `true`) | AOS8 |
+| `UXI_CLIENT_ID` | `uxi_client_id` | yes | UXI |
+| `UXI_CLIENT_SECRET` | `uxi_client_secret` | yes | UXI |
+
+### Where to Obtain Credentials
 
 #### Juniper Mist
 
-| Secret File | Description | How to Obtain |
-|-------------|-------------|---------------|
-| `mist_api_token` | Mist API token | Mist Dashboard > Organization > Settings > API Token |
-| `mist_host` | Mist API host | `api.mist.com` (Global), `api.eu.mist.com` (EU), `api.gc1.mist.com` (GovCloud) |
+| Credential | How to Obtain |
+|------------|---------------|
+| `MIST_API_TOKEN` | Mist Dashboard > Organization > Settings > API Token |
+| `MIST_HOST` | `api.mist.com` (Global), `api.eu.mist.com` (EU), `api.gc1.mist.com` (GovCloud) |
 
 #### Aruba Central
 
-| Secret File | Description | How to Obtain |
-|-------------|-------------|---------------|
-| `central_base_url` | Central API gateway URL | HPE GreenLake Platform > Aruba Central > API Gateway |
-| `central_client_id` | OAuth2 client ID | HPE GreenLake Platform > API Clients |
-| `central_client_secret` | OAuth2 client secret | HPE GreenLake Platform > API Clients |
+| Credential | How to Obtain |
+|------------|---------------|
+| `CENTRAL_BASE_URL` | HPE GreenLake Platform > Aruba Central > API Gateway |
+| `CENTRAL_CLIENT_ID` | HPE GreenLake Platform > API Clients |
+| `CENTRAL_CLIENT_SECRET` | HPE GreenLake Platform > API Clients |
 
 #### HPE GreenLake
 
-| Secret File | Description | How to Obtain |
-|-------------|-------------|---------------|
-| `greenlake_api_base_url` | GreenLake API base URL | Typically `https://global.api.greenlake.hpe.com` |
-| `greenlake_client_id` | OAuth2 client ID | HPE GreenLake Platform > API Clients |
-| `greenlake_client_secret` | OAuth2 client secret | HPE GreenLake Platform > API Clients |
-| `greenlake_workspace_id` | GreenLake workspace ID | HPE GreenLake Platform > Workspaces |
+| Credential | How to Obtain |
+|------------|---------------|
+| `GREENLAKE_API_BASE_URL` | Typically `https://global.api.greenlake.hpe.com` |
+| `GREENLAKE_CLIENT_ID` | HPE GreenLake Platform > API Clients |
+| `GREENLAKE_CLIENT_SECRET` | HPE GreenLake Platform > API Clients |
+| `GREENLAKE_WORKSPACE_ID` | HPE GreenLake Platform > Workspaces |
 
 #### Aruba ClearPass
 
-| Secret File | Description | How to Obtain |
-|-------------|-------------|---------------|
-| `clearpass_server` | ClearPass API URL | `https://your-clearpass-server/api` — the CPPM server hostname with `/api` path |
-| `clearpass_client_id` | OAuth2 client ID | ClearPass Admin > API Clients > Create API Client |
-| `clearpass_client_secret` | OAuth2 client secret | ClearPass Admin > API Clients > Client Secret |
-| `clearpass_verify_ssl` | SSL verification (optional) | `true` (default) or `false` for self-signed certificates |
+| Credential | How to Obtain |
+|------------|---------------|
+| `CLEARPASS_SERVER` | `https://your-clearpass-server/api` — the CPPM server hostname with `/api` path |
+| `CLEARPASS_CLIENT_ID` | ClearPass Admin > API Clients > Create API Client |
+| `CLEARPASS_CLIENT_SECRET` | ClearPass Admin > API Clients > Client Secret |
+| `CLEARPASS_VERIFY_SSL` | `true` (default) or `false` for self-signed certificates |
 
 #### Aruba OS 8 / Mobility Conductor
 
-| Secret File | Required | Default | Purpose |
+| Credential | Required | Default | Purpose |
 |---|---|---|---|
-| `aos8_host` | yes | — | Conductor or standalone controller hostname/IP |
-| `aos8_username` | yes | — | API username with sufficient role |
-| `aos8_password` | yes | — | API password |
-| `aos8_port` | no | `4343` | HTTPS port (Mobility Conductor API port) |
-| `aos8_verify_ssl` | no | `true` | Set to `false` for self-signed certs (logged as WARNING) |
+| `AOS8_HOST` | yes | — | Conductor or standalone controller hostname/IP |
+| `AOS8_USERNAME` | yes | — | API username with sufficient role |
+| `AOS8_PASSWORD` | yes | — | API password |
+| `AOS8_PORT` | no | `4343` | HTTPS port (Mobility Conductor API port) |
+| `AOS8_VERIFY_SSL` | no | `true` | Set to `false` for self-signed certs (logged as WARNING) |
 
 Set `ENABLE_AOS8_WRITE_TOOLS=true` to expose the 12 AOS8 write tools (gated by elicitation middleware; default `false`).
 
 #### HPE UXI / Aruba User Experience Insight
 
-| Secret File | Required | Default | Purpose |
+| Credential | Required | Default | Purpose |
 |---|---|---|---|
-| `uxi_client_id` | yes | — | HPE SSO OAuth2 client ID |
-| `uxi_client_secret` | yes | — | HPE SSO OAuth2 client secret |
+| `UXI_CLIENT_ID` | yes | — | HPE SSO OAuth2 client ID |
+| `UXI_CLIENT_SECRET` | yes | — | HPE SSO OAuth2 client secret |
 
 Set `ENABLE_UXI_WRITE_TOOLS=true` to expose the 10 UXI write tools (gated by elicitation middleware; default `false`).
 
@@ -597,7 +614,7 @@ The retry logic detects transient failures in two patterns: response-dict (Mist/
 | `MCP_PORT` | `8000` | Port the MCP server listens on |
 | `MCP_HOST` | `0.0.0.0` | Bind address **inside the container's namespace** — leave at `0.0.0.0` so Docker's port-forwarder can reach the app. Restrict who can reach the host port via `ports:` in compose, not this. |
 | `ALLOWED_ORIGINS` | `http://localhost:<MCP_PORT>,http://127.0.0.1:<MCP_PORT>` | Comma-separated allowlist for the `Origin` request header (DNS-rebinding defense per MCP spec). Browsers always send `Origin`; non-browser clients (supergateway, curl) don't and pass through. Set to `*` to disable the check (use only behind an auth proxy). |
-| `SECRETS_DIR` | `/run/secrets` | Directory containing Docker secret files |
+| `SECRETS_DIR` | `/run/secrets` | Directory for Docker secret files (credentials in files here take priority over env vars) |
 | `LOG_LEVEL` | `info` | Logging level (`debug`, `info`, `warning`, `error`) |
 | `ENABLE_MIST_WRITE_TOOLS` | `false` | Enable Mist write/mutation tools |
 | `ENABLE_CENTRAL_WRITE_TOOLS` | `false` | Enable Central write/mutation tools |
@@ -667,7 +684,7 @@ hpe-networking-mcp/
 ├── src/hpe_networking_mcp/
 │   ├── __main__.py              # CLI entry point
 │   ├── server.py                # FastMCP server setup and lifespan
-│   ├── config.py                # Docker secrets loading and validation
+│   ├── config.py                # Credential loading (env vars + Docker secrets)
 │   ├── INSTRUCTIONS.md          # LLM instructions for all platforms
 │   ├── middleware/              # null-strip, validation-catch, sandbox-error-catch, elicitation, retry
 │   ├── skills/                  # Markdown-defined multi-step procedures + skills engine
@@ -687,10 +704,12 @@ hpe-networking-mcp/
 │       └── site_rf_check.py     # Cross-platform Wi-Fi RF dashboard
 ├── tests/                       # Unit and integration tests (1158+ unit tests)
 ├── docs/                        # PRD, PRP, tool reference
-├── secrets/                     # Secret files (only .example committed)
+├── secrets/                     # Secret file templates (.example only in git)
+├── .env.example                 # Environment variable template (copy to .env)
 ├── .github/workflows/           # CI, security, Docker publish
 ├── Dockerfile                   # Multi-stage build, non-root user
-├── docker-compose.yml           # Production (pulls GHCR image)
+├── docker-compose.yml           # Production (env var credentials from .env)
+├── docker-compose.secrets.yml   # Optional overlay for Docker secrets (production)
 └── docker-compose.dev.yml       # Development (mounts tests)
 ```
 
@@ -710,14 +729,14 @@ docker compose logs -f                     # Follow live
 
 ### Platform Disabled at Startup
 
-If a platform shows as disabled, the relevant secret file is either absent or empty from the container's perspective:
+If a platform shows as disabled, its credentials are missing or empty:
 
 ```
 Mist: disabled (mist_api_token secret not found)
 Central: disabled (missing secrets: central_client_id, central_client_secret)
 ```
 
-**Fix:** Populate the missing secret files in `secrets/` with real values (no extra whitespace or newlines — each file should contain exactly one value). If you *intended* to disable that platform, ignore the message — the server continues running with the platforms that do have credentials.
+**Fix:** Set the missing credentials in your `.env` file (or Docker secret files if using the secrets overlay). If you *intended* to disable that platform, ignore the message — the server continues running with the platforms that do have credentials.
 
 ### Container exits immediately with `invalid mount config for type "bind"`
 
@@ -726,12 +745,11 @@ Error response from daemon: invalid mount config for type "bind":
 bind source path does not exist: .../secrets/apstra_verify_ssl
 ```
 
-This means `docker-compose.yml` references a secret file that doesn't exist on disk, and Docker failed the bind mount *before* the app started. Two fixes:
+This only happens when using the Docker secrets overlay (`docker-compose.secrets.yml`). It means a secret file referenced in the overlay doesn't exist on disk.
 
-- **If you want that platform enabled:** run `cp secrets/<name>.example secrets/<name>` and populate the file with your real values.
-- **If you don't want that platform:** drop the platform's secret references via a `docker-compose.override.yml` (see [Disable platforms you don't use](#3-disable-platforms-you-dont-use-recommended)).
+**Fix:** Either create the missing file (`cp secrets/<name>.example secrets/<name>` and populate it), or comment out that platform's entries in `docker-compose.secrets.yml`.
 
-Do **not** create an empty file with placeholder contents left over from the `.example` template — the app will boot but fail authentication against the fake values, as explained in [Platform Auto-Disable](#platform-auto-disable).
+> **Note:** If you're using the default `.env` approach (without `docker-compose.secrets.yml`), you will never see this error — missing env vars simply disable the platform gracefully.
 
 ### Authentication Failures
 

@@ -206,6 +206,21 @@ class TestLoadConfig:
         config = load_config()
         assert config.code_sandbox_max_duration_secs == 30.0
 
+    def test_customer_name_from_env(self, patch_secrets_dir, monkeypatch):
+        monkeypatch.setenv("CUSTOMER_NAME", "Acme-Corp")
+        config = load_config()
+        assert config.customer_name == "Acme-Corp"
+
+    def test_customer_name_defaults_to_none(self, patch_secrets_dir, monkeypatch):
+        monkeypatch.delenv("CUSTOMER_NAME", raising=False)
+        config = load_config()
+        assert config.customer_name is None
+
+    def test_customer_name_empty_treated_as_none(self, patch_secrets_dir, monkeypatch):
+        monkeypatch.setenv("CUSTOMER_NAME", "   ")
+        config = load_config()
+        assert config.customer_name is None
+
 
 # ---------------------------------------------------------------------------
 # enabled_platforms property
@@ -229,3 +244,86 @@ class TestEnabledPlatforms:
             greenlake=GreenLakeSecrets(api_base_url="u", client_id="c", client_secret="s", workspace_id="w"),
         )
         assert config.enabled_platforms == ["mist", "central", "greenlake"]
+
+
+# ---------------------------------------------------------------------------
+# _read_secret — environment variable fallback
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestReadSecretEnvFallback:
+    """Tests for the two-tier lookup: Docker secret file > env var > None."""
+
+    def test_env_var_used_when_file_missing(self, patch_secrets_dir, monkeypatch):
+        """Env var provides the value when no secret file exists."""
+        monkeypatch.setenv("NONEXISTENT_SECRET", "from-env")
+        result = _read_secret("nonexistent_secret")
+        assert result == "from-env"
+
+    def test_file_takes_priority_over_env_var(self, patch_secrets_dir, monkeypatch):
+        """Docker secret file wins when both file and env var exist."""
+        monkeypatch.setenv("MIST_API_TOKEN", "from-env")
+        result = _read_secret("mist_api_token")
+        assert result == "test-mist-token-value-1234"
+
+    def test_returns_none_when_neither_source(self, patch_secrets_dir, monkeypatch):
+        """Returns None when no file and no env var."""
+        monkeypatch.delenv("TOTALLY_MISSING", raising=False)
+        result = _read_secret("totally_missing")
+        assert result is None
+
+    def test_env_var_whitespace_stripped(self, patch_secrets_dir, monkeypatch):
+        """Env var value is stripped of surrounding whitespace."""
+        monkeypatch.setenv("PADDED_VALUE", "  my-token  ")
+        result = _read_secret("padded_value")
+        assert result == "my-token"
+
+    def test_empty_env_var_treated_as_missing(self, patch_secrets_dir, monkeypatch):
+        """Empty or whitespace-only env var is treated as not set."""
+        monkeypatch.setenv("EMPTY_VAR", "   ")
+        result = _read_secret("empty_var")
+        assert result is None
+
+    def test_empty_file_falls_through_to_env_var(self, patch_secrets_dir, monkeypatch):
+        """Empty secret file falls through to env var."""
+        (patch_secrets_dir / "empty_file").write_text("")
+        monkeypatch.setenv("EMPTY_FILE", "from-env")
+        result = _read_secret("empty_file")
+        assert result == "from-env"
+
+
+@pytest.mark.unit
+class TestLoadConfigFromEnvVars:
+    """Test that platforms can be enabled purely via environment variables."""
+
+    def test_mist_enabled_via_env_only(self, tmp_path, monkeypatch):
+        """Mist enabled with env vars and empty secrets dir."""
+        monkeypatch.setattr("hpe_networking_mcp.config.SECRETS_DIR", str(tmp_path))
+        monkeypatch.setenv("MIST_API_TOKEN", "env-token-value")
+        monkeypatch.setenv("MIST_HOST", "api.eu.mist.com")
+        config = load_config()
+        assert "mist" in config.enabled_platforms
+        assert config.mist is not None
+        assert config.mist.api_token == "env-token-value"
+        assert config.mist.host == "api.eu.mist.com"
+
+    def test_central_enabled_via_env_only(self, tmp_path, monkeypatch):
+        """Central enabled with env vars and empty secrets dir."""
+        monkeypatch.setattr("hpe_networking_mcp.config.SECRETS_DIR", str(tmp_path))
+        monkeypatch.setenv("CENTRAL_BASE_URL", "https://apigw-us1.central.arubanetworks.com")
+        monkeypatch.setenv("CENTRAL_CLIENT_ID", "env-client-id")
+        monkeypatch.setenv("CENTRAL_CLIENT_SECRET", "env-client-secret")
+        config = load_config()
+        assert "central" in config.enabled_platforms
+        assert config.central is not None
+        assert config.central.base_url == "https://apigw-us1.central.arubanetworks.com"
+
+    def test_multiple_platforms_via_env(self, tmp_path, monkeypatch):
+        """Multiple platforms enabled simultaneously from env vars."""
+        monkeypatch.setattr("hpe_networking_mcp.config.SECRETS_DIR", str(tmp_path))
+        monkeypatch.setenv("MIST_API_TOKEN", "t")
+        monkeypatch.setenv("MIST_HOST", "api.mist.com")
+        monkeypatch.setenv("AXIS_API_TOKEN", "axis-token")
+        config = load_config()
+        assert set(config.enabled_platforms) == {"mist", "axis"}
