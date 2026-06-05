@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0.2] - 2026-06-05
+
+**Patch — AOS 8 CLI config parser + `aos8_parse_config` tool.** Adds an offline parser that turns a pasted/uploaded AOS 8 running-config (CLI) into the same canonical records the translation engine already consumes from `aos8_get_effective_config` — enabling the "paste your AOS 8 config into the AI" migration flow without a live controller.
+
+- **`aos8_parse_config`** (read tool, AOS 8 platform): `cli_text` → `{netdst, acl_sess, role, _warnings}`. Parses `netdestination`/`netdestination6`, `ip access-list session`/`ipv6 access-list session`, and `user-role` stanzas; captures source/destination discriminators, services, protocol/port, actions (incl. `src-nat` / `dst-nat` / `dual-nat pool <name> <port>` / `redirect`), `log`, and `invert`. Tolerant — unmodelled clauses surface as warnings / `_unparsed` rather than being dropped.
+- The output is interchangeable with `aos8_get_effective_config`, so it feeds the `central:policy` / `central:net_group` / `central:role` translations unchanged.
+- AOS 8 platform tool count: 47 → 48 (total registered surface 1961 → 1962).
+
 ## [3.3.0.1] - 2026-06-05
 
 **Patch — AOS 8 → Central policy/net-group translation drift fixes.** Corrects spec-confirmed mismatches in the AOS 8 `acl_sess` / `netdst` → Central CNX translation, validated against Central's live built-in policies.
