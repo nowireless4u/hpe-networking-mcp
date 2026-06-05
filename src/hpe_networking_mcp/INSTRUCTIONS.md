@@ -17,7 +17,7 @@ Tools are namespaced by platform:
 
 Two modes are supported (the `static` mode was removed in v3.0.0.0):
 
-- **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 1961 underlying tools are reachable from inside a sandboxed Python `execute()` block via `await call_tool("<platform>_invoke_tool", {"name": "<tool>", "params": {...}})` — see the in-sandbox dispatch note below; the ~1000 spec-driven Mist tools are reachable **only** through `mist_invoke_tool`, not by direct name. The smallest initial surface; best for orchestrators driving small / local LLMs.
+- **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 1962 underlying tools are reachable from inside a sandboxed Python `execute()` block via `await call_tool("<platform>_invoke_tool", {"name": "<tool>", "params": {...}})` — see the in-sandbox dispatch note below; the ~1000 spec-driven Mist tools are reachable **only** through `mist_invoke_tool`, not by direct name. The smallest initial surface; best for orchestrators driving small / local LLMs.
 - **`MCP_TOOL_MODE=dynamic`** (opt-in since v3.0.0.0; was the v2.x default) — 24 tools visible:
     - **4 cross-platform tools**: `health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`
     - **3 meta-tools per platform × 8 platforms** = 24: `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`
