@@ -51,20 +51,25 @@ class TestCentralGetCnacJobStatus:
         assert result["data"] == {}
 
     @patch(_PATCH)
-    async def test_non_2xx_returns_error_status(self, mock_cmd):
+    async def test_non_2xx_raises_tool_error(self, mock_cmd):
+        from fastmcp.exceptions import ToolError
+
         from hpe_networking_mcp.platforms.central.tools.central_nac_service import central_get_cnac_job_status
 
         mock_cmd.return_value = {"code": 404, "msg": "no such job"}
-        result = await central_get_cnac_job_status(_ctx(), job_id="missing")
-        assert result["status"] == "error"
-        assert result["code"] == 404
-        assert result["message"] == "no such job"
+        with pytest.raises(ToolError) as exc:
+            await central_get_cnac_job_status(_ctx(), job_id="missing")
+        assert exc.value.args[0]["status_code"] == 404
+        assert "no such job" in exc.value.args[0]["message"]
 
     @patch(_PATCH)
-    async def test_zero_code_returns_error_status(self, mock_cmd):
+    async def test_zero_code_raises_tool_error(self, mock_cmd):
+        from fastmcp.exceptions import ToolError
+
         from hpe_networking_mcp.platforms.central.tools.central_nac_service import central_get_cnac_job_status
 
         mock_cmd.return_value = {"msg": "transport error"}
-        result = await central_get_cnac_job_status(_ctx(), job_id="j")
-        assert result["status"] == "error"
-        assert result["code"] == 0
+        with pytest.raises(ToolError) as exc:
+            await central_get_cnac_job_status(_ctx(), job_id="j")
+        assert exc.value.args[0]["status_code"] == 502
+        assert "transport error" in exc.value.args[0]["message"]

@@ -287,22 +287,24 @@ class TestManageGatewayCluster:
         assert kwargs.get("api_data") is None
 
     @patch(_HELPER_RETRY)
-    async def test_error_response_returns_error_status(self, mock_retry):
+    async def test_error_response_raises_tool_error(self, mock_retry):
+        from fastmcp.exceptions import ToolError
+
         from hpe_networking_mcp.platforms.central.tools.high_availability import (
             central_manage_gateway_clusters,
         )
 
         mock_retry.return_value = {"code": 400, "msg": "Cluster name 'auto_x' is reserved"}
-        result = await central_manage_gateway_clusters(
-            _ctx(),
-            name="auto_x",
-            action_type="create",
-            payload={},
-            scope_id=None,
-            device_function=None,
-            confirmed=True,
-        )
+        with pytest.raises(ToolError) as exc:
+            await central_manage_gateway_clusters(
+                _ctx(),
+                name="auto_x",
+                action_type="create",
+                payload={},
+                scope_id=None,
+                device_function=None,
+                confirmed=True,
+            )
 
-        assert result["status"] == "error"
-        assert result["code"] == 400
-        assert "reserved" in result["message"]
+        assert exc.value.args[0]["status_code"] == 400
+        assert "reserved" in exc.value.args[0]["message"]

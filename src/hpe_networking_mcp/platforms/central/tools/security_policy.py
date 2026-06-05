@@ -40,6 +40,11 @@ async def _get_resource(ctx: Context, api_base: str, name: str | None) -> dict |
     conn = ctx.lifespan_context["central_conn"]
     api_path = f"network-config/v1alpha1/{api_base}/{name}" if name else f"network-config/v1alpha1/{api_base}"
     response = retry_central_command(central_conn=conn, api_method="GET", api_path=api_path)
+    code = response.get("code", 0)
+    if code and not 200 <= code < 300:
+        raise ToolError(
+            {"status_code": code or 502, "message": f"GET {api_path} failed: {response.get('msg', 'Unknown error')}"}
+        )
     return response.get("msg", {})
 
 
@@ -120,7 +125,8 @@ async def _manage_resource(
     if 200 <= code < 300:
         return {"status": "success", "action": action_type, "name": name, "data": response.get("msg", {})}
 
-    return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
+    msg = response.get("msg", "Unknown error")
+    raise ToolError({"status_code": code or 502, "message": f"{action_type} {resource_label} {name!r} failed: {msg}"})
 
 
 async def _operation_request(
@@ -142,9 +148,10 @@ async def _operation_request(
 
     For write methods (POST/PATCH/PUT/DELETE) when ``not confirmed``, runs the
     same elicitation flow ``_manage_resource`` uses (respecting ``chat_confirm``
-    state). GET requests skip elicitation. Returns the same shaped dict as
-    ``_manage_resource`` (``{"status": "success", ...}`` on 2xx, else
-    ``{"status": "error", ...}``).
+    state). GET requests skip elicitation. Returns ``{"status": "success", ...}``
+    on 2xx; raises :class:`ToolError` (``{"status_code", "message"}``) on any
+    non-2xx so the calling AI sees a real failure rather than an ok-wrapped
+    error dict (elicitation decline/cancel still return ordinary dicts).
     """
     method = api_method.upper()
     is_write = method in ("POST", "PATCH", "PUT", "DELETE")
@@ -189,7 +196,8 @@ async def _operation_request(
     if 200 <= code < 300:
         return {"status": "success", "method": method, "path": api_path, "data": response.get("msg", {})}
 
-    return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
+    msg = response.get("msg", "Unknown error")
+    raise ToolError({"status_code": code or 502, "message": f"{method} {api_path} failed: {msg}"})
 
 
 # Common field definitions reused across write tools
