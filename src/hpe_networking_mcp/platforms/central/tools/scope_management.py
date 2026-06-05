@@ -9,9 +9,9 @@ so before any hand edits or with care.
 
 Covers config objects sourced from the ``scope-management.json`` vendor
 spec file. Wrappers
-delegate to ``_get_resource`` / ``_manage_resource`` in
-``security_policy.py`` — the same shared helpers used by the
-hand-curated Roles & Policy tools.
+delegate to ``_get_resource`` / ``_manage_resource`` /
+``_operation_request`` in ``security_policy.py`` — the same shared
+helpers used by the hand-curated Roles & Policy tools.
 """
 
 # ruff: noqa: E501
@@ -30,6 +30,7 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _SCOPE_ID_FIELD,
     _get_resource,
     _manage_resource,
+    _operation_request,
 )
 
 WRITE_DELETE = ToolAnnotations(
@@ -204,3 +205,28 @@ async def central_manage_device_collections(
         device_function,
         confirmed,
     )
+
+
+# ----- operation: device-collections/bulk -----
+
+
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+async def central_device_collections_bulk_delete(
+    ctx: Context,
+    payload: Annotated[
+        dict,
+        Field(
+            description=(
+                "Request body for the ``device-collections/bulk`` operation. "
+                "Consult the Aruba Central config-model OpenAPI schema for the field set."
+            )
+        ),
+    ],
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Central operation: device-collections/bulk.
+
+    Wraps ``DELETE network-config/v1alpha1/device-collections/bulk``.
+    """
+    api_path = "network-config/v1alpha1/device-collections/bulk"
+    return await _operation_request(ctx, "DELETE", api_path, payload, confirmed, "device-collections/bulk")

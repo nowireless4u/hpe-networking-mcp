@@ -9,9 +9,9 @@ so before any hand edits or with care.
 
 Covers config objects sourced from the ``named-object.json`` vendor
 spec file. Wrappers
-delegate to ``_get_resource`` / ``_manage_resource`` in
-``security_policy.py`` — the same shared helpers used by the
-hand-curated Roles & Policy tools.
+delegate to ``_get_resource`` / ``_manage_resource`` /
+``_operation_request`` in ``security_policy.py`` — the same shared
+helpers used by the hand-curated Roles & Policy tools.
 """
 
 # ruff: noqa: E501

@@ -9,9 +9,9 @@ so before any hand edits or with care.
 
 Covers config objects sourced from the ``roles-policy.json`` vendor
 spec file. Wrappers
-delegate to ``_get_resource`` / ``_manage_resource`` in
-``security_policy.py`` — the same shared helpers used by the
-hand-curated Roles & Policy tools.
+delegate to ``_get_resource`` / ``_manage_resource`` /
+``_operation_request`` in ``security_policy.py`` — the same shared
+helpers used by the hand-curated Roles & Policy tools.
 """
 
 # ruff: noqa: E501
@@ -142,6 +142,62 @@ async def central_manage_policies(
         ctx,
         "policies",
         "policies",
+        name,
+        action_type,
+        payload,
+        scope_id,
+        device_function,
+        confirmed,
+    )
+
+
+# ----- policy-group-list -----
+
+
+@tool(annotations=READ_ONLY)
+async def central_get_policy_group_list(
+    ctx: Context,
+    name: str | None = None,
+) -> dict | list | str:
+    """Get ``policy-group-list`` configurations from Central.
+
+    Configure Object Groups.
+
+    Parameters:
+        name: Specific ``policy-group-list`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+    """
+    return await _get_resource(ctx, "policy-groups/policy-group/policy-group-list", name)
+
+
+@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+async def central_manage_policy_group_list(
+    ctx: Context,
+    name: Annotated[str, Field(description="``policy-group-list`` identifier (OpenAPI path param: ``name``).")],
+    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
+    payload: Annotated[
+        dict,
+        Field(
+            description=(
+                "Payload for the ``policy-group-list`` object. "
+                "Consult the Aruba Central config-model OpenAPI schema for the "
+                "field set; use ``central_get_policy_group_list`` to "
+                "inspect an existing object for reference. "
+                "For ``delete``, ``payload`` is ignored."
+            )
+        ),
+    ],
+    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Create, update, or delete a ``policy-group-list`` configuration in Central.
+
+    Configure Object Groups.
+    """
+    return await _manage_resource(
+        ctx,
+        "policy-groups/policy-group/policy-group-list",
+        "policy-group-list",
         name,
         action_type,
         payload,

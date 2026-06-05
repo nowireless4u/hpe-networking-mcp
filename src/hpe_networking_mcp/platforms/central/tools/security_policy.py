@@ -123,6 +123,75 @@ async def _manage_resource(
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
+async def _operation_request(
+    ctx: Context,
+    api_method: str,
+    api_path: str,
+    payload: dict | None = None,
+    confirmed: bool = False,
+    label: str = "",
+) -> dict | str:
+    """Generic single-shot request for an irregular Central operation endpoint.
+
+    Unlike :func:`_manage_resource`, this helper targets a fully-formed
+    ``api_path`` (the caller has already substituted any path params and chosen
+    the version prefix) and a fixed ``api_method`` — there is no
+    ``action_type``/CRUD verb mapping. Used by the generated operation tools
+    (fixed-verb actions like ``revoke``/``upload``/``import``/``export``/``bulk``
+    and job/status reads).
+
+    For write methods (POST/PATCH/PUT/DELETE) when ``not confirmed``, runs the
+    same elicitation flow ``_manage_resource`` uses (respecting ``chat_confirm``
+    state). GET requests skip elicitation. Returns the same shaped dict as
+    ``_manage_resource`` (``{"status": "success", ...}`` on 2xx, else
+    ``{"status": "error", ...}``).
+    """
+    method = api_method.upper()
+    is_write = method in ("POST", "PATCH", "PUT", "DELETE")
+
+    if is_write and not confirmed:
+        target_phrase = label or api_path
+        elicitation_response = await elicitation_handler(
+            message=f"The LLM wants to perform '{method}' on {target_phrase}. Do you accept?",
+            ctx=ctx,
+        )
+        if elicitation_response.action == "decline":
+            if await ctx.get_state("elicitation_mode") == "chat_confirm":
+                return {
+                    "status": "confirmation_required",
+                    "message": (
+                        f"This operation will perform '{method}' on {target_phrase}. "
+                        "Please confirm with the user before proceeding. "
+                        "Call this tool again with confirmed=true after the user confirms."
+                    ),
+                }
+            return {"message": "Action declined by user."}
+        elif elicitation_response.action == "cancel":
+            return {"message": "Action canceled by user."}
+
+    conn = ctx.lifespan_context["central_conn"]
+    # Send the request body for any write method that carries one. Unlike CRUD
+    # ``_manage_resource`` (which never bodies a delete), operation endpoints
+    # such as ``.../bulk`` are DELETEs whose payload (``{"items": [...]}``)
+    # selects the targets, so DELETE bodies must pass through when supplied.
+    api_data = payload if is_write else None
+
+    logger.info("Central operation: {} — path: {}", method, api_path)
+
+    response = retry_central_command(
+        central_conn=conn,
+        api_method=method,
+        api_path=api_path,
+        api_data=api_data,
+    )
+
+    code = response.get("code", 0)
+    if 200 <= code < 300:
+        return {"status": "success", "method": method, "path": api_path, "data": response.get("msg", {})}
+
+    return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
+
+
 # Common field definitions reused across write tools
 _SCOPE_ID_FIELD = Field(
     description=(

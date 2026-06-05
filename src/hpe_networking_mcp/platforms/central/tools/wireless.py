@@ -9,9 +9,9 @@ so before any hand edits or with care.
 
 Covers config objects sourced from the ``wireless.json`` vendor
 spec file. Wrappers
-delegate to ``_get_resource`` / ``_manage_resource`` in
-``security_policy.py`` — the same shared helpers used by the
-hand-curated Roles & Policy tools.
+delegate to ``_get_resource`` / ``_manage_resource`` /
+``_operation_request`` in ``security_policy.py`` — the same shared
+helpers used by the hand-curated Roles & Policy tools.
 """
 
 # ruff: noqa: E501
@@ -319,7 +319,7 @@ async def central_manage_passpoint(
     )
 
 
-# ----- radios -----
+# ----- radio -----
 
 
 @tool(annotations=READ_ONLY)
@@ -327,16 +327,12 @@ async def central_get_radio(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``radios`` configurations from Central.
+    """Get ``radio`` configurations from Central.
 
     Aruba AP ALG (SCCP, SIP, UA, Vocera) configuration.
 
-    Renamed from the generated ``central_get_radios`` to ``central_get_radio``
-    to avoid a collision with the monitoring tool ``mrt_ap.central_get_radios``
-    (AP radio runtime state). This is the config-model radio profile.
-
     Parameters:
-        name: Specific ``radios`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``radio`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "radios", name)
 
@@ -344,13 +340,13 @@ async def central_get_radio(
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
 async def central_manage_radio(
     ctx: Context,
-    name: Annotated[str, Field(description="``radios`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``radio`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``radios`` object. "
+                "Payload for the ``radio`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
                 "field set; use ``central_get_radio`` to "
                 "inspect an existing object for reference. "
@@ -362,14 +358,14 @@ async def central_manage_radio(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``radios`` configuration in Central.
+    """Create, update, or delete a ``radio`` configuration in Central.
 
     Aruba AP ALG (SCCP, SIP, UA, Vocera) configuration.
     """
     return await _manage_resource(
         ctx,
         "radios",
-        "radios",
+        "radio",
         name,
         action_type,
         payload,

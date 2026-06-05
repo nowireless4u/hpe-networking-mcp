@@ -125,6 +125,28 @@ HAND_CURATED_SEGMENTS: set[str] = {
 
 
 # ---------------------------------------------------------------------------
+# Tool-name overrides — keyed by ``(filename stem, OAS path segment)``.
+#
+# A handful of OAS resource segments would generate a CRUD tool name that
+# collides with an unrelated HAND-WRITTEN tool elsewhere in the Central surface
+# (e.g. a monitoring/MRT tool). Because the regen owns the config CRUD surface
+# and is re-run wholesale, those collision-avoidance renames must live HERE so
+# they survive every re-run — editing the emitted file by hand is lost on the
+# next regen.
+#
+# The override changes only the TOOL NAME (``title``); ``path_segment`` (the
+# URL) is unchanged, so the request still targets the real OAS segment.
+#
+#   ("wireless", "radios") → "radio": the config-model AP radio PROFILE.
+#   ``central_get_radios`` would clash with ``mrt_ap.central_get_radios`` (AP
+#   radio runtime monitoring), so the config tool is ``central_get_radio`` /
+#   ``central_manage_radio``.
+_TITLE_OVERRIDES: dict[tuple[str, str], str] = {
+    ("wireless", "radios"): "radio",
+}
+
+
+# ---------------------------------------------------------------------------
 # Data classes
 # ---------------------------------------------------------------------------
 
@@ -322,16 +344,51 @@ def _is_crud_shape(tail: str) -> bool:
 
     Collection: ``<segment>`` (one literal segment, no params).
     Item:       ``<segment>/{name}`` (one literal segment + one trailing param).
-    Everything else (``sites/bulk``, ``cnac-image/upload``,
-    ``policy-groups/.../policy-group-list/{name}``, multi-param paths) is an
-    operation.
+    Everything else (``sites/bulk``, ``cnac-image/upload``, multi-param paths) is
+    an operation — EXCEPT a *nested* CRUD item whose leaf is ``/{name}`` and
+    whose preceding literal segment is a resource noun (see
+    :func:`_nested_crud_item_base`), which is modeled as a CRUD object on a
+    nested ``api_base``.
     """
     segs = tail.split("/")
     if len(segs) == 1:
         return "{" not in segs[0]
     if len(segs) == 2:
         return "{" not in segs[0] and bool(re.fullmatch(r"\{[^}]+\}", segs[1]))
-    return False
+    # Deep nested item path with a single trailing {name} param whose leaf noun
+    # is a resource (not a verb) — treat as a CRUD item on the nested base.
+    return _nested_crud_item_base(tail) is not None
+
+
+def _nested_crud_item_base(tail: str) -> str | None:
+    """Return the nested CRUD ``api_base`` for a deep item path, else ``None``.
+
+    A *nested* CRUD item is a path with multiple literal segments followed by a
+    single trailing ``{name}`` param, where the literal segment immediately
+    before the param is a resource noun rather than an action verb. The api_base
+    is every literal segment joined by ``/`` (the helpers prepend the version
+    prefix and append ``/{name}``).
+
+    Examples:
+      * ``policy-groups/policy-group/policy-group-list/{name}`` →
+        ``"policy-groups/policy-group/policy-group-list"`` (nested CRUD item).
+      * ``cnac-image/download/{image-id}`` → ``None`` (leaf ``download`` is a
+        verb — an action, not an identity).
+      * ``config-assignments/{a}/{b}/{c}/{d}`` → ``None`` (multiple params).
+    """
+    segs = tail.split("/")
+    if len(segs) < 3:
+        return None
+    # Exactly one trailing param, and it must be the LAST segment.
+    if not re.fullmatch(r"\{[^}]+\}", segs[-1]):
+        return None
+    literal_segs = segs[:-1]
+    if any("{" in s for s in literal_segs):
+        return None  # an intermediate param → not a plain nested item
+    leaf = literal_segs[-1]
+    if leaf in _VERB_SEGMENTS:
+        return None  # verb leaf before a param is an action, not an identity
+    return "/".join(literal_segs)
 
 
 # Trailing literal verb segments that mark a STANDALONE WRITE ACTION — the verb
@@ -534,14 +591,24 @@ def parse_spec_objects(spec_path: Path) -> tuple[list[ConfigObject], list[Operat
     for p in paths:
         prefix, tail = _split_prefix(p)
         if _is_crud_shape(tail):
-            segs = tail.split("/")
-            seg = segs[0]
-            key = (prefix, seg)
-            slot = crud_groups.setdefault(key, {"coll": None, "item": None})
-            if len(segs) == 1:
-                slot["coll"] = p
-            else:
+            nested_base = _nested_crud_item_base(tail)
+            if nested_base is not None:
+                # Deep nested CRUD item (e.g.
+                # policy-groups/policy-group/policy-group-list/{name}): the whole
+                # literal path is the api_base and this path is the item. There
+                # is no separate collection path for nested items.
+                key = (prefix, nested_base)
+                slot = crud_groups.setdefault(key, {"coll": None, "item": None})
                 slot["item"] = p
+            else:
+                segs = tail.split("/")
+                seg = segs[0]
+                key = (prefix, seg)
+                slot = crud_groups.setdefault(key, {"coll": None, "item": None})
+                if len(segs) == 1:
+                    slot["coll"] = p
+                else:
+                    slot["item"] = p
         else:
             operation_paths.append((prefix, tail))
 
@@ -561,10 +628,21 @@ def parse_spec_objects(spec_path: Path) -> tuple[list[ConfigObject], list[Operat
         all_methods = coll_methods | item_methods
         is_singleton = item is None
         name_param = (_name_param_in_path(item) if item else None) or "name"
+        # ``seg`` is the api_base. For a deep nested item (api_base contains
+        # ``/``, e.g. ``policy-groups/policy-group/policy-group-list``) the tool
+        # name derives from the LEAF noun only (``policy-group-list`` →
+        # ``central_get_policy_group_list``), matching the hand-curated
+        # precedent; ``path_segment`` keeps the full nested base so the URL
+        # resolves to .../{nested base}/{name}.
+        leaf_title = seg.rsplit("/", 1)[-1]
+        # Apply a collision-avoidance tool-name override (keyed by file stem +
+        # segment), if one is registered. ``path_segment`` stays ``seg`` so the
+        # request still targets the real OAS path.
+        title = _TITLE_OVERRIDES.get((spec_path.stem, seg), leaf_title)
         objects.append(
             ConfigObject(
                 filename=spec_path.stem,
-                title=seg,  # tool name derives from the OAS segment (decision #1)
+                title=title,  # tool name derives from the OAS leaf segment (decision #1)
                 tag_group=tag_group,
                 path_prefix=prefix,
                 path_segment=seg,
@@ -616,7 +694,10 @@ def parse_spec_objects(spec_path: Path) -> tuple[list[ConfigObject], list[Operat
             # Name comes from the dominant write verb: prefer post (create-ish),
             # else the single verb present. has_body if any non-delete verb has one.
             primary = write_methods[0]
-            has_body = any(_op_has_body(paths, full_path, m) for m in write_methods if m != "delete")
+            # A body is offered when ANY write verb declares a requestBody —
+            # including DELETE (bulk deletes send ``{"items": [...]}`` as the
+            # request body, not a path/query param).
+            has_body = any(_op_has_body(paths, full_path, m) for m in write_methods)
             operations.append(
                 OperationObject(
                     filename=spec_path.stem,
@@ -690,7 +771,7 @@ def parse_spec(spec_path: Path) -> ConfigObject | None:
 # ---------------------------------------------------------------------------
 
 
-_FILE_HEADER = '''"""Aruba Central ``{source_file}`` config-model tools.
+_FILE_DOCSTRING = '''"""Aruba Central ``{source_file}`` config-model tools.
 
 Initial import emitted by ``scripts/import_central_config_tools.py``
 from a snapshot of ``vendor/central/config/``. The import is
@@ -701,36 +782,75 @@ so before any hand edits or with care.
 
 Covers config objects sourced from the ``{source_file}.json`` vendor
 spec file. Wrappers
-delegate to ``_get_resource`` / ``_manage_resource`` in
-``security_policy.py`` — the same shared helpers used by the
-hand-curated Roles & Policy tools.
+delegate to ``_get_resource`` / ``_manage_resource`` /
+``_operation_request`` in ``security_policy.py`` — the same shared
+helpers used by the hand-curated Roles & Policy tools.
 """
 
 # ruff: noqa: E501
+'''
 
-from typing import Annotated
-
-from fastmcp import Context
-from mcp.types import ToolAnnotations
-from pydantic import Field
-
-from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.tools.security_policy import (
-    _CONFIRMED_FIELD,
-    _DEVICE_FUNCTION_FIELD,
-    _SCOPE_ID_FIELD,
-    _get_resource,
-    _manage_resource,
-)
-
+_WRITE_DELETE_DEF = """
 WRITE_DELETE = ToolAnnotations(
     readOnlyHint=False,
     destructiveHint=True,
     idempotentHint=False,
     openWorldHint=True,
 )
-'''
+"""
+
+
+def _emit_header(group: SourceModule) -> str:
+    """Render the module docstring + an import block tailored to the module.
+
+    Only the helpers actually referenced by the emitted functions are imported,
+    so modules that contain (for example) only operations don't carry unused
+    ``_get_resource`` / ``_SCOPE_ID_FIELD`` imports (ruff F401). The
+    ``WRITE_DELETE`` annotation and ``Annotated`` / ``Field`` imports are
+    included whenever any write tool (manage CRUD or write operation) is emitted.
+    """
+    objs = group.objects
+    ops = group.operations
+
+    has_get = any(o.has_get_collection or o.has_get_item for o in objs)
+    has_manage = any(o.has_create or o.has_update or o.has_delete for o in objs)
+    has_op = bool(ops)
+    has_op_read = any(o.is_read for o in ops)
+    has_op_write = any(not o.is_read for o in ops)
+    has_any_write = has_manage or has_op_write
+    has_any_read = has_get or has_op_read
+
+    # security_policy helper imports (sorted).
+    helper_imports: list[str] = []
+    if has_manage:
+        helper_imports += ["_DEVICE_FUNCTION_FIELD", "_SCOPE_ID_FIELD"]
+    if has_any_write:
+        helper_imports.append("_CONFIRMED_FIELD")
+    if has_get:
+        helper_imports.append("_get_resource")
+    if has_manage:
+        helper_imports.append("_manage_resource")
+    if has_op:
+        helper_imports.append("_operation_request")
+    helper_imports = sorted(set(helper_imports))
+
+    lines: list[str] = [_FILE_DOCSTRING.format(source_file=group.name)]
+    lines.append("\nfrom typing import Annotated\n")
+    lines.append("\nfrom fastmcp import Context\n")
+    if has_any_write:
+        lines.append("from mcp.types import ToolAnnotations\n")
+    lines.append("from pydantic import Field\n")
+    lines.append("\nfrom hpe_networking_mcp.platforms.central._registry import tool\n")
+    if has_any_read:
+        lines.append("from hpe_networking_mcp.platforms.central.tools import READ_ONLY\n")
+    if helper_imports:
+        lines.append("from hpe_networking_mcp.platforms.central.tools.security_policy import (\n")
+        for name in helper_imports:
+            lines.append(f"    {name},\n")
+        lines.append(")\n")
+    if has_any_write:
+        lines.append(_WRITE_DELETE_DEF)
+    return "".join(lines)
 
 
 def _emit_get_function(obj: ConfigObject) -> str:
@@ -874,15 +994,125 @@ async def {fn_name}(
 '''
 
 
+def _operation_api_path_expr(op: OperationObject) -> str:
+    """Build the f-string ``api_path`` expression for an operation tool body.
+
+    Substitutes each ``{hyphen-name}`` path param with its snake-cased Python
+    param ``{snake_name}`` and prepends the version prefix:
+
+      ``cnac-job/{job-id}/status`` (prefix ``network-config/v1alpha1``) →
+      ``f"network-config/v1alpha1/cnac-job/{job_id}/status"``.
+
+    Paths with no params render as a plain f-string too (harmless) for a uniform
+    body shape.
+    """
+    tail = op.path_tail
+    for raw in op.path_params:
+        tail = tail.replace(f"{{{raw}}}", f"{{{_safe_param_name(raw)}}}")
+    full = f"{op.path_prefix}/{tail}" if op.path_prefix else tail
+    # Use a plain string literal when there are no params (avoids ruff F541 —
+    # f-string without placeholders); an f-string only when a {param} is present.
+    prefix = "f" if op.path_params else ""
+    return f'{prefix}"{full}"'
+
+
+def _emit_operation_function(op: OperationObject) -> str:
+    """Emit one discrete-action operation tool (read or write).
+
+    GET ops → ``@tool(annotations=READ_ONLY)``, signature of required path
+    params only, delegating to ``_operation_request(ctx, "GET", api_path)``.
+
+    Write ops → ``@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})``,
+    signature of required path params + (for non-DELETE-only ops with a body) a
+    ``payload`` dict + a ``confirmed`` flag, delegating to
+    ``_operation_request(ctx, "<METHOD>", api_path, payload, confirmed, label)``.
+    Path params are emitted as required ``str`` params, snake-cased, documenting
+    the original OpenAPI spelling.
+    """
+    fn_name = op.tool_name
+    api_path_expr = _operation_api_path_expr(op)
+    desc = op.description or f"Central operation: {op.path_tail}."
+    if not desc.endswith("."):
+        desc = desc + "."
+
+    # Required path params (snake-cased), each documenting its OAS spelling.
+    param_lines: list[str] = []
+    doc_param_lines: list[str] = []
+    for raw in op.path_params:
+        safe = _safe_param_name(raw)
+        param_lines.append(f'    {safe}: Annotated[str, Field(description="Path parameter (OpenAPI: ``{raw}``).")],')
+        doc_param_lines.append(f"        {safe}: Path parameter (OpenAPI path param: ``{raw}``).")
+
+    if op.is_read:
+        sig = "\n".join(["    ctx: Context,", *param_lines])
+        doc_params = ("\n\n    Parameters:\n" + "\n".join(doc_param_lines)) if doc_param_lines else ""
+        return f'''
+@tool(annotations=READ_ONLY)
+async def {fn_name}(
+{sig}
+) -> dict | str:
+    """{desc}
+
+    Wraps ``GET {op.path_prefix}/{op.path_tail}``.{doc_params}
+    """
+    api_path = {api_path_expr}
+    return await _operation_request(ctx, "GET", api_path)
+'''
+
+    # Write operation. ``method`` is the dominant write verb (post/patch/delete).
+    method = op.methods[0].upper()
+    has_body = op.has_body
+    body_param = (
+        [
+            "    payload: Annotated[",
+            "        dict,",
+            "        Field(",
+            "            description=(",
+            f'                "Request body for the ``{op.path_tail}`` operation. "',
+            '                "Consult the Aruba Central config-model OpenAPI schema for the field set."',
+            "            )",
+            "        ),",
+            "    ],",
+        ]
+        if has_body
+        else []
+    )
+    sig_lines = [
+        "    ctx: Context,",
+        *param_lines,
+        *body_param,
+        "    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,",
+    ]
+    sig = "\n".join(sig_lines)
+    doc_params = ("\n\n    Parameters:\n" + "\n".join(doc_param_lines)) if doc_param_lines else ""
+    payload_arg = "payload" if has_body else "None"
+    label = op.path_tail
+    return f'''
+@tool(annotations=WRITE_DELETE, tags={{"central_write_delete"}})
+async def {fn_name}(
+{sig}
+) -> dict | str:
+    """{desc}
+
+    Wraps ``{method} {op.path_prefix}/{op.path_tail}``.{doc_params}
+    """
+    api_path = {api_path_expr}
+    return await _operation_request(ctx, "{method}", api_path, {payload_arg}, confirmed, "{label}")
+'''
+
+
 def emit_source_module(group: SourceModule) -> str:
     """Render one .py file body for a SourceModule (one vendor source file)."""
-    parts: list[str] = [_FILE_HEADER.format(source_file=group.name)]
+    parts: list[str] = [_emit_header(group)]
     for obj in sorted(group.objects, key=lambda o: o.title):
         parts.append(f"\n# ----- {obj.title} -----\n")
         if obj.has_get_collection or obj.has_get_item:
             parts.append(_emit_get_function(obj))
         if obj.has_create or obj.has_update or obj.has_delete:
             parts.append(_emit_manage_function(obj))
+    for op in sorted(group.operations, key=lambda o: o.tool_name):
+        parts.append(f"\n# ----- operation: {op.path_tail} -----\n")
+        parts.append(_emit_operation_function(op))
     return "".join(parts)
 
 

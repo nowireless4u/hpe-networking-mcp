@@ -44507,6 +44507,20 @@
     }
    }
   },
+  "policy_group_list": {
+   "fields": {
+    "description": {
+     "type": "string"
+    },
+    "name": {
+     "type": "string"
+    },
+    "position": {
+     "mandatory": true,
+     "type": "integer"
+    }
+   }
+  },
   "policy_groups": {
    "fields": {
     "policy-group": {
@@ -69352,6 +69366,7 @@
   "central_get_persona_assignment": "persona_assignment",
   "central_get_pim_router": "pim_router",
   "central_get_policies": "policies",
+  "central_get_policy_group_list": "policy_group_list",
   "central_get_policy_groups": "policy_groups",
   "central_get_port_security": "port_security",
   "central_get_portals": "portals",
@@ -69363,7 +69378,7 @@
   "central_get_qos_queues": "qos_queues",
   "central_get_qos_schedules": "qos_schedules",
   "central_get_qos_thresholds": "qos_thresholds",
-  "central_get_radio": "radios",
+  "central_get_radios": "radios",
   "central_get_radius_modifiers": "radius_modifiers",
   "central_get_remote_management": "remote_management",
   "central_get_rip": "rip",
@@ -69568,6 +69583,7 @@
   "central_manage_persona_assignment": "persona_assignment",
   "central_manage_pim_router": "pim_router",
   "central_manage_policies": "policies",
+  "central_manage_policy_group_list": "policy_group_list",
   "central_manage_policy_groups": "policy_groups",
   "central_manage_port_security": "port_security",
   "central_manage_portals": "portals",
@@ -69579,7 +69595,7 @@
   "central_manage_qos_queues": "qos_queues",
   "central_manage_qos_schedules": "qos_schedules",
   "central_manage_qos_thresholds": "qos_thresholds",
-  "central_manage_radio": "radios",
+  "central_manage_radios": "radios",
   "central_manage_radius_modifiers": "radius_modifiers",
   "central_manage_remote_management": "remote_management",
   "central_manage_rip": "rip",
