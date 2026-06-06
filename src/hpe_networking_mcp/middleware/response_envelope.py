@@ -203,6 +203,18 @@ class ResponseEnvelopeMiddleware(Middleware):
         # Determine the raw structured payload, if any.
         raw = getattr(result, "structured_content", None)
 
+        # MCP-Apps / Prefab UI tools (FastMCP ``FileUpload`` provider's
+        # ``file_manager`` / ``store_files``, etc.) return a UI *view spec*
+        # under a top-level ``$prefab`` key in ``structured_content``. The
+        # host's renderer reads ``structured_content`` directly to draw the
+        # interface; wrapping it in the envelope buries ``$prefab`` under
+        # ``data`` and the renderer hangs on "waiting for content". Detect the
+        # marker (not a hardcoded tool name) so any Prefab tool passes through
+        # untouched.
+        if isinstance(raw, dict) and "$prefab" in raw:
+            logger.debug("response_envelope: {} is a Prefab UI tool, pass-through", tool_name)
+            return result  # type: ignore[return-value]
+
         # FastMCP only populates ``structured_content`` for dict-shaped
         # returns from ``-> Any`` tools; a bare JSON array (every
         # ``mist_list_*`` tool, every ``<platform>_invoke_tool`` dispatch

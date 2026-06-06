@@ -235,6 +235,13 @@ async def lifespan(server: FastMCP):
         logger.info("Server shutdown complete")
 
 
+def _file_upload_enabled() -> bool:
+    """Whether the experimental FileUpload provider is enabled (env-gated)."""
+    import os
+
+    return os.environ.get("MCP_ENABLE_FILE_UPLOAD", "").strip().lower() in ("1", "true", "yes")
+
+
 def create_server(config: ServerConfig) -> FastMCP:
     """Create and configure the FastMCP server with all enabled platform tools."""
     from hpe_networking_mcp.middleware.elicitation import (
@@ -313,6 +320,19 @@ def create_server(config: ServerConfig) -> FastMCP:
         _register_aos8_tools(mcp, config)
     if config.uxi:
         _register_uxi_tools(mcp, config)
+
+    # --- File upload (experimental, env-gated test) ---
+    # MCP_ENABLE_FILE_UPLOAD=true registers FastMCP's FileUpload provider,
+    # which exposes a `file_manager` drag/pick upload tool carrying MCP-Apps
+    # `ui` render metadata. In code mode the CodeMode transform would hide it,
+    # so _register_code_mode() re-exposes it top-level via discovery_tools (it
+    # rides through with its `ui` metadata intact — verified). Renders only in
+    # MCP-Apps hosts (Claude Desktop / ChatGPT); a no-op visual in Claude Code.
+    if _file_upload_enabled():
+        from fastmcp.apps.file_upload import FileUpload
+
+        mcp.add_provider(FileUpload())
+        logger.info("File upload: FileUpload provider registered (MCP_ENABLE_FILE_UPLOAD=true)")
 
     # --- Cross-platform aggregators ---
     # These are workarounds for dynamic mode's "AI picks one platform and stops"
@@ -564,16 +584,42 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
     skill_registry = SkillRegistry.from_directory()
     logger.info("Skills: registered {} skill(s) (code mode discovery layer)", len(skill_registry.all()))
 
+    # Heterogeneous discovery-tool factories (the _Hpe* subclasses, the Skills
+    # factories, and the file_manager passthrough lambda) — annotate as Any so
+    # appending the lambda below doesn't collapse the inferred type to object.
+    discovery_tools: list[Any] = [
+        _HpeGetTags(default_detail="brief"),
+        _HpeSearch(default_detail="brief"),
+        _HpeGetSchemas(default_detail="detailed"),
+        SkillsListDiscoveryTool(skill_registry),
+        SkillsLoadDiscoveryTool(skill_registry),
+    ]
+
+    # If the FileUpload provider is registered, re-expose its model-visible
+    # tools top-level so CodeMode doesn't bury them behind `execute`:
+    #   - file_manager — renders the upload UI (carries MCP-Apps `ui` meta)
+    #   - list_files / read_file — let a skill/AI enumerate + read what was
+    #     uploaded (the aos-migration upload branch's read_file fallback path)
+    # A discovery factory is `(get_catalog) -> Tool`; ours ignores the catalog
+    # and returns the already-registered Tool unchanged, so file_manager's `ui`
+    # render metadata survives the transform. create_server() runs before the
+    # event loop starts, so a one-shot asyncio.run to fetch each tool is safe.
+    # store_files is app-only (UI-internal) and intentionally NOT re-exposed.
+    if _file_upload_enabled():
+        import asyncio
+
+        for app_tool_name in ("file_manager", "list_files", "read_file"):
+            try:
+                app_tool = asyncio.run(mcp.get_tool(app_tool_name))
+                discovery_tools.append(lambda get_catalog, _t=app_tool: _t)
+                logger.info("File upload: {} re-exposed top-level in code mode", app_tool_name)
+            except Exception as e:  # pragma: no cover - defensive
+                logger.warning("File upload: could not expose {} top-level: {}", app_tool_name, e)
+
     mcp.add_transform(
         CodeMode(
             sandbox_provider=MontySandboxProvider(limits=limits),
-            discovery_tools=[
-                _HpeGetTags(default_detail="brief"),
-                _HpeSearch(default_detail="brief"),
-                _HpeGetSchemas(default_detail="detailed"),
-                SkillsListDiscoveryTool(skill_registry),
-                SkillsLoadDiscoveryTool(skill_registry),
-            ],
+            discovery_tools=discovery_tools,
             execute_description=execute_description,
         )
     )

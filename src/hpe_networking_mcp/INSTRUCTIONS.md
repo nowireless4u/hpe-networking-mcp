@@ -23,6 +23,8 @@ Two modes are supported (the `static` mode was removed in v3.0.0.0):
     - **3 meta-tools per platform × 8 platforms** = 24: `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`
     - **2 skills tools** (since v2.3.0.0): `skills_list`, `skills_load`
 
+**Optional file upload** (`MCP_ENABLE_FILE_UPLOAD=true`, off by default): `file_manager` (drag/pick upload UI) plus `list_files` / `read_file` are exposed at the top level — even in code mode. The upload UI renders only in MCP-Apps hosts (Claude Desktop / ChatGPT); elsewhere `file_manager` is a callable tool with no rendered widget. Use it to let an operator upload an AOS 8 config for the `aos-migration` skill instead of pasting it.
+
 The discovery patterns below describe **dynamic mode** (the v2.x default). In **code mode**, two discovery paths work — pick whichever your client surfaced:
 
 * **Top-level discovery tools** (when your client loaded them): call `search(query="...")` / `tags()` / `get_schema(tools=[...])` directly at the outer surface. These are the recommended primary path when available.

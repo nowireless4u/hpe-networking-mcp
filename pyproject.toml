@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hpe-networking-mcp"
-version = "3.3.0.3"
+version = "3.3.1.0"
 description = "Unofficial, community-driven MCP server for Juniper Mist, Aruba Central, HPE GreenLake, and ClearPass. Not affiliated with HPE, Aruba, or Juniper."
 readme = "README.md"
 license = "MIT"
@@ -16,7 +16,7 @@ dependencies = [
     # MCP framework — code-mode is the default tool mode since v3.0.0.0
     # (was opt-in via the fastmcp[code-mode] extra in v2.x); the extra is
     # now a hard requirement.
-    "fastmcp[code-mode]>=3.1.1",
+    "fastmcp[code-mode,apps]>=3.4.0",
     # MCP protocol — GreenLake requires >=1.20.0
     "mcp[cli]>=1.20.0",
     # HPE Aruba Central API client
@@ -84,6 +84,9 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]
 "src/hpe_networking_mcp/platforms/mist/tools/*.py" = ["E501"]
 # Central models ported from upstream — naming conventions preserved
 "src/hpe_networking_mcp/platforms/central/models.py" = ["N815"]
+# AOS 8 show-table test fixtures replicate real fixed-width tables verbatim;
+# the rows are legitimately wider than 120 chars and must not be reflowed.
+"tests/unit/test_aos8_show_parser.py" = ["E501"]
 
 # Mypy configuration
 [tool.mypy]

@@ -290,3 +290,112 @@ def test_parsed_acl_feeds_central_policy_translation() -> None:
     # The role that bound the ACL drives the policy-rule source role-list,
     # proving the parsed role record flowed through role_attribution.
     assert policy_rules[0]["condition"]["source"]["role-list"] == ["employee"]
+
+
+# --------------------------------------------------------------------------- #
+# Provenance (show configuration effective detail annotations)
+# --------------------------------------------------------------------------- #
+
+# Generic scope paths only — never a real customer hierarchy.
+_ANNOTATED = """netdestination corp-servers              # inherited from [/md/HQ]
+    host 10.0.0.10                       # inherited from [/md/HQ]
+!
+netdestination6 ipv6-reserved-range      # inherited from [/]
+    network 2000::/3                     # inherited from [/]
+!
+ip access-list session corp-acl          # local [/md/HQ/floor-1]
+    user any svc-http permit             # local [/md/HQ/floor-1]
+!
+user-role employee                       # local [/md/HQ/floor-1]
+    access-list session corp-acl         # local [/md/HQ/floor-1]
+!"""
+
+
+def test_provenance_tags_source_scope() -> None:
+    """Annotated input tags each record with its authoring scope."""
+    out = parse_aos8_cli(_ANNOTATED)
+    assert [(d["dstname"], d.get("_source_scope")) for d in out["netdst"]] == [("corp-servers", "/md/HQ")]
+    assert out["acl_sess"][0]["_source_scope"] == "/md/HQ/floor-1"
+    assert out["role"][0]["_source_scope"] == "/md/HQ/floor-1"
+    assert out["_provenance"]["scopes_seen"] == ["/", "/md/HQ", "/md/HQ/floor-1"]
+
+
+def test_provenance_drops_system_default_scope() -> None:
+    """Objects authored at the system root (``/``) are dropped as defaults."""
+    out = parse_aos8_cli(_ANNOTATED)
+    names = [d["dstname"] for d in out["netdst"]]
+    assert "ipv6-reserved-range" not in names  # authored at [/]
+    assert out["_provenance"]["dropped_default_count"] == 1
+
+
+def test_provenance_keep_all_override() -> None:
+    """``drop_default_scopes=()`` keeps even system-default objects."""
+    out = parse_aos8_cli(_ANNOTATED, drop_default_scopes=())
+    names = {d["dstname"] for d in out["netdst"]}
+    assert names == {"corp-servers", "ipv6-reserved-range"}
+
+
+def test_provenance_dedupes_repeated_object_across_dumps() -> None:
+    """The same (object, scope) repeated across concatenated dumps appears once."""
+    out = parse_aos8_cli(_ANNOTATED + "\n" + _ANNOTATED)
+    assert sum(1 for d in out["netdst"] if d["dstname"] == "corp-servers") == 1
+
+
+def test_plain_config_unannotated_has_no_provenance() -> None:
+    """Plain ``show running-config`` (no annotations) is unchanged — no scope keys."""
+    plain = "netdestination corp-servers\n    host 10.0.0.10\n!"
+    out = parse_aos8_cli(plain)
+    assert "_provenance" not in out
+    assert "_source_scope" not in out["netdst"][0]
+
+
+# --------------------------------------------------------------------------- #
+# Rule grammar — DPI app / WebCC / userrole / send-deny-response
+# --------------------------------------------------------------------------- #
+
+# These emit the field names the REST API uses and the policy translation reads
+# (live-verified). Emitting the wrong field silently degrades the rule to
+# RULE_ANY downstream — see issue #426.
+
+
+def _first_rule(cfg: str) -> dict:
+    return parse_aos8_cli(cfg)["acl_sess"][0]["acl_sess__v4policy"][0]
+
+
+def test_web_cc_category_emits_api_field_names() -> None:
+    rule = _first_rule("ip access-list session p\n    user any web-cc-category malware-sites deny\n!")
+    assert rule["service_app"] == "app_opt"
+    assert rule["app_web_type"] == "web_cat"
+    assert rule["webcccatgname"] == "malware-sites"
+    assert "appname" not in rule  # NOT the generic app field (that was the bug)
+
+
+def test_web_cc_reputation_and_send_deny_response() -> None:
+    rule = _first_rule("ip access-list session p\n    any any web-cc-reputation high-risk deny send-deny-response\n!")
+    assert rule["app_web_type"] == "web_cc_rep"
+    assert rule["web_rep2"] == "high-risk"
+    assert rule["app-send-deny-response"] is True
+
+
+def test_app_and_app_category_tokens() -> None:
+    rules = parse_aos8_cli(
+        "ip access-list session p\n    user any app youtube permit\n    user any app-category streaming-media permit\n!"
+    )["acl_sess"][0]["acl_sess__v4policy"]
+    assert (rules[0]["app_web_type"], rules[0]["appname"]) == ("app", "youtube")
+    assert (rules[1]["app_web_type"], rules[1]["appname"]) == ("app_cat", "streaming-media")
+
+
+def test_userrole_source_and_dest_bare_token() -> None:
+    """The bare ``userrole <name>`` form (no hyphen) parses on both sides."""
+    rule = _first_rule("ip access-list session p\n    userrole staff userrole guest any deny\n!")
+    assert rule["src"] == "suserrole" and rule["surname"] == "staff"
+    assert rule["dst"] == "duserrole" and rule["durname"] == "guest"
+
+
+def test_grammar_forms_produce_no_warnings() -> None:
+    cfg = (
+        "ip access-list session p\n"
+        "    user any web-cc-category malware-sites deny\n"
+        "    userrole staff any app youtube deny\n!"
+    )
+    assert parse_aos8_cli(cfg)["_warnings"] == []
