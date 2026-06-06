@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.3.0] - 2026-06-06
+
+**Minor — AAA translation chain: gateway aaa-profile + 802.1X / MAC-auth profiles.** Builds on the 3.3.2.0 foundation with the three translations that complete the gateway authentication object set, all available via `central_translation_preview`.
+
+### New translations
+- **`central:aaa_profile`** — AOS 8 `aaa_prof` → Central `/network-config/v1alpha1/aaa-profile/{name}`. The keystone gateway profile that ties the chain together: a normalizer flattens the top-level scalars/flags and assembles the nested `authentication{}` (dot1x-auth / dot1x-default-role / dot1xauth-server-group / mac-auth / mac-default-role / macauth-server-group) and `authorization{}` sub-objects. **CoA correlation (issue #322):** `rfc3576_client[]` entries become the `rfc3576-server-list`. Live-validated against the conductor (`MJG-Dot1x-80` previews correctly with acct-server-group, rfc3576-server-list, and the authentication block).
+- **`central:dot1x_auth`** — AOS 8 `dot1x_auth_profile` → Central `/network-config/v1alpha1/dot1xauth/{name}`. Maps the confident core of the 53-field 802.1X profile (reauth / key-rotation / cert / timer scalars + ~13 presence flags); the nested machine-auth / dot1x-termination objects and a handful of uncertain knobs are deferred to v2 and flagged in `unmapped_fields`.
+- **`central:mac_auth`** — AOS 8 `mac_auth_profile` → Central `/network-config/v1alpha1/macauth/{name}`. Small profile; reauth period / max-retries / MAC case + delimiter enums / reauth flags.
+
+All three are Gateway-targeted (config-assignment to `MOBILITY_GW`), reference the 3.3.2.0 foundation profiles by name (run order: auth-server / server-group / captive-portal / dot1x-auth / mac-auth → aaa-profile), and are unit-tested. **Preview-only** — write execution still awaits the auth-server-secret PII tokenization PR and the `central_manage_*` path. The maintainer's tenant 802.1X/MAC-auth profiles are all-default, so the mapped field *names* come from the Central OAS (authoritative) while non-default field *values* for dot1x carry a preview-confirm caveat (see `draft_notes`).
+
 ## [3.3.2.0] - 2026-06-06
 
 **Minor — AAA translation foundation (auth-server / server-group / captive-portal) + vendored Aruba OAS.** Adds the first three AOS 8 → Central AAA-chain translations, available via `central_translation_preview`, and vendors the source/target OpenAPI specs that ground them.
