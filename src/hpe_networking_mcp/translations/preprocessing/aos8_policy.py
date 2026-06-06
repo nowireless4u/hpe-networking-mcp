@@ -399,7 +399,12 @@ def _build_services_block(rule: dict) -> dict[str, Any] | None:
             return None
         central_val = AOS8_APP_CATEGORY_TO_CENTRAL.get(str(cat), str(cat).upper())
         return {"services": {"app-category": central_val}}
-    if awt == "web_cc_cat":
+    if awt in ("web_cc_cat", "web_cat"):
+        # AOS 8 REST emits ``web_cat`` for WebCC-category rules (live-verified on
+        # 8.13 — see /md/Campus block-high-risk_web); the older ``web_cc_cat``
+        # spelling never matched real API output, so category rules silently
+        # fell through to the RULE_ANY default (a category-deny became a
+        # deny-everything). Accept both.
         cat = rule.get("webcccatgname")
         if not cat:
             return None

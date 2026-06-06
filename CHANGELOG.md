@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0.3] - 2026-06-06
+
+**Patch — fix AOS 8 → Central policy translation silently dropping WebCC-category rules.** A `web-cc-category` session-ACL rule (e.g. `user any web-cc-category malware-sites deny`) was translated to a blanket `RULE_ANY` instead of `RULE_WEB_CATEGORY` — silently turning a category-specific deny into a **deny-everything** rule.
+
+- **Root cause:** AOS 8 REST emits `app_web_type == "web_cat"` for WebCC-category rules (live-verified on an 8.13 Mobility Conductor), but the policy preprocessing only recognised the `"web_cc_cat"` spelling, so category rules fell through `_build_services_block` (returning `None`) and were classified `RULE_ANY`. The reputation path (`web_cc_rep`) was unaffected.
+- **Fix:** `_build_services_block` now accepts both `web_cat` and `web_cc_cat`. Category rules emit `condition.services.web-category` → `RULE_WEB_CATEGORY`, mapped through the WebCC-category enum table (e.g. `keyloggers/monitoring` → `KEYLOGGERS-AND-MONITORING`).
+- Added `tests/unit/test_translations_preprocessing_aos8_policy.py` with real-record regression coverage; the broader `central:policy` surface (NAT / redirect / app / icmp / time-range / host / userrole / localip / web-reputation) was re-verified against a live conductor and is correct.
+
 ## [3.3.0.2] - 2026-06-05
 
 **Patch — AOS 8 CLI config parser + `aos8_parse_config` tool.** Adds an offline parser that turns a pasted/uploaded AOS 8 running-config (CLI) into the same canonical records the translation engine already consumes from `aos8_get_effective_config` — enabling the "paste your AOS 8 config into the AI" migration flow without a live controller.
