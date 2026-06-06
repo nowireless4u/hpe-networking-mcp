@@ -567,6 +567,7 @@ Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) ar
 | `ENABLE_AXIS_WRITE_TOOLS` | `false` | Enable Axis Atmos Cloud write/mutation tools (every write stages — call `axis_commit_changes` to apply) |
 | `ENABLE_AOS8_WRITE_TOOLS` | `false` | Enable AOS8 write tools (12 tools; every write returns `requires_write_memory_for` — call `aos8_write_memory` explicitly) |
 | `ENABLE_UXI_WRITE_TOOLS` | `false` | Enable UXI write tools (10 tools: sensor/agent/group/assignment mutations) |
+| `MCP_ENABLE_FILE_UPLOAD` | `false` | Register the FastMCP `FileUpload` provider — exposes `file_manager` (drag/pick upload UI) + `list_files` / `read_file` at the top level (the upload UI renders only in MCP-Apps hosts e.g. Claude Desktop / ChatGPT). Lets operators upload an AOS 8 config for the `aos-migration` skill instead of pasting it. |
 | `DISABLE_ELICITATION` | `false` | Skip user confirmation for write tools (**use with caution**) |
 
 ---

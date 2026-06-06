@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.1.0] - 2026-06-06
+
+**Minor — file-upload data source + offline AOS 8 config ingestion.** Adds an optional in-chat file-upload path and substantially extends the offline AOS 8 parser so an operator can drive an AOS 8 → Central migration from a pasted *or uploaded* config, not just a live controller.
+
+### File upload (opt-in, `MCP_ENABLE_FILE_UPLOAD=true`)
+- Registers FastMCP's `FileUpload` provider and re-exposes its model-visible tools (`file_manager`, `list_files`, `read_file`) at the top level **in code mode** via the CodeMode `discovery_tools` passthrough, so the drag/pick upload UI renders while every other tool stays behind `execute`. Off by default — zero impact on the standard surface.
+- `ResponseEnvelopeMiddleware` now passes Prefab UI tool responses through untouched (detects the `$prefab` view-spec marker), so the upload widget renders instead of being buried in the response envelope.
+- Renders only in MCP-Apps hosts (Claude Desktop / ChatGPT); in other clients `file_manager` is a callable tool with no rendered UI.
+
+### `aos-migration` skill — data-source gate
+- New **Stage -2**: the skill now asks how to obtain the AOS 8 config — (1) AOS 8 direct via API, (2) configuration upload, or (3) pasted configuration snippet — and routes accordingly. Options 2/3 parse offline via `aos8_parse_config`. The skill's "no operator interview" language is reconciled (the data-source choice is a delivery-mechanism question, not a config interview).
+
+### Offline AOS 8 parser (`aos8_parse_config` / `cli_parser.py`)
+- **Provenance preprocessor:** transparently consumes `show configuration effective detail <scope>` output — strips `# inherited from [X]` / `# local [Y]` annotations, tags each record with `_source_scope` (feeds the Central scope mapping), drops system/Mobility-Manager defaults (`/`, `/mm`), and dedups objects repeated across concatenated per-leaf dumps. Plain `show running-config` is unchanged.
+- **Rule grammar made API-exact:** `web-cc-category` → `app_web_type=web_cat` / `webcccatgname`, `web-cc-reputation` → `web_cc_rep` / `web_rep2`, `send-deny-response` → `app-send-deny-response`, the bare `userrole <name>` token, and `app` / `app-category`. These previously fell through to warnings (and, for category, would have degraded downstream); the parser now emits the same field names the REST API returns.
+
+### New: AOS 8 `show`-table inventory parsers (`show_parser.py`)
+- `parse_ap_database` (AP inventory) and `parse_openflow_controllers` (controller/gateway inventory) — type-anchored parsers tolerant of the differing Mobility-Conductor vs older-controller column layouts. Surface AP / gateway serials, models, and counts for the GreenLake capacity (A2) and onboarding (A3) checks.
+
 ## [3.3.0.3] - 2026-06-06
 
 **Patch — fix AOS 8 → Central policy translation silently dropping WebCC-category rules.** A `web-cc-category` session-ACL rule (e.g. `user any web-cc-category malware-sites deny`) was translated to a blanket `RULE_ANY` instead of `RULE_WEB_CATEGORY` — silently turning a category-specific deny into a **deny-everything** rule.

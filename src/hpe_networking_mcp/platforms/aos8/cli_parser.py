@@ -21,7 +21,38 @@ Record shapes match the engine's input contract (see each target spec's
 
 from __future__ import annotations
 
+import re
 from typing import Any
+
+# ``show configuration effective detail <scope>`` annotates every line with its
+# provenance: ``# inherited from [<path>]`` (authored at an ancestor scope) or
+# ``# local [<path>]`` (authored at the queried scope). The bracketed path is
+# the object's authoring scope in BOTH cases — which is exactly what the Central
+# scope mapping (aos-migration Stage 7/8) needs, and what lets us dedupe the
+# same inherited object across multiple per-leaf dumps. Anchored to end-of-line
+# so a stray ``#`` mid-config never false-matches.
+# MULTILINE so end-of-line ``$`` matches per line — both when stripping a single
+# line and when scanning the whole document in ``_has_provenance``.
+_PROVENANCE_RE = re.compile(r"\s+#\s+(inherited from|local)\s+\[([^\]]*)\]\s*$", re.MULTILINE)
+
+
+def _strip_provenance(line: str) -> tuple[str, str | None, bool]:
+    """Split an effective-detail line into ``(clean_line, source_scope, is_local)``.
+
+    Returns ``(line, None, False)`` for plain config (no provenance comment), so
+    the parser handles ``show running-config`` and ``show configuration
+    effective detail`` through the same path.
+    """
+    m = _PROVENANCE_RE.search(line)
+    if not m:
+        return line, None, False
+    return line[: m.start()], m.group(2), m.group(1) == "local"
+
+
+def _has_provenance(text: str) -> bool:
+    """True when the text carries ``show configuration effective detail`` annotations."""
+    return _PROVENANCE_RE.search(text) is not None
+
 
 # AOS 8 session-ACL action keywords → value the engine's _build_action expects
 # (keys of translations.preprocessing.aos8_policy._AOS8_ACTION_TO_CENTRAL).
@@ -45,37 +76,89 @@ _ACTIONS = {
 _OPTION_KEYWORDS = {"log", "position", "time-range", "queue", "tos", "dot1p-priority", "blacklist", "disable-scanning"}
 
 
-def parse_aos8_cli(text: str) -> dict[str, Any]:
+def parse_aos8_cli(
+    text: str,
+    *,
+    drop_default_scopes: tuple[str, ...] = ("/", "/mm"),
+) -> dict[str, Any]:
     """Parse AOS 8 CLI text into canonical config records grouped by object.
+
+    Handles both ``show running-config`` (plain) and ``show configuration
+    effective detail <scope>`` (provenance-annotated) input through one path.
+    For annotated input, each record is tagged with ``_source_scope`` (its
+    authoring scope — feeds the Central scope mapping), records authored at a
+    system/Mobility-Manager scope are dropped as defaults, and an object that
+    repeats across concatenated per-leaf dumps (same name + scope) is deduped.
 
     Args:
         text: AOS 8 running-config CLI (``netdestination`` / ``ip access-list
-            session`` / ``user-role`` stanzas, ``!``-delimited).
+            session`` / ``user-role`` stanzas, ``!``-delimited), optionally
+            carrying ``# inherited from [..]`` / ``# local [..]`` annotations.
+        drop_default_scopes: authoring scopes treated as non-migratable defaults
+            and skipped (annotated input only). Defaults to the system root
+            ``/`` (factory built-ins) and ``/mm`` (Mobility Manager). Pass an
+            empty tuple to keep everything.
 
     Returns:
         ``{"netdst": [...], "acl_sess": [...], "role": [...], "_warnings": [...]}``
-        — record lists ready to feed the translation engine, plus a list of
-        human-readable warnings for clauses that weren't fully modelled.
+        — record lists ready to feed the translation engine, plus warnings for
+        clauses that weren't fully modelled. Annotated input additionally
+        carries ``"_provenance": {"scopes_seen": [...], "dropped_default_count": int}``.
     """
-    netdst: list[dict[str, Any]] = []
-    acl_sess: list[dict[str, Any]] = []
-    role: list[dict[str, Any]] = []
+    buckets: dict[str, list[dict[str, Any]]] = {"netdst": [], "acl_sess": [], "role": []}
     warnings: list[str] = []
+    annotated = _has_provenance(text)
+    seen: set[tuple[str, str, str]] = set()
+    scopes_seen: set[str] = set()
+    dropped_defaults = 0
 
-    for header, body in _stanzas(text):
+    for header, body, scope in _stanzas(text):
         tokens = header.split()
         kind = tokens[0] if tokens else ""
+        bucket: str | None = None
+        name: str | None = None
+        record: dict[str, Any] | None = None
         if kind == "netdestination" and len(tokens) >= 2:
-            netdst.append(_parse_netdestination(tokens[1], body, warnings))
-        elif kind == "ip" and tokens[:3] == ["ip", "access-list", "session"] and len(tokens) >= 4:
-            acl_sess.append(_parse_acl_session(tokens[3], body, warnings))
+            name, bucket = tokens[1], "netdst"
+            record = _parse_netdestination(name, body, warnings)
         elif kind == "netdestination6" and len(tokens) >= 2:
-            netdst.append(_parse_netdestination(tokens[1], body, warnings, ipv6=True))
+            name, bucket = tokens[1], "netdst"
+            record = _parse_netdestination(name, body, warnings, ipv6=True)
+        elif kind == "ip" and tokens[:3] == ["ip", "access-list", "session"] and len(tokens) >= 4:
+            name, bucket = tokens[3], "acl_sess"
+            record = _parse_acl_session(name, body, warnings)
         elif kind == "user-role" and len(tokens) >= 2:
-            role.append(_parse_user_role(tokens[1], body, warnings))
-        # other stanza types (ip access-list eth, etc.) are out of scope here
+            name, bucket = tokens[1], "role"
+            record = _parse_user_role(name, body, warnings)
+        else:
+            # other stanza types (ip access-list eth, etc.) are out of scope here
+            continue
 
-    return {"netdst": netdst, "acl_sess": acl_sess, "role": role, "_warnings": warnings}
+        if scope is not None:
+            scopes_seen.add(scope)
+            if scope in drop_default_scopes:
+                dropped_defaults += 1
+                continue
+            key = (bucket, name, scope)
+            if key in seen:  # same object repeated across concatenated dumps
+                continue
+            seen.add(key)
+            record["_source_scope"] = scope
+
+        buckets[bucket].append(record)
+
+    result: dict[str, Any] = {
+        "netdst": buckets["netdst"],
+        "acl_sess": buckets["acl_sess"],
+        "role": buckets["role"],
+        "_warnings": warnings,
+    }
+    if annotated:
+        result["_provenance"] = {
+            "scopes_seen": sorted(scopes_seen),
+            "dropped_default_count": dropped_defaults,
+        }
+    return result
 
 
 # --------------------------------------------------------------------------- #
@@ -83,33 +166,39 @@ def parse_aos8_cli(text: str) -> dict[str, Any]:
 # --------------------------------------------------------------------------- #
 
 
-def _stanzas(text: str) -> list[tuple[str, list[str]]]:
-    """Split CLI into (header, body-lines) stanzas delimited by ``!``.
+def _stanzas(text: str) -> list[tuple[str, list[str], str | None]]:
+    """Split CLI into ``(header, body-lines, source_scope)`` stanzas delimited by ``!``.
 
     A stanza header is a non-indented line; its body is the following indented
-    lines up to the next ``!`` or non-indented line.
+    lines up to the next ``!`` or non-indented line. ``source_scope`` is the
+    authoring scope from the header's ``# inherited from``/``# local`` annotation
+    (``None`` for plain, unannotated config). Provenance comments are stripped
+    from every line before parsing, so the downstream ``_parse_*`` helpers never
+    see them.
     """
-    out: list[tuple[str, list[str]]] = []
+    out: list[tuple[str, list[str], str | None]] = []
     header: str | None = None
     body: list[str] = []
+    scope: str | None = None
     for raw in text.splitlines():
-        line = raw.rstrip()
+        clean, line_scope, _is_local = _strip_provenance(raw.rstrip())
+        line = clean.rstrip()
         if not line.strip():
             continue
         if line.strip() == "!":
             if header is not None:
-                out.append((header, body))
-            header, body = None, []
+                out.append((header, body, scope))
+            header, body, scope = None, [], None
             continue
         if line[0].isspace():  # indented → body line
             if header is not None:
                 body.append(line.strip())
         else:  # non-indented → new header
             if header is not None:
-                out.append((header, body))
-            header, body = line.strip(), []
+                out.append((header, body, scope))
+            header, body, scope = line.strip(), [], line_scope
     if header is not None:
-        out.append((header, body))
+        out.append((header, body, scope))
     return out
 
 
@@ -239,7 +328,9 @@ def _consume_address(t: list[str], i: int, side: str) -> tuple[dict[str, Any], i
         return None
     if kw == "alias" and i + 1 < len(t):
         return {disc: f"{side}alias", ("srcalias" if side == "s" else "dstalias"): t[i + 1]}, i + 2
-    if kw == "user-role" and i + 1 < len(t):
+    if kw in ("user-role", "userrole") and i + 1 < len(t):
+        # AOS 8 CLI emits the bare ``userrole <name>`` form (no hyphen) in
+        # effective config; accept both spellings.
         return {disc: f"{side}userrole", ("surname" if side == "s" else "durname"): t[i + 1]}, i + 2
     return None
 
@@ -277,6 +368,10 @@ def _parse_acl_rule(t: list[str], acl: str, line: str, warnings: list[str]) -> d
     _apply_action_args(rule, action, opts)
     if "log" in opts:
         rule["log"] = True
+    if "send-deny-response" in opts:
+        # Maps to the engine's ``action.send-deny-response`` (API field
+        # ``app-send-deny-response``); common on WebCC deny rules.
+        rule["app-send-deny-response"] = True
     return rule
 
 
@@ -301,15 +396,27 @@ def _apply_service(rule: dict[str, Any], svc: list[str], acl: str, line: str, wa
         rule["svc"] = "proto"
         rule["proto"] = head
         return
-    if head in ("app", "appcategory", "webcategory", "web-reputation") and len(svc) >= 2:
+    # DPI app / WebCC rules. The CLI tokens and the value FIELD differ per type —
+    # these field names are the ones the REST API emits and the policy
+    # translation reads (live-verified on 8.13): app/app-category use ``appname``,
+    # web-cc-category uses ``webcccatgname``, web-cc-reputation uses ``web_rep2``.
+    # Emitting the wrong field (e.g. ``appname`` for a category) silently degrades
+    # the rule to RULE_ANY downstream — see issue #426.
+    if head in ("app", "app-category", "appcategory", "web-cc-category", "web-cc-reputation") and len(svc) >= 2:
         rule["service_app"] = "app_opt"
-        rule["app_web_type"] = {
-            "app": "app",
-            "appcategory": "app_cat",
-            "webcategory": "web_cc_cat",
-            "web-reputation": "web_cc_rep",
-        }[head]
-        rule["appname"] = svc[1]
+        value = svc[1]
+        if head == "app":
+            rule["app_web_type"] = "app"
+            rule["appname"] = value
+        elif head in ("app-category", "appcategory"):
+            rule["app_web_type"] = "app_cat"
+            rule["appname"] = value
+        elif head == "web-cc-category":
+            rule["app_web_type"] = "web_cat"
+            rule["webcccatgname"] = value
+        else:  # web-cc-reputation
+            rule["app_web_type"] = "web_cc_rep"
+            rule["web_rep2"] = value
         return
     # named service object (svc-*, or a user service name)
     rule["svc"] = "service-name"

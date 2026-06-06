@@ -35,18 +35,24 @@ description: |
   checklist). Act II only fires after a non-BLOCKED verdict and
   explicit operator confirmation.
 
-  No operator interview. The skill detects AOS 8 reachability via
-  health-probe, walks the entire /md hierarchy for inventory, and
-  derives every other input (target SSID forwarding mode, cluster
-  topology, AirWave presence, L3 Mobility usage) from the collected
-  config. Operator drives changes interactively from the report.
+  One upfront question only — the data SOURCE. The skill first asks how
+  to obtain the AOS 8 config (Stage -2): (1) AOS 8 direct via API,
+  (2) configuration upload, or (3) pasted configuration snippet. That is a
+  delivery-mechanism choice, NOT a configuration interview. On the API
+  path the skill then detects AOS 8 reachability via health-probe, walks
+  the entire /md hierarchy for inventory, and derives every other input
+  (target SSID forwarding mode, cluster topology, AirWave presence,
+  L3 Mobility usage) from the collected config. The upload / paste paths
+  parse an offline config via aos8_parse_config (policy / role /
+  net-destination subset — see Stage -2 coverage note). Operator drives
+  changes interactively from the report.
 
   PoC — in-chat workflow for SE pre-engagement use; production
   migration cutovers follow the customer's standard change-management
   process and partner-tool guidance.
 platforms: [central, aos8]
 tags: [central, migration, aos8, aos10, readiness, audit, vsg, translation]
-tools: [health, central_get_scope_tree, central_get_devices, central_get_aps, central_get_sites, central_get_site_name_id_mapping, central_recommend_firmware, central_get_config_assignments, central_get_server_groups, central_get_wlan_profiles, central_get_roles, central_get_role_acls, central_get_net_groups, central_get_net_services, central_get_named_vlan, central_get_aliases, central_get_gw_cluster_intent_config, central_get_gateway_clusters, central_translation_preview, central_manage_site, central_manage_site_collection, central_manage_device_group, central_manage_roles, central_manage_role_acls, central_manage_net_groups, central_manage_net_services, central_manage_wlan_profile, central_manage_config_assignment, central_manage_gw_cluster_intent_config, central_manage_gateway_clusters, clearpass_get_network_devices, clearpass_get_device_groups, clearpass_get_server_certificates, clearpass_get_local_users, greenlake_get_subscriptions, greenlake_get_workspace, greenlake_get_devices, aos8_get_md_hierarchy, aos8_get_effective_config, aos8_get_ap_database, aos8_get_cluster_state, aos8_show_command, aos8_get_clients, aos8_get_bss_table, aos8_get_active_aps, aos8_get_ap_wired_ports]
+tools: [health, central_get_scope_tree, central_get_devices, central_get_aps, central_get_sites, central_get_site_name_id_mapping, central_recommend_firmware, central_get_config_assignments, central_get_server_groups, central_get_wlan_profiles, central_get_roles, central_get_role_acls, central_get_net_groups, central_get_net_services, central_get_named_vlan, central_get_aliases, central_get_gw_cluster_intent_config, central_get_gateway_clusters, central_translation_preview, central_manage_site, central_manage_site_collection, central_manage_device_group, central_manage_roles, central_manage_role_acls, central_manage_net_groups, central_manage_net_services, central_manage_wlan_profile, central_manage_config_assignment, central_manage_gw_cluster_intent_config, central_manage_gateway_clusters, clearpass_get_network_devices, clearpass_get_device_groups, clearpass_get_server_certificates, clearpass_get_local_users, greenlake_get_subscriptions, greenlake_get_workspace, greenlake_get_devices, aos8_get_md_hierarchy, aos8_get_effective_config, aos8_get_ap_database, aos8_get_cluster_state, aos8_show_command, aos8_get_clients, aos8_get_bss_table, aos8_get_active_aps, aos8_get_ap_wired_ports, aos8_parse_config, file_manager, read_file]
 ---
 
 # AOS 8 → AOS 10 migration (PoC) — readiness + config translation plan
@@ -83,7 +89,7 @@ The skill is NOT:
 
 - A **filter for "in use" config.** The customer's running config is the source of truth. Whether something is currently assigned, referenced, or actively serving traffic is **metadata** (`usage_state` column on disposition rows), not a basis for excluding it from the migration plan. Orphaned AAA server groups, unassigned captive portal profiles, AP system profiles configured but not bound to an AP group — all map and get translated.
 - A **legacy controller-plumbing validator.** Rules around LMS-IP, Backup-LMS-IP, AP Fast Failover that flag *"this internal AOS 8 controller-AP wiring is non-ideal"* do NOT fire as REGRESSION. AP-to-controller plumbing dissolves at migration — APs go to Central via TCP 443. These values still get **inventoried** so they can inform target HA mode recommendations, but they don't gate the verdict.
-- An **operator interview.** No Stage-0 questions. The skill detects AOS 8 reachability (Stage -1), walks the hierarchy (Stage 1), and derives every input it needs from the collected config — target SSID forwarding mode is auto-recommended from the source pattern, cluster topology comes from `aos8_get_cluster_state`, AOS 10 cluster-mode (`CM_SITE` / `CM_MANUAL`) is derived from AP adoption + multizone signals (Stage 7 Step 4), AirWave presence comes from config grep, L3 Mobility usage comes from effective-config. The operator can override any auto-derived value when reviewing the report.
+- A **configuration interview.** The skill asks exactly one upfront question — the data *source* (Stage -2: API / upload / paste), a delivery-mechanism choice, not a config value. Beyond that there are no Stage-0 config questions. On the API path the skill detects AOS 8 reachability (Stage -1), walks the hierarchy (Stage 1), and derives every input it needs from the collected config — target SSID forwarding mode is auto-recommended from the source pattern, cluster topology comes from `aos8_get_cluster_state`, AOS 10 cluster-mode (`CM_SITE` / `CM_MANUAL`) is derived from AP adoption + multizone signals (Stage 7 Step 4), AirWave presence comes from config grep, L3 Mobility usage comes from effective-config. The operator can override any auto-derived value when reviewing the report.
 - A **migration executor.** Never calls `central_manage_*` write tools. Plan only; Phase 3 (issue #240) is the execution capability.
 - A **rollback engine.** Rollback is captured as text in the cutover stage; not auto-generated as reversible API calls.
 - A **gap-filler for missing Central write tools.** Three known gaps (AAA RADIUS/TACACS server, AAA server-group, AP system profile) get `[Central API gap — manual UI action required]` placeholders. No invented tool names.
@@ -100,7 +106,9 @@ The skill's job is to prove the in-chat workflow produces credible readiness fin
 
 ## Procedure — 10 stages across two acts
 
-**Act I (Stages -1 through 6) — readiness audit.** Always runs. Ends with a verdict + combined report.
+**Data-source gate (Stage -2) — ALWAYS FIRST.** Before any collection, ask the operator how to obtain the AOS 8 config — (1) API, (2) upload, (3) paste — and route accordingly. See Stage -2.
+
+**Act I (Stages -1 through 6) — readiness audit.** Runs in full on the **API path** (Stage -1 → Stage 1). On the **upload / paste paths** it runs in reduced form against the offline-parsed subset (Stage 1-ALT replaces Stage -1 + Stage 1; object classes the parser doesn't cover are marked `inconclusive — offline source`). Ends with a verdict + combined report.
 
 **Gate — operator confirmation.** After Stage 6, the AI emits the verdict report THEN literally prints the prompt: *"Verdict: <V>. Proceed to AOS 10 translation plan? (yes / no / edit-context)"* and stops. No Act II execution without operator `yes`.
 
@@ -115,7 +123,43 @@ If the operator answers `edit-context` (e.g. "actually we're doing Bridge Mode n
 
 ---
 
+### Stage -2 — Data source selection (SOURCE-00) — ALWAYS FIRST
+
+This is the skill's only upfront question. It chooses the *delivery mechanism* for the AOS 8 config — it is NOT a configuration interview (every config-derived input is still auto-derived downstream). Present exactly these three options and STOP for the operator's choice:
+
+```
+How should I pull the AOS 8 configuration?
+
+  1. AOS 8 direct via API  — I collect live from the controller across the full
+                             /md hierarchy. Highest fidelity: full two-act audit
+                             (cluster topology, AP / SSID / AAA inventory, live state)
+                             + translation plan.
+  2. Configuration upload  — you upload an AOS 8 running-config file; I parse it
+                             offline (policy / role / net-destination subset).
+  3. Pasted snippet        — you paste AOS 8 CLI config; I parse it offline
+                             (policy / role / net-destination subset).
+
+Reply 1, 2, or 3.
+```
+
+Route on the reply:
+
+- **1 (API)** → Stage -1 (reachability gate) → Stage 1 (live hierarchy collection) → Stage 2 → the full pipeline.
+- **2 (upload)** → Stage 1-ALT (offline parse, upload branch). Skip Stage -1 + Stage 1.
+- **3 (paste)** → Stage 1-ALT (offline parse, paste branch). Skip Stage -1 + Stage 1.
+
+**Coverage — state this to the operator when they pick 2 or 3.** The constraint is what the parser *models today*, NOT what offline can see — the operator can include any `show` output in the upload/paste:
+
+- `show running-config` already carries `wlan ssid-profile`, `wlan virtual-ap` (forward-mode), `aaa` profiles, `lc-cluster profile`, and `ap system-profile` as config stanzas; operational data lives in separate commands (`show ap database`, `show lc-cluster group-membership`, `show ap active`).
+- `aos8_parse_config` **currently models only** `netdestination` / `netdestination6`, `ip access-list session`, and `user-role` (the inputs to the Central `policy` / `role` / `net_group` translations). Everything else the operator includes surfaces in `_warnings` rather than being parsed — coverage grows as the parser gains handlers, it is not blocked by the offline path.
+
+For the richest offline result, ask the operator to bundle `show running-config` **plus** `show ap database`, `show lc-cluster group-membership`, and `show ap active` into the upload. Object classes the parser hasn't yet modeled are marked `inconclusive — not yet parsed (include the relevant show output / extend parser)`; readiness rules whose data is absent don't fire. The API path (option 1) is still the zero-parser-gap route.
+
+**Availability of option 2 (upload):** requires the server's file-upload capability (`MCP_ENABLE_FILE_UPLOAD=true`) AND an MCP-Apps-capable client (Claude Desktop / ChatGPT) to render the upload widget. If `file_manager` is not present in the catalog, tell the operator option 2 is unavailable on this server and offer option 3 (paste) instead.
+
 ### Stage -1 — AOS 8 reachability gate (DETECT-01)
+
+Reached only on the **API path** (operator chose option 1 at Stage -2).
 
 Call `health()` once and inspect `aos8.status`.
 
@@ -135,7 +179,7 @@ No further stages run.
 
 ### Stage 0 — (deleted)
 
-There is no operator interview. Every input the skill needs is derived from collected config:
+There is no *configuration* interview — the one upfront question (Stage -2) selects the data source, not config values. Every config input the skill needs is derived from collected config:
 
 - **Target SSID forwarding mode** — auto-recommended by Stage 3 from the source pattern (tunneled VAPs → recommend Tunnel; bridge VAPs → recommend Bridge; mixed → recommend Mixed). Operator can override when reviewing the report.
 - **Cluster topology** — pulled from `aos8_get_cluster_state` (Batch 3) plus cluster-profile config (Batch 1).
@@ -299,9 +343,38 @@ SSIDs: <N> ssid profiles, <N> active in BSS table
 
 This summary is shown to the operator BEFORE Stage 2 runs so the operator can sanity-check that the hierarchy walk found what they expect. If the hierarchy walk missed something the operator knows is configured (e.g. customer says *"I have a cluster at /md/ACX but you didn't find it"*), they can intervene before rules fire on incomplete data.
 
+### Stage 1-ALT — Offline config parse (PARSE-01) — upload / paste branches
+
+Runs **instead of** Stage -1 + Stage 1 when the operator chose option 2 or 3 at Stage -2. Produces the same canonical records the translation engine consumes, via `aos8_parse_config`.
+
+**Option 2 — Configuration upload:**
+
+1. Invoke `file_manager` to render the upload widget. Tell the operator: *"Drop or pick your AOS 8 running-config file (the output of `show running-config`, or any file containing `netdestination` / `ip access-list session` / `user-role` stanzas)."*
+2. After the operator uploads, the file is held in the server's session store. Parse it:
+   - **Preferred (context-clean):** `aos8_parse_config(filename="<uploaded filename>")` — the tool reads the file *inside the server* so the raw config never enters the model context.
+   - **Fallback** (if this server's `aos8_parse_config` does not accept `filename`): `read_file(name="<uploaded filename>")` to retrieve the text, then `aos8_parse_config(cli_text="<that text>")`.
+
+**Option 3 — Pasted snippet:**
+
+1. Ask the operator to paste the AOS 8 CLI config (the relevant `netdestination` / `ip access-list session` / `user-role` stanzas, or a full `show running-config`).
+2. `aos8_parse_config(cli_text="<pasted text>")`.
+
+All branches return `{netdst, acl_sess, role, _warnings}`. These keys feed the Central translations **directly** — `acl_sess` → `central:policy`, `role` → `central:role`, `netdst` (+ `netdst6`) → `central:net_group` — no inventory normalization required for those classes.
+
+Seed the Stage 2 `inventory` with what was parsed and mark everything else inconclusive:
+
+- `inventory["session_acls"]     = acl_sess`
+- `inventory["user_roles"]       = role`
+- `inventory["net_destinations"] = netdst (+ netdst6)`
+- `inventory["_offline_source"]  = True`
+- `inventory["_parse_warnings"]  = _warnings`  — surface as a coverage note; unmodelled clauses are visible, not silently dropped
+- every other inventory class (`ap_database`, `cluster_profiles`, `ssid_profiles`, `aaa_*`, live state) → `inconclusive — offline source`
+
+Then skip to **Stage 3**. Applicability gates there naturally suppress the rules whose data is missing — most feature-parity / orchestration rules will not fire on the offline subset. The Act II translation (Stages 7-10) runs for the parsed object classes (policy / role / net_group); rows for unparsed classes are marked `inconclusive — offline source / API or paste required`.
+
 ### Stage 2 — Parse the live-collected inventory + auto-derive interview-equivalent inputs
 
-Stage 1 collected raw API responses across the full hierarchy. Stage 2 normalizes those responses into a structured inventory and derives the inputs the old skill used to ask the operator for. **No paste parsing — Stage 1 is API-only.**
+Stage 1 collected raw API responses across the full hierarchy. Stage 2 normalizes those responses into a structured inventory and derives the inputs the old skill used to ask the operator for. **API path only** — the upload / paste paths populate `inventory` from the offline parse in Stage 1-ALT instead and skip the normalization below.
 
 #### Normalize the inventory
 
