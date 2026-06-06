@@ -48,6 +48,16 @@ HUB = "https://developer.arubanetworks.com"
 PROJECTS: list[dict[str, str]] = [
     {"slug": "new-central", "outdir": "central/mrt"},
     {"slug": "new-central-config", "outdir": "central/config"},
+    # ArubaOS 8 JSON API — the full source-side object model (168 paths /
+    # ~1240 schemas), authoritative field universe for AOS 8 → Central
+    # translation mapping (pairs with the Central config OAS above).
+    {"slug": "aos8", "outdir": "aos8"},
+    # Other Aruba developer-hub projects we have a tool surface for —
+    # vendored so their authoritative field schemas are on hand (the slugs
+    # are the canonical short forms per developer.arubanetworks.com/llms.txt).
+    {"slug": "uxi", "outdir": "uxi"},
+    {"slug": "cppm", "outdir": "clearpass"},
+    {"slug": "aoscx", "outdir": "aoscx"},
 ]
 
 # ReadMe apiSetting ids are 24-char hex Mongo ObjectIds embedded in page HTML.

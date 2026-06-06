@@ -78,11 +78,24 @@ def _record_id(record: dict[str, Any], translation_id: str) -> str:
         "central:role": "rname",
         "central:vlan_id": "id",
         "central:named_vlan": "name",
+        "central:server_group": "sg_name",
+        "central:captive_portal": "profile-name",
     }
     field = primary_key_by_translation.get(translation_id)
     if field is None:
-        # Best-effort: try a few common identifier fields.
-        for guess in ("id", "name", "rname", "accname"):
+        # Best-effort: try a few common identifier fields. central:auth_server
+        # has two source shapes (rad_server_name / tacacs_server_name), so it
+        # relies on these guesses rather than a single dict entry.
+        for guess in (
+            "id",
+            "name",
+            "rname",
+            "accname",
+            "rad_server_name",
+            "tacacs_server_name",
+            "sg_name",
+            "profile-name",
+        ):
             if guess in record:
                 return str(record[guess])
         return "<unknown>"
@@ -115,17 +128,25 @@ async def central_translation_preview(
     elicitation; this tool is the read-only preview path used by
     aos-migration Stage 9b.
 
-    Available shipped translations (as of v3.0.1.6):
+    Available shipped translations:
 
     * ``central:vlan_id`` — AOS 8 ``vlan_id`` → Central layer2-vlan
     * ``central:named_vlan`` — AOS 8 composite (vlan_name + vlan_name_id) → Central named-VLAN with alias chain
     * ``central:role`` — AOS 8 ``role`` → Central role profile (Gateway-targeted)
     * ``central:policy`` — AOS 8 ``acl_sess`` → Central /policies POST
+    * ``central:auth_server`` — AOS 8 ``rad_server`` / ``tacacs_server`` → Central auth-server
+      (one translation; RADIUS + TACACS; co-located RFC 3576 CoA folds in as AUTH_AND_COA)
+    * ``central:server_group`` — AOS 8 ``server_group_prof`` → Central server-group (ordered members)
+    * ``central:captive_portal`` — AOS 8 ``cp_auth_profile`` → Central /captive-portal POST
 
     Required ``runtime_values`` per translation:
 
-    * ``central:vlan_id`` / ``central:named_vlan`` / ``central:role`` —
+    * ``central:vlan_id`` / ``central:named_vlan`` / ``central:role`` /
+      ``central:server_group`` / ``central:captive_portal`` —
       ``central_scope_id`` (string).
+    * ``central:auth_server`` — ``central_scope_id`` (string); OPTIONAL
+      ``coa_servers`` (list of ``aaa_prof.rfc3576_client[]`` entries) to
+      correlate co-located CoA servers by IP into AUTH_AND_COA mode.
     * ``central:policy`` — ``central_scope_id`` (string) PLUS
       ``role_records`` (list of full AOS 8 role records, used by the
       engine's preprocessing step to compute role_attribution per ACL

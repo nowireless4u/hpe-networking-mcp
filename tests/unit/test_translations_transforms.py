@@ -324,3 +324,35 @@ class TestRegistry:
     def test_unknown_transform_raises_with_known_list(self) -> None:
         with pytest.raises(KeyError, match="Unknown transform"):
             get_transform("does_not_exist")
+
+
+# --------------------------------------------------------------------------- #
+# aos8_server_group_members (central:server_group)
+# --------------------------------------------------------------------------- #
+
+from hpe_networking_mcp.translations.transforms import aos8_server_group_members  # noqa: E402
+
+
+def test_server_group_members_ordered_positions() -> None:
+    out = aos8_server_group_members([{"name": "RAD-1"}, {"name": "RAD-2"}])
+    assert out == [
+        {"server-name": "RAD-1", "position": 1},
+        {"server-name": "RAD-2", "position": 2},
+    ]
+
+
+def test_server_group_members_inherited_flag_not_dropped() -> None:
+    """Member _flags.inherited reflects group-level inheritance — keep the member."""
+    out = aos8_server_group_members([{"name": "RAD-1", "_flags": {"inherited": True}}])
+    assert out == [{"server-name": "RAD-1", "position": 1}]
+
+
+def test_server_group_members_drops_nameless_and_non_dict() -> None:
+    out = aos8_server_group_members([{"name": "RAD-1"}, {"fqdn": "x"}, "junk", {"name": "RAD-2"}])
+    assert [s["server-name"] for s in out] == ["RAD-1", "RAD-2"]
+    assert [s["position"] for s in out] == [1, 2]
+
+
+def test_server_group_members_non_list_is_empty() -> None:
+    assert aos8_server_group_members(None) == []
+    assert aos8_server_group_members({}) == []

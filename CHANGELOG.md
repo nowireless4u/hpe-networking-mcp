@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.2.0] - 2026-06-06
+
+**Minor — AAA translation foundation (auth-server / server-group / captive-portal) + vendored Aruba OAS.** Adds the first three AOS 8 → Central AAA-chain translations, available via `central_translation_preview`, and vendors the source/target OpenAPI specs that ground them.
+
+### New translations
+- **`central:auth_server`** — AOS 8 `rad_server` / `tacacs_server` → Central `/auth-servers/{name}`, one translation for both via a normalizer preprocessor. **Co-located RFC 3576 (CoA) servers fold in** (issue #322): pass `runtime_values["coa_servers"]` (the `aaa_prof.rfc3576_client[]` entries) and a peer matching the RADIUS server's IP flips it to `radius-server-mode: AUTH_AND_COA` + `dynamic-authorization-enable`. Field names live-verified against the tenant (`auth-port`/`acct-port`/`shared-secret-config`/`radius-server-mode`).
+- **`central:server_group`** — AOS 8 `server_group_prof` → Central `/server-groups/{name}` with an ordered `servers[]` member list (1-based position = auth precedence).
+- **`central:captive_portal`** — AOS 8 `cp_auth_profile` → Central `/captive-portal/{name}`, mapped field-by-field from the HPE LLD (incl. the inverted `protocol-http` → `use-https`, the `auth-protocol` enum, and black/white-list arrays).
+
+All three are Gateway-targeted (config-assignment to `MOBILITY_GW`), preview-validated against the live conductor, and unit-tested (preprocessing normalizers + the `aos8_server_group_members` transform). **Preview-only** — write execution awaits the auth-server-secret PII tokenization PR and the `central_manage_*` path.
+
+### Vendored OpenAPI specs (`vendor/`)
+- The devhub sync (`.github/scripts/fetch_aruba_oas.py` + `sync-new-central-oas.yml`) now also vendors **ArubaOS 8** (`vendor/aos8/`), **UXI**, **ClearPass**, and **AOS-CX** alongside New Central — the authoritative source/target field universe for translation mapping. Internal/copyrighted reference docs (CLI PDF, real-config captures, `docs/central/`) are gitignored.
+
 ## [3.3.1.0] - 2026-06-06
 
 **Minor — file-upload data source + offline AOS 8 config ingestion.** Adds an optional in-chat file-upload path and substantially extends the offline AOS 8 parser so an operator can drive an AOS 8 → Central migration from a pasted *or uploaded* config, not just a live controller.

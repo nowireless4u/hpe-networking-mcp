@@ -1,0 +1,3387 @@
+{
+  "components": {
+    "schemas": {
+      "ADDomain": {
+        "properties": {
+          "domain_controller": {
+            "description": "FQDN of the domain controller",
+            "type": "string"
+          },
+          "force_leave": {
+            "description": "Leave domain even if AD is down",
+            "type": "boolean"
+          },
+          "netbios_name": {
+            "description": "NetBIOS name of the domain",
+            "type": "string"
+          },
+          "on_name_conflict": {
+            "description": "Action to perform in case of a controller name conflict(1 - Use specified Domain Controller, 2 - Use Domain Controller returned by DNS query, 3 - Fail on conflict)",
+            "format": "int64",
+            "type": "integer"
+          },
+          "password": {
+            "description": "Domain password",
+            "type": "string"
+          },
+          "password_servers": {
+            "description": "List of Hostname or IP Address of the AD password servers",
+            "type": "object"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "status_message": {
+            "description": "Response message of AD domain join/leave operation",
+            "type": "string"
+          },
+          "username": {
+            "description": "Domain username ",
+            "type": "string"
+          }
+        },
+        "title": "ADDomain",
+        "type": "object"
+      },
+      "ADDomainItems": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ADDomainResult"
+            }
+          }
+        },
+        "title": "ADDomainItems",
+        "type": "object"
+      },
+      "ADDomainJoin": {
+        "properties": {
+          "domain_controller": {
+            "description": "FQDN of the domain controller",
+            "type": "string"
+          },
+          "netbios_name": {
+            "description": "NetBIOS name of the domain",
+            "type": "string"
+          },
+          "on_name_conflict": {
+            "description": "Action to perform in case of a controller name conflict(1 - Use specified Domain Controller, 2 - Use Domain Controller returned by DNS query, 3 - Fail on conflict)",
+            "format": "int64",
+            "type": "integer"
+          },
+          "password": {
+            "description": "Domain password",
+            "type": "string"
+          },
+          "username": {
+            "description": "Domain username ",
+            "type": "string"
+          }
+        },
+        "required": [
+          "domain_controller",
+          "netbios_name",
+          "on_name_conflict",
+          "username",
+          "password"
+        ],
+        "title": "ADDomainJoin",
+        "type": "object"
+      },
+      "ADDomainLeave": {
+        "properties": {
+          "force_leave": {
+            "description": "Leave domain even if AD is down",
+            "type": "boolean"
+          },
+          "netbios_name": {
+            "description": "NetBIOS name of the domain",
+            "type": "string"
+          },
+          "password": {
+            "description": "Domain password",
+            "type": "string"
+          },
+          "username": {
+            "description": "Domain username ",
+            "type": "string"
+          }
+        },
+        "required": [
+          "netbios_name",
+          "username",
+          "password",
+          "force_leave"
+        ],
+        "title": "ADDomainLeave",
+        "type": "object"
+      },
+      "ADDomainResult": {
+        "properties": {
+          "domain_controller": {
+            "description": "FQDN of the domain controller",
+            "type": "string"
+          },
+          "netbios_name": {
+            "description": "NetBIOS name of the domain",
+            "type": "string"
+          },
+          "password_servers": {
+            "description": "List of Hostname or IP Address of the AD password servers",
+            "type": "object"
+          }
+        },
+        "required": [
+          "domain_controller",
+          "netbios_name",
+          "password_servers"
+        ],
+        "title": "ADDomainResult",
+        "type": "object"
+      },
+      "ADDomainStatus": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "status_message": {
+            "description": "Response message of AD domain join/leave operation",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "status_message"
+        ],
+        "title": "ADDomainStatus",
+        "type": "object"
+      },
+      "ADDomainUpdate": {
+        "properties": {
+          "netbios_name": {
+            "description": "NetBIOS name of the domain",
+            "type": "string"
+          },
+          "password_servers": {
+            "description": "List of Hostname or IP Address of the AD password servers",
+            "type": "object"
+          }
+        },
+        "required": [
+          "netbios_name",
+          "password_servers"
+        ],
+        "title": "ADDomainUpdate",
+        "type": "object"
+      },
+      "Access": {
+        "description": "Access type of the Access control application",
+        "enum": [
+          "Allow",
+          "Deny"
+        ],
+        "example": "Allow",
+        "title": "Access",
+        "type": "string"
+      },
+      "AccessControl": {
+        "properties": {
+          "access": {
+            "$ref": "#/components/schemas/Access"
+          },
+          "networks": {
+            "description": "hostname, IP address or subnet (CIDR) of the Networks to be restricted (e.g. [\"hostname.example.com\", \"1.2.3.4\", \"10.1.0.0/16\"])",
+            "type": "object"
+          }
+        },
+        "title": "AccessControl",
+        "type": "object"
+      },
+      "AccessControlItems": {
+        "properties": {
+          "items": {
+            "description": "List of items matching the filter",
+            "items": {
+              "$ref": "#/components/schemas/AccessControlResult"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "AccessControlItems",
+        "type": "object"
+      },
+      "AccessControlList": {
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/AccessControlItems"
+          },
+          "_links": {
+            "$ref": "#/components/schemas/HalLinks"
+          },
+          "count": {
+            "description": "Total number of items matching the filter; returned if calculate_count is true",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "_embedded",
+          "_links"
+        ],
+        "title": "AccessControlList",
+        "type": "object"
+      },
+      "AccessControlReplace": {
+        "properties": {
+          "access": {
+            "$ref": "#/components/schemas/Access"
+          },
+          "networks": {
+            "description": "hostname, IP address or subnet (CIDR) of the Networks to be restricted (e.g. [\"hostname.example.com\", \"1.2.3.4\", \"10.1.0.0/16\"])",
+            "type": "object"
+          }
+        },
+        "required": [
+          "access",
+          "networks"
+        ],
+        "title": "AccessControlReplace",
+        "type": "object"
+      },
+      "AccessControlResult": {
+        "properties": {
+          "access": {
+            "$ref": "#/components/schemas/Access"
+          },
+          "networks": {
+            "description": "hostname, IP address or subnet (CIDR) of the Networks to be restricted (e.g. [\"hostname.example.com\", \"1.2.3.4\", \"10.1.0.0/16\"])",
+            "type": "object"
+          }
+        },
+        "required": [
+          "access",
+          "networks"
+        ],
+        "title": "AccessControlResult",
+        "type": "object"
+      },
+      "AuthProtocol": {
+        "description": "Authentication Protocol of system monitoring settings",
+        "enum": [
+          "MD5",
+          "SHA"
+        ],
+        "example": "MD5",
+        "title": "AuthProtocol",
+        "type": "string"
+      },
+      "CppmVersion": {
+        "properties": {
+          "app_build_number": {
+            "description": "App build number",
+            "type": "string"
+          },
+          "app_major_version": {
+            "description": "App major version",
+            "type": "integer"
+          },
+          "app_minor_version": {
+            "description": "App minor version",
+            "type": "string"
+          },
+          "app_service_release": {
+            "description": "App service release",
+            "type": "string"
+          },
+          "cc_enabled": {
+            "description": "Is CC mode enabled?",
+            "type": "boolean"
+          },
+          "cloud_mode": {
+            "description": "is Cloud mode enabled",
+            "type": "boolean"
+          },
+          "eval_license": {
+            "description": "is Evaluation license",
+            "type": "boolean"
+          },
+          "fips_enabled": {
+            "description": "is FIPS mode enabled",
+            "type": "boolean"
+          },
+          "hardware_version": {
+            "description": "Hardware version",
+            "type": "string"
+          }
+        },
+        "title": "CppmVersion",
+        "type": "object"
+      },
+      "CppmVersionItems": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CppmVersionResult"
+            }
+          }
+        },
+        "title": "CppmVersionItems",
+        "type": "object"
+      },
+      "CppmVersionResult": {
+        "properties": {
+          "app_build_number": {
+            "description": "App build number",
+            "type": "string"
+          },
+          "app_major_version": {
+            "description": "App major version",
+            "type": "integer"
+          },
+          "app_minor_version": {
+            "description": "App minor version",
+            "type": "string"
+          },
+          "app_service_release": {
+            "description": "App service release",
+            "type": "string"
+          },
+          "cc_enabled": {
+            "description": "Is CC mode enabled?",
+            "type": "boolean"
+          },
+          "cloud_mode": {
+            "description": "is Cloud mode enabled",
+            "type": "boolean"
+          },
+          "eval_license": {
+            "description": "is Evaluation license",
+            "type": "boolean"
+          },
+          "fips_enabled": {
+            "description": "is FIPS mode enabled",
+            "type": "boolean"
+          },
+          "hardware_version": {
+            "description": "Hardware version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "app_major_version",
+          "app_minor_version",
+          "app_service_release",
+          "app_build_number",
+          "hardware_version",
+          "fips_enabled",
+          "cc_enabled",
+          "eval_license",
+          "cloud_mode"
+        ],
+        "title": "CppmVersionResult",
+        "type": "object"
+      },
+      "HalLinks": {
+        "properties": {
+          "first": {
+            "description": "URL of first page of results",
+            "type": "string"
+          },
+          "last": {
+            "description": "URL of last page of results",
+            "type": "string"
+          },
+          "next": {
+            "description": "URL of next page of results",
+            "type": "string"
+          },
+          "prev": {
+            "description": "URL of previous page of results",
+            "type": "string"
+          },
+          "self": {
+            "description": "URL of result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "self",
+          "first"
+        ],
+        "title": "HalLinks",
+        "type": "object"
+      },
+      "InstalledPatchInfo": {
+        "properties": {
+          "description": {
+            "description": "Description of the patch",
+            "type": "string"
+          },
+          "installed": {
+            "description": "Time and date of the patch installation",
+            "type": "string"
+          },
+          "name": {
+            "description": "Unique name of the patch",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "installed"
+        ],
+        "title": "InstalledPatchInfo",
+        "type": "object"
+      },
+      "PrivacyProtocol": {
+        "description": "Privacy Protocol of system monitoring settings",
+        "enum": [
+          "DES",
+          "AES",
+          "AES-256"
+        ],
+        "example": "DES",
+        "title": "PrivacyProtocol",
+        "type": "string"
+      },
+      "SecurityLevel": {
+        "description": "Security Level of system monitoring settings",
+        "enum": [
+          "NOAUTH_NOPRIV",
+          "AUTH_NOPRIV",
+          "AUTH_PRIV"
+        ],
+        "example": "NOAUTH_NOPRIV",
+        "title": "SecurityLevel",
+        "type": "string"
+      },
+      "ServerConfiguration": {
+        "properties": {
+          "fqdn": {
+            "description": "Fully-qualified domain name of server",
+            "type": "string"
+          },
+          "ipv6_management_ip": {
+            "description": "IPv6 address of the server’s management port; may be null if not configured",
+            "type": "string"
+          },
+          "ipv6_server_ip": {
+            "description": "IPv6 address of the server’s data port; may be null if not configured",
+            "type": "string"
+          },
+          "is_insight_enabled": {
+            "description": "True if this server has Insight reporting enabled",
+            "type": "boolean"
+          },
+          "is_insight_primary": {
+            "description": "True if this server is the Insight primary server",
+            "type": "boolean"
+          },
+          "is_profiler_enabled": {
+            "description": "True if this server is the Insight primary server",
+            "type": "boolean"
+          },
+          "is_publisher": {
+            "description": "True if this server is the publisher within the cluster",
+            "type": "boolean"
+          },
+          "last_replication_timestamp": {
+            "description": "Last timestamp for replicated data; null if replication has never occurred",
+            "type": "string"
+          },
+          "local_server": {
+            "description": "True if this server is processing this API request",
+            "type": "boolean"
+          },
+          "management_ip": {
+            "description": "IPv4 address of the server’s management port; may be null if not configured",
+            "type": "string"
+          },
+          "name": {
+            "description": "Display name of server",
+            "type": "string"
+          },
+          "replication_status": {
+            "description": "Indicates the replication status of this server within the cluster",
+            "type": "string"
+          },
+          "server_dns_name": {
+            "description": "Hostname of server",
+            "type": "string"
+          },
+          "server_ip": {
+            "description": "IPv4 address of the server’s data port; may be null if not configured",
+            "type": "string"
+          },
+          "server_uuid": {
+            "description": "Unique identifier for server",
+            "type": "string"
+          }
+        },
+        "title": "ServerConfiguration",
+        "type": "object"
+      },
+      "ServerConfigurationChange": {
+        "properties": {
+          "is_insight_enabled": {
+            "description": "True if this server has Insight reporting enabled",
+            "type": "boolean"
+          }
+        },
+        "title": "ServerConfigurationChange",
+        "type": "object"
+      },
+      "ServerConfigurationResult": {
+        "properties": {
+          "fqdn": {
+            "description": "Fully-qualified domain name of server",
+            "type": "string"
+          },
+          "ipv6_management_ip": {
+            "description": "IPv6 address of the server’s management port; may be null if not configured",
+            "type": "string"
+          },
+          "ipv6_server_ip": {
+            "description": "IPv6 address of the server’s data port; may be null if not configured",
+            "type": "string"
+          },
+          "is_insight_enabled": {
+            "description": "True if this server has Insight reporting enabled",
+            "type": "boolean"
+          },
+          "is_insight_primary": {
+            "description": "True if this server is the Insight primary server",
+            "type": "boolean"
+          },
+          "is_profiler_enabled": {
+            "description": "True if this server is the Insight primary server",
+            "type": "boolean"
+          },
+          "is_publisher": {
+            "description": "True if this server is the publisher within the cluster",
+            "type": "boolean"
+          },
+          "last_replication_timestamp": {
+            "description": "Last timestamp for replicated data; null if replication has never occurred",
+            "type": "string"
+          },
+          "local_server": {
+            "description": "True if this server is processing this API request",
+            "type": "boolean"
+          },
+          "management_ip": {
+            "description": "IPv4 address of the server’s management port; may be null if not configured",
+            "type": "string"
+          },
+          "name": {
+            "description": "Display name of server",
+            "type": "string"
+          },
+          "replication_status": {
+            "description": "Indicates the replication status of this server within the cluster",
+            "type": "string"
+          },
+          "server_dns_name": {
+            "description": "Hostname of server",
+            "type": "string"
+          },
+          "server_ip": {
+            "description": "IPv4 address of the server’s data port; may be null if not configured",
+            "type": "string"
+          },
+          "server_uuid": {
+            "description": "Unique identifier for server",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "local_server",
+          "server_uuid",
+          "server_dns_name",
+          "fqdn",
+          "server_ip",
+          "management_ip",
+          "ipv6_server_ip",
+          "ipv6_management_ip",
+          "is_publisher",
+          "is_insight_enabled",
+          "is_insight_primary",
+          "replication_status",
+          "last_replication_timestamp",
+          "is_profiler_enabled"
+        ],
+        "title": "ServerConfigurationResult",
+        "type": "object"
+      },
+      "ServerFips": {
+        "properties": {},
+        "title": "ServerFips",
+        "type": "object"
+      },
+      "ServerFipsResponse": {
+        "properties": {
+          "fips_mode": {
+            "description": "Indicates if FIPS mode has been enabled on this server",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "fips_mode"
+        ],
+        "title": "ServerFipsResponse",
+        "type": "object"
+      },
+      "ServerSnmp": {
+        "properties": {
+          "auth_key": {
+            "description": "Authentication key of system monitoring settings",
+            "type": "string"
+          },
+          "auth_protocol": {
+            "$ref": "#/components/schemas/AuthProtocol"
+          },
+          "community_string": {
+            "description": "Community String of the system monitoring settings",
+            "type": "string"
+          },
+          "engine_id": {
+            "description": "Engine ID of system monitoring settings",
+            "type": "string"
+          },
+          "privacy_key": {
+            "description": "Privacy key of system monitoring settings",
+            "type": "string"
+          },
+          "privacy_protocol": {
+            "$ref": "#/components/schemas/PrivacyProtocol"
+          },
+          "security_level": {
+            "$ref": "#/components/schemas/SecurityLevel"
+          },
+          "system_contact": {
+            "description": "System contact of the system monitoring settings for a server",
+            "type": "string"
+          },
+          "system_location": {
+            "description": "System location of the system monitoring settings for a server",
+            "type": "string"
+          },
+          "username": {
+            "description": "Username for system monitoring settings",
+            "type": "string"
+          },
+          "version": {
+            "$ref": "#/components/schemas/Version"
+          }
+        },
+        "title": "ServerSnmp",
+        "type": "object"
+      },
+      "ServerSnmpItems": {
+        "properties": {
+          "items": {
+            "description": "List of items matching the filter",
+            "items": {
+              "$ref": "#/components/schemas/ServerSnmpResult"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ServerSnmpItems",
+        "type": "object"
+      },
+      "ServerSnmpList": {
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/ServerSnmpItems"
+          },
+          "_links": {
+            "$ref": "#/components/schemas/HalLinks"
+          },
+          "count": {
+            "description": "Total number of items matching the filter; returned if calculate_count is true",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "_embedded",
+          "_links"
+        ],
+        "title": "ServerSnmpList",
+        "type": "object"
+      },
+      "ServerSnmpReplace": {
+        "properties": {
+          "auth_key": {
+            "description": "Authentication key of system monitoring settings",
+            "type": "string"
+          },
+          "auth_protocol": {
+            "$ref": "#/components/schemas/AuthProtocol"
+          },
+          "community_string": {
+            "description": "Community String of the system monitoring settings",
+            "type": "string"
+          },
+          "engine_id": {
+            "description": "Engine ID of system monitoring settings",
+            "type": "string"
+          },
+          "privacy_key": {
+            "description": "Privacy key of system monitoring settings",
+            "type": "string"
+          },
+          "privacy_protocol": {
+            "$ref": "#/components/schemas/PrivacyProtocol"
+          },
+          "security_level": {
+            "$ref": "#/components/schemas/SecurityLevel"
+          },
+          "system_contact": {
+            "description": "System contact of the system monitoring settings for a server",
+            "type": "string"
+          },
+          "system_location": {
+            "description": "System location of the system monitoring settings for a server",
+            "type": "string"
+          },
+          "username": {
+            "description": "Username for system monitoring settings",
+            "type": "string"
+          },
+          "version": {
+            "$ref": "#/components/schemas/Version"
+          }
+        },
+        "required": [
+          "engine_id",
+          "version"
+        ],
+        "title": "ServerSnmpReplace",
+        "type": "object"
+      },
+      "ServerSnmpResult": {
+        "properties": {
+          "auth_key": {
+            "description": "Authentication key of system monitoring settings",
+            "type": "string"
+          },
+          "auth_protocol": {
+            "$ref": "#/components/schemas/AuthProtocol"
+          },
+          "community_string": {
+            "description": "Community String of the system monitoring settings",
+            "type": "string"
+          },
+          "engine_id": {
+            "description": "Engine ID of system monitoring settings",
+            "type": "string"
+          },
+          "privacy_key": {
+            "description": "Privacy key of system monitoring settings",
+            "type": "string"
+          },
+          "privacy_protocol": {
+            "$ref": "#/components/schemas/PrivacyProtocol"
+          },
+          "security_level": {
+            "$ref": "#/components/schemas/SecurityLevel"
+          },
+          "system_contact": {
+            "description": "System contact of the system monitoring settings for a server",
+            "type": "string"
+          },
+          "system_location": {
+            "description": "System location of the system monitoring settings for a server",
+            "type": "string"
+          },
+          "username": {
+            "description": "Username for system monitoring settings",
+            "type": "string"
+          },
+          "version": {
+            "$ref": "#/components/schemas/Version"
+          }
+        },
+        "required": [
+          "system_location",
+          "engine_id",
+          "version",
+          "community_string",
+          "system_contact"
+        ],
+        "title": "ServerSnmpResult",
+        "type": "object"
+      },
+      "ServerSnmpUpdate": {
+        "properties": {
+          "auth_key": {
+            "description": "Authentication key of system monitoring settings",
+            "type": "string"
+          },
+          "auth_protocol": {
+            "$ref": "#/components/schemas/AuthProtocol"
+          },
+          "community_string": {
+            "description": "Community String of the system monitoring settings",
+            "type": "string"
+          },
+          "engine_id": {
+            "description": "Engine ID of system monitoring settings",
+            "type": "string"
+          },
+          "privacy_key": {
+            "description": "Privacy key of system monitoring settings",
+            "type": "string"
+          },
+          "privacy_protocol": {
+            "$ref": "#/components/schemas/PrivacyProtocol"
+          },
+          "security_level": {
+            "$ref": "#/components/schemas/SecurityLevel"
+          },
+          "system_contact": {
+            "description": "System contact of the system monitoring settings for a server",
+            "type": "string"
+          },
+          "system_location": {
+            "description": "System location of the system monitoring settings for a server",
+            "type": "string"
+          },
+          "username": {
+            "description": "Username for system monitoring settings",
+            "type": "string"
+          },
+          "version": {
+            "$ref": "#/components/schemas/Version"
+          }
+        },
+        "title": "ServerSnmpUpdate",
+        "type": "object"
+      },
+      "ServerVersion": {
+        "properties": {},
+        "title": "ServerVersion",
+        "type": "object"
+      },
+      "ServerVersionResponse": {
+        "properties": {
+          "cppm_version": {
+            "description": "ClearPass Policy Manager version",
+            "type": "string"
+          },
+          "guest_version": {
+            "description": "ClearPass Guest version",
+            "type": "string"
+          },
+          "installed_patches": {
+            "description": "Patches that have been installed on this server",
+            "items": {
+              "$ref": "#/components/schemas/InstalledPatchInfo"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "cppm_version",
+          "guest_version",
+          "installed_patches"
+        ],
+        "title": "ServerVersionResponse",
+        "type": "object"
+      },
+      "ServiceParameter": {
+        "properties": {
+          "allowed_values": {
+            "description": "Allowed values for the parameter for the service.",
+            "type": "string"
+          },
+          "default_value": {
+            "description": "Default value assigned to the parameter for the service.",
+            "type": "string"
+          },
+          "group_name": {
+            "description": "Group name under which the parameter for the service.",
+            "type": "string"
+          },
+          "param_name_1": {
+            "description": "param_value_1",
+            "type": "string"
+          },
+          "param_name_2": {
+            "description": "param_value_2...",
+            "type": "string"
+          },
+          "parameter_id": {
+            "description": "Id assigned to the parameter for the service.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "parameter_name": {
+            "description": "Name of the parameter for the service.",
+            "type": "string"
+          },
+          "value": {
+            "description": "Current value for the parameter for the service.",
+            "type": "string"
+          }
+        },
+        "title": "ServiceParameter",
+        "type": "object"
+      },
+      "ServiceParameterItems": {
+        "properties": {
+          "items": {
+            "description": "List of items matching the filter",
+            "items": {
+              "$ref": "#/components/schemas/ServiceParameterResult"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ServiceParameterItems",
+        "type": "object"
+      },
+      "ServiceParameterList": {
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/ServiceParameterItems"
+          },
+          "_links": {
+            "$ref": "#/components/schemas/HalLinks"
+          },
+          "count": {
+            "description": "Total number of items matching the filter; returned if calculate_count is true",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "_embedded",
+          "_links"
+        ],
+        "title": "ServiceParameterList",
+        "type": "object"
+      },
+      "ServiceParameterResult": {
+        "properties": {
+          "allowed_values": {
+            "description": "Allowed values for the parameter for the service.",
+            "type": "string"
+          },
+          "default_value": {
+            "description": "Default value assigned to the parameter for the service.",
+            "type": "string"
+          },
+          "group_name": {
+            "description": "Group name under which the parameter for the service.",
+            "type": "string"
+          },
+          "parameter_id": {
+            "description": "Id assigned to the parameter for the service.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "parameter_name": {
+            "description": "Name of the parameter for the service.",
+            "type": "string"
+          },
+          "value": {
+            "description": "Current value for the parameter for the service.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "parameter_name",
+          "parameter_id",
+          "value",
+          "default_value",
+          "allowed_values"
+        ],
+        "title": "ServiceParameterResult",
+        "type": "object"
+      },
+      "ServiceParameterUpdate": {
+        "properties": {
+          "param_name_1": {
+            "description": "param_value_1",
+            "type": "string"
+          },
+          "param_name_2": {
+            "description": "param_value_2...",
+            "type": "string"
+          }
+        },
+        "title": "ServiceParameterUpdate",
+        "type": "object"
+      },
+      "ServiceParameterUpdateResult": {
+        "properties": {
+          "param_name_1": {
+            "description": "param_value_1",
+            "type": "string"
+          },
+          "param_name_2": {
+            "description": "param_value_2...",
+            "type": "string"
+          }
+        },
+        "title": "ServiceParameterUpdateResult",
+        "type": "object"
+      },
+      "Status": {
+        "description": "Status of AD domain join/leave operation",
+        "enum": [
+          "SUCCESS",
+          "RUNNING"
+        ],
+        "example": "SUCCESS",
+        "title": "Status",
+        "type": "string"
+      },
+      "SystemServiceControl": {
+        "properties": {
+          "description": {
+            "description": "Service Description",
+            "type": "string"
+          },
+          "display_name": {
+            "description": "Service Display Name",
+            "type": "string"
+          },
+          "is_running": {
+            "description": "Service is Running or Stopped",
+            "type": "boolean"
+          },
+          "state": {
+            "description": "Status",
+            "type": "string"
+          }
+        },
+        "title": "SystemServiceControl",
+        "type": "object"
+      },
+      "SystemServiceControlItems": {
+        "properties": {
+          "items": {
+            "description": "List of items matching the filter",
+            "items": {
+              "$ref": "#/components/schemas/SystemServiceControlResult"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "SystemServiceControlItems",
+        "type": "object"
+      },
+      "SystemServiceControlList": {
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/SystemServiceControlItems"
+          },
+          "_links": {
+            "$ref": "#/components/schemas/HalLinks"
+          },
+          "count": {
+            "description": "Total number of items matching the filter; returned if calculate_count is true",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "_embedded",
+          "_links"
+        ],
+        "title": "SystemServiceControlList",
+        "type": "object"
+      },
+      "SystemServiceControlResult": {
+        "properties": {
+          "description": {
+            "description": "Service Description",
+            "type": "string"
+          },
+          "display_name": {
+            "description": "Service Display Name",
+            "type": "string"
+          },
+          "is_running": {
+            "description": "Service is Running or Stopped",
+            "type": "boolean"
+          },
+          "state": {
+            "description": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "description",
+          "display_name",
+          "state",
+          "is_running"
+        ],
+        "title": "SystemServiceControlResult",
+        "type": "object"
+      },
+      "SystemServiceControlUpdate": {
+        "properties": {
+          "description": {
+            "description": "Service Description",
+            "type": "string"
+          },
+          "display_name": {
+            "description": "Service Display Name",
+            "type": "string"
+          },
+          "is_running": {
+            "description": "Service is Running or Stopped",
+            "type": "boolean"
+          },
+          "state": {
+            "description": "Status",
+            "type": "string"
+          }
+        },
+        "title": "SystemServiceControlUpdate",
+        "type": "object"
+      },
+      "Version": {
+        "description": "SNMP Version of the system monitoring settings",
+        "enum": [
+          "V1",
+          "V2C",
+          "V3"
+        ],
+        "example": "V1",
+        "title": "Version",
+        "type": "string"
+      }
+    }
+  },
+  "info": {
+    "contact": {},
+    "title": "Local Server Configuration",
+    "version": "6.12.7"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/ad-domain/join/{server_uuid}": {
+      "put": {
+        "deprecated": false,
+        "description": "Join AD Domain",
+        "operationId": "ADDomainJoinByServer_uuidPut",
+        "parameters": [
+          {
+            "description": "URL parameter server_uuid",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ADDomainJoin"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ADDomainStatus"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Join AD Domain",
+        "tags": [
+          "ADDomain"
+        ]
+      }
+    },
+    "/ad-domain/leave/{server_uuid}": {
+      "put": {
+        "deprecated": false,
+        "description": "Leave AD domain",
+        "operationId": "ADDomainLeaveByServer_uuidPut",
+        "parameters": [
+          {
+            "description": "URL parameter server_uuid",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ADDomainLeave"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ADDomainStatus"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Leave AD domain",
+        "tags": [
+          "ADDomain"
+        ]
+      }
+    },
+    "/ad-domain/password-servers/{server_uuid}": {
+      "patch": {
+        "deprecated": false,
+        "description": "Configure AD Password Servers",
+        "operationId": "ADDomainPassword-serversByServer_uuidPatch",
+        "parameters": [
+          {
+            "description": "URL parameter server_uuid",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ADDomainUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ADDomainUpdate"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Configure AD Password Servers",
+        "tags": [
+          "ADDomain"
+        ]
+      }
+    },
+    "/ad-domain/{server_uuid}": {
+      "get": {
+        "deprecated": false,
+        "description": "Get a list of AD Domains",
+        "operationId": "ADDomainByServer_uuidGet",
+        "parameters": [
+          {
+            "description": "URL parameter server_uuid",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ADDomainResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get a list of AD Domains",
+        "tags": [
+          "ADDomain"
+        ]
+      }
+    },
+    "/ad-domain/{server_uuid}/netbios-name/{netbios_name}": {
+      "get": {
+        "deprecated": false,
+        "description": "GET an AD domain by netbios_name",
+        "operationId": "ADDomainByServer_uuidNetbios-nameByNetbios_nameGet",
+        "parameters": [
+          {
+            "description": "URL parameter server_uuid",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "NetBIOS name of the domain",
+            "in": "path",
+            "name": "netbios_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ADDomainResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "GET an AD domain by netbios_name",
+        "tags": [
+          "ADDomain"
+        ]
+      }
+    },
+    "/cluster/server": {
+      "get": {
+        "deprecated": false,
+        "description": "Get a list of servers in the cluster",
+        "operationId": "ServerConfigurationServerGet",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerConfigurationResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get a list of servers in the cluster",
+        "tags": [
+          "ServerConfiguration"
+        ]
+      }
+    },
+    "/cluster/server/{uuid}": {
+      "get": {
+        "deprecated": false,
+        "description": "Get configuration of a server",
+        "operationId": "ServerConfigurationServerByUuidGet",
+        "parameters": [
+          {
+            "description": "Server UUID, \"publisher\" or \"this\"",
+            "in": "path",
+            "name": "uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerConfigurationResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Get configuration of a server",
+        "tags": [
+          "ServerConfiguration"
+        ]
+      },
+      "patch": {
+        "deprecated": false,
+        "description": "Update configuration of a server",
+        "operationId": "ServerConfigurationServerByUuidPatch",
+        "parameters": [
+          {
+            "description": "Server UUID, \"publisher\" or \"this\"",
+            "in": "path",
+            "name": "uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServerConfigurationChange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerConfigurationResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Update configuration of a server",
+        "tags": [
+          "ServerConfiguration"
+        ]
+      }
+    },
+    "/cppm-version": {
+      "get": {
+        "deprecated": false,
+        "description": "Get Cppm version",
+        "operationId": "CppmVersionGet",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CppmVersionResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get Cppm version",
+        "tags": [
+          "CppmVersion"
+        ]
+      }
+    },
+    "/server/access-control/{server_uuid}": {
+      "get": {
+        "deprecated": false,
+        "description": "Get all application access controls",
+        "operationId": "AccessControlAccess-controlByServer_uuidGet",
+        "parameters": [
+          {
+            "description": "UUID of the server",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get all application access controls",
+        "tags": [
+          "AccessControl"
+        ]
+      }
+    },
+    "/server/access-control/{server_uuid}/{resource_name}": {
+      "delete": {
+        "deprecated": false,
+        "description": "Delete an application access control",
+        "operationId": "AccessControlAccess-controlByServer_uuidByResource_nameDelete",
+        "parameters": [
+          {
+            "description": "UUID of the server",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Unique resource name of the access control ",
+            "in": "path",
+            "name": "resource_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Delete an application access control by resource name",
+        "tags": [
+          "AccessControl"
+        ]
+      },
+      "get": {
+        "deprecated": false,
+        "description": "Get an application access control",
+        "operationId": "AccessControlAccess-controlByServer_uuidByResource_nameGet",
+        "parameters": [
+          {
+            "description": "UUID of the server",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Unique resource name of the access control ",
+            "in": "path",
+            "name": "resource_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get an application access control by resource name",
+        "tags": [
+          "AccessControl"
+        ]
+      },
+      "put": {
+        "deprecated": false,
+        "description": "Replace an application access controls",
+        "operationId": "AccessControlAccess-controlByServer_uuidByResource_namePut",
+        "parameters": [
+          {
+            "description": "UUID of the server",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Unique resource name of the access control ",
+            "in": "path",
+            "name": "resource_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccessControlReplace"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Replace an application access controls by resource name",
+        "tags": [
+          "AccessControl"
+        ]
+      }
+    },
+    "/server/fips": {
+      "get": {
+        "deprecated": false,
+        "description": "Get server FIPS mode information",
+        "operationId": "ServerFipsFipsGet",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerFipsResponse"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get server FIPS mode information",
+        "tags": [
+          "ServerFips"
+        ]
+      }
+    },
+    "/server/service/{server_uuid}": {
+      "get": {
+        "deprecated": false,
+        "description": "Get list of services",
+        "operationId": "SystemServiceControlServiceByServer_uuidGet",
+        "parameters": [
+          {
+            "description": "AlphaNumeric Unique Id of the Server",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemServiceControlResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Get all services",
+        "tags": [
+          "SystemServiceControl"
+        ]
+      }
+    },
+    "/server/service/{server_uuid}/{service_name}": {
+      "get": {
+        "deprecated": false,
+        "description": "Get a service by name",
+        "operationId": "SystemServiceControlServiceByServer_uuidByService_nameGet",
+        "parameters": [
+          {
+            "description": "AlphaNumeric Unique Id of the Server",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Unique Name of the SystemServiceControl",
+            "in": "path",
+            "name": "service_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemServiceControlResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get a service by name",
+        "tags": [
+          "SystemServiceControl"
+        ]
+      }
+    },
+    "/server/service/{server_uuid}/{service_name}/start": {
+      "patch": {
+        "deprecated": false,
+        "description": "Start a service",
+        "operationId": "SystemServiceControlServiceByServer_uuidByService_nameStartPatch",
+        "parameters": [
+          {
+            "description": "AlphaNumeric Unique Id of the Server",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Unique Name of the SystemServiceControl",
+            "in": "path",
+            "name": "service_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemServiceControlResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": " Start a service by name",
+        "tags": [
+          "SystemServiceControl"
+        ]
+      }
+    },
+    "/server/service/{server_uuid}/{service_name}/stop": {
+      "patch": {
+        "deprecated": false,
+        "description": "Stop a service",
+        "operationId": "SystemServiceControlServiceByServer_uuidByService_nameStopPatch",
+        "parameters": [
+          {
+            "description": "AlphaNumeric Unique Id of the Server",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Unique Name of the SystemServiceControl",
+            "in": "path",
+            "name": "service_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemServiceControlResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": " Stop a service by name",
+        "tags": [
+          "SystemServiceControl"
+        ]
+      }
+    },
+    "/server/snmp/{server_uuid}": {
+      "get": {
+        "deprecated": false,
+        "description": "Get server snmp settings",
+        "operationId": "ServerSnmpSnmpByServer_uuidGet",
+        "parameters": [
+          {
+            "description": "UUID of the server",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerSnmpResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get server snmp settings",
+        "tags": [
+          "ServerSnmp"
+        ]
+      },
+      "patch": {
+        "deprecated": false,
+        "description": "Update some fields of server snmp settings",
+        "operationId": "ServerSnmpSnmpByServer_uuidPatch",
+        "parameters": [
+          {
+            "description": "UUID of the server",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServerSnmpUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerSnmpResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Update some fields of server snmp settings",
+        "tags": [
+          "ServerSnmp"
+        ]
+      },
+      "put": {
+        "deprecated": false,
+        "description": "Replace server snmp settings",
+        "operationId": "ServerSnmpSnmpByServer_uuidPut",
+        "parameters": [
+          {
+            "description": "UUID of the server",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServerSnmpReplace"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerSnmpResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Replace server snmp settings",
+        "tags": [
+          "ServerSnmp"
+        ]
+      }
+    },
+    "/server/version": {
+      "get": {
+        "deprecated": false,
+        "description": "Get server version information",
+        "operationId": "ServerVersionVersionGet",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerVersionResponse"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get server version information",
+        "tags": [
+          "ServerVersion"
+        ]
+      }
+    },
+    "/service-parameter/{server_uuid}/{service_id}": {
+      "get": {
+        "deprecated": false,
+        "description": "Get service parameter details",
+        "operationId": "ServiceParameterByServer_uuidByService_idGet",
+        "parameters": [
+          {
+            "description": "UUID of the server",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Unique id for the service",
+            "in": "path",
+            "name": "service_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceParameterResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get service parameter details",
+        "tags": [
+          "ServiceParameter"
+        ]
+      },
+      "patch": {
+        "deprecated": false,
+        "description": "Update service parameter values",
+        "operationId": "ServiceParameterByServer_uuidByService_idPatch",
+        "parameters": [
+          {
+            "description": "UUID of the server",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Unique id for the service",
+            "in": "path",
+            "name": "service_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceParameterUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceParameterUpdateResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Update service parameter values",
+        "tags": [
+          "ServiceParameter"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://clearpass-hostname/api"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Manage AD Domains",
+      "name": "ADDomain"
+    },
+    {
+      "description": "Manage Application access controls",
+      "name": "AccessControl"
+    },
+    {
+      "description": "Manage Cppm Version",
+      "name": "CppmVersion"
+    },
+    {
+      "description": "Manage cluster servers and per-server configuration",
+      "name": "ServerConfiguration"
+    },
+    {
+      "description": "Get server FIPS mode information",
+      "name": "ServerFips"
+    },
+    {
+      "description": "Manage server snmp settings",
+      "name": "ServerSnmp"
+    },
+    {
+      "description": "Get server version information",
+      "name": "ServerVersion"
+    },
+    {
+      "description": "Manage service parameters ",
+      "name": "ServiceParameter"
+    },
+    {
+      "description": "Control services running on a server",
+      "name": "SystemServiceControl"
+    }
+  ],
+  "x-explorer-enabled": false,
+  "x-headers": [
+    {
+      "key": "Authorization",
+      "value": "Bearer <TOKEN>"
+    }
+  ],
+  "x-readme": {
+    "proxy-enabled": true
+  }
+}

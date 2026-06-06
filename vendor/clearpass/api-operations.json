@@ -1,0 +1,407 @@
+{
+  "components": {
+    "schemas": {
+      "GrantType": {
+        "description": "OAuth2 authentication method",
+        "enum": [
+          "client_credentials",
+          "password",
+          "refresh_token"
+        ],
+        "example": "client_credentials",
+        "title": "GrantType",
+        "type": "string"
+      },
+      "OAuth2Response": {
+        "properties": {
+          "access_token": {
+            "description": "Access token issued by the authorization server",
+            "type": "string"
+          },
+          "expires_in": {
+            "description": "The lifetime in seconds of the access token",
+            "type": "integer"
+          },
+          "refresh_token": {
+            "description": "Refresh token, if enabled for this API client. Can be used to obtain a new access token",
+            "type": "string"
+          },
+          "scope": {
+            "description": "Scope of the access token",
+            "type": "string"
+          },
+          "token_type": {
+            "description": "Type of access token. Always set to \"Bearer\"",
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token",
+          "token_type",
+          "expires_in"
+        ],
+        "title": "OAuth2Response",
+        "type": "object"
+      },
+      "TokenEndpoint": {
+        "properties": {
+          "client_id": {
+            "description": "Client ID defined in API Clients",
+            "type": "string"
+          },
+          "client_secret": {
+            "description": "Client secret, required if the API client is not a public client",
+            "type": "string"
+          },
+          "grant_type": {
+            "$ref": "#/components/schemas/GrantType"
+          },
+          "password": {
+            "description": "Password for authentication, required for grant_type \"password\"",
+            "type": "string"
+          },
+          "refresh_token": {
+            "description": "Refresh token issued to the client, required for grant_type \"refresh_token\"",
+            "type": "string"
+          },
+          "scope": {
+            "description": "Scope of the access request",
+            "type": "string"
+          },
+          "username": {
+            "description": "Username for authentication, required for grant_type \"password\"",
+            "type": "string"
+          }
+        },
+        "required": [
+          "grant_type",
+          "client_id"
+        ],
+        "title": "TokenEndpoint",
+        "type": "object"
+      },
+      "TokenInfo": {
+        "properties": {
+          "...": {
+            "description": "Additional properties may be returned for grant_type \"password\" if corresponding properties are defined in the OAuth API enforcement profile",
+            "type": "string"
+          },
+          "info": {
+            "description": "Defaults to the operator profile name",
+            "type": "string"
+          },
+          "name": {
+            "description": "Defaults to the authenticated username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "info",
+          "name"
+        ],
+        "title": "TokenInfo",
+        "type": "object"
+      },
+      "TokenPrivileges": {
+        "properties": {
+          "privileges": {
+            "description": "List of privileges available to the user",
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "privileges"
+        ],
+        "title": "TokenPrivileges",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "contact": {},
+    "title": "API Operations",
+    "version": "6.12.7"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/oauth": {
+      "post": {
+        "deprecated": false,
+        "description": "Obtain an OAuth2 access token for making API calls",
+        "operationId": "TokenEndpointPost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenEndpoint"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuth2Response"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Bad Request"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Obtain an OAuth2 access token for making API calls",
+        "tags": [
+          "TokenEndpoint"
+        ]
+      }
+    },
+    "/oauth/me": {
+      "get": {
+        "deprecated": false,
+        "description": "Returns OAuth2 authenticated client or user information",
+        "operationId": "TokenInfoMeGet",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenInfo"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Returns OAuth2 authenticated client or user information",
+        "tags": [
+          "TokenInfo"
+        ]
+      },
+      "post": {
+        "deprecated": false,
+        "description": "Returns OAuth2 authenticated client or user information",
+        "operationId": "TokenInfoMePost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenInfo"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenInfo"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Returns OAuth2 authenticated client or user information",
+        "tags": [
+          "TokenInfo"
+        ]
+      }
+    },
+    "/oauth/privileges": {
+      "get": {
+        "deprecated": false,
+        "description": "Returns a list of privileges available to the user",
+        "operationId": "TokenPrivilegesPrivilegesGet",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPrivileges"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Returns a list of privileges available to the user",
+        "tags": [
+          "TokenPrivileges"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://clearpass-hostname/api"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Obtain an OAuth2 access token for making API calls",
+      "name": "TokenEndpoint"
+    },
+    {
+      "description": "Returns OAuth2 authenticated client or user information",
+      "name": "TokenInfo"
+    },
+    {
+      "description": "Determine the privileges available to the user",
+      "name": "TokenPrivileges"
+    }
+  ],
+  "x-explorer-enabled": false,
+  "x-headers": [
+    {
+      "key": "Authorization",
+      "value": "Bearer <TOKEN>"
+    }
+  ],
+  "x-readme": {
+    "proxy-enabled": true
+  }
+}

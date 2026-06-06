@@ -62,19 +62,23 @@ jobs:
           delete-branch: true
           add-paths: |
             vendor/central/**
+            vendor/aos8/**
+            vendor/uxi/**
+            vendor/clearpass/**
+            vendor/aoscx/**
           commit-message: |
-            chore(vendor): sync New Central OAS (${{ steps.date.outputs.today }}) (auto)
+            chore(vendor): sync Aruba OAS — New Central + AOS 8 (${{ steps.date.outputs.today }}) (auto)
 
             Source: https://developer.arubanetworks.com (ReadMe /openapi/<id>)
 
             Tool regeneration not run by this workflow — maintainer re-runs the
             Central importer at release time before tagging.
-          title: "chore(vendor): sync New Central OAS"
+          title: "chore(vendor): sync Aruba OAS (New Central + AOS 8)"
           body: |
-            Automated daily sync of the Aruba New Central OpenAPI definitions.
+            Automated daily sync of the Aruba New Central + ArubaOS 8 OpenAPI definitions.
 
             - **Source**: https://developer.arubanetworks.com (ReadMe `/openapi/<id>`)
-            - **Vendored to**: `vendor/central/mrt/` and `vendor/central/config/`
+            - **Vendored to**: `vendor/central/mrt/`, `vendor/central/config/`, and `vendor/aos8/`
             - Per-definition counts and provenance are in each project's
               `_manifest.json`.
 

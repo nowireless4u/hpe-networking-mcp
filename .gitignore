@@ -99,5 +99,15 @@ docs/mappings/
 # Sourced from non-public material; never tracked or redistributed.
 docs/central-undocumented-endpoints.md
 
+# Copyrighted Aruba/HPE reference PDFs kept locally for authoring (e.g. the
+# ArubaOS CLI Reference Guide) — reference only, never redistributed in-repo.
+docs/*.pdf
+
+# Real operator-environment config captures used for translation authoring /
+# parser fixtures (live show-command output, hierarchy dumps). Internal only.
+docs/cli-output.txt
+docs/aos8-*.txt
+docs/central/
+
 # Pre-regen backup of the Central tool surface (local safety copy, never committed)
 central-tools-backup/

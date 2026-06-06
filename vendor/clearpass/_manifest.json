@@ -1,0 +1,120 @@
+{
+  "definition_count": 16,
+  "definitions": [
+    {
+      "id": "69834f79b88f87eb659b7fb1",
+      "path_count": 3,
+      "slug": "api-operations",
+      "title": "API Operations",
+      "version": "6.12.7"
+    },
+    {
+      "id": "69834f79b88f87eb659b7fb2",
+      "path_count": 14,
+      "slug": "certificate-authority",
+      "title": "Certificate Authority",
+      "version": "6.12.7"
+    },
+    {
+      "id": "69834f79b88f87eb659b7fbd",
+      "path_count": 38,
+      "slug": "endpoint-visibility",
+      "title": "Endpoint Visibility",
+      "version": "6.12.7"
+    },
+    {
+      "id": "69834f79b88f87eb659b7fbf",
+      "path_count": 45,
+      "slug": "enforcement-profile",
+      "title": "Enforcement Profile",
+      "version": "6.12.7"
+    },
+    {
+      "id": "69834f79b88f87eb659b7fba",
+      "path_count": 36,
+      "slug": "global-server-configuration",
+      "title": "Global Server Configuration",
+      "version": "6.12.7"
+    },
+    {
+      "id": "69834f79b88f87eb659b7fb3",
+      "path_count": 5,
+      "slug": "guest-actions",
+      "title": "Guest Actions",
+      "version": "6.12.7"
+    },
+    {
+      "id": "69834f79b88f87eb659b7fb4",
+      "path_count": 9,
+      "slug": "guest-configuration",
+      "title": "Guest Configuration",
+      "version": "6.12.7"
+    },
+    {
+      "id": "69834f79b88f87eb659b7fb7",
+      "path_count": 23,
+      "slug": "identities",
+      "title": "Identities",
+      "version": "6.12.7"
+    },
+    {
+      "id": "69834f79b88f87eb659b7fc0",
+      "path_count": 20,
+      "slug": "insight",
+      "title": "Insight",
+      "version": "6.12.7"
+    },
+    {
+      "id": "69834f79b88f87eb659b7fbb",
+      "path_count": 32,
+      "slug": "integrations",
+      "title": "Integrations",
+      "version": "6.12.7"
+    },
+    {
+      "id": "69834f79b88f87eb659b7fb9",
+      "path_count": 18,
+      "slug": "local-server-configuration",
+      "title": "Local Server Configuration",
+      "version": "6.12.7"
+    },
+    {
+      "id": "69834f79b88f87eb659b7fb8",
+      "path_count": 6,
+      "slug": "logs",
+      "title": "Logs",
+      "version": "6.12.7"
+    },
+    {
+      "id": "69834f79b88f87eb659b7fb6",
+      "path_count": 17,
+      "slug": "platform-certificates",
+      "title": "Platform Certificates",
+      "version": "6.12.7"
+    },
+    {
+      "id": "69834f79b88f87eb659b7fbc",
+      "path_count": 51,
+      "slug": "policy-elements",
+      "title": "Policy Elements",
+      "version": "6.12.7"
+    },
+    {
+      "id": "69834f79b88f87eb659b7fbe",
+      "path_count": 14,
+      "slug": "session-control",
+      "title": "Session Control",
+      "version": "6.12.7"
+    },
+    {
+      "id": "69834f79b88f87eb659b7fb5",
+      "path_count": 4,
+      "slug": "tools-and-utilities",
+      "title": "Tools And Utilities",
+      "version": "6.12.7"
+    }
+  ],
+  "project": "cppm",
+  "source": "https://developer.arubanetworks.com/cppm/openapi/<apiSetting-id>",
+  "total_paths": 335
+}
