@@ -78,8 +78,12 @@ def _record_id(record: dict[str, Any], translation_id: str) -> str:
         "central:role": "rname",
         "central:vlan_id": "id",
         "central:named_vlan": "name",
+        "central:net_group": "dstname",
         "central:server_group": "sg_name",
         "central:captive_portal": "profile-name",
+        "central:aaa_profile": "profile-name",
+        "central:dot1x_auth": "profile-name",
+        "central:mac_auth": "profile-name",
     }
     field = primary_key_by_translation.get(translation_id)
     if field is None:

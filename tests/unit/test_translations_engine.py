@@ -1634,40 +1634,55 @@ def test_policy_v6policy_tagged_address_family_ipv6(policy) -> None:
     assert rules[1]["condition"]["destination"]["type"] == "ADDRESS_ROLE"
 
 
-def test_policy_inherited_rules_skipped(policy) -> None:
-    """Defensive: rules with _flags.inherited=True are skipped by the transform."""
-    source = {
-        "accname": "with-inherited",
-        "acl_sess__v4policy": [
-            {
-                "sany": True,
-                "src": "sany",
-                "dany": True,
-                "dst": "dany",
-                "service-any": True,
-                "svc": "service-any",
-                "service_app": "service",
-                "permit": True,
-                "action": "permit",
-                "_flags": {"inherited": True},
-            },  # should be skipped
-            {
-                "suser": True,
-                "src": "suser",
-                "dany": True,
-                "dst": "dany",
-                "service-any": True,
-                "svc": "service-any",
-                "service_app": "service",
-                "permit": True,
-                "action": "permit",
-            },  # should land
-        ],
+def test_policy_inherited_rules_are_translated(policy) -> None:
+    """Inherited rules MUST translate — the ``_flags.inherited`` marker has no
+    filtering effect.
+
+    Effective-config returns an inherited ACL with ``_flags.inherited`` on every
+    rule at any scope below its definition. The transform previously skipped
+    those, emptying ``policy-rule[]`` for the normal migration case (preview at
+    the consuming scope). The inherited flag must now be a no-op; only genuinely
+    ``system`` rules are skipped. Mirrors the server_group member-inherited fix.
+    """
+    inherited_rule = {
+        "sany": True,
+        "src": "sany",
+        "dany": True,
+        "dst": "dany",
+        "service-any": True,
+        "svc": "service-any",
+        "service_app": "service",
+        "permit": True,
+        "action": "permit",
+        "_flags": {"inherited": True},
     }
-    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
-    rules = body["security-policy"]["policy-rule"]
-    assert len(rules) == 1
-    assert rules[0]["condition"]["source"] == {"type": "ADDRESS_ROLE", "role-list": ["parent"]}
+    local_rule = {
+        "suser": True,
+        "src": "suser",
+        "dany": True,
+        "dst": "dany",
+        "service-any": True,
+        "svc": "service-any",
+        "service_app": "service",
+        "permit": True,
+        "action": "permit",
+    }
+    source = {"accname": "with-inherited", "acl_sess__v4policy": [inherited_rule, local_rule]}
+    # The same source with the inherited flag stripped must produce identical output.
+    source_local_only = {
+        "accname": "with-inherited",
+        "acl_sess__v4policy": [{k: v for k, v in inherited_rule.items() if k != "_flags"}, local_rule],
+    }
+
+    rules = (emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {})[
+        "security-policy"
+    ]["policy-rule"]
+    rules_local = (
+        emit_calls(policy, source_local_only, "aos8", runtime_values=_policy_runtime(source_local_only))[0].body or {}
+    )["security-policy"]["policy-rule"]
+
+    assert len(rules) >= 2, "inherited rule was dropped — policy emptied"
+    assert rules == rules_local, "the inherited flag must not change the translated output"
 
 
 def test_policy_step2_assigns_to_mobility_gw(policy) -> None:

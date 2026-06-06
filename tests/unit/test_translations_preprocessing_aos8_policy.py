@@ -19,6 +19,7 @@ import pytest
 from hpe_networking_mcp.translations.preprocessing.aos8_policy import (
     _build_services_block,
     _determine_rule_type,
+    preprocess_acl_for_policy,
 )
 
 pytestmark = pytest.mark.unit
@@ -81,3 +82,51 @@ def test_web_reputation_unaffected() -> None:
     }
     out = _build_services_block(rule)
     assert out == {"services": {"web-reputation": "HIGH_RISK"}}
+
+
+# --------------------------------------------------------------------------- #
+# Inherited-rule regression: a real AOS 8 effective-config ACL inherited to a
+# descendant scope carries _flags.inherited on EVERY rule. The preprocessing
+# used to skip inherited rules, which emptied policy-rule[] for any ACL
+# previewed below its definition scope (the normal migration case). Fixed to
+# skip only genuinely `system` rules. Mirrors the server_group member-inherited
+# fix. Real captured shape from /md/Campus/East `deny-all` / `camera_policy`.
+# --------------------------------------------------------------------------- #
+
+
+def _inherited_acl() -> dict:
+    """A real-shape acl_sess record as effective-config returns it at a child
+    scope: the record AND every rule carry ``_flags.inherited``."""
+    return {
+        "accname": "deny-all",
+        "_flags": {"inherited": True},
+        "acl_sess__v4policy": [
+            {
+                "sany": True,
+                "src": "sany",
+                "dany": True,
+                "dst": "dany",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "deny": True,
+                "action": "deny_opt",
+                "_flags": {"inherited": True},
+            }
+        ],
+    }
+
+
+def test_inherited_rules_are_translated_not_dropped() -> None:
+    """Regression: inherited rules must translate — the bug produced []."""
+    out = preprocess_acl_for_policy(_inherited_acl(), {"role_records": []})
+    assert len(out["_central_rules"]) >= 1, "inherited rules were dropped"
+    assert out["_central_rules"][0]["action"]["type"] == "ACTION_DENY"
+
+
+def test_system_rules_still_skipped() -> None:
+    """A genuinely system-flagged rule is still skipped (built-in, not operator)."""
+    acl = _inherited_acl()
+    acl["acl_sess__v4policy"][0]["_flags"] = {"inherited": True, "system": True}
+    out = preprocess_acl_for_policy(acl, {"role_records": []})
+    assert out["_central_rules"] == []

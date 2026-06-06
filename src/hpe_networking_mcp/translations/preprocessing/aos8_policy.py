@@ -98,10 +98,16 @@ def preprocess_acl_for_policy(source_data: dict[str, Any], runtime_values: dict[
         for aos8_rule in source_data.get(variant_field, []) or []:
             if not isinstance(aos8_rule, dict):
                 continue
-            # Skip system / inherited rules — consumer should pre-filter, but
-            # we're defensive in case a stray inherited entry slips through.
+            # Skip only genuinely system (built-in) rules. Do NOT skip
+            # ``inherited`` rules: when an operator-authored ACL is inherited to
+            # a descendant scope, EVERY one of its rules carries
+            # ``_flags.inherited`` — those rules ARE the effective policy and
+            # must translate. Filtering them here emptied the policy-rule[]
+            # array whenever the ACL was previewed below its definition scope
+            # (the normal case). See the parallel server_group member-inherited
+            # fix; record-level system/default filtering is the consumer's job.
             flags = aos8_rule.get("_flags") or {}
-            if flags.get("inherited") or flags.get("system"):
+            if flags.get("system"):
                 continue
             built = _build_central_rules(aos8_rule, address_family, position, role_attribution)
             if not built:

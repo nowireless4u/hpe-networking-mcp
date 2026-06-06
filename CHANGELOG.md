@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 All three are Gateway-targeted (config-assignment to `MOBILITY_GW`), reference the 3.3.2.0 foundation profiles by name (run order: auth-server / server-group / captive-portal / dot1x-auth / mac-auth → aaa-profile), and are unit-tested. **Preview-only** — write execution still awaits the auth-server-secret PII tokenization PR and the `central_manage_*` path. The maintainer's tenant 802.1X/MAC-auth profiles are all-default, so the mapped field *names* come from the Central OAS (authoritative) while non-default field *values* for dot1x carry a preview-confirm caveat (see `draft_notes`).
 
+### Fixed (validation-pass findings against the live conductor)
+- **`central:policy` emitted empty `policy-rule[]` for any inherited ACL (critical).** The rule-level preprocessing skipped every rule carrying `_flags.inherited`. Because effective-config marks *all* rules of an operator-authored ACL as inherited at any scope below its definition — the normal migration-preview case — this silently produced rule-less policies. Verified live: 87 authored ACLs at `/md/Campus/East` went from **0 → 174** translated rules after the fix. The transform now skips only genuinely `system` (built-in) rules, mirroring the 3.3.2.0 `server_group` member-inherited fix. Locked in with real-shape inherited-rule regression tests (the prior test had encoded the buggy "inherited rules are skipped" behavior).
+- **`central_translation_preview` reported `record_id: "<unknown>"` for net-groups.** The primary-key map was missing `central:net_group` (`dstname`); added it plus explicit entries for `central:aaa_profile` / `central:dot1x_auth` / `central:mac_auth`.
+
+Validation also re-previewed `central:net_group`, `central:vlan_id`, `central:named_vlan`, and `central:role` against the live tenant with no defects — entry classification (HOST/FQDN/NETWORK), VLAN-ID binding skips, alias chains, and role VLAN/bandwidth-contract mappings all confirmed faithful.
+
 ## [3.3.2.0] - 2026-06-06
 
 **Minor — AAA translation foundation (auth-server / server-group / captive-portal) + vendored Aruba OAS.** Adds the first three AOS 8 → Central AAA-chain translations, available via `central_translation_preview`, and vendors the source/target OpenAPI specs that ground them.
