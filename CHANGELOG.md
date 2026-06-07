@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.7.0] - 2026-06-07
+
+**Minor — aos-migration skill: target-architecture questionnaire (Stage 6.5).** Replaces the skill's "auto-derive everything, override later" model with an explicit post-verdict questionnaire, so the operator *decides* the target architecture rather than having it inferred-and-applied.
+
+- **New Stage 6.5 — Target-architecture questionnaire** (runs after the readiness verdict, on operator `yes`, before the translation plan): **Q1 per-SSID forward mode** (`Bridged` / `Tunneled` / `Bridged-and-Tunneled` / `Hybrid`) → `wlan_ssid` `target_mode`; **Q2 gateway topology** (only if any SSID survives on gateways) → `gateway_cluster` `cluster_strategy` (`intent_site` / `intent_site`+`intent_manual` / `ha_only`). Asked via `elicit()`, adaptive, pre-filled from Act I detection. The source says what *is*; the operator decides what they *want* (e.g. going controllerless).
+- **Detection stays as the recommendation engine.** Stage 2 now *detects* per-SSID `forward_mode` + the SSID→cluster map; Stage 7 Step 4's cluster-mode derivation becomes the Stage 6.5 default. Removed the "no configuration interview", "operator does not pick cluster mode", and "override when reviewing" framing throughout — those no longer reflect the flow.
+- **Stage 9b wiring** — new preview subsections for `central:gateway_cluster` (2f) and `central:wlan_ssid` (2g) that consume the Stage 6.5 decisions (`target_mode`, `cluster_strategy`, `gw_cluster_list`, bridge/tunnel scopes) into `central_translation_preview` calls.
+
+Skill-only change (no tool/code changes); 1685 tests pass.
+
 ## [3.3.6.0] - 2026-06-07
 
 **Minor — `central:wlan_ssid` dual-profile (`bridged_and_tunneled`) + essid alias.** Completes the per-SSID mode fork: the same SSID can now exist in **both** forward-modes at once across different locations (large campus tunneled, smaller sites bridged). Preview-only.

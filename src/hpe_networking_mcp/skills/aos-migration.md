@@ -35,17 +35,19 @@ description: |
   checklist). Act II only fires after a non-BLOCKED verdict and
   explicit operator confirmation.
 
-  One upfront question only — the data SOURCE. The skill first asks how
-  to obtain the AOS 8 config (Stage -2): (1) AOS 8 direct via API,
-  (2) configuration upload, or (3) pasted configuration snippet. That is a
-  delivery-mechanism choice, NOT a configuration interview. On the API
-  path the skill then detects AOS 8 reachability via health-probe, walks
-  the entire /md hierarchy for inventory, and derives every other input
-  (target SSID forwarding mode, cluster topology, AirWave presence,
-  L3 Mobility usage) from the collected config. The upload / paste paths
-  parse an offline config via aos8_parse_config (policy / role /
-  net-destination subset — see Stage -2 coverage note). Operator drives
-  changes interactively from the report.
+  One upfront question — the data SOURCE (Stage -2): (1) AOS 8 direct via
+  API, (2) configuration upload, or (3) pasted configuration snippet — a
+  delivery-mechanism choice. On the API path the skill then detects AOS 8
+  reachability via health-probe, walks the entire /md hierarchy for
+  inventory, and DETECTS the target-architecture signals (per-SSID
+  forward mode, SSID→cluster map, cluster topology, AirWave presence,
+  L3 Mobility usage) from the collected config. Those detections are
+  recommendations. After the readiness verdict, a target-architecture
+  questionnaire (Stage 6.5) presents them and the operator DECIDES the
+  per-SSID forward mode and gateway topology — the source says what is,
+  the operator says what they want (e.g. going controllerless). The
+  upload / paste paths parse an offline config via aos8_parse_config
+  (policy / role / net-destination subset — see Stage -2 coverage note).
 
   PoC — in-chat workflow for SE pre-engagement use; production
   migration cutovers follow the customer's standard change-management
@@ -89,7 +91,7 @@ The skill is NOT:
 
 - A **filter for "in use" config.** The customer's running config is the source of truth. Whether something is currently assigned, referenced, or actively serving traffic is **metadata** (`usage_state` column on disposition rows), not a basis for excluding it from the migration plan. Orphaned AAA server groups, unassigned captive portal profiles, AP system profiles configured but not bound to an AP group — all map and get translated.
 - A **legacy controller-plumbing validator.** Rules around LMS-IP, Backup-LMS-IP, AP Fast Failover that flag *"this internal AOS 8 controller-AP wiring is non-ideal"* do NOT fire as REGRESSION. AP-to-controller plumbing dissolves at migration — APs go to Central via TCP 443. These values still get **inventoried** so they can inform target HA mode recommendations, but they don't gate the verdict.
-- A **configuration interview.** The skill asks exactly one upfront question — the data *source* (Stage -2: API / upload / paste), a delivery-mechanism choice, not a config value. Beyond that there are no Stage-0 config questions. On the API path the skill detects AOS 8 reachability (Stage -1), walks the hierarchy (Stage 1), and derives every input it needs from the collected config — target SSID forwarding mode is auto-recommended from the source pattern, cluster topology comes from `aos8_get_cluster_state`, AOS 10 cluster-mode (`CM_SITE` / `CM_MANUAL`) is derived from AP adoption + multizone signals (Stage 7 Step 4), AirWave presence comes from config grep, L3 Mobility usage comes from effective-config. The operator can override any auto-derived value when reviewing the report.
+- An **upfront configuration interview.** Act I (Stages -1 through 6) asks **no** config questions — it's a read-only audit. The one upfront question is the data *source* (Stage -2: API / upload / paste), a delivery-mechanism choice. The skill walks the hierarchy and **detects** every target-architecture signal from the source (per-SSID `forward-mode`, the SSID→cluster map, cluster-mode signals from AP-adoption + multizone, AirWave presence, L3 Mobility usage). Those detections become **recommendations**, not silent decisions: after the readiness verdict, the **target-architecture questionnaire (Stage 6.5)** presents them per SSID and the operator confirms or changes them (forward mode per SSID, gateway topology). The source says what *is*; the operator decides what they *want* (e.g. going controllerless) — so the architecture decisions are an explicit post-verdict questionnaire, never inferred-and-applied.
 - A **migration executor.** Never calls `central_manage_*` write tools. Plan only; Phase 3 (issue #240) is the execution capability.
 - A **rollback engine.** Rollback is captured as text in the cutover stage; not auto-generated as reversible API calls.
 - A **gap-filler for missing Central write tools.** Three known gaps (AAA RADIUS/TACACS server, AAA server-group, AP system profile) get `[Central API gap — manual UI action required]` placeholders. No invented tool names.
@@ -110,22 +112,24 @@ The skill's job is to prove the in-chat workflow produces credible readiness fin
 
 **Act I (Stages -1 through 6) — readiness audit.** Runs in full on the **API path** (Stage -1 → Stage 1). On the **upload / paste paths** it runs in reduced form against the offline-parsed subset (Stage 1-ALT replaces Stage -1 + Stage 1; object classes the parser doesn't cover are marked `inconclusive — offline source`). Ends with a verdict + combined report.
 
-**Gate — operator confirmation.** After Stage 6, the AI emits the verdict report THEN literally prints the prompt: *"Verdict: <V>. Proceed to AOS 10 translation plan? (yes / no / edit-context)"* and stops. No Act II execution without operator `yes`.
+**Gate — operator confirmation.** After Stage 6, the AI emits the verdict report (stating whether the devices are Central-ready) THEN literally prints the prompt: *"Verdict: <V>. Proceed to AOS 10 translation plan? (yes / no / edit-context)"* and stops. No Act II execution without operator `yes`.
 
 - If verdict is **BLOCKED**, the gate does not appear. The report ends with *"Translation locked until REGRESSIONs are resolved. Re-run the audit after fixes."*
 - If verdict is **PARTIAL**, the gate appears but warns which translation rows will be marked `inconclusive` (any object class where Stage 1 collection failed).
 - If verdict is **GO**, the gate appears with no caveat.
 
-**Act II (Stages 7 through 10) — translation plan.** Only fires on operator `yes` after a non-BLOCKED verdict. Reuses everything Act I already collected; no re-fetching, no second operator paste. Output is the **plan** (disposition matrix + ordered API call sequence + validation checklist), not executed `central_manage_*` writes.
+**Stage 6.5 — Target-architecture questionnaire.** On operator `yes`, BEFORE the translation plan, run the questionnaire (Stage 6.5): the per-SSID forward-mode decision + the gateway-topology decision, pre-filled from Act I detection. This is where the operator decides what they *want* (the source only told us what *is*). The answers populate the Act II `runtime_values`. See Stage 6.5.
+
+**Act II (Stages 7 through 10) — translation plan.** Fires after Stage 6.5. Reuses everything Act I already collected; no re-fetching, no second operator paste. Output is the **plan** (disposition matrix + ordered API call sequence + validation checklist), not executed `central_manage_*` writes.
 
 If the operator answers `no`, end the session with the Act I report unchanged.
-If the operator answers `edit-context` (e.g. "actually we're doing Bridge Mode not Tunnel"), update the corresponding Stage 0 / Stage 1 context fields, re-run Stage 3 + Stage 6 to re-verdict, and re-emit the gate prompt.
+If the operator answers `edit-context` (e.g. "actually our readiness inputs are wrong"), update the corresponding Stage 1 context fields, re-run Stage 3 + Stage 6 to re-verdict, and re-emit the gate prompt. (Forward-mode / topology *target* choices are made in Stage 6.5, not here — `edit-context` is for correcting detected source facts that change the verdict.)
 
 ---
 
 ### Stage -2 — Data source selection (SOURCE-00) — ALWAYS FIRST
 
-This is the skill's only upfront question. It chooses the *delivery mechanism* for the AOS 8 config — it is NOT a configuration interview (every config-derived input is still auto-derived downstream). Present exactly these three options and STOP for the operator's choice:
+This is the skill's only *upfront* question — it chooses the *delivery mechanism* for the AOS 8 config, not a config value. (The architecture decisions come later, in the Stage 6.5 questionnaire, after the readiness verdict.) Present exactly these three options and STOP for the operator's choice:
 
 ```
 How should I pull the AOS 8 configuration?
@@ -177,15 +181,16 @@ AOS 8 not configured on this MCP server. This skill covers AOS 8 → AOS 10 migr
 
 No further stages run.
 
-### Stage 0 — (deleted)
+### Stage 0 — (deleted; no upfront config interview)
 
-There is no *configuration* interview — the one upfront question (Stage -2) selects the data source, not config values. Every config input the skill needs is derived from collected config:
+Act I asks **no** config questions — the one upfront question (Stage -2) selects the data source, not config values. Act I **detects** the target-architecture signals from the source so the audit can run and so the **Stage 6.5 questionnaire** (after the readiness verdict) has informed defaults. Detection ≠ decision: the operator confirms or changes the architecture in Stage 6.5.
 
-- **Target SSID forwarding mode** — auto-recommended by Stage 3 from the source pattern (tunneled VAPs → recommend Tunnel; bridge VAPs → recommend Bridge; mixed → recommend Mixed). Operator can override when reviewing the report.
-- **Cluster topology** — pulled from `aos8_get_cluster_state` (Batch 3) plus cluster-profile config (Batch 1).
+- **Per-SSID forward mode (detected)** — Stage 2 reads each `virtual_ap.forward_mode` (`tunnel` / `bridge` / `split-tunnel` / `decrypt-tunnel`) and recommends a per-SSID AOS 10 target (`tunnel`+`decrypt-tunnel`→Tunnel, `bridge`→Bridge, `split-tunnel`→Hybrid). This is a **recommendation that pre-fills the Stage 6.5 per-SSID question** — the operator decides the actual target (and may go controllerless / change any SSID).
+- **SSID→cluster map (detected)** — which cluster each SSID's ap-group anchors to; same essid spanning clusters / same-ap-group-to-different-clusters flags a DMZ pattern. Feeds the Stage 6.5 gateway-topology question.
+- **Cluster topology** — `aos8_get_cluster_state` (Batch 3) + cluster-profile config (Batch 1). Cluster-mode signals (AP-adoption + multizone, Stage 7 Step 4) become the Stage 6.5 recommendation.
 - **AirWave presence** — detected from effective-config (`mgmt-server`, `ams-ip`, AMP profile entries).
 - **L3 Mobility usage** — detected from effective-config (`mobility l3-mobility` lines).
-- **HA mode mapping** — derived from cluster topology.
+- **HA mode mapping** — recommended from cluster topology; confirmed in Stage 6.5.
 
 ### Stage 1 — Live AOS 8 inventory across the full /md hierarchy (COLLECT-01..04)
 
@@ -372,7 +377,7 @@ Seed the Stage 2 `inventory` with what was parsed and mark everything else incon
 
 Then skip to **Stage 3**. Applicability gates there naturally suppress the rules whose data is missing — most feature-parity / orchestration rules will not fire on the offline subset. The Act II translation (Stages 7-10) runs for the parsed object classes (policy / role / net_group); rows for unparsed classes are marked `inconclusive — offline source / API or paste required`.
 
-### Stage 2 — Parse the live-collected inventory + auto-derive interview-equivalent inputs
+### Stage 2 — Parse the live-collected inventory + detect target-architecture signals
 
 Stage 1 collected raw API responses across the full hierarchy. Stage 2 normalizes those responses into a structured inventory and derives the inputs the old skill used to ask the operator for. **API path only** — the upload / paste paths populate `inventory` from the offline parse in Stage 1-ALT instead and skip the normalization below.
 
@@ -414,21 +419,22 @@ inventory = {
 
 Each entry tagged with `source_scope` (which `/md/...` node defined it). The same logical object (e.g. an `ssid_prof` named "CorpNet") may appear at multiple scopes — preserve all instances; do not dedupe.
 
-#### Auto-derive inputs (replaces deleted Stage 0 interview)
+#### Detect target-architecture signals (feeds Stage 3 rules + pre-fills the Stage 6.5 questionnaire)
 
-The old skill asked the operator 7 questions before proceeding. With the live inventory in hand, derive every one of them:
+With the live inventory in hand, detect the signals the audit rules need and that the post-verdict questionnaire will present for operator decision. **These are recommendations, not applied decisions** — the operator confirms/changes them in Stage 6.5.
 
-| Input | Derive from |
+| Signal | Detect from |
 |---|---|
 | **Source platform** | Always `aos8` — the skill's only supported source |
-| **Target SSID forwarding mode** (`tunnel` / `bridge` / `mixed`) | Inspect `forward-mode` in `virtual_ap` rows. All `tunnel` → recommend Tunnel. All `bridge` → recommend Bridge. Mix → recommend Mixed. The recommendation appears in the report; operator can override at any time. |
-| **AirWave in path** | Look in `running_config` for `mgmt-server` / `ams-ip` / `mobility-manager` lines. Present → emit DRIFT finding. |
-| **Cluster topology** (L2 / L3 / standalone) | Inspect `cluster_prof` + `group_membership` rows. `controller-l2-only` flag → L2; cross-VLAN members → L3; no cluster profiles → standalone. **Default L2** when ambiguous (per project guidance: L3 is rare). |
-| **L3 Mobility usage** | Look in `running_config` for `mobility l3-mobility` lines. |
-| **HA mode mapping recommendation** | Cluster-topology-derived: L2 cluster → recommend Auto Group; L2 cluster + LMS pattern → recommend Auto Site; standalone → recommend Manual. |
-| **AP-group → forwarding-mode mapping** | Per `virtual_ap` row's `forward-mode`, grouped by `ap-group` reference. Drives mixed-mode finding granularity. |
+| **Per-SSID forward mode (recommendation)** | Read `forward_mode` on each `virtual_ap` (`tunnel` / `bridge` / `split-tunnel` / `decrypt-tunnel`; absent = `tunnel` default). Recommend the AOS 10 target per SSID: `tunnel`+`decrypt-tunnel`→Tunnel, `bridge`→Bridge, `split-tunnel`→Hybrid. **Pre-fills the Stage 6.5 per-SSID question.** |
+| **SSID → cluster map** | For each `virtual_ap`, the cluster its ap-group anchors to (via ap-system-profile / cluster membership). Same essid across clusters, or one ap-group's SSIDs anchoring to different clusters → **DMZ pattern** flag. Feeds the Stage 6.5 gateway-topology question. |
+| **Aggregate forward-mode mode** (`tunnel` / `bridge` / `mixed`) | All SSIDs tunnel → tunnel; all bridge → bridge; mix → mixed. Drives the Stage 3 per-target-mode rule gates (the rules still run on the *recommended* mode pre-questionnaire). |
+| **AirWave in path** | `running_config` `mgmt-server` / `ams-ip` / `mobility-manager` lines. Present → DRIFT finding. |
+| **Cluster topology** (L2 / L3 / standalone) | `cluster_prof` + `group_membership`. `controller-l2-only` → L2; cross-VLAN members → L3; none → standalone. **Default L2** when ambiguous. |
+| **L3 Mobility usage** | `running_config` `mobility l3-mobility` lines. |
+| **Cluster-strategy recommendation** | From the SSID→cluster map + AP-adoption/multizone (Stage 7 Step 4): no DMZ → `intent_site`@global; campus + DMZ → `intent_site`(campus) + `intent_manual`(DMZ); DMZ-only/few → `ha_only`. Pre-fills the Stage 6.5 gateway-topology question. |
 
-These derivations feed Stage 3 rules. The **report** explicitly shows the derived value and how it was derived (e.g. *"Target SSID forwarding mode: Tunnel (auto-recommended — 4 of 4 virtual_ap rows have forward-mode=tunnel)"*) so the operator can override with confidence.
+These detections feed Stage 3 rules (which run against the *recommended* target mode) and pre-fill Stage 6.5. The **report** shows each detected value + how it was derived (e.g. *"SSID `CORP`: tunnel today (forward-mode=tunnel) → recommend Tunnel"*) so the operator decides Stage 6.5 with full context.
 
 #### Cluster-offline tolerance
 
@@ -633,11 +639,53 @@ After emitting the Stage 6 readiness report, decide:
 - **Verdict = GO** — emit the literal prompt: *"Verdict: GO. Proceed to AOS 10 translation plan? (yes / no / edit-context)"* and stop. Wait for the operator's reply.
 - **Verdict = PARTIAL** — emit the literal prompt: *"Verdict: PARTIAL — <N> Stage-1 collection items were inconclusive. Translation rows for those object classes will be marked `inconclusive — paste required`. Proceed to AOS 10 translation plan? (yes / no / edit-context)"* and stop. Wait for the operator's reply.
 
-On `yes` → proceed to Stage 7.
+On `yes` → proceed to **Stage 6.5** (the target-architecture questionnaire), then Stage 7.
 On `no` → end the session with the Act I report unchanged.
-On `edit-context` → operator names which Stage 0 / Stage 1 field(s) to update, the AI updates the audit context, re-runs Stage 3 + Stage 6, re-emits the Act I report, and re-emits the gate prompt. (This is how the operator changes target mode mid-session, for example.)
+On `edit-context` → operator names which detected Stage 1 source fact to correct (one that changes the verdict), the AI updates the audit context, re-runs Stage 3 + Stage 6, re-emits the Act I report, and re-emits the gate prompt. Target-architecture *choices* (forward mode, topology) are NOT made here — they're the Stage 6.5 questionnaire.
 
-Do NOT run Stages 7-10 silently or pre-emptively.
+Do NOT run Stage 6.5 or Stages 7-10 silently or pre-emptively.
+
+---
+
+### Stage 6.5 — Target-architecture questionnaire (DECIDE-01)
+
+Runs only after the operator answers `yes` at the gate (non-BLOCKED verdict). This is the skill's one configuration interview, and it is deliberately **after** the readiness verdict: the operator first learns whether the devices are Central-ready, then decides the target architecture. Detection (Stage 2 / Stage 7 Step 4) supplies the **defaults**; the operator confirms or changes each. Ask via `elicit()` (the same mechanism as the Stage -2 data-source question). Keep it adaptive — only ask what's relevant.
+
+**Question 1 — per-SSID forward mode (always).** For each translatable `virtual_ap` (SSID), present the detected current mode + the recommended AOS 10 target, and ask the operator to pick one of:
+
+| Option | Meaning | Drives `wlan_ssid` `target_mode` |
+|---|---|---|
+| **Bridged** | AP local breakout; no gateway | `bridged` |
+| **Tunneled** | gateway-terminated | `tunneled` |
+| **Bridged and Tunneled** | the same SSID in BOTH modes across locations (campus tunneled, branches bridged) → essid alias + two profiles | `bridged_and_tunneled` (also ask the bridge-vs-tunnel **scope split** — detected default, operator adjusts → `bridge_scope_id` / `tunnel_scope_id`) |
+| **Hybrid** | split-tunnel (one SSID, corporate tunneled + Internet local) | `hybrid` |
+
+Pre-fill the recommendation from the detected `forward_mode` (`tunnel`/`decrypt-tunnel`→Tunneled, `bridge`→Bridged, `split-tunnel`→Hybrid). The operator may pick anything — e.g. flipping every SSID to **Bridged** to go controllerless. The source tells us what *is*; the operator decides what they *want*.
+
+**Question 2 — gateway topology (only if any SSID is Tunneled / Hybrid / Bridged-and-Tunneled).** Skip entirely if every SSID is Bridged (no gateways survive → no clustering). Otherwise present the detected topology (from the SSID→cluster map + Stage 7 Step 4) and ask:
+
+| Option | `gateway_cluster` `cluster_strategy` | Scope |
+|---|---|---|
+| **Campus gateways, no DMZ clusters** | `intent_site` | global / site / site-collection |
+| **Campus gateways + DMZ clusters** | `intent_site` (campus) **and** `intent_manual` (DMZ) | site/site-collection + device-group |
+| **DMZ controllers only (few)** | `ha_only` | device-group |
+
+Default the selection to the detected pattern (same-ap-group-to-different-clusters → "campus + DMZ"; single regional cluster → "no DMZ"; few/DMZ-only → "DMZ only"). Per cluster, the strategy + scope feed `central:gateway_cluster`.
+
+**Outputs → Act II `runtime_values`.** Record the answers and pass them into every Stage 9b `central_translation_preview` call:
+
+```
+decisions = {
+  "per_ssid": { "<vap-name>": {"target_mode": "...",       # Q1
+                               "gw_cluster_list": [...],   # which cluster(s) this SSID tunnels to (from the SSID→cluster map)
+                               "bridge_scope_id": "...",   # dual only
+                               "tunnel_scope_id": "..."},  # dual only
+                ... },
+  "per_cluster": { "<cluster-name>": {"cluster_strategy": "...", "central_scope_id": "..."} },  # Q2
+}
+```
+
+If verdict was EMPTY-SOURCE (no SSIDs/clusters), skip Stage 6.5 — there's nothing to decide — and proceed to Stage 7 for whatever defaults exist.
 
 ---
 
@@ -681,9 +729,9 @@ The Device Function travels with the device into Central; profiles assigned at a
 | Geographic / cardinal noun (`East`, `West`, `Dallas`, three-letter region codes) at leaf or near-leaf | Site | high | naming heuristic for true sites |
 | No matching signal | Device Group (default fallback) | low | operator review required |
 
-**Step 4 — Cluster mode derivation (data-driven, no operator-confirm):**
+**Step 4 — Cluster mode derivation (detection → Stage 6.5 recommendation):**
 
-AOS 8 has no `cluster-mode` knob. The AOS 10 cluster-mode (`CM_SITE` / `CM_MANUAL`) is derived from three Stage 1 signals already in `config_by_scope`:
+AOS 8 has no `cluster-mode` knob. The AOS 10 cluster-mode (`CM_SITE` / `CM_MANUAL`) is **derived** from three Stage 1 signals to produce the per-cluster *recommendation* that pre-fills the Stage 6.5 gateway-topology question — the operator confirms or overrides it there (CM_SITE primary-zone + CM_MANUAL DMZ-anchor together = the "campus + DMZ" topology option). Signals, all already in `config_by_scope`:
 
 1. `cluster_prof.cluster_controller[].ip` — cluster member IPs (from COLLECT-01). **Use the `ip` field, NOT `vrrp_ip`** — AP `Switch IP` / `Standby IP` is the per-controller management address (matches `cluster_controller[].ip`); `vrrp_ip` is the VRRP virtual address and never appears as an AP's adoption target. Live-verified against AOS 8.13 cluster_prof — see [issue #270](https://github.com/nowireless4u/hpe-networking-mcp/issues/270).
 2. `ap_database.Switch IP` and `ap_database.Standby IP` — each AP's adoption controller (from COLLECT-02)
@@ -1229,6 +1277,62 @@ result
 
 **Note on `netsvc` (AOS 8 service aliases).** AOS 8 `acl_sess` rules may reference custom service aliases via `service-name` plus the AOS 8 `netsvc` schema. `central:net_service` is **deferred** to a future release pending live shape verification — Central rejects policy POSTs that reference unknown service aliases. If preview surfaces policy rules using non-`svc-*` service names (`svc-http` / `svc-https` / etc. come from Central's built-in catalog and work today), surface those in Translation gaps under "Service aliases pending translation" so the operator knows to pre-populate Central or wait for the translation to ship.
 
+##### 2f — Gateway clusters (`central:gateway_cluster`) — consumes Stage 6.5 Q2
+
+Only when at least one SSID is Tunneled / Hybrid / Bridged-and-Tunneled (otherwise skip — no gateways). For each source `cluster_prof`, pass the `cluster_strategy` the operator chose in Stage 6.5 (`decisions["per_cluster"][<name>]`).
+
+```python
+cluster_records = [
+    c for c in stage1_cluster_prof_records
+    if not (c.get("_flags") or {}).get("system") and not (c.get("_flags") or {}).get("default")
+]
+cluster_previews = []
+for c in cluster_records:
+    dec = decisions["per_cluster"].get(c["profile-name"], {})   # from Stage 6.5
+    response = await call_tool(
+        "central_translation_preview",
+        {
+            "translation_id": "central:gateway_cluster",
+            "source_records": [c],
+            "runtime_values": {
+                "central_scope_id": dec.get("central_scope_id", scope_lookup["Global"]),
+                "cluster_strategy": dec["cluster_strategy"],   # ha_only / intent_site / intent_manual
+            },
+        },
+    )
+    cluster_previews.append(response.get("data", response))
+```
+
+##### 2g — WLAN SSIDs (`central:wlan_ssid`) — consumes Stage 6.5 Q1
+
+One source record = one `virtual_ap`; pass the FULL `ssid_prof` list via `runtime_values["ssid_profiles"]` (the engine joins by name). Per SSID, pass the operator's `target_mode` (Stage 6.5 Q1) + the `gw_cluster_list` it binds to (from the SSID→cluster map); for `bridged_and_tunneled`, also `bridge_scope_id` + `tunnel_scope_id`.
+
+```python
+vap_records = [
+    v for v in stage1_virtual_ap_records
+    if not (v.get("_flags") or {}).get("system") and not (v.get("_flags") or {}).get("default")
+]
+ssid_previews = []
+for v in vap_records:
+    dec = decisions["per_ssid"].get(v["profile-name"], {})   # from Stage 6.5
+    rt = {
+        "central_scope_id": scope_lookup["Global"],   # or the Stage-7 AP scope
+        "target_mode": dec["target_mode"],            # bridged / tunneled / hybrid / bridged_and_tunneled
+        "ssid_profiles": stage1_ssid_prof_records,    # full list — engine joins by name
+        "gw_cluster_list": dec.get("gw_cluster_list", []),
+    }
+    if dec["target_mode"] == "bridged_and_tunneled":
+        rt["bridge_scope_id"] = dec["bridge_scope_id"]
+        rt["tunnel_scope_id"] = dec["tunnel_scope_id"]
+    response = await call_tool(
+        "central_translation_preview",
+        {"translation_id": "central:wlan_ssid", "source_records": [v], "runtime_values": rt},
+    )
+    ssid_previews.append(response.get("data", response))
+```
+
+Surface each SSID's emitted calls (the wlan-ssids profile(s) + any overlay-wlan binding) in the consolidated report; a `skip_reason` here is a Stage 6.5 input gap (e.g. dual mode missing a scope) — surface it verbatim.
+
 #### Step 3 — Render the consolidated preview report
 
 Combine the five `result` dicts from Step 2 into a single operator-facing report. The report has THREE parts: (a) summary table, (b) per-record detail tables, (c) **sample TargetCall bodies** as JSON code blocks. Operators reviewing the migration need (c) — the actual JSON the migration will POST — not just counts.
@@ -1426,9 +1530,9 @@ If you believe a different format would be more legible, the answer is no — th
 
 ## AOS 8 → AOS 10 migration audit
 **Captured:** <ISO timestamp>
-**Target SSID forwarding mode (auto-recommended):** <tunnel | bridge | mixed> — derived from <X virtual_ap rows: forward-mode breakdown>. Operator can override.
+**Per-SSID forward mode (detected → decided in Stage 6.5):** <per-SSID forward-mode breakdown from the virtual_ap rows>. These are the recommendations the operator confirms/changes in the Stage 6.5 questionnaire.
 **Cluster topology (auto-detected):** <L2 cluster <name> at <scope> | L3 cluster | standalone | offline-at-audit-time>
-**Target HA mode (auto-recommended):** <Auto Group | Auto Site | Manual> — derived from cluster topology
+**Target HA mode (recommended → confirmed in Stage 6.5):** <Auto Group | Auto Site | Manual> — derived from cluster topology
 **L3 Mobility detected in source:** <yes / no>
 **AirWave detected in source:** <yes / no>
 **Verdict:** GO / BLOCKED / PARTIAL / EMPTY-SOURCE
@@ -1458,7 +1562,7 @@ If you believe a different format would be more legible, the answer is no — th
 
 ### Suggested AOS 10 hierarchy mapping (operator-confirmable draft)
 
-The skill produces a draft inference per `/md/<path>` Group node using naming heuristics, structural signals, Device-Function cross-reference, and **data-driven cluster-mode derivation** (see Stage 7 rules). Rows marked `medium` or `low` confidence may need operator review for placement / target-name corrections, but cluster mode itself is auto-derived — the operator does not pick `CM_SITE` vs `CM_MANUAL`.
+The skill produces a draft inference per `/md/<path>` Group node using naming heuristics, structural signals, Device-Function cross-reference, and **cluster-mode derivation** (see Stage 7 rules). Rows marked `medium` or `low` confidence may need operator review for placement / target-name corrections. The derived cluster mode is the **recommendation** shown in the Stage 6.5 gateway-topology question — the operator confirms it or overrides the topology there.
 
 | Source AOS node | Inferred placement | Inferred Device Function | Confidence | Cluster mode (derived) | Reason | Operator action |
 |---|---|---|---|---|---|---|
@@ -1471,7 +1575,7 @@ The skill produces a draft inference per `/md/<path>` Group node using naming he
 - `MICROBRANCH_AP` / `CAMPUS_AP` — wireless AP Device Functions.
 - (out of scope) `ACCESS_SWITCH`, `AGG_SWITCH`, `CORE_SWITCH`, `BRIDGE`, `HYBRID_NAC` — flagged as wired/NAC migration not in this skill's scope; not translated.
 
-**Cluster mode column (auto-derived):** every row's cluster mode is computed by the Stage 7 algorithm from `ap_database.Switch IP` / `Standby IP` matching against `cluster_prof.cluster_controller[].ip`, with multizone enrichment from `ap_multizone_prof.controller[].ip`. **Operator does NOT pick the cluster mode** — it's a function of the source data. `CM_SITE` = primary zone (APs adopted to this cluster). `CM_MANUAL` = no APs adopted (multizone anchor or DMZ/unused). Operator only confirms the AOS 10 *target name* and overrides placement classification when the heuristic is wrong (e.g. plural-noun rule misfires).
+**Cluster mode column (detected default):** every row's cluster mode is computed by the Stage 7 algorithm from `ap_database.Switch IP` / `Standby IP` matching against `cluster_prof.cluster_controller[].ip`, with multizone enrichment from `ap_multizone_prof.controller[].ip`. `CM_SITE` = primary zone (APs adopted to this cluster). `CM_MANUAL` = no APs adopted (multizone anchor or DMZ/unused). This is the **recommendation**; the operator confirms or overrides the gateway topology in the Stage 6.5 questionnaire (and confirms the AOS 10 *target name* / placement classification when a heuristic misfires).
 
 ### REGRESSION findings (must fix before migration)
 Findings only fire when their applicability gate is met (see Stage 3). Possible REGRESSIONs include:
@@ -1512,7 +1616,7 @@ Findings only fire when their applicability gate is met (see Stage 3). Possible 
 - **Active client baseline**: <N> total, breakdown per SSID — for post-cutover diff (or "live-state inconclusive — clusters offline at audit time").
 - **AP RF baseline**: channel, TX power, client count per AP — for post-cutover comparison.
 - **Cluster topology** (auto-detected): <L2 cluster / L3 cluster / standalone / offline> at scope <X> → recommended target HA mode <Y>.
-- **Cluster mode classification** (auto-derived per Stage 7 Step 4): <one bullet per source `cluster_prof`, e.g. "`<cluster-name>` at `<scope>` → CM_SITE (primary zone for N APs)" or "`<cluster-name>` at `<scope>` → CM_MANUAL (multizone anchor for AP-group `<X>`)" or "`<cluster-name>` at `<scope>` → CM_MANUAL (active cluster, no APs adopted)">.
+- **Cluster mode classification** (detected per Stage 7 Step 4; confirmed in Stage 6.5): <one bullet per source `cluster_prof`, e.g. "`<cluster-name>` at `<scope>` → CM_SITE (primary zone for N APs)" or "`<cluster-name>` at `<scope>` → CM_MANUAL (multizone anchor for AP-group `<X>`)" or "`<cluster-name>` at `<scope>` → CM_MANUAL (active cluster, no APs adopted)">.
 - **External multizone target**: AP-group `<X>` multizone profile `<Y>` references `<ip>` — not in any source `cluster_prof`, not managed by this conductor. External standalone controller; migrates to a single Central gateway, not a `gw-cluster`. Operator confirms placement. (One bullet per external IP; emit nothing when the multizone target is in `cluster_prof` member list or in the conductor's own `aos8_get_controllers` list.)
 - **Central name collisions** (translation enrichment): <N> collisions detected; full per-row detail appears in Act II disposition matrix.
 - **Central-recommended firmware** for the AP models in inventory: <model → version table>.
