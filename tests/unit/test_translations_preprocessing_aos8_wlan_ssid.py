@@ -96,9 +96,39 @@ def test_gw_cluster_list_passthrough() -> None:
     assert out["_gw_cluster_list"] == gw
 
 
-def test_deferred_dual_mode_raises() -> None:
-    with pytest.raises(ValueError, match="bridged_and_tunneled"):
-        preprocess_wlan_ssid(_vap(), _rt("bridged_and_tunneled"))
+def _dual_rt(**extra) -> dict:
+    return {
+        "central_scope_id": "S",
+        "target_mode": "bridged_and_tunneled",
+        "ssid_profiles": _ssids(),
+        "bridge_scope_id": "BRANCH",
+        "tunnel_scope_id": "CAMPUS",
+        **extra,
+    }
+
+
+def test_dual_mode_alias_and_profiles() -> None:
+    out = preprocess_wlan_ssid(_vap(), _dual_rt())
+    assert out["_emit_dual"] is True
+    assert "_emit_single" not in out
+    # ESSID alias shared by both profiles
+    assert out["_essid_alias"] == "CORP-WIFI"
+    assert out["_essid_obj_alias"] == {"use-alias": True, "alias": "CORP-WIFI"}
+    # distinct per-mode profile names
+    assert out["_name_bridge"] == "corp-vap-bridge"
+    assert out["_name_tunnel"] == "corp-vap-tunnel"
+    # no single-profile artifacts
+    assert "_forward_mode" not in out and "_essid_obj" not in out and "_needs_overlay" not in out
+
+
+def test_dual_mode_requires_both_scopes() -> None:
+    with pytest.raises(ValueError, match="bridge_scope_id"):
+        preprocess_wlan_ssid(_vap(), {**_dual_rt(), "bridge_scope_id": ""})
+    with pytest.raises(ValueError, match="tunnel_scope_id|bridge_scope_id"):
+        preprocess_wlan_ssid(
+            _vap(),
+            {"central_scope_id": "S", "target_mode": "bridged_and_tunneled", "ssid_profiles": _ssids()},
+        )
 
 
 def test_invalid_target_mode_raises() -> None:

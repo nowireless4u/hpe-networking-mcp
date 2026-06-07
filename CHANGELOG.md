@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.6.0] - 2026-06-07
+
+**Minor — `central:wlan_ssid` dual-profile (`bridged_and_tunneled`) + essid alias.** Completes the per-SSID mode fork: the same SSID can now exist in **both** forward-modes at once across different locations (large campus tunneled, smaller sites bridged). Preview-only.
+
+- **`bridged_and_tunneled` target mode** — emits an **ESSID alias** (`/aliases`, `type: ALIAS_ESSID`, SHARED) plus **two `wlan-ssids` profiles** that reference it (`{name}-bridge` @ `bridge_scope_id` with `FORWARD_MODE_BRIDGE`, `{name}-tunnel` @ `tunnel_scope_id` with `FORWARD_MODE_L2`), plus the tunnel variant's `overlay-wlan` cluster binding (`use-essid-alias: true`). Requires `runtime_values` `bridge_scope_id` + `tunnel_scope_id` (the per-location split). Live-validated: one source SSID → 4 calls (alias + bridge + tunnel + overlay), both profiles sharing the `{use-alias: true, alias: <essid>}` reference.
+- The single-profile modes (`bridged` / `tunneled` / `hybrid`) are unchanged; the four `emit_when`-gated branches (single profile, single overlay, the dual set) keep each mode's output clean.
+
 ## [3.3.5.0] - 2026-06-07
 
 **Minor — `central:wlan_ssid` (v1) — the SSID translation + cluster binding.** The piece that turns the AAA + cluster work into actual broadcast SSIDs. Preview-only via `central_translation_preview`.

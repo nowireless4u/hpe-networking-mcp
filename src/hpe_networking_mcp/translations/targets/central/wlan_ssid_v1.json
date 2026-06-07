@@ -6,8 +6,25 @@
   "target_emits": [
     {
       "step":     1,
+      "name":     "create_essid_alias",
+      "purpose":  "Dual-mode only (bridged_and_tunneled): create the ESSID alias both the bridge + tunnel profiles reference, so one logical SSID exists in two forward-modes without an essid collision. Created SHARED so it's referenceable from both scopes.",
+      "endpoint": "/network-config/v1alpha1/aliases/{essid_alias}",
+      "method":   "POST",
+      "query_params": { "object-type": "SHARED" },
+      "body": {
+        "name":          "{essid_alias}",
+        "type":          "ALIAS_ESSID",
+        "default-value": "{essid}"
+      },
+      "emit_when": { "context_truthy": "emit_dual" },
+      "iteration": "once",
+      "iteration_notes": "One alias per dual-mode SSID.",
+      "depends_on": []
+    },
+    {
+      "step":     2,
       "name":     "create_wlan_ssid",
-      "purpose":  "Create the Central wlan-ssids profile — the flat SSID object merging the AOS 8 virtual_ap (forward-mode, vlan) + its ssid_prof (essid, opmode). Created LOCAL at the target scope on the AP device-function. forward-mode is the operator's target decision (runtime target_mode), not a copy of the source.",
+      "purpose":  "Single-mode (bridged / tunneled / hybrid): the one flat wlan-ssids profile merging virtual_ap (forward-mode, vlan) + ssid_prof (essid, opmode). Created LOCAL at the AP scope. forward-mode is the operator's target decision.",
       "endpoint": "/network-config/v1alpha1/wlan-ssids/{name}",
       "method":   "POST",
       "query_params": {
@@ -24,14 +41,65 @@
         "vlan-name":     "{vlan_name}",
         "vlan-id-range": "{vlan_id_range}"
       },
+      "emit_when": { "context_truthy": "emit_single" },
       "iteration": "once",
-      "iteration_notes": "One POST per source virtual_ap record.",
+      "iteration_notes": "One POST per single-mode virtual_ap.",
       "depends_on": []
     },
     {
-      "step":     2,
+      "step":     3,
+      "name":     "create_wlan_bridge",
+      "purpose":  "Dual-mode: the BRIDGE variant of the SSID (FORWARD_MODE_BRIDGE), referencing the ESSID alias, created LOCAL at the bridge scope (e.g. the smaller/branch sites).",
+      "endpoint": "/network-config/v1alpha1/wlan-ssids/{name_bridge}",
+      "method":   "POST",
+      "query_params": {
+        "object-type":     "LOCAL",
+        "scope-id":        "{bridge_scope_id}",
+        "device-function": "CAMPUS_AP"
+      },
+      "body": {
+        "name":          "{name_bridge}",
+        "essid":         "{essid_obj_alias}",
+        "opmode":        "{opmode}",
+        "forward-mode":  "FORWARD_MODE_BRIDGE",
+        "vlan-selector": "{vlan_selector}",
+        "vlan-name":     "{vlan_name}",
+        "vlan-id-range": "{vlan_id_range}"
+      },
+      "emit_when": { "context_truthy": "emit_dual" },
+      "iteration": "once",
+      "iteration_notes": "One POST for the bridge variant.",
+      "depends_on": [1]
+    },
+    {
+      "step":     4,
+      "name":     "create_wlan_tunnel",
+      "purpose":  "Dual-mode: the TUNNEL variant of the SSID (FORWARD_MODE_L2), referencing the ESSID alias, created LOCAL at the tunnel scope (e.g. the large campus).",
+      "endpoint": "/network-config/v1alpha1/wlan-ssids/{name_tunnel}",
+      "method":   "POST",
+      "query_params": {
+        "object-type":     "LOCAL",
+        "scope-id":        "{tunnel_scope_id}",
+        "device-function": "CAMPUS_AP"
+      },
+      "body": {
+        "name":          "{name_tunnel}",
+        "essid":         "{essid_obj_alias}",
+        "opmode":        "{opmode}",
+        "forward-mode":  "FORWARD_MODE_L2",
+        "vlan-selector": "{vlan_selector}",
+        "vlan-name":     "{vlan_name}",
+        "vlan-id-range": "{vlan_id_range}"
+      },
+      "emit_when": { "context_truthy": "emit_dual" },
+      "iteration": "once",
+      "iteration_notes": "One POST for the tunnel variant.",
+      "depends_on": [1]
+    },
+    {
+      "step":     5,
       "name":     "create_overlay_wlan",
-      "purpose":  "Bind a tunneled / hybrid SSID to its gateway cluster(s) via the overlay-wlan object. Gated by emit_when: fires only for tunneled / hybrid target modes (skipped for bridged). gw-cluster-list (which clusters + scope-ids + tunnel-type) is supplied by the skill from detection / operator; an SSID may bind to multiple clusters.",
+      "purpose":  "Single-mode tunneled/hybrid: bind the SSID to its gateway cluster(s) via overlay-wlan (literal essid-name). gw-cluster-list (which clusters + scope-ids + tunnel-type) is supplied by the skill; an SSID may bind to multiple clusters.",
       "endpoint": "/network-config/v1alpha1/overlay-wlan/{name}",
       "method":   "POST",
       "query_params": {
@@ -48,8 +116,31 @@
       },
       "emit_when": { "context_truthy": "needs_overlay" },
       "iteration": "once",
-      "iteration_notes": "One POST when target_mode is tunneled / hybrid; suppressed for bridged.",
-      "depends_on": [1]
+      "iteration_notes": "One POST when single-mode target is tunneled / hybrid.",
+      "depends_on": [2]
+    },
+    {
+      "step":     6,
+      "name":     "create_overlay_wlan_dual",
+      "purpose":  "Dual-mode: bind the TUNNEL variant to its gateway cluster(s) via overlay-wlan, referencing the ESSID alias (use-essid-alias=true).",
+      "endpoint": "/network-config/v1alpha1/overlay-wlan/{name_tunnel}",
+      "method":   "POST",
+      "query_params": {
+        "object-type":     "LOCAL",
+        "scope-id":        "{tunnel_scope_id}",
+        "device-function": "CAMPUS_AP"
+      },
+      "body": {
+        "profile":              "{name_tunnel}",
+        "overlay-profile-type": "WIRELESS_PROFILE",
+        "essid-alias-name":     "{essid_alias}",
+        "use-essid-alias":      true,
+        "gw-cluster-list":      "{gw_cluster_list}"
+      },
+      "emit_when": { "context_truthy": "emit_dual" },
+      "iteration": "once",
+      "iteration_notes": "One POST for the dual tunnel variant's cluster binding.",
+      "depends_on": [4]
     }
   ],
   "target_meta": {
@@ -57,15 +148,15 @@
     "device_function_filtering_rule": "wlan-ssids + overlay-wlan are AP constructs (the SSID is broadcast/forwarded by the AP) → CAMPUS_AP. Tunneled SSIDs reach the gateway cluster via the overlay-wlan gw-cluster-list, not by being a gateway profile."
   },
   "target_scope_id_resolution": {
-    "rule":   "Central scope_id supplied by the skill at runtime (the AP scope where the SSID is broadcast — site / device-group, derived from the AOS 8 ap-group binding).",
+    "rule":   "Central scope_id(s) supplied by the skill at runtime. Single mode: central_scope_id (the AP scope). Dual mode: bridge_scope_id + tunnel_scope_id (the per-location split for the same SSID), derived from detection / operator.",
     "input":  "Source ap-group binding scope + operator selection",
-    "output": "Central scope_id (string) via runtime_values['central_scope_id']"
+    "output": "central_scope_id / bridge_scope_id / tunnel_scope_id via runtime_values"
   },
   "required_runtime_values": ["central_scope_id", "target_mode", "ssid_profiles"],
   "derived": {},
   "dependencies": [
     {
-      "depends_on": "central:gateway_cluster (tunneled/hybrid SSIDs bind to a cluster via overlay-wlan gw-cluster-list); central:named_vlan (the wlan-ssids vlan-name references a Central named VLAN)",
+      "depends_on": "central:gateway_cluster (tunneled/hybrid/dual SSIDs bind to a cluster via overlay-wlan gw-cluster-list); central:named_vlan (vlan-name references a Central named VLAN)",
       "depended_by": []
     }
   ],
@@ -98,31 +189,32 @@
         }
       ],
       "key_mappings": {
-        "name":          { "from": "_name",          "to": "wlan-ssids 'name' (profile id)", "transform": "direct_str", "notes": "Required. virtual_ap profile-name." },
-        "essid_obj":     { "from": "_essid_obj",      "to": "body 'essid' (object)", "transform": "direct", "optional": true, "notes": "{name: <essid>} literal in v1; v2 swaps for {alias, use-alias} in the dual-profile case. From ssid_prof.essid.essid." },
-        "essid":         { "from": "_essid",          "to": "overlay-wlan 'essid-name'", "transform": "direct_str", "optional": true, "notes": "Raw essid string for the overlay binding." },
+        "name":          { "from": "_name",          "to": "wlan-ssids 'name' (single profile id)", "transform": "direct_str", "notes": "Required. virtual_ap profile-name." },
+        "name_bridge":   { "from": "_name_bridge",   "to": "dual bridge wlan-ssids 'name'", "transform": "direct_str", "optional": true, "notes": "{name}-bridge (dual mode only)." },
+        "name_tunnel":   { "from": "_name_tunnel",   "to": "dual tunnel wlan-ssids 'name'", "transform": "direct_str", "optional": true, "notes": "{name}-tunnel (dual mode only)." },
+        "essid":         { "from": "_essid",          "to": "overlay 'essid-name' / alias 'default-value'", "transform": "direct_str", "optional": true, "notes": "Raw essid string. From ssid_prof.essid.essid." },
+        "essid_alias":   { "from": "_essid_alias",    "to": "alias 'name' / overlay 'essid-alias-name'", "transform": "direct_str", "optional": true, "notes": "Dual mode: the ESSID alias name (= the essid)." },
+        "essid_obj":     { "from": "_essid_obj",      "to": "single-profile body 'essid' (object)", "transform": "direct", "optional": true, "notes": "{name: <essid>} literal (single modes)." },
+        "essid_obj_alias": { "from": "_essid_obj_alias", "to": "dual-profile body 'essid' (object)", "transform": "direct", "optional": true, "notes": "{use-alias: true, alias: <name>} (dual modes — both profiles share the alias)." },
         "opmode":        { "from": "_opmode",         "to": "body 'opmode'", "transform": "direct_str", "optional": true, "notes": "AOS 8 ssid_prof opmode key -> Central opmode enum (table in the normalizer). bSec-*/xSec are unmapped (legacy)." },
-        "forward_mode":  { "from": "_forward_mode",   "to": "body 'forward-mode'", "transform": "direct_str", "notes": "From the operator's target_mode: bridged->FORWARD_MODE_BRIDGE, tunneled->FORWARD_MODE_L2, hybrid->FORWARD_MODE_MIXED." },
-        "vlan_selector": { "from": "_vlan_selector",  "to": "body 'vlan-selector'", "transform": "direct_str", "optional": true, "notes": "NAMED_VLAN (named) or VLAN_RANGES (numeric), from virtual_ap.vlan.vlan." },
-        "vlan_name":     { "from": "_vlan_name",      "to": "body 'vlan-name'", "transform": "direct_str", "optional": true, "notes": "Named-VLAN case -> references a Central named VLAN (central:named_vlan)." },
+        "forward_mode":  { "from": "_forward_mode",   "to": "single body 'forward-mode'", "transform": "direct_str", "optional": true, "notes": "Single modes only (dual variants hard-code BRIDGE / L2). bridged->FORWARD_MODE_BRIDGE, tunneled->FORWARD_MODE_L2, hybrid->FORWARD_MODE_MIXED." },
+        "vlan_selector": { "from": "_vlan_selector",  "to": "body 'vlan-selector'", "transform": "direct_str", "optional": true, "notes": "NAMED_VLAN (named) or VLAN_RANGES (numeric)." },
+        "vlan_name":     { "from": "_vlan_name",      "to": "body 'vlan-name'", "transform": "direct_str", "optional": true, "notes": "Named-VLAN -> references central:named_vlan." },
         "vlan_id_range": { "from": "_vlan_id_range",  "to": "body 'vlan-id-range' (array)", "transform": "direct", "optional": true, "notes": "Numeric-VLAN case." },
-        "needs_overlay": { "from": "_needs_overlay",  "to": "(emit_when guard for step 2)", "transform": "direct", "optional": true, "notes": "True for tunneled / hybrid; gates the overlay-wlan emit." },
-        "gw_cluster_list": { "from": "_gw_cluster_list", "to": "overlay-wlan 'gw-cluster-list' (array)", "transform": "direct", "optional": true, "notes": "[{cluster, cluster-type, tunnel-type, cluster-redundancy-type, cluster-scope-id}] supplied via runtime_values['gw_cluster_list']. An SSID may bind to multiple clusters." }
+        "emit_single":   { "from": "_emit_single",    "to": "(emit_when guard, single profile + overlay)", "transform": "direct", "optional": true, "notes": "True for bridged / tunneled / hybrid." },
+        "emit_dual":     { "from": "_emit_dual",      "to": "(emit_when guard, alias + bridge + tunnel + dual overlay)", "transform": "direct", "optional": true, "notes": "True for bridged_and_tunneled." },
+        "needs_overlay": { "from": "_needs_overlay",  "to": "(emit_when guard, single overlay)", "transform": "direct", "optional": true, "notes": "True for single tunneled / hybrid." },
+        "gw_cluster_list": { "from": "_gw_cluster_list", "to": "overlay 'gw-cluster-list' (array)", "transform": "direct", "optional": true, "notes": "[{cluster, cluster-type, tunnel-type, cluster-redundancy-type, cluster-scope-id}] via runtime_values['gw_cluster_list']. An SSID may bind to multiple clusters." }
       },
       "unmapped_fields": [
         {
           "from":          "Inline AAA on wlan-ssids (auth-server-group / acct-server-group / default-role / pre-auth-role / mac-authentication / radius-*) sourced from the virtual_ap's aaa_prof",
-          "reason":        "v1 ships the SSID core (identity / forwarding / encryption / vlan / cluster binding). Bridge-mode SSIDs need their AAA inlined here (the AP terminates auth); tunnel-mode SSIDs lean on the gateway aaa-profile (central:aaa_profile) reached via the overlay. Full aaa_prof-join + inline AAA is deferred to wlan_ssid v2.",
+          "reason":        "Bridge-mode SSIDs need their AAA inlined here (the AP terminates auth); tunnel-mode SSIDs lean on the gateway aaa-profile (central:aaa_profile) reached via the overlay. The full aaa_prof-join + inline AAA is deferred to a later wlan_ssid increment.",
           "severity_rule": "non_empty_regression"
         },
         {
           "from":          "ssid_prof rates / wmm / he_ssid_prof / dot11k / beacon-rate; virtual_ap band-steering / dynamic-mcast-optimization / broadcast-filter / drop_mcast / wmm-traffic-management; PSK secret (wpa-passphrase / wpa-hexkey)",
-          "reason":        "Radio/QoS tuning + advanced VAP options deferred to v2. The PSK secret (personal opmodes) must route through PII tokenization before it lands in any write path.",
-          "severity_rule": "always_operator_map"
-        },
-        {
-          "from":          "target_mode = bridged_and_tunneled",
-          "reason":        "The two-profile essid-alias case (same SSID bridged + tunneled across locations) is deferred to v2: it emits an essid alias + a bridge profile + a tunnel profile, all sharing the alias. v1 raises a clear error for this mode.",
+          "reason":        "Radio/QoS tuning + advanced VAP options deferred. The PSK secret (personal opmodes) must route through PII tokenization before it lands in any write path.",
           "severity_rule": "always_operator_map"
         }
       ],
@@ -135,11 +227,12 @@
     }
   },
   "draft_notes": [
-    "v1 translation. Central wlan-ssids (forward-mode L2/MIXED/BRIDGE from the operator's target_mode) + overlay-wlan binding (tunneled/hybrid only, gated by emit_when). Created LOCAL at the AP scope (device-function CAMPUS_AP) via query params.",
+    "Central wlan-ssids (forward-mode L2/MIXED/BRIDGE from the operator's target_mode) + overlay-wlan cluster binding. All 4 questionnaire modes: bridged / tunneled / hybrid (single profile, gated by emit_single + needs_overlay) and bridged_and_tunneled (essid alias + bridge profile + tunnel profile + tunnel overlay, gated by emit_dual). Created LOCAL at the AP scope via query params.",
     "JOIN: source record = one virtual_ap; its ssid_prof is supplied via runtime_values['ssid_profiles'] and joined by name (like central:policy's role_records).",
-    "TARGET MODE is the operator's decision (runtime target_mode), not the source forward_mode — detection only recommends it upstream in the skill. v1: bridged / tunneled / hybrid. bridged_and_tunneled (dual-profile + essid alias) deferred to v2.",
-    "DEFERRED to v2 (flagged in unmapped_fields): inline bridge-mode AAA (aaa_prof join), radio/QoS tuning, PSK secret (needs PII tokenization), and the dual-profile essid-alias case.",
-    "DEPENDENCY: tunneled/hybrid SSIDs bind to central:gateway_cluster via the overlay gw-cluster-list; vlan-name references central:named_vlan. Run those first.",
-    "NEEDS-LIVE-VERIFY (write path): device-function CAMPUS_AP vs the SSID's actual broadcast scope; opmode enum spellings for less-common modes; the overlay gw-cluster-list cluster-type / tunnel-type values."
+    "DUAL MODE (bridged_and_tunneled) requires runtime_values bridge_scope_id + tunnel_scope_id (the per-location split — e.g. large campus tunneled, branches bridged). The same SSID lands as two profiles ({name}-bridge / {name}-tunnel) sharing one ESSID alias.",
+    "TARGET MODE is the operator's decision (runtime target_mode), not the source forward_mode — detection only recommends it upstream in the skill.",
+    "DEFERRED (flagged in unmapped_fields): inline bridge-mode AAA (aaa_prof join), radio/QoS tuning, PSK secret (needs PII tokenization).",
+    "DEPENDENCY: tunneled/hybrid/dual SSIDs bind to central:gateway_cluster via overlay gw-cluster-list; vlan-name references central:named_vlan. Run those first.",
+    "NEEDS-LIVE-VERIFY (write path): device-function CAMPUS_AP vs the SSID's actual broadcast scope; opmode enum spellings for less-common modes; overlay gw-cluster-list cluster-type / tunnel-type; the SHARED essid alias scope vs a per-scope alias."
   ]
 }
