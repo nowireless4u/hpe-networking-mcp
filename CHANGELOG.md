@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.5.0] - 2026-06-07
+
+**Minor — `central:wlan_ssid` (v1) — the SSID translation + cluster binding.** The piece that turns the AAA + cluster work into actual broadcast SSIDs. Preview-only via `central_translation_preview`.
+
+### New translation
+- **`central:wlan_ssid`** — AOS 8 `virtual_ap` (+ its `ssid_prof`, joined by name from `runtime_values["ssid_profiles"]`) → the flat Central **`wlan-ssids`** profile, plus a conditional **`overlay-wlan`** SSID→cluster binding. Maps essid, the `opmode` enum (AOS 8 `{mode: true}` → Central `opmode`, full table), forward-mode, and VLAN (named → `NAMED_VLAN`/`vlan-name`; numeric → `VLAN_RANGES`). The **target forward-mode is the operator's decision** (`runtime_values["target_mode"]`), not a copy of the source — detection only recommends it upstream in the skill. A three-way fork via the `emit_when` guard: `bridged` (FORWARD_MODE_BRIDGE, no overlay), `tunneled` (FORWARD_MODE_L2 + overlay), `hybrid` (FORWARD_MODE_MIXED + overlay). The `overlay-wlan` `gw-cluster-list[]` (supplied per SSID from detection/operator) lets one SSID bind to **multiple** clusters. Created LOCAL at the AP scope (`device-function=CAMPUS_AP`). Live-validated against the tenant `MJG-Dot1x` (tunnel/bridge/hybrid) and a North-config SSID (`wpa2-aes` → `WPA2_ENTERPRISE`).
+- **Deferred to v2** (flagged in `unmapped_fields`, not silent): the two-profile `bridged_and_tunneled` **essid-alias** case (v1 raises a clear error for it), inline **bridge-mode AAA** (the `aaa_prof` join), radio/QoS tuning, and the **PSK secret** (must route through PII tokenization before any write path).
+
 ## [3.3.4.0] - 2026-06-06
 
 **Minor — gateway-cluster translation + engine conditional-emit (`emit_when`).** First step of the AOS 8 → Central wireless-forwarding migration: the gateway clustering that gates every tunneled SSID. Preview-only via `central_translation_preview`.

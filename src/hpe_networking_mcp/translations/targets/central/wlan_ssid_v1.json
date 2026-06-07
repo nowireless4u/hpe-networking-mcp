@@ -1,0 +1,145 @@
+{
+  "version": 1,
+  "target_platform": "central",
+  "target_id": "wlan_ssid",
+  "preprocessing": "hpe_networking_mcp.translations.preprocessing.aos8_wlan_ssid.preprocess_wlan_ssid",
+  "target_emits": [
+    {
+      "step":     1,
+      "name":     "create_wlan_ssid",
+      "purpose":  "Create the Central wlan-ssids profile — the flat SSID object merging the AOS 8 virtual_ap (forward-mode, vlan) + its ssid_prof (essid, opmode). Created LOCAL at the target scope on the AP device-function. forward-mode is the operator's target decision (runtime target_mode), not a copy of the source.",
+      "endpoint": "/network-config/v1alpha1/wlan-ssids/{name}",
+      "method":   "POST",
+      "query_params": {
+        "object-type":     "LOCAL",
+        "scope-id":        "{central_scope_id}",
+        "device-function": "CAMPUS_AP"
+      },
+      "body": {
+        "name":          "{name}",
+        "essid":         "{essid_obj}",
+        "opmode":        "{opmode}",
+        "forward-mode":  "{forward_mode}",
+        "vlan-selector": "{vlan_selector}",
+        "vlan-name":     "{vlan_name}",
+        "vlan-id-range": "{vlan_id_range}"
+      },
+      "iteration": "once",
+      "iteration_notes": "One POST per source virtual_ap record.",
+      "depends_on": []
+    },
+    {
+      "step":     2,
+      "name":     "create_overlay_wlan",
+      "purpose":  "Bind a tunneled / hybrid SSID to its gateway cluster(s) via the overlay-wlan object. Gated by emit_when: fires only for tunneled / hybrid target modes (skipped for bridged). gw-cluster-list (which clusters + scope-ids + tunnel-type) is supplied by the skill from detection / operator; an SSID may bind to multiple clusters.",
+      "endpoint": "/network-config/v1alpha1/overlay-wlan/{name}",
+      "method":   "POST",
+      "query_params": {
+        "object-type":     "LOCAL",
+        "scope-id":        "{central_scope_id}",
+        "device-function": "CAMPUS_AP"
+      },
+      "body": {
+        "profile":              "{name}",
+        "overlay-profile-type": "WIRELESS_PROFILE",
+        "essid-name":           "{essid}",
+        "use-essid-alias":      false,
+        "gw-cluster-list":      "{gw_cluster_list}"
+      },
+      "emit_when": { "context_truthy": "needs_overlay" },
+      "iteration": "once",
+      "iteration_notes": "One POST when target_mode is tunneled / hybrid; suppressed for bridged.",
+      "depends_on": [1]
+    }
+  ],
+  "target_meta": {
+    "device_functions": ["CAMPUS_AP"],
+    "device_function_filtering_rule": "wlan-ssids + overlay-wlan are AP constructs (the SSID is broadcast/forwarded by the AP) → CAMPUS_AP. Tunneled SSIDs reach the gateway cluster via the overlay-wlan gw-cluster-list, not by being a gateway profile."
+  },
+  "target_scope_id_resolution": {
+    "rule":   "Central scope_id supplied by the skill at runtime (the AP scope where the SSID is broadcast — site / device-group, derived from the AOS 8 ap-group binding).",
+    "input":  "Source ap-group binding scope + operator selection",
+    "output": "Central scope_id (string) via runtime_values['central_scope_id']"
+  },
+  "required_runtime_values": ["central_scope_id", "target_mode", "ssid_profiles"],
+  "derived": {},
+  "dependencies": [
+    {
+      "depends_on": "central:gateway_cluster (tunneled/hybrid SSIDs bind to a cluster via overlay-wlan gw-cluster-list); central:named_vlan (the wlan-ssids vlan-name references a Central named VLAN)",
+      "depended_by": []
+    }
+  ],
+  "tokenize_kind_per_field": {},
+  "sources": {
+    "aos8": {
+      "kind":         "rest",
+      "mapping_kind": "composite",
+      "merge_rule": {
+        "join_key": "ssid_prof.profile-name",
+        "scope_policy": "virtual_ap_record_joins_referenced_ssid_prof",
+        "description": "The engine source record is one virtual_ap. Its ssid_prof is looked up by name from runtime_values['ssid_profiles'] (the full ssid_prof list) in the aos8_wlan_ssid preprocessing, then essid/opmode are merged onto the virtual_ap before key_mappings run. Mirrors central:policy's runtime-supplied role_records join."
+      },
+      "objects": [
+        {
+          "object":      "virtual_ap",
+          "object_path": "/v1/configuration/object/virtual_ap",
+          "role":        "wlan_broadcast_definition",
+          "docs": { "cli": "wlan virtual-ap <name>" },
+          "live_shape_example": "[{\"profile-name\": \"MJG-Dot1x-80\", \"ssid_prof\": {\"profile-name\": \"MJG-Dot1x\"}, \"aaa_prof\": {\"profile-name\": \"MJG-Dot1x-80\"}, \"vlan\": {\"vlan\": \"local\"}, \"forward_mode\": {\"forward_mode\": \"tunnel\"}}]",
+          "notes": "The SSID-as-broadcast. forward_mode (one-level wrapped; absent = tunnel default), vlan, ssid_prof ref, aaa_prof ref. The engine source record IS one virtual_ap."
+        },
+        {
+          "object":      "ssid_prof",
+          "object_path": "/v1/configuration/object/ssid_prof",
+          "role":        "ssid_radio_profile",
+          "docs": { "cli": "wlan ssid-profile <name>" },
+          "live_shape_example": "[{\"profile-name\": \"MJG-Dot1x\", \"essid\": {\"essid\": \"MJG-DOT1x\"}, \"opmode\": {\"wpa3-aes-gcm-256\": true}}]",
+          "notes": "essid + opmode + rates. Supplied via runtime_values['ssid_profiles'] and joined to the virtual_ap by ssid_prof.profile-name. opmode is {<mode-name>: true}; mapped to the Central opmode enum."
+        }
+      ],
+      "key_mappings": {
+        "name":          { "from": "_name",          "to": "wlan-ssids 'name' (profile id)", "transform": "direct_str", "notes": "Required. virtual_ap profile-name." },
+        "essid_obj":     { "from": "_essid_obj",      "to": "body 'essid' (object)", "transform": "direct", "optional": true, "notes": "{name: <essid>} literal in v1; v2 swaps for {alias, use-alias} in the dual-profile case. From ssid_prof.essid.essid." },
+        "essid":         { "from": "_essid",          "to": "overlay-wlan 'essid-name'", "transform": "direct_str", "optional": true, "notes": "Raw essid string for the overlay binding." },
+        "opmode":        { "from": "_opmode",         "to": "body 'opmode'", "transform": "direct_str", "optional": true, "notes": "AOS 8 ssid_prof opmode key -> Central opmode enum (table in the normalizer). bSec-*/xSec are unmapped (legacy)." },
+        "forward_mode":  { "from": "_forward_mode",   "to": "body 'forward-mode'", "transform": "direct_str", "notes": "From the operator's target_mode: bridged->FORWARD_MODE_BRIDGE, tunneled->FORWARD_MODE_L2, hybrid->FORWARD_MODE_MIXED." },
+        "vlan_selector": { "from": "_vlan_selector",  "to": "body 'vlan-selector'", "transform": "direct_str", "optional": true, "notes": "NAMED_VLAN (named) or VLAN_RANGES (numeric), from virtual_ap.vlan.vlan." },
+        "vlan_name":     { "from": "_vlan_name",      "to": "body 'vlan-name'", "transform": "direct_str", "optional": true, "notes": "Named-VLAN case -> references a Central named VLAN (central:named_vlan)." },
+        "vlan_id_range": { "from": "_vlan_id_range",  "to": "body 'vlan-id-range' (array)", "transform": "direct", "optional": true, "notes": "Numeric-VLAN case." },
+        "needs_overlay": { "from": "_needs_overlay",  "to": "(emit_when guard for step 2)", "transform": "direct", "optional": true, "notes": "True for tunneled / hybrid; gates the overlay-wlan emit." },
+        "gw_cluster_list": { "from": "_gw_cluster_list", "to": "overlay-wlan 'gw-cluster-list' (array)", "transform": "direct", "optional": true, "notes": "[{cluster, cluster-type, tunnel-type, cluster-redundancy-type, cluster-scope-id}] supplied via runtime_values['gw_cluster_list']. An SSID may bind to multiple clusters." }
+      },
+      "unmapped_fields": [
+        {
+          "from":          "Inline AAA on wlan-ssids (auth-server-group / acct-server-group / default-role / pre-auth-role / mac-authentication / radius-*) sourced from the virtual_ap's aaa_prof",
+          "reason":        "v1 ships the SSID core (identity / forwarding / encryption / vlan / cluster binding). Bridge-mode SSIDs need their AAA inlined here (the AP terminates auth); tunnel-mode SSIDs lean on the gateway aaa-profile (central:aaa_profile) reached via the overlay. Full aaa_prof-join + inline AAA is deferred to wlan_ssid v2.",
+          "severity_rule": "non_empty_regression"
+        },
+        {
+          "from":          "ssid_prof rates / wmm / he_ssid_prof / dot11k / beacon-rate; virtual_ap band-steering / dynamic-mcast-optimization / broadcast-filter / drop_mcast / wmm-traffic-management; PSK secret (wpa-passphrase / wpa-hexkey)",
+          "reason":        "Radio/QoS tuning + advanced VAP options deferred to v2. The PSK secret (personal opmodes) must route through PII tokenization before it lands in any write path.",
+          "severity_rule": "always_operator_map"
+        },
+        {
+          "from":          "target_mode = bridged_and_tunneled",
+          "reason":        "The two-profile essid-alias case (same SSID bridged + tunneled across locations) is deferred to v2: it emits an essid alias + a bridge profile + a tunnel profile, all sharing the alias. v1 raises a clear error for this mode.",
+          "severity_rule": "always_operator_map"
+        }
+      ],
+      "ignored_variants": [
+        {
+          "form":   "virtual_ap with _flags.system / _flags.default (built-in)",
+          "reason": "Consumer filters system/default VAPs at the record level before emit_calls."
+        }
+      ]
+    }
+  },
+  "draft_notes": [
+    "v1 translation. Central wlan-ssids (forward-mode L2/MIXED/BRIDGE from the operator's target_mode) + overlay-wlan binding (tunneled/hybrid only, gated by emit_when). Created LOCAL at the AP scope (device-function CAMPUS_AP) via query params.",
+    "JOIN: source record = one virtual_ap; its ssid_prof is supplied via runtime_values['ssid_profiles'] and joined by name (like central:policy's role_records).",
+    "TARGET MODE is the operator's decision (runtime target_mode), not the source forward_mode — detection only recommends it upstream in the skill. v1: bridged / tunneled / hybrid. bridged_and_tunneled (dual-profile + essid alias) deferred to v2.",
+    "DEFERRED to v2 (flagged in unmapped_fields): inline bridge-mode AAA (aaa_prof join), radio/QoS tuning, PSK secret (needs PII tokenization), and the dual-profile essid-alias case.",
+    "DEPENDENCY: tunneled/hybrid SSIDs bind to central:gateway_cluster via the overlay gw-cluster-list; vlan-name references central:named_vlan. Run those first.",
+    "NEEDS-LIVE-VERIFY (write path): device-function CAMPUS_AP vs the SSID's actual broadcast scope; opmode enum spellings for less-common modes; the overlay gw-cluster-list cluster-type / tunnel-type values."
+  ]
+}
