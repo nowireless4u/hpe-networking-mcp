@@ -147,8 +147,38 @@ def emit_calls(
     emits_in_order = sorted(translation.target_emits, key=lambda e: e.step)
     out: list[TargetCall] = []
     for emit in emits_in_order:
+        # Conditional emits: a strategy/mode fork can gate a step (e.g. emit the
+        # intent-config only for intent_* cluster strategies). A failed guard
+        # skips THIS emit only — the rest of the record still renders.
+        if not _emit_guard_passes(emit, base_ctx):
+            continue
         out.extend(_render_emit(emit=emit, base_ctx=base_ctx, device_functions=device_functions))
     return out
+
+
+def _emit_guard_passes(emit: TargetEmit, ctx: dict[str, Any]) -> bool:
+    """Evaluate an emit's optional ``emit_when`` guard against the context.
+
+    Returns True (emit fires) when there is no guard or the condition holds.
+    Recognized condition keys: ``context_truthy`` (ctx[key] is truthy) and
+    ``context_equals`` ({'key', 'value'} → ctx[key] == value). Unknown shapes
+    raise ``EngineError`` rather than silently passing — a malformed guard is a
+    spec bug, not a no-op.
+    """
+    cond = emit.emit_when
+    if not cond:
+        return True
+    if "context_truthy" in cond:
+        return bool(ctx.get(cond["context_truthy"]))
+    if "context_equals" in cond:
+        spec = cond["context_equals"]
+        if not isinstance(spec, dict) or "key" not in spec or "value" not in spec:
+            raise EngineError(
+                f"Emit {emit.name!r} has malformed 'context_equals' guard {spec!r}; "
+                "expected {'key': <ctx_key>, 'value': <v>}"
+            )
+        return ctx.get(spec["key"]) == spec["value"]
+    raise EngineError(f"Emit {emit.name!r} has unknown emit_when condition {cond!r}")
 
 
 # --------------------------------------------------------------------------- #

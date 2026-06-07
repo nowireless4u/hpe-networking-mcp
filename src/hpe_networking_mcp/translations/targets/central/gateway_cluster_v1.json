@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "target_platform": "central",
+  "target_id": "gateway_cluster",
+  "preprocessing": "hpe_networking_mcp.translations.preprocessing.aos8_gateway_cluster.preprocess_gateway_cluster",
+  "target_emits": [
+    {
+      "step":     1,
+      "name":     "create_gateway_cluster",
+      "purpose":  "Create the HA gateway-cluster profile — the object that owns the explicit member gateways + their CoA-VRRP IPs (and multicast-vlan / heartbeat). Always emitted: required on every strategy because it carries CoA + membership. Created LOCAL at the target scope via query params.",
+      "endpoint": "/network-config/v1alpha1/gateway-clusters/{name}",
+      "method":   "POST",
+      "query_params": {
+        "object-type":     "LOCAL",
+        "scope-id":        "{central_scope_id}",
+        "device-function": "MOBILITY_GW"
+      },
+      "body": {
+        "name":               "{name}",
+        "ipv4-gateways":      "{ipv4_gateways}",
+        "multicast-vlan":     "{multicast_vlan}",
+        "heartbeat-threshold": "{heartbeat_threshold}"
+      },
+      "iteration": "once",
+      "iteration_notes": "One POST per source cluster_prof record.",
+      "depends_on": []
+    },
+    {
+      "step":     2,
+      "name":     "create_gw_cluster_intent",
+      "purpose":  "Create the gateway-cluster INTENT config (the modern path). Declares cluster-mode (CM_SITE / CM_MANUAL) + device-type. Gated by emit_when: only fires for the intent_site / intent_manual strategies (skipped for ha_only). Scope placement is operator-driven via central_scope_id (CM_SITE → global/site/site-collection; CM_MANUAL → device-group).",
+      "endpoint": "/network-config/v1alpha1/gw-cluster-intent-config/{name}",
+      "method":   "POST",
+      "query_params": {
+        "object-type":     "LOCAL",
+        "scope-id":        "{central_scope_id}",
+        "device-function": "MOBILITY_GW"
+      },
+      "body": {
+        "name":                "{name}",
+        "cluster-mode":        "{cluster_mode}",
+        "device-type":         "MOBILITY_GW",
+        "multicast-vlan":      "{multicast_vlan}",
+        "heartbeat-threshold": "{heartbeat_threshold}"
+      },
+      "emit_when": { "context_truthy": "emit_intent" },
+      "iteration": "once",
+      "iteration_notes": "One POST when the strategy is intent_site / intent_manual; suppressed for ha_only.",
+      "depends_on": [1]
+    }
+  ],
+  "target_meta": {
+    "device_functions": ["MOBILITY_GW"],
+    "device_function_filtering_rule": "Gateway clusters terminate AP tunnels — always MOBILITY_GW for the AOS 8 → Central migration."
+  },
+  "target_scope_id_resolution": {
+    "rule":   "Central scope_id is supplied by the consuming skill at runtime. The strategy determines the appropriate breadth: ha_only / intent_manual → device-group; intent_site → global / site / site-collection.",
+    "input":  "Operator gateway-topology answer + the source cluster's binding scope",
+    "output": "Central scope_id (string), supplied via runtime_values['central_scope_id']"
+  },
+  "required_runtime_values": ["central_scope_id", "cluster_strategy"],
+  "derived": {},
+  "dependencies": [
+    {
+      "depends_on": "(none — foundational; the cluster is created before the SSIDs that tunnel to it)",
+      "depended_by": [
+        {
+          "target_id": "central:wlan_ssid",
+          "field":     "overlay-wlan gw-cluster-list[].cluster",
+          "relation":  "a tunneled / hybrid wlan-ssid binds to this cluster via the overlay-wlan object",
+          "notes":     "Run gateway_cluster BEFORE the tunneled wlan_ssid + its overlay-wlan binding. One SSID may bind to multiple clusters (gw-cluster-list is an array)."
+        }
+      ]
+    }
+  ],
+  "tokenize_kind_per_field": {},
+  "sources": {
+    "aos8": {
+      "kind":         "rest",
+      "mapping_kind": "simple",
+      "objects": [
+        {
+          "object":      "cluster_prof",
+          "object_path": "/v1/configuration/object/cluster_prof",
+          "role":        "lc_cluster_group_profile",
+          "docs": {
+            "get":  "https://developer.arubanetworks.com/aos8/reference/get_object-cluster_prof",
+            "cli":  "lc-cluster group-profile <name>"
+          },
+          "live_shape_example": "[{\"profile-name\": \"East\", \"cluster_controller\": [{\"ip\": \"192.168.150.248\", \"vrrp_ip\": \"192.168.150.246\", \"prio\": 128, \"mcast_vlan\": 0, \"vrrp_vlan\": 150}], \"redundancy\": {\"_present\": true}}]",
+          "notes": "REST schema 'cluster_prof' (CLI: lc-cluster group-profile). cluster_controller[] holds the member controllers (ip + vrrp_ip = CoA-VRRP IP + prio + mcast_vlan/vrrp_vlan + group_id). Live-verified on the tenant ('East' 2-node, VRRP-150) and the North_Cluster MD config (10 nodes, redundancy groups 1/2)."
+        }
+      ],
+      "key_mappings": {
+        "name":                { "from": "_name",                "to": "Central gateway-cluster / intent 'name'", "transform": "direct_str", "notes": "Required. cluster_prof profile-name -> name." },
+        "ipv4_gateways":       { "from": "_ipv4_gateways",       "to": "gateway-clusters 'ipv4-gateways' (whole array)", "transform": "direct", "optional": true, "notes": "cluster_controller[] -> [{ip, coa-vrrp-ip=vrrp_ip, priority=prio}]. Substituted whole into the body. Member-inherited entries are NOT dropped." },
+        "multicast_vlan":      { "from": "_multicast_vlan",      "to": "body 'multicast-vlan'", "transform": "direct_int", "optional": true, "notes": "First non-zero cluster_controller mcast_vlan." },
+        "heartbeat_threshold": { "from": "_heartbeat_threshold", "to": "body 'heartbeat-threshold'", "transform": "direct_int", "optional": true, "notes": "heartbeat_threshold.heartbeat-threshold (skipped when 0/default)." },
+        "cluster_mode":        { "from": "_cluster_mode",        "to": "intent body 'cluster-mode'", "transform": "direct_str", "optional": true, "notes": "CM_SITE (intent_site) / CM_MANUAL (intent_manual). Absent for ha_only." },
+        "emit_intent":         { "from": "_emit_intent",         "to": "(emit_when guard for step 2)", "transform": "direct", "optional": true, "notes": "True for intent_site / intent_manual; absent for ha_only. Gates the gw-cluster-intent-config emit." }
+      },
+      "unmapped_fields": [
+        {
+          "from":          "redundancy (active/active vs active/standby), ap_load_balancing, the rebalance thresholds (active_ap_rebal_*, unbalance_threshold, act_cl_rebal_act_load_perc, sby_cl_rebal_tot_load_perc), vrrp_info (vrrp_id/passphrase), cluster_controller[].group_id / vrrp_vlan / rap_public_ip, cluster_prof_clone, _flags",
+          "reason":        "v1 maps the membership + CoA + multicast + heartbeat core. redundancy → Central 'one-to-one-redundancy' is deferred pending a live semantic confirm (AOS active/active vs active/standby vs Central's one-to-one flag). Rebalance/load-balancing thresholds, the VRRP group id/passphrase, and per-member group_id/vrrp_vlan/rap_public_ip don't have confirmed Central counterparts on gateway-clusters yet. clone is a CLI convenience.",
+          "severity_rule": "non_empty_regression"
+        }
+      ],
+      "ignored_variants": [
+        {
+          "form":   "cluster_prof with _flags.system / _flags.default (built-in)",
+          "reason": "Consumer filters system/default cluster records at the record level before emit_calls."
+        }
+      ]
+    }
+  },
+  "draft_notes": [
+    "v1 translation. Dual-object Central clustering: gateway-clusters (HA, always) + gw-cluster-intent-config (intent, gated by cluster_strategy via emit_when). Created LOCAL at the target scope via query params (object-type=LOCAL / scope-id / device-function=MOBILITY_GW) — clusters use direct scope-creation, NOT the SHARED-create-then-config-assignment pattern the profile translations use.",
+    "STRATEGY FORK (runtime_values['cluster_strategy']): ha_only → step 1 only; intent_site → step 1 + step 2 CM_SITE; intent_manual → step 1 + step 2 CM_MANUAL. The skill picks per-cluster from the operator's gateway-topology answer (no-DMZ → intent_site@global; campus+DMZ → intent_site@site for campus + intent_manual@device-group for DMZ; DMZ-only → ha_only).",
+    "DEPENDENCY: depended_by central:wlan_ssid — tunneled/hybrid SSIDs bind to this cluster via the overlay-wlan gw-cluster-list. Run gateway_cluster first.",
+    "NEEDS-LIVE-VERIFY (write-path, not preview): the object-type=LOCAL vs SHARED choice + global-scope scope-id semantics for CM_SITE@global; the redundancy → one-to-one-redundancy mapping; whether multicast-vlan should come from mcast_vlan or vrrp_vlan. Preview is read-only so these don't block design validation.",
+    "Idempotency: SHARED/LOCAL POST for an existing name returns HTTP 409; consumer handles 409 idempotently."
+  ]
+}

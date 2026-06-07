@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.4.0] - 2026-06-06
+
+**Minor — gateway-cluster translation + engine conditional-emit (`emit_when`).** First step of the AOS 8 → Central wireless-forwarding migration: the gateway clustering that gates every tunneled SSID. Preview-only via `central_translation_preview`.
+
+### New translation
+- **`central:gateway_cluster`** — AOS 8 `cluster_prof` (lc-cluster group-profile) → Central's **dual-object** clustering model. Always emits the HA **`gateway-clusters`** profile (owns the explicit member gateways + their CoA-VRRP IPs, multicast-vlan, heartbeat), and conditionally emits the **`gw-cluster-intent-config`** intent. A required `runtime_values["cluster_strategy"]` drives a three-way fork: `ha_only` (HA profile alone — few/DMZ-only gateways), `intent_site` (+ intent `CM_SITE`, for campus auto-grouping at global/site/site-collection), `intent_manual` (+ intent `CM_MANUAL`, for explicit device-group membership / the DMZ path). Objects are created LOCAL at the target scope via query params (`object-type`/`scope-id`/`device-function=MOBILITY_GW`). Live-validated against the tenant `East` cluster (2-node, VRRP-150) and a 10-node reference cluster, all three strategies.
+
+### Engine
+- **`emit_when` conditional-emit guard** — an emit can now declare `emit_when` (`{"context_truthy": "<key>"}` or `{"context_equals": {"key","value"}}`); the engine emits zero calls for that step when the guard fails, *without* skipping the rest of the record. Enables strategy/mode forks (e.g. the cluster intent emit, and the upcoming `wlan_ssid` forward-mode fork). Loader-validated; unit-tested.
+
 ## [3.3.3.0] - 2026-06-06
 
 **Minor — AAA translation chain: gateway aaa-profile + 802.1X / MAC-auth profiles.** Builds on the 3.3.2.0 foundation with the three translations that complete the gateway authentication object set, all available via `central_translation_preview`.

@@ -84,6 +84,7 @@ def _record_id(record: dict[str, Any], translation_id: str) -> str:
         "central:aaa_profile": "profile-name",
         "central:dot1x_auth": "profile-name",
         "central:mac_auth": "profile-name",
+        "central:gateway_cluster": "profile-name",
     }
     field = primary_key_by_translation.get(translation_id)
     if field is None:

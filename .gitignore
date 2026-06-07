@@ -108,6 +108,16 @@ docs/*.pdf
 docs/cli-output.txt
 docs/aos8-*.txt
 docs/central/
+# Customer MD / controller config captures (real IPs + secrets) — never commit.
+docs/*_MD_Config.txt
+docs/North_Cluster_MD_Config.txt
+
+# Copyrighted Aruba CLI reference content (markdown export of the CLI guide),
+# kept locally for translation authoring. Reference only, never redistributed.
+docs/AOS/
+
+# Local scratch (vendored-OAS working copies, etc.)
+docs/aox-cx/
 
 # Pre-regen backup of the Central tool surface (local safety copy, never committed)
 central-tools-backup/

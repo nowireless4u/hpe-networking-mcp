@@ -2237,3 +2237,89 @@ def test_net_group_items_carry_one_based_index_in_source_order(net_group) -> Non
     }
     body = emit_calls(net_group, source, "aos8", runtime_values=_ng_runtime())[0].body or {}
     assert [i["index"] for i in body["items"]] == [1, 2, 3]
+
+
+# --------------------------------------------------------------------------- #
+# emit_when — conditional-emit guard (strategy/mode forks)
+# --------------------------------------------------------------------------- #
+
+
+@pytest.fixture
+def gateway_cluster(translations: dict):
+    return translations["central:gateway_cluster"]
+
+
+def _cluster_source() -> dict:
+    return {
+        "profile-name": "East",
+        "cluster_controller": [
+            {"ip": "10.0.0.1", "vrrp_ip": "10.0.0.10", "prio": 128, "mcast_vlan": 0},
+            {"ip": "10.0.0.2", "vrrp_ip": "10.0.0.11", "prio": 128, "mcast_vlan": 0},
+        ],
+    }
+
+
+def test_emit_when_ha_only_suppresses_intent(gateway_cluster) -> None:
+    """ha_only → emit_intent absent → the gated intent emit fires zero calls."""
+    calls = emit_calls(
+        gateway_cluster,
+        _cluster_source(),
+        "aos8",
+        runtime_values={"central_scope_id": "S", "cluster_strategy": "ha_only"},
+    )
+    assert [c.step_name for c in calls] == ["create_gateway_cluster"]
+
+
+def test_emit_when_intent_site_fires_intent(gateway_cluster) -> None:
+    calls = emit_calls(
+        gateway_cluster,
+        _cluster_source(),
+        "aos8",
+        runtime_values={"central_scope_id": "S", "cluster_strategy": "intent_site"},
+    )
+    assert [c.step_name for c in calls] == ["create_gateway_cluster", "create_gw_cluster_intent"]
+    intent = calls[1].body or {}
+    assert intent["cluster-mode"] == "CM_SITE"
+
+
+def test_emit_when_intent_manual_fires_intent(gateway_cluster) -> None:
+    calls = emit_calls(
+        gateway_cluster,
+        _cluster_source(),
+        "aos8",
+        runtime_values={"central_scope_id": "S", "cluster_strategy": "intent_manual"},
+    )
+    assert calls[1].body["cluster-mode"] == "CM_MANUAL"
+
+
+def test_emit_guard_passes_helper() -> None:
+    """Direct coverage of the guard evaluator."""
+    from hpe_networking_mcp.translations.engine import _emit_guard_passes
+    from hpe_networking_mcp.translations.loader import TargetEmit
+
+    def _emit(emit_when):
+        return TargetEmit(
+            step=1,
+            name="x",
+            purpose="p",
+            endpoint="/e",
+            method="POST",
+            iteration="once",
+            emit_when=emit_when,
+        )
+
+    # no guard → always fires
+    assert _emit_guard_passes(_emit(None), {}) is True
+    # context_truthy
+    assert _emit_guard_passes(_emit({"context_truthy": "k"}), {"k": True}) is True
+    assert _emit_guard_passes(_emit({"context_truthy": "k"}), {"k": None}) is False
+    assert _emit_guard_passes(_emit({"context_truthy": "k"}), {}) is False
+    # context_equals
+    eq = {"context_equals": {"key": "mode", "value": "TUNNEL"}}
+    assert _emit_guard_passes(_emit(eq), {"mode": "TUNNEL"}) is True
+    assert _emit_guard_passes(_emit(eq), {"mode": "BRIDGE"}) is False
+    # malformed / unknown → EngineError
+    with pytest.raises(EngineError):
+        _emit_guard_passes(_emit({"context_equals": {"key": "m"}}), {})
+    with pytest.raises(EngineError):
+        _emit_guard_passes(_emit({"bogus": "x"}), {})
