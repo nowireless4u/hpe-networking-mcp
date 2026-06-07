@@ -447,11 +447,12 @@ The audit MUST proceed in either case. Don't refuse to verdict.
 
 ### Stage 3 — Apply rules with applicability gates
 
-Rules fall into three buckets:
+Rules fall into four buckets:
 
 1. **INVENTORY** — record what's there; never fires as REGRESSION/DRIFT. Includes legacy AOS 8 controller plumbing (LMS-IP, Backup-LMS-IP, AP Fast Failover, cluster topology) that dissolves at migration but informs Act II translation. Drives the report's inventory section, not its findings list.
-2. **Feature-parity findings** — fire as REGRESSION/DRIFT/INFO when the source uses a feature AOS 10 doesn't support or handles differently. **Each rule has an applicability gate** — no rule fires on an empty source surface.
-3. **Orchestration prerequisites** — fire as REGRESSION when the operator can't successfully run the cutover (Central unreachable, GreenLake under-licensed, controllers below firmware floor).
+2. **Source-readiness findings (verdict-gating)** — target-architecture-INDEPENDENT feature-parity findings: the source uses something AOS 10 can't represent at all, regardless of forward mode. These compute the **pre-questionnaire verdict** (a REGRESSION here → BLOCKED). **Each rule has an applicability gate** — no rule fires on an empty source surface.
+3. **Orchestration prerequisites (verdict-gating)** — fire as REGRESSION when the operator can't run the cutover at all (Central unreachable, GreenLake under-licensed, controllers below firmware floor). Target-independent → contribute to the pre-questionnaire verdict.
+4. **Target-architecture-dependent findings (PROVISIONAL — do NOT gate the pre-questionnaire verdict)** — any rule gated on `target_mode_recommended` (F3, F4, and the per-target-mode T\*/B\*/M\* blocks below). These are scored against the *recommended* mode only as a preview. **They must NOT force a BLOCKED verdict before Stage 6.5**, because the operator may choose a different target mode (e.g. Bridged / controllerless) that makes them moot. They are re-evaluated against the operator's actual Stage 6.5 choices and surfaced in the Act II plan — see Stage 6.5's re-score step. The Stage 6 verdict is computed from buckets 2 + 3 only.
 
 Each finding format: **Severity — Description (VSG §anchor when one exists; else literal `none`) (source: <inventory key>)**.
 
@@ -512,7 +513,9 @@ These describe the source's controller-AP plumbing. Post-migration APs go to Cen
 | O5 | **Backup procedure documented** for source-platform configuration | DRIFT if not documented | VSG §2435 |
 | O6 | **Rollback procedure documented** for each cutover stage | DRIFT if not documented | VSG §1624, §2590-§2591 |
 
-#### Per-target-mode findings (fire only when target_mode_recommended matches)
+#### Per-target-mode findings (PROVISIONAL — bucket 4; do NOT gate the pre-questionnaire verdict)
+
+These are scored against `target_mode_recommended` as a **preview only**. A REGRESSION here must **not** produce a BLOCKED verdict before Stage 6.5 — surface it in the report as *"provisional (recommended target = <mode>); re-scored after you choose in Stage 6.5"*. After the operator picks per-SSID modes in Stage 6.5, re-run these against the **chosen** modes and fold the results into the Act II plan (Stage 6.5 re-score step). An operator flipping every SSID to Bridged makes the Tunnel/Mixed-mode REGRESSIONs disappear — which is exactly why they can't pre-block the gate.
 
 ##### When target_mode_recommended = Tunnel (VSG §340-§357, §1102-§1110, §1213-§1227, §1930-§1953)
 
@@ -633,7 +636,7 @@ This stage produces the Act I report. Once the report is emitted, fire the Act-I
 
 ## Act I → Act II gate
 
-After emitting the Stage 6 readiness report, decide:
+After emitting the Stage 6 readiness report, decide. **The verdict is computed from source-readiness + orchestration findings (Stage 3 buckets 2 + 3) ONLY** — target-architecture-dependent findings (bucket 4, gated on `target_mode_recommended`) are provisional and never produce BLOCKED here, so they can never lock the operator out of Stage 6.5. (If the source is genuinely un-migratable in any mode, that's a bucket-2 source-readiness REGRESSION and BLOCKED is correct.)
 
 - **Verdict = BLOCKED** — emit the literal sentence: *"Translation locked until REGRESSIONs are resolved. Re-run the audit after fixes."* Stop. Do NOT print the proceed prompt; do NOT run Stages 7-10.
 - **Verdict = GO** — emit the literal prompt: *"Verdict: GO. Proceed to AOS 10 translation plan? (yes / no / edit-context)"* and stop. Wait for the operator's reply.
@@ -651,7 +654,7 @@ Do NOT run Stage 6.5 or Stages 7-10 silently or pre-emptively.
 
 Runs only after the operator answers `yes` at the gate (non-BLOCKED verdict). This is the skill's one configuration interview, and it is deliberately **after** the readiness verdict: the operator first learns whether the devices are Central-ready, then decides the target architecture. Detection (Stage 2 / Stage 7 Step 4) supplies the **defaults**; the operator confirms or changes each. Ask via `elicit()` (the same mechanism as the Stage -2 data-source question). Keep it adaptive — only ask what's relevant.
 
-**Question 1 — per-SSID forward mode (always).** For each translatable `virtual_ap` (SSID), present the detected current mode + the recommended AOS 10 target, and ask the operator to pick one of:
+**Question 1 — per-virtual-AP forward mode (always).** Ask once **per `virtual_ap` instance**, NOT per ESSID — multiple VAPs can broadcast the same ESSID at different scopes (e.g. one `CORP` VAP per region) and each is its own profile with its own forward mode. Key every decision by the **composite identity `<source_scope>/<vap-name>`** so same-named VAPs across scopes never collide. (`Bridged and Tunneled` is the distinct case where *one* VAP intentionally becomes two profiles sharing an essid alias — that's a single decision with a scope split, not two VAPs.) For each translatable VAP, present its detected current mode + the recommended AOS 10 target, and ask the operator to pick one of:
 
 | Option | Meaning | Drives `wlan_ssid` `target_mode` |
 |---|---|---|
@@ -676,14 +679,18 @@ Default the selection to the detected pattern (same-ap-group-to-different-cluste
 
 ```
 decisions = {
-  "per_ssid": { "<vap-name>": {"target_mode": "...",       # Q1
-                               "gw_cluster_list": [...],   # which cluster(s) this SSID tunnels to (from the SSID→cluster map)
-                               "bridge_scope_id": "...",   # dual only
-                               "tunnel_scope_id": "..."},  # dual only
-                ... },
+  # keyed by composite "<source_scope>/<vap-name>" — NOT bare vap-name / ESSID,
+  # so same-ESSID VAPs across scopes can't collide.
+  "per_vap": { "<source_scope>/<vap-name>": {"target_mode": "...",      # Q1
+                                             "gw_cluster_list": [...],  # cluster(s) this VAP tunnels to (from the SSID→cluster map)
+                                             "bridge_scope_id": "...",  # bridged_and_tunneled only
+                                             "tunnel_scope_id": "..."}, # bridged_and_tunneled only
+               ... },
   "per_cluster": { "<cluster-name>": {"cluster_strategy": "...", "central_scope_id": "..."} },  # Q2
 }
 ```
+
+**Re-score the provisional findings (bucket 4) against the chosen architecture.** After the operator answers, re-evaluate the per-target-mode findings (the Tunnel / Bridge / Mixed blocks + F3 / F4) against each SSID's **chosen** `target_mode` — not the recommendation. Findings whose mode the operator chose away from simply disappear; findings that still apply are folded into the Act II disposition matrix / Translation gaps for the chosen design. This re-score does **not** re-open the Act I verdict (that gate already passed on source-readiness); it informs the *plan*. If the re-score surfaces a hard REGRESSION for the architecture the operator just chose, state it plainly and offer to revisit Stage 6.5 (e.g. *"your chosen Tunnel mode for `CORP` still has REGRESSION X; pick a different mode for it, or proceed and handle X manually"*) — the operator decides, having been told.
 
 If verdict was EMPTY-SOURCE (no SSIDs/clusters), skip Stage 6.5 — there's nothing to decide — and proceed to Stage 7 for whatever defaults exist.
 
@@ -1288,7 +1295,16 @@ cluster_records = [
 ]
 cluster_previews = []
 for c in cluster_records:
-    dec = decisions["per_cluster"].get(c["profile-name"], {})   # from Stage 6.5
+    # Only clusters that survive into the chosen topology have a Stage 6.5 decision.
+    # If all SSIDs were Bridged (Q2 skipped) or this cluster is unused, there's no
+    # decision — skip with a clear reason instead of indexing a missing key.
+    dec = decisions.get("per_cluster", {}).get(c["profile-name"])
+    if not dec:
+        cluster_previews.append({
+            "source": c["profile-name"],
+            "skip_reason": "no Stage 6.5 gateway-cluster decision (not referenced by the chosen topology / no tunneled SSID binds it)",
+        })
+        continue
     response = await call_tool(
         "central_translation_preview",
         {
@@ -1305,7 +1321,7 @@ for c in cluster_records:
 
 ##### 2g — WLAN SSIDs (`central:wlan_ssid`) — consumes Stage 6.5 Q1
 
-One source record = one `virtual_ap`; pass the FULL `ssid_prof` list via `runtime_values["ssid_profiles"]` (the engine joins by name). Per SSID, pass the operator's `target_mode` (Stage 6.5 Q1) + the `gw_cluster_list` it binds to (from the SSID→cluster map); for `bridged_and_tunneled`, also `bridge_scope_id` + `tunnel_scope_id`.
+One source record = one `virtual_ap`; pass the FULL `ssid_prof` list via `runtime_values["ssid_profiles"]` (the engine joins by name). Per **VAP instance**, look up the operator's decision by the composite `<source_scope>/<vap-name>` key (Q1), and pass `target_mode` + the `gw_cluster_list` it binds to; for `bridged_and_tunneled`, also `bridge_scope_id` + `tunnel_scope_id`.
 
 ```python
 vap_records = [
@@ -1314,7 +1330,11 @@ vap_records = [
 ]
 ssid_previews = []
 for v in vap_records:
-    dec = decisions["per_ssid"].get(v["profile-name"], {})   # from Stage 6.5
+    vap_key = f"{v.get('_source_scope', '<scope>')}/{v['profile-name']}"   # composite identity
+    dec = decisions.get("per_vap", {}).get(vap_key)                         # from Stage 6.5
+    if not dec:
+        ssid_previews.append({"source": vap_key, "skip_reason": "no Stage 6.5 forward-mode decision for this VAP"})
+        continue
     rt = {
         "central_scope_id": scope_lookup["Global"],   # or the Stage-7 AP scope
         "target_mode": dec["target_mode"],            # bridged / tunneled / hybrid / bridged_and_tunneled
@@ -1331,7 +1351,7 @@ for v in vap_records:
     ssid_previews.append(response.get("data", response))
 ```
 
-Surface each SSID's emitted calls (the wlan-ssids profile(s) + any overlay-wlan binding) in the consolidated report; a `skip_reason` here is a Stage 6.5 input gap (e.g. dual mode missing a scope) — surface it verbatim.
+Surface each VAP's emitted calls (the wlan-ssids profile(s) + any overlay-wlan binding) in the consolidated report; a `skip_reason` here is a Stage 6.5 input gap (e.g. dual mode missing a scope) — surface it verbatim.
 
 #### Step 3 — Render the consolidated preview report
 
