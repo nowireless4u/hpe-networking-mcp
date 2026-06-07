@@ -117,6 +117,7 @@ The skill's job is to prove the in-chat workflow produces credible readiness fin
 - If verdict is **BLOCKED**, the gate does not appear. The report ends with *"Translation locked until REGRESSIONs are resolved. Re-run the audit after fixes."*
 - If verdict is **PARTIAL**, the gate appears but warns which translation rows will be marked `inconclusive` (any object class where Stage 1 collection failed).
 - If verdict is **GO**, the gate appears with no caveat.
+- If verdict is **EMPTY-SOURCE** (only AOS 8 defaults found), the gate appears with a no-customer-config caveat and, on `yes`, **skips Stage 6.5** (nothing to decide) — there are no SSIDs/clusters, so Act II runs on defaults only.
 
 **Stage 6.5 — Target-architecture questionnaire.** On operator `yes`, BEFORE the translation plan, run the questionnaire (Stage 6.5): the per-SSID forward-mode decision + the gateway-topology decision, pre-filled from Act I detection. This is where the operator decides what they *want* (the source only told us what *is*). The answers populate the Act II `runtime_values`. See Stage 6.5.
 
@@ -454,6 +455,8 @@ Rules fall into four buckets:
 3. **Orchestration prerequisites (verdict-gating)** — fire as REGRESSION when the operator can't run the cutover at all (Central unreachable, GreenLake under-licensed, controllers below firmware floor). Target-independent → contribute to the pre-questionnaire verdict.
 4. **Target-architecture-dependent findings (PROVISIONAL — do NOT gate the pre-questionnaire verdict)** — any rule gated on `target_mode_recommended` (F3, F4, and the per-target-mode T\*/B\*/M\* blocks below). These are scored against the *recommended* mode only as a preview. **They must NOT force a BLOCKED verdict before Stage 6.5**, because the operator may choose a different target mode (e.g. Bridged / controllerless) that makes them moot. They are re-evaluated against the operator's actual Stage 6.5 choices and surfaced in the Act II plan — see Stage 6.5's re-score step. The Stage 6 verdict is computed from buckets 2 + 3 only.
 
+> **INVARIANT (do not break in future edits):** Bucket-4 (target-architecture-dependent) findings must **never** be included in the pre-questionnaire verdict count. The Stage 6 verdict = buckets 2 + 3 only. Breaking this lets a target-mode finding BLOCK the gate and lock the operator out of Stage 6.5 — the exact dead-end this design removes.
+
 Each finding format: **Severity — Description (VSG §anchor when one exists; else literal `none`) (source: <inventory key>)**.
 
 #### Applicability principle
@@ -641,8 +644,9 @@ After emitting the Stage 6 readiness report, decide. **The verdict is computed f
 - **Verdict = BLOCKED** — emit the literal sentence: *"Translation locked until REGRESSIONs are resolved. Re-run the audit after fixes."* Stop. Do NOT print the proceed prompt; do NOT run Stages 7-10.
 - **Verdict = GO** — emit the literal prompt: *"Verdict: GO. Proceed to AOS 10 translation plan? (yes / no / edit-context)"* and stop. Wait for the operator's reply.
 - **Verdict = PARTIAL** — emit the literal prompt: *"Verdict: PARTIAL — <N> Stage-1 collection items were inconclusive. Translation rows for those object classes will be marked `inconclusive — paste required`. Proceed to AOS 10 translation plan? (yes / no / edit-context)"* and stop. Wait for the operator's reply.
+- **Verdict = EMPTY-SOURCE** — the hierarchy held only AOS 8 system defaults (no customer-defined objects). Emit the literal prompt: *"Verdict: EMPTY-SOURCE — no customer-defined config found; there is nothing to translate beyond AOS 8 defaults. Proceed anyway to see the default-only plan? (yes / no)"* and stop. On `yes`, **skip Stage 6.5** (there are no SSIDs/clusters to decide) and run Stages 7-10 for whatever defaults exist; on `no`, end with the Act I report. (`edit-context` is not offered — there are no detected facts to correct.)
 
-On `yes` → proceed to **Stage 6.5** (the target-architecture questionnaire), then Stage 7.
+On `yes` (GO / PARTIAL) → proceed to **Stage 6.5** (the target-architecture questionnaire), then Stage 7. On `yes` (EMPTY-SOURCE) → skip Stage 6.5, go straight to Stage 7.
 On `no` → end the session with the Act I report unchanged.
 On `edit-context` → operator names which detected Stage 1 source fact to correct (one that changes the verdict), the AI updates the audit context, re-runs Stage 3 + Stage 6, re-emits the Act I report, and re-emits the gate prompt. Target-architecture *choices* (forward mode, topology) are NOT made here — they're the Stage 6.5 questionnaire.
 
@@ -654,7 +658,7 @@ Do NOT run Stage 6.5 or Stages 7-10 silently or pre-emptively.
 
 Runs only after the operator answers `yes` at the gate (non-BLOCKED verdict). This is the skill's one configuration interview, and it is deliberately **after** the readiness verdict: the operator first learns whether the devices are Central-ready, then decides the target architecture. Detection (Stage 2 / Stage 7 Step 4) supplies the **defaults**; the operator confirms or changes each. Ask via `elicit()` (the same mechanism as the Stage -2 data-source question). Keep it adaptive — only ask what's relevant.
 
-**Question 1 — per-virtual-AP forward mode (always).** Ask once **per `virtual_ap` instance**, NOT per ESSID — multiple VAPs can broadcast the same ESSID at different scopes (e.g. one `CORP` VAP per region) and each is its own profile with its own forward mode. Key every decision by the **composite identity `<source_scope>/<vap-name>`** so same-named VAPs across scopes never collide. (`Bridged and Tunneled` is the distinct case where *one* VAP intentionally becomes two profiles sharing an essid alias — that's a single decision with a scope split, not two VAPs.) For each translatable VAP, present its detected current mode + the recommended AOS 10 target, and ask the operator to pick one of:
+**Question 1 — per-virtual-AP forward mode (always).** Ask once **per `virtual_ap` instance**, NOT per ESSID — multiple VAPs can broadcast the same ESSID at different scopes (e.g. one `CORP` VAP per region) and each is its own profile with its own forward mode. Key every decision by the **composite identity `<source_scope>/<vap-name>`** so same-named VAPs across scopes never collide. (`Bridged and Tunneled` is the distinct case where *one* VAP intentionally becomes two profiles sharing an essid alias — that's a single decision with a scope split, not two VAPs.) A VAP is **translatable** (and so gets a question) when it matches the Stage 9b 2g preview filter: not `_flags.system`, not `_flags.default`, and it resolves an `ssid_prof` (the `virtual_ap.ssid_prof` reference exists in the collected `ssid_prof` list). Skip system/default VAPs and ones with a missing SSID profile — do NOT ask the operator about records the preview loop will skip; instead note them under Translation gaps (e.g. *"VAP `<scope>/<name>` references missing ssid-profile `<x>` — not translatable"*). For each translatable VAP, present its detected current mode + the recommended AOS 10 target, and ask the operator to pick one of:
 
 | Option | Meaning | Drives `wlan_ssid` `target_mode` |
 |---|---|---|
@@ -673,7 +677,9 @@ Pre-fill the recommendation from the detected `forward_mode` (`tunnel`/`decrypt-
 | **Campus gateways + DMZ clusters** | `intent_site` (campus) **and** `intent_manual` (DMZ) | site/site-collection + device-group |
 | **DMZ controllers only (few)** | `ha_only` | device-group |
 
-Default the selection to the detected pattern (same-ap-group-to-different-clusters → "campus + DMZ"; single regional cluster → "no DMZ"; few/DMZ-only → "DMZ only"). Per cluster, the strategy + scope feed `central:gateway_cluster`.
+Default the selection to the detected pattern (same-ap-group-to-different-clusters → "campus + DMZ"; single regional cluster → "no DMZ"; few/DMZ-only → "DMZ only").
+
+**Strategy and placement are separate — collect both.** The topology option above fixes the `cluster_strategy`; it does NOT fix *where* the cluster lands. For each surviving cluster, also confirm the **`central_scope_id`** (the actual target Central scope — global / a specific site / site-collection / device-group, consistent with the strategy's scope type). The `Scope` column above is the scope *type*; the operator must name the concrete scope. Record both in `decisions["per_cluster"][<name>]` (`cluster_strategy` + `central_scope_id`). Stage 9b does **not** default a missing scope to Global — it skips with a `skip_reason`, so an unconfirmed scope surfaces as a gap rather than a silently-wrong preview.
 
 **Outputs → Act II `runtime_values`.** Record the answers and pass them into every Stage 9b `central_translation_preview` call:
 
@@ -1305,13 +1311,22 @@ for c in cluster_records:
             "skip_reason": "no Stage 6.5 gateway-cluster decision (not referenced by the chosen topology / no tunneled SSID binds it)",
         })
         continue
+    # Strategy and placement scope are SEPARATE decisions — do NOT default scope to
+    # Global, which would silently preview the cluster at the wrong scope. Stage 6.5
+    # Q2 must have collected central_scope_id per surviving cluster; if it didn't, skip.
+    if not dec.get("central_scope_id"):
+        cluster_previews.append({
+            "source": c["profile-name"],
+            "skip_reason": "Stage 6.5 recorded a cluster_strategy but no central_scope_id — confirm the Central scope for this cluster before previewing",
+        })
+        continue
     response = await call_tool(
         "central_translation_preview",
         {
             "translation_id": "central:gateway_cluster",
             "source_records": [c],
             "runtime_values": {
-                "central_scope_id": dec.get("central_scope_id", scope_lookup["Global"]),
+                "central_scope_id": dec["central_scope_id"],
                 "cluster_strategy": dec["cluster_strategy"],   # ha_only / intent_site / intent_manual
             },
         },
