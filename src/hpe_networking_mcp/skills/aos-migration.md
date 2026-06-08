@@ -658,6 +658,8 @@ Do NOT run Stage 6.5 or Stages 7-10 silently or pre-emptively.
 
 Runs only after the operator answers `yes` at the gate (non-BLOCKED verdict). This is the skill's one configuration interview, and it is deliberately **after** the readiness verdict: the operator first learns whether the devices are Central-ready, then decides the target architecture. Detection (Stage 2 / Stage 7 Step 4) supplies the **defaults**; the operator confirms or changes each. Ask via `elicit()` (the same mechanism as the Stage -2 data-source question). Keep it adaptive — only ask what's relevant.
 
+**Precondition — inventory coverage.** Stage 6.5 needs `virtual_ap` + `ssid_prof` (Q1) and `cluster_prof` (Q2). The **offline upload / paste path (Stage 1-ALT) does not collect those** — it parses only `netdst` / `acl_sess` / `role`. So if there are **no translatable VAPs** (offline source, or the API walk genuinely found none): **skip Stage 6.5 entirely** and proceed to Act II for the object classes that *were* collected (policy / role / net-group), emitting a Translation-gaps note — *"Stage 6.5 (SSID forward-mode + gateway-topology decisions) skipped: requires `virtual_ap` / `ssid_prof` / `cluster_prof` coverage, which the offline parser does not provide. Re-run on the API path (or paste a full `show configuration effective` covering WLAN) to drive the SSID/cluster translations."* Do not ask Q1/Q2 against an empty VAP set.
+
 **Question 1 — per-virtual-AP forward mode (always).** Ask once **per `virtual_ap` instance**, NOT per ESSID — multiple VAPs can broadcast the same ESSID at different scopes (e.g. one `CORP` VAP per region) and each is its own profile with its own forward mode. Key every decision by the **composite identity `<source_scope>/<vap-name>`** so same-named VAPs across scopes never collide. (`Bridged and Tunneled` is the distinct case where *one* VAP intentionally becomes two profiles sharing an essid alias — that's a single decision with a scope split, not two VAPs.) A VAP is **translatable** (and so gets a question) when it matches the Stage 9b 2g preview filter: not `_flags.system`, not `_flags.default`, and it resolves an `ssid_prof` (the `virtual_ap.ssid_prof` reference exists in the collected `ssid_prof` list). Skip system/default VAPs and ones with a missing SSID profile — do NOT ask the operator about records the preview loop will skip; instead note them under Translation gaps (e.g. *"VAP `<scope>/<name>` references missing ssid-profile `<x>` — not translatable"*). For each translatable VAP, present its detected current mode + the recommended AOS 10 target, and ask the operator to pick one of:
 
 | Option | Meaning | Drives `wlan_ssid` `target_mode` |
@@ -995,10 +997,11 @@ For every row of the Stage 8 disposition matrix where Disposition is `direct-tra
 **Preconditions (soft — Stage 9b runs against partial inputs):**
 
 - Stage 1 has collected the AOS 8 inventory (effective-config dump). If the operator jumps straight to Stage 9b without Act I, run a **minimal Stage 1 collection** first — pull `role`, `acl_sess`, `vlan_id`, `vlan_name`, `vlan_name_id`, `netdst`, `netdst6` from the AOS 8 path the operator named (e.g. `/md/Campus/West`). Do NOT do the full Act I hierarchy walk — that's overkill for a preview.
+  - **This minimal path covers only 2a–2e** (VLANs / roles / policies / net-groups) — the bare-`record_id`, decision-free translations. **Sections 2f (gateway clusters) and 2g (WLAN SSIDs) do NOT run on the minimal path**: they additionally need `cluster_prof` / `virtual_ap` / `ssid_prof` collected **with `_source_scope` stamping across the hierarchy** (Step 2's `_flatten`) *and* the **Stage 6.5 decisions** (`per_vap` / `per_cluster`). Run 2f/2g only after a **full Act I walk + Stage 6.5**; on the minimal path, emit a note that the SSID/cluster previews require the full flow rather than producing empty/"no decision" output.
 - Stage 7 has produced the operator-confirmed AOS 8 → Central hierarchy mapping. **If Stage 7 was not run, target Global as a fallback** with a clearly-marked placeholder note in the output (see Step 1 below). The preview is engine output regardless of where the operator plans to land it; making Stage 9b strict on Stage 7 would defeat its purpose.
 - The target Central hierarchy does NOT need to exist in Central yet. Stage 9 builds the hierarchy as the FIRST cutover step; Stage 9b previews the per-object work that follows. Walker may legitimately return no match for a Stage-7 Central scope name — in that case use a placeholder scope_id (see Step 1).
 
-**Translations shipped today (v3.0.1.14):**
+**Translations shipped today (v3.3.7.0):**
 
 | translation_id | AOS 8 source | Central target | Notes |
 |---|---|---|---|
@@ -1007,10 +1010,16 @@ For every row of the Stage 8 disposition matrix where Disposition is `direct-tra
 | `central:role` | `role` (Gateway-targeted) | role profile + config-assignment | ~25 fields. Skip `_flags.default=true` system roles. |
 | `central:net_group` | `netdst` (IPv4) or `netdst6` (IPv6) | net-group profile + config-assignment | Address family inferred from source record. Per-entry host/network/FQDN mapped to Central HOST/NETWORK/FQDN items. Must run BEFORE `central:policy`. |
 | `central:policy` | `acl_sess` | /policies POST + config-assignment | Engine pre-processes via reverse-index lookup against role records (consumer pre-fetches once). References `net-group` aliases by name (created by `central:net_group`); `net-service` aliases pending. |
+| `central:gateway_cluster` | `cluster_prof` | `gateway-clusters` (HA) + `gw-cluster-intent-config` | **Preview wired in §2f.** `runtime_values["cluster_strategy"]` (`ha_only` / `intent_site` / `intent_manual`) from Stage 6.5 Q2; `central_scope_id` per cluster. Needs full Act I + Stage 6.5. |
+| `central:wlan_ssid` | `virtual_ap` ⨝ `ssid_prof` (by name) | `wlan-ssids` (+ `overlay-wlan` cluster binding) | **Preview wired in §2g.** `runtime_values["target_mode"]` (4 modes) from Stage 6.5 Q1 + `ssid_profiles` (full list) + `gw_cluster_list`; dual mode adds `bridge_scope_id`/`tunnel_scope_id`. Needs full Act I + Stage 6.5. |
+
+The AAA-chain translations (`central:auth_server`, `central:server_group`, `central:captive_portal`, `central:aaa_profile`, `central:dot1x_auth`, `central:mac_auth`) also ship and are previewable via `central_translation_preview`, but do not yet have dedicated Stage 9b subsections (driven directly, not from a Stage 6.5 decision).
 
 #### Step 1 — Scope resolution (walker-optional, fall back to placeholder)
 
 For each distinct Central scope name from the Stage 7 mapping (or each AOS 8 binding scope if Stage 7 wasn't run), try `central-scope-walker` to resolve it to a real Central scope_id. **If walker returns no match — the target scope doesn't exist in Central yet — use a placeholder scope_id of the form `<TBD:Central-name>` and continue.** Stage 9b is a preview; the engine substitutes whatever string is passed and the resulting body's `scope-id` field surfaces as `<TBD:...>`, which is exactly the right "this scope must be created before execution" signal.
+
+> **Scope-resolution principle (applies to every 2a–2g snippet):** pass the **Stage-7-resolved scope** for the object's binding, and a **`<TBD:...>`** placeholder when it can't be resolved — **never a silent `scope_lookup["Global"]` as if it were authoritative.** The literal `scope_lookup["Global"]` shown in the 2a–2e examples is shorthand for "the resolved scope for this object"; on a real run substitute the object's Stage-7 Central scope (2f uses the operator-confirmed `central_scope_id` from Stage 6.5; 2g resolves the VAP's `_source_scope` via the Stage-7 mapping). Global is correct only when Global is genuinely the chosen target.
 
 ```python
 # Inside execute(): one walker pass for the Central scopes you need.
@@ -1391,8 +1400,15 @@ for v in vap_records:
     if not dec:
         ssid_previews.append({"source": vap_key, "skip_reason": "no Stage 6.5 forward-mode decision for this VAP"})
         continue
+    # Resolve the AP broadcast scope from the VAP's source scope via the Stage 7
+    # AOS8->Central hierarchy mapping — do NOT default to Global (that would preview
+    # at the wrong scope after the operator confirmed placement in Stage 7). If the
+    # Stage 7 mapping / walker can't resolve it, use a <TBD:...> placeholder (Step 1
+    # convention) so the gap is visible rather than authoritative-looking.
+    mapped_scope = stage7_central_scope_for(v.get("_source_scope"))   # Central name from the Stage 7 mapping
+    ssid_scope_id = scope_lookup.get(mapped_scope, f"<TBD:{mapped_scope or v.get('_source_scope')}>")
     rt = {
-        "central_scope_id": scope_lookup["Global"],   # or the Stage-7 AP scope
+        "central_scope_id": ssid_scope_id,
         "target_mode": dec["target_mode"],            # bridged / tunneled / hybrid / bridged_and_tunneled
         "ssid_profiles": stage1_ssid_prof_records,    # full list — engine joins by name
         "gw_cluster_list": dec.get("gw_cluster_list", []),
@@ -1419,7 +1435,7 @@ Surface each VAP's emitted calls (the wlan-ssids profile(s) + any overlay-wlan b
 
 #### Step 3 — Render the consolidated preview report
 
-Combine the five `result` dicts from Step 2 into a single operator-facing report. The report has THREE parts: (a) summary table, (b) per-record detail tables, (c) **sample TargetCall bodies** as JSON code blocks. Operators reviewing the migration need (c) — the actual JSON the migration will POST — not just counts.
+Combine all preview result dicts from Step 2 (VLANs / named-VLANs / roles / policies / net-groups, plus gateway-clusters and WLAN-SSIDs when the full Act I + Stage 6.5 flow ran) into a single operator-facing report. The report has THREE parts: (a) summary table, (b) per-record detail tables, (c) **sample TargetCall bodies** as JSON code blocks. Operators reviewing the migration need (c) — the actual JSON the migration will POST — not just counts.
 
 ```
 ## Engine-driven translation preview (read-only)
