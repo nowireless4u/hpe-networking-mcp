@@ -1440,7 +1440,7 @@ for v in vap_records:
     # central:wlan_ssid substitutes gw_cluster_list WHOLE into the overlay body, so it
     # must already be Central objects, NOT decision-key strings.
     gw_cluster_list, cluster_gap = [], None
-    for cref in dec.get("cluster_refs", []):
+    for idx, cref in enumerate(dec.get("cluster_refs", [])):
         cdec = decisions.get("per_cluster", {}).get(cref)
         if not cdec or not cdec.get("target_scope_name"):
             cluster_gap = f"cluster {cref} has no confirmed Stage 6.5 decision/scope — can't build the overlay binding"
@@ -1451,6 +1451,11 @@ for v in vap_records:
             "cluster": cref.split("/")[-1],            # Central gateway-cluster profile name
             "cluster-type": "GATEWAY",
             "tunnel-type": "L2",                       # tunnel binding; refine per design if L3
+            # cluster-redundancy-type is MANDATORY in the overlay schema (enum PRIMARY/BACKUP).
+            # The VAP's first/anchor cluster is PRIMARY; any additional (e.g. DMZ) clusters are
+            # BACKUP. cluster_refs order encodes this (anchor first); operator confirms for
+            # multi-cluster designs.
+            "cluster-redundancy-type": "PRIMARY" if idx == 0 else "BACKUP",
             "cluster-scope-id": cluster_scope_id,
         })
     if cluster_gap:
