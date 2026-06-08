@@ -671,6 +671,8 @@ Runs only after the operator answers `yes` at the gate (non-BLOCKED verdict). Th
 | **Bridged and Tunneled** | the same SSID in BOTH modes across locations (campus tunneled, branches bridged) → essid alias + two profiles | `bridged_and_tunneled` (also ask the bridge-vs-tunnel **scope split** — detected default, operator adjusts → collect the **scope NAMES** `bridge_scope_name` / `tunnel_scope_name`, resolved to ids/`<TBD>` in 9b) |
 | **Hybrid** | split-tunnel (one SSID, corporate tunneled + Internet local) | `hybrid` |
 
+**Display label → engine value (do not confuse the two):** the left column is the operator-facing label; the **right column is the exact string that must go into `runtime_values["target_mode"]`** — `Bridged`→`bridged`, `Tunneled`→`tunneled`, `Bridged and Tunneled`→`bridged_and_tunneled`, `Hybrid`→`hybrid`. Store/pass the lowercase engine value, never the display label (the engine rejects unknown `target_mode` strings). Same for the Stage 3 re-score vocabulary mapping (`tunnel`/`bridge`/`mixed` blocks) at the re-score step.
+
 Pre-fill the recommendation from the detected `forward_mode` (`tunnel`/`decrypt-tunnel`→Tunneled, `bridge`→Bridged, `split-tunnel`→Hybrid). The operator may pick anything — e.g. flipping every SSID to **Bridged** to go controllerless. The source tells us what *is*; the operator decides what they *want*.
 
 **Question 2 — gateway topology (only if any SSID is Tunneled / Hybrid / Bridged-and-Tunneled).** Skip entirely if every SSID is Bridged (no gateways survive → no clustering). Otherwise present the detected topology (from Stage 2 detection — the SSID→cluster map + the cluster-mode recommendation derivation) and ask:
@@ -1394,23 +1396,31 @@ for c in cluster_records:
 
 ##### 2g — WLAN SSIDs (`central:wlan_ssid`) — consumes Stage 6.5 Q1
 
-One source record = one `virtual_ap`; pass the FULL `ssid_prof` list via `runtime_values["ssid_profiles"]` (the engine joins by name). Per **VAP instance**, look up the operator's decision by the composite `<source_scope>/<vap-name>` key (Q1), pass `target_mode`, and **resolve the decision's `cluster_refs` (composite per_cluster keys) into the engine's `gw_cluster_list` — the Central overlay object shape `[{cluster, cluster-type, tunnel-type, cluster-scope-id}]`**, not the raw key strings (the engine substitutes it whole into the overlay body). For `bridged_and_tunneled`, resolve the decision's `bridge_scope_name` / `tunnel_scope_name` → `bridge_scope_id` / `tunnel_scope_id` (walker, `<TBD:...>` fallback) before passing them.
+One source record = one `virtual_ap`; pass **only the VAP's own scope's** `ssid_prof` records via `runtime_values["ssid_profiles"]` (the engine joins by name, so a scope-filtered list prevents a same-name profile at another scope from binding — never pass the full flat list). Per **VAP instance**, look up the operator's decision by the composite `<source_scope>/<vap-name>` key (Q1), pass `target_mode`, and **resolve the decision's `cluster_refs` (composite per_cluster keys) into the engine's `gw_cluster_list` — the Central overlay object shape `[{cluster, cluster-type, tunnel-type, cluster-scope-id}]`**, not the raw key strings (the engine substitutes it whole into the overlay body). For `bridged_and_tunneled`, resolve the decision's `bridge_scope_name` / `tunnel_scope_name` → `bridge_scope_id` / `tunnel_scope_id` (walker, `<TBD:...>` fallback) before passing them.
 
 ```python
 vap_records = [
     v for v in stage1_virtual_ap_records
     if not (v.get("_flags") or {}).get("system") and not (v.get("_flags") or {}).get("default")
 ]
-ssid_prof_names = {s.get("profile-name") for s in stage1_ssid_prof_records}
 ssid_previews = []
 for v in vap_records:
     vap_key = f"{v.get('_source_scope', '<scope>')}/{v['profile-name']}"   # composite identity
+    # SCOPE-AWARE ssid_prof join: a VAP resolves its ssid_prof within its OWN scope
+    # (effective-config surfaces the inherited copy at that scope). Same-name ssid_prof
+    # objects at different scopes can differ, so pass the engine ONLY this VAP's scope's
+    # ssid_profiles — never the full flat list (a bare-name join over all scopes could
+    # bind the wrong profile). This is the same cross-scope collision guard used for
+    # the VAP/cluster decision keys.
+    scoped_ssid_profiles = [
+        s for s in stage1_ssid_prof_records if s.get("_source_scope") == v.get("_source_scope")
+    ]
+    scoped_ssid_names = {s.get("profile-name") for s in scoped_ssid_profiles}
     # Match the Q1 "translatable" definition: a VAP whose ssid_prof reference doesn't
-    # resolve is not translatable — surface the specific missing-profile gap, not the
-    # generic "no decision" one.
+    # resolve at its scope is not translatable — surface the specific missing-profile gap.
     sp_ref = (v.get("ssid_prof") or {}).get("profile-name")
-    if sp_ref not in ssid_prof_names:
-        ssid_previews.append({"source": vap_key, "skip_reason": f"references missing ssid-profile '{sp_ref}' — not translatable"})
+    if sp_ref not in scoped_ssid_names:
+        ssid_previews.append({"source": vap_key, "skip_reason": f"references ssid-profile '{sp_ref}' not present at scope {v.get('_source_scope')} — not translatable"})
         continue
     dec = decisions.get("per_vap", {}).get(vap_key)                         # from Stage 6.5
     if not dec:
@@ -1450,7 +1460,7 @@ for v in vap_records:
     rt = {
         "central_scope_id": ssid_scope_id,
         "target_mode": dec["target_mode"],            # bridged / tunneled / hybrid / bridged_and_tunneled
-        "ssid_profiles": stage1_ssid_prof_records,    # full list — engine joins by name
+        "ssid_profiles": scoped_ssid_profiles,        # THIS VAP's scope only — engine joins by name within scope
         "gw_cluster_list": gw_cluster_list,           # Central overlay objects (engine contract)
     }
     if dec["target_mode"] == "bridged_and_tunneled":
