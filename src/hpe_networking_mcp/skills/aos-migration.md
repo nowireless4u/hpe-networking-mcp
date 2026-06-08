@@ -1019,11 +1019,11 @@ For every row of the Stage 8 disposition matrix where Disposition is `direct-tra
 **Preconditions (soft — Stage 9b runs against partial inputs):**
 
 - Stage 1 has collected the AOS 8 inventory (effective-config dump). If the operator jumps straight to Stage 9b without Act I, run a **minimal Stage 1 collection** first — pull `role`, `acl_sess`, `vlan_id`, `vlan_name`, `vlan_name_id`, `netdst`, `netdst6` from the AOS 8 path the operator named (e.g. `/md/Campus/West`). Do NOT do the full Act I hierarchy walk — that's overkill for a preview. **Build the `stage1_<obj>_records` lists via Step 2's `_flatten` even on this path** (so the 2a–2e snippets' variable names resolve and records carry `_source_scope`); a single-scope minimal collection is just a one-entry `config_by_scope`.
-  - **This minimal path covers only 2a–2e** (VLANs / roles / policies / net-groups) — the bare-`record_id`, decision-free translations. **Sections 2f (gateway clusters) and 2g (WLAN SSIDs) do NOT run on the minimal path**: they additionally need `cluster_prof` / `virtual_ap` / `ssid_prof` collected **with `_source_scope` stamping across the hierarchy** (Step 2's `_flatten`) *and* the **Stage 6.5 decisions** (`per_vap` / `per_cluster`). Run 2f/2g only after a **full Act I walk + Stage 6.5**; on the minimal path, emit a note that the SSID/cluster previews require the full flow rather than producing empty/"no decision" output.
+  - **This minimal path covers only 2a–2e** (VLANs / roles / policies / net-groups) — the bare-`record_id`, decision-free translations. **Sections 2f (gateway clusters) and 2g (WLAN SSIDs) do NOT run on the minimal path**: they additionally need `cluster_prof` / `virtual_ap` / `ssid_prof` collected **with `_source_scope` stamping across the hierarchy** (Step 2's `_flatten`) *and* the **Stage 6.5 decisions** (`per_vap` / `per_cluster`). Run 2f/2g only after a **full Act I walk + Stage 6.5**; on the minimal path, emit a note that the SSID/cluster previews require the full flow rather than producing empty/"no decision" output. **Section 2h (the AAA chain) also does NOT run on the minimal path** — it needs the AAA objects (`rad_server` / `tacacs_server` / `server_group_prof` / `dot1x_auth_profile` / `mac_auth_profile` / `cp_auth_profile` / `aaa_prof`) collected — but unlike 2f/2g it needs **no Stage 6.5 decision**; run it after a full Act I walk (or extend the minimal collection to pull those kinds).
 - Stage 7 has produced the operator-confirmed AOS 8 → Central hierarchy mapping. **If Stage 7 was not run, target Global as a fallback** with a clearly-marked placeholder note in the output (see Step 1 below). The preview is engine output regardless of where the operator plans to land it; making Stage 9b strict on Stage 7 would defeat its purpose.
 - The target Central hierarchy does NOT need to exist in Central yet. Stage 9 builds the hierarchy as the FIRST cutover step; Stage 9b previews the per-object work that follows. Walker may legitimately return no match for a Stage-7 Central scope name — in that case use a placeholder scope_id (see Step 1).
 
-**Translations shipped today (v3.3.7.0):**
+**Translations shipped today (v3.3.8.0):**
 
 | translation_id | AOS 8 source | Central target | Notes |
 |---|---|---|---|
@@ -1034,8 +1034,14 @@ For every row of the Stage 8 disposition matrix where Disposition is `direct-tra
 | `central:policy` | `acl_sess` | /policies POST + config-assignment | Engine pre-processes via reverse-index lookup against role records (consumer pre-fetches once). References `net-group` aliases by name (created by `central:net_group`); `net-service` aliases pending. |
 | `central:gateway_cluster` | `cluster_prof` | `gateway-clusters` (HA) + `gw-cluster-intent-config` | **Preview wired in §2f.** `runtime_values["cluster_strategy"]` (`ha_only` / `intent_site` / `intent_manual`) from Stage 6.5 Q2; `central_scope_id` per cluster. Needs full Act I + Stage 6.5. |
 | `central:wlan_ssid` | `virtual_ap` ⨝ `ssid_prof` (by name) | `wlan-ssids` (+ `overlay-wlan` cluster binding) | **Preview wired in §2g.** `runtime_values["target_mode"]` (4 modes) from Stage 6.5 Q1 + `ssid_profiles` (the VAP's **own-scope** records only — never the full flat list; see §2g) + `gw_cluster_list`; dual mode adds `bridge_scope_id`/`tunnel_scope_id`. Needs full Act I + Stage 6.5. |
+| `central:auth_server` | `rad_server` + `tacacs_server` | auth-server profile + config-assignment | **Preview wired in §2h.** Per-record; `central_scope_id` only. Foundational — run FIRST (server-groups reference it by name). Shared-secret field (`rad_key`/`tacacs_key`) is PII; write path PII-gated. |
+| `central:server_group` | `server_group_prof` | server-group profile + config-assignment | **Preview wired in §2h.** Per-record; `central_scope_id` only. Depends on `central:auth_server` (members reference auth-servers by name). |
+| `central:dot1x_auth` | `dot1x_auth_profile` | dot1x-auth profile + config-assignment | **Preview wired in §2h.** Per-record; `central_scope_id` only. Foundational profile referenced by the aaa-profile. |
+| `central:mac_auth` | `mac_auth_profile` | mac-auth profile + config-assignment | **Preview wired in §2h.** Per-record; `central_scope_id` only. Foundational profile referenced by the aaa-profile. |
+| `central:captive_portal` | `cp_auth_profile` | captive-portal profile + config-assignment | **Preview wired in §2h.** Per-record; `central_scope_id` only. References a server-group + roles by name (run those first / alongside). |
+| `central:aaa_profile` | `aaa_prof` | aaa-profile + config-assignment | **Preview wired in §2h.** Per-record; `central_scope_id` only. Depends on auth-server, server-group, dot1x/mac/captive profiles, and roles — run the whole §2h chain in order. Gateway-terminated model. |
 
-The AAA-chain translations (`central:auth_server`, `central:server_group`, `central:captive_portal`, `central:aaa_profile`, `central:dot1x_auth`, `central:mac_auth`) also ship and are previewable via `central_translation_preview`, but do not yet have dedicated Stage 9b subsections (driven directly, not from a Stage 6.5 decision).
+All seven config families above ship and are wired into Stage 9b. The **AAA chain** (`central:auth_server` → `central:server_group` → `central:dot1x_auth` / `central:mac_auth` / `central:captive_portal` → `central:aaa_profile`) is driven directly (per-record, no Stage 6.5 decision) — see §2h.
 
 #### Step 1 — Scope resolution (walker-optional, fall back to placeholder)
 
@@ -1535,9 +1541,76 @@ for v in vap_records:
 
 Surface each VAP's emitted calls (the wlan-ssids profile(s) + any overlay-wlan binding) in the consolidated report; a `skip_reason` here is a Stage 6.5 input gap (e.g. dual mode missing a scope) — surface it verbatim.
 
+##### 2h — AAA chain (`central:auth_server` → `server_group` → `dot1x_auth` / `mac_auth` / `captive_portal` → `aaa_profile`)
+
+These six translations ship and preview via `central_translation_preview`. Unlike 2f/2g they are **driven directly** — per-record, `central_scope_id` only, **no Stage 6.5 decision** — so they need the AAA objects from Stage 1 but **not** the questionnaire. They model the **gateway-terminated (tunnel / hybrid) AAA**: the gateway `aaa-profile` a tunnel-mode `wlan-ssid` binds to. For a fully **bridged / controllerless** design the AAA folds inline into the `wlan-ssid` instead (deferred — see §2g notes / the bridge-mode AAA backlog item); if **every** surviving SSID is Bridged, run §2h for completeness but mark it **informational** in the report (the gateway aaa-profile won't be referenced).
+
+**Dependency order is also the preview order** (so the operator reads prerequisites first): `auth_server` → `server_group` → {`dot1x_auth`, `mac_auth`, `captive_portal`} → `aaa_profile`. Server-groups reference auth-servers by name; the aaa-profile references server-groups + the dot1x/mac/captive profiles + roles by name — each prerequisite must exist in Central before the object that references it.
+
+> **PII:** `central:auth_server` bodies carry the shared-secret field (`rad_key` / `tacacs_key`). Stage 9b is **read-only** (preview only), so this is safe to display, but the **write path stays PII-gated** — do not enable auth-server writes until the secret-tokenization prerequisite ships (see the spec `draft_notes`). Surface the secret presence as a note, not the value, in any operator-facing summary you author.
+
+```python
+def _aaa_translatable(r: dict) -> bool:
+    # Same consumer-side filter as every other family: drop system / default /
+    # inherited-at-descendant-scope copies; the engine translates the rest.
+    flags = r.get("_flags") or {}
+    return not (flags.get("inherited") or flags.get("system") or flags.get("default"))
+
+# (translation_id, source record list) in EXECUTION = PREVIEW order. auth_server
+# combines both REST source shapes (RADIUS + TACACS) — the engine tags _type per record.
+aaa_chain = [
+    ("central:auth_server",    stage1_rad_server_records + stage1_tacacs_server_records),
+    ("central:server_group",   stage1_server_group_prof_records),
+    ("central:dot1x_auth",     stage1_dot1x_auth_profile_records),
+    ("central:mac_auth",       stage1_mac_auth_profile_records),
+    ("central:captive_portal", stage1_cp_auth_profile_records),
+    ("central:aaa_profile",    stage1_aaa_prof_records),
+]
+aaa_previews = []
+for tid, records in aaa_chain:
+    recs = [r for r in records if _aaa_translatable(r)]
+    if not recs:
+        # No user-defined records at this scope is normal (e.g. no TACACS, or AAA
+        # lives at a parent scope). Record it so the report shows the family ran.
+        aaa_previews.append({"kind": tid, "record_count": 0, "translatable": 0, "skipped": 0,
+                             "note": "no user-defined records at this scope (all system/default/inherited, or none configured)"})
+        continue
+    response = await call_tool(
+        "central_translation_preview",
+        {
+            "translation_id": tid,
+            "source_records": recs,
+            # Resolve the binding scope the SAME way as every other object — the
+            # gateway-terminated AAA profiles land at the gateway's Central scope
+            # (where the cluster lands). Use the resolved scope / <TBD:...>, never a
+            # silent Global default (the scope_lookup["Global"] literal is shorthand).
+            "runtime_values": {"central_scope_id": scope_lookup["Global"]},
+        },
+    )
+    preview = response.get("data", response)
+    aaa_previews.append({
+        "kind": tid,
+        "record_count": preview["record_count"],
+        "translatable": preview["translatable_count"],
+        "skipped": preview["skipped_count"],
+        # auth_server bodies include the shared secret — note its PRESENCE, not value.
+        "summary": [
+            {"id": r["record_id"], "calls": r["call_count"], "skip": r["skip_reason"]}
+            for r in preview["results"]
+        ][:30],
+    })
+    # Cross-record collisions matter here too (e.g. two server-groups folding to one
+    # Central name); surface preview["target_collisions"] if non-empty (issue #439).
+aaa_previews
+```
+
+Surface each family's emitted calls in the consolidated report under an **AAA chain** subsection, in the order above. A `skip_reason` on a record is a translation gap (e.g. an `aaa_prof` referencing a server-group that wasn't collected) — surface it verbatim; a record that references a not-yet-created prerequisite is an **ordering** note, not a failure (the chain creates prerequisites first).
+
+**Minimal-path note:** §2h needs the AAA objects (`rad_server` / `server_group_prof` / `dot1x_auth_profile` / `mac_auth_profile` / `cp_auth_profile` / `aaa_prof`) collected in Stage 1. They are **not** part of the 2a–2e minimal collection, but — unlike 2f/2g — they need **no Stage 6.5 decision**. Run §2h after a **full Act I walk**, or extend the minimal collection to pull these object kinds; do not emit empty AAA previews silently on the 2a–2e minimal path — note that the AAA chain requires the AAA objects.
+
 #### Step 3 — Render the consolidated preview report
 
-Combine all preview result dicts from Step 2 (VLANs / named-VLANs / roles / policies / net-groups, plus gateway-clusters and WLAN-SSIDs when the full Act I + Stage 6.5 flow ran) into a single operator-facing report. The report has THREE parts: (a) summary table, (b) per-record detail tables, (c) **sample TargetCall bodies** as JSON code blocks. Operators reviewing the migration need (c) — the actual JSON the migration will POST — not just counts.
+Combine all preview result dicts from Step 2 (VLANs / named-VLANs / roles / policies / net-groups, plus gateway-clusters and WLAN-SSIDs when the full Act I + Stage 6.5 flow ran, plus the §2h AAA chain when the AAA objects were collected) into a single operator-facing report. The report has THREE parts: (a) summary table, (b) per-record detail tables, (c) **sample TargetCall bodies** as JSON code blocks. Operators reviewing the migration need (c) — the actual JSON the migration will POST — not just counts.
 
 ```
 ## Engine-driven translation preview (read-only)
@@ -1610,6 +1683,14 @@ For at least the FIRST record of each translation, emit the engine's `target_cal
 #### VLAN ID: `108` (representative)
 ... (similar JSON block) ...
 
+### Write hazards (target collisions)
+
+If any translation's preview returned a non-empty `target_collisions` (distinct source records that resolve to the **same** Central object — e.g. two named-VLANs whose names case-fold to one alias, or two server-groups folding to one name), list them here verbatim. These would overwrite/409 each other at execution time, so the operator must rename or merge the source records before cutover. Omit the section when every translation returned `target_collisions: []`.
+
+| Target object | Colliding source records | Hazard |
+|---|---|---|
+| `/aliases/user-vlan` (NAMED_VLAN alias) | `USER-VLAN`, `user-vlan` | both fold to alias `user-vlan` — second POST overwrites the first |
+
 ### Drill-down available
 
 - *"Show me the body for ACL `<name>`"* — re-run with that single record; dump the full `target_calls[0].body` (and `target_calls[1].body` for the config-assignment if relevant).
@@ -1624,6 +1705,7 @@ For at least the FIRST record of each translation, emit the engine's `target_cal
 - **Cap the per-record detail table at ~30 rows per translation.** Bodies appear in the "Sample TargetCall bodies" section, not in the table. The drill-down prompts let the operator request specific bodies.
 - **Always emit at least 1 sample body per translation** in Step 3 unless `translatable_count == 0`. Picking the FIRST translatable record is fine; the goal is to give the operator a concrete sense of what gets POSTed.
 - **For runs with `record_count == 0` for a given translation,** emit a one-line note (e.g. *"central:vlan_id: 0 records at this scope"*) instead of an empty section.
+- **Surface `target_collisions` as write hazards.** If any translation's preview returns a non-empty `target_collisions`, render the "Write hazards" section above — distinct source records colliding on one Central object overwrite/409 each other at execution and must be reconciled before cutover.
 - **Mark every placeholder scope_id loudly.** A body that contains `"scope-id": "<TBD:..."` is NOT executable — say so in the report header so the operator knows the migration plan needs the target hierarchy created first.
 
 **Findings produced:** if `skipped_count > 0` (engine-skipped) OR `skipped_per_lld` is non-empty (pre-filtered) for any translation, surface the skip reasons as a finding under Act II's "Translation gaps" subsection.

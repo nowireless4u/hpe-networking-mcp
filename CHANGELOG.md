@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.8.0] - 2026-06-08
+
+**Minor — aos-migration Stage 9b now wires the full AAA chain + surfaces target collisions (#437).** Closes the gap where Stage 9b's deterministic preview documented only five translation IDs while six more shipped specs (the AAA chain) were silently omitted — an operator could read the preview as complete when it skipped auth-servers, server-groups, and auth profiles entirely.
+
+- **New Stage 9b §2h — AAA chain.** Wires `central:auth_server` → `central:server_group` → `central:dot1x_auth` / `central:mac_auth` / `central:captive_portal` → `central:aaa_profile` into the engine-driven preview, in execution/dependency order (server-groups reference auth-servers by name; the aaa-profile references server-groups + the dot1x/mac/captive profiles + roles). Driven directly (per-record, `central_scope_id` only — no Stage 6.5 decision); models the gateway-terminated (tunnel/hybrid) AAA. Includes a read-only PII note (auth-server shared secrets `rad_key`/`tacacs_key` display in the preview but the write path stays PII-gated) and a minimal-path note (§2h needs the AAA objects collected but no questionnaire).
+- **All 13 shipped `central:*` translations now represented in Stage 9b** (added six AAA rows to the translation table). A new guard test (`test_skill_stage9b_translation_coverage.py`) fails when a newly-shipped `central:*` translation isn't wired into Stage 9b unless explicitly listed in `OUT_OF_SCOPE` with a reason — so the omission class #437 reported can't silently recur. It also asserts the AAA chain appears in dependency order.
+- **`target_collisions` surfaced in the consolidated report** (consumes the #439 preview output): a new "Write hazards (target collisions)" section + output rule lists distinct source records that resolve to the same Central object (case-folded aliases, name-folded groups) and would overwrite/409 each other at execution — the operator must reconcile them before cutover.
+
+Skill + test change (no tool/code changes); 1693 tests pass.
+
 ## [3.3.7.2] - 2026-06-08
 
 **Patch — two translation-engine bugs caught by the automated reviewer (#438, #439).** Both surfaced in the `central:wlan_ssid` / `central_translation_preview` surface shipped in 3.3.6.0–3.3.7.1.
