@@ -668,7 +668,7 @@ Runs only after the operator answers `yes` at the gate (non-BLOCKED verdict). Th
 |---|---|---|
 | **Bridged** | AP local breakout; no gateway | `bridged` |
 | **Tunneled** | gateway-terminated | `tunneled` |
-| **Bridged and Tunneled** | the same SSID in BOTH modes across locations (campus tunneled, branches bridged) → essid alias + two profiles | `bridged_and_tunneled` (also ask the bridge-vs-tunnel **scope split** — detected default, operator adjusts → `bridge_scope_id` / `tunnel_scope_id`) |
+| **Bridged and Tunneled** | the same SSID in BOTH modes across locations (campus tunneled, branches bridged) → essid alias + two profiles | `bridged_and_tunneled` (also ask the bridge-vs-tunnel **scope split** — detected default, operator adjusts → collect the **scope NAMES** `bridge_scope_name` / `tunnel_scope_name`, resolved to ids/`<TBD>` in 9b) |
 | **Hybrid** | split-tunnel (one SSID, corporate tunneled + Internet local) | `hybrid` |
 
 Pre-fill the recommendation from the detected `forward_mode` (`tunnel`/`decrypt-tunnel`→Tunneled, `bridge`→Bridged, `split-tunnel`→Hybrid). The operator may pick anything — e.g. flipping every SSID to **Bridged** to go controllerless. The source tells us what *is*; the operator decides what they *want*.
@@ -697,8 +697,10 @@ decisions = {
                                              # payload). 2g resolves each via per_cluster into the Central
                                              # overlay gw_cluster_list object shape before previewing.
                                              "cluster_refs": ["<source_scope>/<cluster-name>", ...],
-                                             "bridge_scope_id": "...",  # bridged_and_tunneled only
-                                             "tunnel_scope_id": "..."}, # bridged_and_tunneled only
+                                             # dual-mode scope split: NAMES (resolved to ids/<TBD> in 9b,
+                                             # like target_scope_name) — the scopes may not exist yet:
+                                             "bridge_scope_name": "...",  # bridged_and_tunneled only
+                                             "tunnel_scope_name": "..."}, # bridged_and_tunneled only
                ... },
   # keyed by composite "<source_scope>/<cluster-name>" — same collision-safety as per_vap.
   # target_scope_name is the intended Central scope NAME (resolved to scope_id/<TBD> in 9b), not a raw id.
@@ -713,7 +715,7 @@ decisions = {
 | `tunneled` | the **Tunnel** block (+ F3/F4 where their tunnel-target severity applies) |
 | `bridged` | the **Bridge** block (+ F3/F4 bridge-target severity) |
 | `hybrid` (split-tunnel) | the **Mixed** block + any split-tunnel-specific rules |
-| `bridged_and_tunneled` | **both** the Bridge block (scoped to `bridge_scope_id`) **and** the Tunnel block (scoped to `tunnel_scope_id`) — it's two real profiles |
+| `bridged_and_tunneled` | **both** the Bridge block (at the bridge scope) **and** the Tunnel block (at the tunnel scope) — it's two real profiles |
 
 **F3 / F4 are deployment-level, not per-SSID** (L3 Mobility being load-bearing; VC-managed NAT'd WLANs depending on controller-side NAT/DHCP). Their original aggregate gate was `{bridge, mixed}` = "some traffic bridges locally." Post-questionnaire, re-trigger them as **REGRESSION if ANY SSID's chosen mode bridges traffic locally** — `bridged`, `hybrid` (split-tunnel keeps Internet local), or the bridge half of `bridged_and_tunneled`. If **every** SSID is pure `tunneled`, F3 downgrades to DRIFT and F4 does not apply (all client traffic terminates on the gateway). Evaluate F3/F4 once over the whole set of chosen modes, not per SSID.
 
@@ -1392,7 +1394,7 @@ for c in cluster_records:
 
 ##### 2g — WLAN SSIDs (`central:wlan_ssid`) — consumes Stage 6.5 Q1
 
-One source record = one `virtual_ap`; pass the FULL `ssid_prof` list via `runtime_values["ssid_profiles"]` (the engine joins by name). Per **VAP instance**, look up the operator's decision by the composite `<source_scope>/<vap-name>` key (Q1), pass `target_mode`, and **resolve the decision's `cluster_refs` (composite per_cluster keys) into the engine's `gw_cluster_list` — the Central overlay object shape `[{cluster, cluster-type, tunnel-type, cluster-scope-id}]`**, not the raw key strings (the engine substitutes it whole into the overlay body). For `bridged_and_tunneled`, also pass `bridge_scope_id` + `tunnel_scope_id`.
+One source record = one `virtual_ap`; pass the FULL `ssid_prof` list via `runtime_values["ssid_profiles"]` (the engine joins by name). Per **VAP instance**, look up the operator's decision by the composite `<source_scope>/<vap-name>` key (Q1), pass `target_mode`, and **resolve the decision's `cluster_refs` (composite per_cluster keys) into the engine's `gw_cluster_list` — the Central overlay object shape `[{cluster, cluster-type, tunnel-type, cluster-scope-id}]`**, not the raw key strings (the engine substitutes it whole into the overlay body). For `bridged_and_tunneled`, resolve the decision's `bridge_scope_name` / `tunnel_scope_name` → `bridge_scope_id` / `tunnel_scope_id` (walker, `<TBD:...>` fallback) before passing them.
 
 ```python
 vap_records = [
@@ -1452,16 +1454,17 @@ for v in vap_records:
         "gw_cluster_list": gw_cluster_list,           # Central overlay objects (engine contract)
     }
     if dec["target_mode"] == "bridged_and_tunneled":
-        # Dual mode needs both scopes — guard, don't index (a partial decision must
-        # surface as the promised gap, not a KeyError).
-        if not dec.get("bridge_scope_id") or not dec.get("tunnel_scope_id"):
+        # Dual mode needs both scope NAMES (resolved to ids/<TBD> here, like every other
+        # scope — they may not exist yet). Guard on the names, don't index (a partial
+        # decision must surface as the promised gap, not a KeyError).
+        if not dec.get("bridge_scope_name") or not dec.get("tunnel_scope_name"):
             ssid_previews.append({
                 "source": vap_key,
-                "skip_reason": "bridged_and_tunneled needs both bridge_scope_id and tunnel_scope_id — confirm the scope split in Stage 6.5",
+                "skip_reason": "bridged_and_tunneled needs both bridge_scope_name and tunnel_scope_name — confirm the scope split in Stage 6.5",
             })
             continue
-        rt["bridge_scope_id"] = dec["bridge_scope_id"]
-        rt["tunnel_scope_id"] = dec["tunnel_scope_id"]
+        rt["bridge_scope_id"] = scope_lookup.get(dec["bridge_scope_name"], f"<TBD:{dec['bridge_scope_name']}>")
+        rt["tunnel_scope_id"] = scope_lookup.get(dec["tunnel_scope_name"], f"<TBD:{dec['tunnel_scope_name']}>")
     response = await call_tool(
         "central_translation_preview",
         {"translation_id": "central:wlan_ssid", "source_records": [v], "runtime_values": rt},
