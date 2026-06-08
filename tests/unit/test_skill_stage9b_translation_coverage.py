@@ -81,6 +81,12 @@ class TestStage9bTranslationCoverage:
         stale = sorted(tid for tid in OUT_OF_SCOPE if tid not in shipped_central_translations)
         assert not stale, f"OUT_OF_SCOPE lists translations that no longer ship: {stale}"
 
+    def test_out_of_scope_entries_have_reasons(self) -> None:
+        """The OUT_OF_SCOPE rule is 'excluded WITH a documented reason' — enforce that the
+        reason is non-empty so a blank-stub entry can't quietly suppress the coverage guard."""
+        missing_reasons = sorted(tid for tid, reason in OUT_OF_SCOPE.items() if not reason.strip())
+        assert not missing_reasons, f"OUT_OF_SCOPE entries must document a non-empty reason: {missing_reasons}"
+
     def test_aaa_chain_present_in_dependency_order(self, stage9b_text: str) -> None:
         """Issue #437: the FULL AAA chain must appear in execution/dependency order so the
         operator reads prerequisites before the objects that reference them.
