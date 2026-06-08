@@ -697,7 +697,16 @@ decisions = {
 }
 ```
 
-**Re-score the provisional findings (bucket 4) against the chosen architecture.** After the operator answers, re-evaluate the per-target-mode findings (the Tunnel / Bridge / Mixed blocks + F3 / F4) against each SSID's **chosen** `target_mode` — not the recommendation. Findings whose mode the operator chose away from simply disappear; findings that still apply are folded into the Act II disposition matrix / Translation gaps for the chosen design. This re-score does **not** re-open the Act I verdict (that gate already passed on source-readiness); it informs the *plan*. If the re-score surfaces a hard REGRESSION for the architecture the operator just chose, state it plainly and offer to revisit Stage 6.5 (e.g. *"your chosen Tunnel mode for `CORP` still has REGRESSION X; pick a different mode for it, or proceed and handle X manually"*) — the operator decides, having been told.
+**Re-score the provisional findings (bucket 4) against the chosen architecture.** After the operator answers, re-evaluate the per-target-mode findings against each SSID's **chosen** `target_mode` — not the recommendation. The Stage 3 rule blocks use the vocabulary `tunnel` / `bridge` / `mixed`; the Stage 6.5 answers use `bridged` / `tunneled` / `hybrid` / `bridged_and_tunneled`. Normalize per SSID before re-scoring:
+
+| Stage 6.5 `target_mode` | Stage 3 block(s) to apply |
+|---|---|
+| `tunneled` | the **Tunnel** block (+ F3/F4 where their tunnel-target severity applies) |
+| `bridged` | the **Bridge** block (+ F3/F4 bridge-target severity) |
+| `hybrid` (split-tunnel) | the **Mixed** block + any split-tunnel-specific rules |
+| `bridged_and_tunneled` | **both** the Bridge block (scoped to `bridge_scope_id`) **and** the Tunnel block (scoped to `tunnel_scope_id`) — it's two real profiles |
+
+The old **aggregate** `mixed` (a whole-deployment "some SSIDs tunnel, some bridge" recommendation) only existed pre-questionnaire to gate the provisional preview; post-questionnaire there is no aggregate mode — re-scoring is strictly **per SSID** by the table above, so a deployment with a mix of bridged + tunneled SSIDs is just each SSID scored under its own block (no SSID is "mixed" unless it's `hybrid`/split-tunnel). Findings whose mode the operator chose away from simply disappear; findings that still apply fold into the Act II disposition matrix / Translation gaps for the chosen design. This re-score does **not** re-open the Act I verdict (that gate already passed on source-readiness); it informs the *plan*. If it surfaces a hard REGRESSION for the architecture the operator just chose, state it plainly and offer to revisit Stage 6.5 (e.g. *"your chosen Tunnel mode for `CORP` still has REGRESSION X; pick a different mode for it, or proceed and handle X manually"*) — the operator decides, having been told.
 
 If verdict was EMPTY-SOURCE (no SSIDs/clusters), skip Stage 6.5 — there's nothing to decide — and proceed to Stage 7 for whatever defaults exist.
 
@@ -1389,6 +1398,14 @@ for v in vap_records:
         "gw_cluster_list": dec.get("gw_cluster_list", []),
     }
     if dec["target_mode"] == "bridged_and_tunneled":
+        # Dual mode needs both scopes — guard, don't index (a partial decision must
+        # surface as the promised gap, not a KeyError).
+        if not dec.get("bridge_scope_id") or not dec.get("tunnel_scope_id"):
+            ssid_previews.append({
+                "source": vap_key,
+                "skip_reason": "bridged_and_tunneled needs both bridge_scope_id and tunnel_scope_id — confirm the scope split in Stage 6.5",
+            })
+            continue
         rt["bridge_scope_id"] = dec["bridge_scope_id"]
         rt["tunnel_scope_id"] = dec["tunnel_scope_id"]
     response = await call_tool(
