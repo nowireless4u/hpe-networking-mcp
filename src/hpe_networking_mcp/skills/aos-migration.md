@@ -683,7 +683,7 @@ Pre-fill the recommendation from the detected `forward_mode` (`tunnel`/`decrypt-
 
 Default the selection to the detected pattern (same-ap-group-to-different-clusters → "campus + DMZ"; single regional cluster → "no DMZ"; few/DMZ-only → "DMZ only").
 
-**Strategy and placement are separate — collect both.** The topology option above fixes the `cluster_strategy`; it does NOT fix *where* the cluster lands. For each surviving cluster, also confirm the **`central_scope_id`** (the actual target Central scope — global / a specific site / site-collection / device-group, consistent with the strategy's scope type). The `Scope` column above is the scope *type*; the operator must name the concrete scope. Record both in `decisions["per_cluster"]`, keyed by the composite **`<source_scope>/<cluster-name>`** (NOT a bare cluster name — the same `cluster_prof` name can exist at multiple AOS hierarchy scopes, exactly like VAPs; a bare key would apply one cluster's decision to another scope's cluster). Each entry holds `cluster_strategy` + `central_scope_id`. Stage 9b does **not** default a missing scope to Global — it skips with a `skip_reason`, so an unconfirmed scope surfaces as a gap rather than a silently-wrong preview.
+**Strategy and placement are separate — collect both.** The topology option above fixes the `cluster_strategy`; it does NOT fix *where* the cluster lands. For each surviving cluster, also confirm the **intended Central scope NAME + type** (`global` / a specific Site / Site-Collection / Device-Group name, consistent with the strategy's scope type) — collect the **name**, not a numeric `scope_id`. The Central scope may not exist yet at Stage 6.5 time (Stage 7 maps/creates the hierarchy, and the scope tree is built as the first cutover step), so resolution of name → `scope_id` (or a `<TBD:...>` placeholder) happens later in Stage 9b via the walker, exactly like the SSID scope in 2g. Record `cluster_strategy` + `target_scope_name` (the name) in `decisions["per_cluster"]`, keyed by the composite **`<source_scope>/<cluster-name>`** (NOT a bare cluster name — the same `cluster_prof` name can exist at multiple AOS hierarchy scopes; a bare key would apply one cluster's decision to another scope's cluster). Stage 9b resolves `target_scope_name` → `scope_id`/`<TBD:...>` and **never** defaults a *missing* scope to Global — a cluster with no chosen scope skips with a `skip_reason`.
 
 **Outputs → Act II `runtime_values`.** Record the answers and pass them into every Stage 9b `central_translation_preview` call:
 
@@ -701,7 +701,8 @@ decisions = {
                                              "tunnel_scope_id": "..."}, # bridged_and_tunneled only
                ... },
   # keyed by composite "<source_scope>/<cluster-name>" — same collision-safety as per_vap.
-  "per_cluster": { "<source_scope>/<cluster-name>": {"cluster_strategy": "...", "central_scope_id": "..."} },  # Q2
+  # target_scope_name is the intended Central scope NAME (resolved to scope_id/<TBD> in 9b), not a raw id.
+  "per_cluster": { "<source_scope>/<cluster-name>": {"cluster_strategy": "...", "target_scope_name": "<scope-name>"} },  # Q2
 }
 ```
 
@@ -1029,7 +1030,7 @@ The AAA-chain translations (`central:auth_server`, `central:server_group`, `cent
 
 For each distinct Central scope name from the Stage 7 mapping (or each AOS 8 binding scope if Stage 7 wasn't run), try `central-scope-walker` to resolve it to a real Central scope_id. **If walker returns no match — the target scope doesn't exist in Central yet — use a placeholder scope_id of the form `<TBD:Central-name>` and continue.** Stage 9b is a preview; the engine substitutes whatever string is passed and the resulting body's `scope-id` field surfaces as `<TBD:...>`, which is exactly the right "this scope must be created before execution" signal.
 
-> **Scope-resolution principle (applies to every 2a–2g snippet):** pass the **Stage-7-resolved scope** for the object's binding, and a **`<TBD:...>`** placeholder when it can't be resolved — **never a silent `scope_lookup["Global"]` as if it were authoritative.** The literal `scope_lookup["Global"]` shown in the 2a–2e examples is shorthand for "the resolved scope for this object"; on a real run substitute the object's Stage-7 Central scope (2f uses the operator-confirmed `central_scope_id` from Stage 6.5; 2g resolves the VAP's `_source_scope` via the Stage-7 mapping). Global is correct only when Global is genuinely the chosen target.
+> **Scope-resolution principle (applies to every 2a–2g snippet):** pass the **Stage-7-resolved scope** for the object's binding, and a **`<TBD:...>`** placeholder when it can't be resolved — **never a silent `scope_lookup["Global"]` as if it were authoritative.** The literal `scope_lookup["Global"]` shown in the 2a–2e examples is shorthand for "the resolved scope for this object"; on a real run substitute the object's Stage-7 Central scope (2f resolves the operator-confirmed `target_scope_name` *name* from Stage 6.5 → `scope_id`/`<TBD>`; 2g resolves the VAP's `_source_scope` via the Stage-7 mapping). Global is correct only when Global is genuinely the chosen target.
 
 ```python
 # Inside execute(): one walker pass for the Central scopes you need.
@@ -1341,7 +1342,7 @@ result
 
 ##### 2f — Gateway clusters (`central:gateway_cluster`) — consumes Stage 6.5 Q2
 
-Only when at least one SSID is Tunneled / Hybrid / Bridged-and-Tunneled (otherwise skip — no gateways). For each source `cluster_prof`, look up the operator's decision by the composite `<source_scope>/<cluster-name>` key (same collision-safety as VAPs) and pass the chosen `cluster_strategy` + `central_scope_id`.
+Only when at least one SSID is Tunneled / Hybrid / Bridged-and-Tunneled (otherwise skip — no gateways). For each source `cluster_prof`, look up the operator's decision by the composite `<source_scope>/<cluster-name>` key (same collision-safety as VAPs), then pass the chosen `cluster_strategy` and the `target_scope_name` *name* resolved to a `scope_id`/`<TBD>` (the scope may not exist yet).
 
 ```python
 cluster_records = [
@@ -1363,22 +1364,25 @@ for c in cluster_records:
             "skip_reason": "no Stage 6.5 gateway-cluster decision (not referenced by the chosen topology / no tunneled SSID binds it)",
         })
         continue
-    # Strategy and placement scope are SEPARATE decisions — do NOT default scope to
-    # Global, which would silently preview the cluster at the wrong scope. Stage 6.5
-    # Q2 must have collected central_scope_id per surviving cluster; if it didn't, skip.
-    if not dec.get("central_scope_id"):
+    # Strategy and placement are SEPARATE decisions. Stage 6.5 collected the intended
+    # Central scope NAME (target_scope_name), not an id; resolve it to a scope_id here via
+    # the walker, falling back to <TBD:...> (the scope may not exist yet — Stage 9
+    # builds the hierarchy first). Do NOT default a MISSING scope to Global: if the
+    # operator never chose a scope, skip with a reason rather than silently mis-placing.
+    if not dec.get("target_scope_name"):
         cluster_previews.append({
             "source": cluster_key,
-            "skip_reason": "Stage 6.5 recorded a cluster_strategy but no central_scope_id — confirm the Central scope for this cluster before previewing",
+            "skip_reason": "Stage 6.5 recorded a cluster_strategy but no target_scope_name — confirm the Central scope for this cluster before previewing",
         })
         continue
+    cluster_scope_id = scope_lookup.get(dec["target_scope_name"], f"<TBD:{dec['target_scope_name']}>")
     response = await call_tool(
         "central_translation_preview",
         {
             "translation_id": "central:gateway_cluster",
             "source_records": [c],
             "runtime_values": {
-                "central_scope_id": dec["central_scope_id"],
+                "central_scope_id": cluster_scope_id,
                 "cluster_strategy": dec["cluster_strategy"],   # ha_only / intent_site / intent_manual
             },
         },
@@ -1426,14 +1430,16 @@ for v in vap_records:
     gw_cluster_list, cluster_gap = [], None
     for cref in dec.get("cluster_refs", []):
         cdec = decisions.get("per_cluster", {}).get(cref)
-        if not cdec or not cdec.get("central_scope_id"):
+        if not cdec or not cdec.get("target_scope_name"):
             cluster_gap = f"cluster {cref} has no confirmed Stage 6.5 decision/scope — can't build the overlay binding"
             break
+        # target_scope_name is the intended scope NAME — resolve to id/<TBD> like the SSID scope.
+        cluster_scope_id = scope_lookup.get(cdec["target_scope_name"], f"<TBD:{cdec['target_scope_name']}>")
         gw_cluster_list.append({
             "cluster": cref.split("/")[-1],            # Central gateway-cluster profile name
             "cluster-type": "GATEWAY",
             "tunnel-type": "L2",                       # tunnel binding; refine per design if L3
-            "cluster-scope-id": cdec["central_scope_id"],
+            "cluster-scope-id": cluster_scope_id,
         })
     if cluster_gap:
         ssid_previews.append({"source": vap_key, "skip_reason": cluster_gap})
