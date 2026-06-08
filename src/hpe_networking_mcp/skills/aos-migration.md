@@ -679,7 +679,7 @@ Pre-fill the recommendation from the detected `forward_mode` (`tunnel`/`decrypt-
 
 Default the selection to the detected pattern (same-ap-group-to-different-clusters → "campus + DMZ"; single regional cluster → "no DMZ"; few/DMZ-only → "DMZ only").
 
-**Strategy and placement are separate — collect both.** The topology option above fixes the `cluster_strategy`; it does NOT fix *where* the cluster lands. For each surviving cluster, also confirm the **`central_scope_id`** (the actual target Central scope — global / a specific site / site-collection / device-group, consistent with the strategy's scope type). The `Scope` column above is the scope *type*; the operator must name the concrete scope. Record both in `decisions["per_cluster"][<name>]` (`cluster_strategy` + `central_scope_id`). Stage 9b does **not** default a missing scope to Global — it skips with a `skip_reason`, so an unconfirmed scope surfaces as a gap rather than a silently-wrong preview.
+**Strategy and placement are separate — collect both.** The topology option above fixes the `cluster_strategy`; it does NOT fix *where* the cluster lands. For each surviving cluster, also confirm the **`central_scope_id`** (the actual target Central scope — global / a specific site / site-collection / device-group, consistent with the strategy's scope type). The `Scope` column above is the scope *type*; the operator must name the concrete scope. Record both in `decisions["per_cluster"]`, keyed by the composite **`<source_scope>/<cluster-name>`** (NOT a bare cluster name — the same `cluster_prof` name can exist at multiple AOS hierarchy scopes, exactly like VAPs; a bare key would apply one cluster's decision to another scope's cluster). Each entry holds `cluster_strategy` + `central_scope_id`. Stage 9b does **not** default a missing scope to Global — it skips with a `skip_reason`, so an unconfirmed scope surfaces as a gap rather than a silently-wrong preview.
 
 **Outputs → Act II `runtime_values`.** Record the answers and pass them into every Stage 9b `central_translation_preview` call:
 
@@ -692,7 +692,8 @@ decisions = {
                                              "bridge_scope_id": "...",  # bridged_and_tunneled only
                                              "tunnel_scope_id": "..."}, # bridged_and_tunneled only
                ... },
-  "per_cluster": { "<cluster-name>": {"cluster_strategy": "...", "central_scope_id": "..."} },  # Q2
+  # keyed by composite "<source_scope>/<cluster-name>" — same collision-safety as per_vap.
+  "per_cluster": { "<source_scope>/<cluster-name>": {"cluster_strategy": "...", "central_scope_id": "..."} },  # Q2
 }
 ```
 
@@ -1048,6 +1049,26 @@ When rendering the final report, surface `scope_status` so the operator sees whi
 
 For each translation, invoke `central_translation_preview` with the relevant Stage 1 records + scope_id. The tool returns deterministic per-record `TargetCall` descriptors.
 
+**The `stage1_<obj>_records` flat lists are derived from `config_by_scope` by flattening — and each record MUST be stamped with its origin scope as `_source_scope`** so identity keys stay collision-safe:
+
+```python
+def _flatten(obj_type):
+    out = []
+    for scope, objs in config_by_scope.items():
+        resp = objs.get(obj_type)
+        rows = resp if isinstance(resp, list) else (resp or {}).get("_data", []) if isinstance(resp, dict) else []
+        for r in (rows or []):
+            if isinstance(r, dict):
+                out.append({**r, "_source_scope": scope})
+    return out
+
+stage1_virtual_ap_records  = _flatten("virtual_ap")
+stage1_cluster_prof_records = _flatten("cluster_prof")
+stage1_ssid_prof_records   = _flatten("ssid_prof")   # ... and likewise for vlan_id / role / acl_sess / netdst / etc.
+```
+
+Without the `_source_scope` stamp, the composite `<source_scope>/<vap-name>` and `<source_scope>/<cluster-name>` keys collapse to bare names and the cross-scope collisions return. (Translations keyed by bare `record_id` — VLANs / roles / policies / net-groups — don't need the stamp, but it's harmless.)
+
 ##### 2a — VLANs (`central:vlan_id`)
 
 ```python
@@ -1292,7 +1313,7 @@ result
 
 ##### 2f — Gateway clusters (`central:gateway_cluster`) — consumes Stage 6.5 Q2
 
-Only when at least one SSID is Tunneled / Hybrid / Bridged-and-Tunneled (otherwise skip — no gateways). For each source `cluster_prof`, pass the `cluster_strategy` the operator chose in Stage 6.5 (`decisions["per_cluster"][<name>]`).
+Only when at least one SSID is Tunneled / Hybrid / Bridged-and-Tunneled (otherwise skip — no gateways). For each source `cluster_prof`, look up the operator's decision by the composite `<source_scope>/<cluster-name>` key (same collision-safety as VAPs) and pass the chosen `cluster_strategy` + `central_scope_id`.
 
 ```python
 cluster_records = [
@@ -1301,13 +1322,16 @@ cluster_records = [
 ]
 cluster_previews = []
 for c in cluster_records:
+    # Composite key — the same cluster_prof name can exist at multiple AOS scopes,
+    # so a bare name would apply one cluster's decision to another's.
+    cluster_key = f"{c.get('_source_scope', '<scope>')}/{c['profile-name']}"
     # Only clusters that survive into the chosen topology have a Stage 6.5 decision.
     # If all SSIDs were Bridged (Q2 skipped) or this cluster is unused, there's no
     # decision — skip with a clear reason instead of indexing a missing key.
-    dec = decisions.get("per_cluster", {}).get(c["profile-name"])
+    dec = decisions.get("per_cluster", {}).get(cluster_key)
     if not dec:
         cluster_previews.append({
-            "source": c["profile-name"],
+            "source": cluster_key,
             "skip_reason": "no Stage 6.5 gateway-cluster decision (not referenced by the chosen topology / no tunneled SSID binds it)",
         })
         continue
@@ -1316,7 +1340,7 @@ for c in cluster_records:
     # Q2 must have collected central_scope_id per surviving cluster; if it didn't, skip.
     if not dec.get("central_scope_id"):
         cluster_previews.append({
-            "source": c["profile-name"],
+            "source": cluster_key,
             "skip_reason": "Stage 6.5 recorded a cluster_strategy but no central_scope_id — confirm the Central scope for this cluster before previewing",
         })
         continue
@@ -1343,9 +1367,17 @@ vap_records = [
     v for v in stage1_virtual_ap_records
     if not (v.get("_flags") or {}).get("system") and not (v.get("_flags") or {}).get("default")
 ]
+ssid_prof_names = {s.get("profile-name") for s in stage1_ssid_prof_records}
 ssid_previews = []
 for v in vap_records:
     vap_key = f"{v.get('_source_scope', '<scope>')}/{v['profile-name']}"   # composite identity
+    # Match the Q1 "translatable" definition: a VAP whose ssid_prof reference doesn't
+    # resolve is not translatable — surface the specific missing-profile gap, not the
+    # generic "no decision" one.
+    sp_ref = (v.get("ssid_prof") or {}).get("profile-name")
+    if sp_ref not in ssid_prof_names:
+        ssid_previews.append({"source": vap_key, "skip_reason": f"references missing ssid-profile '{sp_ref}' — not translatable"})
+        continue
     dec = decisions.get("per_vap", {}).get(vap_key)                         # from Stage 6.5
     if not dec:
         ssid_previews.append({"source": vap_key, "skip_reason": "no Stage 6.5 forward-mode decision for this VAP"})
