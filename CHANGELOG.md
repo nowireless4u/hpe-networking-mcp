@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.7.1] - 2026-06-08
+
+**Patch — aos-migration skill: two post-merge review fixes (scope identity + Q1/2g alignment).** Skill-only; caught by the automated reviewer after v3.3.7.0 merged.
+
+- **Central scope identity, not bare name.** Stage 6.5 cluster + dual-mode split scopes now record the scope **name + type** (+ optional path), not just a name — a bare Central scope name isn't unique (Sites / Site-Collections / Device-Groups can share a name; names recur under different parents). The Stage 9b resolver (`resolve_scope_id`) matches by path → name+type, and returns `<AMBIGUOUS:...>` rather than silently picking the first of several matches. Applied uniformly to the per-cluster scope, the dual bridge/tunnel split scopes, and the Stage-7-mapped SSID scope.
+- **Q1 "translatable" matches the 2g filter exactly.** Q1 now requires the `virtual_ap.ssid_prof` reference to resolve **at the VAP's own `_source_scope`** (the same scoped join 2g uses), not merely "exists somewhere in the collected list" — so the questionnaire never asks about a VAP that 2g will then skip.
+
 ## [3.3.7.0] - 2026-06-07
 
 **Minor — aos-migration skill: target-architecture questionnaire (Stage 6.5).** Replaces the skill's "auto-derive everything, override later" model with an explicit post-verdict questionnaire, so the operator *decides* the target architecture rather than having it inferred-and-applied.
