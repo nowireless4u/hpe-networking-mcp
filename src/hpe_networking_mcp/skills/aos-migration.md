@@ -1576,19 +1576,22 @@ for tid, records in aaa_chain:
     if not recs:
         # No user-defined records at this scope is normal (e.g. no TACACS, or AAA
         # lives at a parent scope). Record it so the report shows the family ran.
+        # Keep target_collisions in the shape so Step 3 can treat every entry uniformly.
         aaa_previews.append({"kind": tid, "record_count": 0, "translatable": 0, "skipped": 0,
+                             "target_collisions": [],
                              "note": "no user-defined records at this scope (all system/default/inherited, or none configured)"})
         continue
+    # Resolve the binding scope the SAME way as every other object — the gateway-terminated
+    # AAA profiles land at the gateway's Central scope (where the cluster lands). This is the
+    # resolved scope / <TBD:...> from resolve_scope_id() (via the Stage-7 mapping), NEVER a
+    # silent Global default. Substitute the real resolved id on your run.
+    resolved_central_scope_id = resolve_scope_id(*aaa_landing_scope_identity)   # (name, type, path)
     response = await call_tool(
         "central_translation_preview",
         {
             "translation_id": tid,
             "source_records": recs,
-            # Resolve the binding scope the SAME way as every other object — the
-            # gateway-terminated AAA profiles land at the gateway's Central scope
-            # (where the cluster lands). Use the resolved scope / <TBD:...>, never a
-            # silent Global default (the scope_lookup["Global"] literal is shorthand).
-            "runtime_values": {"central_scope_id": scope_lookup["Global"]},
+            "runtime_values": {"central_scope_id": resolved_central_scope_id},
         },
     )
     preview = response.get("data", response)
@@ -1597,14 +1600,16 @@ for tid, records in aaa_chain:
         "record_count": preview["record_count"],
         "translatable": preview["translatable_count"],
         "skipped": preview["skipped_count"],
-        # auth_server bodies include the shared secret — note its PRESENCE, not value.
+        # auth_server bodies include the shared secret — note its PRESENCE, not value (and
+        # redact rad_key/tacacs_key in any rendered sample body — see the MANDATORY note).
         "summary": [
             {"id": r["record_id"], "calls": r["call_count"], "skip": r["skip_reason"]}
             for r in preview["results"]
         ][:30],
+        # PRESERVE collisions for Step 3's Write-hazards section (e.g. two server-groups
+        # folding to one Central name) — dropping it here hides a write hazard (issue #439).
+        "target_collisions": preview.get("target_collisions", []),
     })
-    # Cross-record collisions matter here too (e.g. two server-groups folding to one
-    # Central name); surface preview["target_collisions"] if non-empty (issue #439).
 aaa_previews
 ```
 

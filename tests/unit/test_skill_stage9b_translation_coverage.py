@@ -57,9 +57,29 @@ def shipped_central_translations() -> set[str]:
     return {k for k in load_translations() if str(k).startswith("central:")}
 
 
+def _subsection_2h(stage9b: str) -> str:
+    """Return just the §2h (AAA chain) subsection — from its ``##### 2h`` heading to the
+    next ``##### ``/``#### `` heading. Narrowing the dependency-order check here verifies
+    the actual §2h preview/execution order, not merely the earlier translation-table order.
+    """
+    lines = stage9b.splitlines()
+    start = next((i for i, ln in enumerate(lines) if ln.startswith("##### 2h")), None)
+    assert start is not None, "Stage 9b is missing the '##### 2h' AAA-chain subsection"
+    end = next(
+        (i for i in range(start + 1, len(lines)) if lines[i].startswith(("##### ", "#### "))),
+        len(lines),
+    )
+    return "\n".join(lines[start:end])
+
+
 @pytest.fixture(scope="module")
 def stage9b_text() -> str:
     return _stage9b_section(SKILL_PATH.read_text(encoding="utf-8"))
+
+
+@pytest.fixture(scope="module")
+def subsection_2h_text(stage9b_text: str) -> str:
+    return _subsection_2h(stage9b_text)
 
 
 @pytest.mark.unit
@@ -87,7 +107,7 @@ class TestStage9bTranslationCoverage:
         missing_reasons = sorted(tid for tid, reason in OUT_OF_SCOPE.items() if not reason.strip())
         assert not missing_reasons, f"OUT_OF_SCOPE entries must document a non-empty reason: {missing_reasons}"
 
-    def test_aaa_chain_present_in_dependency_order(self, stage9b_text: str) -> None:
+    def test_aaa_chain_present_in_dependency_order(self, subsection_2h_text: str) -> None:
         """Issue #437: the FULL AAA chain must appear in execution/dependency order so the
         operator reads prerequisites before the objects that reference them.
 
@@ -95,6 +115,9 @@ class TestStage9bTranslationCoverage:
         captive_portal} -> aaa_profile. Each middle profile is independent of the others
         but all sit after server_group and before aaa_profile (the aaa-profile references
         server-groups + the dot1x/mac/captive profiles + roles by name).
+
+        Scanned within the §2h subsection only (Casey #450 review) — so this verifies the
+        actual preview/execution `aaa_chain` order, not the earlier translation-table order.
         """
         members = (
             "central:auth_server",
@@ -104,9 +127,8 @@ class TestStage9bTranslationCoverage:
             "central:captive_portal",
             "central:aaa_profile",
         )
-        # First occurrence of each id in the section (the translation table lists them
-        # in order; §2h's chain list repeats that order).
-        pos = {m: stage9b_text.find(m) for m in members}
+        # First occurrence of each id within the §2h subsection (its aaa_chain list).
+        pos = {m: subsection_2h_text.find(m) for m in members}
         missing = sorted(m for m, p in pos.items() if p < 0)
         assert not missing, f"AAA chain link(s) missing from Stage 9b: {missing}"
 
