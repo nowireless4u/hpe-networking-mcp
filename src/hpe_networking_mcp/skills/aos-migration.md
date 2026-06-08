@@ -1041,7 +1041,7 @@ For every row of the Stage 8 disposition matrix where Disposition is `direct-tra
 | `central:captive_portal` | `cp_auth_profile` | captive-portal profile + config-assignment | **Preview wired in §2h.** Per-record; `central_scope_id` only. References a server-group + roles by name (run those first / alongside). |
 | `central:aaa_profile` | `aaa_prof` | aaa-profile + config-assignment | **Preview wired in §2h.** Per-record; `central_scope_id` only. Depends on auth-server, server-group, dot1x/mac/captive profiles, and roles — run the whole §2h chain in order. Gateway-terminated model. |
 
-All seven config families above ship and are wired into Stage 9b. The **AAA chain** (`central:auth_server` → `central:server_group` → `central:dot1x_auth` / `central:mac_auth` / `central:captive_portal` → `central:aaa_profile`) is driven directly (per-record, no Stage 6.5 decision) — see §2h.
+All 13 `central:*` translations above ship and are wired into Stage 9b. The **AAA chain** (`central:auth_server` → `central:server_group` → `central:dot1x_auth` / `central:mac_auth` / `central:captive_portal` → `central:aaa_profile`) is driven directly (per-record, no Stage 6.5 decision) — see §2h.
 
 #### Step 1 — Scope resolution (walker-optional, fall back to placeholder)
 
