@@ -1085,7 +1085,19 @@ def resolve(name: str, scope_type: str | None = None, scope_path: str | None = N
     ql = (name or "").lower()
     m = [n for n in all_nodes if (n.get("scope_name") or "").lower() == ql or n["path"].lower() == ql]
     if scope_type:
-        m = [n for n in m if (n.get("type") or "").lower() == scope_type.lower()]
+        # Normalize the user-facing Stage 6.5 type to the actual central_get_scope_tree
+        # token before comparing. Live tree tokens (verified): GLOBAL / SITE_COLLECTION /
+        # SITE / DEVICE / DEVICE_COLLECTION. The mismatch that bites is "device_group"
+        # (operator/skill term) vs the tree's "DEVICE_COLLECTION".
+        TYPE_ALIASES = {
+            "global": "global",
+            "site": "site",
+            "site_collection": "site_collection", "site-collection": "site_collection",
+            "device_group": "device_collection", "device-group": "device_collection",
+            "device_collection": "device_collection",
+        }
+        wanted = TYPE_ALIASES.get(scope_type.lower(), scope_type.lower())
+        m = [n for n in m if (n.get("type") or "").lower() == wanted]
     if len(m) == 1:
         return m[0]["scope_id"], "resolved"
     if len(m) > 1:
