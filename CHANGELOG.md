@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **All 13 shipped `central:*` translations now represented in Stage 9b** (added six AAA rows to the translation table). A new guard test (`test_skill_stage9b_translation_coverage.py`) fails when a newly-shipped `central:*` translation isn't wired into Stage 9b unless explicitly listed in `OUT_OF_SCOPE` with a reason — so the omission class #437 reported can't silently recur. It also asserts the AAA chain appears in dependency order.
 - **`target_collisions` surfaced in the consolidated report** (consumes the #439 preview output): a new "Write hazards (target collisions)" section + output rule lists distinct source records that resolve to the same Central object (case-folded aliases, name-folded groups) and would overwrite/409 each other at execution — the operator must reconcile them before cutover.
 
-Skill + test change (no tool/code changes); 1693 tests pass.
+Skill + test change (no tool/code changes); 1694 tests pass.
 
 ## [3.3.7.2] - 2026-06-08
 
