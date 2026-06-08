@@ -214,9 +214,12 @@ async def central_translation_preview(
           ``record_id`` / ``target_calls`` / ``call_count`` /
           ``skip_reason`` (None on success).
         * ``target_collisions`` — list of cross-record write hazards: distinct
-          records that emit the same ``(method, endpoint, query)`` and would
-          overwrite/409 each other on execution (e.g. case-folded alias names).
-          Empty when none. Surface to the operator verbatim.
+          source records (by occurrence/index, not display ``record_id``) that
+          target the same Central object and would overwrite/409 each other on
+          execution (e.g. case-folded alias names, or duplicate same-named
+          records with different payloads). Each entry carries the
+          ``target_object`` identity, the colliding ``records``, and the
+          per-occurrence ``calls``. Empty when none. Surface verbatim.
 
         On a fatal error (unknown translation_id, loader failure, etc.)
         returns ``{"ok": false, "error": "..."}`` instead of the normal
@@ -293,23 +296,36 @@ async def central_translation_preview(
     #   * the shared /config-assignments collection (object identity is the body's
     #     profile-type + profile-instance, not the URL) does NOT false-positive — two
     #     records assigning different profiles to that endpoint aren't colliding.
-    collision_records: dict[tuple, set[str]] = defaultdict(set)
+    # Uniqueness is keyed by source-record OCCURRENCE (its index in source_records),
+    # NOT the display `record_id` — two distinct records can derive the SAME record_id
+    # (e.g. duplicate named-VLANs both named `user` with different payloads) and still
+    # overwrite each other on the same target object; a record_id set would collapse
+    # them and miss the hazard (issue #439 follow-up). `results` is 1:1 with
+    # `source_records` in order, so enumerate(results) yields the source index.
+    collision_indices: dict[tuple, set[int]] = defaultdict(set)
     collision_calls: dict[tuple, list[dict[str, Any]]] = defaultdict(list)
-    for r in results:
+    for idx, r in enumerate(results):
         for c in r["target_calls"]:
             for okey in _target_object_keys(c):
-                collision_records[okey].add(r["record_id"])
+                collision_indices[okey].add(idx)
                 collision_calls[okey].append(
-                    {"record_id": r["record_id"], "step": c["step_name"], "endpoint": c["endpoint"]}
+                    {
+                        "record_index": idx,
+                        "record_id": r["record_id"],
+                        "step": c["step_name"],
+                        "endpoint": c["endpoint"],
+                    }
                 )
     target_collisions = [
         {
             "target_object": list(k),
-            "records": sorted(collision_records[k]),
+            # One entry per colliding occurrence (preserves duplicate display IDs so a
+            # same-record_id collision is still visible), ordered by source index.
+            "records": [results[i]["record_id"] for i in sorted(collision_indices[k])],
             "calls": collision_calls[k],
         }
-        for k in collision_records
-        if len(collision_records[k]) > 1
+        for k in collision_indices
+        if len(collision_indices[k]) > 1
     ]
 
     return {
