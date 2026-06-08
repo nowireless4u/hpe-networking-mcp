@@ -662,13 +662,13 @@ Runs only after the operator answers `yes` at the gate (non-BLOCKED verdict). Th
 
 **Precondition — inventory coverage.** Stage 6.5 needs `virtual_ap` + `ssid_prof` (Q1) and `cluster_prof` (Q2). The **offline upload / paste path (Stage 1-ALT) does not collect those** — it parses only `netdst` / `acl_sess` / `role`. So if there are **no translatable VAPs** (offline source, or the API walk genuinely found none): **skip Stage 6.5 entirely** and proceed to Act II for the object classes that *were* collected (policy / role / net-group), emitting a Translation-gaps note — *"Stage 6.5 (SSID forward-mode + gateway-topology decisions) skipped: requires `virtual_ap` / `ssid_prof` / `cluster_prof` coverage, which the offline parser does not provide. Re-run on the API path (or paste a full `show configuration effective` covering WLAN) to drive the SSID/cluster translations."* Do not ask Q1/Q2 against an empty VAP set.
 
-**Question 1 — per-virtual-AP forward mode (always).** Ask once **per `virtual_ap` instance**, NOT per ESSID — multiple VAPs can broadcast the same ESSID at different scopes (e.g. one `CORP` VAP per region) and each is its own profile with its own forward mode. Key every decision by the **composite identity `<source_scope>/<vap-name>`** so same-named VAPs across scopes never collide. (`Bridged and Tunneled` is the distinct case where *one* VAP intentionally becomes two profiles sharing an essid alias — that's a single decision with a scope split, not two VAPs.) A VAP is **translatable** (and so gets a question) when it matches the Stage 9b 2g preview filter: not `_flags.system`, not `_flags.default`, and it resolves an `ssid_prof` (the `virtual_ap.ssid_prof` reference exists in the collected `ssid_prof` list). Skip system/default VAPs and ones with a missing SSID profile — do NOT ask the operator about records the preview loop will skip; instead note them under Translation gaps (e.g. *"VAP `<scope>/<name>` references missing ssid-profile `<x>` — not translatable"*). For each translatable VAP, present its detected current mode + the recommended AOS 10 target, and ask the operator to pick one of:
+**Question 1 — per-virtual-AP forward mode (always).** Ask once **per `virtual_ap` instance**, NOT per ESSID — multiple VAPs can broadcast the same ESSID at different scopes (e.g. one `CORP` VAP per region) and each is its own profile with its own forward mode. Key every decision by the **composite identity `<source_scope>/<vap-name>`** so same-named VAPs across scopes never collide. (`Bridged and Tunneled` is the distinct case where *one* VAP intentionally becomes two profiles sharing an essid alias — that's a single decision with a scope split, not two VAPs.) A VAP is **translatable** (and so gets a question) when it matches the Stage 9b 2g preview filter **exactly**: not `_flags.system`, not `_flags.default`, and its `virtual_ap.ssid_prof` reference resolves to an `ssid_prof` **at the VAP's OWN `_source_scope`** — the same scoped join 2g uses (`s._source_scope == vap._source_scope`), NOT merely "exists somewhere in the collected list" (a same-name profile at another scope that 2g won't use). Skip system/default VAPs and ones whose SSID profile is missing **at their scope** — do NOT ask the operator about records the preview loop will skip; note them under Translation gaps (e.g. *"VAP `<scope>/<name>` references ssid-profile `<x>` not present at that scope — not translatable"*). For each translatable VAP, present its detected current mode + the recommended AOS 10 target, and ask the operator to pick one of:
 
 | Option | Meaning | Drives `wlan_ssid` `target_mode` |
 |---|---|---|
 | **Bridged** | AP local breakout; no gateway | `bridged` |
 | **Tunneled** | gateway-terminated | `tunneled` |
-| **Bridged and Tunneled** | the same SSID in BOTH modes across locations (campus tunneled, branches bridged) → essid alias + two profiles | `bridged_and_tunneled` (also ask the bridge-vs-tunnel **scope split** — detected default, operator adjusts → collect the **scope NAMES** `bridge_scope_name` / `tunnel_scope_name`, resolved to ids/`<TBD>` in 9b) |
+| **Bridged and Tunneled** | the same SSID in BOTH modes across locations (campus tunneled, branches bridged) → essid alias + two profiles | `bridged_and_tunneled` (also ask the bridge-vs-tunnel **scope split** — detected default, operator adjusts → collect each scope's **identity** `bridge_scope_name`+`bridge_scope_type` / `tunnel_scope_name`+`tunnel_scope_type` (+path when known), resolved to ids/`<TBD>` in 9b — a bare name isn't unique) |
 | **Hybrid** | split-tunnel (one SSID, corporate tunneled + Internet local) | `hybrid` |
 
 **Display label → engine value (do not confuse the two):** the left column is the operator-facing label; the **right column is the exact string that must go into `runtime_values["target_mode"]`** — `Bridged`→`bridged`, `Tunneled`→`tunneled`, `Bridged and Tunneled`→`bridged_and_tunneled`, `Hybrid`→`hybrid`. Store/pass the lowercase engine value, never the display label (the engine rejects unknown `target_mode` strings). Same for the Stage 3 re-score vocabulary mapping (`tunnel`/`bridge`/`mixed` blocks) at the re-score step.
@@ -685,7 +685,7 @@ Pre-fill the recommendation from the detected `forward_mode` (`tunnel`/`decrypt-
 
 Default the selection to the detected pattern (same-ap-group-to-different-clusters → "campus + DMZ"; single regional cluster → "no DMZ"; few/DMZ-only → "DMZ only").
 
-**Strategy and placement are separate — collect both.** The topology option above fixes the `cluster_strategy`; it does NOT fix *where* the cluster lands. For each surviving cluster, also confirm the **intended Central scope NAME + type** (`global` / a specific Site / Site-Collection / Device-Group name, consistent with the strategy's scope type) — collect the **name**, not a numeric `scope_id`. The Central scope may not exist yet at Stage 6.5 time (Stage 7 maps/creates the hierarchy, and the scope tree is built as the first cutover step), so resolution of name → `scope_id` (or a `<TBD:...>` placeholder) happens later in Stage 9b via the walker, exactly like the SSID scope in 2g. Record `cluster_strategy` + `target_scope_name` (the name) in `decisions["per_cluster"]`, keyed by the composite **`<source_scope>/<cluster-name>`** (NOT a bare cluster name — the same `cluster_prof` name can exist at multiple AOS hierarchy scopes; a bare key would apply one cluster's decision to another scope's cluster). Stage 9b resolves `target_scope_name` → `scope_id`/`<TBD:...>` and **never** defaults a *missing* scope to Global — a cluster with no chosen scope skips with a `skip_reason`.
+**Strategy and placement are separate — collect both.** The topology option above fixes the `cluster_strategy`; it does NOT fix *where* the cluster lands. For each surviving cluster, also confirm the **intended Central scope identity** — collect the scope **name AND type** (`target_scope_type` ∈ `global` / `site` / `site_collection` / `device_group`), plus the **full path** (`target_scope_path`, e.g. `USW/West`) when the operator can give it. A bare scope *name* is **not** globally unique (a Site, Site-Collection, and Device-Group can share a name; the same name can recur under different parents), so name-only resolution can bind the wrong scope — always carry the type, and prefer the path. Collect the identity, **not** a numeric `scope_id` (the Central scope may not exist yet — Stage 7 maps/creates the hierarchy as the first cutover step), so resolution → `scope_id`/`<TBD:...>` happens later in Stage 9b. Record `cluster_strategy` + `target_scope_name` + `target_scope_type` (+ optional `target_scope_path`) in `decisions["per_cluster"]`, keyed by the composite **`<source_scope>/<cluster-name>`** (a bare cluster name would apply one cluster's decision to another scope's cluster). Stage 9b calls `resolve_scope_id(target_scope_name, target_scope_type, target_scope_path)` → `scope_id` / `<TBD:...>` / `<AMBIGUOUS:...>` (when name+type still match several — the operator must supply a path) and **never** defaults a *missing* scope to Global — a cluster with no chosen scope skips with a `skip_reason`.
 
 **Outputs → Act II `runtime_values`.** Record the answers and pass them into every Stage 9b `central_translation_preview` call:
 
@@ -699,14 +699,19 @@ decisions = {
                                              # payload). 2g resolves each via per_cluster into the Central
                                              # overlay gw_cluster_list object shape before previewing.
                                              "cluster_refs": ["<source_scope>/<cluster-name>", ...],
-                                             # dual-mode scope split: NAMES (resolved to ids/<TBD> in 9b,
-                                             # like target_scope_name) — the scopes may not exist yet:
-                                             "bridge_scope_name": "...",  # bridged_and_tunneled only
-                                             "tunnel_scope_name": "..."}, # bridged_and_tunneled only
+                                             # dual-mode scope split: scope IDENTITY (name+type, +optional
+                                             # path) resolved to ids/<TBD> in 9b — like target_scope_*; a
+                                             # bare name isn't unique, so carry the type:
+                                             "bridge_scope_name": "...", "bridge_scope_type": "...",  # +bridge_scope_path? (dual only)
+                                             "tunnel_scope_name": "...", "tunnel_scope_type": "..."}, # +tunnel_scope_path? (dual only)
                ... },
   # keyed by composite "<source_scope>/<cluster-name>" — same collision-safety as per_vap.
-  # target_scope_name is the intended Central scope NAME (resolved to scope_id/<TBD> in 9b), not a raw id.
-  "per_cluster": { "<source_scope>/<cluster-name>": {"cluster_strategy": "...", "target_scope_name": "<scope-name>"} },  # Q2
+  # Scope IDENTITY (name + type, +optional path), resolved to scope_id/<TBD> in 9b — a bare
+  # name isn't unique across types/parents, so carry the type (and a path when known).
+  "per_cluster": { "<source_scope>/<cluster-name>": {"cluster_strategy": "...",
+                                                     "target_scope_name": "<scope-name>",
+                                                     "target_scope_type": "global|site|site_collection|device_group",
+                                                     "target_scope_path": "<optional/full/path>"} },  # Q2
 }
 ```
 
@@ -1034,7 +1039,7 @@ The AAA-chain translations (`central:auth_server`, `central:server_group`, `cent
 
 For each distinct Central scope name from the Stage 7 mapping (or each AOS 8 binding scope if Stage 7 wasn't run), try `central-scope-walker` to resolve it to a real Central scope_id. **If walker returns no match — the target scope doesn't exist in Central yet — use a placeholder scope_id of the form `<TBD:Central-name>` and continue.** Stage 9b is a preview; the engine substitutes whatever string is passed and the resulting body's `scope-id` field surfaces as `<TBD:...>`, which is exactly the right "this scope must be created before execution" signal.
 
-> **Scope-resolution principle (applies to every 2a–2g snippet):** pass the **Stage-7-resolved scope** for the object's binding, and a **`<TBD:...>`** placeholder when it can't be resolved — **never a silent `scope_lookup["Global"]` as if it were authoritative.** The literal `scope_lookup["Global"]` shown in the 2a–2e examples is shorthand for "the resolved scope for this object"; on a real run substitute the object's Stage-7 Central scope (2f resolves the operator-confirmed `target_scope_name` *name* from Stage 6.5 → `scope_id`/`<TBD>`; 2g resolves the VAP's `_source_scope` via the Stage-7 mapping). Global is correct only when Global is genuinely the chosen target.
+> **Scope-resolution principle (applies to every 2a–2g snippet):** pass the **resolved scope** for the object's binding, and a **`<TBD:...>`** placeholder when it can't be resolved — **never a silent `scope_lookup["Global"]` as if it were authoritative.** Resolve via `resolve_scope_id(name, type, path)`, which disambiguates because a **bare scope name is not unique** (Sites / Site-Collections / Device-Groups can share a name; the same name recurs under different parents): it matches by path when given, else name+type, and returns **`<AMBIGUOUS:...>`** rather than guessing when several scopes still match. The literal `scope_lookup["Global"]` shown in the 2a–2e examples is shorthand for "the resolved scope for this object"; on a real run substitute the object's resolved scope (2f/2g/dual resolve the operator-confirmed scope **identity** — name+type+path — from Stage 6.5; the SSID scope comes from the Stage-7 mapping's identity for the VAP's `_source_scope`). Global is correct only when Global is genuinely the chosen target.
 
 ```python
 # Inside execute(): one walker pass for the Central scopes you need.
@@ -1059,17 +1064,40 @@ while stack:
     for child in (node.get("children") or []):
         stack.append((child, here))
 
-def resolve(central_scope_name: str) -> tuple[str, str]:
-    """Return (scope_id, status) — status is 'resolved' or 'placeholder'."""
-    ql = central_scope_name.lower()
-    matches = [n for n in all_nodes
-               if (n.get("scope_name") or "").lower() == ql or n["path"].lower() == ql]
-    if matches:
-        return matches[0]["scope_id"], "resolved"
-    return f"<TBD:{central_scope_name}>", "placeholder"
+def resolve(name: str, scope_type: str | None = None, scope_path: str | None = None) -> tuple[str, str]:
+    """Resolve a Central scope to (scope_id, status). status ∈ resolved / placeholder / ambiguous.
+
+    A bare display NAME is NOT unique — a Site, Site-Collection, and Device-Group can share
+    a name, and the same name can recur under different parents. So disambiguate by the most
+    specific identity available, and NEVER silently pick the first of several matches:
+      1. scope_path given  -> match by full path (unique).
+      2. else name (+ scope_type when given, normalized to the tree's type tokens).
+      3. exactly one match -> resolved; several -> <AMBIGUOUS:...> (operator must give path/type);
+         none -> <TBD:...> (scope not created yet).
+    """
+    if scope_path:
+        m = [n for n in all_nodes if n["path"].lower() == scope_path.lower()]
+        if m:
+            return m[0]["scope_id"], "resolved"
+        return f"<TBD:{scope_path}>", "placeholder"
+    ql = (name or "").lower()
+    m = [n for n in all_nodes if (n.get("scope_name") or "").lower() == ql or n["path"].lower() == ql]
+    if scope_type:
+        m = [n for n in m if (n.get("type") or "").lower() == scope_type.lower()]
+    if len(m) == 1:
+        return m[0]["scope_id"], "resolved"
+    if len(m) > 1:
+        return f"<AMBIGUOUS:{name} ({scope_type or 'no type'})>", "ambiguous"
+    return f"<TBD:{name}>", "placeholder"
+
+def resolve_scope_id(name, scope_type=None, scope_path=None):
+    """Thin wrapper returning just the scope_id (or <TBD>/<AMBIGUOUS> placeholder)."""
+    return resolve(name, scope_type, scope_path)[0]
 
 # Build the lookup ONCE for every Stage-7 Central name you need; default to "Global"
-# if Stage 7 wasn't run.
+# if Stage 7 wasn't run. (For decisions that carry a type/path — clusters, dual SSID
+# split scopes — call resolve_scope_id(name, type, path) directly so same-name scopes
+# don't collide.)
 scope_lookup = {}
 scope_status = {}
 for name in {"Global"}:  # ← replace with the set of Stage-7-confirmed Central names
@@ -1346,7 +1374,7 @@ result
 
 ##### 2f — Gateway clusters (`central:gateway_cluster`) — consumes Stage 6.5 Q2
 
-Only when at least one SSID is Tunneled / Hybrid / Bridged-and-Tunneled (otherwise skip — no gateways). For each source `cluster_prof`, look up the operator's decision by the composite `<source_scope>/<cluster-name>` key (same collision-safety as VAPs), then pass the chosen `cluster_strategy` and the `target_scope_name` *name* resolved to a `scope_id`/`<TBD>` (the scope may not exist yet).
+Only when at least one SSID is Tunneled / Hybrid / Bridged-and-Tunneled (otherwise skip — no gateways). For each source `cluster_prof`, look up the operator's decision by the composite `<source_scope>/<cluster-name>` key (same collision-safety as VAPs), then pass the chosen `cluster_strategy` and the scope **identity** (`target_scope_name` + `target_scope_type` + optional `target_scope_path`) resolved to a `scope_id`/`<TBD>` via `resolve_scope_id` (the scope may not exist yet, and a bare name isn't unique).
 
 ```python
 cluster_records = [
@@ -1379,7 +1407,8 @@ for c in cluster_records:
             "skip_reason": "Stage 6.5 recorded a cluster_strategy but no target_scope_name — confirm the Central scope for this cluster before previewing",
         })
         continue
-    cluster_scope_id = scope_lookup.get(dec["target_scope_name"], f"<TBD:{dec['target_scope_name']}>")
+    # Resolve by name+type (+path) — never bare name (ambiguous across types/parents).
+    cluster_scope_id = resolve_scope_id(dec["target_scope_name"], dec.get("target_scope_type"), dec.get("target_scope_path"))
     response = await call_tool(
         "central_translation_preview",
         {
@@ -1431,8 +1460,11 @@ for v in vap_records:
     # at the wrong scope after the operator confirmed placement in Stage 7). If the
     # Stage 7 mapping / walker can't resolve it, use a <TBD:...> placeholder (Step 1
     # convention) so the gap is visible rather than authoritative-looking.
-    mapped_scope = stage7_central_scope_for(v.get("_source_scope"))   # Central name from the Stage 7 mapping
-    ssid_scope_id = scope_lookup.get(mapped_scope, f"<TBD:{mapped_scope or v.get('_source_scope')}>")
+    # The Stage 7 mapping yields the AP's Central scope IDENTITY (name + type + path) for the
+    # VAP's source scope — resolve by it, not a bare name (a path from the mapping is unambiguous).
+    mapped = stage7_central_scope_for(v.get("_source_scope"))   # {"name":..., "type":..., "path":...}
+    ssid_scope_id = resolve_scope_id(mapped.get("name"), mapped.get("type"), mapped.get("path")) \
+        if mapped else f"<TBD:{v.get('_source_scope')}>"
 
     # Resolve the VAP's cluster_refs (composite per_cluster KEYS — for lookup only)
     # into the Central overlay payload shape the engine actually expects:
@@ -1445,8 +1477,8 @@ for v in vap_records:
         if not cdec or not cdec.get("target_scope_name"):
             cluster_gap = f"cluster {cref} has no confirmed Stage 6.5 decision/scope — can't build the overlay binding"
             break
-        # target_scope_name is the intended scope NAME — resolve to id/<TBD> like the SSID scope.
-        cluster_scope_id = scope_lookup.get(cdec["target_scope_name"], f"<TBD:{cdec['target_scope_name']}>")
+        # resolve by name+type (+path) — never bare name (ambiguous across types/parents).
+        cluster_scope_id = resolve_scope_id(cdec["target_scope_name"], cdec.get("target_scope_type"), cdec.get("target_scope_path"))
         gw_cluster_list.append({
             "cluster": cref.split("/")[-1],            # Central gateway-cluster profile name
             "cluster-type": "GATEWAY",
@@ -1478,8 +1510,8 @@ for v in vap_records:
                 "skip_reason": "bridged_and_tunneled needs both bridge_scope_name and tunnel_scope_name — confirm the scope split in Stage 6.5",
             })
             continue
-        rt["bridge_scope_id"] = scope_lookup.get(dec["bridge_scope_name"], f"<TBD:{dec['bridge_scope_name']}>")
-        rt["tunnel_scope_id"] = scope_lookup.get(dec["tunnel_scope_name"], f"<TBD:{dec['tunnel_scope_name']}>")
+        rt["bridge_scope_id"] = resolve_scope_id(dec["bridge_scope_name"], dec.get("bridge_scope_type"), dec.get("bridge_scope_path"))
+        rt["tunnel_scope_id"] = resolve_scope_id(dec["tunnel_scope_name"], dec.get("tunnel_scope_type"), dec.get("tunnel_scope_path"))
     response = await call_tool(
         "central_translation_preview",
         {"translation_id": "central:wlan_ssid", "source_records": [v], "runtime_values": rt},
