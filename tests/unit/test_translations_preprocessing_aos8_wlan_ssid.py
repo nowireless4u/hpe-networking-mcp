@@ -32,7 +32,13 @@ def _ssids() -> list[dict]:
 
 
 def _rt(mode: str, **extra) -> dict:
-    return {"central_scope_id": "S", "target_mode": mode, "ssid_profiles": _ssids(), **extra}
+    rt = {"central_scope_id": "S", "target_mode": mode, "ssid_profiles": _ssids()}
+    # Overlay modes require gw_cluster_list (issue #438); default one so unrelated
+    # tests don't trip the guard. Tests targeting the guard override it explicitly.
+    if mode in {"tunneled", "hybrid", "bridged_and_tunneled"} and "gw_cluster_list" not in extra:
+        rt["gw_cluster_list"] = [{"cluster": "East", "cluster-scope-id": "S"}]
+    rt.update(extra)
+    return rt
 
 
 def test_join_and_core_fields() -> None:
@@ -53,6 +59,25 @@ def test_overlay_flag_only_for_tunnel_hybrid() -> None:
     assert "_needs_overlay" not in preprocess_wlan_ssid(_vap(), _rt("bridged"))
     assert preprocess_wlan_ssid(_vap(), _rt("tunneled"))["_needs_overlay"] is True
     assert preprocess_wlan_ssid(_vap(), _rt("hybrid"))["_needs_overlay"] is True
+
+
+def test_overlay_modes_require_gw_cluster_list() -> None:
+    """Issue #438: tunneled / hybrid / dual must have a non-empty gw_cluster_list."""
+    for mode in ("tunneled", "hybrid", "bridged_and_tunneled"):
+        rt_missing = {"central_scope_id": "S", "target_mode": mode, "ssid_profiles": _ssids()}
+        if mode == "bridged_and_tunneled":
+            rt_missing |= {"bridge_scope_id": "B", "tunnel_scope_id": "T"}
+        with pytest.raises(ValueError, match="gw_cluster_list"):
+            preprocess_wlan_ssid(_vap(), rt_missing)
+        # empty list is also rejected
+        with pytest.raises(ValueError, match="gw_cluster_list"):
+            preprocess_wlan_ssid(_vap(), {**rt_missing, "gw_cluster_list": []})
+
+
+def test_bridged_needs_no_gw_cluster_list() -> None:
+    """bridged is the only mode that may omit gw_cluster_list."""
+    out = preprocess_wlan_ssid(_vap(), {"central_scope_id": "S", "target_mode": "bridged", "ssid_profiles": _ssids()})
+    assert out["_forward_mode"] == "FORWARD_MODE_BRIDGE"
 
 
 def test_named_vlan() -> None:
@@ -79,14 +104,30 @@ def test_opmode_mapping_table() -> None:
     }
     for aos, central in cases.items():
         ssids = [{"profile-name": "corp-ssid", "essid": {"essid": "E"}, "opmode": {aos: True}}]
-        out = preprocess_wlan_ssid(_vap(), {"central_scope_id": "S", "target_mode": "tunneled", "ssid_profiles": ssids})
+        out = preprocess_wlan_ssid(
+            _vap(),
+            {
+                "central_scope_id": "S",
+                "target_mode": "tunneled",
+                "ssid_profiles": ssids,
+                "gw_cluster_list": [{"cluster": "East"}],
+            },
+        )
         assert out["_opmode"] == central, f"{aos} -> {central}"
 
 
 def test_legacy_opmode_unmapped() -> None:
     """bSec / xSec have no Central equivalent → _opmode omitted."""
     ssids = [{"profile-name": "corp-ssid", "essid": {"essid": "E"}, "opmode": {"xSec": True}}]
-    out = preprocess_wlan_ssid(_vap(), {"central_scope_id": "S", "target_mode": "tunneled", "ssid_profiles": ssids})
+    out = preprocess_wlan_ssid(
+        _vap(),
+        {
+            "central_scope_id": "S",
+            "target_mode": "tunneled",
+            "ssid_profiles": ssids,
+            "gw_cluster_list": [{"cluster": "East"}],
+        },
+    )
     assert "_opmode" not in out
 
 
@@ -103,6 +144,7 @@ def _dual_rt(**extra) -> dict:
         "ssid_profiles": _ssids(),
         "bridge_scope_id": "BRANCH",
         "tunnel_scope_id": "CAMPUS",
+        "gw_cluster_list": [{"cluster": "East"}],  # overlay mode requires it (#438)
         **extra,
     }
 
@@ -127,7 +169,12 @@ def test_dual_mode_requires_both_scopes() -> None:
     with pytest.raises(ValueError, match="tunnel_scope_id|bridge_scope_id"):
         preprocess_wlan_ssid(
             _vap(),
-            {"central_scope_id": "S", "target_mode": "bridged_and_tunneled", "ssid_profiles": _ssids()},
+            {
+                "central_scope_id": "S",
+                "target_mode": "bridged_and_tunneled",
+                "ssid_profiles": _ssids(),
+                "gw_cluster_list": [{"cluster": "East"}],  # present so we reach the scope check
+            },
         )
 
 

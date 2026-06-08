@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.7.2] - 2026-06-08
+
+**Patch — two translation-engine bugs caught by the automated reviewer (#438, #439).** Both surfaced in the `central:wlan_ssid` / `central_translation_preview` surface shipped in 3.3.6.0–3.3.7.1.
+
+- **`central:wlan_ssid` overlay modes now require a non-empty `gw_cluster_list` (#438).** A `tunneled` / `hybrid` / `bridged_and_tunneled` SSID emits an `overlay-wlan` binding to a gateway cluster — but with no `gw_cluster_list` supplied, the binding was null-stripped and the preview emitted a structurally-incomplete (yet valid-looking) overlay. The preprocessing now raises `ValueError` for any overlay mode missing a non-empty `gw_cluster_list`; `bridged` is the only mode that may omit it (local breakout, no cluster).
+- **`central_translation_preview` now reports cross-record target collisions (#439).** Two distinct source records can resolve to the **same** Central object — e.g. named-VLANs `USER-VLAN` + `user-vlan` both fold to the `user-vlan` alias — and would overwrite/409 each other at execution time. The preview now returns a **`target_collisions`** list keyed by target-object identity (path-addressed resources by URL; `/config-assignments` by `profile-type`+`profile-instance`, so distinct assignments don't false-positive). Empty when none.
+
+Preview-only (read-only); no write path touched. 1689 tests pass.
+
 ## [3.3.7.1] - 2026-06-08
 
 **Patch — aos-migration skill: two post-merge review fixes (scope identity + Q1/2g alignment).** Skill-only; caught by the automated reviewer after v3.3.7.0 merged.

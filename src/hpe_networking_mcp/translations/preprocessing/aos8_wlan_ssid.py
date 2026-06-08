@@ -37,6 +37,9 @@ _SINGLE_FORWARD_MODE = {
 _SINGLE_OVERLAY_MODES = {"tunneled", "hybrid"}
 _DUAL_MODE = "bridged_and_tunneled"
 _ALL_MODES = set(_SINGLE_FORWARD_MODE) | {_DUAL_MODE}
+# Modes that emit an overlay-wlan binding → a non-empty gw_cluster_list is REQUIRED
+# (a tunneled/hybrid/dual SSID with no gateway cluster to tunnel to is invalid).
+_OVERLAY_MODES = _SINGLE_OVERLAY_MODES | {_DUAL_MODE}
 
 # AOS 8 ssid_prof opmode (the True key in the opmode object) → Central opmode enum.
 _OPMODE_MAP = {
@@ -84,9 +87,11 @@ def preprocess_wlan_ssid(source_data: dict, runtime_values: dict) -> dict:
     """Join a ``virtual_ap`` with its ``ssid_prof`` and normalize for wlan-ssids.
 
     Raises:
-        ValueError: If ``target_mode`` is missing/invalid, or — for
-            ``bridged_and_tunneled`` — if ``bridge_scope_id`` / ``tunnel_scope_id``
-            are absent (engine wraps as EngineError).
+        ValueError: If ``target_mode`` is missing/invalid; if an overlay mode
+            (``tunneled`` / ``hybrid`` / ``bridged_and_tunneled``) is missing a
+            non-empty ``gw_cluster_list``; or — for ``bridged_and_tunneled`` — if
+            ``bridge_scope_id`` / ``tunnel_scope_id`` are absent (engine wraps as
+            EngineError).
     """
     target_mode = runtime_values.get("target_mode")
     if target_mode not in _ALL_MODES:
@@ -94,6 +99,17 @@ def preprocess_wlan_ssid(source_data: dict, runtime_values: dict) -> dict:
             "preprocess_wlan_ssid requires runtime_values['target_mode'] in "
             f"{sorted(_ALL_MODES)}; got {target_mode!r}. The migration skill supplies this "
             "per SSID from the operator's forward-mode answer."
+        )
+
+    # Overlay modes (tunneled / hybrid / bridged_and_tunneled) emit an overlay-wlan
+    # binding — they MUST have a non-empty gw_cluster_list (the gateway cluster(s) the
+    # SSID tunnels to). Without it the overlay would emit with the binding null-stripped,
+    # producing a structurally-incomplete preview that looks valid (issue #438).
+    if target_mode in _OVERLAY_MODES and not runtime_values.get("gw_cluster_list"):
+        raise ValueError(
+            f"target_mode {target_mode!r} emits a gateway-cluster overlay and requires a "
+            "non-empty runtime_values['gw_cluster_list'] (the cluster binding the SSID "
+            "tunnels to). bridged is the only mode that needs no cluster."
         )
 
     va = source_data

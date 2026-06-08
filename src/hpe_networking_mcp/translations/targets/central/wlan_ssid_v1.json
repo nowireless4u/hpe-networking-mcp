@@ -204,7 +204,7 @@
         "emit_single":   { "from": "_emit_single",    "to": "(emit_when guard, single profile + overlay)", "transform": "direct", "optional": true, "notes": "True for bridged / tunneled / hybrid." },
         "emit_dual":     { "from": "_emit_dual",      "to": "(emit_when guard, alias + bridge + tunnel + dual overlay)", "transform": "direct", "optional": true, "notes": "True for bridged_and_tunneled." },
         "needs_overlay": { "from": "_needs_overlay",  "to": "(emit_when guard, single overlay)", "transform": "direct", "optional": true, "notes": "True for single tunneled / hybrid." },
-        "gw_cluster_list": { "from": "_gw_cluster_list", "to": "overlay 'gw-cluster-list' (array)", "transform": "direct", "optional": true, "notes": "[{cluster, cluster-type, tunnel-type, cluster-redundancy-type, cluster-scope-id}] via runtime_values['gw_cluster_list']. An SSID may bind to multiple clusters." }
+        "gw_cluster_list": { "from": "_gw_cluster_list", "to": "overlay 'gw-cluster-list' (array)", "transform": "direct", "optional": true, "notes": "[{cluster, cluster-type, tunnel-type, cluster-redundancy-type, cluster-scope-id}] via runtime_values['gw_cluster_list']. An SSID may bind to multiple clusters. CONDITIONALLY REQUIRED (issue #438): the preprocessing RAISES if target_mode is tunneled / hybrid / bridged_and_tunneled and gw_cluster_list is empty/missing — an overlay SSID with no gateway-cluster binding is invalid. Only 'bridged' may omit it." }
       },
       "unmapped_fields": [
         {

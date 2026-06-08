@@ -277,3 +277,51 @@ async def test_translations_are_cached_across_calls(ctx: _StubContext, monkeypat
     )
 
     assert call_count["n"] == 1, "load_translations should only be invoked on the first call"
+
+
+# --------------------------------------------------------------------------- #
+# Cross-record target collisions (issue #439)
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.unit
+async def test_named_vlan_case_fold_alias_collision_is_flagged(ctx: _StubContext) -> None:
+    """Two named-VLANs differing only by case derive the same lowercase alias →
+    distinct records collide on the same /aliases endpoint → flagged."""
+    response = await central_translation_preview(
+        ctx=ctx,  # type: ignore[arg-type]
+        translation_id="central:named_vlan",
+        source_records=[
+            {"name": "USER-VLAN", "vlan-ids": "10"},
+            {"name": "user-vlan", "vlan-ids": "20"},
+        ],
+        runtime_values={"central_scope_id": "scope-abc"},
+        source_platform="aos8",
+    )
+
+    collisions = response["target_collisions"]
+    assert collisions, "expected a cross-record alias collision"
+    # The /aliases/user-vlan object is hit by both records.
+    alias_hit = next(
+        (c for c in collisions if any("/aliases/" in call["endpoint"] for call in c["calls"])),
+        None,
+    )
+    assert alias_hit is not None
+    assert set(alias_hit["records"]) == {"USER-VLAN", "user-vlan"}
+    # The shared /config-assignments collection must NOT be flagged (distinct profiles).
+    assert not any(any("/config-assignments" in call["endpoint"] for call in c["calls"]) for c in collisions), (
+        "config-assignments with distinct profile-instances must not false-positive"
+    )
+
+
+@pytest.mark.unit
+async def test_distinct_records_produce_no_collision(ctx: _StubContext) -> None:
+    """Distinct VLAN IDs touch distinct endpoints → no collisions."""
+    response = await central_translation_preview(
+        ctx=ctx,  # type: ignore[arg-type]
+        translation_id="central:vlan_id",
+        source_records=[{"id": 108}, {"id": 109}],
+        runtime_values={"central_scope_id": "scope-abc"},
+        source_platform="aos8",
+    )
+    assert response["target_collisions"] == []
