@@ -72,6 +72,23 @@ def _subsection_2h(stage9b: str) -> str:
     return "\n".join(lines[start:end])
 
 
+def _aaa_chain_list_block(subsection_2h: str) -> str:
+    """Return the literal ``aaa_chain = [ ... ]`` list body from the §2h snippet.
+
+    The dependency-order guard must read the EXECUTABLE list, not the explanatory prose
+    around it (Casey #450 review): the sentence before the code block already names the
+    IDs in order, so scanning the whole subsection could pass even if the real
+    ``aaa_chain`` list were reordered. We slice from ``aaa_chain = [`` to its closing
+    ``]`` so the guard sees only the list the operator actually executes.
+    """
+    marker = "aaa_chain = ["
+    start = subsection_2h.find(marker)
+    assert start >= 0, "§2h is missing the 'aaa_chain = [' execution list"
+    close = subsection_2h.find("\n]", start)
+    assert close >= 0, "could not find the closing ']' of the aaa_chain list"
+    return subsection_2h[start:close]
+
+
 @pytest.fixture(scope="module")
 def stage9b_text() -> str:
     return _stage9b_section(SKILL_PATH.read_text(encoding="utf-8"))
@@ -80,6 +97,11 @@ def stage9b_text() -> str:
 @pytest.fixture(scope="module")
 def subsection_2h_text(stage9b_text: str) -> str:
     return _subsection_2h(stage9b_text)
+
+
+@pytest.fixture(scope="module")
+def aaa_chain_list_text(subsection_2h_text: str) -> str:
+    return _aaa_chain_list_block(subsection_2h_text)
 
 
 @pytest.mark.unit
@@ -107,7 +129,7 @@ class TestStage9bTranslationCoverage:
         missing_reasons = sorted(tid for tid, reason in OUT_OF_SCOPE.items() if not reason.strip())
         assert not missing_reasons, f"OUT_OF_SCOPE entries must document a non-empty reason: {missing_reasons}"
 
-    def test_aaa_chain_present_in_dependency_order(self, subsection_2h_text: str) -> None:
+    def test_aaa_chain_present_in_dependency_order(self, aaa_chain_list_text: str) -> None:
         """Issue #437: the FULL AAA chain must appear in execution/dependency order so the
         operator reads prerequisites before the objects that reference them.
 
@@ -116,8 +138,9 @@ class TestStage9bTranslationCoverage:
         but all sit after server_group and before aaa_profile (the aaa-profile references
         server-groups + the dot1x/mac/captive profiles + roles by name).
 
-        Scanned within the §2h subsection only (Casey #450 review) — so this verifies the
-        actual preview/execution `aaa_chain` order, not the earlier translation-table order.
+        Scanned within the literal ``aaa_chain = [...]`` execution list (Casey #450 review)
+        — NOT the surrounding prose, which already names the IDs in order and would mask a
+        reordering of the actual list the operator runs.
         """
         members = (
             "central:auth_server",
@@ -127,8 +150,8 @@ class TestStage9bTranslationCoverage:
             "central:captive_portal",
             "central:aaa_profile",
         )
-        # First occurrence of each id within the §2h subsection (its aaa_chain list).
-        pos = {m: subsection_2h_text.find(m) for m in members}
+        # First occurrence of each id within the executable aaa_chain list slice.
+        pos = {m: aaa_chain_list_text.find(m) for m in members}
         missing = sorted(m for m, p in pos.items() if p < 0)
         assert not missing, f"AAA chain link(s) missing from Stage 9b: {missing}"
 

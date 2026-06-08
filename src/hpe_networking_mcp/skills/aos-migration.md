@@ -1545,6 +1545,8 @@ Surface each VAP's emitted calls (the wlan-ssids profile(s) + any overlay-wlan b
 
 These six translations ship and preview via `central_translation_preview`. Unlike 2f/2g they are **driven directly** — per-record, `central_scope_id` only, **no Stage 6.5 decision** — so they need the AAA objects from Stage 1 but **not** the questionnaire. They model the **gateway-terminated (tunnel / hybrid) AAA**: the gateway `aaa-profile` a tunnel-mode `wlan-ssid` binds to. For a fully **bridged / controllerless** design the AAA folds inline into the `wlan-ssid` instead (deferred — see §2g notes / the bridge-mode AAA backlog item); if **every** surviving SSID is Bridged, run §2h for completeness but mark it **informational** in the report (the gateway aaa-profile won't be referenced).
 
+**Where "every surviving SSID is Bridged" comes from:** read it off the **Stage 6.5 Q1 decisions** that §2g consumes — the gateway AAA is referenced only when at least one VAP's `target_mode` is `tunneled` / `hybrid` / `bridged_and_tunneled`. Concretely: `any_gateway_ssid = any(d.get("target_mode") in {"tunneled", "hybrid", "bridged_and_tunneled"} for d in decisions.get("per_vap", {}).values())`. When `any_gateway_ssid` is `False` (all Bridged, or no VAP decisions at all), still run §2h but tag the result **informational**; when `True`, the chain is live (its `aaa-profile` is what the §2g overlay SSIDs authenticate against).
+
 **Dependency order is also the preview order** (so the operator reads prerequisites first): `auth_server` → `server_group` → {`dot1x_auth`, `mac_auth`, `captive_portal`} → `aaa_profile`. Server-groups reference auth-servers by name; the aaa-profile references server-groups + the dot1x/mac/captive profiles + roles by name — each prerequisite must exist in Central before the object that references it.
 
 > **PII — MANDATORY redaction:** `central:auth_server` preview bodies carry the shared-secret field (`rad_key` / `tacacs_key`). Read-only does **not** mean safe to display — a shared secret rendered into an operator-facing report is an exposure regardless of whether the preview wrote anything. **You MUST redact the secret before rendering anything operator-facing:**
@@ -1552,6 +1554,31 @@ These six translations ship and preview via `central_translation_preview`. Unlik
 > - In summaries, show **presence only** (e.g. `shared_secret: present`), never the value.
 > - The **write path stays PII-gated** — do not enable auth-server writes until the secret-tokenization prerequisite ships (see the spec `draft_notes`).
 > Treat this as a hard rule: when in doubt, redact.
+
+Use this helper to redact before rendering any `central:auth_server` sample body (recursive, so nested `rad_key: {key: ...}` / `tacacs_key: {key: ...}` wrappers are caught too):
+
+```python
+import copy
+
+_SECRET_KEYS = {"rad_key", "tacacs_key", "key"}   # AOS 8 wraps the secret as rad_key.key / tacacs_key.key
+
+def redact_secrets(body):
+    """Return a deep copy of an engine TargetCall body with shared secrets masked.
+    Apply to central:auth_server sample bodies BEFORE rendering them to the operator."""
+    def _walk(node):
+        if isinstance(node, dict):
+            return {
+                k: ("<redacted: present>" if k in _SECRET_KEYS and v not in (None, "", {}) else
+                    "<redacted: absent>" if k in _SECRET_KEYS else _walk(v))
+                for k, v in node.items()
+            }
+        if isinstance(node, list):
+            return [_walk(x) for x in node]
+        return node
+    return _walk(copy.deepcopy(body))
+
+# Step 3: sample_body = redact_secrets(preview["results"][0]["target_calls"][0]["body"])  # for central:auth_server
+```
 
 ```python
 def _aaa_translatable(r: dict) -> bool:
