@@ -1560,16 +1560,23 @@ Use this helper to redact before rendering any `central:auth_server` sample body
 ```python
 import copy
 
-_SECRET_KEYS = {"rad_key", "tacacs_key", "key"}   # AOS 8 wraps the secret as rad_key.key / tacacs_key.key
+# Redact ONLY the shared-secret fields, not every field named "key" (an unrelated
+# "key" elsewhere must not be masked). The secret arrives either as a bare string
+# or as a one-level {"key": "..."} wrapper — mask the whole value in both cases.
+_SECRET_FIELDS = {"rad_key", "tacacs_key"}
 
 def redact_secrets(body):
     """Return a deep copy of an engine TargetCall body with shared secrets masked.
     Apply to central:auth_server sample bodies BEFORE rendering them to the operator."""
+    def _present(value):
+        if isinstance(value, dict):
+            return bool(value.get("key"))          # {"key": "<secret>"} wrapper
+        return value not in (None, "")             # bare scalar secret
     def _walk(node):
         if isinstance(node, dict):
             return {
-                k: ("<redacted: present>" if k in _SECRET_KEYS and v not in (None, "", {}) else
-                    "<redacted: absent>" if k in _SECRET_KEYS else _walk(v))
+                k: (("<redacted: present>" if _present(v) else "<redacted: absent>")
+                    if k in _SECRET_FIELDS else _walk(v))
                 for k, v in node.items()
             }
         if isinstance(node, list):
