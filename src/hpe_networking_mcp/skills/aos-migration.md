@@ -1547,7 +1547,11 @@ These six translations ship and preview via `central_translation_preview`. Unlik
 
 **Dependency order is also the preview order** (so the operator reads prerequisites first): `auth_server` → `server_group` → {`dot1x_auth`, `mac_auth`, `captive_portal`} → `aaa_profile`. Server-groups reference auth-servers by name; the aaa-profile references server-groups + the dot1x/mac/captive profiles + roles by name — each prerequisite must exist in Central before the object that references it.
 
-> **PII:** `central:auth_server` bodies carry the shared-secret field (`rad_key` / `tacacs_key`). Stage 9b is **read-only** (preview only), so this is safe to display, but the **write path stays PII-gated** — do not enable auth-server writes until the secret-tokenization prerequisite ships (see the spec `draft_notes`). Surface the secret presence as a note, not the value, in any operator-facing summary you author.
+> **PII — MANDATORY redaction:** `central:auth_server` preview bodies carry the shared-secret field (`rad_key` / `tacacs_key`). Read-only does **not** mean safe to display — a shared secret rendered into an operator-facing report is an exposure regardless of whether the preview wrote anything. **You MUST redact the secret before rendering anything operator-facing:**
+> - In any sample TargetCall body for `central:auth_server` (Step 3), replace the `rad_key` / `tacacs_key` value with the literal `"<redacted: present>"` (or `"<redacted: absent>"` when the source field was empty) — never the actual value.
+> - In summaries, show **presence only** (e.g. `shared_secret: present`), never the value.
+> - The **write path stays PII-gated** — do not enable auth-server writes until the secret-tokenization prerequisite ships (see the spec `draft_notes`).
+> Treat this as a hard rule: when in doubt, redact.
 
 ```python
 def _aaa_translatable(r: dict) -> bool:
@@ -1703,7 +1707,7 @@ If any translation's preview returned a non-empty `target_collisions` (distinct 
 - **Use the engine's deterministic counts** — never hand-fabricate. If the tool returns `translatable_count=8`, that's the number; do not narrate "approximately 8" or "8 or 9".
 - **Surface every skip_reason verbatim** — these are the operator's signals about what won't migrate (empty ACLs, missing role attribution, etc.). Surface `skipped_per_lld` lists separately (these are pre-engine filters; engine never saw them).
 - **Cap the per-record detail table at ~30 rows per translation.** Bodies appear in the "Sample TargetCall bodies" section, not in the table. The drill-down prompts let the operator request specific bodies.
-- **Always emit at least 1 sample body per translation** in Step 3 unless `translatable_count == 0`. Picking the FIRST translatable record is fine; the goal is to give the operator a concrete sense of what gets POSTed.
+- **Always emit at least 1 sample body per translation** in Step 3 unless `translatable_count == 0`. Picking the FIRST translatable record is fine; the goal is to give the operator a concrete sense of what gets POSTed. **EXCEPTION — `central:auth_server`: redact secrets before rendering.** A sample `central:auth_server` body MUST replace the `rad_key` / `tacacs_key` value with `"<redacted: present>"` (or `"<redacted: absent>"` if the source field was empty) — never the actual shared secret (see §2h's MANDATORY-redaction note). This is the one place a sample body is edited before display; everywhere else it's verbatim engine output.
 - **For runs with `record_count == 0` for a given translation,** emit a one-line note (e.g. *"central:vlan_id: 0 records at this scope"*) instead of an empty section.
 - **Surface `target_collisions` as write hazards.** If any translation's preview returns a non-empty `target_collisions`, render the "Write hazards" section above — distinct source records colliding on one Central object overwrite/409 each other at execution and must be reconciled before cutover.
 - **Mark every placeholder scope_id loudly.** A body that contains `"scope-id": "<TBD:..."` is NOT executable — say so in the report header so the operator knows the migration plan needs the target hierarchy created first.

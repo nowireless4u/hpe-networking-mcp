@@ -82,17 +82,40 @@ class TestStage9bTranslationCoverage:
         assert not stale, f"OUT_OF_SCOPE lists translations that no longer ship: {stale}"
 
     def test_aaa_chain_present_in_dependency_order(self, stage9b_text: str) -> None:
-        """Issue #437: the AAA chain must appear in execution/dependency order so the
-        operator reads prerequisites before the objects that reference them."""
-        chain = [
+        """Issue #437: the FULL AAA chain must appear in execution/dependency order so the
+        operator reads prerequisites before the objects that reference them.
+
+        Dependency model: auth_server -> server_group -> {dot1x_auth, mac_auth,
+        captive_portal} -> aaa_profile. Each middle profile is independent of the others
+        but all sit after server_group and before aaa_profile (the aaa-profile references
+        server-groups + the dot1x/mac/captive profiles + roles by name).
+        """
+        members = (
             "central:auth_server",
             "central:server_group",
+            "central:dot1x_auth",
+            "central:mac_auth",
+            "central:captive_portal",
             "central:aaa_profile",
+        )
+        # First occurrence of each id in the section (the translation table lists them
+        # in order; §2h's chain list repeats that order).
+        pos = {m: stage9b_text.find(m) for m in members}
+        missing = sorted(m for m, p in pos.items() if p < 0)
+        assert not missing, f"AAA chain link(s) missing from Stage 9b: {missing}"
+
+        # Required partial order (Casey #450 review): every prerequisite before its dependents.
+        required_before = [
+            ("central:auth_server", "central:server_group"),
+            ("central:server_group", "central:dot1x_auth"),
+            ("central:server_group", "central:mac_auth"),
+            ("central:server_group", "central:captive_portal"),
+            ("central:dot1x_auth", "central:aaa_profile"),
+            ("central:mac_auth", "central:aaa_profile"),
+            ("central:captive_portal", "central:aaa_profile"),
         ]
-        positions = [stage9b_text.find(tid) for tid in chain]
-        assert all(p >= 0 for p in positions), f"AAA chain link missing from Stage 9b: {chain}"
-        assert positions == sorted(positions), (
-            "AAA chain must appear in dependency order in Stage 9b "
-            "(auth_server -> server_group -> ... -> aaa_profile); "
-            f"found positions {dict(zip(chain, positions, strict=True))}"
+        violations = [(a, b) for a, b in required_before if pos[a] >= pos[b]]
+        assert not violations, (
+            "AAA chain out of dependency order in Stage 9b — these prerequisites must appear "
+            f"before their dependents but don't: {violations}. Positions: {pos}"
         )
