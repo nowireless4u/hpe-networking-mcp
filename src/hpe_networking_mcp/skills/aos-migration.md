@@ -692,11 +692,11 @@ decisions = {
   # keyed by composite "<source_scope>/<vap-name>" — NOT bare vap-name / ESSID,
   # so same-ESSID VAPs across scopes can't collide.
   "per_vap": { "<source_scope>/<vap-name>": {"target_mode": "...",      # Q1
-                                             # gw_cluster_list entries are the SAME composite
-                                             # "<source_scope>/<cluster-name>" keys used in per_cluster,
-                                             # so a tunneled VAP resolves to the right per_cluster decision
-                                             # (bare names would re-introduce the cross-scope collision):
-                                             "gw_cluster_list": ["<source_scope>/<cluster-name>", ...],
+                                             # cluster_refs holds the composite per_cluster keys this VAP
+                                             # tunnels to — for collision-safe LOOKUP only (NOT the engine
+                                             # payload). 2g resolves each via per_cluster into the Central
+                                             # overlay gw_cluster_list object shape before previewing.
+                                             "cluster_refs": ["<source_scope>/<cluster-name>", ...],
                                              "bridge_scope_id": "...",  # bridged_and_tunneled only
                                              "tunnel_scope_id": "..."}, # bridged_and_tunneled only
                ... },
@@ -1388,7 +1388,7 @@ for c in cluster_records:
 
 ##### 2g — WLAN SSIDs (`central:wlan_ssid`) — consumes Stage 6.5 Q1
 
-One source record = one `virtual_ap`; pass the FULL `ssid_prof` list via `runtime_values["ssid_profiles"]` (the engine joins by name). Per **VAP instance**, look up the operator's decision by the composite `<source_scope>/<vap-name>` key (Q1), and pass `target_mode` + the `gw_cluster_list` it binds to; for `bridged_and_tunneled`, also `bridge_scope_id` + `tunnel_scope_id`.
+One source record = one `virtual_ap`; pass the FULL `ssid_prof` list via `runtime_values["ssid_profiles"]` (the engine joins by name). Per **VAP instance**, look up the operator's decision by the composite `<source_scope>/<vap-name>` key (Q1), pass `target_mode`, and **resolve the decision's `cluster_refs` (composite per_cluster keys) into the engine's `gw_cluster_list` — the Central overlay object shape `[{cluster, cluster-type, tunnel-type, cluster-scope-id}]`**, not the raw key strings (the engine substitutes it whole into the overlay body). For `bridged_and_tunneled`, also pass `bridge_scope_id` + `tunnel_scope_id`.
 
 ```python
 vap_records = [
@@ -1417,11 +1417,33 @@ for v in vap_records:
     # convention) so the gap is visible rather than authoritative-looking.
     mapped_scope = stage7_central_scope_for(v.get("_source_scope"))   # Central name from the Stage 7 mapping
     ssid_scope_id = scope_lookup.get(mapped_scope, f"<TBD:{mapped_scope or v.get('_source_scope')}>")
+
+    # Resolve the VAP's cluster_refs (composite per_cluster KEYS — for lookup only)
+    # into the Central overlay payload shape the engine actually expects:
+    #   [{cluster, cluster-type, tunnel-type, cluster-redundancy-type, cluster-scope-id}]
+    # central:wlan_ssid substitutes gw_cluster_list WHOLE into the overlay body, so it
+    # must already be Central objects, NOT decision-key strings.
+    gw_cluster_list, cluster_gap = [], None
+    for cref in dec.get("cluster_refs", []):
+        cdec = decisions.get("per_cluster", {}).get(cref)
+        if not cdec or not cdec.get("central_scope_id"):
+            cluster_gap = f"cluster {cref} has no confirmed Stage 6.5 decision/scope — can't build the overlay binding"
+            break
+        gw_cluster_list.append({
+            "cluster": cref.split("/")[-1],            # Central gateway-cluster profile name
+            "cluster-type": "GATEWAY",
+            "tunnel-type": "L2",                       # tunnel binding; refine per design if L3
+            "cluster-scope-id": cdec["central_scope_id"],
+        })
+    if cluster_gap:
+        ssid_previews.append({"source": vap_key, "skip_reason": cluster_gap})
+        continue
+
     rt = {
         "central_scope_id": ssid_scope_id,
         "target_mode": dec["target_mode"],            # bridged / tunneled / hybrid / bridged_and_tunneled
         "ssid_profiles": stage1_ssid_prof_records,    # full list — engine joins by name
-        "gw_cluster_list": dec.get("gw_cluster_list", []),
+        "gw_cluster_list": gw_cluster_list,           # Central overlay objects (engine contract)
     }
     if dec["target_mode"] == "bridged_and_tunneled":
         # Dual mode needs both scopes — guard, don't index (a partial decision must
