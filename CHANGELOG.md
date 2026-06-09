@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.8.2] - 2026-06-09
+
+**Patch — `central_get_applications` now validates the time window up front (#458).** The applications endpoint expects epoch **milliseconds**; an ISO-8601 string, a plain date, or a reversed window produced an opaque upstream `HTTP 400 BAD_REQUEST` ("Your request was incorrect or incomplete") wrapped as a 502, leaving the caller with no idea what was wrong.
+
+- The tool now validates `start_query_time` / `end_query_time` before calling Central and raises a clear `ToolError` (400) naming the offending value and the expected format (e.g. *"start_query_time must be an epoch timestamp in milliseconds (e.g. '1780876800000'), got '2026-06-08T00:00:00Z'"*).
+- Epoch **seconds** (10-digit) are accepted as a convenience and normalized to ms (the seconds-vs-ms mixup is the most common mistake; 10- vs 13-digit values don't overlap for present-day timestamps).
+- `start_query_time` must be before `end_query_time`, and `site_id` must be non-empty — both checked with clear messages.
+
+Live-verified: the endpoint + its `v1alpha1` path are correct (a valid site_id + epoch-ms window returns data); the 400 was purely a malformed-input passthrough. New unit tests cover the helper and the tool-level validation paths.
+
 ## [3.3.8.1] - 2026-06-09
 
 **Patch — Central read-tool enum filters now fold case + known synonyms (#455, #456, #457).** Three MRT read tools rejected reasonable-but-non-canonical enum inputs with a hard validation error. A new shared `coerce_enum` helper (a Pydantic `BeforeValidator`) folds recognized case/alias variants onto the canonical `Literal` value while keeping the enum in the JSON schema (discoverability) and still rejecting genuinely invalid values.
