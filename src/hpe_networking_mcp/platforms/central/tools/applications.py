@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
@@ -6,17 +8,35 @@ from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import retry_central_command
 
 
+def _parse_iso_to_epoch_ms(value: str) -> int | None:
+    """Parse an ISO-8601 datetime to epoch milliseconds, or return None if it isn't
+    a parseable ISO-8601 string. A naive datetime (no offset) is assumed UTC."""
+    iso = value[:-1] + "+00:00" if value.endswith("Z") else value
+    try:
+        dt = datetime.fromisoformat(iso)
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    return int(dt.timestamp() * 1000)
+
+
 def _to_epoch_ms(label: str, value: str) -> int:
-    """Validate and normalize an epoch timestamp to milliseconds.
+    """Validate and normalize a timestamp to epoch milliseconds.
 
     The Central applications endpoint expects epoch **milliseconds** and returns an
-    opaque ``HTTP 400 BAD_REQUEST`` for anything else (ISO-8601 strings, plain dates,
-    etc.). Validate up front so callers get an actionable error instead of the bare
-    upstream 400 (issue #458). Only the two sane digit lengths for present-day
-    timestamps are accepted: **13-digit** epoch milliseconds, or **10-digit** epoch
-    seconds (converted to ms — the seconds-vs-ms mixup is the most common mistake).
-    Any other length (an 11/12/14-digit typo) is rejected rather than passed through
-    to produce a second opaque upstream 400.
+    opaque ``HTTP 400 BAD_REQUEST`` for anything else, so normalize up front and give
+    an actionable error for genuinely bad input (issue #458). Accepted forms:
+
+    * **13-digit** epoch milliseconds — used as-is.
+    * **10-digit** epoch seconds — converted to ms (the seconds-vs-ms mixup is the
+      most common mistake; 10- vs 13-digit values don't overlap for present-day times).
+    * **ISO-8601** datetimes (e.g. ``2026-06-08T23:00:00Z``) — converted to ms. This
+      is the natural form for an LLM that can't read the clock inside the code-mode
+      sandbox (``datetime.now()`` / ``time.time()`` are blocked there), so accept it
+      and do the conversion server-side where a clock is available.
+
+    Anything else (a plain date, a word, an 11/12/14-digit typo) is rejected.
 
     Args:
         label: Parameter name, used in the error message.
@@ -26,23 +46,25 @@ def _to_epoch_ms(label: str, value: str) -> int:
         The timestamp as integer epoch milliseconds.
 
     Raises:
-        ToolError: 400 when ``value`` is not a 10- or 13-digit epoch timestamp.
+        ToolError: 400 when ``value`` is not a recognized timestamp form.
     """
     s = str(value).strip()
-    if not s.isdigit() or len(s) not in (10, 13):
-        raise ToolError(
-            {
-                "status_code": 400,
-                "message": (
-                    f"{label} must be an epoch timestamp in milliseconds "
-                    f"(13-digit, e.g. '1780876800000') or seconds (10-digit), got "
-                    f"{value!r}. ISO-8601 timestamps and plain dates are not accepted "
-                    "— convert to epoch milliseconds first."
-                ),
-            }
-        )
-    # 10-digit value = epoch seconds → normalize to ms; 13-digit already ms.
-    return int(s) * 1000 if len(s) == 10 else int(s)
+    if s.isdigit() and len(s) in (10, 13):
+        # 10-digit = epoch seconds → ms; 13-digit already ms.
+        return int(s) * 1000 if len(s) == 10 else int(s)
+    iso_ms = _parse_iso_to_epoch_ms(s)
+    if iso_ms is not None:
+        return iso_ms
+    raise ToolError(
+        {
+            "status_code": 400,
+            "message": (
+                f"{label} must be epoch milliseconds (13-digit, e.g. '1780876800000'), "
+                f"epoch seconds (10-digit), or an ISO-8601 datetime (e.g. "
+                f"'2026-06-08T23:00:00Z'); got {value!r}."
+            ),
+        }
+    )
 
 
 @tool(annotations=READ_ONLY)
@@ -66,11 +88,11 @@ async def central_get_applications(
 
     Parameters:
         site_id: Site ID to scope the query (required).
-        start_query_time: Start of the time window in epoch milliseconds (required).
-            Epoch seconds (10-digit) are accepted and converted. ISO-8601 strings and
-            plain dates are NOT accepted — the upstream API rejects them with a 400.
-        end_query_time: End of the time window in epoch milliseconds (required), and
-            must be after start_query_time. Same format rules as start_query_time.
+        start_query_time: Start of the time window (required). Accepts epoch
+            milliseconds (13-digit), epoch seconds (10-digit), or an ISO-8601
+            datetime (e.g. "2026-06-08T23:00:00Z"); all are normalized to epoch ms.
+        end_query_time: End of the time window (required), must be after
+            start_query_time. Same accepted formats as start_query_time.
         limit: Number of records per page (default 1000).
         offset: Starting record offset for pagination (default 0).
         client_id: Filter results to a specific client ID.

@@ -45,24 +45,36 @@ def test_epoch_seconds_converted_to_ms() -> None:
     assert _to_epoch_ms("start_query_time", "1780876800") == 1780876800000
 
 
+def test_iso_8601_converted_to_epoch_ms() -> None:
+    """ISO-8601 is the natural form for an LLM that can't read the sandbox clock — accept
+    it and convert server-side (2026-06-08T23:00:00Z = 1780959600000 ms)."""
+    assert _to_epoch_ms("start_query_time", "2026-06-08T23:00:00Z") == 1780959600000
+    # Naive (no offset) is assumed UTC.
+    assert _to_epoch_ms("start_query_time", "2026-06-08T23:00:00") == 1780959600000
+
+
+def test_plain_date_converted_to_epoch_ms() -> None:
+    """A bare date is a valid ISO-8601 window boundary (midnight UTC)."""
+    assert _to_epoch_ms("start_query_time", "2026-06-08") == 1780876800000
+
+
 @pytest.mark.parametrize(
     "bad",
     [
-        "2026-06-08T00:00:00Z",  # ISO-8601
-        "2026-06-08",  # plain date
         "yesterday",  # word
         "",  # empty
         "12ab34",  # mixed
-        "178087680000",  # 12-digit typo (dropped a digit) — must not pass through
+        "178087680000",  # 12-digit typo (dropped a digit) — not a valid epoch or ISO
         "17808768000000",  # 14-digit typo (extra digit)
+        "2026-13-40",  # ISO-shaped but invalid date
     ],
 )
-def test_malformed_timestamp_rejected(bad: str) -> None:
+def test_unparseable_timestamp_rejected(bad: str) -> None:
     with pytest.raises(ToolError) as exc:
         _to_epoch_ms("start_query_time", bad)
     payload = exc.value.args[0]
     assert payload["status_code"] == 400
-    assert "epoch" in payload["message"].lower()
+    assert "epoch" in payload["message"].lower() or "iso" in payload["message"].lower()
 
 
 # --------------------------------------------------------------------------- #
@@ -77,22 +89,27 @@ async def test_empty_site_id_rejected() -> None:
     assert "site_id" in exc.value.args[0]["message"]
 
 
-async def test_iso_8601_window_rejected_with_clear_error() -> None:
-    """The exact failure the dashboard run hit: an ISO-8601 window → clear 400, not an
-    opaque upstream BAD_REQUEST."""
+async def test_unparseable_window_rejected_with_clear_error() -> None:
+    """A genuinely unparseable timestamp still yields a clear 400 before the API call."""
     with pytest.raises(ToolError) as exc:
         await _apps(
             ctx=_Ctx(),
             site_id="64061593875",
-            start_query_time="2026-06-08T00:00:00Z",
+            start_query_time="last tuesday",
             end_query_time="2026-06-09T00:00:00Z",
         )
     assert exc.value.args[0]["status_code"] == 400
-    assert "epoch" in exc.value.args[0]["message"].lower()
 
 
 async def test_reversed_window_rejected() -> None:
+    """Reversed window is caught after normalization (works across mixed input forms:
+    an ISO start that resolves after an epoch-ms end)."""
     with pytest.raises(ToolError) as exc:
-        await _apps(ctx=_Ctx(), site_id="64061593875", start_query_time="1780963200000", end_query_time="1780876800000")
+        await _apps(
+            ctx=_Ctx(),
+            site_id="64061593875",
+            start_query_time="2026-06-09T00:00:00Z",
+            end_query_time="1780876800000",  # 2026-06-08 — earlier than the ISO start
+        )
     assert exc.value.args[0]["status_code"] == 400
     assert "before" in exc.value.args[0]["message"]
