@@ -12,9 +12,11 @@ def _to_epoch_ms(label: str, value: str) -> int:
     The Central applications endpoint expects epoch **milliseconds** and returns an
     opaque ``HTTP 400 BAD_REQUEST`` for anything else (ISO-8601 strings, plain dates,
     etc.). Validate up front so callers get an actionable error instead of the bare
-    upstream 400 (issue #458). Epoch **seconds** (10-digit) are accepted as a
-    convenience and converted to ms — the seconds-vs-ms mixup is the most common
-    mistake and 10- vs 13-digit values don't overlap for present-day timestamps.
+    upstream 400 (issue #458). Only the two sane digit lengths for present-day
+    timestamps are accepted: **13-digit** epoch milliseconds, or **10-digit** epoch
+    seconds (converted to ms — the seconds-vs-ms mixup is the most common mistake).
+    Any other length (an 11/12/14-digit typo) is rejected rather than passed through
+    to produce a second opaque upstream 400.
 
     Args:
         label: Parameter name, used in the error message.
@@ -24,17 +26,18 @@ def _to_epoch_ms(label: str, value: str) -> int:
         The timestamp as integer epoch milliseconds.
 
     Raises:
-        ToolError: 400 when ``value`` is not a numeric epoch timestamp.
+        ToolError: 400 when ``value`` is not a 10- or 13-digit epoch timestamp.
     """
     s = str(value).strip()
-    if not s.isdigit():
+    if not s.isdigit() or len(s) not in (10, 13):
         raise ToolError(
             {
                 "status_code": 400,
                 "message": (
                     f"{label} must be an epoch timestamp in milliseconds "
-                    f"(e.g. '1780876800000'), got {value!r}. ISO-8601 timestamps and "
-                    "plain dates are not accepted — convert to epoch milliseconds first."
+                    f"(13-digit, e.g. '1780876800000') or seconds (10-digit), got "
+                    f"{value!r}. ISO-8601 timestamps and plain dates are not accepted "
+                    "— convert to epoch milliseconds first."
                 ),
             }
         )

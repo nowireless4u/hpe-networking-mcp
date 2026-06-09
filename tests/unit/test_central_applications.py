@@ -45,8 +45,19 @@ def test_epoch_seconds_converted_to_ms() -> None:
     assert _to_epoch_ms("start_query_time", "1780876800") == 1780876800000
 
 
-@pytest.mark.parametrize("bad", ["2026-06-08T00:00:00Z", "2026-06-08", "yesterday", "", "12ab34"])
-def test_non_numeric_timestamp_rejected(bad: str) -> None:
+@pytest.mark.parametrize(
+    "bad",
+    [
+        "2026-06-08T00:00:00Z",  # ISO-8601
+        "2026-06-08",  # plain date
+        "yesterday",  # word
+        "",  # empty
+        "12ab34",  # mixed
+        "178087680000",  # 12-digit typo (dropped a digit) — must not pass through
+        "17808768000000",  # 14-digit typo (extra digit)
+    ],
+)
+def test_malformed_timestamp_rejected(bad: str) -> None:
     with pytest.raises(ToolError) as exc:
         _to_epoch_ms("start_query_time", bad)
     payload = exc.value.args[0]
