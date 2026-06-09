@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Annotated, Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
@@ -11,6 +11,7 @@ from hpe_networking_mcp.platforms.central.utils import (
     FilterField,
     build_odata_filter,
     clean_alert_data,
+    coerce_enum,
     retry_central_command,
 )
 
@@ -44,9 +45,19 @@ OPERATIONAL = ToolAnnotations(
 async def central_get_alerts(
     ctx: Context,
     site_id: str,
-    status: Literal["Active", "Cleared", "Deferred"] | None = "Active",
-    device_type: Literal["Access Point", "Gateway", "Switch", "Bridge"] | None = None,
-    category: Literal["Clients", "System", "LAN", "WLAN", "WAN", "Cluster", "Routing", "Security"] | None = None,
+    status: Annotated[
+        Literal["Active", "Cleared", "Deferred"] | None,
+        # "Open"/"open" is a common synonym for an unresolved alert → map to "Active".
+        coerce_enum(("Active", "Cleared", "Deferred"), {"open": "Active"}),
+    ] = "Active",
+    device_type: Annotated[
+        Literal["Access Point", "Gateway", "Switch", "Bridge"] | None,
+        coerce_enum(("Access Point", "Gateway", "Switch", "Bridge")),
+    ] = None,
+    category: Annotated[
+        Literal["Clients", "System", "LAN", "WLAN", "WAN", "Cluster", "Routing", "Security"] | None,
+        coerce_enum(("Clients", "System", "LAN", "WLAN", "WAN", "Cluster", "Routing", "Security")),
+    ] = None,
     sort: str = "severity desc",
     limit: int = 50,
     cursor: int | None = None,
@@ -69,7 +80,9 @@ async def central_get_alerts(
     Parameters:
         - site_id: Site identifier. Obtain by calling
           central_get_site_health(site_name="<name>") and reading site_id from the result.
-        - status: "Active" (default) for unresolved alerts, "Cleared" for resolved ones.
+        - status: "Active" (default) for unresolved/open alerts, "Cleared" for resolved
+          ones, "Deferred" for snoozed ones. Case-insensitive; "Open" is accepted as a
+          synonym for "Active".
         - device_type: Narrow to a device class — "Access Point", "Gateway", "Switch",
           or "Bridge".
         - category: Narrow to an alert domain — "Clients", "System", "LAN", "WLAN",
