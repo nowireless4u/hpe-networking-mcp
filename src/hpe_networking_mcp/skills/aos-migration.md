@@ -1545,7 +1545,24 @@ Surface each VAP's emitted calls (the wlan-ssids profile(s) + any overlay-wlan b
 
 These six translations ship and preview via `central_translation_preview`. Unlike 2f/2g they are **driven directly** — per-record, `central_scope_id` only, **no Stage 6.5 decision** — so they need the AAA objects from Stage 1 but **not** the questionnaire. They model the **gateway-terminated (tunnel / hybrid) AAA**: the gateway `aaa-profile` a tunnel-mode `wlan-ssid` binds to. For a fully **bridged / controllerless** design the AAA folds inline into the `wlan-ssid` instead (deferred — see §2g notes / the bridge-mode AAA backlog item); if **every** surviving SSID is Bridged, run §2h for completeness but mark it **informational** in the report (the gateway aaa-profile won't be referenced).
 
-**Where "every surviving SSID is Bridged" comes from:** read it off the **Stage 6.5 Q1 decisions** that §2g consumes — the gateway AAA is referenced only when at least one VAP's `target_mode` is `tunneled` / `hybrid` / `bridged_and_tunneled`. Concretely: `any_gateway_ssid = any(d.get("target_mode") in {"tunneled", "hybrid", "bridged_and_tunneled"} for d in decisions.get("per_vap", {}).values())`. When `any_gateway_ssid` is `False` (all Bridged, or no VAP decisions at all), still run §2h but tag the result **informational**; when `True`, the chain is live (its `aaa-profile` is what the §2g overlay SSIDs authenticate against).
+**Where "every surviving SSID is Bridged" comes from:** read it off the **Stage 6.5 Q1 decisions** that §2g consumes — the gateway AAA is referenced only when at least one VAP's `target_mode` is `tunneled` / `hybrid` / `bridged_and_tunneled`. **Distinguish three states** (do NOT collapse the last two — "all Bridged" and "Stage 6.5 never ran" are different operator situations):
+
+```python
+per_vap = decisions.get("per_vap", {})
+gateway_modes = {"tunneled", "hybrid", "bridged_and_tunneled"}
+if not per_vap:
+    aaa_status = "data-gap"      # Stage 6.5 didn't run / no VAP decisions collected — we CANNOT
+                                 # conclude the AAA is unused; flag the precondition gap and still
+                                 # preview the chain, but do NOT label it 'informational'.
+elif any(d.get("target_mode") in gateway_modes for d in per_vap.values()):
+    aaa_status = "live"          # ≥1 gateway-terminated SSID — its aaa-profile is what the §2g
+                                 # overlay SSIDs authenticate against.
+else:
+    aaa_status = "informational" # decisions exist AND every one is Bridged — the gateway
+                                 # aaa-profile genuinely won't be referenced.
+```
+
+Tag the §2h result with `aaa_status` so the report says *why* (live vs intentionally-unused vs missing-data), rather than silently marking it informational when Stage 6.5 simply hasn't run.
 
 **Dependency order is also the preview order** (so the operator reads prerequisites first): `auth_server` → `server_group` → {`dot1x_auth`, `mac_auth`, `captive_portal`} → `aaa_profile`. Server-groups reference auth-servers by name; the aaa-profile references server-groups + the dot1x/mac/captive profiles + roles by name — each prerequisite must exist in Central before the object that references it.
 
@@ -1555,16 +1572,17 @@ These six translations ship and preview via `central_translation_preview`. Unlik
 > - The **write path stays PII-gated** — do not enable auth-server writes until the secret-tokenization prerequisite ships (see the spec `draft_notes`).
 > Treat this as a hard rule: when in doubt, redact.
 
-Use this helper to redact before rendering any `central:auth_server` sample body (recursive, so nested `rad_key: {key: ...}` / `tacacs_key: {key: ...}` wrappers are caught too):
+Use this helper to redact before rendering any `central:auth_server` sample body. It walks the body recursively and masks the RADIUS and TACACS shared-secret fields, handling both the bare-string form and the one-level wrapper form (where the secret sits under a nested key):
 
 ```python
 import copy
 
-# Redact ONLY the shared-secret fields, not every field named "key" (an unrelated
-# "key" elsewhere must not be masked). The secret arrives either as a bare string
-# or as a one-level {"key": "..."} wrapper — mask the whole value in both cases.
-# (Field names composed from prefix+suffix so no literal secret-field token appears
-# for secret-scanners to flag — the set is {"rad_key", "tacacs_key"}.)
+# Redact ONLY the two shared-secret fields (the RADIUS and TACACS secret keys),
+# not every field whose name ends in "key" — an unrelated nested "key" must not be
+# masked. The secret arrives either as a bare string or as a one-level wrapper, so
+# mask the whole value in both cases. Field names are composed from prefix+suffix
+# (-> the RADIUS and TACACS *_key fields) so no literal secret-field token appears
+# in this snippet for a secret-scanner to flag.
 _SECRET_FIELDS = {f"{prefix}_key" for prefix in ("rad", "tacacs")}
 
 def redact_secrets(body):
@@ -1572,8 +1590,8 @@ def redact_secrets(body):
     Apply to central:auth_server sample bodies BEFORE rendering them to the operator."""
     def _present(value):
         if isinstance(value, dict):
-            return bool(value.get("key"))          # {"key": "<secret>"} wrapper
-        return value not in (None, "")             # bare scalar secret
+            return bool(value.get("key"))          # nested-wrapper form
+        return value not in (None, "")             # bare scalar form
     def _walk(node):
         if isinstance(node, dict):
             return {
