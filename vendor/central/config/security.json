@@ -2995,6 +2995,7 @@
             "items": {
               "properties": {
                 "allow-list": {
+                  "description": "Allow List of Netdestinations.",
                   "items": {
                     "description": "Allow List of Netdestinations.",
                     "format": "const",
@@ -3086,6 +3087,7 @@
                   ]
                 },
                 "deny-list": {
+                  "description": "Deny List of Netdestinations.",
                   "items": {
                     "description": "Deny List of Netdestinations.",
                     "format": "const",
@@ -3413,6 +3415,7 @@
       "ArubaAaaCaptivePortal_CaptivePortalprofileSchema": {
         "properties": {
           "allow-list": {
+            "description": "Allow List of Netdestinations.",
             "items": {
               "description": "Allow List of Netdestinations.",
               "format": "const",
@@ -3504,6 +3507,7 @@
             ]
           },
           "deny-list": {
+            "description": "Deny List of Netdestinations.",
             "items": {
               "description": "Deny List of Netdestinations.",
               "format": "const",
@@ -3819,6 +3823,7 @@
       "ArubaAaaCaptivePortal_CaptivePortalprofileSchemaGet": {
         "properties": {
           "allow-list": {
+            "description": "Allow List of Netdestinations.",
             "items": {
               "description": "Allow List of Netdestinations.",
               "format": "const",
@@ -3910,6 +3915,7 @@
             ]
           },
           "deny-list": {
+            "description": "Deny List of Netdestinations.",
             "items": {
               "description": "Deny List of Netdestinations.",
               "format": "const",
@@ -4739,6 +4745,17 @@
               "Gateway"
             ]
           },
+          "role-tls-guest": {
+            "description": "Assign TLS Guest role.",
+            "format": "const",
+            "maxLength": 63,
+            "minLength": 1,
+            "type": "string",
+            "x-path": "/ac-role:roles/ac-role:role/ac-role:name",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
           "server-cert": {
             "description": "Server Certificate for EAP termination.",
             "format": "const",
@@ -4769,7 +4786,7 @@
             ]
           },
           "tls-guest-role": {
-            "description": "Assign TLS Guest role.",
+            "description": "The leaf will be deprecated. Please use role-tls-guest for assigning TLS Guest role.",
             "format": "const",
             "maxLength": 256,
             "minLength": 1,
@@ -5300,6 +5317,17 @@
               "Gateway"
             ]
           },
+          "role-tls-guest": {
+            "description": "Assign TLS Guest role.",
+            "format": "const",
+            "maxLength": 63,
+            "minLength": 1,
+            "type": "string",
+            "x-path": "/ac-role:roles/ac-role:role/ac-role:name",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
           "server-cert": {
             "description": "Server Certificate for EAP termination.",
             "format": "const",
@@ -5330,7 +5358,7 @@
             ]
           },
           "tls-guest-role": {
-            "description": "Assign TLS Guest role.",
+            "description": "The leaf will be deprecated. Please use role-tls-guest for assigning TLS Guest role.",
             "format": "const",
             "maxLength": 256,
             "minLength": 1,
@@ -7103,6 +7131,7 @@
         "description": "Group for authentication attributes.",
         "properties": {
           "auth-precedence": {
+            "description": "Precedence order for port-access authentication. Auth-precedence must\ncontain either 0 or 2 elements. If empty, the default precedence\norder of dot1x followed by mac-auth will be used.",
             "items": {
               "default": "MAC_AUTH",
               "description": "Precedence order for port-access authentication. Auth-precedence must\ncontain either 0 or 2 elements. If empty, the default precedence\norder of dot1x followed by mac-auth will be used.",
@@ -7122,10 +7151,11 @@
               ],
               "x-typeDescription": "Authentication methods."
             },
-            "maxItems": 2147483647,
+            "maxItems": 2,
             "type": "array"
           },
           "auth-priority": {
+            "description": "Priority order for port-access authentication. Auth-priority must\ncontain either 0 or 2 elements. If not set, priority will follow\nthe 'auth-precedence' order.",
             "items": {
               "description": "Priority order for port-access authentication. Auth-priority must\ncontain either 0 or 2 elements. If not set, priority will follow\nthe 'auth-precedence' order.",
               "enum": [
@@ -7144,10 +7174,11 @@
               ],
               "x-typeDescription": "Authentication methods."
             },
-            "maxItems": 2147483647,
+            "maxItems": 2,
             "type": "array"
           },
           "client-auto-logoff-enable": {
+            "description": "The list of reasons when a client can be automatically logged off by\nthe device.",
             "items": {
               "description": "The list of reasons when a client can be automatically logged off by\nthe device.",
               "enum": [
@@ -7256,6 +7287,7 @@
             ]
           },
           "onboarding-precedence": {
+            "description": "Precedence order when onboarding a client. Onboarding-precedence must\ncontain either 0 or 2 elements. If empty, the default precedence order\nof AAA followed by device-profile will be used.",
             "items": {
               "description": "Precedence order when onboarding a client. Onboarding-precedence must\ncontain either 0 or 2 elements. If empty, the default precedence order\nof AAA followed by device-profile will be used.",
               "enum": [
@@ -7273,7 +7305,7 @@
               ],
               "x-typeDescription": "Onboarding methods."
             },
-            "maxItems": 2147483647,
+            "maxItems": 2,
             "type": "array"
           }
         }
@@ -7287,6 +7319,7 @@
         "description": "Group for authentication attributes.",
         "properties": {
           "auth-precedence": {
+            "description": "Precedence order for port-access authentication. Auth-precedence must\ncontain either 0 or 2 elements. If empty, the default precedence\norder of dot1x followed by mac-auth will be used.",
             "items": {
               "default": "MAC_AUTH",
               "description": "Precedence order for port-access authentication. Auth-precedence must\ncontain either 0 or 2 elements. If empty, the default precedence\norder of dot1x followed by mac-auth will be used.",
@@ -7306,10 +7339,11 @@
               ],
               "x-typeDescription": "Authentication methods."
             },
-            "maxItems": 2147483647,
+            "maxItems": 2,
             "type": "array"
           },
           "auth-priority": {
+            "description": "Priority order for port-access authentication. Auth-priority must\ncontain either 0 or 2 elements. If not set, priority will follow\nthe 'auth-precedence' order.",
             "items": {
               "description": "Priority order for port-access authentication. Auth-priority must\ncontain either 0 or 2 elements. If not set, priority will follow\nthe 'auth-precedence' order.",
               "enum": [
@@ -7328,10 +7362,11 @@
               ],
               "x-typeDescription": "Authentication methods."
             },
-            "maxItems": 2147483647,
+            "maxItems": 2,
             "type": "array"
           },
           "client-auto-logoff-enable": {
+            "description": "The list of reasons when a client can be automatically logged off by\nthe device.",
             "items": {
               "description": "The list of reasons when a client can be automatically logged off by\nthe device.",
               "enum": [
@@ -7440,6 +7475,7 @@
             ]
           },
           "onboarding-precedence": {
+            "description": "Precedence order when onboarding a client. Onboarding-precedence must\ncontain either 0 or 2 elements. If empty, the default precedence order\nof AAA followed by device-profile will be used.",
             "items": {
               "description": "Precedence order when onboarding a client. Onboarding-precedence must\ncontain either 0 or 2 elements. If empty, the default precedence order\nof AAA followed by device-profile will be used.",
               "enum": [
@@ -7457,7 +7493,7 @@
               ],
               "x-typeDescription": "Onboarding methods."
             },
-            "maxItems": 2147483647,
+            "maxItems": 2,
             "type": "array"
           }
         }
@@ -8409,6 +8445,7 @@
             ]
           },
           "rfc3576-server-list": {
+            "description": "RFC3576 server to send user disconnect, CoA.\nThis field should only refer the auth servers with type RADIUS and mode as AUTH_AND_COA or COA_ONLY",
             "items": {
               "description": "RFC3576 server to send user disconnect, CoA.\nThis field should only refer the auth servers with type RADIUS and mode as AUTH_AND_COA or COA_ONLY",
               "format": "const",
@@ -8467,6 +8504,22 @@
             "x-supportedDeviceType": [
               "Gateway"
             ]
+          },
+          "xml-api-server": {
+            "description": "Configure XML API server.",
+            "items": {
+              "description": "Configure XML API server.",
+              "format": "const",
+              "maxLength": 63,
+              "minLength": 1,
+              "type": "string",
+              "x-path": "/ac-auth-server:auth-servers/ac-auth-server:auth-server/ac-auth-server:name",
+              "x-supportedDeviceType": [
+                "Gateway"
+              ]
+            },
+            "maxItems": 2147483647,
+            "type": "array"
           }
         }
       },
@@ -8615,6 +8668,7 @@
             ]
           },
           "rfc3576-server-list": {
+            "description": "RFC3576 server to send user disconnect, CoA.\nThis field should only refer the auth servers with type RADIUS and mode as AUTH_AND_COA or COA_ONLY",
             "items": {
               "description": "RFC3576 server to send user disconnect, CoA.\nThis field should only refer the auth servers with type RADIUS and mode as AUTH_AND_COA or COA_ONLY",
               "format": "const",
@@ -8673,6 +8727,22 @@
             "x-supportedDeviceType": [
               "Gateway"
             ]
+          },
+          "xml-api-server": {
+            "description": "Configure XML API server.",
+            "items": {
+              "description": "Configure XML API server.",
+              "format": "const",
+              "maxLength": 63,
+              "minLength": 1,
+              "type": "string",
+              "x-path": "/ac-auth-server:auth-servers/ac-auth-server:auth-server/ac-auth-server:name",
+              "x-supportedDeviceType": [
+                "Gateway"
+              ]
+            },
+            "maxItems": 2147483647,
+            "type": "array"
           }
         }
       },
@@ -8717,6 +8787,22 @@
           "open-system-accounting": {
             "default": "false",
             "description": "Open system SSID radius accounting.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "radius-loc-obj-in-access": {
+            "default": "false",
+            "description": "Include Location-Object in RADIUS Access-Request",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "radius-loc-obj-in-accting": {
+            "default": "false",
+            "description": "Include Location-Object in RADIUS Accounting-Request",
             "type": "boolean",
             "x-supportedDeviceType": [
               "Gateway"
@@ -8781,6 +8867,22 @@
           "open-system-accounting": {
             "default": "false",
             "description": "Open system SSID radius accounting.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "radius-loc-obj-in-access": {
+            "default": "false",
+            "description": "Include Location-Object in RADIUS Access-Request",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ]
+          },
+          "radius-loc-obj-in-accting": {
+            "default": "false",
+            "description": "Include Location-Object in RADIUS Accounting-Request",
             "type": "boolean",
             "x-supportedDeviceType": [
               "Gateway"
@@ -9301,6 +9403,7 @@
                       "type": "string"
                     },
                     "iot-cert": {
+                      "description": "Assign CA certificates for Internet of Things(IOT).",
                       "items": {
                         "description": "Assign CA certificates for Internet of Things(IOT).",
                         "format": "const",
@@ -9362,6 +9465,7 @@
                 "type": "string"
               },
               "iot-cert": {
+                "description": "Assign CA certificates for Internet of Things(IOT).",
                 "items": {
                   "description": "Assign CA certificates for Internet of Things(IOT).",
                   "format": "const",
@@ -9409,6 +9513,7 @@
                 "type": "string"
               },
               "iot-cert": {
+                "description": "Assign CA certificates for Internet of Things(IOT).",
                 "items": {
                   "description": "Assign CA certificates for Internet of Things(IOT).",
                   "format": "const",
@@ -11528,6 +11633,19 @@
                         "Gateway"
                       ]
                     },
+                    "admin-dn-alias": {
+                      "description": "Alias for Admin DN.",
+                      "format": "pattern",
+                      "maxLength": 256,
+                      "minLength": 1,
+                      "type": "string",
+                      "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                      "x-patternSources": "name",
+                      "x-patterns": "'[a-zA-Z0-9-_ ]+'",
+                      "x-supportedDeviceType": [
+                        "Access Point"
+                      ]
+                    },
                     "admin-password": {
                       "description": "Password for the admin user.\nthis field can be configured only when type is LDAP.",
                       "format": "const",
@@ -11538,6 +11656,19 @@
                         "Gateway"
                       ],
                       "x-typeDescription": "A custom derived type for special use cases. This type takes a plaintext password and uses\nVault's 3rd party API to encrypt the password. The intended use case is to encrypt and store\ncustomer credentials which will be used later to login to 3rd party services."
+                    },
+                    "admin-password-alias": {
+                      "description": "Alias for Admin password.",
+                      "format": "pattern",
+                      "maxLength": 256,
+                      "minLength": 1,
+                      "type": "string",
+                      "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                      "x-patternSources": "name",
+                      "x-patterns": "'[a-zA-Z0-9-_ ]+'",
+                      "x-supportedDeviceType": [
+                        "Access Point"
+                      ]
                     },
                     "allow-cleartext": {
                       "default": "false",
@@ -11645,6 +11776,19 @@
                       "x-supportedDeviceType": [
                         "Access Point",
                         "Gateway"
+                      ]
+                    },
+                    "base-dn-alias": {
+                      "description": "Alias for Base DN.",
+                      "format": "pattern",
+                      "maxLength": 256,
+                      "minLength": 1,
+                      "type": "string",
+                      "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                      "x-patternSources": "name",
+                      "x-patterns": "'[a-zA-Z0-9-_ ]+'",
+                      "x-supportedDeviceType": [
+                        "Access Point"
                       ]
                     },
                     "chase-referrals": {
@@ -12171,6 +12315,19 @@
                         "Switch PVOS"
                       ]
                     },
+                    "radius-server-mode-alias": {
+                      "description": "Alias for Radius server mode.",
+                      "format": "pattern",
+                      "maxLength": 256,
+                      "minLength": 1,
+                      "type": "string",
+                      "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                      "x-patternSources": "name",
+                      "x-patterns": "'[a-zA-Z0-9-_ ]+'",
+                      "x-supportedDeviceType": [
+                        "Access Point"
+                      ]
+                    },
                     "radsec-client-cert": {
                       "description": "RADIUS Security Client Certificate Name.\nThis field can be configured only when type is RADIUS with radius-server-mode configured as AUTH_ONLY or AUTH_AND_COA",
                       "format": "const",
@@ -12657,6 +12814,19 @@
                   "Gateway"
                 ]
               },
+              "admin-dn-alias": {
+                "description": "Alias for Admin DN.",
+                "format": "pattern",
+                "maxLength": 256,
+                "minLength": 1,
+                "type": "string",
+                "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                "x-patternSources": "name",
+                "x-patterns": "'[a-zA-Z0-9-_ ]+'",
+                "x-supportedDeviceType": [
+                  "Access Point"
+                ]
+              },
               "admin-password": {
                 "description": "Password for the admin user.\nthis field can be configured only when type is LDAP.",
                 "format": "const",
@@ -12667,6 +12837,19 @@
                   "Gateway"
                 ],
                 "x-typeDescription": "A custom derived type for special use cases. This type takes a plaintext password and uses\nVault's 3rd party API to encrypt the password. The intended use case is to encrypt and store\ncustomer credentials which will be used later to login to 3rd party services."
+              },
+              "admin-password-alias": {
+                "description": "Alias for Admin password.",
+                "format": "pattern",
+                "maxLength": 256,
+                "minLength": 1,
+                "type": "string",
+                "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                "x-patternSources": "name",
+                "x-patterns": "'[a-zA-Z0-9-_ ]+'",
+                "x-supportedDeviceType": [
+                  "Access Point"
+                ]
               },
               "allow-cleartext": {
                 "default": "false",
@@ -12774,6 +12957,19 @@
                 "x-supportedDeviceType": [
                   "Access Point",
                   "Gateway"
+                ]
+              },
+              "base-dn-alias": {
+                "description": "Alias for Base DN.",
+                "format": "pattern",
+                "maxLength": 256,
+                "minLength": 1,
+                "type": "string",
+                "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                "x-patternSources": "name",
+                "x-patterns": "'[a-zA-Z0-9-_ ]+'",
+                "x-supportedDeviceType": [
+                  "Access Point"
                 ]
               },
               "chase-referrals": {
@@ -13300,6 +13496,19 @@
                   "Switch PVOS"
                 ]
               },
+              "radius-server-mode-alias": {
+                "description": "Alias for Radius server mode.",
+                "format": "pattern",
+                "maxLength": 256,
+                "minLength": 1,
+                "type": "string",
+                "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                "x-patternSources": "name",
+                "x-patterns": "'[a-zA-Z0-9-_ ]+'",
+                "x-supportedDeviceType": [
+                  "Access Point"
+                ]
+              },
               "radsec-client-cert": {
                 "description": "RADIUS Security Client Certificate Name.\nThis field can be configured only when type is RADIUS with radius-server-mode configured as AUTH_ONLY or AUTH_AND_COA",
                 "format": "const",
@@ -13772,6 +13981,19 @@
                   "Gateway"
                 ]
               },
+              "admin-dn-alias": {
+                "description": "Alias for Admin DN.",
+                "format": "pattern",
+                "maxLength": 256,
+                "minLength": 1,
+                "type": "string",
+                "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                "x-patternSources": "name",
+                "x-patterns": "'[a-zA-Z0-9-_ ]+'",
+                "x-supportedDeviceType": [
+                  "Access Point"
+                ]
+              },
               "admin-password": {
                 "description": "Password for the admin user.\nthis field can be configured only when type is LDAP.",
                 "format": "const",
@@ -13782,6 +14004,19 @@
                   "Gateway"
                 ],
                 "x-typeDescription": "A custom derived type for special use cases. This type takes a plaintext password and uses\nVault's 3rd party API to encrypt the password. The intended use case is to encrypt and store\ncustomer credentials which will be used later to login to 3rd party services."
+              },
+              "admin-password-alias": {
+                "description": "Alias for Admin password.",
+                "format": "pattern",
+                "maxLength": 256,
+                "minLength": 1,
+                "type": "string",
+                "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                "x-patternSources": "name",
+                "x-patterns": "'[a-zA-Z0-9-_ ]+'",
+                "x-supportedDeviceType": [
+                  "Access Point"
+                ]
               },
               "allow-cleartext": {
                 "default": "false",
@@ -13889,6 +14124,19 @@
                 "x-supportedDeviceType": [
                   "Access Point",
                   "Gateway"
+                ]
+              },
+              "base-dn-alias": {
+                "description": "Alias for Base DN.",
+                "format": "pattern",
+                "maxLength": 256,
+                "minLength": 1,
+                "type": "string",
+                "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                "x-patternSources": "name",
+                "x-patterns": "'[a-zA-Z0-9-_ ]+'",
+                "x-supportedDeviceType": [
+                  "Access Point"
                 ]
               },
               "chase-referrals": {
@@ -14413,6 +14661,19 @@
                 "x-supportedDeviceType": [
                   "Access Point",
                   "Switch PVOS"
+                ]
+              },
+              "radius-server-mode-alias": {
+                "description": "Alias for Radius server mode.",
+                "format": "pattern",
+                "maxLength": 256,
+                "minLength": 1,
+                "type": "string",
+                "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                "x-patternSources": "name",
+                "x-patterns": "'[a-zA-Z0-9-_ ]+'",
+                "x-supportedDeviceType": [
+                  "Access Point"
                 ]
               },
               "radsec-client-cert": {
@@ -16627,7 +16888,10 @@
                       "description": "Certificate name.",
                       "format": "const",
                       "maxLength": 9999,
-                      "type": "string"
+                      "type": "string",
+                      "x-supportedDeviceType": [
+                        "Access Point"
+                      ]
                     },
                     "passphrase": {
                       "description": "Passphrase encoded in base64.",
@@ -16710,7 +16974,10 @@
                 "description": "Certificate name.",
                 "format": "const",
                 "maxLength": 9999,
-                "type": "string"
+                "type": "string",
+                "x-supportedDeviceType": [
+                  "Access Point"
+                ]
               },
               "passphrase": {
                 "description": "Passphrase encoded in base64.",
@@ -16785,7 +17052,10 @@
                 "description": "Certificate name.",
                 "format": "const",
                 "maxLength": 9999,
-                "type": "string"
+                "type": "string",
+                "x-supportedDeviceType": [
+                  "Access Point"
+                ]
               },
               "passphrase": {
                 "description": "Passphrase encoded in base64.",
@@ -18200,6 +18470,7 @@
                 {
                   "properties": {
                     "app-usage": {
+                      "description": "The application(s) that use the Device Certificate.",
                       "items": {
                         "description": "The application(s) that use the Device Certificate.",
                         "enum": [
@@ -18284,6 +18555,7 @@
                       ]
                     },
                     "ext-key-usage": {
+                      "description": "Extended key usage options of the certificate.",
                       "items": {
                         "description": "Extended key usage options of the certificate.",
                         "enum": [
@@ -18305,6 +18577,7 @@
                       "type": "array"
                     },
                     "key-usage": {
+                      "description": "Key usage options of the certificate.",
                       "items": {
                         "description": "Key usage options of the certificate.",
                         "enum": [
@@ -18461,6 +18734,7 @@
           {
             "properties": {
               "app-usage": {
+                "description": "The application(s) that use the Device Certificate.",
                 "items": {
                   "description": "The application(s) that use the Device Certificate.",
                   "enum": [
@@ -18545,6 +18819,7 @@
                 ]
               },
               "ext-key-usage": {
+                "description": "Extended key usage options of the certificate.",
                 "items": {
                   "description": "Extended key usage options of the certificate.",
                   "enum": [
@@ -18566,6 +18841,7 @@
                 "type": "array"
               },
               "key-usage": {
+                "description": "Key usage options of the certificate.",
                 "items": {
                   "description": "Key usage options of the certificate.",
                   "enum": [
@@ -18710,6 +18986,7 @@
           {
             "properties": {
               "app-usage": {
+                "description": "The application(s) that use the Device Certificate.",
                 "items": {
                   "description": "The application(s) that use the Device Certificate.",
                   "enum": [
@@ -18794,6 +19071,7 @@
                 ]
               },
               "ext-key-usage": {
+                "description": "Extended key usage options of the certificate.",
                 "items": {
                   "description": "Extended key usage options of the certificate.",
                   "enum": [
@@ -18815,6 +19093,7 @@
                 "type": "array"
               },
               "key-usage": {
+                "description": "Key usage options of the certificate.",
                 "items": {
                   "description": "Key usage options of the certificate.",
                   "enum": [
@@ -21358,6 +21637,7 @@
                       "description": "Intra vlan traffic grouping",
                       "properties": {
                         "wired-server-ip": {
+                          "description": "IP address of the wired server",
                           "items": {
                             "description": "IP address of the wired server",
                             "format": "pattern",
@@ -21374,6 +21654,7 @@
                           "type": "array"
                         },
                         "wired-server-ipv6": {
+                          "description": "IPv6 address of the wired server",
                           "items": {
                             "description": "IPv6 address of the wired server",
                             "format": "pattern",
@@ -21390,6 +21671,7 @@
                           "type": "array"
                         },
                         "wired-server-mac": {
+                          "description": "MAC address of the wired server",
                           "items": {
                             "description": "MAC address of the wired server",
                             "format": "pattern",
@@ -21625,6 +21907,17 @@
                         "Gateway"
                       ]
                     },
+                    "tcp-session-idle-timeout": {
+                      "default": "900",
+                      "description": "Time, in seconds, that a TCP session can be idle before it is removed from the session table. You should not modify this option unless instructed to do so by an Aruba representative. Default value is 16. Valid range 300-43200",
+                      "format": "int32",
+                      "maximum": 43200,
+                      "minimum": 300,
+                      "type": "integer",
+                      "x-supportedDeviceType": [
+                        "Gateway"
+                      ]
+                    },
                     "track-spoof": {
                       "default": "false",
                       "description": "Detects spoof in datapath. Disabled voip-qos-trusted Prioritizes the RTP traffic based on the DSCP value set by the end user device. NOTE: On enabling, all UCC based ALGs will be disabled. Disabled by default.",
@@ -21781,6 +22074,17 @@
                       "format": "int32",
                       "maximum": 300,
                       "minimum": 16,
+                      "type": "integer",
+                      "x-supportedDeviceType": [
+                        "Gateway"
+                      ]
+                    },
+                    "tcp-session-idle-timeout": {
+                      "default": "900",
+                      "description": "Time, in seconds, that a TCP session can be idle before it is removed from the session table. You should not modify this option unless instructed to do so by an Aruba representative. Default value is 16. Valid range 300-43200",
+                      "format": "int32",
+                      "maximum": 43200,
+                      "minimum": 300,
                       "type": "integer",
                       "x-supportedDeviceType": [
                         "Gateway"
@@ -22137,6 +22441,7 @@
                 "description": "Intra vlan traffic grouping",
                 "properties": {
                   "wired-server-ip": {
+                    "description": "IP address of the wired server",
                     "items": {
                       "description": "IP address of the wired server",
                       "format": "pattern",
@@ -22153,6 +22458,7 @@
                     "type": "array"
                   },
                   "wired-server-ipv6": {
+                    "description": "IPv6 address of the wired server",
                     "items": {
                       "description": "IPv6 address of the wired server",
                       "format": "pattern",
@@ -22169,6 +22475,7 @@
                     "type": "array"
                   },
                   "wired-server-mac": {
+                    "description": "MAC address of the wired server",
                     "items": {
                       "description": "MAC address of the wired server",
                       "format": "pattern",
@@ -22404,6 +22711,17 @@
                   "Gateway"
                 ]
               },
+              "tcp-session-idle-timeout": {
+                "default": "900",
+                "description": "Time, in seconds, that a TCP session can be idle before it is removed from the session table. You should not modify this option unless instructed to do so by an Aruba representative. Default value is 16. Valid range 300-43200",
+                "format": "int32",
+                "maximum": 43200,
+                "minimum": 300,
+                "type": "integer",
+                "x-supportedDeviceType": [
+                  "Gateway"
+                ]
+              },
               "track-spoof": {
                 "default": "false",
                 "description": "Detects spoof in datapath. Disabled voip-qos-trusted Prioritizes the RTP traffic based on the DSCP value set by the end user device. NOTE: On enabling, all UCC based ALGs will be disabled. Disabled by default.",
@@ -22560,6 +22878,17 @@
                 "format": "int32",
                 "maximum": 300,
                 "minimum": 16,
+                "type": "integer",
+                "x-supportedDeviceType": [
+                  "Gateway"
+                ]
+              },
+              "tcp-session-idle-timeout": {
+                "default": "900",
+                "description": "Time, in seconds, that a TCP session can be idle before it is removed from the session table. You should not modify this option unless instructed to do so by an Aruba representative. Default value is 16. Valid range 300-43200",
+                "format": "int32",
+                "maximum": 43200,
+                "minimum": 300,
                 "type": "integer",
                 "x-supportedDeviceType": [
                   "Gateway"
@@ -22902,6 +23231,7 @@
                 "description": "Intra vlan traffic grouping",
                 "properties": {
                   "wired-server-ip": {
+                    "description": "IP address of the wired server",
                     "items": {
                       "description": "IP address of the wired server",
                       "format": "pattern",
@@ -22918,6 +23248,7 @@
                     "type": "array"
                   },
                   "wired-server-ipv6": {
+                    "description": "IPv6 address of the wired server",
                     "items": {
                       "description": "IPv6 address of the wired server",
                       "format": "pattern",
@@ -22934,6 +23265,7 @@
                     "type": "array"
                   },
                   "wired-server-mac": {
+                    "description": "MAC address of the wired server",
                     "items": {
                       "description": "MAC address of the wired server",
                       "format": "pattern",
@@ -23169,6 +23501,17 @@
                   "Gateway"
                 ]
               },
+              "tcp-session-idle-timeout": {
+                "default": "900",
+                "description": "Time, in seconds, that a TCP session can be idle before it is removed from the session table. You should not modify this option unless instructed to do so by an Aruba representative. Default value is 16. Valid range 300-43200",
+                "format": "int32",
+                "maximum": 43200,
+                "minimum": 300,
+                "type": "integer",
+                "x-supportedDeviceType": [
+                  "Gateway"
+                ]
+              },
               "track-spoof": {
                 "default": "false",
                 "description": "Detects spoof in datapath. Disabled voip-qos-trusted Prioritizes the RTP traffic based on the DSCP value set by the end user device. NOTE: On enabling, all UCC based ALGs will be disabled. Disabled by default.",
@@ -23325,6 +23668,17 @@
                 "format": "int32",
                 "maximum": 300,
                 "minimum": 16,
+                "type": "integer",
+                "x-supportedDeviceType": [
+                  "Gateway"
+                ]
+              },
+              "tcp-session-idle-timeout": {
+                "default": "900",
+                "description": "Time, in seconds, that a TCP session can be idle before it is removed from the session table. You should not modify this option unless instructed to do so by an Aruba representative. Default value is 16. Valid range 300-43200",
+                "format": "int32",
+                "maximum": 43200,
+                "minimum": 300,
                 "type": "integer",
                 "x-supportedDeviceType": [
                   "Gateway"
@@ -23505,6 +23859,7 @@
                 ]
               },
               "vpn-client-ca-certificate": {
+                "description": "Trusted certificates to trust VPN Client's certificate.",
                 "items": {
                   "description": "Trusted certificates to trust VPN Client's certificate.",
                   "format": "const",
@@ -23577,6 +23932,7 @@
                 ]
               },
               "vpn-client-ca-certificate": {
+                "description": "Trusted certificates to trust VPN Client's certificate.",
                 "items": {
                   "description": "Trusted certificates to trust VPN Client's certificate.",
                   "format": "const",
@@ -24189,7 +24545,7 @@
                 "type"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 512,
             "type": "array",
             "x-key": [
               "username"
@@ -24248,7 +24604,7 @@
                 "type"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 512,
             "type": "array",
             "x-key": [
               "username"
@@ -24705,7 +25061,7 @@
                 }
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 64,
             "type": "array",
             "x-key": [
               "keyId"
@@ -24743,7 +25099,7 @@
                 }
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 64,
             "type": "array",
             "x-key": [
               "keyId"
@@ -25020,6 +25376,7 @@
         "description": "Grouping for MACsec policy configurations.",
         "properties": {
           "bypass-list": {
+            "description": "List of packet types to bypass MACsec.",
             "items": {
               "description": "List of packet types to bypass MACsec.",
               "enum": [
@@ -25035,7 +25392,7 @@
               ],
               "x-typeDescription": "Bypass packet type."
             },
-            "maxItems": 2147483647,
+            "maxItems": 1,
             "type": "array"
           },
           "cak": {
@@ -25050,6 +25407,7 @@
             ]
           },
           "cipher-suites": {
+            "description": "Configure the cipher-suites to use in the MACsec policy.",
             "items": {
               "description": "Configure the cipher-suites to use in the MACsec policy.",
               "enum": [
@@ -25198,6 +25556,7 @@
         "description": "Grouping for MACsec policy configurations.",
         "properties": {
           "bypass-list": {
+            "description": "List of packet types to bypass MACsec.",
             "items": {
               "description": "List of packet types to bypass MACsec.",
               "enum": [
@@ -25213,7 +25572,7 @@
               ],
               "x-typeDescription": "Bypass packet type."
             },
-            "maxItems": 2147483647,
+            "maxItems": 1,
             "type": "array"
           },
           "cak": {
@@ -25228,6 +25587,7 @@
             ]
           },
           "cipher-suites": {
+            "description": "Configure the cipher-suites to use in the MACsec policy.",
             "items": {
               "description": "Configure the cipher-suites to use in the MACsec policy.",
               "enum": [
@@ -25958,6 +26318,7 @@
                         ]
                       },
                       "address-range": {
+                        "description": "A contiguous IP address range defined by exactly two\nelements: the start address and the end address.\nApplicable when type is ADDRESS_RANGE.",
                         "items": {
                           "description": "A contiguous IP address range defined by exactly two\nelements: the start address and the end address.\nApplicable when type is ADDRESS_RANGE.",
                           "oneOf": [
@@ -26168,6 +26529,7 @@
                     }
                   },
                   "maxItems": 2147483647,
+                  "minItems": 1,
                   "type": "array",
                   "x-key": [
                     "index"
@@ -26294,6 +26656,7 @@
                   ]
                 },
                 "address-range": {
+                  "description": "A contiguous IP address range defined by exactly two\nelements: the start address and the end address.\nApplicable when type is ADDRESS_RANGE.",
                   "items": {
                     "description": "A contiguous IP address range defined by exactly two\nelements: the start address and the end address.\nApplicable when type is ADDRESS_RANGE.",
                     "oneOf": [
@@ -26504,6 +26867,7 @@
               }
             },
             "maxItems": 2147483647,
+            "minItems": 1,
             "type": "array",
             "x-key": [
               "index"
@@ -26618,6 +26982,7 @@
                   ]
                 },
                 "address-range": {
+                  "description": "A contiguous IP address range defined by exactly two\nelements: the start address and the end address.\nApplicable when type is ADDRESS_RANGE.",
                   "items": {
                     "description": "A contiguous IP address range defined by exactly two\nelements: the start address and the end address.\nApplicable when type is ADDRESS_RANGE.",
                     "oneOf": [
@@ -26828,6 +27193,7 @@
               }
             },
             "maxItems": 2147483647,
+            "minItems": 1,
             "type": "array",
             "x-key": [
               "index"
@@ -26917,6 +27283,7 @@
                         "x-typeDescription": "Type of Mobile Network Operator."
                       },
                       "plmn": {
+                        "description": "The Public Land Mobile Networks (PLMN) value of the highest-priority network.",
                         "items": {
                           "description": "The Public Land Mobile Networks (PLMN) value of the highest-priority network.",
                           "format": "pattern",
@@ -26929,7 +27296,7 @@
                             "Access Point"
                           ]
                         },
-                        "maxItems": 2147483647,
+                        "maxItems": 6,
                         "type": "array"
                       }
                     }
@@ -27115,7 +27482,7 @@
                             }
                           }
                         },
-                        "maxItems": 2147483647,
+                        "maxItems": 4,
                         "type": "array",
                         "x-key": [
                           "idValue"
@@ -27171,7 +27538,7 @@
                       }
                     }
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 4,
                   "type": "array",
                   "x-key": [
                     "index"
@@ -27276,7 +27643,7 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 10,
             "type": "array",
             "x-key": [
               "name"
@@ -27317,6 +27684,7 @@
                   "x-typeDescription": "Type of Mobile Network Operator."
                 },
                 "plmn": {
+                  "description": "The Public Land Mobile Networks (PLMN) value of the highest-priority network.",
                   "items": {
                     "description": "The Public Land Mobile Networks (PLMN) value of the highest-priority network.",
                     "format": "pattern",
@@ -27329,7 +27697,7 @@
                       "Access Point"
                     ]
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 6,
                   "type": "array"
                 }
               }
@@ -27515,7 +27883,7 @@
                       }
                     }
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 4,
                   "type": "array",
                   "x-key": [
                     "idValue"
@@ -27571,7 +27939,7 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 4,
             "type": "array",
             "x-key": [
               "index"
@@ -27709,6 +28077,7 @@
                   "x-typeDescription": "Type of Mobile Network Operator."
                 },
                 "plmn": {
+                  "description": "The Public Land Mobile Networks (PLMN) value of the highest-priority network.",
                   "items": {
                     "description": "The Public Land Mobile Networks (PLMN) value of the highest-priority network.",
                     "format": "pattern",
@@ -27721,7 +28090,7 @@
                       "Access Point"
                     ]
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 6,
                   "type": "array"
                 }
               }
@@ -27907,7 +28276,7 @@
                       }
                     }
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 4,
                   "type": "array",
                   "x-key": [
                     "idValue"
@@ -27963,7 +28332,7 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 4,
             "type": "array",
             "x-key": [
               "index"
@@ -28083,8 +28452,8 @@
             "default": "1",
             "description": "Maximum number of port-security clients that can be onboarded on the\ninterface.",
             "format": "int32",
-            "maximum": 65535,
-            "minimum": 0,
+            "maximum": 64,
+            "minimum": 1,
             "type": "integer",
             "x-supportedDeviceType": [
               "Switch CX",
@@ -28157,8 +28526,8 @@
             "default": "1",
             "description": "Maximum number of port-security clients that can be onboarded on the\ninterface.",
             "format": "int32",
-            "maximum": 65535,
-            "minimum": 0,
+            "maximum": 64,
+            "minimum": 1,
             "type": "integer",
             "x-supportedDeviceType": [
               "Switch CX",
@@ -29544,6 +29913,7 @@
                         ]
                       },
                       "wol-vlans": {
+                        "description": "Wake-on-LAN VLAN configuration.\nThese VLANs need to pre-configured on Switch and Controller.\nThis is applicable only when mode is set to VLAN_EXTEND.",
                         "items": {
                           "description": "Wake-on-LAN VLAN configuration.\nThese VLANs need to pre-configured on Switch and Controller.\nThis is applicable only when mode is set to VLAN_EXTEND.",
                           "format": "int32",
@@ -29557,7 +29927,7 @@
                           ],
                           "x-typeDescription": "Type definition representing a single-tagged VLAN"
                         },
-                        "maxItems": 2147483647,
+                        "maxItems": 100,
                         "type": "array"
                       },
                       "zone-description": {
@@ -29738,6 +30108,7 @@
                   ]
                 },
                 "wol-vlans": {
+                  "description": "Wake-on-LAN VLAN configuration.\nThese VLANs need to pre-configured on Switch and Controller.\nThis is applicable only when mode is set to VLAN_EXTEND.",
                   "items": {
                     "description": "Wake-on-LAN VLAN configuration.\nThese VLANs need to pre-configured on Switch and Controller.\nThis is applicable only when mode is set to VLAN_EXTEND.",
                     "format": "int32",
@@ -29751,7 +30122,7 @@
                     ],
                     "x-typeDescription": "Type definition representing a single-tagged VLAN"
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 100,
                   "type": "array"
                 },
                 "zone-description": {
@@ -29917,6 +30288,7 @@
                   ]
                 },
                 "wol-vlans": {
+                  "description": "Wake-on-LAN VLAN configuration.\nThese VLANs need to pre-configured on Switch and Controller.\nThis is applicable only when mode is set to VLAN_EXTEND.",
                   "items": {
                     "description": "Wake-on-LAN VLAN configuration.\nThese VLANs need to pre-configured on Switch and Controller.\nThis is applicable only when mode is set to VLAN_EXTEND.",
                     "format": "int32",
@@ -29930,7 +30302,7 @@
                     ],
                     "x-typeDescription": "Type definition representing a single-tagged VLAN"
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 100,
                   "type": "array"
                 },
                 "zone-description": {
@@ -30870,6 +31242,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "List of AAA profiles.",
+        "operationId": "replaceAaaProfileProfileByID",
+        "parameters": [
+          {
+            "description": "Name of the AAA profile.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAaaProfile_AaaProfileprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add or update an exiting AAA profile",
+        "tags": [
+          "Aaa Profile"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceAaaProfileProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceAaaProfileCmd",
+          "pathToPrint": "/aaa-profile/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/auth-server-global-config": {
@@ -31327,6 +31782,89 @@
           "parentCommand": "createAuthServerGlobalConfigCmd",
           "pathToPrint": "/auth-server-global-config/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Authentication Server Global Profiles.",
+        "operationId": "replaceAuthServerGlobalConfigProfileByID",
+        "parameters": [
+          {
+            "description": "Profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAuthServerGlobal_AuthServerGlobalConfigprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing Auth Server Global profile configurations",
+        "tags": [
+          "Auth Server Global"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceAuthServerGlobalConfigProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceAuthServerGlobalConfigCmd",
+          "pathToPrint": "/auth-server-global-config/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -31788,6 +32326,89 @@
           "summary": "Create operation for auth-server",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Auth Server profile.",
+        "operationId": "replaceAuthServersAuthServerByID",
+        "parameters": [
+          {
+            "description": "The name of the Auth Server.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAuthServer_AuthServersauthServerSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing auth server profile configuration",
+        "tags": [
+          "Auth Server"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceAuthServersAuthServerCmd",
+          "commandUse": "auth-server",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceAuthServersCmd",
+          "pathToPrint": "/auth-servers/auth-server/%s/",
+          "summary": "Replace operation for auth-server",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/auth-survivability": {
@@ -32245,6 +32866,89 @@
           "parentCommand": "createAuthSurvivabilityCmd",
           "pathToPrint": "/auth-survivability/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Configure the paramaters of authentication survivability.",
+        "operationId": "replaceAuthSurvivabilityProfileByID",
+        "parameters": [
+          {
+            "description": "Auth survivability profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAuthSurvivability_AuthSurvivabilityprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing authentication survivability profile configuration",
+        "tags": [
+          "Auth Survivability"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceAuthSurvivabilityProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceAuthSurvivabilityCmd",
+          "pathToPrint": "/auth-survivability/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -32706,6 +33410,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Configures list of Beacon Report Request Profile to provide the parameters for the Beacon Report Request frames.\nThe Beacon Report Request profile is attached to 802.11K profile.",
+        "operationId": "replaceBcnRptReqProfilesProfileByID",
+        "parameters": [
+          {
+            "description": "Beacon report request profile name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/Aruba802dot11kBcnRptReq_BcnRptReqProfilesprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "802dot11k Bcn Rpt Req"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceBcnRptReqProfilesProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceBcnRptReqProfilesCmd",
+          "pathToPrint": "/bcn-rpt-req-profiles/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/captive-portal": {
@@ -33163,6 +33950,89 @@
           "parentCommand": "createCaptivePortalCmd",
           "pathToPrint": "/captive-portal/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Captive portal profile configuration.",
+        "operationId": "replaceCaptivePortalProfileByID",
+        "parameters": [
+          {
+            "description": "The name of the captive portal profile.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAaaCaptivePortal_CaptivePortalprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing external captive profile configuration",
+        "tags": [
+          "Aaa Captive Portal"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceCaptivePortalProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceCaptivePortalCmd",
+          "pathToPrint": "/captive-portal/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -33624,6 +34494,89 @@
           "summary": "Create operation for ta-profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "List of TA(Trust-anchor) Profiles. TA profile contains configuration related to TrustedCert like RCP/OCSP/CRL etc.,",
+        "operationId": "replaceCertificateRcpTaProfileByID",
+        "parameters": [
+          {
+            "description": "Name of the TA Profile to be configured.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaCertificateRcp_CertificateRcptaProfileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace ta-profile by name",
+        "tags": [
+          "Certificate Rcp"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceCertificateRcpTaProfileCmd",
+          "commandUse": "ta-profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceCertificateRcpCmd",
+          "pathToPrint": "/certificate-rcp/ta-profile/%s/",
+          "summary": "Replace operation for ta-profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/certificate-store": {
@@ -34081,6 +35034,89 @@
           "parentCommand": "createCertificateStoreCmd",
           "pathToPrint": "/certificate-store/certificate/%s/",
           "summary": "Create operation for certificate",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "List certificate uploaded by customer.",
+        "operationId": "replaceCertificateStoreCertificateByID",
+        "parameters": [
+          {
+            "description": "Certificate name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaCertificateStore_CertificateStorecertificateSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace certificate by name",
+        "tags": [
+          "Certificate Store"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceCertificateStoreCertificateCmd",
+          "commandUse": "certificate",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceCertificateStoreCmd",
+          "pathToPrint": "/certificate-store/certificate/%s/",
+          "summary": "Replace operation for certificate",
           "totParams": 1
         }
       }
@@ -34542,6 +35578,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "AP certificate usage profile.",
+        "operationId": "replaceCertificateUsageProfileByID",
+        "parameters": [
+          {
+            "description": "Name of the profile.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaApCertificateUsage_CertificateUsageprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing AP certificate usage profile configurations",
+        "tags": [
+          "Ap Certificate Usage"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceCertificateUsageProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceCertificateUsageCmd",
+          "pathToPrint": "/certificate-usage/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/certificates": {
@@ -34999,6 +36118,89 @@
           "parentCommand": "createCertificatesCmd",
           "pathToPrint": "/certificates/certificate/%s/",
           "summary": "Create operation for certificate",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "List certificate uploaded by customer.",
+        "operationId": "replaceCertificatesCertificateByID",
+        "parameters": [
+          {
+            "description": "Certificate name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaCertificate_CertificatescertificateSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace certificate by name",
+        "tags": [
+          "Certificate"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceCertificatesCertificateCmd",
+          "commandUse": "certificate",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceCertificatesCmd",
+          "pathToPrint": "/certificates/certificate/%s/",
+          "summary": "Replace operation for certificate",
           "totParams": 1
         }
       }
@@ -35460,6 +36662,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "profile",
+        "operationId": "replaceCoppProfileByID",
+        "parameters": [
+          {
+            "description": "The name of the profile describing configured CoPP policies. (AOS-CX) Also the name of the CoPP policy as configured on the device.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaCopp_CoppprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "Copp"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceCoppProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceCoppCmd",
+          "pathToPrint": "/copp/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/device-certificates": {
@@ -35917,6 +37202,89 @@
           "parentCommand": "createDeviceCertificatesCmd",
           "pathToPrint": "/device-certificates/device-certificate/%s/",
           "summary": "Create operation for device-certificate",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "List of device certificate parameters.",
+        "operationId": "replaceDeviceCertificatesDeviceCertificateByID",
+        "parameters": [
+          {
+            "description": "Name of Device Certificate to be configured.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaDeviceCertificate_DeviceCertificatesdeviceCertificateSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update Device Certificate by certificate name.",
+        "tags": [
+          "Device Certificate"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceDeviceCertificatesDeviceCertificateCmd",
+          "commandUse": "device-certificate",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceDeviceCertificatesCmd",
+          "pathToPrint": "/device-certificates/device-certificate/%s/",
+          "summary": "Replace operation for device-certificate",
           "totParams": 1
         }
       }
@@ -36378,6 +37746,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Configures list of 802.11k radio profile. The 802.11k profile must be attached to the WLAN SSID.",
+        "operationId": "replaceDot11kProfilesProfileByID",
+        "parameters": [
+          {
+            "description": "802.11k profile name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/Aruba802dot11k_Dot11kProfilesprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "802dot11k"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceDot11kProfilesProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceDot11kProfilesCmd",
+          "pathToPrint": "/dot11k-profiles/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/dot1xauth": {
@@ -36835,6 +38286,89 @@
           "parentCommand": "createDot1xauthCmd",
           "pathToPrint": "/dot1xauth/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "List of 802.1X authentication profiles.",
+        "operationId": "replaceDot1xauthProfileByID",
+        "parameters": [
+          {
+            "description": "Name of the 802.1X authentication profile.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAaaDot1xauth_Dot1xauthprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add or update an existing 802.1X authentication profile",
+        "tags": [
+          "Aaa Dot1xauth"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceDot1xauthProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceDot1xauthCmd",
+          "pathToPrint": "/dot1xauth/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -37296,6 +38830,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "List of 802.1X supplicant profiles.",
+        "operationId": "replaceDot1xsuppProfileByID",
+        "parameters": [
+          {
+            "description": "802.1X supplicant profile description.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAaaDot1xsupp_Dot1xsuppprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "Aaa Dot1xsupp"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceDot1xsuppProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceDot1xsuppCmd",
+          "pathToPrint": "/dot1xsupp/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/est-profiles": {
@@ -37753,6 +39370,89 @@
           "parentCommand": "createEstProfilesCmd",
           "pathToPrint": "/est-profiles/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Configurate the parameters of Enrollment over Secure Transport(EST) Profile. You can configure parameters such as server-host, server-port,\narbitrary-label, etc.\nFor AP, one EST profile is supported for per device.\nFor CX device, maximum of 16 profiles supported.",
+        "operationId": "replaceEstProfilesProfileByID",
+        "parameters": [
+          {
+            "description": "EST Profile name to be configured.\nFor AP device, valid length: 1-32 characters.\nFor CX device, valid length: 1-32 characters.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaEst_EstProfilesprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing EST profile configuration",
+        "tags": [
+          "Est"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceEstProfilesProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceEstProfilesCmd",
+          "pathToPrint": "/est-profiles/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -38214,6 +39914,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "A named firewall profile that encapsulates a complete set of IPv4 and\nIPv6 firewall policies for a given deployment context. Only a single\nfirewall profile instance is permitted per scope. Each profile is\nidentified by a unique name and contains separate IPv4 and IPv6\ncontainers with tunables for session management, traffic classification,\nspoofing protection, multicast optimization, and various datapath behaviors.\nProfiles can be created, updated, and deleted independently, allowing\nadministrators to maintain multiple policy sets and apply them to different\ndevice groups or network segments as needed.",
+        "operationId": "replaceFirewallProfileByID",
+        "parameters": [
+          {
+            "description": "Firewall profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaFirewall_FirewallprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing firewall configuration",
+        "tags": [
+          "Firewall"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceFirewallProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceFirewallCmd",
+          "pathToPrint": "/firewall/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/gw-certificate-usage": {
@@ -38671,6 +40454,89 @@
           "parentCommand": "createGwCertificateUsageCmd",
           "pathToPrint": "/gw-certificate-usage/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "List of Gateway Certificate Usage profiles",
+        "operationId": "replaceGwCertificateUsageProfileByID",
+        "parameters": [
+          {
+            "description": "Name of the Gateway Certificate usage profile to be configured.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaGwCertificateUsage_GwCertificateUsageprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "Gw Certificate Usage"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceGwCertificateUsageProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceGwCertificateUsageCmd",
+          "pathToPrint": "/gw-certificate-usage/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -39132,6 +40998,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Internal User profile configuration grouping. Each profile is identified by ‘name’. Use these APIs to create, modify, or delete a profile.",
+        "operationId": "replaceInternalUserProfileByID",
+        "parameters": [
+          {
+            "description": "Profile name for the Internal User configuration.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaInternalUser_InternalUserprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing Internal user profile configurations",
+        "tags": [
+          "Internal User"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceInternalUserProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceInternalUserCmd",
+          "pathToPrint": "/internal-user/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/keychains": {
@@ -39589,6 +41538,89 @@
           "parentCommand": "createKeychainsCmd",
           "pathToPrint": "/keychains/keychain/%s/",
           "summary": "Create operation for keychain",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "List of all keychains.",
+        "operationId": "replaceKeychainsKeychainByID",
+        "parameters": [
+          {
+            "description": "Keychain name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaKeychain_KeychainskeychainSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add or Update existing keychain",
+        "tags": [
+          "Keychain"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceKeychainsKeychainCmd",
+          "commandUse": "keychain",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceKeychainsCmd",
+          "pathToPrint": "/keychains/keychain/%s/",
+          "summary": "Replace operation for keychain",
           "totParams": 1
         }
       }
@@ -40050,6 +42082,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Defines a single MAC Lockout profile, specifying the MAC addresses to be blocked\nand the lockout duration. Each entity is identified by name. Use these APIs to create,\nmodify, or delete an instance.",
+        "operationId": "replaceMacLockoutProfileByID",
+        "parameters": [
+          {
+            "description": "Unique name for the MAC Lockout profile. Required to reference this profile in device configurations.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaMacLockout_MacLockoutprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing mac lockout profile configurations",
+        "tags": [
+          "Mac Lockout"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceMacLockoutProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceMacLockoutCmd",
+          "pathToPrint": "/mac-lockout/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/macauth": {
@@ -40507,6 +42622,89 @@
           "parentCommand": "createMacauthCmd",
           "pathToPrint": "/macauth/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "List of MAC Auth profiles.",
+        "operationId": "replaceMacauthProfileByID",
+        "parameters": [
+          {
+            "description": "Name of the MAC Auth profile.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAaaMacauth_MacauthprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add or update an existing MAC authentication profile",
+        "tags": [
+          "Aaa Macauth"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceMacauthProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceMacauthCmd",
+          "pathToPrint": "/macauth/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -40968,6 +43166,89 @@
           "summary": "Create operation for policy",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "List of MACsec policies.",
+        "operationId": "replaceMacsecPolicyByID",
+        "parameters": [
+          {
+            "description": "Name of the MACsec policy.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaMacsec_MacsecpolicySchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add or Update existing MACsec policy",
+        "tags": [
+          "Macsec"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceMacsecPolicyCmd",
+          "commandUse": "policy",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceMacsecCmd",
+          "pathToPrint": "/macsec/policy/%s/",
+          "summary": "Replace operation for policy",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/mka": {
@@ -41425,6 +43706,89 @@
           "parentCommand": "createMkaCmd",
           "pathToPrint": "/mka/policy/%s/",
           "summary": "Create operation for policy",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "List of MKA policies.",
+        "operationId": "replaceMkaPolicyByID",
+        "parameters": [
+          {
+            "description": "Name of the MKA policy.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaMka_MkapolicySchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add or Update existing MKA policy",
+        "tags": [
+          "Mka"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceMkaPolicyCmd",
+          "commandUse": "policy",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceMkaCmd",
+          "pathToPrint": "/mka/policy/%s/",
+          "summary": "Replace operation for policy",
           "totParams": 1
         }
       }
@@ -41886,6 +44250,89 @@
           "summary": "Create operation for net-group",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "A network group (netdestination) profile. Each profile\nis identified by a unique name and contains a list of\nnetwork destination entries.",
+        "operationId": "replaceNetGroupsNetGroupByID",
+        "parameters": [
+          {
+            "description": "Configures the unique name for this network group\n(netdestination) profile. This leaf is mandatory and\nserves as the key for the net-group list. The name is\nused to reference this group as a source or destination\nalias in session ACLs and firewall policies. Must be\nbetween 1 and 63 characters.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaNetGroup_NetGroupsnetGroupSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing network group profile configurations",
+        "tags": [
+          "Net Group"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceNetGroupsNetGroupCmd",
+          "commandUse": "net-group",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceNetGroupsCmd",
+          "pathToPrint": "/net-groups/net-group/%s/",
+          "summary": "Replace operation for net-group",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/passpoint-identity": {
@@ -42343,6 +44790,89 @@
           "parentCommand": "createPasspointIdentityCmd",
           "pathToPrint": "/passpoint-identity/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "List of NAI realms whose information can be sent as\nan ANQP information element in a GAS query response.",
+        "operationId": "replacePasspointIdentityProfileByID",
+        "parameters": [
+          {
+            "description": "Profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaPasspointIdentity_PasspointIdentityprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "Passpoint Identity"
+        ],
+        "x-cliParam": {
+          "commandName": "replacePasspointIdentityProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replacePasspointIdentityCmd",
+          "pathToPrint": "/passpoint-identity/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -42804,6 +45334,89 @@
           "summary": "Create operation for policy",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "List of port security policies.",
+        "operationId": "replacePortSecurityPolicyByID",
+        "parameters": [
+          {
+            "description": "Name of the port security policy.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaPortSecurity_PortSecuritypolicySchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing Port-Security policy configuration.",
+        "tags": [
+          "Port Security"
+        ],
+        "x-cliParam": {
+          "commandName": "replacePortSecurityPolicyCmd",
+          "commandUse": "policy",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replacePortSecurityCmd",
+          "pathToPrint": "/port-security/policy/%s/",
+          "summary": "Replace operation for policy",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/radius-modifiers": {
@@ -43261,6 +45874,89 @@
           "parentCommand": "createRadiusModifiersCmd",
           "pathToPrint": "/radius-modifiers/radius-modifier/%s/",
           "summary": "Create operation for radius-modifier",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "RADIUS Modifier Profile.",
+        "operationId": "replaceRadiusModifiersRadiusModifierByID",
+        "parameters": [
+          {
+            "description": "The specified RADIUS modifier profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaRadiusModifiers_RadiusModifiersradiusModifierSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing Radius modifier profile configuration",
+        "tags": [
+          "Radius Modifiers"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceRadiusModifiersRadiusModifierCmd",
+          "commandUse": "radius-modifier",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceRadiusModifiersCmd",
+          "pathToPrint": "/radius-modifiers/radius-modifier/%s/",
+          "summary": "Replace operation for radius-modifier",
           "totParams": 1
         }
       }
@@ -43722,6 +46418,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Configures list of Radio Resource Management (RRM) IE profile to define the information elements advertised by an AP with 802.11k support enabled.",
+        "operationId": "replaceRrmIeProfilesProfileByID",
+        "parameters": [
+          {
+            "description": "RRM IE profile name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/Aruba802dot11kRrmIe_RrmIeProfilesprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "802dot11k Rrm Ie"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceRrmIeProfilesProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceRrmIeProfilesCmd",
+          "pathToPrint": "/rrm-ie-profiles/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/server-groups": {
@@ -44179,6 +46958,89 @@
           "parentCommand": "createServerGroupsCmd",
           "pathToPrint": "/server-groups/server-group/%s/",
           "summary": "Create operation for server-group",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Auth Server Group profile.",
+        "operationId": "replaceServerGroupsServerGroupByID",
+        "parameters": [
+          {
+            "description": "The name of the Server Group.For CX, maximum length is 32 characters.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAuthServerGroup_ServerGroupsserverGroupSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing Authentication Server Group profile configuration",
+        "tags": [
+          "Auth Server Group"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceServerGroupsServerGroupCmd",
+          "commandUse": "server-group",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceServerGroupsCmd",
+          "pathToPrint": "/server-groups/server-group/%s/",
+          "summary": "Replace operation for server-group",
           "totParams": 1
         }
       }
@@ -44640,6 +47502,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "List of stateful 802.1X profiles.",
+        "operationId": "replaceStatefulDot1xProfilesProfileByID",
+        "parameters": [
+          {
+            "description": "Stateful-dot1x Profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAaaStatefulDot1x_StatefulDot1xProfilesprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "Aaa Stateful Dot1x"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceStatefulDot1xProfilesProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceStatefulDot1xProfilesCmd",
+          "pathToPrint": "/stateful-dot1x-profiles/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/ubt": {
@@ -45097,6 +48042,89 @@
           "parentCommand": "createUbtCmd",
           "pathToPrint": "/ubt/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "A list of global profile(s) for UBT, each\nscope (global, site, site-collection, device, device-collection)\ncan accept only one profile.",
+        "operationId": "replaceUbtProfileByID",
+        "parameters": [
+          {
+            "description": "UBT profile name to be configured.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaUbt_UbtprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing UBT profile configurations",
+        "tags": [
+          "Ubt"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceUbtProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceUbtCmd",
+          "pathToPrint": "/ubt/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }

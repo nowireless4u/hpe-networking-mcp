@@ -1170,6 +1170,7 @@
         "description": "Grouping for DHCPv4 Named Options Configurations",
         "properties": {
           "default-router": {
+            "description": "Default Router",
             "items": {
               "description": "Default Router",
               "format": "pattern",
@@ -1185,7 +1186,7 @@
               ],
               "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
             },
-            "maxItems": 2147483647,
+            "maxItems": 8,
             "type": "array"
           },
           "dns-config-mode": {
@@ -1221,6 +1222,7 @@
             "x-typeDescription": "Domain Name System (DNS) Server Import Option"
           },
           "dns-server": {
+            "description": "DNS Server Address",
             "items": {
               "description": "DNS Server Address",
               "format": "pattern",
@@ -1236,7 +1238,7 @@
               ],
               "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
             },
-            "maxItems": 2147483647,
+            "maxItems": 8,
             "type": "array"
           },
           "domain": {
@@ -1311,6 +1313,7 @@
             "x-typeDescription": "NetBIOS Node Type"
           },
           "netbios-server": {
+            "description": "NetBIOS Server Address",
             "items": {
               "description": "NetBIOS Server Address",
               "format": "pattern",
@@ -1324,7 +1327,7 @@
               ],
               "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
             },
-            "maxItems": 2147483647,
+            "maxItems": 8,
             "type": "array"
           },
           "vendor-class-identifier": {
@@ -1341,6 +1344,7 @@
         "description": "Grouping for DHCPv4 Named Options Configurations",
         "properties": {
           "default-router": {
+            "description": "Default Router",
             "items": {
               "description": "Default Router",
               "format": "pattern",
@@ -1356,7 +1360,7 @@
               ],
               "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
             },
-            "maxItems": 2147483647,
+            "maxItems": 8,
             "type": "array"
           },
           "dns-config-mode": {
@@ -1392,6 +1396,7 @@
             "x-typeDescription": "Domain Name System (DNS) Server Import Option"
           },
           "dns-server": {
+            "description": "DNS Server Address",
             "items": {
               "description": "DNS Server Address",
               "format": "pattern",
@@ -1407,7 +1412,7 @@
               ],
               "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
             },
-            "maxItems": 2147483647,
+            "maxItems": 8,
             "type": "array"
           },
           "domain": {
@@ -1482,6 +1487,7 @@
             "x-typeDescription": "NetBIOS Node Type"
           },
           "netbios-server": {
+            "description": "NetBIOS Server Address",
             "items": {
               "description": "NetBIOS Server Address",
               "format": "pattern",
@@ -1495,7 +1501,7 @@
               ],
               "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
             },
-            "maxItems": 2147483647,
+            "maxItems": 8,
             "type": "array"
           },
           "vendor-class-identifier": {
@@ -1548,6 +1554,7 @@
                       "x-typeDescription": "A string consisting of a hexadecimal characters."
                     },
                     "ip": {
+                      "description": "List of IPv4 addresses.",
                       "items": {
                         "description": "List of IPv4 addresses.",
                         "format": "pattern",
@@ -1562,7 +1569,7 @@
                         ],
                         "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
                       },
-                      "maxItems": 2147483647,
+                      "maxItems": 4,
                       "type": "array"
                     }
                   }
@@ -1623,6 +1630,7 @@
                       "x-typeDescription": "A string consisting of a hexadecimal characters."
                     },
                     "ip": {
+                      "description": "List of IPv4 addresses.",
                       "items": {
                         "description": "List of IPv4 addresses.",
                         "format": "pattern",
@@ -1637,7 +1645,7 @@
                         ],
                         "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
                       },
-                      "maxItems": 2147483647,
+                      "maxItems": 4,
                       "type": "array"
                     }
                   }
@@ -1957,6 +1965,7 @@
             "x-typeDescription": "Domain Name System (DNS) Server Import Option"
           },
           "dns-server": {
+            "description": "DNS Server Address",
             "items": {
               "description": "DNS Server Address",
               "format": "pattern",
@@ -1970,7 +1979,7 @@
               ],
               "x-typeDescription": "An IPv6 address represented as either a full address; shortened\nor mixed-shortened formats, using the default zone."
             },
-            "maxItems": 2147483647,
+            "maxItems": 8,
             "type": "array"
           },
           "domain": {
@@ -2072,6 +2081,7 @@
             "x-typeDescription": "Domain Name System (DNS) Server Import Option"
           },
           "dns-server": {
+            "description": "DNS Server Address",
             "items": {
               "description": "DNS Server Address",
               "format": "pattern",
@@ -2085,7 +2095,7 @@
               ],
               "x-typeDescription": "An IPv6 address represented as either a full address; shortened\nor mixed-shortened formats, using the default zone."
             },
-            "maxItems": 2147483647,
+            "maxItems": 8,
             "type": "array"
           },
           "domain": {
@@ -2186,6 +2196,7 @@
                       ]
                     },
                     "ip": {
+                      "description": "List of IPv6 addresses.",
                       "items": {
                         "description": "List of IPv6 addresses.",
                         "format": "pattern",
@@ -2199,7 +2210,7 @@
                         ],
                         "x-typeDescription": "An IPv6 address represented as either a full address; shortened\nor mixed-shortened formats, using the default zone."
                       },
-                      "maxItems": 2147483647,
+                      "maxItems": 4,
                       "type": "array"
                     }
                   }
@@ -2252,6 +2263,7 @@
                       ]
                     },
                     "ip": {
+                      "description": "List of IPv6 addresses.",
                       "items": {
                         "description": "List of IPv6 addresses.",
                         "format": "pattern",
@@ -2265,7 +2277,7 @@
                         ],
                         "x-typeDescription": "An IPv6 address represented as either a full address; shortened\nor mixed-shortened formats, using the default zone."
                       },
-                      "maxItems": 2147483647,
+                      "maxItems": 4,
                       "type": "array"
                     }
                   }
@@ -3411,6 +3423,7 @@
                   ]
                 },
                 "dhcp-pool": {
+                  "description": "DHCPv4/DHCPv6 Pool name",
                   "items": {
                     "description": "DHCPv4/DHCPv6 Pool name",
                     "format": "const",
@@ -3423,6 +3436,7 @@
                     ]
                   },
                   "maxItems": 2147483647,
+                  "minItems": 1,
                   "type": "array"
                 },
                 "enable": {
@@ -3490,6 +3504,7 @@
                   ]
                 },
                 "dhcp-pool": {
+                  "description": "DHCPv4/DHCPv6 Pool name",
                   "items": {
                     "description": "DHCPv4/DHCPv6 Pool name",
                     "format": "const",
@@ -3502,6 +3517,7 @@
                     ]
                   },
                   "maxItems": 2147483647,
+                  "minItems": 1,
                   "type": "array"
                 },
                 "enable": {
@@ -3717,7 +3733,7 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 2,
             "type": "array",
             "x-key": [
               "ipVersionEsName"
@@ -3905,7 +3921,7 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 2,
             "type": "array",
             "x-key": [
               "ipVersionEsName"
@@ -4298,6 +4314,7 @@
             "items": {
               "properties": {
                 "ip": {
+                  "description": "List of DHCP-Server IPv4 addresses",
                   "items": {
                     "description": "List of DHCP-Server IPv4 addresses",
                     "format": "pattern",
@@ -4349,6 +4366,7 @@
             "items": {
               "properties": {
                 "ip": {
+                  "description": "List of DHCP-Server IPv4 addresses",
                   "items": {
                     "description": "List of DHCP-Server IPv4 addresses",
                     "format": "pattern",
@@ -4708,6 +4726,7 @@
             "items": {
               "properties": {
                 "ip": {
+                  "description": "List of DHCP-Server IPv6 addresses",
                   "items": {
                     "description": "List of DHCP-Server IPv6 addresses",
                     "format": "pattern",
@@ -4759,6 +4778,7 @@
             "items": {
               "properties": {
                 "ip": {
+                  "description": "List of DHCP-Server IPv6 addresses",
                   "items": {
                     "description": "List of DHCP-Server IPv6 addresses",
                     "format": "pattern",
@@ -4824,7 +4844,7 @@
                 "match-server": {
                   "description": "Access-list to match server detail",
                   "format": "const",
-                  "maxLength": 144,
+                  "maxLength": 145,
                   "minLength": 1,
                   "type": "string",
                   "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -4910,7 +4930,7 @@
                 "match-server": {
                   "description": "Access-list to match server detail",
                   "format": "const",
-                  "maxLength": 144,
+                  "maxLength": 145,
                   "minLength": 1,
                   "type": "string",
                   "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -5869,7 +5889,7 @@
                 }
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 16,
             "type": "array",
             "x-key": [
               "storeName"
@@ -6001,7 +6021,7 @@
                 }
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 16,
             "type": "array",
             "x-key": [
               "storeName"
@@ -9230,6 +9250,7 @@
             ]
           },
           "eth-ports": {
+            "description": "List of eth-ports on which fastlearn is enabled.",
             "items": {
               "description": "List of eth-ports on which fastlearn is enabled.",
               "format": "const",
@@ -9244,6 +9265,7 @@
             "type": "array"
           },
           "lag-ports": {
+            "description": "List of lag ports on which fastlearn is enabled.",
             "items": {
               "description": "List of lag ports on which fastlearn is enabled.",
               "format": "const",
@@ -9270,6 +9292,7 @@
             ]
           },
           "eth-ports": {
+            "description": "List of eth-ports on which fastlearn is enabled.",
             "items": {
               "description": "List of eth-ports on which fastlearn is enabled.",
               "format": "const",
@@ -9284,6 +9307,7 @@
             "type": "array"
           },
           "lag-ports": {
+            "description": "List of lag ports on which fastlearn is enabled.",
             "items": {
               "description": "List of lag ports on which fastlearn is enabled.",
               "format": "const",
@@ -10246,6 +10270,7 @@
             ]
           },
           "sd-gateway-vlans": {
+            "description": "Enable list of VLANs for mDNS Gateway.",
             "items": {
               "description": "Enable list of VLANs for mDNS Gateway.",
               "format": "pattern",
@@ -10354,6 +10379,7 @@
             ]
           },
           "sd-gateway-vlans": {
+            "description": "Enable list of VLANs for mDNS Gateway.",
             "items": {
               "description": "Enable list of VLANs for mDNS Gateway.",
               "format": "pattern",
@@ -10388,6 +10414,7 @@
             "description": "Configure service identifiers for a service.\nThe service identifier configured here must be same as the service ID that\nis present in the packet.",
             "properties": {
               "custom-identifiers": {
+                "description": "List of Custom Service identifiers that are part of this group.",
                 "items": {
                   "description": "List of Custom Service identifiers that are part of this group.",
                   "format": "const",
@@ -10402,6 +10429,7 @@
                 "type": "array"
               },
               "identifiers": {
+                "description": "List of Service identifiers that are part of this group.",
                 "items": {
                   "description": "List of Service identifiers that are part of this group.",
                   "enum": [
@@ -10518,6 +10546,7 @@
             "description": "Configure service identifiers for a service.\nThe service identifier configured here must be same as the service ID that\nis present in the packet.",
             "properties": {
               "custom-identifiers": {
+                "description": "List of Custom Service identifiers that are part of this group.",
                 "items": {
                   "description": "List of Custom Service identifiers that are part of this group.",
                   "format": "const",
@@ -10532,6 +10561,7 @@
                 "type": "array"
               },
               "identifiers": {
+                "description": "List of Service identifiers that are part of this group.",
                 "items": {
                   "description": "List of Service identifiers that are part of this group.",
                   "enum": [
@@ -10689,6 +10719,7 @@
                   "x-typeDescription": "Filter action types"
                 },
                 "gateway-vlans": {
+                  "description": "Enable list of VLANs for mDNS Gateway.",
                   "items": {
                     "description": "Enable list of VLANs for mDNS Gateway.",
                     "format": "pattern",
@@ -10814,6 +10845,7 @@
             "x-typeDescription": "Filter action types"
           },
           "gateway-vlans": {
+            "description": "Enable list of VLANs for mDNS Gateway.",
             "items": {
               "description": "Enable list of VLANs for mDNS Gateway.",
               "format": "pattern",
@@ -10928,6 +10960,7 @@
             "x-typeDescription": "Filter action types"
           },
           "gateway-vlans": {
+            "description": "Enable list of VLANs for mDNS Gateway.",
             "items": {
               "description": "Enable list of VLANs for mDNS Gateway.",
               "format": "pattern",
@@ -11200,7 +11233,7 @@
                 }
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 2,
             "type": "array",
             "x-key": [
               "condtype"
@@ -11422,7 +11455,7 @@
                 }
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 2,
             "type": "array",
             "x-key": [
               "condtype"
@@ -11666,7 +11699,7 @@
                 }
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 2,
             "type": "array",
             "x-key": [
               "monitorName"
@@ -11838,7 +11871,7 @@
                 }
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 2,
             "type": "array",
             "x-key": [
               "monitorName"
@@ -12043,6 +12076,7 @@
             ]
           },
           "exclude-regex": {
+            "description": "List of comma separated regular expressions to exclude.",
             "items": {
               "description": "List of comma separated regular expressions to exclude.",
               "format": "const",
@@ -12074,6 +12108,7 @@
             "x-typeDescription": "Type of regular expression match."
           },
           "include-regex": {
+            "description": "List of comma separated regular expressions to include.",
             "items": {
               "description": "List of comma separated regular expressions to include.",
               "format": "const",
@@ -12103,6 +12138,7 @@
             ]
           },
           "exclude-regex": {
+            "description": "List of comma separated regular expressions to exclude.",
             "items": {
               "description": "List of comma separated regular expressions to exclude.",
               "format": "const",
@@ -12134,6 +12170,7 @@
             "x-typeDescription": "Type of regular expression match."
           },
           "include-regex": {
+            "description": "List of comma separated regular expressions to include.",
             "items": {
               "description": "List of comma separated regular expressions to include.",
               "format": "const",
@@ -12223,6 +12260,7 @@
                       ]
                     },
                     "tags": {
+                      "description": "The list of tags assigned to the NAE Script",
                       "items": {
                         "description": "The list of tags assigned to the NAE Script",
                         "format": "const",
@@ -12233,7 +12271,7 @@
                           "Switch CX"
                         ]
                       },
-                      "maxItems": 2147483647,
+                      "maxItems": 16,
                       "type": "array"
                     }
                   }
@@ -12323,6 +12361,7 @@
                 ]
               },
               "tags": {
+                "description": "The list of tags assigned to the NAE Script",
                 "items": {
                   "description": "The list of tags assigned to the NAE Script",
                   "format": "const",
@@ -12333,7 +12372,7 @@
                     "Switch CX"
                   ]
                 },
-                "maxItems": 2147483647,
+                "maxItems": 16,
                 "type": "array"
               }
             }
@@ -12409,6 +12448,7 @@
                 ]
               },
               "tags": {
+                "description": "The list of tags assigned to the NAE Script",
                 "items": {
                   "description": "The list of tags assigned to the NAE Script",
                   "format": "const",
@@ -12419,7 +12459,7 @@
                     "Switch CX"
                   ]
                 },
-                "maxItems": 2147483647,
+                "maxItems": 16,
                 "type": "array"
               }
             }
@@ -12472,7 +12512,7 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 2,
             "type": "array",
             "x-key": [
               "watchName"
@@ -12529,7 +12569,7 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 2,
             "type": "array",
             "x-key": [
               "watchName"
@@ -12960,7 +13000,7 @@
                     "access-list": {
                       "description": "Access-list filter for incoming RA packets",
                       "format": "const",
-                      "maxLength": 144,
+                      "maxLength": 145,
                       "minLength": 1,
                       "type": "string",
                       "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -13114,7 +13154,7 @@
                     "access-list": {
                       "description": "Access-list filter for incoming RA packets",
                       "format": "const",
-                      "maxLength": 144,
+                      "maxLength": 145,
                       "minLength": 1,
                       "type": "string",
                       "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -13360,7 +13400,7 @@
                       "profile"
                     ]
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 1,
                   "type": "array",
                   "x-key": [
                     "profile"
@@ -13550,7 +13590,7 @@
                 "profile"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 1,
             "type": "array",
             "x-key": [
               "profile"
@@ -13732,7 +13772,7 @@
                 "profile"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 1,
             "type": "array",
             "x-key": [
               "profile"
@@ -14238,7 +14278,7 @@
         "description": "Combined QoS queue- and schedule-profile global pairing.",
         "properties": {
           "q-profile": {
-            "description": "Queue profile to apply in combination with the specified\nschedule profile. Queue profiles must first be configured using the\naruba-qos-queue yang model, and must be valid for the platform to\nwhich the profile is being applied.\n\nQueue profiles cannot be modified while they are applied. The number\nof queues and queue ID values must also match those in the paired\nschedule profile.",
+            "description": "Queue profile to apply in combination with the specified\nschedule profile. Queue profiles must first be configured using the\naruba-qos-queue yang model, and must be valid for the platform to\nwhich the profile is being applied.\n\nQueue profiles cannot be modified while they are applied. The number\nof queues and queue ID values must also match those in the paired\nschedule profile. If an applied queue profile is modified, the\nconfiguration will be rejected. To apply the modified queue profile,\nfollow the following sequence of operations:\n\n1. If sched-profile in aruba-qos-global is set to DEFAULT, set\nq-profile to DEFAULT. Otherwise, remove both q-profile and\nsched-profile. This will cause the factory-default profiles\nto be applied.\n2. For PVOS devices, ensure that the traffic-template leaf is not\nset to the same profile as the queue-profile being modified. If it\nis, delete the traffic-template by setting the traffic-template\nleaf to null.\n3. Modify the queue profile.\n4. If both q-profile and sched-profile were removed in step 1,\napply them again together in the same transaction. If q-profile\nwas set to DEFAULT in step 1, apply only the queue profile.\n5. For PVOS devices, if the traffic template was removed as part of\nthis process, apply it again after the queue profile\nhas been modified.",
             "oneOf": [
               {
                 "format": "const",
@@ -14301,7 +14341,7 @@
         "description": "Combined QoS queue- and schedule-profile global pairing.",
         "properties": {
           "q-profile": {
-            "description": "Queue profile to apply in combination with the specified\nschedule profile. Queue profiles must first be configured using the\naruba-qos-queue yang model, and must be valid for the platform to\nwhich the profile is being applied.\n\nQueue profiles cannot be modified while they are applied. The number\nof queues and queue ID values must also match those in the paired\nschedule profile.",
+            "description": "Queue profile to apply in combination with the specified\nschedule profile. Queue profiles must first be configured using the\naruba-qos-queue yang model, and must be valid for the platform to\nwhich the profile is being applied.\n\nQueue profiles cannot be modified while they are applied. The number\nof queues and queue ID values must also match those in the paired\nschedule profile. If an applied queue profile is modified, the\nconfiguration will be rejected. To apply the modified queue profile,\nfollow the following sequence of operations:\n\n1. If sched-profile in aruba-qos-global is set to DEFAULT, set\nq-profile to DEFAULT. Otherwise, remove both q-profile and\nsched-profile. This will cause the factory-default profiles\nto be applied.\n2. For PVOS devices, ensure that the traffic-template leaf is not\nset to the same profile as the queue-profile being modified. If it\nis, delete the traffic-template by setting the traffic-template\nleaf to null.\n3. Modify the queue profile.\n4. If both q-profile and sched-profile were removed in step 1,\napply them again together in the same transaction. If q-profile\nwas set to DEFAULT in step 1, apply only the queue profile.\n5. For PVOS devices, if the traffic template was removed as part of\nthis process, apply it again after the queue profile\nhas been modified.",
             "oneOf": [
               {
                 "format": "const",
@@ -15180,6 +15220,7 @@
                   ]
                 },
                 "priority": {
+                  "description": "List of priorities to be mapped to this pool for use by the interface\nPriority Flow Control (PFC) feature.",
                   "items": {
                     "description": "List of priorities to be mapped to this pool for use by the interface\nPriority Flow Control (PFC) feature.",
                     "format": "int32",
@@ -15299,6 +15340,7 @@
                   ]
                 },
                 "priority": {
+                  "description": "List of priorities to be mapped to this pool for use by the interface\nPriority Flow Control (PFC) feature.",
                   "items": {
                     "description": "List of priorities to be mapped to this pool for use by the interface\nPriority Flow Control (PFC) feature.",
                     "format": "int32",
@@ -15510,6 +15552,7 @@
                   ]
                 },
                 "priorities": {
+                  "description": "The local-priority or class of service values that will use this\nqueue. Every priority must be uniquely assigned to a queue.",
                   "items": {
                     "description": "The local-priority or class of service values that will use this\nqueue. Every priority must be uniquely assigned to a queue.",
                     "format": "int32",
@@ -15568,6 +15611,7 @@
                   ]
                 },
                 "priorities": {
+                  "description": "The local-priority or class of service values that will use this\nqueue. Every priority must be uniquely assigned to a queue.",
                   "items": {
                     "description": "The local-priority or class of service values that will use this\nqueue. Every priority must be uniquely assigned to a queue.",
                     "format": "int32",
@@ -15611,7 +15655,7 @@
         "description": "QoS queue parameters.",
         "properties": {
           "profile": {
-            "description": "QoS Queue Profile. This profile is used to assign priorities to\nqueues, to determine servicing. Once it has been created, a queue\nprofile can be globally applied in combination with a separately-\ncreated schedule profile, using the aruba-qos-global yang model. The\nqueue and schedule profiles must be valid for the platform to which\nthey are being applied, and the configured number of queues and the\nqueue ID values must match.\n\nPlatform-dependent queue profile restrictions may include requiring\nprofiles to start with queue zero and requiring all queues in the\nprofiles to be adjacent.\n\nAOSCX: All local priorities must be mapped to a queue, with no\nduplicates.\nPVOS: Profiles can only be configured for 2, 4, or 8 queues. All cos\nvalues must be mapped to a queue, with no duplicates.",
+            "description": "QoS Queue Profile. This profile is used to assign priorities to\nqueues, to determine servicing. Once it has been created, a queue\nprofile can be globally applied in combination with a separately-\ncreated schedule profile, using the aruba-qos-global yang model. The\nqueue and schedule profiles must be valid for the platform to which\nthey are being applied, and the configured number of queues and the\nqueue ID values must match.\n\nPlatform-dependent queue profile restrictions may include requiring\nprofiles to start with queue zero and requiring all queues in the\nprofiles to be adjacent.\n\nAOSCX: All local priorities must be mapped to a queue, with no\nduplicates.\nPVOS: Profiles can only be configured for 2, 4, or 8 queues. All cos\nvalues must be mapped to a queue, with no duplicates.\n\nQueue profiles cannot be modified while they are applied. If an\napplied queue profile is modified, the configuration is rejected.\nTo apply the modified queue profile, follow the following sequence\nof operations:\n\n1. If sched-profile in aruba-qos-global is set to DEFAULT, set\n  q-profile to DEFAULT. Otherwise, remove both q-profile and\n  sched-profile. This will cause the factory-default profiles\n  to be applied.\n2. For PVOS devices, ensure that the traffic-template leaf in\n  aruba-qos-global is not set to the same profile as the\n  queue-profile being modified. If it is, delete the\n  aruba-qos-global traffic-template by setting the traffic-template\n  leaf to null.\n3. Modify the queue profile.\n4. If both q-profile and sched-profile were removed in step 1, apply\n  them again together in the same transaction. If q-profile was set\n  to DEFAULT in step 1, apply only the q-profile leaf in aruba-qos-global.\n5. If the traffic-template leaf in aruba-qos-global was set to null\n  as part of this process, apply it again after the queue profile\n  has been modified.",
             "items": {
               "allOf": [
                 {
@@ -17762,6 +17806,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "DHCP pool profile defining address ranges, lease times, DNS servers,\ngateway addresses, domain names, and vendor options for DHCPv4 or\nDHCPv6. Each entity is identified by profile name. Use these APIs\nto create, modify, or delete a DHCP pool profile instance.",
+        "operationId": "replaceDhcpPoolProfileByID",
+        "parameters": [
+          {
+            "description": "DHCPv4/DHCPv6 Pool profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaDhcpPool_DhcpPoolprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or modify DHCP pool profile",
+        "tags": [
+          "Dhcp Pool"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceDhcpPoolProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceDhcpPoolCmd",
+          "pathToPrint": "/dhcp-pool/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/dhcp-relay": {
@@ -18221,6 +18348,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "DHCP relay profile defining DHCPv4 and DHCPv6 relay agent parameters\nincluding server addresses, Option 82 handling, hop count settings,\nand source interface selection. Each entity is identified by profile\nname. Use these APIs to create, modify, or delete a DHCP relay\nprofile instance.",
+        "operationId": "replaceDhcpRelayProfileByID",
+        "parameters": [
+          {
+            "description": "DHCP Relay profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaDhcpRelay_DhcpRelayprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update profile for DHCPv4/DHCPv6 Relay configurations",
+        "tags": [
+          "Dhcp Relay"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceDhcpRelayProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceDhcpRelayCmd",
+          "pathToPrint": "/dhcp-relay/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/dhcp-server": {
@@ -18678,6 +18888,89 @@
           "parentCommand": "createDhcpServerCmd",
           "pathToPrint": "/dhcp-server/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Global profile for DHCPv4/DHCPv6 Server Configurations",
+        "operationId": "replaceDhcpServerProfileByID",
+        "parameters": [
+          {
+            "description": "DHCPv4/DHCPv6 Server profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaDhcpServer_DhcpServerprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update profile for DHCPv4/DHCPv6 Server configurations",
+        "tags": [
+          "Dhcp Server"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceDhcpServerProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceDhcpServerCmd",
+          "pathToPrint": "/dhcp-server/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -19237,6 +19530,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "DHCP-Snooping interface profile",
+        "operationId": "replaceDhcpSnoopingInterfaceProfileByID",
+        "parameters": [
+          {
+            "description": "DHCP-Snooping interface profile name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaDhcpSnoopingInterface_DhcpSnoopingInterfaceprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing DHCP-Snooping interface configuration profile configuration",
+        "tags": [
+          "Dhcp Snooping Interface"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceDhcpSnoopingInterfaceProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceDhcpSnoopingInterfaceCmd",
+          "pathToPrint": "/dhcp-snooping-interface/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/dhcp-snooping/{name}": {
@@ -19596,6 +19972,89 @@
           "parentCommand": "createDhcpSnoopingCmd",
           "pathToPrint": "/dhcp-snooping/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "DHCP-Snooping profile",
+        "operationId": "replaceDhcpSnoopingProfileByID",
+        "parameters": [
+          {
+            "description": "DHCP-Snooping profile name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaDhcpSnooping_DhcpSnoopingprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing DHCP-Snooping profile configuration",
+        "tags": [
+          "Dhcp Snooping"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceDhcpSnoopingProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceDhcpSnoopingCmd",
+          "pathToPrint": "/dhcp-snooping/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -20057,6 +20516,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Dynamic ARP Inspection interface profile",
+        "operationId": "replaceDynamicArpInspectionInterfaceProfileByID",
+        "parameters": [
+          {
+            "description": "Dynamic ARP Inspection interface profile name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaDynamicArpInspectionInterface_DynamicArpInspectionInterfaceprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing Dynamic ARP Inspection interface configuration profile configuration",
+        "tags": [
+          "Dynamic Arp Inspection Interface"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceDynamicArpInspectionInterfaceProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceDynamicArpInspectionInterfaceCmd",
+          "pathToPrint": "/dynamic-arp-inspection-interface/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/external-storage": {
@@ -20514,6 +21056,89 @@
           "parentCommand": "createExternalStorageCmd",
           "pathToPrint": "/external-storage/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Global profile for External storage and External storage parameters.",
+        "operationId": "replaceExternalStorageProfileByID",
+        "parameters": [
+          {
+            "description": "External storage profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaExternalStorage_ExternalStorageprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update profile for External Storage configurations",
+        "tags": [
+          "External Storage"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceExternalStorageProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceExternalStorageCmd",
+          "pathToPrint": "/external-storage/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -21073,6 +21698,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "IP source lockdown interface profile",
+        "operationId": "replaceIpSourceLockdownInterfaceProfileByID",
+        "parameters": [
+          {
+            "description": "IP source lockdown interface profile name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaIpLockdownInterface_IpSourceLockdownInterfaceprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing IP source lockdown interface profile",
+        "tags": [
+          "Ip Lockdown Interface"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceIpSourceLockdownInterfaceProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceIpSourceLockdownInterfaceCmd",
+          "pathToPrint": "/ip-source-lockdown-interface/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/ip-source-lockdown/{name}": {
@@ -21432,6 +22140,89 @@
           "parentCommand": "createIpSourceLockdownCmd",
           "pathToPrint": "/ip-source-lockdown/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "IP source lockdown profile",
+        "operationId": "replaceIpSourceLockdownProfileByID",
+        "parameters": [
+          {
+            "description": "IP source lockdown profile name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaIpLockdown_IpSourceLockdownprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing IP source lockdown profile",
+        "tags": [
+          "Ip Lockdown"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceIpSourceLockdownProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceIpSourceLockdownCmd",
+          "pathToPrint": "/ip-source-lockdown/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -21893,6 +22684,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "IPSLA Profile.",
+        "operationId": "replaceIpslaProfileByID",
+        "parameters": [
+          {
+            "description": "IPSLA profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaIpsla_IpslaprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update existing SLA profile {name}",
+        "tags": [
+          "Ipsla"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceIpslaProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceIpslaCmd",
+          "pathToPrint": "/ipsla/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/mgmd-global": {
@@ -22350,6 +23224,89 @@
           "parentCommand": "createMgmdGlobalCmd",
           "pathToPrint": "/mgmd-global/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "MGMD profile defining IGMP and MLD snooping parameters, querier\nsettings, fast-leave options, static multicast groups, and refresh\nintervals for multicast traffic management. Each entity is\nidentified by profile name. Use these APIs to create, modify, or\ndelete an MGMD profile instance.",
+        "operationId": "replaceMgmdGlobalProfileByID",
+        "parameters": [
+          {
+            "description": "Configure MGMD profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaMgmd_MgmdGlobalprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing MGMD profile configurations",
+        "tags": [
+          "Mgmd"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceMgmdGlobalProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceMgmdGlobalCmd",
+          "pathToPrint": "/mgmd-global/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -22811,6 +23768,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Multicast DNS profiles.",
+        "operationId": "replaceMulticastDnsProfileByID",
+        "parameters": [
+          {
+            "description": "Multicast DNS profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaMulticastDns_MulticastDnsprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing Multicast DNS profile configurations",
+        "tags": [
+          "Multicast Dns"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceMulticastDnsProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceMulticastDnsCmd",
+          "pathToPrint": "/multicast-dns/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/nae-lite": {
@@ -23268,6 +24308,89 @@
           "parentCommand": "createNaeLiteCmd",
           "pathToPrint": "/nae-lite/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "NAE Lite parameters.",
+        "operationId": "replaceNaeLiteProfileByID",
+        "parameters": [
+          {
+            "description": "Name of the NAE Script.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaNaeLite_NaeLiteprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing nae-lite agent configurations",
+        "tags": [
+          "Nae Lite"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceNaeLiteProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceNaeLiteCmd",
+          "pathToPrint": "/nae-lite/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -23827,6 +24950,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "ND-Snooping interface profile",
+        "operationId": "replaceNdSnoopingInterfaceProfileByID",
+        "parameters": [
+          {
+            "description": "ND-Snooping interface profile name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaNdSnoopingInterface_NdSnoopingInterfaceprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing ND-Snooping interface configuration profile configuration",
+        "tags": [
+          "Nd Snooping Interface"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceNdSnoopingInterfaceProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceNdSnoopingInterfaceCmd",
+          "pathToPrint": "/nd-snooping-interface/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/nd-snooping/{name}": {
@@ -24186,6 +25392,89 @@
           "parentCommand": "createNdSnoopingCmd",
           "pathToPrint": "/nd-snooping/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "ND-Snooping profile",
+        "operationId": "replaceNdSnoopingProfileByID",
+        "parameters": [
+          {
+            "description": "ND-Snooping profile name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaNdSnooping_NdSnoopingprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing ND-Snooping profile configuration",
+        "tags": [
+          "Nd Snooping"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceNdSnoopingProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceNdSnoopingCmd",
+          "pathToPrint": "/nd-snooping/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -24647,6 +25936,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "PTP feature configs.",
+        "operationId": "replacePtpProfileByID",
+        "parameters": [
+          {
+            "description": "CNX PTP profile instance name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaPtp_PtpprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing PTP Profile instance configurations",
+        "tags": [
+          "Ptp"
+        ],
+        "x-cliParam": {
+          "commandName": "replacePtpProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replacePtpCmd",
+          "pathToPrint": "/ptp/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/qos-global": {
@@ -25106,6 +26478,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Global QoS Configuration Profile.",
+        "operationId": "replaceQosGlobalProfileByID",
+        "parameters": [
+          {
+            "description": "Global QoS profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaQosGlobal_QosGlobalprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or update existing Global QoS profile configurations",
+        "tags": [
+          "Qos Global"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceQosGlobalProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceQosGlobalCmd",
+          "pathToPrint": "/qos-global/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/qos-queues": {
@@ -25208,7 +26663,7 @@
     },
     "/network-config/v1alpha1/qos-queues/{q-profile-name}": {
       "delete": {
-        "description": "QoS Queue Profile. This profile is used to assign priorities to\nqueues, to determine servicing. Once it has been created, a queue\nprofile can be globally applied in combination with a separately-\ncreated schedule profile, using the aruba-qos-global yang model. The\nqueue and schedule profiles must be valid for the platform to which\nthey are being applied, and the configured number of queues and the\nqueue ID values must match.\n\nPlatform-dependent queue profile restrictions may include requiring\nprofiles to start with queue zero and requiring all queues in the\nprofiles to be adjacent.\n\nAOSCX: All local priorities must be mapped to a queue, with no\nduplicates.\nPVOS: Profiles can only be configured for 2, 4, or 8 queues. All cos\nvalues must be mapped to a queue, with no duplicates.",
+        "description": "QoS Queue Profile. This profile is used to assign priorities to\nqueues, to determine servicing. Once it has been created, a queue\nprofile can be globally applied in combination with a separately-\ncreated schedule profile, using the aruba-qos-global yang model. The\nqueue and schedule profiles must be valid for the platform to which\nthey are being applied, and the configured number of queues and the\nqueue ID values must match.\n\nPlatform-dependent queue profile restrictions may include requiring\nprofiles to start with queue zero and requiring all queues in the\nprofiles to be adjacent.\n\nAOSCX: All local priorities must be mapped to a queue, with no\nduplicates.\nPVOS: Profiles can only be configured for 2, 4, or 8 queues. All cos\nvalues must be mapped to a queue, with no duplicates.\n\nQueue profiles cannot be modified while they are applied. If an\napplied queue profile is modified, the configuration is rejected.\nTo apply the modified queue profile, follow the following sequence\nof operations:\n\n1. If sched-profile in aruba-qos-global is set to DEFAULT, set\n  q-profile to DEFAULT. Otherwise, remove both q-profile and\n  sched-profile. This will cause the factory-default profiles\n  to be applied.\n2. For PVOS devices, ensure that the traffic-template leaf in\n  aruba-qos-global is not set to the same profile as the\n  queue-profile being modified. If it is, delete the\n  aruba-qos-global traffic-template by setting the traffic-template\n  leaf to null.\n3. Modify the queue profile.\n4. If both q-profile and sched-profile were removed in step 1, apply\n  them again together in the same transaction. If q-profile was set\n  to DEFAULT in step 1, apply only the q-profile leaf in aruba-qos-global.\n5. If the traffic-template leaf in aruba-qos-global was set to null\n  as part of this process, apply it again after the queue profile\n  has been modified.",
         "operationId": "deleteQosQueuesProfileByID",
         "parameters": [
           {
@@ -25288,7 +26743,7 @@
         }
       },
       "get": {
-        "description": "QoS Queue Profile. This profile is used to assign priorities to\nqueues, to determine servicing. Once it has been created, a queue\nprofile can be globally applied in combination with a separately-\ncreated schedule profile, using the aruba-qos-global yang model. The\nqueue and schedule profiles must be valid for the platform to which\nthey are being applied, and the configured number of queues and the\nqueue ID values must match.\n\nPlatform-dependent queue profile restrictions may include requiring\nprofiles to start with queue zero and requiring all queues in the\nprofiles to be adjacent.\n\nAOSCX: All local priorities must be mapped to a queue, with no\nduplicates.\nPVOS: Profiles can only be configured for 2, 4, or 8 queues. All cos\nvalues must be mapped to a queue, with no duplicates.",
+        "description": "QoS Queue Profile. This profile is used to assign priorities to\nqueues, to determine servicing. Once it has been created, a queue\nprofile can be globally applied in combination with a separately-\ncreated schedule profile, using the aruba-qos-global yang model. The\nqueue and schedule profiles must be valid for the platform to which\nthey are being applied, and the configured number of queues and the\nqueue ID values must match.\n\nPlatform-dependent queue profile restrictions may include requiring\nprofiles to start with queue zero and requiring all queues in the\nprofiles to be adjacent.\n\nAOSCX: All local priorities must be mapped to a queue, with no\nduplicates.\nPVOS: Profiles can only be configured for 2, 4, or 8 queues. All cos\nvalues must be mapped to a queue, with no duplicates.\n\nQueue profiles cannot be modified while they are applied. If an\napplied queue profile is modified, the configuration is rejected.\nTo apply the modified queue profile, follow the following sequence\nof operations:\n\n1. If sched-profile in aruba-qos-global is set to DEFAULT, set\n  q-profile to DEFAULT. Otherwise, remove both q-profile and\n  sched-profile. This will cause the factory-default profiles\n  to be applied.\n2. For PVOS devices, ensure that the traffic-template leaf in\n  aruba-qos-global is not set to the same profile as the\n  queue-profile being modified. If it is, delete the\n  aruba-qos-global traffic-template by setting the traffic-template\n  leaf to null.\n3. Modify the queue profile.\n4. If both q-profile and sched-profile were removed in step 1, apply\n  them again together in the same transaction. If q-profile was set\n  to DEFAULT in step 1, apply only the q-profile leaf in aruba-qos-global.\n5. If the traffic-template leaf in aruba-qos-global was set to null\n  as part of this process, apply it again after the queue profile\n  has been modified.",
         "operationId": "readQosQueuesProfileByID",
         "parameters": [
           {
@@ -25401,7 +26856,7 @@
         }
       },
       "patch": {
-        "description": "QoS Queue Profile. This profile is used to assign priorities to\nqueues, to determine servicing. Once it has been created, a queue\nprofile can be globally applied in combination with a separately-\ncreated schedule profile, using the aruba-qos-global yang model. The\nqueue and schedule profiles must be valid for the platform to which\nthey are being applied, and the configured number of queues and the\nqueue ID values must match.\n\nPlatform-dependent queue profile restrictions may include requiring\nprofiles to start with queue zero and requiring all queues in the\nprofiles to be adjacent.\n\nAOSCX: All local priorities must be mapped to a queue, with no\nduplicates.\nPVOS: Profiles can only be configured for 2, 4, or 8 queues. All cos\nvalues must be mapped to a queue, with no duplicates.",
+        "description": "QoS Queue Profile. This profile is used to assign priorities to\nqueues, to determine servicing. Once it has been created, a queue\nprofile can be globally applied in combination with a separately-\ncreated schedule profile, using the aruba-qos-global yang model. The\nqueue and schedule profiles must be valid for the platform to which\nthey are being applied, and the configured number of queues and the\nqueue ID values must match.\n\nPlatform-dependent queue profile restrictions may include requiring\nprofiles to start with queue zero and requiring all queues in the\nprofiles to be adjacent.\n\nAOSCX: All local priorities must be mapped to a queue, with no\nduplicates.\nPVOS: Profiles can only be configured for 2, 4, or 8 queues. All cos\nvalues must be mapped to a queue, with no duplicates.\n\nQueue profiles cannot be modified while they are applied. If an\napplied queue profile is modified, the configuration is rejected.\nTo apply the modified queue profile, follow the following sequence\nof operations:\n\n1. If sched-profile in aruba-qos-global is set to DEFAULT, set\n  q-profile to DEFAULT. Otherwise, remove both q-profile and\n  sched-profile. This will cause the factory-default profiles\n  to be applied.\n2. For PVOS devices, ensure that the traffic-template leaf in\n  aruba-qos-global is not set to the same profile as the\n  queue-profile being modified. If it is, delete the\n  aruba-qos-global traffic-template by setting the traffic-template\n  leaf to null.\n3. Modify the queue profile.\n4. If both q-profile and sched-profile were removed in step 1, apply\n  them again together in the same transaction. If q-profile was set\n  to DEFAULT in step 1, apply only the q-profile leaf in aruba-qos-global.\n5. If the traffic-template leaf in aruba-qos-global was set to null\n  as part of this process, apply it again after the queue profile\n  has been modified.",
         "operationId": "updateQosQueuesProfileByID",
         "parameters": [
           {
@@ -25484,7 +26939,7 @@
         }
       },
       "post": {
-        "description": "QoS Queue Profile. This profile is used to assign priorities to\nqueues, to determine servicing. Once it has been created, a queue\nprofile can be globally applied in combination with a separately-\ncreated schedule profile, using the aruba-qos-global yang model. The\nqueue and schedule profiles must be valid for the platform to which\nthey are being applied, and the configured number of queues and the\nqueue ID values must match.\n\nPlatform-dependent queue profile restrictions may include requiring\nprofiles to start with queue zero and requiring all queues in the\nprofiles to be adjacent.\n\nAOSCX: All local priorities must be mapped to a queue, with no\nduplicates.\nPVOS: Profiles can only be configured for 2, 4, or 8 queues. All cos\nvalues must be mapped to a queue, with no duplicates.",
+        "description": "QoS Queue Profile. This profile is used to assign priorities to\nqueues, to determine servicing. Once it has been created, a queue\nprofile can be globally applied in combination with a separately-\ncreated schedule profile, using the aruba-qos-global yang model. The\nqueue and schedule profiles must be valid for the platform to which\nthey are being applied, and the configured number of queues and the\nqueue ID values must match.\n\nPlatform-dependent queue profile restrictions may include requiring\nprofiles to start with queue zero and requiring all queues in the\nprofiles to be adjacent.\n\nAOSCX: All local priorities must be mapped to a queue, with no\nduplicates.\nPVOS: Profiles can only be configured for 2, 4, or 8 queues. All cos\nvalues must be mapped to a queue, with no duplicates.\n\nQueue profiles cannot be modified while they are applied. If an\napplied queue profile is modified, the configuration is rejected.\nTo apply the modified queue profile, follow the following sequence\nof operations:\n\n1. If sched-profile in aruba-qos-global is set to DEFAULT, set\n  q-profile to DEFAULT. Otherwise, remove both q-profile and\n  sched-profile. This will cause the factory-default profiles\n  to be applied.\n2. For PVOS devices, ensure that the traffic-template leaf in\n  aruba-qos-global is not set to the same profile as the\n  queue-profile being modified. If it is, delete the\n  aruba-qos-global traffic-template by setting the traffic-template\n  leaf to null.\n3. Modify the queue profile.\n4. If both q-profile and sched-profile were removed in step 1, apply\n  them again together in the same transaction. If q-profile was set\n  to DEFAULT in step 1, apply only the q-profile leaf in aruba-qos-global.\n5. If the traffic-template leaf in aruba-qos-global was set to null\n  as part of this process, apply it again after the queue profile\n  has been modified.",
         "operationId": "createQosQueuesProfileByID",
         "parameters": [
           {
@@ -25563,6 +27018,89 @@
           "parentCommand": "createQosQueuesCmd",
           "pathToPrint": "/qos-queues/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "QoS Queue Profile. This profile is used to assign priorities to\nqueues, to determine servicing. Once it has been created, a queue\nprofile can be globally applied in combination with a separately-\ncreated schedule profile, using the aruba-qos-global yang model. The\nqueue and schedule profiles must be valid for the platform to which\nthey are being applied, and the configured number of queues and the\nqueue ID values must match.\n\nPlatform-dependent queue profile restrictions may include requiring\nprofiles to start with queue zero and requiring all queues in the\nprofiles to be adjacent.\n\nAOSCX: All local priorities must be mapped to a queue, with no\nduplicates.\nPVOS: Profiles can only be configured for 2, 4, or 8 queues. All cos\nvalues must be mapped to a queue, with no duplicates.\n\nQueue profiles cannot be modified while they are applied. If an\napplied queue profile is modified, the configuration is rejected.\nTo apply the modified queue profile, follow the following sequence\nof operations:\n\n1. If sched-profile in aruba-qos-global is set to DEFAULT, set\n  q-profile to DEFAULT. Otherwise, remove both q-profile and\n  sched-profile. This will cause the factory-default profiles\n  to be applied.\n2. For PVOS devices, ensure that the traffic-template leaf in\n  aruba-qos-global is not set to the same profile as the\n  queue-profile being modified. If it is, delete the\n  aruba-qos-global traffic-template by setting the traffic-template\n  leaf to null.\n3. Modify the queue profile.\n4. If both q-profile and sched-profile were removed in step 1, apply\n  them again together in the same transaction. If q-profile was set\n  to DEFAULT in step 1, apply only the q-profile leaf in aruba-qos-global.\n5. If the traffic-template leaf in aruba-qos-global was set to null\n  as part of this process, apply it again after the queue profile\n  has been modified.",
+        "operationId": "replaceQosQueuesProfileByID",
+        "parameters": [
+          {
+            "description": "The name of the QoS queue profile. Must be 1-64 characters in length.",
+            "in": "path",
+            "name": "q-profile-name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaQosQueue_QosQueuesprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or update existing QoS queue profile configurations",
+        "tags": [
+          "Qos Queue"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceQosQueuesProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "q-profile-name"
+            }
+          ],
+          "parentCommand": "replaceQosQueuesCmd",
+          "pathToPrint": "/qos-queues/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -26024,6 +27562,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "QoS Schedule Profile. These profiles are used to determine bandwidth\nallocation for the queues and how they will be serviced. They can\ninclude minimum-bandwidths, weighted queues, all-strict queues,\nweighted plus a strict top queue, or minimum-bandwidths plus a strict\ntop queue.\n\n'Strict' priority will service all packets in a queue before any\npackets in lower-numbered queues, as long as there are no packets in\nany higher-numbered queues.\n\n'Weighted' queuing will apportion available bandwidth among all non-\nempty weighted queues in relation to their queue weights.\n\n'Min_bandwidth' queuing will apportion available bandwidth among all\nnon-empty min-bandwidth queues in relation to their configured\npercentages.\n\nOnce it has been created, a schedule profile can be globally applied\nin combination with a separately-created queue profile, using the\naruba-qos-global yang model. The queue and schedule profiles must be\nvalid for the platform to which they are being applied, and the\nconfigured number of queues and the queue ID values must match. Valid\nschedule profiles can also be applied to ports, using the\naruba-interface-ethernet and/or aruba-interface-portchannel yang models.",
+        "operationId": "replaceQosSchedulesProfileByID",
+        "parameters": [
+          {
+            "description": "QoS schedule profile name. Must be 1-64 characters in length and can only\ncontain alphanumeric characters, periods, underscores, and hyphens.\nCannot use reserved schedule profile names: 'factory-default'.",
+            "in": "path",
+            "name": "sched-profile-name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaQosSchedule_QosSchedulesprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or update existing QoS schedule-profile configurations",
+        "tags": [
+          "Qos Schedule"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceQosSchedulesProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "sched-profile-name"
+            }
+          ],
+          "parentCommand": "replaceQosSchedulesCmd",
+          "pathToPrint": "/qos-schedules/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/qos-thresholds": {
@@ -26481,6 +28102,89 @@
           "parentCommand": "createQosThresholdsCmd",
           "pathToPrint": "/qos-thresholds/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "QoS Threshold Profile. This profile configures interface queue\nactions for WRED and ECN behavior. Once it has been created, a\nthreshold profle can be globally applied using the aruba-qos-global\nyang model. The threshold configuration (e.g., WRED, responsive-WRED,\nnon-responsive-WRED, or ECN) must be supported by the platform to\nwhich the profile is applied. On some platforms, threshold profiles\ncan also be applied to ports, using the aruba-interface-ethernet\nand/or aruba-interface-portchannel yang models.",
+        "operationId": "replaceQosThresholdsProfileByID",
+        "parameters": [
+          {
+            "description": "QoS threshold profile name. Must be 1-64 characters in length and\ncan only contain alphanumeric characters, periods, underscores, and\nhyphens.",
+            "in": "path",
+            "name": "thresh-profile-name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaQosThresholdProfile_QosThresholdsprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or update existing QoS threshold profile configurations",
+        "tags": [
+          "Qos Threshold Profile"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceQosThresholdsProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "thresh-profile-name"
+            }
+          ],
+          "parentCommand": "replaceQosThresholdsCmd",
+          "pathToPrint": "/qos-thresholds/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -26942,6 +28646,89 @@
           "summary": "Create operation for static-entry",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Static IP source binding entry",
+        "operationId": "replaceSourceIpBindingsStaticEntryByID",
+        "parameters": [
+          {
+            "description": "Key combination of ip-version,vlan and client-address separated by ~",
+            "in": "path",
+            "name": "ip-version-vlan-client-address",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaIpBinding_SourceIpBindingsstaticEntrySchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing static entry configuration",
+        "tags": [
+          "Ip Binding"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceSourceIpBindingsStaticEntryCmd",
+          "commandUse": "static-entry",
+          "paramKeys": [
+            {
+              "key": "ip-version-vlan-client-address"
+            }
+          ],
+          "parentCommand": "replaceSourceIpBindingsCmd",
+          "pathToPrint": "/source-ip-bindings/static-entry/%s/",
+          "summary": "Replace operation for static-entry",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/udp-broadcast-forwarders": {
@@ -27399,6 +29186,89 @@
           "parentCommand": "createUdpBroadcastForwardersCmd",
           "pathToPrint": "/udp-broadcast-forwarders/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Global profile for UDP Broadcast Forwarder Configurations.",
+        "operationId": "replaceUdpBroadcastForwardersProfileByID",
+        "parameters": [
+          {
+            "description": "UDP Broadcast Forwarder profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaUdpBroadcastForwarder_UdpBroadcastForwardersprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update profile for UDP Broadcast Forwarder configurations",
+        "tags": [
+          "Udp Broadcast Forwarder"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceUdpBroadcastForwardersProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceUdpBroadcastForwardersCmd",
+          "pathToPrint": "/udp-broadcast-forwarders/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }

@@ -1236,6 +1236,7 @@
             ]
           },
           "cdp-tlv-names": {
+            "description": "Enable Device Fingerprinting based on CDP TLV names.",
             "items": {
               "default": "PLATFORM",
               "description": "Enable Device Fingerprinting based on CDP TLV names.",
@@ -1267,10 +1268,11 @@
               ],
               "x-typeDescription": "Enable device fingerprinting based on CDP TLVs."
             },
-            "maxItems": 2147483647,
+            "maxItems": 127,
             "type": "array"
           },
           "cdp-tlv-numbers": {
+            "description": "Enable Device Fingerprinting based on CDP TLV numbers.",
             "items": {
               "default": "6",
               "description": "Enable Device Fingerprinting based on CDP TLV numbers.",
@@ -1296,6 +1298,7 @@
             ]
           },
           "dhcp-options": {
+            "description": "Enable Device Fingerprinting based on DHCP options.",
             "items": {
               "description": "Enable Device Fingerprinting based on DHCP options.",
               "format": "int32",
@@ -1338,6 +1341,7 @@
             ]
           },
           "lldp-tlv-names": {
+            "description": "Enable Device Fingerprinting based on LLDP TLV names.",
             "items": {
               "default": "SYSTEM_DESCRIPTION",
               "description": "Enable Device Fingerprinting based on LLDP TLV names.",
@@ -1369,10 +1373,11 @@
               ],
               "x-typeDescription": "Enable device fingerprinting based on LLDP TLVs."
             },
-            "maxItems": 2147483647,
+            "maxItems": 127,
             "type": "array"
           },
           "lldp-tlv-numbers": {
+            "description": "Enable Device Fingerprinting based on LLDP TLV numbers.",
             "items": {
               "default": "6",
               "description": "Enable Device Fingerprinting based on LLDP TLV numbers.",
@@ -1403,6 +1408,7 @@
             ]
           },
           "cdp-tlv-names": {
+            "description": "Enable Device Fingerprinting based on CDP TLV names.",
             "items": {
               "default": "PLATFORM",
               "description": "Enable Device Fingerprinting based on CDP TLV names.",
@@ -1434,10 +1440,11 @@
               ],
               "x-typeDescription": "Enable device fingerprinting based on CDP TLVs."
             },
-            "maxItems": 2147483647,
+            "maxItems": 127,
             "type": "array"
           },
           "cdp-tlv-numbers": {
+            "description": "Enable Device Fingerprinting based on CDP TLV numbers.",
             "items": {
               "default": "6",
               "description": "Enable Device Fingerprinting based on CDP TLV numbers.",
@@ -1463,6 +1470,7 @@
             ]
           },
           "dhcp-options": {
+            "description": "Enable Device Fingerprinting based on DHCP options.",
             "items": {
               "description": "Enable Device Fingerprinting based on DHCP options.",
               "format": "int32",
@@ -1505,6 +1513,7 @@
             ]
           },
           "lldp-tlv-names": {
+            "description": "Enable Device Fingerprinting based on LLDP TLV names.",
             "items": {
               "default": "SYSTEM_DESCRIPTION",
               "description": "Enable Device Fingerprinting based on LLDP TLV names.",
@@ -1536,10 +1545,11 @@
               ],
               "x-typeDescription": "Enable device fingerprinting based on LLDP TLVs."
             },
-            "maxItems": 2147483647,
+            "maxItems": 127,
             "type": "array"
           },
           "lldp-tlv-numbers": {
+            "description": "Enable Device Fingerprinting based on LLDP TLV numbers.",
             "items": {
               "default": "6",
               "description": "Enable Device Fingerprinting based on LLDP TLV numbers.",
@@ -4399,6 +4409,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Client-insight profile",
+        "operationId": "replaceClientInsightProfileByID",
+        "parameters": [
+          {
+            "description": "Client-insight profile name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaClientInsight_ClientInsightprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing client-insight profile configurations",
+        "tags": [
+          "Client Insight"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceClientInsightProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceClientInsightCmd",
+          "pathToPrint": "/client-insight/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/client-iptracker": {
@@ -4956,6 +5049,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "List of IP tracker interface profiles.",
+        "operationId": "replaceClientIptrackerInterfaceProfileByID",
+        "parameters": [
+          {
+            "description": "Name of the IP tracker interface profile",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaClientIptrackerInterface_ClientIptrackerInterfaceprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing client-iptracker profile configurations on the interface.",
+        "tags": [
+          "Client Iptracker Interface"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceClientIptrackerInterfaceProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceClientIptrackerInterfaceCmd",
+          "pathToPrint": "/client-iptracker-interface/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/client-iptracker/{name}": {
@@ -5315,6 +5491,89 @@
           "parentCommand": "createClientIptrackerCmd",
           "pathToPrint": "/client-iptracker/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "List of IP tracker global profiles.",
+        "operationId": "replaceClientIptrackerProfileByID",
+        "parameters": [
+          {
+            "description": "Name of the IP tracker global profile",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaClientIptracker_ClientIptrackerprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing client-iptracker profile configurations",
+        "tags": [
+          "Client Iptracker"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceClientIptrackerProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceClientIptrackerCmd",
+          "pathToPrint": "/client-iptracker/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -5874,6 +6133,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "DFP Interface Profiles.",
+        "operationId": "replaceDevicefingerprintingInterfaceProfileByID",
+        "parameters": [
+          {
+            "description": "Name of the DFP Interface Profile",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaDevicefingerprintingInterface_DevicefingerprintingInterfaceprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing device-fingerprinting interface profile configurations.",
+        "tags": [
+          "Devicefingerprinting Interface"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceDevicefingerprintingInterfaceProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceDevicefingerprintingInterfaceCmd",
+          "pathToPrint": "/devicefingerprinting-interface/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/devicefingerprinting-profile": {
@@ -6333,6 +6675,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "DFP Profiles",
+        "operationId": "replaceDevicefingerprintingProfileProfileByID",
+        "parameters": [
+          {
+            "description": "Name of the Device Fingerprinting profile",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaDevicefingerprintingProfile_DevicefingerprintingProfileprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing device-fingerprinting switch profile configurations.",
+        "tags": [
+          "Devicefingerprinting Profile"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceDevicefingerprintingProfileProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceDevicefingerprintingProfileCmd",
+          "pathToPrint": "/devicefingerprinting-profile/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/devicefingerprinting/{name}": {
@@ -6692,6 +7117,89 @@
           "parentCommand": "createDevicefingerprintingCmd",
           "pathToPrint": "/devicefingerprinting/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Device Fingerprinting global profiles.",
+        "operationId": "replaceDevicefingerprintingProfileByID",
+        "parameters": [
+          {
+            "description": "Name of the Device Fingerprinting global profile",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaDevicefingerprinting_DevicefingerprintingprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing device-fingerprinting profile configurations",
+        "tags": [
+          "Devicefingerprinting"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceDevicefingerprintingProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceDevicefingerprintingCmd",
+          "pathToPrint": "/devicefingerprinting/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -7153,6 +7661,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Global profile for Flow-tracking Configuration",
+        "operationId": "replaceFlowTrackingProfileByID",
+        "parameters": [
+          {
+            "description": "Flow-Tracking profile name to be configured to enter the flow-tracking context.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaFlowTracking_FlowTrackingprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "Flow Tracking"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceFlowTrackingProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceFlowTrackingCmd",
+          "pathToPrint": "/flow-tracking/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/ipfix-flow-exporter": {
@@ -7612,6 +8203,89 @@
           "summary": "Create operation for exporters",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Flow exporter list for IPFIX flow exporter Configuration.",
+        "operationId": "replaceIpfixFlowExporterExportersByID",
+        "parameters": [
+          {
+            "description": "Configuration to set the name of a flow exporter.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaIpfixFlowExporter_IpfixFlowExporterexportersSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or modify IPFIX Flow Exporter",
+        "tags": [
+          "Ipfix Flow Exporter"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceIpfixFlowExporterExportersCmd",
+          "commandUse": "exporters",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceIpfixFlowExporterCmd",
+          "pathToPrint": "/ipfix-flow-exporter/exporters/%s/",
+          "summary": "Replace operation for exporters",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/traffic-insight": {
@@ -8069,6 +8743,89 @@
           "parentCommand": "createTrafficInsightCmd",
           "pathToPrint": "/traffic-insight/instance/%s/",
           "summary": "Create operation for instance",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "List of traffic insight instances.",
+        "operationId": "replaceTrafficInsightInstanceByID",
+        "parameters": [
+          {
+            "description": "The traffic-insight instance name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaTrafficInsight_TrafficInsightinstanceSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing Traffic-insight instance configurations",
+        "tags": [
+          "Traffic Insight"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceTrafficInsightInstanceCmd",
+          "commandUse": "instance",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceTrafficInsightCmd",
+          "pathToPrint": "/traffic-insight/instance/%s/",
+          "summary": "Replace operation for instance",
           "totParams": 1
         }
       }

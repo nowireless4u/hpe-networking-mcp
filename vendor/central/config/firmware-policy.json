@@ -32,6 +32,30 @@
       }
     },
     "parameters": {
+      "delete_device_function": {
+        "description": "Device function for which the local object needs to be deleted. Mandatory if object_type = LOCAL. Should not be provided for object_type = SHARED.",
+        "in": "query",
+        "name": "device-function",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "delete_object_type": {
+        "description": "LOCAL - To delete local objects. SHARED - To delete shared objects. Default - Defaults to SHARED if not provided",
+        "in": "query",
+        "name": "object-type",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "delete_scope_id": {
+        "description": "Scope at which local object needs to be deleted. Mandatory if object-type = LOCAL. Should not be provided for object-type = SHARED.",
+        "in": "query",
+        "name": "scope-id",
+        "schema": {
+          "type": "string"
+        }
+      },
       "detailed": {
         "description": "True - Includes annotations in the returned json to indicate the type of object, scope, and device function. False - Returns only config objects without annotations.",
         "in": "query",
@@ -709,6 +733,13 @@
               "modelInfo"
             ]
           },
+          "lte-modem-version": {
+            "description": "LTE Modem Firmware version",
+            "format": "const",
+            "maxLength": 63,
+            "minLength": 1,
+            "type": "string"
+          },
           "version": {
             "description": "Firmware version",
             "format": "const",
@@ -746,6 +777,13 @@
             "x-key": [
               "modelInfo"
             ]
+          },
+          "lte-modem-version": {
+            "description": "LTE Modem Firmware version",
+            "format": "const",
+            "maxLength": 63,
+            "minLength": 1,
+            "type": "string"
           },
           "version": {
             "description": "Firmware version",
@@ -1210,6 +1248,17 @@
       "delete": {
         "description": "Firmware Policy configuration allows centralized control over firmware versions of all devices\nincluding APs, switches, and gateways across various scopes. Firmware upgrade APIs will function consistently\nin Central On-Prem deployments. In Central Cloud, API behavior may vary based on the customer’s deployment mode\nand the device type. Full API support is available for the 5G Bridge device type while support for other\ndevice types may differ.",
         "operationId": "deleteFirmwareCompliance",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/delete_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/delete_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/delete_device_function"
+          }
+        ],
         "responses": {
           "200": {
             "$ref": "#/components/responses/200"

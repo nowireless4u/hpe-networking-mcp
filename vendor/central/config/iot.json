@@ -711,7 +711,7 @@
                             }
                           }
                         },
-                        "maxItems": 2147483647,
+                        "maxItems": 16,
                         "type": "array",
                         "x-key": [
                           "ruleName"
@@ -1111,7 +1111,7 @@
                       }
                     }
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 16,
                   "type": "array",
                   "x-key": [
                     "ruleName"
@@ -1497,7 +1497,7 @@
                       }
                     }
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 16,
                   "type": "array",
                   "x-key": [
                     "ruleName"
@@ -2476,6 +2476,89 @@
           "parentCommand": "createUsbCmd",
           "pathToPrint": "/usb/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Config the global profile for USB parameters. Including a usb profile list and the acl rule profiles detail.\na AP USB ACL profile policy including a acl-name and a rule list. The rule includes a USB vendor name and\nits related action is deny or permit. Such as vendor is Alcatel-L800, action is deny, it means the Alcatel-L800\nUSB dongle's data will be denied by AP.",
+        "operationId": "replaceUsbProfileByID",
+        "parameters": [
+          {
+            "description": "USB profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaUsb_UsbprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "Usb"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceUsbProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceUsbCmd",
+          "pathToPrint": "/usb/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }

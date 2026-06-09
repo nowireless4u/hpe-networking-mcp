@@ -1554,6 +1554,7 @@
             ]
           },
           "loop-protect-vlans": {
+            "description": "Configure VLANs to be considered for sending loop-protect pdus for a port.\nIt is applicable only for IPV4 VXLAN.",
             "items": {
               "description": "Configure VLANs to be considered for sending loop-protect pdus for a port.\nIt is applicable only for IPV4 VXLAN.",
               "format": "int32",
@@ -1569,6 +1570,7 @@
             "type": "array"
           },
           "mac-notify-traps": {
+            "description": "Configure MAC notify traps for VXLAN, to generate trap notifications for\nfour different types of dynamic MAC address related events.",
             "items": {
               "description": "Configure MAC notify traps for VXLAN, to generate trap notifications for\nfour different types of dynamic MAC address related events.",
               "enum": [
@@ -1697,6 +1699,7 @@
             ]
           },
           "loop-protect-vlans": {
+            "description": "Configure VLANs to be considered for sending loop-protect pdus for a port.\nIt is applicable only for IPV4 VXLAN.",
             "items": {
               "description": "Configure VLANs to be considered for sending loop-protect pdus for a port.\nIt is applicable only for IPV4 VXLAN.",
               "format": "int32",
@@ -1712,6 +1715,7 @@
             "type": "array"
           },
           "mac-notify-traps": {
+            "description": "Configure MAC notify traps for VXLAN, to generate trap notifications for\nfour different types of dynamic MAC address related events.",
             "items": {
               "description": "Configure MAC notify traps for VXLAN, to generate trap notifications for\nfour different types of dynamic MAC address related events.",
               "enum": [
@@ -1844,7 +1848,7 @@
                 "policy-name": {
                   "description": "Configure Policy for on VNI.\nA policy can be applied only if VRF is configured and routing is enabled on the VNI.",
                   "format": "const",
-                  "maxLength": 144,
+                  "maxLength": 145,
                   "minLength": 1,
                   "type": "string",
                   "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -1931,7 +1935,7 @@
                 "policy-name": {
                   "description": "Configure Policy for on VNI.\nA policy can be applied only if VRF is configured and routing is enabled on the VNI.",
                   "format": "const",
-                  "maxLength": 144,
+                  "maxLength": 145,
                   "minLength": 1,
                   "type": "string",
                   "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -3024,6 +3028,7 @@
                       }
                     },
                     "interface-vlan-ref": {
+                      "description": "List of L3 VLANs in use by VSX intent configuration that should not be removed while in use.",
                       "items": {
                         "description": "List of L3 VLANs in use by VSX intent configuration that should not be removed while in use.",
                         "format": "int32",
@@ -3066,6 +3071,7 @@
                       }
                     },
                     "linkup-delay-timer-exclude": {
+                      "description": "Disable linkup delay timer on the list of multichassis port channel interface.",
                       "items": {
                         "description": "Disable linkup delay timer on the list of multichassis port channel interface.",
                         "format": "pattern",
@@ -3106,7 +3112,7 @@
                 }
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 1,
             "type": "array",
             "x-key": [
               "name"
@@ -3179,6 +3185,7 @@
                 }
               },
               "interface-vlan-ref": {
+                "description": "List of L3 VLANs in use by VSX intent configuration that should not be removed while in use.",
                 "items": {
                   "description": "List of L3 VLANs in use by VSX intent configuration that should not be removed while in use.",
                   "format": "int32",
@@ -3221,6 +3228,7 @@
                 }
               },
               "linkup-delay-timer-exclude": {
+                "description": "Disable linkup delay timer on the list of multichassis port channel interface.",
                 "items": {
                   "description": "Disable linkup delay timer on the list of multichassis port channel interface.",
                   "format": "pattern",
@@ -3322,6 +3330,7 @@
                 }
               },
               "interface-vlan-ref": {
+                "description": "List of L3 VLANs in use by VSX intent configuration that should not be removed while in use.",
                 "items": {
                   "description": "List of L3 VLANs in use by VSX intent configuration that should not be removed while in use.",
                   "format": "int32",
@@ -3364,6 +3373,7 @@
                 }
               },
               "linkup-delay-timer-exclude": {
+                "description": "Disable linkup delay timer on the list of multichassis port channel interface.",
                 "items": {
                   "description": "Disable linkup delay timer on the list of multichassis port channel interface.",
                   "format": "pattern",
@@ -3858,6 +3868,17 @@
       "delete": {
         "description": "Device firmware configuration parameters",
         "operationId": "deleteDeviceFirmware",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/delete_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/delete_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/delete_device_function"
+          }
+        ],
         "responses": {
           "200": {
             "$ref": "#/components/responses/200"
@@ -4593,12 +4614,106 @@
           "summary": "Create operation for dsm-instance",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "List of Distributed Services Module(DSM) instance.",
+        "operationId": "replaceDsmDsmInstanceByID",
+        "parameters": [
+          {
+            "description": "Name of the Distributed Services Module(DSM).",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaDsm_DsmdsmInstanceSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add or update existing Distributed Services Module(DSM) configuration.",
+        "tags": [
+          "Dsm"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceDsmDsmInstanceCmd",
+          "commandUse": "dsm-instance",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceDsmCmd",
+          "pathToPrint": "/dsm/dsm-instance/%s/",
+          "summary": "Replace operation for dsm-instance",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/features": {
       "delete": {
         "description": "Features.",
         "operationId": "deleteFeatures",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/delete_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/delete_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/delete_device_function"
+          }
+        ],
         "responses": {
           "200": {
             "$ref": "#/components/responses/200"
@@ -5334,6 +5449,89 @@
           "summary": "Create operation for operations",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "List of operations to perform on nodes, identified by xpaths",
+        "operationId": "replaceNodeOperationsOperationsByID",
+        "parameters": [
+          {
+            "description": "xpath identifying the node to operate on",
+            "in": "path",
+            "name": "xpath",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaDbDataMigration_NodeOperationsoperationsSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace operations by xpath",
+        "tags": [
+          "Db Data Migration"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceNodeOperationsOperationsCmd",
+          "commandUse": "operations",
+          "paramKeys": [
+            {
+              "key": "xpath"
+            }
+          ],
+          "parentCommand": "replaceNodeOperationsCmd",
+          "pathToPrint": "/node-operations/operations/%s/",
+          "summary": "Replace operation for operations",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/overlay-wlan": {
@@ -5793,6 +5991,89 @@
           "summary": "Create operation for ssid-cluster",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "WLAN profile to Cluster mapping",
+        "operationId": "replaceOverlayWlanSsidClusterByID",
+        "parameters": [
+          {
+            "description": "WLAN ssid profile name or wired-port profile name",
+            "in": "path",
+            "name": "profile",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaOverlayWlan_OverlayWlanssidClusterSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace ssid-cluster by profile",
+        "tags": [
+          "Overlay Wlan"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceOverlayWlanSsidClusterCmd",
+          "commandUse": "ssid-cluster",
+          "paramKeys": [
+            {
+              "key": "profile"
+            }
+          ],
+          "parentCommand": "replaceOverlayWlanCmd",
+          "pathToPrint": "/overlay-wlan/ssid-cluster/%s/",
+          "summary": "Replace operation for ssid-cluster",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/vsx-config": {
@@ -6250,6 +6531,89 @@
           "parentCommand": "createVsxConfigCmd",
           "pathToPrint": "/vsx-config/vsx/%s/",
           "summary": "Create operation for vsx",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Single list of  VSX config.",
+        "operationId": "replaceVsxConfigVsxByID",
+        "parameters": [
+          {
+            "description": "VSX configuration name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaVsxPair_VsxConfigvsxSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace vsx by name",
+        "tags": [
+          "Vsx Pair"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceVsxConfigVsxCmd",
+          "commandUse": "vsx",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceVsxConfigCmd",
+          "pathToPrint": "/vsx-config/vsx/%s/",
+          "summary": "Replace operation for vsx",
           "totParams": 1
         }
       }
@@ -6713,6 +7077,90 @@
           "parentCommand": "createVxlanCmd",
           "pathToPrint": "/vxlan/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "deprecated": true,
+        "description": "(Deprecated) Global profile for VXLAN configuration parameters,\neach scope (global, site, site-collection, device, device-collection)\ncan accept only one profile. This profile creates VXLAN Interface in AOS-CX.\nThis list is deprecated now, please use the configuration from aruba-interface-vni.yang",
+        "operationId": "replaceVxlanProfileByID",
+        "parameters": [
+          {
+            "description": "Configure VXLAN profile.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaInterfaceVxlan_VxlanprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add or Update VXLAN profile configurations",
+        "tags": [
+          "Interface Vxlan"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceVxlanProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceVxlanCmd",
+          "pathToPrint": "/vxlan/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }

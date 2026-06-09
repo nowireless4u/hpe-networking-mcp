@@ -454,6 +454,7 @@
                   ]
                 },
                 "tunnels": {
+                  "description": "List of tunnels in the tunnel-group.\nOne tunnel-group can have up to 5 tunnels.",
                   "items": {
                     "description": "List of tunnels in the tunnel-group.\nOne tunnel-group can have up to 5 tunnels.",
                     "format": "int64",
@@ -465,7 +466,7 @@
                       "Gateway"
                     ]
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 5,
                   "type": "array"
                 }
               }
@@ -534,6 +535,7 @@
             ]
           },
           "tunnels": {
+            "description": "List of tunnels in the tunnel-group.\nOne tunnel-group can have up to 5 tunnels.",
             "items": {
               "description": "List of tunnels in the tunnel-group.\nOne tunnel-group can have up to 5 tunnels.",
               "format": "int64",
@@ -545,7 +547,7 @@
                 "Gateway"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 5,
             "type": "array"
           }
         }
@@ -595,6 +597,7 @@
             ]
           },
           "tunnels": {
+            "description": "List of tunnels in the tunnel-group.\nOne tunnel-group can have up to 5 tunnels.",
             "items": {
               "description": "List of tunnels in the tunnel-group.\nOne tunnel-group can have up to 5 tunnels.",
               "format": "int64",
@@ -606,7 +609,7 @@
                 "Gateway"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 5,
             "type": "array"
           }
         }
@@ -631,7 +634,7 @@
           "name": {
             "description": "Configure ACL for the Tunnel interface.",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -663,7 +666,7 @@
           "name": {
             "description": "Configure ACL for the Tunnel interface.",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -691,6 +694,7 @@
             ]
           },
           "allowed-vlans": {
+            "description": "List of allowed VLANs.\nThis configuration is valid for L2 tunnels only.",
             "items": {
               "description": "List of allowed VLANs.\nThis configuration is valid for L2 tunnels only.",
               "format": "pattern",
@@ -827,6 +831,7 @@
             ]
           },
           "trusted-vlans": {
+            "description": "List of trusted VLANs.\nThis configuration is valid for L2 tunnels only.",
             "items": {
               "default": "1-4094",
               "description": "List of trusted VLANs.\nThis configuration is valid for L2 tunnels only.",
@@ -861,6 +866,7 @@
             ]
           },
           "allowed-vlans": {
+            "description": "List of allowed VLANs.\nThis configuration is valid for L2 tunnels only.",
             "items": {
               "description": "List of allowed VLANs.\nThis configuration is valid for L2 tunnels only.",
               "format": "pattern",
@@ -997,6 +1003,7 @@
             ]
           },
           "trusted-vlans": {
+            "description": "List of trusted VLANs.\nThis configuration is valid for L2 tunnels only.",
             "items": {
               "default": "1-4094",
               "description": "List of trusted VLANs.\nThis configuration is valid for L2 tunnels only.",
@@ -1156,6 +1163,7 @@
             "x-typeDescription": "An IPv6 address represented as either a full address; shortened\nor mixed-shortened formats, using the default zone."
           },
           "ipv6-prefix": {
+            "description": "Configure IPv6 prefix for the Tunnel interface.\nIPv6 prefix is applicable for GRE, V6_IN_V4 and V6_IN_V6 Tunnel.",
             "items": {
               "description": "Configure IPv6 prefix for the Tunnel interface.\nIPv6 prefix is applicable for GRE, V6_IN_V4 and V6_IN_V6 Tunnel.",
               "format": "pattern",
@@ -1233,6 +1241,7 @@
             ]
           },
           "secondary-ipv4-prefix": {
+            "description": "List of secondary IPv4 prefix of Tunnel Interface.",
             "items": {
               "description": "List of secondary IPv4 prefix of Tunnel Interface.",
               "format": "pattern",
@@ -1420,6 +1429,7 @@
             "x-typeDescription": "An IPv6 address represented as either a full address; shortened\nor mixed-shortened formats, using the default zone."
           },
           "ipv6-prefix": {
+            "description": "Configure IPv6 prefix for the Tunnel interface.\nIPv6 prefix is applicable for GRE, V6_IN_V4 and V6_IN_V6 Tunnel.",
             "items": {
               "description": "Configure IPv6 prefix for the Tunnel interface.\nIPv6 prefix is applicable for GRE, V6_IN_V4 and V6_IN_V6 Tunnel.",
               "format": "pattern",
@@ -1497,6 +1507,7 @@
             ]
           },
           "secondary-ipv4-prefix": {
+            "description": "List of secondary IPv4 prefix of Tunnel Interface.",
             "items": {
               "description": "List of secondary IPv4 prefix of Tunnel Interface.",
               "format": "pattern",
@@ -2715,6 +2726,89 @@
           "summary": "Create operation for group",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "List of Tunnel-groups.",
+        "operationId": "replaceTunnelGroupsGroupByID",
+        "parameters": [
+          {
+            "description": "Tunnel-group name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaInterfaceTunnelGroup_TunnelGroupsgroupSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing GRE tunnel-group configurations",
+        "tags": [
+          "Interface Tunnel Group"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceTunnelGroupsGroupCmd",
+          "commandUse": "group",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceTunnelGroupsCmd",
+          "pathToPrint": "/tunnel-groups/group/%s/",
+          "summary": "Replace operation for group",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/tunnel/{id}": {
@@ -3074,6 +3168,89 @@
           "parentCommand": "createTunnelCmd",
           "pathToPrint": "/tunnel/interface/%s/",
           "summary": "Create operation for interface",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Tunnel Interface(s) configuration.\nOn AOS-CX, VXLAN operates with IPv4 or IPv6 version and GRE, IPsec operate with IPv4 version.",
+        "operationId": "replaceTunnelInterfaceByID",
+        "parameters": [
+          {
+            "description": "Configure Tunnel interface id.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaInterfaceTunnel_TunnelinterfaceSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing Tunnel interface configurations",
+        "tags": [
+          "Interface Tunnel"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceTunnelInterfaceCmd",
+          "commandUse": "interface",
+          "paramKeys": [
+            {
+              "key": "id"
+            }
+          ],
+          "parentCommand": "replaceTunnelCmd",
+          "pathToPrint": "/tunnel/interface/%s/",
+          "summary": "Replace operation for interface",
           "totParams": 1
         }
       }

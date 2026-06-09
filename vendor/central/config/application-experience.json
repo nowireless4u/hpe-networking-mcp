@@ -189,6 +189,36 @@
           }
         },
         "description": "profilebody object"
+      },
+      "ArubaDapApplication_DapApplicationprofileSchema": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ArubaDapApplication_DapApplicationprofileSchema"
+            }
+          }
+        },
+        "description": "profilebody object"
+      },
+      "ArubaDapSla_DapSlaprofileSchema": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ArubaDapSla_DapSlaprofileSchema"
+            }
+          }
+        },
+        "description": "profilebody object"
+      },
+      "ArubaDap_DapprofileSchema": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ArubaDap_DapprofileSchema"
+            }
+          }
+        },
+        "description": "profilebody object"
       }
     },
     "responses": {
@@ -822,6 +852,7 @@
             "maximum": 2000000,
             "minimum": 1,
             "type": "integer",
+            "x-mandatory": true,
             "x-supportedDeviceType": [
               "Gateway"
             ]
@@ -848,7 +879,8 @@
           }
         },
         "required": [
-          "bwc-units"
+          "bwc-units",
+          "bit-rate"
         ]
       },
       "ArubaAppBandwidthContract_BwcRateGet": {
@@ -860,6 +892,7 @@
             "maximum": 2000000,
             "minimum": 1,
             "type": "integer",
+            "x-mandatory": true,
             "x-supportedDeviceType": [
               "Gateway"
             ]
@@ -886,7 +919,8 @@
           }
         },
         "required": [
-          "bwc-units"
+          "bwc-units",
+          "bit-rate"
         ]
       },
       "ArubaAppRecogControl_ArcSchemaGET": {
@@ -1279,6 +1313,1134 @@
             "type": "boolean",
             "x-supportedDeviceType": [
               "Gateway"
+            ]
+          }
+        }
+      },
+      "ArubaDapApplication_DapApplicationSchemaGET": {
+        "description": "Configure a DAP application profile is for optimizing this application. One DAP SLA profile\nhas to be configured under the DAP application profile knob to indicate how to optimize this\napplication. The application profile number can be up to 32.",
+        "properties": {
+          "profile": {
+            "description": "DAP application profile.",
+            "items": {
+              "properties": {
+                "description": {
+                  "description": "DAP application description.",
+                  "format": "const",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "name": {
+                  "description": "DAP application's name.",
+                  "enum": [
+                    "AMAZON_AWS",
+                    "AZURE_MS",
+                    "CISCO_WEBEX",
+                    "DROPBOX",
+                    "FACETIME_AUDIO",
+                    "FACETIME_VIDEO",
+                    "GOOGLE_GCP",
+                    "GITHUB",
+                    "GLCP",
+                    "GOOGLE_MEET",
+                    "GOTOMEETING",
+                    "JABBER_AUDIO",
+                    "JABBER_DESKTOP_SHARING",
+                    "JABBER_MC",
+                    "JABBER_VIDEO",
+                    "OFFICE365",
+                    "MICROSOFT_ONEDRIVE",
+                    "MICROSOFT_SHAREPOINT",
+                    "SIP_AUDIO",
+                    "SIP_VIDEO",
+                    "SKYPE_AUDIO",
+                    "SKYPE_DESKTOP_SHARING",
+                    "SKYPE_VIDEO",
+                    "SLACK",
+                    "TEAMS_AUDIO",
+                    "TEAMS_VIDEO",
+                    "VOCERA",
+                    "WEBRTC_AUDIO",
+                    "WEBRTC_VIDEO",
+                    "WHATSAPP",
+                    "WIFI_CALLING",
+                    "ZOOM_AUDIO",
+                    "ZOOM_DS",
+                    "ZOOM_VIDEO"
+                  ],
+                  "format": "enum",
+                  "type": "string",
+                  "x-enumDescriptions": {
+                    "AMAZON_AWS": "Application amazon-aws.",
+                    "AZURE_MS": "Application azure-ms.",
+                    "CISCO_WEBEX": "Application cisco-webex.",
+                    "DROPBOX": "Application dropbox.",
+                    "FACETIME_AUDIO": "Application facetime-audio.",
+                    "FACETIME_VIDEO": "Application facetime-video.",
+                    "GITHUB": "Application github.",
+                    "GLCP": "Application glcp.",
+                    "GOOGLE_GCP": "Application google-gcp.",
+                    "GOOGLE_MEET": "Application google-meet.",
+                    "GOTOMEETING": "Application gotomeeting.",
+                    "JABBER_AUDIO": "Application jabber-audio.",
+                    "JABBER_DESKTOP_SHARING": "Application jabber-desktop-sharing.",
+                    "JABBER_MC": "Application jabber-mc.",
+                    "JABBER_VIDEO": "Application jabber-video.",
+                    "MICROSOFT_ONEDRIVE": "Application microsoft-onedrive.",
+                    "MICROSOFT_SHAREPOINT": "Application microsoft-sharepoint.",
+                    "OFFICE365": "Application office365.",
+                    "SIP_AUDIO": "Application sip-audio.",
+                    "SIP_VIDEO": "Application sip-video.",
+                    "SKYPE_AUDIO": "Application skype-audio.",
+                    "SKYPE_DESKTOP_SHARING": "Application skype-desktop-sharing.",
+                    "SKYPE_VIDEO": "Application skype-video.",
+                    "SLACK": "Application slack.",
+                    "TEAMS_AUDIO": "Application teams-audio.",
+                    "TEAMS_VIDEO": "Application teams-video.",
+                    "VOCERA": "Application vocera.",
+                    "WEBRTC_AUDIO": "Application webrtc-audio.",
+                    "WEBRTC_VIDEO": "Application webrtc-video.",
+                    "WHATSAPP": "Application whatsapp.",
+                    "WIFI_CALLING": "Application wifi-calling.",
+                    "ZOOM_AUDIO": "Application zoom-audio.",
+                    "ZOOM_DS": "Application zoom-ds.",
+                    "ZOOM_VIDEO": "Application zoom-video."
+                  },
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ],
+                  "x-typeDescription": "Application's names."
+                },
+                "sla-profile": {
+                  "description": "The DAP SLA profile which can be referenced by current DAP application profile.",
+                  "format": "const",
+                  "maxLength": 32,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-path": "/ac-dap-sla:dap-sla/ac-dap-sla:profile/ac-dap-sla:name",
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ]
+                },
+                "wificall-dns": {
+                  "description": "Wifi Calling DNS configuration.",
+                  "items": {
+                    "properties": {
+                      "carrier-name": {
+                        "description": "Carrier name of the fqdn list.",
+                        "format": "const",
+                        "maxLength": 63,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "dns-pattern": {
+                        "description": "WiFi calling DNS patterns of the ePDG (Evolved Packet Data Gateway)",
+                        "items": {
+                          "description": "WiFi calling DNS patterns of the ePDG (Evolved Packet Data Gateway)",
+                          "format": "pattern",
+                          "maxLength": 63,
+                          "minLength": 1,
+                          "type": "string",
+                          "x-patternSources": "dns-pattern",
+                          "x-patterns": "'([A-Za-z0-9]+(\\.?_?-?[A-Za-z0-9]+)*)+\\.([A-Za-z][-A-Za-z]{1,62}){1}'",
+                          "x-supportedDeviceType": [
+                            "Access Point"
+                          ]
+                        },
+                        "maxItems": 2147483647,
+                        "type": "array"
+                      }
+                    }
+                  },
+                  "maxItems": 22,
+                  "type": "array",
+                  "x-key": [
+                    "carrierName"
+                  ],
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ]
+                }
+              }
+            },
+            "maxItems": 2147483647,
+            "type": "array",
+            "x-key": [
+              "name"
+            ],
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          }
+        },
+        "x-supportedDeviceType": [
+          "Access Point"
+        ]
+      },
+      "ArubaDapApplication_DapApplicationprofileSchema": {
+        "properties": {
+          "description": {
+            "description": "DAP application description.",
+            "format": "const",
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "name": {
+            "description": "DAP application's name.",
+            "enum": [
+              "AMAZON_AWS",
+              "AZURE_MS",
+              "CISCO_WEBEX",
+              "DROPBOX",
+              "FACETIME_AUDIO",
+              "FACETIME_VIDEO",
+              "GOOGLE_GCP",
+              "GITHUB",
+              "GLCP",
+              "GOOGLE_MEET",
+              "GOTOMEETING",
+              "JABBER_AUDIO",
+              "JABBER_DESKTOP_SHARING",
+              "JABBER_MC",
+              "JABBER_VIDEO",
+              "OFFICE365",
+              "MICROSOFT_ONEDRIVE",
+              "MICROSOFT_SHAREPOINT",
+              "SIP_AUDIO",
+              "SIP_VIDEO",
+              "SKYPE_AUDIO",
+              "SKYPE_DESKTOP_SHARING",
+              "SKYPE_VIDEO",
+              "SLACK",
+              "TEAMS_AUDIO",
+              "TEAMS_VIDEO",
+              "VOCERA",
+              "WEBRTC_AUDIO",
+              "WEBRTC_VIDEO",
+              "WHATSAPP",
+              "WIFI_CALLING",
+              "ZOOM_AUDIO",
+              "ZOOM_DS",
+              "ZOOM_VIDEO"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "AMAZON_AWS": "Application amazon-aws.",
+              "AZURE_MS": "Application azure-ms.",
+              "CISCO_WEBEX": "Application cisco-webex.",
+              "DROPBOX": "Application dropbox.",
+              "FACETIME_AUDIO": "Application facetime-audio.",
+              "FACETIME_VIDEO": "Application facetime-video.",
+              "GITHUB": "Application github.",
+              "GLCP": "Application glcp.",
+              "GOOGLE_GCP": "Application google-gcp.",
+              "GOOGLE_MEET": "Application google-meet.",
+              "GOTOMEETING": "Application gotomeeting.",
+              "JABBER_AUDIO": "Application jabber-audio.",
+              "JABBER_DESKTOP_SHARING": "Application jabber-desktop-sharing.",
+              "JABBER_MC": "Application jabber-mc.",
+              "JABBER_VIDEO": "Application jabber-video.",
+              "MICROSOFT_ONEDRIVE": "Application microsoft-onedrive.",
+              "MICROSOFT_SHAREPOINT": "Application microsoft-sharepoint.",
+              "OFFICE365": "Application office365.",
+              "SIP_AUDIO": "Application sip-audio.",
+              "SIP_VIDEO": "Application sip-video.",
+              "SKYPE_AUDIO": "Application skype-audio.",
+              "SKYPE_DESKTOP_SHARING": "Application skype-desktop-sharing.",
+              "SKYPE_VIDEO": "Application skype-video.",
+              "SLACK": "Application slack.",
+              "TEAMS_AUDIO": "Application teams-audio.",
+              "TEAMS_VIDEO": "Application teams-video.",
+              "VOCERA": "Application vocera.",
+              "WEBRTC_AUDIO": "Application webrtc-audio.",
+              "WEBRTC_VIDEO": "Application webrtc-video.",
+              "WHATSAPP": "Application whatsapp.",
+              "WIFI_CALLING": "Application wifi-calling.",
+              "ZOOM_AUDIO": "Application zoom-audio.",
+              "ZOOM_DS": "Application zoom-ds.",
+              "ZOOM_VIDEO": "Application zoom-video."
+            },
+            "x-supportedDeviceType": [
+              "Access Point"
+            ],
+            "x-typeDescription": "Application's names."
+          },
+          "sla-profile": {
+            "description": "The DAP SLA profile which can be referenced by current DAP application profile.",
+            "format": "const",
+            "maxLength": 32,
+            "minLength": 1,
+            "type": "string",
+            "x-path": "/ac-dap-sla:dap-sla/ac-dap-sla:profile/ac-dap-sla:name",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "wificall-dns": {
+            "description": "Wifi Calling DNS configuration.",
+            "items": {
+              "properties": {
+                "carrier-name": {
+                  "description": "Carrier name of the fqdn list.",
+                  "format": "const",
+                  "maxLength": 63,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "dns-pattern": {
+                  "description": "WiFi calling DNS patterns of the ePDG (Evolved Packet Data Gateway)",
+                  "items": {
+                    "description": "WiFi calling DNS patterns of the ePDG (Evolved Packet Data Gateway)",
+                    "format": "pattern",
+                    "maxLength": 63,
+                    "minLength": 1,
+                    "type": "string",
+                    "x-patternSources": "dns-pattern",
+                    "x-patterns": "'([A-Za-z0-9]+(\\.?_?-?[A-Za-z0-9]+)*)+\\.([A-Za-z][-A-Za-z]{1,62}){1}'",
+                    "x-supportedDeviceType": [
+                      "Access Point"
+                    ]
+                  },
+                  "maxItems": 2147483647,
+                  "type": "array"
+                }
+              }
+            },
+            "maxItems": 22,
+            "type": "array",
+            "x-key": [
+              "carrierName"
+            ],
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          }
+        }
+      },
+      "ArubaDapApplication_DapApplicationprofileSchemaGet": {
+        "properties": {
+          "description": {
+            "description": "DAP application description.",
+            "format": "const",
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "name": {
+            "description": "DAP application's name.",
+            "enum": [
+              "AMAZON_AWS",
+              "AZURE_MS",
+              "CISCO_WEBEX",
+              "DROPBOX",
+              "FACETIME_AUDIO",
+              "FACETIME_VIDEO",
+              "GOOGLE_GCP",
+              "GITHUB",
+              "GLCP",
+              "GOOGLE_MEET",
+              "GOTOMEETING",
+              "JABBER_AUDIO",
+              "JABBER_DESKTOP_SHARING",
+              "JABBER_MC",
+              "JABBER_VIDEO",
+              "OFFICE365",
+              "MICROSOFT_ONEDRIVE",
+              "MICROSOFT_SHAREPOINT",
+              "SIP_AUDIO",
+              "SIP_VIDEO",
+              "SKYPE_AUDIO",
+              "SKYPE_DESKTOP_SHARING",
+              "SKYPE_VIDEO",
+              "SLACK",
+              "TEAMS_AUDIO",
+              "TEAMS_VIDEO",
+              "VOCERA",
+              "WEBRTC_AUDIO",
+              "WEBRTC_VIDEO",
+              "WHATSAPP",
+              "WIFI_CALLING",
+              "ZOOM_AUDIO",
+              "ZOOM_DS",
+              "ZOOM_VIDEO"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "AMAZON_AWS": "Application amazon-aws.",
+              "AZURE_MS": "Application azure-ms.",
+              "CISCO_WEBEX": "Application cisco-webex.",
+              "DROPBOX": "Application dropbox.",
+              "FACETIME_AUDIO": "Application facetime-audio.",
+              "FACETIME_VIDEO": "Application facetime-video.",
+              "GITHUB": "Application github.",
+              "GLCP": "Application glcp.",
+              "GOOGLE_GCP": "Application google-gcp.",
+              "GOOGLE_MEET": "Application google-meet.",
+              "GOTOMEETING": "Application gotomeeting.",
+              "JABBER_AUDIO": "Application jabber-audio.",
+              "JABBER_DESKTOP_SHARING": "Application jabber-desktop-sharing.",
+              "JABBER_MC": "Application jabber-mc.",
+              "JABBER_VIDEO": "Application jabber-video.",
+              "MICROSOFT_ONEDRIVE": "Application microsoft-onedrive.",
+              "MICROSOFT_SHAREPOINT": "Application microsoft-sharepoint.",
+              "OFFICE365": "Application office365.",
+              "SIP_AUDIO": "Application sip-audio.",
+              "SIP_VIDEO": "Application sip-video.",
+              "SKYPE_AUDIO": "Application skype-audio.",
+              "SKYPE_DESKTOP_SHARING": "Application skype-desktop-sharing.",
+              "SKYPE_VIDEO": "Application skype-video.",
+              "SLACK": "Application slack.",
+              "TEAMS_AUDIO": "Application teams-audio.",
+              "TEAMS_VIDEO": "Application teams-video.",
+              "VOCERA": "Application vocera.",
+              "WEBRTC_AUDIO": "Application webrtc-audio.",
+              "WEBRTC_VIDEO": "Application webrtc-video.",
+              "WHATSAPP": "Application whatsapp.",
+              "WIFI_CALLING": "Application wifi-calling.",
+              "ZOOM_AUDIO": "Application zoom-audio.",
+              "ZOOM_DS": "Application zoom-ds.",
+              "ZOOM_VIDEO": "Application zoom-video."
+            },
+            "x-supportedDeviceType": [
+              "Access Point"
+            ],
+            "x-typeDescription": "Application's names."
+          },
+          "sla-profile": {
+            "description": "The DAP SLA profile which can be referenced by current DAP application profile.",
+            "format": "const",
+            "maxLength": 32,
+            "minLength": 1,
+            "type": "string",
+            "x-path": "/ac-dap-sla:dap-sla/ac-dap-sla:profile/ac-dap-sla:name",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "wificall-dns": {
+            "description": "Wifi Calling DNS configuration.",
+            "items": {
+              "properties": {
+                "carrier-name": {
+                  "description": "Carrier name of the fqdn list.",
+                  "format": "const",
+                  "maxLength": 63,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "dns-pattern": {
+                  "description": "WiFi calling DNS patterns of the ePDG (Evolved Packet Data Gateway)",
+                  "items": {
+                    "description": "WiFi calling DNS patterns of the ePDG (Evolved Packet Data Gateway)",
+                    "format": "pattern",
+                    "maxLength": 63,
+                    "minLength": 1,
+                    "type": "string",
+                    "x-patternSources": "dns-pattern",
+                    "x-patterns": "'([A-Za-z0-9]+(\\.?_?-?[A-Za-z0-9]+)*)+\\.([A-Za-z][-A-Za-z]{1,62}){1}'",
+                    "x-supportedDeviceType": [
+                      "Access Point"
+                    ]
+                  },
+                  "maxItems": 2147483647,
+                  "type": "array"
+                }
+              }
+            },
+            "maxItems": 22,
+            "type": "array",
+            "x-key": [
+              "carrierName"
+            ],
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          }
+        }
+      },
+      "ArubaDapSla_DapSlaSchemaGET": {
+        "description": "Dynamic application prioritization(DAP) SLA profile allow to configure some SLA parameters such as latency,\njitter, and so on, based on which some specific applications can be optimized. A name is a unique identifier\nthat names an DAP SLA profile, the SLA profile numbers can be up to 32.",
+        "properties": {
+          "profile": {
+            "description": "Dynamic application prioritization(DAP) SLA profile.",
+            "items": {
+              "properties": {
+                "bitrate": {
+                  "description": "Bitrate.",
+                  "format": "int32",
+                  "maximum": 2147483647,
+                  "minimum": -2147483648,
+                  "type": "integer",
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ]
+                },
+                "burst-size": {
+                  "description": "Burst count.",
+                  "format": "int32",
+                  "maximum": 2147483647,
+                  "minimum": -2147483648,
+                  "type": "integer",
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ]
+                },
+                "delay": {
+                  "description": "Average delay - Roundtrip time.",
+                  "format": "int32",
+                  "maximum": 2147483647,
+                  "minimum": -2147483648,
+                  "type": "integer",
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ]
+                },
+                "description": {
+                  "description": "DAP SLA profile description.",
+                  "format": "const",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "dscp": {
+                  "description": "Traffic Category.",
+                  "format": "int32",
+                  "maximum": 63,
+                  "minimum": -2147483648,
+                  "type": "integer",
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ]
+                },
+                "jitter": {
+                  "description": "Average Jitter - variation in the time it takes for data packets to arrive at a destination over a network.",
+                  "format": "int32",
+                  "maximum": 2147483647,
+                  "minimum": -2147483648,
+                  "type": "integer",
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ]
+                },
+                "latency": {
+                  "description": "One way delay - Time it takes for data to pass from one point on a network to another.",
+                  "format": "int32",
+                  "maximum": 2147483647,
+                  "minimum": -2147483648,
+                  "type": "integer",
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ]
+                },
+                "max-si": {
+                  "description": "Max Service Interval - minimum interval between the start of two consecutive Service Periods.",
+                  "format": "int32",
+                  "maximum": 2147483647,
+                  "minimum": -2147483648,
+                  "type": "integer",
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ]
+                },
+                "min-si": {
+                  "description": "Min Service Interval - minimum interval between the start of two consecutive Service periods.",
+                  "format": "int32",
+                  "maximum": 2147483647,
+                  "minimum": -2147483648,
+                  "type": "integer",
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ]
+                },
+                "msdu-lifetime": {
+                  "description": "Max Delay bound - maximum amount of time, in milliseconds, since the arrival of the MSDU at the MAC data service interface beyond which the MSDU is not useful even if received by the receiver.",
+                  "format": "int32",
+                  "maximum": 2147483647,
+                  "minimum": -2147483648,
+                  "type": "integer",
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ]
+                },
+                "msdu-size": {
+                  "description": "Max packet size -  maximum size of an MSDU belonging to the traffic flow described by this element.",
+                  "format": "int32",
+                  "maximum": 2147483647,
+                  "minimum": -2147483648,
+                  "type": "integer",
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ]
+                },
+                "name": {
+                  "description": "DAP SLA profile name.",
+                  "format": "const",
+                  "maxLength": 32,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ]
+                },
+                "pktloss": {
+                  "description": "Packet Loss count.",
+                  "format": "int32",
+                  "maximum": 2147483647,
+                  "minimum": -2147483648,
+                  "type": "integer",
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ]
+                }
+              }
+            },
+            "maxItems": 2147483647,
+            "type": "array",
+            "x-key": [
+              "name"
+            ]
+          }
+        },
+        "x-supportedDeviceType": [
+          "Access Point"
+        ]
+      },
+      "ArubaDapSla_DapSlaprofileSchema": {
+        "properties": {
+          "bitrate": {
+            "description": "Bitrate.",
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "burst-size": {
+            "description": "Burst count.",
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "delay": {
+            "description": "Average delay - Roundtrip time.",
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "description": {
+            "description": "DAP SLA profile description.",
+            "format": "const",
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "dscp": {
+            "description": "Traffic Category.",
+            "format": "int32",
+            "maximum": 63,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "jitter": {
+            "description": "Average Jitter - variation in the time it takes for data packets to arrive at a destination over a network.",
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "latency": {
+            "description": "One way delay - Time it takes for data to pass from one point on a network to another.",
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "max-si": {
+            "description": "Max Service Interval - minimum interval between the start of two consecutive Service Periods.",
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "min-si": {
+            "description": "Min Service Interval - minimum interval between the start of two consecutive Service periods.",
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "msdu-lifetime": {
+            "description": "Max Delay bound - maximum amount of time, in milliseconds, since the arrival of the MSDU at the MAC data service interface beyond which the MSDU is not useful even if received by the receiver.",
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "msdu-size": {
+            "description": "Max packet size -  maximum size of an MSDU belonging to the traffic flow described by this element.",
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "name": {
+            "description": "DAP SLA profile name.",
+            "format": "const",
+            "maxLength": 32,
+            "minLength": 1,
+            "type": "string",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "pktloss": {
+            "description": "Packet Loss count.",
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          }
+        }
+      },
+      "ArubaDapSla_DapSlaprofileSchemaGet": {
+        "properties": {
+          "bitrate": {
+            "description": "Bitrate.",
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "burst-size": {
+            "description": "Burst count.",
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "delay": {
+            "description": "Average delay - Roundtrip time.",
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "description": {
+            "description": "DAP SLA profile description.",
+            "format": "const",
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "dscp": {
+            "description": "Traffic Category.",
+            "format": "int32",
+            "maximum": 63,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "jitter": {
+            "description": "Average Jitter - variation in the time it takes for data packets to arrive at a destination over a network.",
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "latency": {
+            "description": "One way delay - Time it takes for data to pass from one point on a network to another.",
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "max-si": {
+            "description": "Max Service Interval - minimum interval between the start of two consecutive Service Periods.",
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "min-si": {
+            "description": "Min Service Interval - minimum interval between the start of two consecutive Service periods.",
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "msdu-lifetime": {
+            "description": "Max Delay bound - maximum amount of time, in milliseconds, since the arrival of the MSDU at the MAC data service interface beyond which the MSDU is not useful even if received by the receiver.",
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "msdu-size": {
+            "description": "Max packet size -  maximum size of an MSDU belonging to the traffic flow described by this element.",
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "name": {
+            "description": "DAP SLA profile name.",
+            "format": "const",
+            "maxLength": 32,
+            "minLength": 1,
+            "type": "string",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "pktloss": {
+            "description": "Packet Loss count.",
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "type": "integer",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          }
+        }
+      },
+      "ArubaDap_DapSchemaGET": {
+        "description": "Dynamic application prioritization(DAP) is an application-aware QoS feature.\nUnlike traditional QoS methods that treat all traffic matching a classification the same,\ndynamic application prioritization adjusts based on each individual application’s needs.\nDynamic Application Priorization automatically adjusts the advanced RF parameters such as\nuplink-scheduling to satisfy stringent SLAs of business-critical applications. This ensures\nimproved user experience even in the most challenging RF conditions.",
+        "properties": {
+          "profile": {
+            "description": "Dynamic application prioritization(DAP) global profile. Each AP only support one profile.",
+            "items": {
+              "properties": {
+                "description": {
+                  "description": "DAP profile description.",
+                  "format": "const",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "dyn-app-prioritization": {
+                  "default": "false",
+                  "description": "Enable DAP policy. This is a global DAP switch, must configure both of\nthis switch and per-role DAP switch to make DAP policy work.",
+                  "type": "boolean",
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ]
+                },
+                "name": {
+                  "description": "DAP profile name.",
+                  "format": "pattern",
+                  "maxLength": 32,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-patternSources": "name",
+                  "x-patterns": "'[^\\s\\[\\]|\\\\()/'\";<>*{}]+'"
+                },
+                "netsvc-sip": {
+                  "description": "Netservice SIP configuration.",
+                  "items": {
+                    "properties": {
+                      "port": {
+                        "description": "Custom SIP port for parsing SIP control packets",
+                        "format": "int32",
+                        "maximum": 65535,
+                        "minimum": 0,
+                        "type": "integer",
+                        "x-supportedDeviceType": [
+                          "Access Point"
+                        ],
+                        "x-typeDescription": "A 16-bit port number used by a transport protocol such as TCP\nor UDP."
+                      },
+                      "protocol": {
+                        "description": "TCP or UDP are the only two options supported for SIP protocol",
+                        "enum": [
+                          "TCP",
+                          "UDP"
+                        ],
+                        "format": "enum",
+                        "type": "string",
+                        "x-enumDescriptions": {
+                          "TCP": "Netservice SIP TCP",
+                          "UDP": "Netservice SIP UDP"
+                        },
+                        "x-supportedDeviceType": [
+                          "Access Point"
+                        ],
+                        "x-typeDescription": "netservice SIP protocol type"
+                      },
+                      "timeout-min": {
+                        "description": "Timeout for the UDP or TCP SIP protocol control plane sessions in minutes",
+                        "format": "int64",
+                        "maximum": 30,
+                        "minimum": 15,
+                        "type": "integer",
+                        "x-supportedDeviceType": [
+                          "Access Point"
+                        ]
+                      }
+                    }
+                  },
+                  "maxItems": 10,
+                  "type": "array",
+                  "x-key": [
+                    "port"
+                  ]
+                },
+                "voice-tracking-snmptrap": {
+                  "default": "false",
+                  "description": "Enables sending SNMP Traps to SNMP server when voice calls are detected",
+                  "type": "boolean",
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ]
+                }
+              }
+            },
+            "maxItems": 2147483647,
+            "type": "array",
+            "x-key": [
+              "name"
+            ]
+          }
+        },
+        "x-supportedDeviceType": [
+          "Access Point"
+        ]
+      },
+      "ArubaDap_DapprofileSchema": {
+        "properties": {
+          "description": {
+            "description": "DAP profile description.",
+            "format": "const",
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "dyn-app-prioritization": {
+            "default": "false",
+            "description": "Enable DAP policy. This is a global DAP switch, must configure both of\nthis switch and per-role DAP switch to make DAP policy work.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "name": {
+            "description": "DAP profile name.",
+            "format": "pattern",
+            "maxLength": 32,
+            "minLength": 1,
+            "type": "string",
+            "x-patternSources": "name",
+            "x-patterns": "'[^\\s\\[\\]|\\\\()/'\";<>*{}]+'"
+          },
+          "netsvc-sip": {
+            "description": "Netservice SIP configuration.",
+            "items": {
+              "properties": {
+                "port": {
+                  "description": "Custom SIP port for parsing SIP control packets",
+                  "format": "int32",
+                  "maximum": 65535,
+                  "minimum": 0,
+                  "type": "integer",
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ],
+                  "x-typeDescription": "A 16-bit port number used by a transport protocol such as TCP\nor UDP."
+                },
+                "protocol": {
+                  "description": "TCP or UDP are the only two options supported for SIP protocol",
+                  "enum": [
+                    "TCP",
+                    "UDP"
+                  ],
+                  "format": "enum",
+                  "type": "string",
+                  "x-enumDescriptions": {
+                    "TCP": "Netservice SIP TCP",
+                    "UDP": "Netservice SIP UDP"
+                  },
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ],
+                  "x-typeDescription": "netservice SIP protocol type"
+                },
+                "timeout-min": {
+                  "description": "Timeout for the UDP or TCP SIP protocol control plane sessions in minutes",
+                  "format": "int64",
+                  "maximum": 30,
+                  "minimum": 15,
+                  "type": "integer",
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ]
+                }
+              }
+            },
+            "maxItems": 10,
+            "type": "array",
+            "x-key": [
+              "port"
+            ]
+          },
+          "voice-tracking-snmptrap": {
+            "default": "false",
+            "description": "Enables sending SNMP Traps to SNMP server when voice calls are detected",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          }
+        }
+      },
+      "ArubaDap_DapprofileSchemaGet": {
+        "properties": {
+          "description": {
+            "description": "DAP profile description.",
+            "format": "const",
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "dyn-app-prioritization": {
+            "default": "false",
+            "description": "Enable DAP policy. This is a global DAP switch, must configure both of\nthis switch and per-role DAP switch to make DAP policy work.",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Access Point"
+            ]
+          },
+          "name": {
+            "description": "DAP profile name.",
+            "format": "pattern",
+            "maxLength": 32,
+            "minLength": 1,
+            "type": "string",
+            "x-patternSources": "name",
+            "x-patterns": "'[^\\s\\[\\]|\\\\()/'\";<>*{}]+'"
+          },
+          "netsvc-sip": {
+            "description": "Netservice SIP configuration.",
+            "items": {
+              "properties": {
+                "port": {
+                  "description": "Custom SIP port for parsing SIP control packets",
+                  "format": "int32",
+                  "maximum": 65535,
+                  "minimum": 0,
+                  "type": "integer",
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ],
+                  "x-typeDescription": "A 16-bit port number used by a transport protocol such as TCP\nor UDP."
+                },
+                "protocol": {
+                  "description": "TCP or UDP are the only two options supported for SIP protocol",
+                  "enum": [
+                    "TCP",
+                    "UDP"
+                  ],
+                  "format": "enum",
+                  "type": "string",
+                  "x-enumDescriptions": {
+                    "TCP": "Netservice SIP TCP",
+                    "UDP": "Netservice SIP UDP"
+                  },
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ],
+                  "x-typeDescription": "netservice SIP protocol type"
+                },
+                "timeout-min": {
+                  "description": "Timeout for the UDP or TCP SIP protocol control plane sessions in minutes",
+                  "format": "int64",
+                  "maximum": 30,
+                  "minimum": 15,
+                  "type": "integer",
+                  "x-supportedDeviceType": [
+                    "Access Point"
+                  ]
+                }
+              }
+            },
+            "maxItems": 10,
+            "type": "array",
+            "x-key": [
+              "port"
+            ]
+          },
+          "voice-tracking-snmptrap": {
+            "default": "false",
+            "description": "Enables sending SNMP Traps to SNMP server when voice calls are detected",
+            "type": "boolean",
+            "x-supportedDeviceType": [
+              "Access Point"
             ]
           }
         }
@@ -2190,6 +3352,89 @@
           "summary": "Create operation for profiles",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "List of App Bandwidth Contract profiles. Each profile is identified by a\nunique name and groups up to four types of directional bandwidth contracts:\nDPI application (app), DPI application category (app-category), WebCC\nreputation score (web-reputation), and WebCC category (web-category).\nThe combined total number of entries across all four contract lists within\na single profile must not exceed 32.",
+        "operationId": "replaceAppBandwidthContractsProfilesByID",
+        "parameters": [
+          {
+            "description": "App bandwidth Contract profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAppBandwidthContract_AppBandwidthContractsprofilesSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add or update existing app bandwidth contract profile",
+        "tags": [
+          "App Bandwidth Contract"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceAppBandwidthContractsProfilesCmd",
+          "commandUse": "profiles",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceAppBandwidthContractsCmd",
+          "pathToPrint": "/app-bandwidth-contracts/profiles/%s/",
+          "summary": "Replace operation for profiles",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/arc": {
@@ -2649,6 +3894,1715 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Global profile for ARC Configurations",
+        "operationId": "replaceArcProfileByID",
+        "parameters": [
+          {
+            "description": "Configure a profile name. Only alphanumeric characters, space, hyphen, underscore, hash, and period are allowed.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAppRecogControl_ArcprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing ARC profile of {name}",
+        "tags": [
+          "App Recog Control"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceArcProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceArcCmd",
+          "pathToPrint": "/arc/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
+      }
+    },
+    "/network-config/v1alpha1/dap": {
+      "get": {
+        "description": "Dynamic application prioritization(DAP) is an application-aware QoS feature.\nUnlike traditional QoS methods that treat all traffic matching a classification the same,\ndynamic application prioritization adjusts based on each individual application’s needs.\nDynamic Application Priorization automatically adjusts the advanced RF parameters such as\nuplink-scheduling to satisfy stringent SLAs of business-critical applications. This ensures\nimproved user experience even in the most challenging RF conditions.",
+        "operationId": "readDap",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/view_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/get_device_function"
+          },
+          {
+            "$ref": "#/components/parameters/effective"
+          },
+          {
+            "$ref": "#/components/parameters/detailed"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArubaDap_DapSchemaGET"
+                }
+              }
+            },
+            "description": "Successful operation",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Read configured DAP policy",
+        "tags": [
+          "Dap"
+        ],
+        "x-cliParam": {
+          "commandName": "readDapCmd",
+          "commandUse": "dap",
+          "parentCommand": "readCmd",
+          "pathToPrint": "/dap/",
+          "summary": "Read operation for dap"
+        }
+      }
+    },
+    "/network-config/v1alpha1/dap-application": {
+      "get": {
+        "description": "Configure a DAP application profile is for optimizing this application. One DAP SLA profile\nhas to be configured under the DAP application profile knob to indicate how to optimize this\napplication. The application profile number can be up to 32.",
+        "operationId": "readDapApplication",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/view_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/get_device_function"
+          },
+          {
+            "$ref": "#/components/parameters/effective"
+          },
+          {
+            "$ref": "#/components/parameters/detailed"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArubaDapApplication_DapApplicationSchemaGET"
+                }
+              }
+            },
+            "description": "Successful operation",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Read configured DAP application profile",
+        "tags": [
+          "Dap Application"
+        ],
+        "x-cliParam": {
+          "commandName": "readDapApplicationCmd",
+          "commandUse": "dap-application",
+          "parentCommand": "readCmd",
+          "pathToPrint": "/dap-application/",
+          "summary": "Read operation for dap-application"
+        }
+      }
+    },
+    "/network-config/v1alpha1/dap-application/{name}": {
+      "delete": {
+        "description": "DAP application profile.",
+        "operationId": "deleteDapApplicationProfileByID",
+        "parameters": [
+          {
+            "description": "DAP application's name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/delete_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/delete_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/delete_device_function"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Delete the DAP application profile",
+        "tags": [
+          "Dap Application"
+        ],
+        "x-cliParam": {
+          "commandName": "deleteDapApplicationProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "deleteDapApplicationCmd",
+          "pathToPrint": "/dap-application/profile/%s/",
+          "summary": "Delete operation for profile",
+          "totParams": 1
+        }
+      },
+      "get": {
+        "description": "DAP application profile.",
+        "operationId": "readDapApplicationProfileByID",
+        "parameters": [
+          {
+            "description": "DAP application's name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/view_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/get_device_function"
+          },
+          {
+            "$ref": "#/components/parameters/effective"
+          },
+          {
+            "$ref": "#/components/parameters/detailed"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArubaDapApplication_DapApplicationprofileSchemaGet"
+                }
+              }
+            },
+            "description": "Successful operation",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Read existing DAP application profile configuration",
+        "tags": [
+          "Dap Application"
+        ],
+        "x-cliParam": {
+          "commandName": "readDapApplicationProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "readDapApplicationCmd",
+          "pathToPrint": "/dap-application/profile/%s/",
+          "summary": "Read operation for profile",
+          "totParams": 1
+        }
+      },
+      "patch": {
+        "description": "DAP application profile.",
+        "operationId": "updateDapApplicationProfileByID",
+        "parameters": [
+          {
+            "description": "DAP application's name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/patch_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/patch_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/patch_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaDapApplication_DapApplicationprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update existing DAP application profile configuration",
+        "tags": [
+          "Dap Application"
+        ],
+        "x-cliParam": {
+          "commandName": "updateDapApplicationProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "updateDapApplicationCmd",
+          "pathToPrint": "/dap-application/profile/%s/",
+          "summary": "Update operation for profile",
+          "totParams": 1
+        }
+      },
+      "post": {
+        "description": "DAP application profile.",
+        "operationId": "createDapApplicationProfileByID",
+        "parameters": [
+          {
+            "description": "DAP application's name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaDapApplication_DapApplicationprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create a new DAP application profile by unique name",
+        "tags": [
+          "Dap Application"
+        ],
+        "x-cliParam": {
+          "commandName": "createDapApplicationProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "createDapApplicationCmd",
+          "pathToPrint": "/dap-application/profile/%s/",
+          "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "DAP application profile.",
+        "operationId": "replaceDapApplicationProfileByID",
+        "parameters": [
+          {
+            "description": "DAP application's name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaDapApplication_DapApplicationprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing DAP application profile configuration",
+        "tags": [
+          "Dap Application"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceDapApplicationProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceDapApplicationCmd",
+          "pathToPrint": "/dap-application/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
+      }
+    },
+    "/network-config/v1alpha1/dap-sla": {
+      "get": {
+        "description": "Dynamic application prioritization(DAP) SLA profile allow to configure some SLA parameters such as latency,\njitter, and so on, based on which some specific applications can be optimized. A name is a unique identifier\nthat names an DAP SLA profile, the SLA profile numbers can be up to 32.",
+        "operationId": "readDapSla",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/view_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/get_device_function"
+          },
+          {
+            "$ref": "#/components/parameters/effective"
+          },
+          {
+            "$ref": "#/components/parameters/detailed"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArubaDapSla_DapSlaSchemaGET"
+                }
+              }
+            },
+            "description": "Successful operation",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Read configured DAP SLA policy",
+        "tags": [
+          "Dap Sla"
+        ],
+        "x-cliParam": {
+          "commandName": "readDapSlaCmd",
+          "commandUse": "dap-sla",
+          "parentCommand": "readCmd",
+          "pathToPrint": "/dap-sla/",
+          "summary": "Read operation for dap-sla"
+        }
+      }
+    },
+    "/network-config/v1alpha1/dap-sla/{name}": {
+      "delete": {
+        "description": "Dynamic application prioritization(DAP) SLA profile.",
+        "operationId": "deleteDapSlaProfileByID",
+        "parameters": [
+          {
+            "description": "DAP SLA profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/delete_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/delete_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/delete_device_function"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Delete the DAP SLA profile",
+        "tags": [
+          "Dap Sla"
+        ],
+        "x-cliParam": {
+          "commandName": "deleteDapSlaProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "deleteDapSlaCmd",
+          "pathToPrint": "/dap-sla/profile/%s/",
+          "summary": "Delete operation for profile",
+          "totParams": 1
+        }
+      },
+      "get": {
+        "description": "Dynamic application prioritization(DAP) SLA profile.",
+        "operationId": "readDapSlaProfileByID",
+        "parameters": [
+          {
+            "description": "DAP SLA profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/view_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/get_device_function"
+          },
+          {
+            "$ref": "#/components/parameters/effective"
+          },
+          {
+            "$ref": "#/components/parameters/detailed"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArubaDapSla_DapSlaprofileSchemaGet"
+                }
+              }
+            },
+            "description": "Successful operation",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Read existing DAP SLA profile configuration",
+        "tags": [
+          "Dap Sla"
+        ],
+        "x-cliParam": {
+          "commandName": "readDapSlaProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "readDapSlaCmd",
+          "pathToPrint": "/dap-sla/profile/%s/",
+          "summary": "Read operation for profile",
+          "totParams": 1
+        }
+      },
+      "patch": {
+        "description": "Dynamic application prioritization(DAP) SLA profile.",
+        "operationId": "updateDapSlaProfileByID",
+        "parameters": [
+          {
+            "description": "DAP SLA profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/patch_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/patch_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/patch_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaDapSla_DapSlaprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update existing DAP SLA profile configuration",
+        "tags": [
+          "Dap Sla"
+        ],
+        "x-cliParam": {
+          "commandName": "updateDapSlaProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "updateDapSlaCmd",
+          "pathToPrint": "/dap-sla/profile/%s/",
+          "summary": "Update operation for profile",
+          "totParams": 1
+        }
+      },
+      "post": {
+        "description": "Dynamic application prioritization(DAP) SLA profile.",
+        "operationId": "createDapSlaProfileByID",
+        "parameters": [
+          {
+            "description": "DAP SLA profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaDapSla_DapSlaprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create a new DAP SLA profile by unique name",
+        "tags": [
+          "Dap Sla"
+        ],
+        "x-cliParam": {
+          "commandName": "createDapSlaProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "createDapSlaCmd",
+          "pathToPrint": "/dap-sla/profile/%s/",
+          "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Dynamic application prioritization(DAP) SLA profile.",
+        "operationId": "replaceDapSlaProfileByID",
+        "parameters": [
+          {
+            "description": "DAP SLA profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaDapSla_DapSlaprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing DAP SLA profile configuration",
+        "tags": [
+          "Dap Sla"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceDapSlaProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceDapSlaCmd",
+          "pathToPrint": "/dap-sla/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
+      }
+    },
+    "/network-config/v1alpha1/dap/{name}": {
+      "delete": {
+        "description": "Dynamic application prioritization(DAP) global profile. Each AP only support one profile.",
+        "operationId": "deleteDapProfileByID",
+        "parameters": [
+          {
+            "description": "DAP profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/delete_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/delete_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/delete_device_function"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Delete the profile for DAP",
+        "tags": [
+          "Dap"
+        ],
+        "x-cliParam": {
+          "commandName": "deleteDapProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "deleteDapCmd",
+          "pathToPrint": "/dap/profile/%s/",
+          "summary": "Delete operation for profile",
+          "totParams": 1
+        }
+      },
+      "get": {
+        "description": "Dynamic application prioritization(DAP) global profile. Each AP only support one profile.",
+        "operationId": "readDapProfileByID",
+        "parameters": [
+          {
+            "description": "DAP profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/view_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/get_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/get_device_function"
+          },
+          {
+            "$ref": "#/components/parameters/effective"
+          },
+          {
+            "$ref": "#/components/parameters/detailed"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArubaDap_DapprofileSchemaGet"
+                }
+              }
+            },
+            "description": "Successful operation",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-RateLimit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-RateLimit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Read configured profile for DAP",
+        "tags": [
+          "Dap"
+        ],
+        "x-cliParam": {
+          "commandName": "readDapProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "readDapCmd",
+          "pathToPrint": "/dap/profile/%s/",
+          "summary": "Read operation for profile",
+          "totParams": 1
+        }
+      },
+      "patch": {
+        "description": "Dynamic application prioritization(DAP) global profile. Each AP only support one profile.",
+        "operationId": "updateDapProfileByID",
+        "parameters": [
+          {
+            "description": "DAP profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/patch_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/patch_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/patch_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaDap_DapprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update existing DAP profile configurations",
+        "tags": [
+          "Dap"
+        ],
+        "x-cliParam": {
+          "commandName": "updateDapProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "updateDapCmd",
+          "pathToPrint": "/dap/profile/%s/",
+          "summary": "Update operation for profile",
+          "totParams": 1
+        }
+      },
+      "post": {
+        "description": "Dynamic application prioritization(DAP) global profile. Each AP only support one profile.",
+        "operationId": "createDapProfileByID",
+        "parameters": [
+          {
+            "description": "DAP profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaDap_DapprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create profile for DAP",
+        "tags": [
+          "Dap"
+        ],
+        "x-cliParam": {
+          "commandName": "createDapProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "createDapCmd",
+          "pathToPrint": "/dap/profile/%s/",
+          "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Dynamic application prioritization(DAP) global profile. Each AP only support one profile.",
+        "operationId": "replaceDapProfileByID",
+        "parameters": [
+          {
+            "description": "DAP profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaDap_DapprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing DAP profile configurations",
+        "tags": [
+          "Dap"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceDapProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceDapCmd",
+          "pathToPrint": "/dap/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     }
   },
@@ -2729,6 +5683,15 @@
     },
     {
       "name": "App Recog Control"
+    },
+    {
+      "name": "Dap"
+    },
+    {
+      "name": "Dap Application"
+    },
+    {
+      "name": "Dap Sla"
     }
   ],
   "x-readme": {

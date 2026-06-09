@@ -609,7 +609,7 @@
                     }
                   }
                 },
-                "maxItems": 2147483647,
+                "maxItems": 20,
                 "type": "array",
                 "x-key": [
                   "role"
@@ -653,7 +653,7 @@
                     }
                   }
                 },
-                "maxItems": 2147483647,
+                "maxItems": 20,
                 "type": "array",
                 "x-key": [
                   "role"
@@ -668,6 +668,7 @@
             "description": "Configuration of allowed/disallowed VLANs applicable to this service.\nBoth allowed and disallowed VLANS cannot be configured at the same time.",
             "properties": {
               "allowed-vlans": {
+                "description": "List of allowed VLAN ids or range of VLAN ids. This\nlist must be empty if 'disallowed-vlans' has vlans configured",
                 "items": {
                   "description": "List of allowed VLAN ids or range of VLAN ids. This\nlist must be empty if 'disallowed-vlans' has vlans configured",
                   "format": "pattern",
@@ -681,10 +682,11 @@
                   ],
                   "x-typeDescription": "VLANs or only single-tagged VLANs or both. A range is\nspecified as x-y where x and y are valid VLAN IDs\n(1 <= vlan-id <= 4094). The range is assumed to be inclusive,\nsuch that any VLAN-ID matching x <= VLAN-ID <= y falls within\nthe range."
                 },
-                "maxItems": 2147483647,
+                "maxItems": 20,
                 "type": "array"
               },
               "disallowed-vlans": {
+                "description": "List of disallowed VLAN ids or range of VLAN ids. This\nlist must be empty if 'allowed-vlans' has vlans configured",
                 "items": {
                   "description": "List of disallowed VLAN ids or range of VLAN ids. This\nlist must be empty if 'allowed-vlans' has vlans configured",
                   "format": "pattern",
@@ -698,7 +700,7 @@
                   ],
                   "x-typeDescription": "VLANs or only single-tagged VLANs or both. A range is\nspecified as x-y where x and y are valid VLAN IDs\n(1 <= vlan-id <= 4094). The range is assumed to be inclusive,\nsuch that any VLAN-ID matching x <= VLAN-ID <= y falls within\nthe range."
                 },
-                "maxItems": 2147483647,
+                "maxItems": 20,
                 "type": "array"
               },
               "vlan-restriction-mode": {
@@ -749,7 +751,7 @@
                     }
                   }
                 },
-                "maxItems": 2147483647,
+                "maxItems": 20,
                 "type": "array",
                 "x-key": [
                   "role"
@@ -793,7 +795,7 @@
                     }
                   }
                 },
-                "maxItems": 2147483647,
+                "maxItems": 20,
                 "type": "array",
                 "x-key": [
                   "role"
@@ -808,6 +810,7 @@
             "description": "Configuration of allowed/disallowed VLANs applicable to this service.\nBoth allowed and disallowed VLANS cannot be configured at the same time.",
             "properties": {
               "allowed-vlans": {
+                "description": "List of allowed VLAN ids or range of VLAN ids. This\nlist must be empty if 'disallowed-vlans' has vlans configured",
                 "items": {
                   "description": "List of allowed VLAN ids or range of VLAN ids. This\nlist must be empty if 'disallowed-vlans' has vlans configured",
                   "format": "pattern",
@@ -821,10 +824,11 @@
                   ],
                   "x-typeDescription": "VLANs or only single-tagged VLANs or both. A range is\nspecified as x-y where x and y are valid VLAN IDs\n(1 <= vlan-id <= 4094). The range is assumed to be inclusive,\nsuch that any VLAN-ID matching x <= VLAN-ID <= y falls within\nthe range."
                 },
-                "maxItems": 2147483647,
+                "maxItems": 20,
                 "type": "array"
               },
               "disallowed-vlans": {
+                "description": "List of disallowed VLAN ids or range of VLAN ids. This\nlist must be empty if 'allowed-vlans' has vlans configured",
                 "items": {
                   "description": "List of disallowed VLAN ids or range of VLAN ids. This\nlist must be empty if 'allowed-vlans' has vlans configured",
                   "format": "pattern",
@@ -838,7 +842,7 @@
                   ],
                   "x-typeDescription": "VLANs or only single-tagged VLANs or both. A range is\nspecified as x-y where x and y are valid VLAN IDs\n(1 <= vlan-id <= 4094). The range is assumed to be inclusive,\nsuch that any VLAN-ID matching x <= VLAN-ID <= y falls within\nthe range."
                 },
-                "maxItems": 2147483647,
+                "maxItems": 20,
                 "type": "array"
               },
               "vlan-restriction-mode": {
@@ -916,7 +920,7 @@
                           }
                         }
                       },
-                      "maxItems": 2147483647,
+                      "maxItems": 50,
                       "type": "array",
                       "x-key": [
                         "serialNumber"
@@ -940,7 +944,7 @@
                           }
                         }
                       },
-                      "maxItems": 2147483647,
+                      "maxItems": 20,
                       "type": "array",
                       "x-key": [
                         "role"
@@ -959,7 +963,7 @@
                           }
                         }
                       },
-                      "maxItems": 2147483647,
+                      "maxItems": 20,
                       "type": "array",
                       "x-key": [
                         "role"
@@ -1023,7 +1027,7 @@
                     }
                   }
                 },
-                "maxItems": 2147483647,
+                "maxItems": 50,
                 "type": "array",
                 "x-key": [
                   "serialNumber"
@@ -1047,7 +1051,7 @@
                     }
                   }
                 },
-                "maxItems": 2147483647,
+                "maxItems": 20,
                 "type": "array",
                 "x-key": [
                   "role"
@@ -1066,7 +1070,7 @@
                     }
                   }
                 },
-                "maxItems": 2147483647,
+                "maxItems": 20,
                 "type": "array",
                 "x-key": [
                   "role"
@@ -1122,7 +1126,7 @@
                     }
                   }
                 },
-                "maxItems": 2147483647,
+                "maxItems": 50,
                 "type": "array",
                 "x-key": [
                   "serialNumber"
@@ -1146,7 +1150,7 @@
                     }
                   }
                 },
-                "maxItems": 2147483647,
+                "maxItems": 20,
                 "type": "array",
                 "x-key": [
                   "role"
@@ -1165,7 +1169,7 @@
                     }
                   }
                 },
-                "maxItems": 2147483647,
+                "maxItems": 20,
                 "type": "array",
                 "x-key": [
                   "role"
@@ -1271,7 +1275,8 @@
                       }
                     }
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 32,
+                  "minItems": 1,
                   "type": "array",
                   "x-key": [
                     "serviceId"
@@ -1283,7 +1288,7 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 16,
             "type": "array",
             "x-key": [
               "name"
@@ -1386,7 +1391,8 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 32,
+            "minItems": 1,
             "type": "array",
             "x-key": [
               "serviceId"
@@ -1489,7 +1495,8 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 32,
+            "minItems": 1,
             "type": "array",
             "x-key": [
               "serviceId"
@@ -1628,7 +1635,7 @@
                     }
                   }
                 },
-                "maxItems": 2147483647,
+                "maxItems": 3,
                 "type": "array",
                 "x-key": [
                   "name"
@@ -1698,7 +1705,7 @@
                     }
                   }
                 },
-                "maxItems": 2147483647,
+                "maxItems": 3,
                 "type": "array",
                 "x-key": [
                   "name"
@@ -3186,6 +3193,89 @@
           "summary": "Create operation for policy",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "List of policies for each Airgroup service to be applied at different scope.",
+        "operationId": "replaceAirgroupPoliciesPolicyByID",
+        "parameters": [
+          {
+            "description": "Name of the Airgroup service. This should refer to one of the pre-defined services or a custom-service that has been defined by user.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAirgroupPolicy_AirgroupPoliciespolicySchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or modify service policy",
+        "tags": [
+          "Airgroup Policy"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceAirgroupPoliciesPolicyCmd",
+          "commandUse": "policy",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceAirgroupPoliciesCmd",
+          "pathToPrint": "/airgroup-policies/policy/%s/",
+          "summary": "Replace operation for policy",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/airgroup-servers": {
@@ -3643,6 +3733,89 @@
           "parentCommand": "createAirgroupServersCmd",
           "pathToPrint": "/airgroup-servers/server/%s/",
           "summary": "Create operation for server",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "List of Airgroup servers.",
+        "operationId": "replaceAirgroupServersServerByID",
+        "parameters": [
+          {
+            "description": "MAC address of the Airgroup server",
+            "in": "path",
+            "name": "mac-address",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAirgroupServers_AirgroupServersserverSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or modify server",
+        "tags": [
+          "Airgroup Servers"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceAirgroupServersServerCmd",
+          "commandUse": "server",
+          "paramKeys": [
+            {
+              "key": "mac-address"
+            }
+          ],
+          "parentCommand": "replaceAirgroupServersCmd",
+          "pathToPrint": "/airgroup-servers/server/%s/",
+          "summary": "Replace operation for server",
           "totParams": 1
         }
       }
@@ -4104,12 +4277,106 @@
           "summary": "Create operation for service",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Definition of Airgroup services that can have user specified protocol service-ids.",
+        "operationId": "replaceAirgroupServiceDefinitionsServiceByID",
+        "parameters": [
+          {
+            "description": "Unique service name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAirgroupServiceDefinition_AirgroupServiceDefinitionsserviceSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or modify service definition",
+        "tags": [
+          "Airgroup Service Definition"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceAirgroupServiceDefinitionsServiceCmd",
+          "commandUse": "service",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceAirgroupServiceDefinitionsCmd",
+          "pathToPrint": "/airgroup-service-definitions/service/%s/",
+          "summary": "Replace operation for service",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/airgroup-system": {
       "delete": {
         "description": "AirGroup is a unique service that uses zero-configuration networking\n and allows devices to communicate over complex access-network topologies.\n AirGroup supports Bonjour and DLNA services on supported devices.\n This feature is applicable for AP",
         "operationId": "deleteAirgroupSystem",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/delete_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/delete_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/delete_device_function"
+          }
+        ],
         "responses": {
           "200": {
             "$ref": "#/components/responses/200"
@@ -4843,6 +5110,89 @@
           "parentCommand": "createLocationCmd",
           "pathToPrint": "/location/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Location configuration. It supports three methods for locating:\n1, Received Signal Strength Indication (RSSI): Calculate the pathloss of signal to locate a device.\n2, Analytics and Location Engine (ALE): The ALE is designed to gather client information from\n   the network, process it, and share it through a standard API. The client information\n   gathered by ALE can be used for business purposes by analyzing a client’s Internet behavior\n   such as shopping preferences.\n   ALE includes a location engine that calculates the associated and unassociated device\n   location every 30 seconds by default.\n3, Real Time Location System (RTLS): AP supports the real-time tracking of devices\n   when integrated with the Airwave server or a third-party RTLS server such as\n   Aeroscout RTLS server. With the help of the RTLS, the devices can be monitored in\n   real time or through history.\n\nThis feature is only applicable for AP.",
+        "operationId": "replaceLocationProfileByID",
+        "parameters": [
+          {
+            "description": "Profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaLocation_LocationprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or update a new location profile by unique name",
+        "tags": [
+          "Location"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceLocationProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceLocationCmd",
+          "pathToPrint": "/location/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }

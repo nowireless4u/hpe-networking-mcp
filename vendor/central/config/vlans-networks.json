@@ -1665,6 +1665,7 @@
                       "type": "string"
                     },
                     "vlans": {
+                      "description": "List of VLANs for sending loop-protect pdus(Protocol Data Unit)\nfor a port.",
                       "items": {
                         "description": "List of VLANs for sending loop-protect pdus(Protocol Data Unit)\nfor a port.",
                         "format": "int32",
@@ -1720,6 +1721,7 @@
                 "type": "string"
               },
               "vlans": {
+                "description": "List of VLANs for sending loop-protect pdus(Protocol Data Unit)\nfor a port.",
                 "items": {
                   "description": "List of VLANs for sending loop-protect pdus(Protocol Data Unit)\nfor a port.",
                   "format": "int32",
@@ -1760,6 +1762,7 @@
                 "type": "string"
               },
               "vlans": {
+                "description": "List of VLANs for sending loop-protect pdus(Protocol Data Unit)\nfor a port.",
                 "items": {
                   "description": "List of VLANs for sending loop-protect pdus(Protocol Data Unit)\nfor a port.",
                   "format": "int32",
@@ -1782,6 +1785,7 @@
         "description": "IPv4 IGMP Static Group Configurations",
         "properties": {
           "static-group": {
+            "description": "IGMP static group address",
             "items": {
               "description": "IGMP static group address",
               "format": "pattern",
@@ -1804,6 +1808,7 @@
         "description": "IPv4 IGMP Static Group Configurations",
         "properties": {
           "static-group": {
+            "description": "IGMP static group address",
             "items": {
               "description": "IGMP static group address",
               "format": "pattern",
@@ -1978,6 +1983,7 @@
         "description": "Grouping for common MGMD Configurations on the VLAN",
         "properties": {
           "auto-eth-interfaces": {
+            "description": "This list is now deprecated. Configure the eth-interface to monitor traffic on specific ports.",
             "items": {
               "description": "This list is now deprecated. Configure the eth-interface to monitor traffic on specific ports.",
               "format": "const",
@@ -1991,6 +1997,7 @@
             "type": "array"
           },
           "block-eth-interfaces": {
+            "description": "This list is now deprecated. Configure the eth-interface in block mode for IGMP/MLD.",
             "items": {
               "description": "This list is now deprecated. Configure the eth-interface in block mode for IGMP/MLD.",
               "format": "const",
@@ -2004,6 +2011,7 @@
             "type": "array"
           },
           "fastleave-eth-interfaces": {
+            "description": "This list is now deprecated. The list of eth-interfaces on which IGMP/MLD fastleave is configured.",
             "items": {
               "description": "This list is now deprecated. The list of eth-interfaces on which IGMP/MLD fastleave is configured.",
               "format": "const",
@@ -2017,6 +2025,7 @@
             "type": "array"
           },
           "forced-fastleave-eth-interfaces": {
+            "description": "This list is now deprecated. The list of eth-interfaces on which IGMP/MLD forced fastleave is configured.",
             "items": {
               "description": "This list is now deprecated. The list of eth-interfaces on which IGMP/MLD forced fastleave is configured.",
               "format": "const",
@@ -2030,6 +2039,7 @@
             "type": "array"
           },
           "forward-eth-interfaces": {
+            "description": "This list is now deprecated. Configure the eth-interfaces in forward mode for IGMP/MLD.",
             "items": {
               "description": "This list is now deprecated. Configure the eth-interfaces in forward mode for IGMP/MLD.",
               "format": "const",
@@ -2056,7 +2066,7 @@
           "policy-in": {
             "description": "Ingress ACL to filter processing of IGMP reports\nand leave messages received",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -2116,6 +2126,7 @@
         "description": "Grouping for common MGMD Configurations on the VLAN",
         "properties": {
           "auto-eth-interfaces": {
+            "description": "This list is now deprecated. Configure the eth-interface to monitor traffic on specific ports.",
             "items": {
               "description": "This list is now deprecated. Configure the eth-interface to monitor traffic on specific ports.",
               "format": "const",
@@ -2129,6 +2140,7 @@
             "type": "array"
           },
           "block-eth-interfaces": {
+            "description": "This list is now deprecated. Configure the eth-interface in block mode for IGMP/MLD.",
             "items": {
               "description": "This list is now deprecated. Configure the eth-interface in block mode for IGMP/MLD.",
               "format": "const",
@@ -2142,6 +2154,7 @@
             "type": "array"
           },
           "fastleave-eth-interfaces": {
+            "description": "This list is now deprecated. The list of eth-interfaces on which IGMP/MLD fastleave is configured.",
             "items": {
               "description": "This list is now deprecated. The list of eth-interfaces on which IGMP/MLD fastleave is configured.",
               "format": "const",
@@ -2155,6 +2168,7 @@
             "type": "array"
           },
           "forced-fastleave-eth-interfaces": {
+            "description": "This list is now deprecated. The list of eth-interfaces on which IGMP/MLD forced fastleave is configured.",
             "items": {
               "description": "This list is now deprecated. The list of eth-interfaces on which IGMP/MLD forced fastleave is configured.",
               "format": "const",
@@ -2168,6 +2182,7 @@
             "type": "array"
           },
           "forward-eth-interfaces": {
+            "description": "This list is now deprecated. Configure the eth-interfaces in forward mode for IGMP/MLD.",
             "items": {
               "description": "This list is now deprecated. Configure the eth-interfaces in forward mode for IGMP/MLD.",
               "format": "const",
@@ -2194,7 +2209,7 @@
           "policy-in": {
             "description": "Ingress ACL to filter processing of IGMP reports\nand leave messages received",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -2254,6 +2269,7 @@
         "description": "IPv6 MLD Static Group Configurations",
         "properties": {
           "static-group": {
+            "description": "MLD static group address",
             "items": {
               "description": "MLD static group address",
               "format": "pattern",
@@ -2275,6 +2291,7 @@
         "description": "IPv6 MLD Static Group Configurations",
         "properties": {
           "static-group": {
+            "description": "MLD static group address",
             "items": {
               "description": "MLD static group address",
               "format": "pattern",
@@ -2592,6 +2609,7 @@
                       ]
                     },
                     "vlan-id-ranges": {
+                      "description": "List of VLAN ranges associated with the named VLAN or VLAN group.\nOnly one out of vlan-alias, vlan-id-ranges can be configured.",
                       "items": {
                         "description": "List of VLAN ranges associated with the named VLAN or VLAN group.\nOnly one out of vlan-alias, vlan-id-ranges can be configured.",
                         "format": "pattern",
@@ -2686,6 +2704,7 @@
                 ]
               },
               "vlan-id-ranges": {
+                "description": "List of VLAN ranges associated with the named VLAN or VLAN group.\nOnly one out of vlan-alias, vlan-id-ranges can be configured.",
                 "items": {
                   "description": "List of VLAN ranges associated with the named VLAN or VLAN group.\nOnly one out of vlan-alias, vlan-id-ranges can be configured.",
                   "format": "pattern",
@@ -2763,6 +2782,7 @@
                 ]
               },
               "vlan-id-ranges": {
+                "description": "List of VLAN ranges associated with the named VLAN or VLAN group.\nOnly one out of vlan-alias, vlan-id-ranges can be configured.",
                 "items": {
                   "description": "List of VLAN ranges associated with the named VLAN or VLAN group.\nOnly one out of vlan-alias, vlan-id-ranges can be configured.",
                   "format": "pattern",
@@ -2816,6 +2836,7 @@
                 ]
               },
               "prefix": {
+                "description": "IPv6 prefix-list for ND Snooping",
                 "items": {
                   "description": "IPv6 prefix-list for ND Snooping",
                   "format": "pattern",
@@ -2833,6 +2854,7 @@
                 "type": "array"
               },
               "prefix-list": {
+                "description": "Allowed prefix-list for ND-Snooping",
                 "items": {
                   "description": "Allowed prefix-list for ND-Snooping",
                   "format": "const",
@@ -2920,6 +2942,7 @@
                 ]
               },
               "prefix": {
+                "description": "IPv6 prefix-list for ND Snooping",
                 "items": {
                   "description": "IPv6 prefix-list for ND Snooping",
                   "format": "pattern",
@@ -2937,6 +2960,7 @@
                 "type": "array"
               },
               "prefix-list": {
+                "description": "Allowed prefix-list for ND-Snooping",
                 "items": {
                   "description": "Allowed prefix-list for ND-Snooping",
                   "format": "const",
@@ -3091,6 +3115,7 @@
                         ]
                       },
                       "protected-vlans": {
+                        "description": "Protected VLANs in the group",
                         "items": {
                           "description": "Protected VLANs in the group",
                           "format": "pattern",
@@ -3104,7 +3129,7 @@
                           ],
                           "x-typeDescription": "VLANs or only single-tagged VLANs or both. A range is\nspecified as x-y where x and y are valid VLAN IDs\n(1 <= vlan-id <= 4094). The range is assumed to be inclusive,\nsuch that any VLAN-ID matching x <= VLAN-ID <= y falls within\nthe range."
                         },
-                        "maxItems": 2147483647,
+                        "maxItems": 4094,
                         "type": "array"
                       },
                       "secondary-ethernet-port": {
@@ -3152,6 +3177,7 @@
                   "type": "string"
                 },
                 "recv-control-vlans": {
+                  "description": "Control VLANs to receive flush messages",
                   "items": {
                     "description": "Control VLANs to receive flush messages",
                     "format": "pattern",
@@ -3164,7 +3190,7 @@
                     ],
                     "x-typeDescription": "VLANs or only single-tagged VLANs or both. A range is\nspecified as x-y where x and y are valid VLAN IDs\n(1 <= vlan-id <= 4094). The range is assumed to be inclusive,\nsuch that any VLAN-ID matching x <= VLAN-ID <= y falls within\nthe range."
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 24,
                   "type": "array"
                 }
               }
@@ -3277,6 +3303,7 @@
                   ]
                 },
                 "protected-vlans": {
+                  "description": "Protected VLANs in the group",
                   "items": {
                     "description": "Protected VLANs in the group",
                     "format": "pattern",
@@ -3290,7 +3317,7 @@
                     ],
                     "x-typeDescription": "VLANs or only single-tagged VLANs or both. A range is\nspecified as x-y where x and y are valid VLAN IDs\n(1 <= vlan-id <= 4094). The range is assumed to be inclusive,\nsuch that any VLAN-ID matching x <= VLAN-ID <= y falls within\nthe range."
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 4094,
                   "type": "array"
                 },
                 "secondary-ethernet-port": {
@@ -3338,6 +3365,7 @@
             "type": "string"
           },
           "recv-control-vlans": {
+            "description": "Control VLANs to receive flush messages",
             "items": {
               "description": "Control VLANs to receive flush messages",
               "format": "pattern",
@@ -3350,7 +3378,7 @@
               ],
               "x-typeDescription": "VLANs or only single-tagged VLANs or both. A range is\nspecified as x-y where x and y are valid VLAN IDs\n(1 <= vlan-id <= 4094). The range is assumed to be inclusive,\nsuch that any VLAN-ID matching x <= VLAN-ID <= y falls within\nthe range."
             },
-            "maxItems": 2147483647,
+            "maxItems": 24,
             "type": "array"
           }
         }
@@ -3449,6 +3477,7 @@
                   ]
                 },
                 "protected-vlans": {
+                  "description": "Protected VLANs in the group",
                   "items": {
                     "description": "Protected VLANs in the group",
                     "format": "pattern",
@@ -3462,7 +3491,7 @@
                     ],
                     "x-typeDescription": "VLANs or only single-tagged VLANs or both. A range is\nspecified as x-y where x and y are valid VLAN IDs\n(1 <= vlan-id <= 4094). The range is assumed to be inclusive,\nsuch that any VLAN-ID matching x <= VLAN-ID <= y falls within\nthe range."
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 4094,
                   "type": "array"
                 },
                 "secondary-ethernet-port": {
@@ -3510,6 +3539,7 @@
             "type": "string"
           },
           "recv-control-vlans": {
+            "description": "Control VLANs to receive flush messages",
             "items": {
               "description": "Control VLANs to receive flush messages",
               "format": "pattern",
@@ -3522,7 +3552,7 @@
               ],
               "x-typeDescription": "VLANs or only single-tagged VLANs or both. A range is\nspecified as x-y where x and y are valid VLAN IDs\n(1 <= vlan-id <= 4094). The range is assumed to be inclusive,\nsuch that any VLAN-ID matching x <= VLAN-ID <= y falls within\nthe range."
             },
-            "maxItems": 2147483647,
+            "maxItems": 24,
             "type": "array"
           }
         }
@@ -3966,7 +3996,6 @@
                         "minimum": 1,
                         "type": "integer",
                         "x-supportedDeviceType": [
-                          "Switch CX",
                           "Switch PVOS"
                         ]
                       },
@@ -3985,7 +4014,6 @@
                         "x-patternSources": "vlan-list",
                         "x-patterns": "'((409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{0,2})(\\-(409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{0,2}))?)(,((409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{0,2})(\\-(409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{0,2}))?))*'",
                         "x-supportedDeviceType": [
-                          "Switch CX",
                           "Switch PVOS"
                         ],
                         "x-typeDescription": "Comma separated list of VLAN IDs and ranges"
@@ -3997,7 +4025,6 @@
                         "minimum": 0,
                         "type": "integer",
                         "x-supportedDeviceType": [
-                          "Switch CX",
                           "Switch PVOS"
                         ]
                       },
@@ -4022,11 +4049,11 @@
                         "description": "Enable topology change notification for the specified MST instance.",
                         "type": "boolean",
                         "x-supportedDeviceType": [
-                          "Switch CX",
                           "Switch PVOS"
                         ]
                       },
                       "vlans": {
+                        "description": "List of VLANs for MSTP instance.",
                         "items": {
                           "description": "List of VLANs for MSTP instance.",
                           "format": "int32",
@@ -4034,7 +4061,6 @@
                           "minimum": 1,
                           "type": "integer",
                           "x-supportedDeviceType": [
-                            "Switch CX",
                             "Switch PVOS"
                           ],
                           "x-typeDescription": "Type definition representing a single-tagged VLAN"
@@ -4050,6 +4076,7 @@
                     "instanceId"
                   ],
                   "x-supportedDeviceType": [
+                    "Switch CX",
                     "Switch PVOS"
                   ]
                 },
@@ -4236,7 +4263,8 @@
                     "vlan"
                   ],
                   "x-supportedDeviceType": [
-                    "Switch PVOS"
+                    "Switch PVOS",
+                    "Switch CX"
                   ]
                 },
                 "rpvst-auto-enable": {
@@ -4306,6 +4334,7 @@
                   ]
                 },
                 "traps": {
+                  "description": "Enable MSTP/PVST(Multiple Spanning Tree Protocol/Per VLAN Spanning Tree) traps.",
                   "items": {
                     "description": "Enable MSTP/PVST(Multiple Spanning Tree Protocol/Per VLAN Spanning Tree) traps.",
                     "enum": [
@@ -4523,7 +4552,6 @@
                   "minimum": 1,
                   "type": "integer",
                   "x-supportedDeviceType": [
-                    "Switch CX",
                     "Switch PVOS"
                   ]
                 },
@@ -4542,7 +4570,6 @@
                   "x-patternSources": "vlan-list",
                   "x-patterns": "'((409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{0,2})(\\-(409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{0,2}))?)(,((409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{0,2})(\\-(409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{0,2}))?))*'",
                   "x-supportedDeviceType": [
-                    "Switch CX",
                     "Switch PVOS"
                   ],
                   "x-typeDescription": "Comma separated list of VLAN IDs and ranges"
@@ -4554,7 +4581,6 @@
                   "minimum": 0,
                   "type": "integer",
                   "x-supportedDeviceType": [
-                    "Switch CX",
                     "Switch PVOS"
                   ]
                 },
@@ -4579,11 +4605,11 @@
                   "description": "Enable topology change notification for the specified MST instance.",
                   "type": "boolean",
                   "x-supportedDeviceType": [
-                    "Switch CX",
                     "Switch PVOS"
                   ]
                 },
                 "vlans": {
+                  "description": "List of VLANs for MSTP instance.",
                   "items": {
                     "description": "List of VLANs for MSTP instance.",
                     "format": "int32",
@@ -4591,7 +4617,6 @@
                     "minimum": 1,
                     "type": "integer",
                     "x-supportedDeviceType": [
-                      "Switch CX",
                       "Switch PVOS"
                     ],
                     "x-typeDescription": "Type definition representing a single-tagged VLAN"
@@ -4607,6 +4632,7 @@
               "instanceId"
             ],
             "x-supportedDeviceType": [
+              "Switch CX",
               "Switch PVOS"
             ]
           },
@@ -4793,7 +4819,8 @@
               "vlan"
             ],
             "x-supportedDeviceType": [
-              "Switch PVOS"
+              "Switch PVOS",
+              "Switch CX"
             ]
           },
           "rpvst-auto-enable": {
@@ -4863,6 +4890,7 @@
             ]
           },
           "traps": {
+            "description": "Enable MSTP/PVST(Multiple Spanning Tree Protocol/Per VLAN Spanning Tree) traps.",
             "items": {
               "description": "Enable MSTP/PVST(Multiple Spanning Tree Protocol/Per VLAN Spanning Tree) traps.",
               "enum": [
@@ -5065,7 +5093,6 @@
                   "minimum": 1,
                   "type": "integer",
                   "x-supportedDeviceType": [
-                    "Switch CX",
                     "Switch PVOS"
                   ]
                 },
@@ -5084,7 +5111,6 @@
                   "x-patternSources": "vlan-list",
                   "x-patterns": "'((409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{0,2})(\\-(409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{0,2}))?)(,((409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{0,2})(\\-(409[0-4]|40[0-8][0-9]|[1-3][0-9]{3}|[1-9][0-9]{0,2}))?))*'",
                   "x-supportedDeviceType": [
-                    "Switch CX",
                     "Switch PVOS"
                   ],
                   "x-typeDescription": "Comma separated list of VLAN IDs and ranges"
@@ -5096,7 +5122,6 @@
                   "minimum": 0,
                   "type": "integer",
                   "x-supportedDeviceType": [
-                    "Switch CX",
                     "Switch PVOS"
                   ]
                 },
@@ -5121,11 +5146,11 @@
                   "description": "Enable topology change notification for the specified MST instance.",
                   "type": "boolean",
                   "x-supportedDeviceType": [
-                    "Switch CX",
                     "Switch PVOS"
                   ]
                 },
                 "vlans": {
+                  "description": "List of VLANs for MSTP instance.",
                   "items": {
                     "description": "List of VLANs for MSTP instance.",
                     "format": "int32",
@@ -5133,7 +5158,6 @@
                     "minimum": 1,
                     "type": "integer",
                     "x-supportedDeviceType": [
-                      "Switch CX",
                       "Switch PVOS"
                     ],
                     "x-typeDescription": "Type definition representing a single-tagged VLAN"
@@ -5149,6 +5173,7 @@
               "instanceId"
             ],
             "x-supportedDeviceType": [
+              "Switch CX",
               "Switch PVOS"
             ]
           },
@@ -5335,7 +5360,8 @@
               "vlan"
             ],
             "x-supportedDeviceType": [
-              "Switch PVOS"
+              "Switch PVOS",
+              "Switch CX"
             ]
           },
           "rpvst-auto-enable": {
@@ -5405,6 +5431,7 @@
             ]
           },
           "traps": {
+            "description": "Enable MSTP/PVST(Multiple Spanning Tree Protocol/Per VLAN Spanning Tree) traps.",
             "items": {
               "description": "Enable MSTP/PVST(Multiple Spanning Tree Protocol/Per VLAN Spanning Tree) traps.",
               "enum": [
@@ -5438,7 +5465,7 @@
           "access-list-in": {
             "description": "Access-list Policy for inbound (Ingress) traffic.",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -5450,7 +5477,7 @@
           "access-list-out": {
             "description": "Access-list Policy for outbound (Egress) traffic.",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -5471,7 +5498,7 @@
           "access-list-in": {
             "description": "Access-list Policy for inbound (Ingress) traffic.",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -5483,7 +5510,7 @@
           "access-list-out": {
             "description": "Access-list Policy for outbound (Egress) traffic.",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -5609,7 +5636,7 @@
           "policy-in": {
             "description": "Policy for inbound (Ingress) traffic.",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -5620,7 +5647,7 @@
           "policy-out": {
             "description": "Policy for outbound (Egress) traffic.",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -5629,6 +5656,7 @@
             ]
           },
           "protocols": {
+            "description": "Assign traffic to different VLANs based on protocol.",
             "items": {
               "description": "Assign traffic to different VLANs based on protocol.",
               "enum": [
@@ -5656,7 +5684,7 @@
               ],
               "x-typeDescription": "Protocols mapped to a VLAN."
             },
-            "maxItems": 2147483647,
+            "maxItems": 4,
             "type": "array"
           },
           "ttl-threshold": {
@@ -5756,7 +5784,7 @@
           "policy-in": {
             "description": "Policy for inbound (Ingress) traffic.",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -5767,7 +5795,7 @@
           "policy-out": {
             "description": "Policy for outbound (Egress) traffic.",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -5776,6 +5804,7 @@
             ]
           },
           "protocols": {
+            "description": "Assign traffic to different VLANs based on protocol.",
             "items": {
               "description": "Assign traffic to different VLANs based on protocol.",
               "enum": [
@@ -5803,7 +5832,7 @@
               ],
               "x-typeDescription": "Protocols mapped to a VLAN."
             },
-            "maxItems": 2147483647,
+            "maxItems": 4,
             "type": "array"
           },
           "ttl-threshold": {
@@ -6172,6 +6201,7 @@
         "description": "Private VLAN config values",
         "properties": {
           "community-vlan": {
+            "description": "Configure a list of community VLANs under the current primary VLAN.",
             "items": {
               "description": "Configure a list of community VLANs under the current primary VLAN.",
               "format": "int32",
@@ -6237,6 +6267,7 @@
         "description": "Private VLAN config values",
         "properties": {
           "community-vlan": {
+            "description": "Configure a list of community VLANs under the current primary VLAN.",
             "items": {
               "description": "Configure a list of community VLANs under the current primary VLAN.",
               "format": "int32",
@@ -6367,6 +6398,7 @@
                       "x-typeDescription": "Authentication type"
                     },
                     "bfd": {
+                      "description": "Configure BFD peer IPs",
                       "items": {
                         "description": "Configure BFD peer IPs",
                         "format": "pattern",
@@ -6555,6 +6587,7 @@
                       ]
                     },
                     "sec-address": {
+                      "description": "List of secondary IPv4 or IPv6 addresses.",
                       "items": {
                         "description": "List of secondary IPv4 or IPv6 addresses.",
                         "oneOf": [
@@ -6584,6 +6617,7 @@
                       "type": "array"
                     },
                     "track-id": {
+                      "description": "Track object ID",
                       "items": {
                         "description": "Track object ID",
                         "format": "int32",
@@ -6716,6 +6750,7 @@
                       "x-typeDescription": "Authentication type"
                     },
                     "bfd": {
+                      "description": "Configure BFD peer IPs",
                       "items": {
                         "description": "Configure BFD peer IPs",
                         "format": "pattern",
@@ -6904,6 +6939,7 @@
                       ]
                     },
                     "sec-address": {
+                      "description": "List of secondary IPv4 or IPv6 addresses.",
                       "items": {
                         "description": "List of secondary IPv4 or IPv6 addresses.",
                         "oneOf": [
@@ -6933,6 +6969,7 @@
                       "type": "array"
                     },
                     "track-id": {
+                      "description": "Track object ID",
                       "items": {
                         "description": "Track object ID",
                         "format": "int32",
@@ -7441,7 +7478,8 @@
               "name"
             ],
             "x-supportedDeviceType": [
-              "Switch CX"
+              "Switch CX",
+              "Switch PVOS"
             ]
           }
         }
@@ -8469,6 +8507,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "ERPS Profile.",
+        "operationId": "replaceErpsProfileByID",
+        "parameters": [
+          {
+            "description": "ERPS profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaErps_ErpsprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing ERPS configurations.",
+        "tags": [
+          "Erps"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceErpsProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceErpsCmd",
+          "pathToPrint": "/erps/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/layer2-vlan": {
@@ -8996,6 +9117,89 @@
           "summary": "Create operation for l2-vlan",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "List of L2 VLAN profiles",
+        "operationId": "replaceLayer2VlanL2VlanByID",
+        "parameters": [
+          {
+            "description": "VLAN identifier",
+            "in": "path",
+            "name": "vlan",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaVlan_Layer2Vlanl2VlanSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add or Update L2-VLAN",
+        "tags": [
+          "Vlan"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceLayer2VlanL2VlanCmd",
+          "commandUse": "l2-vlan",
+          "paramKeys": [
+            {
+              "key": "vlan"
+            }
+          ],
+          "parentCommand": "replaceLayer2VlanCmd",
+          "pathToPrint": "/layer2-vlan/l2-vlan/%s/",
+          "summary": "Replace operation for l2-vlan",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/loop-protect": {
@@ -9453,6 +9657,89 @@
           "parentCommand": "createLoopProtectCmd",
           "pathToPrint": "/loop-protect/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "List of Profiles for Loop Protect.",
+        "operationId": "replaceLoopProtectProfileByID",
+        "parameters": [
+          {
+            "description": "Loop Protect profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaLoopProtect_LoopProtectprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing loop-protect configurations for given name.",
+        "tags": [
+          "Loop Protect"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceLoopProtectProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceLoopProtectCmd",
+          "pathToPrint": "/loop-protect/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -9914,6 +10201,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "List of MVRP profiles.",
+        "operationId": "replaceMvrpProfileByID",
+        "parameters": [
+          {
+            "description": "MVRP profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaMvrp_MvrpprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing MVRP configurations for given name.",
+        "tags": [
+          "Mvrp"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceMvrpProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceMvrpCmd",
+          "pathToPrint": "/mvrp/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/named-vlan": {
@@ -10371,6 +10741,89 @@
           "parentCommand": "createNamedVlanCmd",
           "pathToPrint": "/named-vlan/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "List of Named-VLANs/VLAN-Groups",
+        "operationId": "replaceNamedVlanProfileByID",
+        "parameters": [
+          {
+            "description": "Named VLAN or the name of the VLAN group",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaNamedVlan_NamedVlanprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add or Update Named-VLAN/VLAN-Group profile",
+        "tags": [
+          "Named Vlan"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceNamedVlanProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceNamedVlanCmd",
+          "pathToPrint": "/named-vlan/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -10832,6 +11285,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "List of Smartlink Profiles.",
+        "operationId": "replaceSmartlinkProfileByID",
+        "parameters": [
+          {
+            "description": "Smartlink profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaSmartlink_SmartlinkprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing smartlink configuration for given name.",
+        "tags": [
+          "Smartlink"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceSmartlinkProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceSmartlinkCmd",
+          "pathToPrint": "/smartlink/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/static-neighbor": {
@@ -11289,6 +11825,89 @@
           "parentCommand": "createStaticNeighborCmd",
           "pathToPrint": "/static-neighbor/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Static neighbor profile",
+        "operationId": "replaceStaticNeighborProfileByID",
+        "parameters": [
+          {
+            "description": "Static neighbor profile name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaStaticNeighbor_StaticNeighborprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or update existing static neighbor profile",
+        "tags": [
+          "Static Neighbor"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceStaticNeighborProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceStaticNeighborCmd",
+          "pathToPrint": "/static-neighbor/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -11848,6 +12467,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Spanning Tree profile defining RSTP or RPVST configuration\nwith global bridge parameters and per-VLAN settings. Each\nentity is identified by profile name. Use these APIs to\ncreate, modify, or delete a Spanning Tree profile.",
+        "operationId": "replaceStpGwProfileByID",
+        "parameters": [
+          {
+            "description": "STP profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaGwStp_StpGwprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or modify Spanning Tree profile",
+        "tags": [
+          "Gw Stp"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceStpGwProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceStpGwCmd",
+          "pathToPrint": "/stp-gw/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/stp/{name}": {
@@ -12207,6 +12909,89 @@
           "parentCommand": "createStpCmd",
           "pathToPrint": "/stp/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "List of Profiles for STP.",
+        "operationId": "replaceStpProfileByID",
+        "parameters": [
+          {
+            "description": "STP profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaStp_StpprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing STP configurations for given name.",
+        "tags": [
+          "Stp"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceStpProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceStpCmd",
+          "pathToPrint": "/stp/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -12766,6 +13551,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "VRRP Profile",
+        "operationId": "replaceVrrpGlobalProfileByID",
+        "parameters": [
+          {
+            "description": "VRRP profile name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaVrrp_VrrpGlobalprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "Vrrp"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceVrrpGlobalProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceVrrpGlobalCmd",
+          "pathToPrint": "/vrrp-global/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/vrrp/{name}": {
@@ -13125,6 +13993,89 @@
           "parentCommand": "createVrrpCmd",
           "pathToPrint": "/vrrp/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "VRRP-interface Profile",
+        "operationId": "replaceVrrpProfileByID",
+        "parameters": [
+          {
+            "description": "VRRP-interface profile name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaVrrpInterface_VrrpprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "Vrrp Interface"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceVrrpProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceVrrpCmd",
+          "pathToPrint": "/vrrp/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }

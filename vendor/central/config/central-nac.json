@@ -770,6 +770,7 @@
                 "x-mandatory": true
               },
               "provider": {
+                "description": "List of passpoint identities that will be used for Air Pass.",
                 "items": {
                   "description": "List of passpoint identities that will be used for Air Pass.",
                   "format": "const",
@@ -777,7 +778,8 @@
                   "minLength": 1,
                   "type": "string"
                 },
-                "maxItems": 2147483647,
+                "maxItems": 10,
+                "minItems": 1,
                 "type": "array"
               },
               "site": {
@@ -801,6 +803,7 @@
                   ]
                 },
                 "maxItems": 2147483647,
+                "minItems": 1,
                 "type": "array",
                 "x-key": [
                   "siteId"
@@ -881,6 +884,7 @@
                 "x-mandatory": true
               },
               "provider": {
+                "description": "List of passpoint identities that will be used for Air Pass.",
                 "items": {
                   "description": "List of passpoint identities that will be used for Air Pass.",
                   "format": "const",
@@ -888,7 +892,8 @@
                   "minLength": 1,
                   "type": "string"
                 },
-                "maxItems": 2147483647,
+                "maxItems": 10,
+                "minItems": 1,
                 "type": "array"
               },
               "site": {
@@ -912,6 +917,7 @@
                   ]
                 },
                 "maxItems": 2147483647,
+                "minItems": 1,
                 "type": "array",
                 "x-key": [
                   "siteId"
@@ -1026,6 +1032,7 @@
                       "type": "boolean"
                     },
                     "identity-stores": {
+                      "description": "Reference to the identity store(s) to be used for authentication.",
                       "items": {
                         "description": "Reference to the identity store(s) to be used for authentication.",
                         "format": "pattern",
@@ -1052,6 +1059,7 @@
                       "x-mandatory": true
                     },
                     "networks": {
+                      "description": "Reference to the wired/wlan network to be used for authentication.",
                       "items": {
                         "description": "Reference to the wired/wlan network to be used for authentication.",
                         "format": "const",
@@ -1170,6 +1178,7 @@
                 "type": "boolean"
               },
               "identity-stores": {
+                "description": "Reference to the identity store(s) to be used for authentication.",
                 "items": {
                   "description": "Reference to the identity store(s) to be used for authentication.",
                   "format": "pattern",
@@ -1196,6 +1205,7 @@
                 "x-mandatory": true
               },
               "networks": {
+                "description": "Reference to the wired/wlan network to be used for authentication.",
                 "items": {
                   "description": "Reference to the wired/wlan network to be used for authentication.",
                   "format": "const",
@@ -1306,6 +1316,7 @@
                 "type": "boolean"
               },
               "identity-stores": {
+                "description": "Reference to the identity store(s) to be used for authentication.",
                 "items": {
                   "description": "Reference to the identity store(s) to be used for authentication.",
                   "format": "pattern",
@@ -1332,6 +1343,7 @@
                 "x-mandatory": true
               },
               "networks": {
+                "description": "Reference to the wired/wlan network to be used for authentication.",
                 "items": {
                   "description": "Reference to the wired/wlan network to be used for authentication.",
                   "format": "const",
@@ -1625,7 +1637,7 @@
             "description": "MPSK profile.",
             "properties": {
               "password-auto-expire": {
-                "description": "password-auto-expire is an automatic expiration interval (ISO 8601 duration)\nthat is applied whenever an owned MPSK is created or the password is reset.\n\nAn active Central NAC subscription is required to set this field.\n\nThis field applies to end-user provisioned MPSK only. It does not apply to\nadministrator managed MPSK or operations.",
+                "description": "password-auto-expire is an automatic expiration interval (ISO 8601 duration)\nthat is applied whenever an owned MPSK is created or the password is reset.\n\nAn active Central NAC subscription is required to set this field.\n\nThis field applies to end-user provisioned MPSK only. It does not apply to\nadministrator Named MPSK or operations.",
                 "format": "pattern",
                 "maxLength": 9999,
                 "type": "string",
@@ -1634,7 +1646,7 @@
                 "x-typeDescription": "Duration in ISO 8601 format."
               },
               "password-minimum-age": {
-                "description": "password-minimum-age is a password minimum age (ISO 8601 duration) that limits\nhow often an end user can reset a password.\n\npassword-minimum-age duration must be at least one day less than the\npassword-auto-expire duration, in the case that both are set.\n\nAn active Central NAC subscription is required to set this field.\n\nThis field applies to end-user provisioned MPSK only. It does not apply to\nadministrator managed MPSK or operations.",
+                "description": "password-minimum-age is a password minimum age (ISO 8601 duration) that limits\nhow often an end user can reset a password.\n\npassword-minimum-age duration must be at least one day less than the\npassword-auto-expire duration, in the case that both are set.\n\nAn active Central NAC subscription is required to set this field.\n\nThis field applies to end-user provisioned MPSK only. It does not apply to\nadministrator Named MPSK or operations.",
                 "format": "pattern",
                 "maxLength": 9999,
                 "type": "string",
@@ -1643,7 +1655,7 @@
                 "x-typeDescription": "Duration in ISO 8601 format."
               },
               "password-minimum-history": {
-                "description": "password-minimum-history is a password history length that enforces password\nuniqueness for the specified number of password resets.\n\nAn active Central NAC subscription is required to set this field.\n\nThis field applies to end-user provisioned MPSK only. It does not apply to\nadministrator managed MPSK or operations.",
+                "description": "password-minimum-history is a password history length that enforces password\nuniqueness for the specified number of password resets.\n\nAn active Central NAC subscription is required to set this field.\n\nThis field applies to end-user provisioned MPSK only. It does not apply to\nadministrator Named MPSK or operations.",
                 "format": "int32",
                 "maximum": 12,
                 "minimum": 1,
@@ -1672,7 +1684,7 @@
             "description": "MPSK profile.",
             "properties": {
               "password-auto-expire": {
-                "description": "password-auto-expire is an automatic expiration interval (ISO 8601 duration)\nthat is applied whenever an owned MPSK is created or the password is reset.\n\nAn active Central NAC subscription is required to set this field.\n\nThis field applies to end-user provisioned MPSK only. It does not apply to\nadministrator managed MPSK or operations.",
+                "description": "password-auto-expire is an automatic expiration interval (ISO 8601 duration)\nthat is applied whenever an owned MPSK is created or the password is reset.\n\nAn active Central NAC subscription is required to set this field.\n\nThis field applies to end-user provisioned MPSK only. It does not apply to\nadministrator Named MPSK or operations.",
                 "format": "pattern",
                 "maxLength": 9999,
                 "type": "string",
@@ -1681,7 +1693,7 @@
                 "x-typeDescription": "Duration in ISO 8601 format."
               },
               "password-minimum-age": {
-                "description": "password-minimum-age is a password minimum age (ISO 8601 duration) that limits\nhow often an end user can reset a password.\n\npassword-minimum-age duration must be at least one day less than the\npassword-auto-expire duration, in the case that both are set.\n\nAn active Central NAC subscription is required to set this field.\n\nThis field applies to end-user provisioned MPSK only. It does not apply to\nadministrator managed MPSK or operations.",
+                "description": "password-minimum-age is a password minimum age (ISO 8601 duration) that limits\nhow often an end user can reset a password.\n\npassword-minimum-age duration must be at least one day less than the\npassword-auto-expire duration, in the case that both are set.\n\nAn active Central NAC subscription is required to set this field.\n\nThis field applies to end-user provisioned MPSK only. It does not apply to\nadministrator Named MPSK or operations.",
                 "format": "pattern",
                 "maxLength": 9999,
                 "type": "string",
@@ -1690,7 +1702,7 @@
                 "x-typeDescription": "Duration in ISO 8601 format."
               },
               "password-minimum-history": {
-                "description": "password-minimum-history is a password history length that enforces password\nuniqueness for the specified number of password resets.\n\nAn active Central NAC subscription is required to set this field.\n\nThis field applies to end-user provisioned MPSK only. It does not apply to\nadministrator managed MPSK or operations.",
+                "description": "password-minimum-history is a password history length that enforces password\nuniqueness for the specified number of password resets.\n\nAn active Central NAC subscription is required to set this field.\n\nThis field applies to end-user provisioned MPSK only. It does not apply to\nadministrator Named MPSK or operations.",
                 "format": "int32",
                 "maximum": 12,
                 "minimum": 1,
@@ -1720,6 +1732,7 @@
             "description": "Configuration for an authentication profile when supporting a wired network.\n\nThe wired field must be true, and the auth-type must be CAPTIVE_PORTAL, to configure a wired-profile.",
             "properties": {
               "ap-port-profiles": {
+                "description": "The names of the Access Point (AP) port profiles with which this authentication profile will used.\n\nA port profile defines parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.\n\nFor a CAPTIVE_PORTAL authentication profile, only wired interfaces with one of these port profiles will be configured with the captive portal.\n\nAt least one port profile must be specified.\n\nAt most 100 port profiles may be specified.",
                 "items": {
                   "description": "The names of the Access Point (AP) port profiles with which this authentication profile will used.\n\nA port profile defines parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.\n\nFor a CAPTIVE_PORTAL authentication profile, only wired interfaces with one of these port profiles will be configured with the captive portal.\n\nAt least one port profile must be specified.\n\nAt most 100 port profiles may be specified.",
                   "format": "const",
@@ -1727,7 +1740,8 @@
                   "minLength": 1,
                   "type": "string"
                 },
-                "maxItems": 2147483647,
+                "maxItems": 100,
+                "minItems": 1,
                 "type": "array"
               },
               "local-port-profiles": {
@@ -1774,6 +1788,7 @@
             "description": "Configuration for an authentication profile when supporting a wired network.\n\nThe wired field must be true, and the auth-type must be CAPTIVE_PORTAL, to configure a wired-profile.",
             "properties": {
               "ap-port-profiles": {
+                "description": "The names of the Access Point (AP) port profiles with which this authentication profile will used.\n\nA port profile defines parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.\n\nFor a CAPTIVE_PORTAL authentication profile, only wired interfaces with one of these port profiles will be configured with the captive portal.\n\nAt least one port profile must be specified.\n\nAt most 100 port profiles may be specified.",
                 "items": {
                   "description": "The names of the Access Point (AP) port profiles with which this authentication profile will used.\n\nA port profile defines parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.\n\nFor a CAPTIVE_PORTAL authentication profile, only wired interfaces with one of these port profiles will be configured with the captive portal.\n\nAt least one port profile must be specified.\n\nAt most 100 port profiles may be specified.",
                   "format": "const",
@@ -1781,7 +1796,8 @@
                   "minLength": 1,
                   "type": "string"
                 },
-                "maxItems": 2147483647,
+                "maxItems": 100,
+                "minItems": 1,
                 "type": "array"
               },
               "local-port-profiles": {
@@ -1833,7 +1849,7 @@
                 }
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 100,
             "type": "array",
             "x-key": [
               "policyId"
@@ -1883,7 +1899,8 @@
                 }
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 32,
+            "minItems": 0,
             "type": "array",
             "x-key": [
               "profileId"
@@ -1914,6 +1931,7 @@
             "type": "boolean"
           },
           "identity-stores": {
+            "description": "Reference to the identity store(s) to be used for policy evaluation.",
             "items": {
               "description": "Reference to the identity store(s) to be used for policy evaluation.",
               "format": "pattern",
@@ -2006,7 +2024,8 @@
                 }
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 32,
+            "minItems": 0,
             "type": "array",
             "x-key": [
               "profileId"
@@ -2037,6 +2056,7 @@
             "type": "boolean"
           },
           "identity-stores": {
+            "description": "Reference to the identity store(s) to be used for policy evaluation.",
             "items": {
               "description": "Reference to the identity store(s) to be used for policy evaluation.",
               "format": "pattern",
@@ -2201,6 +2221,7 @@
             "x-typeDescription": "Specifies the policy condition value."
           },
           "values": {
+            "description": "list of values for operators associated with list",
             "items": {
               "description": "list of values for operators associated with list",
               "format": "const",
@@ -2319,6 +2340,7 @@
             "x-typeDescription": "Specifies the policy condition value."
           },
           "values": {
+            "description": "list of values for operators associated with list",
             "items": {
               "description": "list of values for operators associated with list",
               "format": "const",
@@ -2382,7 +2404,7 @@
                           }
                         ]
                       },
-                      "maxItems": 2147483647,
+                      "maxItems": 10,
                       "type": "array",
                       "x-key": [
                         "conditionGroupId"
@@ -2409,7 +2431,7 @@
                     "position"
                   ]
                 },
-                "maxItems": 2147483647,
+                "maxItems": 10,
                 "type": "array",
                 "x-key": [
                   "conditionId"
@@ -2471,7 +2493,7 @@
                           }
                         ]
                       },
-                      "maxItems": 2147483647,
+                      "maxItems": 10,
                       "type": "array",
                       "x-key": [
                         "conditionGroupId"
@@ -2498,7 +2520,7 @@
                     "position"
                   ]
                 },
-                "maxItems": 2147483647,
+                "maxItems": 10,
                 "type": "array",
                 "x-key": [
                   "conditionId"
@@ -2548,7 +2570,8 @@
                           }
                         ]
                       },
-                      "maxItems": 2147483647,
+                      "maxItems": 32,
+                      "minItems": 1,
                       "type": "array",
                       "x-key": [
                         "profileId"
@@ -2586,7 +2609,7 @@
                 }
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 32,
             "type": "array",
             "x-key": [
               "ruleId"
@@ -2627,7 +2650,8 @@
                           }
                         ]
                       },
-                      "maxItems": 2147483647,
+                      "maxItems": 32,
+                      "minItems": 1,
                       "type": "array",
                       "x-key": [
                         "profileId"
@@ -2665,7 +2689,7 @@
                 }
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 32,
             "type": "array",
             "x-key": [
               "ruleId"
@@ -2809,7 +2833,7 @@
                 "position"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 10,
             "type": "array",
             "x-key": [
               "position"
@@ -2901,7 +2925,7 @@
                 "position"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 10,
             "type": "array",
             "x-key": [
               "position"
@@ -3079,6 +3103,7 @@
         "description": "Self-registration sponsor approval configuration grouping",
         "properties": {
           "sponsor-domains": {
+            "description": "Allowed domain names for sponsor email addresses.\n\nThe maximum number of sponsor-domains allowed is 50.\n\nWhen a user is registering an account that requires sponsor approval (see require-sponsor-approval), they must provide the email address of a valid sponsor.\n\nAnyone who has an email address in one of these domains is a valid sponsor.\n\nThe sponsor-domains list can only be configured when require-sponsor-approval is true.\n\nAt least one sponsor domain (see sponsor-domains), or sponsor email (see sponsor-emails), must be configured when require-sponsor-approval is true.\n\nSee also the sponsor-emails field for configuring specific email addresses as valid sponsors.\n\nBoth the sponsor-domains and sponsor-emails lists define valid sponsors.",
             "items": {
               "description": "Allowed domain names for sponsor email addresses.\n\nThe maximum number of sponsor-domains allowed is 50.\n\nWhen a user is registering an account that requires sponsor approval (see require-sponsor-approval), they must provide the email address of a valid sponsor.\n\nAnyone who has an email address in one of these domains is a valid sponsor.\n\nThe sponsor-domains list can only be configured when require-sponsor-approval is true.\n\nAt least one sponsor domain (see sponsor-domains), or sponsor email (see sponsor-emails), must be configured when require-sponsor-approval is true.\n\nSee also the sponsor-emails field for configuring specific email addresses as valid sponsors.\n\nBoth the sponsor-domains and sponsor-emails lists define valid sponsors.",
               "format": "pattern",
@@ -3089,10 +3114,11 @@
               "x-patterns": "'([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\\.)*([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)'",
               "x-typeDescription": "A domain name (as supported by Cloud Guest) according to RFC 952 and RFC 1123."
             },
-            "maxItems": 2147483647,
+            "maxItems": 50,
             "type": "array"
           },
           "sponsor-emails": {
+            "description": "Allowed sponsor email addresses.\n\nThe maximum number of sponsor-emails allowed is 100.\n\nWhen a user is registering an account that requires sponsor approval (see require-sponsor-approval), they must provide the email address of a valid sponsor.\n\nAny one of these email addresses is a valid sponsor.\n\nThe sponsor-emails list can only be configured when require-sponsor-approval is true.\n\nAt least one sponsor domain (see sponsor-domains), or sponsor email (see sponsor-emails), must be configured when require-sponsor-approval is true.\n\nSee also the sponsor-domains field for configuring an entire domain as valid sponsors.\n\nBoth the sponsor-domains and sponsor-emails lists define valid sponsors.",
             "items": {
               "description": "Allowed sponsor email addresses.\n\nThe maximum number of sponsor-emails allowed is 100.\n\nWhen a user is registering an account that requires sponsor approval (see require-sponsor-approval), they must provide the email address of a valid sponsor.\n\nAny one of these email addresses is a valid sponsor.\n\nThe sponsor-emails list can only be configured when require-sponsor-approval is true.\n\nAt least one sponsor domain (see sponsor-domains), or sponsor email (see sponsor-emails), must be configured when require-sponsor-approval is true.\n\nSee also the sponsor-domains field for configuring an entire domain as valid sponsors.\n\nBoth the sponsor-domains and sponsor-emails lists define valid sponsors.",
               "format": "pattern",
@@ -3103,7 +3129,7 @@
               "x-patterns": "'[-A-Za-z0-9!#$%&'*+/=?^_`{|}~]+([.][-A-Za-z0-9!#$%&'*+/=?^_`{|}~]+)*@([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\\.)*([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)'",
               "x-typeDescription": "An email address (as supported by Cloud Guest) according to RFC 5322, limited by RFC 952 and RFC 1123"
             },
-            "maxItems": 2147483647,
+            "maxItems": 100,
             "type": "array"
           }
         }
@@ -3112,6 +3138,7 @@
         "description": "Self-registration sponsor approval configuration grouping",
         "properties": {
           "sponsor-domains": {
+            "description": "Allowed domain names for sponsor email addresses.\n\nThe maximum number of sponsor-domains allowed is 50.\n\nWhen a user is registering an account that requires sponsor approval (see require-sponsor-approval), they must provide the email address of a valid sponsor.\n\nAnyone who has an email address in one of these domains is a valid sponsor.\n\nThe sponsor-domains list can only be configured when require-sponsor-approval is true.\n\nAt least one sponsor domain (see sponsor-domains), or sponsor email (see sponsor-emails), must be configured when require-sponsor-approval is true.\n\nSee also the sponsor-emails field for configuring specific email addresses as valid sponsors.\n\nBoth the sponsor-domains and sponsor-emails lists define valid sponsors.",
             "items": {
               "description": "Allowed domain names for sponsor email addresses.\n\nThe maximum number of sponsor-domains allowed is 50.\n\nWhen a user is registering an account that requires sponsor approval (see require-sponsor-approval), they must provide the email address of a valid sponsor.\n\nAnyone who has an email address in one of these domains is a valid sponsor.\n\nThe sponsor-domains list can only be configured when require-sponsor-approval is true.\n\nAt least one sponsor domain (see sponsor-domains), or sponsor email (see sponsor-emails), must be configured when require-sponsor-approval is true.\n\nSee also the sponsor-emails field for configuring specific email addresses as valid sponsors.\n\nBoth the sponsor-domains and sponsor-emails lists define valid sponsors.",
               "format": "pattern",
@@ -3122,10 +3149,11 @@
               "x-patterns": "'([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\\.)*([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)'",
               "x-typeDescription": "A domain name (as supported by Cloud Guest) according to RFC 952 and RFC 1123."
             },
-            "maxItems": 2147483647,
+            "maxItems": 50,
             "type": "array"
           },
           "sponsor-emails": {
+            "description": "Allowed sponsor email addresses.\n\nThe maximum number of sponsor-emails allowed is 100.\n\nWhen a user is registering an account that requires sponsor approval (see require-sponsor-approval), they must provide the email address of a valid sponsor.\n\nAny one of these email addresses is a valid sponsor.\n\nThe sponsor-emails list can only be configured when require-sponsor-approval is true.\n\nAt least one sponsor domain (see sponsor-domains), or sponsor email (see sponsor-emails), must be configured when require-sponsor-approval is true.\n\nSee also the sponsor-domains field for configuring an entire domain as valid sponsors.\n\nBoth the sponsor-domains and sponsor-emails lists define valid sponsors.",
             "items": {
               "description": "Allowed sponsor email addresses.\n\nThe maximum number of sponsor-emails allowed is 100.\n\nWhen a user is registering an account that requires sponsor approval (see require-sponsor-approval), they must provide the email address of a valid sponsor.\n\nAny one of these email addresses is a valid sponsor.\n\nThe sponsor-emails list can only be configured when require-sponsor-approval is true.\n\nAt least one sponsor domain (see sponsor-domains), or sponsor email (see sponsor-emails), must be configured when require-sponsor-approval is true.\n\nSee also the sponsor-domains field for configuring an entire domain as valid sponsors.\n\nBoth the sponsor-domains and sponsor-emails lists define valid sponsors.",
               "format": "pattern",
@@ -3136,7 +3164,7 @@
               "x-patterns": "'[-A-Za-z0-9!#$%&'*+/=?^_`{|}~]+([.][-A-Za-z0-9!#$%&'*+/=?^_`{|}~]+)*@([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\\.)*([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)'",
               "x-typeDescription": "An email address (as supported by Cloud Guest) according to RFC 5322, limited by RFC 952 and RFC 1123"
             },
-            "maxItems": 2147483647,
+            "maxItems": 100,
             "type": "array"
           }
         }
@@ -3389,14 +3417,18 @@
                     "ATTR_VLAN_NAME",
                     "ATTR_REAUTH_TIMER",
                     "ATTR_SSID",
-                    "ATTR_POLICY_ACTION"
+                    "ATTR_POLICY_ACTION",
+                    "ATTR_SIMULTANEOUS_USE",
+                    "ATTR_ALLOW_MAC_CACHING"
                   ],
                   "format": "enum",
                   "type": "string",
                   "x-enumDescriptions": {
+                    "ATTR_ALLOW_MAC_CACHING": "Mac caching property for Captive Portal",
                     "ATTR_ARUBA_ROLE": "Aruba Role",
                     "ATTR_POLICY_ACTION": "Policy Action result with possible values of Accept or Reject",
                     "ATTR_REAUTH_TIMER": "Session reauth timer",
+                    "ATTR_SIMULTANEOUS_USE": "The value for this attribute will be used to allow or deny access\nbased on the current count of concurrent sessions for the associated user account",
                     "ATTR_SSID": "SSID NAME",
                     "ATTR_VLAN_ID": "VLAN ID",
                     "ATTR_VLAN_NAME": "VLAN NAME"
@@ -3461,14 +3493,18 @@
                     "ATTR_VLAN_NAME",
                     "ATTR_REAUTH_TIMER",
                     "ATTR_SSID",
-                    "ATTR_POLICY_ACTION"
+                    "ATTR_POLICY_ACTION",
+                    "ATTR_SIMULTANEOUS_USE",
+                    "ATTR_ALLOW_MAC_CACHING"
                   ],
                   "format": "enum",
                   "type": "string",
                   "x-enumDescriptions": {
+                    "ATTR_ALLOW_MAC_CACHING": "Mac caching property for Captive Portal",
                     "ATTR_ARUBA_ROLE": "Aruba Role",
                     "ATTR_POLICY_ACTION": "Policy Action result with possible values of Accept or Reject",
                     "ATTR_REAUTH_TIMER": "Session reauth timer",
+                    "ATTR_SIMULTANEOUS_USE": "The value for this attribute will be used to allow or deny access\nbased on the current count of concurrent sessions for the associated user account",
                     "ATTR_SSID": "SSID NAME",
                     "ATTR_VLAN_ID": "VLAN ID",
                     "ATTR_VLAN_NAME": "VLAN NAME"
@@ -4841,7 +4877,7 @@
                     "messaging-service"
                   ]
                 },
-                "maxItems": 2147483647,
+                "maxItems": 20,
                 "type": "array",
                 "x-key": [
                   "countryCode"
@@ -4918,7 +4954,7 @@
                     "messaging-service"
                   ]
                 },
-                "maxItems": 2147483647,
+                "maxItems": 20,
                 "type": "array",
                 "x-key": [
                   "countryCode"
@@ -7755,7 +7791,7 @@
                 "name"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 400,
             "type": "array",
             "x-key": [
               "tagId"
@@ -7902,7 +7938,8 @@
                     }
                   ]
                 },
-                "maxItems": 2147483647,
+                "maxItems": 10,
+                "minItems": 0,
                 "type": "array",
                 "x-key": [
                   "uemId"
@@ -7989,7 +8026,8 @@
                     }
                   ]
                 },
-                "maxItems": 2147483647,
+                "maxItems": 10,
+                "minItems": 0,
                 "type": "array",
                 "x-key": [
                   "uemId"
@@ -9175,6 +9213,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Authentication profile to be used for Central NAC.\n\nAuthentication profile defines the authentication method, authentication sources, and additional attributes used to authenticate users on the associated networks.\n\nAuthentication profiles must be configured with default query parameters.",
+        "operationId": "replaceAuthProfilesProfileByID",
+        "parameters": [
+          {
+            "description": "Unique immutable identifier for auth profile.",
+            "in": "path",
+            "name": "auth-profile-id",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaCdaAuthProfile_AuthProfilesprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by auth-profile-id",
+        "tags": [
+          "Cda Auth Profile"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceAuthProfilesProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "auth-profile-id"
+            }
+          ],
+          "parentCommand": "replaceAuthProfilesCmd",
+          "pathToPrint": "/auth-profiles/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/authz-policies": {
@@ -9632,6 +9753,89 @@
           "parentCommand": "createAuthzPoliciesCmd",
           "pathToPrint": "/authz-policies/policy/%s/",
           "summary": "Create operation for policy",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Authorization Policy to be used for Central NAC.\n\nAuthorization policy defines authorization sources and rules that determine the enforcement profile that is assigned to user or device upon authorization.",
+        "operationId": "replaceAuthzPoliciesPolicyByID",
+        "parameters": [
+          {
+            "description": "Unique immutable identifier for policy.",
+            "in": "path",
+            "name": "policy-id",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaCdaAuthzPolicy_AuthzPoliciespolicySchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace policy by policy-id",
+        "tags": [
+          "Cda Authz Policy"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceAuthzPoliciesPolicyCmd",
+          "commandUse": "policy",
+          "paramKeys": [
+            {
+              "key": "policy-id"
+            }
+          ],
+          "parentCommand": "replaceAuthzPoliciesCmd",
+          "pathToPrint": "/authz-policies/policy/%s/",
+          "summary": "Replace operation for policy",
           "totParams": 1
         }
       }
@@ -10093,6 +10297,89 @@
           "summary": "Create operation for custom-message",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "A custom message can be used with Central NAC portal profiles and visitor\nmanagement facilities to provide customized email and SMS messages for\nCentral NAC visitors.",
+        "operationId": "replaceCustomMessagesCustomMessageByID",
+        "parameters": [
+          {
+            "description": "Unique identifier for the custom message (must be a UUID).",
+            "in": "path",
+            "name": "message-id",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaCdaPortalCustomMessage_CustomMessagescustomMessageSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or update a custom message",
+        "tags": [
+          "Cda Portal Custom Message"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceCustomMessagesCustomMessageCmd",
+          "commandUse": "custom-message",
+          "paramKeys": [
+            {
+              "key": "message-id"
+            }
+          ],
+          "parentCommand": "replaceCustomMessagesCmd",
+          "pathToPrint": "/custom-messages/custom-message/%s/",
+          "summary": "Replace operation for custom-message",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/default-custom-messages": {
@@ -10550,6 +10837,89 @@
           "parentCommand": "createDefaultCustomMessagesCmd",
           "pathToPrint": "/default-custom-messages/default-custom-message/%s/",
           "summary": "Create operation for default-custom-message",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "default-custom-message",
+        "operationId": "replaceDefaultCustomMessagesDefaultCustomMessageByID",
+        "parameters": [
+          {
+            "description": "The ID of the custom message to be assigned as the default for the specified\ntype and purpose.\n\nThe type of this assigned default must match the type of the referenced\nmessage.\n\nThe purpose of this assigned default must match the purpose of the referenced\nmessage.",
+            "in": "path",
+            "name": "message-id",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaCdaPortalDefaultCustomMessage_DefaultCustomMessagesdefaultCustomMessageSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or update default custom message assignment",
+        "tags": [
+          "Cda Portal Default Custom Message"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceDefaultCustomMessagesDefaultCustomMessageCmd",
+          "commandUse": "default-custom-message",
+          "paramKeys": [
+            {
+              "key": "message-id"
+            }
+          ],
+          "parentCommand": "replaceDefaultCustomMessagesCmd",
+          "pathToPrint": "/default-custom-messages/default-custom-message/%s/",
+          "summary": "Replace operation for default-custom-message",
           "totParams": 1
         }
       }
@@ -11011,6 +11381,89 @@
           "summary": "Create operation for store",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Identity store to be used for Central NAC.\nThis store can be configured for Identity providers like Azure, Microsoft, Okta and local user or MAC based stores.\nIt can be referenced in authentication profiles and authorization policies and used for authentication and authorization.",
+        "operationId": "replaceIdentityStoresStoreByID",
+        "parameters": [
+          {
+            "description": "Unique immutable identifier for identity store.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaCdaIdentityStore_IdentityStoresstoreSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace store by id",
+        "tags": [
+          "Cda Identity Store"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceIdentityStoresStoreCmd",
+          "commandUse": "store",
+          "paramKeys": [
+            {
+              "key": "id"
+            }
+          ],
+          "parentCommand": "replaceIdentityStoresCmd",
+          "pathToPrint": "/identity-stores/store/%s/",
+          "summary": "Replace operation for store",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/message-providers": {
@@ -11468,6 +11921,89 @@
           "parentCommand": "createMessageProvidersCmd",
           "pathToPrint": "/message-providers/provider/%s/",
           "summary": "Create operation for provider",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Configuration for a messaging service provider (e.g Twilio for SMS) to use\nwith Central NAC.\n\nAt most, one SMS messaging service provider is allowed.",
+        "operationId": "replaceMessageProvidersProviderByID",
+        "parameters": [
+          {
+            "description": "Unique identifier for the provider (must be a UUID).",
+            "in": "path",
+            "name": "provider-id",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaCdaMessageProvider_MessageProvidersproviderSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or update a message provider profile",
+        "tags": [
+          "Cda Message Provider"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceMessageProvidersProviderCmd",
+          "commandUse": "provider",
+          "paramKeys": [
+            {
+              "key": "provider-id"
+            }
+          ],
+          "parentCommand": "replaceMessageProvidersCmd",
+          "pathToPrint": "/message-providers/provider/%s/",
+          "summary": "Replace operation for provider",
           "totParams": 1
         }
       }
@@ -11929,6 +12465,89 @@
           "summary": "Create operation for override",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "A portal override contains multilingual text overrides to be applied to\nCentral NAC portals (e.g. MPSK provisioning, or captive portals).\n\nOverrides can be provided for each supported language.",
+        "operationId": "replaceOverridesOverrideByID",
+        "parameters": [
+          {
+            "description": "Unique identifier for the portal overrides profile (must be a UUID).",
+            "in": "path",
+            "name": "override-id",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaCdaPortalOverridesProfile_OverridesoverrideSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or update a portal overrides profile",
+        "tags": [
+          "Cda Portal Overrides Profile"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceOverridesOverrideCmd",
+          "commandUse": "override",
+          "paramKeys": [
+            {
+              "key": "override-id"
+            }
+          ],
+          "parentCommand": "replaceOverridesCmd",
+          "pathToPrint": "/overrides/override/%s/",
+          "summary": "Replace operation for override",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/portals": {
@@ -12386,6 +13005,89 @@
           "parentCommand": "createPortalsCmd",
           "pathToPrint": "/portals/portal/%s/",
           "summary": "Create operation for portal",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "A portal profile contains customizations to be applied to Central NAC\nportals (e.g. MPSK provisioning, or captive portals)",
+        "operationId": "replacePortalsPortalByID",
+        "parameters": [
+          {
+            "description": "Unique identifier for the portal profile (must be a UUID).",
+            "in": "path",
+            "name": "portal-id",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaCdaPortalProfile_PortalsportalSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or update a portal profile",
+        "tags": [
+          "Cda Portal Profile"
+        ],
+        "x-cliParam": {
+          "commandName": "replacePortalsPortalCmd",
+          "commandUse": "portal",
+          "paramKeys": [
+            {
+              "key": "portal-id"
+            }
+          ],
+          "parentCommand": "replacePortalsCmd",
+          "pathToPrint": "/portals/portal/%s/",
+          "summary": "Replace operation for portal",
           "totParams": 1
         }
       }
@@ -12847,6 +13549,89 @@
           "summary": "Create operation for skin",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "A portal skin profile contains page-level layout and presentation\ncustomizations to be applied to Central NAC portals (e.g. MPSK provisioning,\nor captive portals).",
+        "operationId": "replaceSkinsSkinByID",
+        "parameters": [
+          {
+            "description": "Unique identifier for the portal skin profile (must be a UUID).",
+            "in": "path",
+            "name": "skin-id",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaCdaPortalSkinProfile_SkinsskinSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or update a portal skin profile",
+        "tags": [
+          "Cda Portal Skin Profile"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceSkinsSkinCmd",
+          "commandUse": "skin",
+          "paramKeys": [
+            {
+              "key": "skin-id"
+            }
+          ],
+          "parentCommand": "replaceSkinsCmd",
+          "pathToPrint": "/skins/skin/%s/",
+          "summary": "Replace operation for skin",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/static-tag": {
@@ -13304,6 +14089,89 @@
           "parentCommand": "createStaticTagCmd",
           "pathToPrint": "/static-tag/tag/%s/",
           "summary": "Create operation for tag",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Static Tags for Central NAC.\n\nStatic Tags can be used to build policies that apply to specific devices.",
+        "operationId": "replaceStaticTagTagByID",
+        "parameters": [
+          {
+            "description": "Unique immutable identifier for static tag.",
+            "in": "path",
+            "name": "tag-id",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaCdaStaticTag_StaticTagtagSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update Static Tag configuration.",
+        "tags": [
+          "Cda Static Tag"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceStaticTagTagCmd",
+          "commandUse": "tag",
+          "paramKeys": [
+            {
+              "key": "tag-id"
+            }
+          ],
+          "parentCommand": "replaceStaticTagCmd",
+          "pathToPrint": "/static-tag/tag/%s/",
+          "summary": "Replace operation for tag",
           "totParams": 1
         }
       }
