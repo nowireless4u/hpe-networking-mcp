@@ -182,11 +182,11 @@ cp docker-compose.override.yml.example docker-compose.override.yml
 # edit to match the platforms you actually use
 ```
 
-The template shows a Mist-only deployment with `!reset` directives dropping every other platform's secret references — both the service-level `secrets:` list **and** the top-level `secrets:` block, which you need to do both halves of for Compose to stop trying to bind-mount the unused files. Adjust the `secrets: !reset - <names>` under `services:` to keep whichever platforms you need, and `!reset` only the top-level entries you're actually dropping. The template also has examples for per-platform write-tool flags, log level, and tool mode overrides.
+The template shows a Mist-only deployment that drops every other platform's secret references — and you need to do **both halves** for Compose to stop trying to bind-mount the unused files: the service-level `secrets:` list **and** the top-level `secrets:` block. The two halves use different Compose tags. Adjust the `secrets: !override` list under `services:` to keep whichever platforms you need — `!override` replaces the base list with just your entries (don't use `!reset` on this list; it empties it and mounts nothing). Then `!reset` only the top-level entries you're actually dropping, which removes those map keys so Compose won't resolve their files. The template also has examples for per-platform write-tool flags, log level, and tool mode overrides.
 
 `docker-compose.override.yml` is already in `.gitignore`, so your per-deployment tailoring never ends up in git. With the Mist-only override in place, you only need `secrets/mist_api_token` and `secrets/mist_host` on disk — every other secret file can be absent.
 
-> **Compose version required:** `!reset` needs Docker Compose v2.24 or newer. If you're on an older Compose, either upgrade (recommended) or skip the override file and edit `docker-compose.yml` directly, commenting out the unused platform's service-level and top-level secret entries.
+> **Compose version required:** the `!override` and `!reset` tags both need Docker Compose v2.24 or newer. If you're on an older Compose, either upgrade (recommended) or skip the override file and edit `docker-compose.yml` directly, commenting out the unused platform's service-level and top-level secret entries.
 
 ### 4. Start
 
@@ -229,7 +229,7 @@ You don't need credentials for all eight platforms. The server detects which pla
 - **Only ClearPass configured** → Only `clearpass_*` tools available; other platforms disabled
 - **No valid credentials** → Server refuses to start with a clear error message
 
-Add a platform later by populating its secret files (or removing the override's `!reset` lines) and restarting the container. The server logs which platforms are enabled at startup:
+Add a platform later by populating its secret files (and, if you dropped it in the override, adding its names back to the service-level `secrets: !override` list and removing its top-level `!reset` lines), then restarting the container. The server logs which platforms are enabled at startup:
 
 ```
 Mist: credentials loaded (token: abcd...wxyz, host: api.mist.com)
