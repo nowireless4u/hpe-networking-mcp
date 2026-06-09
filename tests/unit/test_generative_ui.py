@@ -1,10 +1,11 @@
-"""Unit tests for the env-gated Generative UI provider wiring.
+"""Unit tests for the env-gated MCP-Apps provider wiring.
 
-``MCP_ENABLE_GENERATIVE_UI=true`` registers FastMCP's ``GenerativeUI`` provider,
-which exposes ``generate_prefab_ui`` + ``search_prefab_components`` tools and a
-``ui://`` streaming-renderer resource. The provider is off by default; when on,
-both tools must survive the code-mode transform (re-exposed top-level) and ride
-alongside in dynamic mode. Mirrors the FileUpload provider's gating contract.
+``MCP_APP_ENABLE=true`` is the single switch for every MCP-Apps capability — it
+registers BOTH FastMCP's ``GenerativeUI`` provider (``generate_prefab_ui`` +
+``search_prefab_components`` + a ``ui://`` streaming-renderer resource) AND the
+``FileUpload`` provider (``file_manager`` / ``list_files`` / ``read_file``). All
+are off by default; when on, the model-visible tools must survive the code-mode
+transform (re-exposed top-level) and ride alongside in dynamic mode.
 
 These tests are intentionally SYNCHRONOUS. ``create_server()`` re-exposes the
 app-provider tools in code mode via a one-shot ``asyncio.run(mcp.get_tool(...))``,
@@ -27,6 +28,8 @@ from hpe_networking_mcp.server import create_server
 pytestmark = pytest.mark.unit
 
 _PREFAB_TOOLS = {"generate_prefab_ui", "search_prefab_components"}
+_FILE_UPLOAD_TOOLS = {"file_manager", "list_files", "read_file"}
+_APP_TOOLS = _PREFAB_TOOLS | _FILE_UPLOAD_TOOLS
 
 
 def _build(tool_mode: str) -> object:
@@ -49,19 +52,21 @@ def _resource_labels(mcp: object) -> list[str]:
 
 
 def test_disabled_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
-    """No env var → the prefab tools must NOT be registered."""
-    monkeypatch.delenv("MCP_ENABLE_GENERATIVE_UI", raising=False)
+    """No env var → NO MCP-Apps tools (prefab OR file-upload) are registered."""
+    monkeypatch.delenv("MCP_APP_ENABLE", raising=False)
     names = _tool_names(_build("code"))
-    assert not (_PREFAB_TOOLS & names), f"generative-UI tools leaked while disabled: {_PREFAB_TOOLS & names}"
+    assert not (_APP_TOOLS & names), f"MCP-Apps tools leaked while disabled: {_APP_TOOLS & names}"
 
 
 def test_enabled_code_mode_reexposes_tools(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Flag on + code mode: both prefab tools survive the CodeMode transform
-    (re-exposed top-level) and the streaming renderer resource is present."""
-    monkeypatch.setenv("MCP_ENABLE_GENERATIVE_UI", "true")
+    """Flag on + code mode: the single switch brings up BOTH providers' tools past
+    the CodeMode transform (re-exposed top-level), and the streaming renderer
+    resource is present."""
+    monkeypatch.setenv("MCP_APP_ENABLE", "true")
     mcp = _build("code")
     names = _tool_names(mcp)
     assert names >= _PREFAB_TOOLS, f"prefab tools missing top-level in code mode: {_PREFAB_TOOLS - names}"
+    assert names >= _FILE_UPLOAD_TOOLS, f"file-upload tools missing in code mode: {_FILE_UPLOAD_TOOLS - names}"
     # The CodeMode base surface (execute + 5 discovery tools) must still be there.
     assert "execute" in names
     labels = _resource_labels(mcp)
@@ -71,10 +76,10 @@ def test_enabled_code_mode_reexposes_tools(monkeypatch: pytest.MonkeyPatch) -> N
 
 
 def test_enabled_dynamic_mode_exposes_tools(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Flag on + dynamic mode: the prefab tools ride alongside the others."""
-    monkeypatch.setenv("MCP_ENABLE_GENERATIVE_UI", "true")
+    """Flag on + dynamic mode: both providers' tools ride alongside the others."""
+    monkeypatch.setenv("MCP_APP_ENABLE", "true")
     names = _tool_names(_build("dynamic"))
-    assert names >= _PREFAB_TOOLS, f"prefab tools missing in dynamic mode: {_PREFAB_TOOLS - names}"
+    assert names >= _APP_TOOLS, f"MCP-Apps tools missing in dynamic mode: {_APP_TOOLS - names}"
 
 
 def test_search_prefab_components_not_enveloped(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -82,7 +87,7 @@ def test_search_prefab_components_not_enveloped(monkeypatch: pytest.MonkeyPatch)
     requiring a top-level ``result`` key. The ResponseEnvelopeMiddleware must NOT wrap
     them — wrapping strips ``result`` and the tool's own output validation fails with
     "'result' is a required property" (same class as discovery tools, #293/#302)."""
-    monkeypatch.setenv("MCP_ENABLE_GENERATIVE_UI", "true")
+    monkeypatch.setenv("MCP_APP_ENABLE", "true")
     mcp = _build("code")
     res = asyncio.run(mcp.call_tool("search_prefab_components", {"query": "card"}))  # type: ignore[attr-defined]
     sc = getattr(res, "structured_content", None) or {}
@@ -94,7 +99,7 @@ def test_description_augmented_with_dashboard_guidance(monkeypatch: pytest.Monke
     """The tool description (not INSTRUCTIONS.md) is what steers tool selection, so
     generate_prefab_ui's description must carry the dashboard guidance AND keep the
     upstream Prefab authoring instructions. Applies in both modes."""
-    monkeypatch.setenv("MCP_ENABLE_GENERATIVE_UI", "true")
+    monkeypatch.setenv("MCP_APP_ENABLE", "true")
     for mode in ("code", "dynamic"):
         desc = _tool_descriptions(_build(mode)).get("generate_prefab_ui", "")
         assert "USE THIS TOOL FIRST" in desc, f"dashboard guidance missing in {mode} mode"

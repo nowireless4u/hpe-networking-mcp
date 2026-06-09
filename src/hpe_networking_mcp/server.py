@@ -235,18 +235,16 @@ async def lifespan(server: FastMCP):
         logger.info("Server shutdown complete")
 
 
-def _file_upload_enabled() -> bool:
-    """Whether the experimental FileUpload provider is enabled (env-gated)."""
+def _mcp_apps_enabled() -> bool:
+    """Whether the MCP-Apps providers are enabled (env-gated by ``MCP_APP_ENABLE``).
+
+    A single switch for every MCP-Apps capability — the ``FileUpload`` provider and
+    the ``GenerativeUI`` provider — since both emit ``ui://`` MCP-Apps resources that
+    only render in MCP-Apps hosts. Off by default.
+    """
     import os
 
-    return os.environ.get("MCP_ENABLE_FILE_UPLOAD", "").strip().lower() in ("1", "true", "yes")
-
-
-def _generative_ui_enabled() -> bool:
-    """Whether the experimental Generative UI provider is enabled (env-gated)."""
-    import os
-
-    return os.environ.get("MCP_ENABLE_GENERATIVE_UI", "").strip().lower() in ("1", "true", "yes")
+    return os.environ.get("MCP_APP_ENABLE", "").strip().lower() in ("1", "true", "yes")
 
 
 # Prepended to the GenerativeUI tool's own description. Tool descriptions are part
@@ -355,37 +353,31 @@ def create_server(config: ServerConfig) -> FastMCP:
     if config.uxi:
         _register_uxi_tools(mcp, config)
 
-    # --- File upload (experimental, env-gated test) ---
-    # MCP_ENABLE_FILE_UPLOAD=true registers FastMCP's FileUpload provider,
-    # which exposes a `file_manager` drag/pick upload tool carrying MCP-Apps
-    # `ui` render metadata. In code mode the CodeMode transform would hide it,
-    # so _register_code_mode() re-exposes it top-level via discovery_tools (it
-    # rides through with its `ui` metadata intact — verified). Renders only in
-    # MCP-Apps hosts (Claude Desktop / ChatGPT); a no-op visual in Claude Code.
-    if _file_upload_enabled():
-        from fastmcp.apps.file_upload import FileUpload
-
-        mcp.add_provider(FileUpload())
-        logger.info("File upload: FileUpload provider registered (MCP_ENABLE_FILE_UPLOAD=true)")
-
-    # --- Generative UI (experimental, env-gated) ---
-    # MCP_ENABLE_GENERATIVE_UI=true registers FastMCP's GenerativeUI provider
-    # (FastMCP 3.2.0+; the fastmcp[apps] extra is already pinned). It exposes a
-    # `generate_prefab_ui` tool — the model writes Prefab Python that renders as
-    # a live dashboard from data it collected (e.g. AP health across sites) — a
-    # `search_prefab_components` discovery tool, and a `ui://` streaming-renderer
-    # resource. In code mode the CodeMode transform would bury the two tools, so
-    # _register_code_mode() re-exposes them top-level via discovery_tools (their
-    # `ui` render metadata rides through intact). Renders only in MCP-Apps hosts
-    # (Claude Desktop / ChatGPT / claude.ai); a no-op visual in Claude Code.
-    # Server-side validation uses Deno (auto-installs on first use).
-    if _generative_ui_enabled():
+    # --- MCP-Apps providers (experimental, env-gated by MCP_APP_ENABLE) ---
+    # One switch enables every MCP-Apps capability. Both providers emit `ui://`
+    # MCP-Apps resources that render only in MCP-Apps hosts (Claude Desktop /
+    # ChatGPT / claude.ai); they're no-op visuals in Claude Code.
+    #
+    # FileUpload: exposes a `file_manager` drag/pick upload tool (carrying MCP-Apps
+    # `ui` render metadata) plus `list_files` / `read_file`. In code mode the
+    # CodeMode transform would hide them, so _register_code_mode() re-exposes them
+    # top-level via discovery_tools (their `ui` metadata rides through intact).
+    #
+    # GenerativeUI: exposes `generate_prefab_ui` — the model writes Prefab Python
+    # that renders as a live dashboard from data it collected (e.g. AP health across
+    # sites) — a `search_prefab_components` discovery tool, and a `ui://` streaming
+    # renderer resource. Server-side validation uses Deno (baked into the image).
+    if _mcp_apps_enabled():
         import asyncio
 
+        from fastmcp.apps.file_upload import FileUpload
         from fastmcp.apps.generative import GenerativeUI
 
+        mcp.add_provider(FileUpload())
+        logger.info("MCP Apps: FileUpload provider registered (MCP_APP_ENABLE=true)")
+
         mcp.add_provider(GenerativeUI())
-        logger.info("Generative UI: GenerativeUI provider registered (MCP_ENABLE_GENERATIVE_UI=true)")
+        logger.info("MCP Apps: GenerativeUI provider registered (MCP_APP_ENABLE=true)")
 
         # Steer dashboard/visualization requests to this tool by prepending
         # networking-specific guidance to its description (preserving the upstream
@@ -662,42 +654,35 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
         SkillsLoadDiscoveryTool(skill_registry),
     ]
 
-    # If the FileUpload provider is registered, re-expose its model-visible
-    # tools top-level so CodeMode doesn't bury them behind `execute`:
-    #   - file_manager — renders the upload UI (carries MCP-Apps `ui` meta)
-    #   - list_files / read_file — let a skill/AI enumerate + read what was
-    #     uploaded (the aos-migration upload branch's read_file fallback path)
-    # A discovery factory is `(get_catalog) -> Tool`; ours ignores the catalog
-    # and returns the already-registered Tool unchanged, so file_manager's `ui`
-    # render metadata survives the transform. create_server() runs before the
+    # If the MCP-Apps providers are registered (MCP_APP_ENABLE), re-expose their
+    # model-visible tools top-level so CodeMode doesn't bury them behind `execute`:
+    #   FileUpload  — file_manager (renders the upload UI; carries MCP-Apps `ui`
+    #                 meta) + list_files / read_file (the aos-migration upload
+    #                 branch's read_file fallback path). store_files is app-only
+    #                 (UI-internal) and intentionally NOT re-exposed.
+    #   GenerativeUI — generate_prefab_ui (carries the streaming-renderer `ui`
+    #                 meta) + search_prefab_components.
+    # A discovery factory is `(get_catalog) -> Tool`; ours ignores the catalog and
+    # returns the already-registered Tool unchanged, so the `ui` render metadata
+    # survives the transform. The `ui://` renderer resources are not tools, so the
+    # CodeMode tool transform leaves them untouched. create_server() runs before the
     # event loop starts, so a one-shot asyncio.run to fetch each tool is safe.
-    # store_files is app-only (UI-internal) and intentionally NOT re-exposed.
-    if _file_upload_enabled():
+    if _mcp_apps_enabled():
         import asyncio
 
-        for app_tool_name in ("file_manager", "list_files", "read_file"):
+        for app_tool_name in (
+            "file_manager",
+            "list_files",
+            "read_file",
+            "generate_prefab_ui",
+            "search_prefab_components",
+        ):
             try:
                 app_tool = asyncio.run(mcp.get_tool(app_tool_name))
                 discovery_tools.append(lambda get_catalog, _t=app_tool: _t)
-                logger.info("File upload: {} re-exposed top-level in code mode", app_tool_name)
+                logger.info("MCP Apps: {} re-exposed top-level in code mode", app_tool_name)
             except Exception as e:  # pragma: no cover - defensive
-                logger.warning("File upload: could not expose {} top-level: {}", app_tool_name, e)
-
-    # Same pattern for Generative UI: re-expose its two model-visible tools so
-    # CodeMode doesn't bury them behind `execute`. generate_prefab_ui carries the
-    # MCP-Apps `ui` render metadata (the streaming Prefab renderer); it rides
-    # through the discovery factory unchanged. The `ui://` renderer resource is
-    # not a tool, so the CodeMode tool transform leaves it untouched.
-    if _generative_ui_enabled():
-        import asyncio
-
-        for app_tool_name in ("generate_prefab_ui", "search_prefab_components"):
-            try:
-                app_tool = asyncio.run(mcp.get_tool(app_tool_name))
-                discovery_tools.append(lambda get_catalog, _t=app_tool: _t)
-                logger.info("Generative UI: {} re-exposed top-level in code mode", app_tool_name)
-            except Exception as e:  # pragma: no cover - defensive
-                logger.warning("Generative UI: could not expose {} top-level: {}", app_tool_name, e)
+                logger.warning("MCP Apps: could not expose {} top-level: {}", app_tool_name, e)
 
     mcp.add_transform(
         CodeMode(

@@ -23,7 +23,7 @@ Two modes are supported (the `static` mode was removed in v3.0.0.0):
     - **3 meta-tools per platform × 8 platforms** = 24: `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`
     - **2 skills tools** (since v2.3.0.0): `skills_list`, `skills_load`
 
-**Optional file upload** (`MCP_ENABLE_FILE_UPLOAD=true`, off by default): `file_manager` (drag/pick upload UI) plus `list_files` / `read_file` are exposed at the top level — even in code mode. The upload UI renders only in MCP-Apps hosts (Claude Desktop / ChatGPT); elsewhere `file_manager` is a callable tool with no rendered widget. Use it to let an operator upload an AOS 8 config for the `aos-migration` skill instead of pasting it.
+**Optional MCP-Apps providers** (`MCP_APP_ENABLE=true`, off by default — one switch for both): `file_manager` (drag/pick upload UI) plus `list_files` / `read_file`, and `generate_prefab_ui` (the model writes a live Prefab dashboard from data it collected) plus `search_prefab_components`, are exposed at the top level — even in code mode. The UIs render only in MCP-Apps hosts (Claude Desktop / ChatGPT / claude.ai); elsewhere these are callable tools with no rendered widget. Use `file_manager` to let an operator upload an AOS 8 config for the `aos-migration` skill instead of pasting it; use `generate_prefab_ui` for any dashboard / visualization request.
 
 The discovery patterns below describe **dynamic mode** (the v2.x default). In **code mode**, two discovery paths work — pick whichever your client surfaced:
 

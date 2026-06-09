@@ -160,7 +160,7 @@ Route on the reply:
 
 For the richest offline result, ask the operator to bundle `show running-config` **plus** `show ap database`, `show lc-cluster group-membership`, and `show ap active` into the upload. Object classes the parser hasn't yet modeled are marked `inconclusive — not yet parsed (include the relevant show output / extend parser)`; readiness rules whose data is absent don't fire. The API path (option 1) is still the zero-parser-gap route.
 
-**Availability of option 2 (upload):** requires the server's file-upload capability (`MCP_ENABLE_FILE_UPLOAD=true`) AND an MCP-Apps-capable client (Claude Desktop / ChatGPT) to render the upload widget. If `file_manager` is not present in the catalog, tell the operator option 2 is unavailable on this server and offer option 3 (paste) instead.
+**Availability of option 2 (upload):** requires the server's MCP-Apps capability (`MCP_APP_ENABLE=true`) AND an MCP-Apps-capable client (Claude Desktop / ChatGPT) to render the upload widget. If `file_manager` is not present in the catalog, tell the operator option 2 is unavailable on this server and offer option 3 (paste) instead.
 
 ### Stage -1 — AOS 8 reachability gate (DETECT-01)
 

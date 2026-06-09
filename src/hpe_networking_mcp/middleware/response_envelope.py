@@ -65,7 +65,7 @@ _NO_ENVELOPE_TOOLS: frozenset[str] = frozenset(
         "get_schema",
         "skills_list",
         "skills_load",
-        # GenerativeUI provider (MCP_ENABLE_GENERATIVE_UI). Both tools carry an
+        # GenerativeUI provider (MCP_APP_ENABLE). Both tools carry an
         # ``x-fastmcp-wrap-result`` output schema requiring a top-level ``result``
         # key; wrapping them in the envelope strips ``result`` and the tool's own
         # output validation fails with "'result' is a required property" — the same
