@@ -14,6 +14,7 @@ import pytest
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.central.tools.applications import (
+    _normalize_sort,
     _to_epoch_ms,
     central_get_applications,
 )
@@ -75,6 +76,27 @@ def test_unparseable_timestamp_rejected(bad: str) -> None:
     payload = exc.value.args[0]
     assert payload["status_code"] == 400
     assert "epoch" in payload["message"].lower() or "iso" in payload["message"].lower()
+
+
+# --------------------------------------------------------------------------- #
+# _normalize_sort helper
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize(
+    "raw,expected",
+    [
+        ("-usage", "usage desc"),  # Mongo/Django shorthand the model used → OData
+        ("+usage", "usage asc"),
+        ("-bytes", "bytes desc"),
+        ("usage desc", "usage desc"),  # already OData → unchanged
+        ("usage asc", "usage asc"),
+        ("usage desc, name asc", "usage desc, name asc"),  # multi-field → unchanged
+        ("usage", "usage"),  # bare field → left for Central to interpret
+    ],
+)
+def test_normalize_sort(raw: str, expected: str) -> None:
+    assert _normalize_sort(raw) == expected
 
 
 # --------------------------------------------------------------------------- #

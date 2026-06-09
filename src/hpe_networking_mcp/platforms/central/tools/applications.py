@@ -67,6 +67,22 @@ def _to_epoch_ms(label: str, value: str) -> int:
     )
 
 
+def _normalize_sort(value: str) -> str:
+    """Normalize a sort expression to the OData ``<field> asc|desc`` form Central wants.
+
+    The endpoint rejects the common ``-field`` / ``+field`` shorthand (e.g. ``-usage``)
+    with an opaque 400 — it only accepts ``<field> desc`` / ``<field> asc``. Convert the
+    single-field leading-sign shorthand; pass anything already OData-shaped (or a
+    multi-field / comma list) through unchanged for Central to validate.
+
+    ``-usage`` -> ``usage desc`` · ``+usage`` -> ``usage asc`` · ``usage desc`` -> unchanged
+    """
+    s = value.strip()
+    if s and s[0] in "+-" and " " not in s and "," not in s:
+        return f"{s[1:].strip()} {'desc' if s[0] == '-' else 'asc'}"
+    return s
+
+
 @tool(annotations=READ_ONLY)
 async def central_get_applications(
     ctx: Context,
@@ -97,7 +113,9 @@ async def central_get_applications(
         offset: Starting record offset for pagination (default 0).
         client_id: Filter results to a specific client ID.
         filter: OData filter expression to narrow results.
-        sort: Sort order for results.
+        sort: OData sort order, "<field> asc|desc" (e.g. "usage desc" for the top
+            apps by traffic). The "-field" / "+field" shorthand is also accepted and
+            normalized (e.g. "-usage" -> "usage desc").
     """
     # Validate inputs up front so a bad timestamp yields an actionable error instead
     # of the opaque upstream HTTP 400 (issue #458).
@@ -127,7 +145,7 @@ async def central_get_applications(
     if filter:
         query_params["filter"] = filter
     if sort:
-        query_params["sort"] = sort
+        query_params["sort"] = _normalize_sort(sort)
 
     try:
         resp = retry_central_command(
