@@ -50,7 +50,7 @@ services:
     # platforms — keep the service-level secret names you use, and !reset the
     # top-level secrets dict entries you don't. Do both halves: the service's
     # `secrets:` list AND the top-level `secrets:` block.
-    secrets: !reset
+    secrets: !override
       - mist_api_token
       - mist_host
 
