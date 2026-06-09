@@ -502,7 +502,7 @@
                       }
                     ]
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 12,
                   "type": "array",
                   "x-key": [
                     "mac"
@@ -525,7 +525,7 @@
                       }
                     ]
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 12,
                   "type": "array",
                   "x-key": [
                     "mac"
@@ -660,7 +660,7 @@
                 }
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 12,
             "type": "array",
             "x-key": [
               "mac"
@@ -683,7 +683,7 @@
                 }
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 12,
             "type": "array",
             "x-key": [
               "mac"
@@ -807,7 +807,7 @@
                 }
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 12,
             "type": "array",
             "x-key": [
               "mac"
@@ -830,7 +830,7 @@
                 }
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 12,
             "type": "array",
             "x-key": [
               "mac"
@@ -1957,6 +1957,7 @@
               ]
             },
             "maxItems": 2147483647,
+            "minItems": 1,
             "type": "array",
             "x-key": [
               "id"
@@ -2027,6 +2028,7 @@
               ]
             },
             "maxItems": 2147483647,
+            "minItems": 1,
             "type": "array",
             "x-key": [
               "id"
@@ -2116,6 +2118,7 @@
             "type": "string"
           },
           "interfaces": {
+            "description": "Interface(s) associated with the stack link.\nStacks with 6200/6300/6300L/4100i/6100 platform can have upto 4 interfaces per stack link\nand other platforms allows upto 8 interfaces per stack link.",
             "items": {
               "description": "Interface(s) associated with the stack link.\nStacks with 6200/6300/6300L/4100i/6100 platform can have upto 4 interfaces per stack link\nand other platforms allows upto 8 interfaces per stack link.",
               "oneOf": [
@@ -2185,6 +2188,7 @@
             "type": "string"
           },
           "interfaces": {
+            "description": "Interface(s) associated with the stack link.\nStacks with 6200/6300/6300L/4100i/6100 platform can have upto 4 interfaces per stack link\nand other platforms allows upto 8 interfaces per stack link.",
             "items": {
               "description": "Interface(s) associated with the stack link.\nStacks with 6200/6300/6300L/4100i/6100 platform can have upto 4 interfaces per stack link\nand other platforms allows upto 8 interfaces per stack link.",
               "oneOf": [
@@ -2795,6 +2799,40 @@
             ],
             "x-mandatory": true
           },
+          "port-speed": {
+            "description": "Port speed for the stack.",
+            "enum": [
+              "SPEED_10MB",
+              "SPEED_100MB",
+              "SPEED_1GB",
+              "SPEED_2_5GB",
+              "SPEED_5GB",
+              "SPEED_10GB",
+              "SPEED_40GB",
+              "SPEED_100GB",
+              "SPEED_1000GB",
+              "SPEED_AUTO"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "SPEED_1000GB": "1000 Gb/sec Ethernet.",
+              "SPEED_100GB": "100 Gb/sec Ethernet.",
+              "SPEED_100MB": "100 Mb/sec Ethernet.",
+              "SPEED_10GB": "10 Gb/sec Ethernet.",
+              "SPEED_10MB": "10 Mb/sec Ethernet.",
+              "SPEED_1GB": "1 Gb/sec Ethernet.",
+              "SPEED_2_5GB": "2.5 Gb/sec Ethernet.",
+              "SPEED_40GB": "40 Gb/sec Ethernet.",
+              "SPEED_5GB": "5 Gb/sec Ethernet.",
+              "SPEED_AUTO": "Auto negotiation Ethernet."
+            },
+            "x-supportedDeviceType": [
+              "Switch PVOS",
+              "Switch CX"
+            ],
+            "x-typeDescription": "Speed Type."
+          },
           "secondary-member": {
             "description": "Indicates the secondary member of the stack.",
             "format": "int32",
@@ -2823,6 +2861,13 @@
               "Switch CX"
             ],
             "x-typeDescription": "Split detection methods for the stack."
+          },
+          "template-name": {
+            "description": "Indicates whether the stack is managed via a template.",
+            "format": "const",
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
           }
         },
         "required": [
@@ -2915,6 +2960,40 @@
             ],
             "x-mandatory": true
           },
+          "port-speed": {
+            "description": "Port speed for the stack.",
+            "enum": [
+              "SPEED_10MB",
+              "SPEED_100MB",
+              "SPEED_1GB",
+              "SPEED_2_5GB",
+              "SPEED_5GB",
+              "SPEED_10GB",
+              "SPEED_40GB",
+              "SPEED_100GB",
+              "SPEED_1000GB",
+              "SPEED_AUTO"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "SPEED_1000GB": "1000 Gb/sec Ethernet.",
+              "SPEED_100GB": "100 Gb/sec Ethernet.",
+              "SPEED_100MB": "100 Mb/sec Ethernet.",
+              "SPEED_10GB": "10 Gb/sec Ethernet.",
+              "SPEED_10MB": "10 Mb/sec Ethernet.",
+              "SPEED_1GB": "1 Gb/sec Ethernet.",
+              "SPEED_2_5GB": "2.5 Gb/sec Ethernet.",
+              "SPEED_40GB": "40 Gb/sec Ethernet.",
+              "SPEED_5GB": "5 Gb/sec Ethernet.",
+              "SPEED_AUTO": "Auto negotiation Ethernet."
+            },
+            "x-supportedDeviceType": [
+              "Switch PVOS",
+              "Switch CX"
+            ],
+            "x-typeDescription": "Speed Type."
+          },
           "secondary-member": {
             "description": "Indicates the secondary member of the stack.",
             "format": "int32",
@@ -2943,6 +3022,13 @@
               "Switch CX"
             ],
             "x-typeDescription": "Split detection methods for the stack."
+          },
+          "template-name": {
+            "description": "Indicates whether the stack is managed via a template.",
+            "format": "const",
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
           }
         },
         "required": [
@@ -2993,40 +3079,6 @@
                       "x-supportedDeviceType": [
                         "Switch PVOS"
                       ]
-                    },
-                    "port-speed": {
-                      "description": "Port speed for the stack.",
-                      "enum": [
-                        "SPEED_10MB",
-                        "SPEED_100MB",
-                        "SPEED_1GB",
-                        "SPEED_2_5GB",
-                        "SPEED_5GB",
-                        "SPEED_10GB",
-                        "SPEED_40GB",
-                        "SPEED_100GB",
-                        "SPEED_1000GB",
-                        "SPEED_AUTO"
-                      ],
-                      "format": "enum",
-                      "type": "string",
-                      "x-enumDescriptions": {
-                        "SPEED_1000GB": "1000 Gb/sec Ethernet.",
-                        "SPEED_100GB": "100 Gb/sec Ethernet.",
-                        "SPEED_100MB": "100 Mb/sec Ethernet.",
-                        "SPEED_10GB": "10 Gb/sec Ethernet.",
-                        "SPEED_10MB": "10 Mb/sec Ethernet.",
-                        "SPEED_1GB": "1 Gb/sec Ethernet.",
-                        "SPEED_2_5GB": "2.5 Gb/sec Ethernet.",
-                        "SPEED_40GB": "40 Gb/sec Ethernet.",
-                        "SPEED_5GB": "5 Gb/sec Ethernet.",
-                        "SPEED_AUTO": "Auto negotiation Ethernet."
-                      },
-                      "x-supportedDeviceType": [
-                        "Switch PVOS",
-                        "Switch CX"
-                      ],
-                      "x-typeDescription": "Speed Type."
                     },
                     "split-policy": {
                       "description": "Configures the split-policy for stack splits. It determines the behavior\nof the fragments resulting from a stack split. This option is available\nonly for 2930M and 3810 stacks.",
@@ -3124,40 +3176,6 @@
                   "Switch PVOS"
                 ]
               },
-              "port-speed": {
-                "description": "Port speed for the stack.",
-                "enum": [
-                  "SPEED_10MB",
-                  "SPEED_100MB",
-                  "SPEED_1GB",
-                  "SPEED_2_5GB",
-                  "SPEED_5GB",
-                  "SPEED_10GB",
-                  "SPEED_40GB",
-                  "SPEED_100GB",
-                  "SPEED_1000GB",
-                  "SPEED_AUTO"
-                ],
-                "format": "enum",
-                "type": "string",
-                "x-enumDescriptions": {
-                  "SPEED_1000GB": "1000 Gb/sec Ethernet.",
-                  "SPEED_100GB": "100 Gb/sec Ethernet.",
-                  "SPEED_100MB": "100 Mb/sec Ethernet.",
-                  "SPEED_10GB": "10 Gb/sec Ethernet.",
-                  "SPEED_10MB": "10 Mb/sec Ethernet.",
-                  "SPEED_1GB": "1 Gb/sec Ethernet.",
-                  "SPEED_2_5GB": "2.5 Gb/sec Ethernet.",
-                  "SPEED_40GB": "40 Gb/sec Ethernet.",
-                  "SPEED_5GB": "5 Gb/sec Ethernet.",
-                  "SPEED_AUTO": "Auto negotiation Ethernet."
-                },
-                "x-supportedDeviceType": [
-                  "Switch PVOS",
-                  "Switch CX"
-                ],
-                "x-typeDescription": "Speed Type."
-              },
               "split-policy": {
                 "description": "Configures the split-policy for stack splits. It determines the behavior\nof the fragments resulting from a stack split. This option is available\nonly for 2930M and 3810 stacks.",
                 "enum": [
@@ -3239,40 +3257,6 @@
                   "Switch PVOS"
                 ]
               },
-              "port-speed": {
-                "description": "Port speed for the stack.",
-                "enum": [
-                  "SPEED_10MB",
-                  "SPEED_100MB",
-                  "SPEED_1GB",
-                  "SPEED_2_5GB",
-                  "SPEED_5GB",
-                  "SPEED_10GB",
-                  "SPEED_40GB",
-                  "SPEED_100GB",
-                  "SPEED_1000GB",
-                  "SPEED_AUTO"
-                ],
-                "format": "enum",
-                "type": "string",
-                "x-enumDescriptions": {
-                  "SPEED_1000GB": "1000 Gb/sec Ethernet.",
-                  "SPEED_100GB": "100 Gb/sec Ethernet.",
-                  "SPEED_100MB": "100 Mb/sec Ethernet.",
-                  "SPEED_10GB": "10 Gb/sec Ethernet.",
-                  "SPEED_10MB": "10 Mb/sec Ethernet.",
-                  "SPEED_1GB": "1 Gb/sec Ethernet.",
-                  "SPEED_2_5GB": "2.5 Gb/sec Ethernet.",
-                  "SPEED_40GB": "40 Gb/sec Ethernet.",
-                  "SPEED_5GB": "5 Gb/sec Ethernet.",
-                  "SPEED_AUTO": "Auto negotiation Ethernet."
-                },
-                "x-supportedDeviceType": [
-                  "Switch PVOS",
-                  "Switch CX"
-                ],
-                "x-typeDescription": "Speed Type."
-              },
               "split-policy": {
                 "description": "Configures the split-policy for stack splits. It determines the behavior\nof the fragments resulting from a stack split. This option is available\nonly for 2930M and 3810 stacks.",
                 "enum": [
@@ -3327,6 +3311,7 @@
               ]
             },
             "maxItems": 2147483647,
+            "minItems": 1,
             "type": "array",
             "x-key": [
               "id"
@@ -3347,6 +3332,7 @@
               ]
             },
             "maxItems": 2147483647,
+            "minItems": 1,
             "type": "array",
             "x-key": [
               "id"
@@ -3373,6 +3359,7 @@
                 {
                   "properties": {
                     "conductor-serials": {
+                      "description": "List of conductor serials to which this VSF template must be applied.",
                       "items": {
                         "description": "List of conductor serials to which this VSF template must be applied.",
                         "format": "pattern",
@@ -3441,6 +3428,7 @@
           {
             "properties": {
               "conductor-serials": {
+                "description": "List of conductor serials to which this VSF template must be applied.",
                 "items": {
                   "description": "List of conductor serials to which this VSF template must be applied.",
                   "format": "pattern",
@@ -3498,6 +3486,7 @@
           {
             "properties": {
               "conductor-serials": {
+                "description": "List of conductor serials to which this VSF template must be applied.",
                 "items": {
                   "description": "List of conductor serials to which this VSF template must be applied.",
                   "format": "pattern",
@@ -4034,6 +4023,7 @@
                 "type": "boolean"
               },
               "ipv4-address": {
+                "description": "List of active gateway IPv4 addresses.",
                 "items": {
                   "description": "List of active gateway IPv4 addresses.",
                   "format": "pattern",
@@ -4047,6 +4037,7 @@
                 "type": "array"
               },
               "ipv6-address": {
+                "description": "List of active gateway IPv6 addresses.",
                 "items": {
                   "description": "List of active gateway IPv6 addresses.",
                   "format": "pattern",
@@ -4104,6 +4095,7 @@
                 "type": "boolean"
               },
               "ipv4-address": {
+                "description": "List of active gateway IPv4 addresses.",
                 "items": {
                   "description": "List of active gateway IPv4 addresses.",
                   "format": "pattern",
@@ -4117,6 +4109,7 @@
                 "type": "array"
               },
               "ipv6-address": {
+                "description": "List of active gateway IPv6 addresses.",
                 "items": {
                   "description": "List of active gateway IPv6 addresses.",
                   "format": "pattern",
@@ -4375,6 +4368,7 @@
             "x-typeDescription": "An IPv4 prefix represented in dotted quad notation followed by\na slash and a CIDR mask (0 <= mask <= 32)."
           },
           "ipv4-address-secondary": {
+            "description": "Secondary IPv4 address configuration on an interface.",
             "items": {
               "description": "Secondary IPv4 address configuration on an interface.",
               "format": "pattern",
@@ -4388,6 +4382,7 @@
             "type": "array"
           },
           "ipv6-address": {
+            "description": "IPv6 address configuration on an interface.",
             "items": {
               "description": "IPv6 address configuration on an interface.",
               "format": "pattern",
@@ -4437,6 +4432,7 @@
             "x-typeDescription": "An IPv4 prefix represented in dotted quad notation followed by\na slash and a CIDR mask (0 <= mask <= 32)."
           },
           "ipv4-address-secondary": {
+            "description": "Secondary IPv4 address configuration on an interface.",
             "items": {
               "description": "Secondary IPv4 address configuration on an interface.",
               "format": "pattern",
@@ -4450,6 +4446,7 @@
             "type": "array"
           },
           "ipv6-address": {
+            "description": "IPv6 address configuration on an interface.",
             "items": {
               "description": "IPv6 address configuration on an interface.",
               "format": "pattern",
@@ -4774,6 +4771,7 @@
                       ]
                     },
                     "port-list": {
+                      "description": "Attach physical interfaces to tunnel interface.",
                       "items": {
                         "description": "Attach physical interfaces to tunnel interface.",
                         "format": "pattern",
@@ -4964,6 +4962,7 @@
                       ]
                     },
                     "port-list": {
+                      "description": "Attach physical interfaces to tunnel interface.",
                       "items": {
                         "description": "Attach physical interfaces to tunnel interface.",
                         "format": "pattern",
@@ -5090,6 +5089,7 @@
                 ]
               },
               "trunk-vlan-ranges": {
+                "description": "VLAN ranges that the interface may carry when in trunk mode.",
                 "items": {
                   "description": "VLAN ranges that the interface may carry when in trunk mode.",
                   "format": "pattern",
@@ -5103,6 +5103,7 @@
                 "type": "array"
               },
               "trunk-vlans": {
+                "description": "VLANs that the interface may carry when in trunk mode.",
                 "items": {
                   "description": "VLANs that the interface may carry when in trunk mode.",
                   "format": "int32",
@@ -5172,6 +5173,7 @@
                 ]
               },
               "trunk-vlan-ranges": {
+                "description": "VLAN ranges that the interface may carry when in trunk mode.",
                 "items": {
                   "description": "VLAN ranges that the interface may carry when in trunk mode.",
                   "format": "pattern",
@@ -5185,6 +5187,7 @@
                 "type": "array"
               },
               "trunk-vlans": {
+                "description": "VLANs that the interface may carry when in trunk mode.",
                 "items": {
                   "description": "VLANs that the interface may carry when in trunk mode.",
                   "format": "int32",
@@ -6853,6 +6856,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "List of Gateway Cluster Profiles.",
+        "operationId": "replaceGatewayClustersProfileByID",
+        "parameters": [
+          {
+            "description": "Gateway Cluster Profile name. Manual cluster profile name should not start with auto_ prefix and it should not contain space.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaGwCluster_GatewayClustersprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update an existing gateway cluster profile configuration",
+        "tags": [
+          "Gw Cluster"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceGatewayClustersProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceGatewayClustersCmd",
+          "pathToPrint": "/gateway-clusters/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/stacks": {
@@ -7310,6 +7396,89 @@
           "parentCommand": "createStacksCmd",
           "pathToPrint": "/stacks/stack/%s/",
           "summary": "Create operation for stack",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "List of stacks.",
+        "operationId": "replaceStacksStackByID",
+        "parameters": [
+          {
+            "description": "Name of the stack.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaSwitchStack_StacksstackSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing stack configurations",
+        "tags": [
+          "Switch Stack"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceStacksStackCmd",
+          "commandUse": "stack",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceStacksCmd",
+          "pathToPrint": "/stacks/stack/%s/",
+          "summary": "Replace operation for stack",
           "totParams": 1
         }
       }
@@ -7771,6 +7940,89 @@
           "summary": "Create operation for template",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "List of VSF templates.",
+        "operationId": "replaceVsfTemplatesTemplateByID",
+        "parameters": [
+          {
+            "description": "Name of the VSF template.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaVsfTemplate_VsfTemplatestemplateSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing template configurations",
+        "tags": [
+          "Vsf Template"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceVsfTemplatesTemplateCmd",
+          "commandUse": "template",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceVsfTemplatesCmd",
+          "pathToPrint": "/vsf-templates/template/%s/",
+          "summary": "Replace operation for template",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/vsx-profiles": {
@@ -8228,6 +8480,89 @@
           "parentCommand": "createVsxProfilesCmd",
           "pathToPrint": "/vsx-profiles/vsx/%s/",
           "summary": "Create operation for vsx",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "VSX profile name.",
+        "operationId": "replaceVsxProfilesVsxByID",
+        "parameters": [
+          {
+            "description": "VSX configuration name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaVsx_VsxProfilesvsxSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace vsx by name",
+        "tags": [
+          "Vsx"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceVsxProfilesVsxCmd",
+          "commandUse": "vsx",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceVsxProfilesCmd",
+          "pathToPrint": "/vsx-profiles/vsx/%s/",
+          "summary": "Replace operation for vsx",
           "totParams": 1
         }
       }

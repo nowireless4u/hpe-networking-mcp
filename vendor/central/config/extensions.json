@@ -448,7 +448,8 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 3,
+            "minItems": 1,
             "type": "array",
             "x-key": [
               "ds"
@@ -490,7 +491,8 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 3,
+            "minItems": 1,
             "type": "array",
             "x-key": [
               "ds"
@@ -562,7 +564,7 @@
                 }
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 8,
             "type": "array",
             "x-key": [
               "name"
@@ -984,6 +986,7 @@
             ]
           },
           "psm-ips": {
+            "description": "IP's to access PSM.",
             "items": {
               "description": "IP's to access PSM.",
               "format": "pattern",
@@ -996,7 +999,8 @@
               ],
               "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
             },
-            "maxItems": 2147483647,
+            "maxItems": 3,
+            "minItems": 1,
             "type": "array"
           },
           "vrf": {
@@ -1048,6 +1052,7 @@
             ]
           },
           "psm-ips": {
+            "description": "IP's to access PSM.",
             "items": {
               "description": "IP's to access PSM.",
               "format": "pattern",
@@ -1060,7 +1065,8 @@
               ],
               "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
             },
-            "maxItems": 2147483647,
+            "maxItems": 3,
+            "minItems": 1,
             "type": "array"
           },
           "vrf": {
@@ -2026,6 +2032,89 @@
           "summary": "Create operation for psm-instance",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "List of PSM instance.",
+        "operationId": "replacePsmPsmInstanceByID",
+        "parameters": [
+          {
+            "description": "Name of the PSM.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaPsm_PsmpsmInstanceSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace psm-instance by name",
+        "tags": [
+          "Psm"
+        ],
+        "x-cliParam": {
+          "commandName": "replacePsmPsmInstanceCmd",
+          "commandUse": "psm-instance",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replacePsmCmd",
+          "pathToPrint": "/psm/psm-instance/%s/",
+          "summary": "Replace operation for psm-instance",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/splunk-instances": {
@@ -2485,6 +2574,89 @@
           "summary": "Create operation for instance",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "List of Splunk Extension installed instances.",
+        "operationId": "replaceSplunkInstancesInstanceByID",
+        "parameters": [
+          {
+            "description": "Extension instance name. Required field.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaExtensionSplunk_SplunkInstancesinstanceSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace instance by name",
+        "tags": [
+          "Extension Splunk"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceSplunkInstancesInstanceCmd",
+          "commandUse": "instance",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceSplunkInstancesCmd",
+          "pathToPrint": "/splunk-instances/instance/%s/",
+          "summary": "Replace operation for instance",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/vsphere-instances": {
@@ -2942,6 +3114,89 @@
           "parentCommand": "createVsphereInstancesCmd",
           "pathToPrint": "/vsphere-instances/vsphere-instance/%s/",
           "summary": "Create operation for vsphere-instance",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "List of vSphere Extension installed instances.",
+        "operationId": "replaceVsphereInstancesVsphereInstanceByID",
+        "parameters": [
+          {
+            "description": "Extension instance name. Required field.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaExtensionVsphere_VsphereInstancesvsphereInstanceSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace vsphere-instance by name",
+        "tags": [
+          "Extension Vsphere"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceVsphereInstancesVsphereInstanceCmd",
+          "commandUse": "vsphere-instance",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceVsphereInstancesCmd",
+          "pathToPrint": "/vsphere-instances/vsphere-instance/%s/",
+          "summary": "Replace operation for vsphere-instance",
           "totParams": 1
         }
       }

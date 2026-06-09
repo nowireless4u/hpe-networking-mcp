@@ -946,7 +946,6 @@
                 "scheduleLastRunTs desc",
                 "scheduleNextRunTs desc",
                 "scheduleTotalRuns desc",
-                "scheduleCreatedBy asc",
                 "createdBy asc",
                 "scheduleEnd desc"
               ],
@@ -1013,13 +1012,87 @@
       }
     },
     "/network-reporting/v1/reports/{report-id}": {
+      "delete": {
+        "description": "This API endpoint deletes particular user report with report ID, it will also delete associated report runs in the process of deleting report. Report ID can be obtained from **List Reports API**.",
+        "operationId": "deleteUserReport",
+        "parameters": [
+          {
+            "description": "The unique identifier of the user report.",
+            "example": "1",
+            "in": "path",
+            "name": "report-id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "status": {
+                      "examples": [
+                        "Success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successfully deleted user report.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-Rate-Limit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-Rate-Limit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-Rate-Limit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Delete Report",
+        "tags": [
+          "Reporting"
+        ]
+      },
       "put": {
         "description": "This API endpoint updates a User Report with a report ID. Report ID can be obtained from **List Reports API**.",
         "operationId": "updateUserReport",
         "parameters": [
           {
             "description": "The unique identifier of the user report.",
-            "example": 1,
+            "example": "1",
             "in": "path",
             "name": "report-id",
             "required": true,
@@ -1127,7 +1200,7 @@
         "parameters": [
           {
             "description": "The unique identifier of the user report.",
-            "example": 1,
+            "example": "1",
             "in": "path",
             "name": "report-id",
             "required": true,
@@ -1202,6 +1275,218 @@
           }
         ],
         "summary": "List Report Runs",
+        "tags": [
+          "Reporting"
+        ]
+      }
+    },
+    "/network-reporting/v1/reports/{report-id}/report-runs/{report-run-id}": {
+      "delete": {
+        "description": "This API endpoint deletes particular report runs with report run ID. Report ID can be obtained from **List Reports API** and Report run ID can be obtained from **List Report Runs API**.",
+        "operationId": "deleteReportRun",
+        "parameters": [
+          {
+            "description": "The unique identifier of the user report.",
+            "example": "1",
+            "in": "path",
+            "name": "report-id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The unique identifier of the report run.",
+            "example": "1",
+            "in": "path",
+            "name": "report-run-id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "status": {
+                      "examples": [
+                        "Success"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Status of report run deletion.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-Rate-Limit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-Rate-Limit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-Rate-Limit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Delete Report Run",
+        "tags": [
+          "Reporting"
+        ]
+      }
+    },
+    "/network-reporting/v1/reports/{report-id}/report-runs/{report-run-id}/download-link": {
+      "post": {
+        "description": "This endpoint allows users to retrieve a downloadable link for a previously generated report run. Users can specify the export file format (CSV or PDF) by providing the appropriate `exportType` parameter in the request body. The response will contain the file's download URL, MIME type (application/zip for CSV file format and application/pdf for PDF file format), and the suggested file name for the report. Report ID can be obtained from **List Reports API** and Report run ID can be obtained from **List Report Runs API**.",
+        "operationId": "downloadReportLink",
+        "parameters": [
+          {
+            "description": "The unique identifier of the user report.",
+            "example": "1",
+            "in": "path",
+            "name": "report-id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The unique identifier of the report run",
+            "example": "1",
+            "in": "path",
+            "name": "report-run-id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "exportType": "CSV"
+              },
+              "schema": {
+                "properties": {
+                  "exportType": {
+                    "$ref": "#/components/schemas/ReportFormat",
+                    "description": "export file format"
+                  }
+                },
+                "required": [
+                  "exportType"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "fileName": {
+                      "examples": [
+                        "report.zip"
+                      ],
+                      "type": "string"
+                    },
+                    "mimeType": {
+                      "examples": [
+                        "application/zip",
+                        "application/pdf"
+                      ],
+                      "type": "string"
+                    },
+                    "url": {
+                      "examples": [
+                        "https://download-url/report"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "fileName",
+                    "mimeType",
+                    "url"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successfully generated report download link.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-Rate-Limit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-Rate-Limit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-Rate-Limit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get Download Report Link",
         "tags": [
           "Reporting"
         ]

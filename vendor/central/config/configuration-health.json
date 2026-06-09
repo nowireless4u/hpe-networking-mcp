@@ -20,7 +20,7 @@
         }
       },
       "XRateLimitResetHeader": {
-        "description": "The UTC date/time at which the current rate limit window resets.",
+        "description": "The UTC date and time when the current rate limit window resets.",
         "schema": {
           "format": "date-time",
           "maxLength": 20,
@@ -33,32 +33,32 @@
         "content": {
           "application/json": {
             "schema": {
-              "description": "Error details returned from the server.\n",
+              "description": "Error details returned from the server.",
               "properties": {
                 "debugId": {
-                  "description": "This can be used to help with troubleshooting\n",
+                  "description": "This can be used to help with troubleshooting",
                   "example": "abc-123-456",
                   "format": "const",
                   "maxLength": 50,
                   "type": "string"
                 },
                 "errorCode": {
-                  "description": "Bad Request.\n",
+                  "description": "Bad Request.",
                   "example": "HPE_GL_ERROR_BAD_REQUEST",
                   "format": "const",
                   "maxLength": 32,
                   "type": "string"
                 },
                 "httpStatusCode": {
-                  "description": "HTTP status code.\n",
+                  "description": "HTTP status code.",
                   "example": 400,
                   "maximum": 400,
                   "minimum": 400,
                   "type": "integer"
                 },
                 "message": {
-                  "description": "Error message indicating the cause of the failure.\n",
-                  "example": "Authentication error - the token was expired",
+                  "description": "Error message indicating invalid input or malformed request.",
+                  "example": "Invalid request parameters or malformed input.",
                   "format": "const",
                   "maxLength": 512,
                   "type": "string"
@@ -91,10 +91,10 @@
         "content": {
           "application/json": {
             "schema": {
-              "description": "Error details returned from the server.\n",
+              "description": "Error details returned from the server.",
               "properties": {
                 "debugId": {
-                  "description": "Internal debug id.\n",
+                  "description": "Internal debug id.",
                   "example": [
                     "e5b61232-83c8-401a-8e14-a4c75b4fb745"
                   ],
@@ -103,7 +103,7 @@
                   "type": "string"
                 },
                 "errorCode": {
-                  "description": "Internal error code.\n",
+                  "description": "Internal error code.",
                   "enum": [
                     "HPE_GL_ERROR_FORBIDDEN"
                   ],
@@ -114,7 +114,7 @@
                   "type": "string"
                 },
                 "httpStatusCode": {
-                  "description": "HTTP status code.\n",
+                  "description": "HTTP status code.",
                   "example": [
                     403
                   ],
@@ -123,7 +123,7 @@
                   "type": "integer"
                 },
                 "message": {
-                  "description": "Error message indicating the cause of the failure.\n",
+                  "description": "Error message indicating the cause of the failure.",
                   "example": [
                     "Forbidden"
                   ],
@@ -159,10 +159,10 @@
         "content": {
           "application/json": {
             "schema": {
-              "description": "Error details returned from the server.\n",
+              "description": "Error details returned from the server.",
               "properties": {
                 "debugId": {
-                  "description": "Internal debug id.\n",
+                  "description": "Internal debug id.",
                   "example": [
                     "e5b61232-83c8-401a-8e14-a4c75b4fb745"
                   ],
@@ -171,7 +171,7 @@
                   "type": "string"
                 },
                 "errorCode": {
-                  "description": "Internal error code.\n",
+                  "description": "Internal error code.",
                   "enum": [
                     "HPE_GL_ERROR_INTERNAL_SERVER_ERROR"
                   ],
@@ -182,7 +182,7 @@
                   "type": "string"
                 },
                 "httpStatusCode": {
-                  "description": "HTTP status code.\n",
+                  "description": "HTTP status code.",
                   "example": [
                     500
                   ],
@@ -191,9 +191,9 @@
                   "type": "integer"
                 },
                 "message": {
-                  "description": "Error message indicating the cause of the failure.\n",
+                  "description": "Error message indicating an internal server failure.",
                   "example": [
-                    "com.arangodb.ArangoDBException: Cannot contact any host!"
+                    "An unexpected error occurred while processing the request."
                   ],
                   "format": "const",
                   "maxLength": 512,
@@ -227,10 +227,10 @@
         "content": {
           "application/json": {
             "schema": {
-              "description": "Error details returned from the server.\n",
+              "description": "Error details returned from the server.",
               "properties": {
                 "debugId": {
-                  "description": "Internal debug id.\n",
+                  "description": "Internal debug id.",
                   "example": [
                     "e5b61232-83c8-401a-8e14-a4c75b4fb745"
                   ],
@@ -239,7 +239,7 @@
                   "type": "string"
                 },
                 "errorCode": {
-                  "description": "Internal error code.\n",
+                  "description": "Internal error code.",
                   "enum": [
                     "HPE_GL_ERROR_TOO_MANY_REQUESTS"
                   ],
@@ -250,7 +250,7 @@
                   "type": "string"
                 },
                 "httpStatusCode": {
-                  "description": "HTTP status code.\n",
+                  "description": "HTTP status code.",
                   "example": [
                     429
                   ],
@@ -259,7 +259,7 @@
                   "type": "integer"
                 },
                 "message": {
-                  "description": "Error message indicating the cause of the failure.\n",
+                  "description": "Error message indicating the cause of the failure.",
                   "example": [
                     "Too Many Requests"
                   ],
@@ -295,10 +295,10 @@
         "content": {
           "application/json": {
             "schema": {
-              "description": "Error details returned from the server.\n",
+              "description": "Error details returned from the server.",
               "properties": {
                 "debugId": {
-                  "description": "Internal debug id.\n",
+                  "description": "Internal debug id.",
                   "example": [
                     "e5b61232-83c8-401a-8e14-a4c75b4fb745"
                   ],
@@ -307,7 +307,7 @@
                   "type": "string"
                 },
                 "errorCode": {
-                  "description": "Internal error code.\n",
+                  "description": "Internal error code.",
                   "enum": [
                     "HPE_GL_ERROR_UNAUTHORIZED"
                   ],
@@ -318,7 +318,7 @@
                   "type": "string"
                 },
                 "httpStatusCode": {
-                  "description": "HTTP status code.\n",
+                  "description": "HTTP status code.",
                   "example": [
                     401
                   ],
@@ -327,7 +327,7 @@
                   "type": "integer"
                 },
                 "message": {
-                  "description": "Error message indicating the cause of the failure.\n",
+                  "description": "Error message indicating the cause of the failure.",
                   "example": [
                     "Unauthorized Request"
                   ],
@@ -374,7 +374,7 @@
     }
   },
   "info": {
-    "description": "This is release of the Aruba Network Configuration APIs.",
+    "description": "This is a release of the Aruba Network Configuration APIs.",
     "license": {
       "name": "HPE",
       "url": "https://www.hpe.com/us/en/software/licensing.html"
@@ -429,7 +429,7 @@
                             "type": "string"
                           },
                           "timestamp": {
-                            "description": "Time the issue occurred at.",
+                            "description": "Time when the issue occurred.",
                             "nullable": true,
                             "type": "string"
                           }
@@ -459,7 +459,7 @@
                             "type": "string"
                           },
                           "timestamp": {
-                            "description": "Time the issue occurred at.",
+                            "description": "Time when the issue occurred.",
                             "nullable": true,
                             "type": "string"
                           }
@@ -479,7 +479,7 @@
                             "type": "string"
                           },
                           "assignedScopeType": {
-                            "description": "Scope type the profile is assigned to.",
+                            "description": "The scope type the profile is assigned to.",
                             "enum": [
                               "SCOPE_TYPE_UNSPECIFIED",
                               "SCOPE_TYPE_DEVICE",
@@ -508,7 +508,7 @@
                             "type": "string"
                           },
                           "profileName": {
-                            "description": "Name of the profile.",
+                            "description": "The name of the profile.",
                             "nullable": false,
                             "type": "string"
                           },
@@ -523,7 +523,7 @@
                             "type": "string"
                           },
                           "timestamp": {
-                            "description": "Time the issue occurred at.",
+                            "description": "Time when the issue occurred.",
                             "nullable": true,
                             "type": "string"
                           }
@@ -543,7 +543,7 @@
                             "type": "string"
                           },
                           "assignedScopeType": {
-                            "description": "Scope type the profile is assigned to.",
+                            "description": "The scope type the profile is assigned to.",
                             "enum": [
                               "SCOPE_TYPE_UNSPECIFIED",
                               "SCOPE_TYPE_DEVICE",
@@ -572,7 +572,7 @@
                             "type": "string"
                           },
                           "profileName": {
-                            "description": "Name of the profile.",
+                            "description": "The name of the profile.",
                             "nullable": false,
                             "type": "string"
                           },
@@ -587,7 +587,7 @@
                             "type": "string"
                           },
                           "timestamp": {
-                            "description": "Time the issue occurred at.",
+                            "description": "Time when the issue occurred.",
                             "nullable": true,
                             "type": "string"
                           }
@@ -602,7 +602,7 @@
                 }
               }
             },
-            "description": "response",
+            "description": "Successfully retrieved active configuration issues for the specified device.",
             "headers": {
               "X-RateLimit-Limit": {
                 "$ref": "#/components/headers/XRateLimitLimitHeader"
@@ -648,7 +648,7 @@
         "operationId": "getConfigHealthDevices",
         "parameters": [
           {
-            "description": "Number of devices that needs to be fetched.",
+            "description": "Number of devices that need to be fetched.",
             "in": "query",
             "name": "limit",
             "required": true,
@@ -660,7 +660,7 @@
             }
           },
           {
-            "description": "Offset from where the devices need to be fetched",
+            "description": "Offset from where the devices should be fetched.",
             "in": "query",
             "name": "offset",
             "required": true,
@@ -715,7 +715,7 @@
                       "type": "integer"
                     },
                     "devices": {
-                      "description": "List of all devices that are part of configuration.",
+                      "description": "List of all devices that are part of the configuration.",
                       "items": {
                         "properties": {
                           "activeIssues": {
@@ -773,7 +773,7 @@
                             "type": "boolean"
                           },
                           "lastConfigTimestamp": {
-                            "description": "Time when last config pushed to the device in ms. from epoch",
+                            "description": "Time when the last config was pushed to the device, in milliseconds since the epoch.",
                             "nullable": true,
                             "type": "string"
                           },
@@ -793,7 +793,7 @@
                             "type": "string"
                           },
                           "role": {
-                            "description": "Role of the device is the network.",
+                            "description": "Role of the device in the network.",
                             "nullable": true,
                             "type": "string"
                           },
@@ -843,7 +843,7 @@
                 }
               }
             },
-            "description": "response",
+            "description": "Successfully retrieved configuration health summary for devices.",
             "headers": {
               "X-RateLimit-Limit": {
                 "$ref": "#/components/headers/XRateLimitLimitHeader"
@@ -878,6 +878,99 @@
           }
         ],
         "summary": "Returns summary of configuration health for devices.",
+        "tags": [
+          "Configuration Health"
+        ]
+      }
+    },
+    "/network-config/v1alpha1/config-health/devices-resync": {
+      "post": {
+        "description": "Initiate configuration resync for a list of device serials. Maximum 50 devices per request.",
+        "operationId": "resyncCfgDevices",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "serials": {
+                    "description": "List of device serial numbers to resync",
+                    "example": [
+                      "CN12345ABC",
+                      "CN67890XYZ"
+                    ],
+                    "items": {
+                      "nullable": false,
+                      "type": "string"
+                    },
+                    "maxItems": 50,
+                    "minItems": 1,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "serials"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "message": {
+                      "description": "Response message indicating the number of devices queued for resync, or an error message.",
+                      "example": "Full configuration sync triggered for 10 devices.",
+                      "nullable": false,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Resync initiated successfully",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeader"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeader"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Resync device configurations",
         "tags": [
           "Configuration Health"
         ]

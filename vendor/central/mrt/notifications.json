@@ -77,6 +77,138 @@
           }
         }
       },
+      "AlertConfigListResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "description": "Paginated list of alert configurations.\n",
+              "example": {
+                "count": 2,
+                "items": [
+                  {
+                    "category": "System",
+                    "clearTimeout": "1H",
+                    "description": "Triggers when access point CPU usage exceeds configured thresholds.",
+                    "deviceType": "Access Point",
+                    "enabled": true,
+                    "inherited": false,
+                    "label": "CPU",
+                    "name": "AP CPU Utilization",
+                    "ruleSource": "USER",
+                    "rules": [
+                      {
+                        "rule": {
+                          "additionalCondition": [],
+                          "condition": [
+                            {
+                              "expression": {
+                                "metric": "cpu_utilization",
+                                "operator": "GTE",
+                                "valueNumber": 90
+                              },
+                              "severity": "CRITICAL"
+                            },
+                            {
+                              "expression": {
+                                "metric": "cpu_utilization",
+                                "operator": "GTE",
+                                "valueNumber": 80
+                              },
+                              "severity": "MAJOR"
+                            },
+                            {
+                              "expression": {
+                                "metric": "cpu_utilization",
+                                "operator": "GTE",
+                                "valueNumber": 70
+                              },
+                              "severity": "MINOR"
+                            }
+                          ],
+                          "duration": 5,
+                          "metric": "cpu_utilization"
+                        },
+                        "ruleNumber": 0
+                      }
+                    ],
+                    "scopeId": "1021882040",
+                    "scopeType": "GLOBAL"
+                  },
+                  {
+                    "category": "System",
+                    "clearTimeout": null,
+                    "description": "Triggers when switch CPU usage exceeds configured thresholds.",
+                    "deviceType": "Switch",
+                    "enabled": true,
+                    "inherited": false,
+                    "label": "CPU",
+                    "name": "Switch CPU Utilization",
+                    "ruleSource": "SYSTEM",
+                    "rules": [],
+                    "scopeId": "1021882040",
+                    "scopeType": "GLOBAL"
+                  }
+                ],
+                "offset": 0,
+                "total": 99
+              },
+              "properties": {
+                "count": {
+                  "description": "Number of alert configurations returned in the current page.\n",
+                  "example": 10,
+                  "type": "integer"
+                },
+                "id": {
+                  "description": "Unique identifier for this collection resource.\n",
+                  "example": "network-notifications/v1/alert-config",
+                  "type": "string"
+                },
+                "items": {
+                  "description": "List of alert configuration entries in the current page.\n",
+                  "items": {
+                    "$ref": "#/components/schemas/AlertConfigResponse"
+                  },
+                  "type": "array"
+                },
+                "offset": {
+                  "description": "Zero-based index of the first item returned in this page. Present only when the request includes a `limit` parameter.\n",
+                  "example": 0,
+                  "type": "integer"
+                },
+                "total": {
+                  "description": "Total number of alert configurations available across all pages. Present only when the request includes a `limit` parameter.\n",
+                  "example": 99,
+                  "type": "integer"
+                },
+                "type": {
+                  "description": "Resource type identifier.\n",
+                  "example": "network-notifications/alert-configs",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "type",
+                "items",
+                "count"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "description": "List of alert configurations for the requested scope.\n",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
       "AlertListResponse": {
         "content": {
           "application/json": {
@@ -161,6 +293,43 @@
           }
         }
       },
+      "InsightsSchemasResponse": {
+        "content": {
+          "application/json": {
+            "examples": {
+              "allSchemas": {
+                "summary": "All insight schemas — no insight-id provided",
+                "value": {
+                  "count": 22,
+                  "schemaJson": "{\"701\":{\"analyzer_id\":\"string\",\"category\":\"string\"},\"702\":{\"analyzer_id\":\"string\"}}"
+                }
+              },
+              "singleSchema": {
+                "summary": "Single insight schema for insight-id=702",
+                "value": {
+                  "count": 1,
+                  "schemaJson": "{\"702\":{\"analyzer_id\":\"string\",\"category\":\"string\",\"timestamp\":\"long\"}}"
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/components/schemas/AIOpsInsightsSchemasResult"
+            }
+          }
+        },
+        "description": "Insights schema definitions response.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
       "InternalServerError": {
         "content": {
           "application/json": {
@@ -190,7 +359,7 @@
             }
           }
         },
-        "description": "Not Found error",
+        "description": "Not Found Error",
         "headers": {
           "X-RateLimit-Limit": {
             "$ref": "#/components/headers/XRateLimitLimit"
@@ -208,7 +377,7 @@
           "application/json": {
             "examples": {
               "globalLevel": {
-                "summary": "Global recommendations when site-id is omitted",
+                "summary": "Global recommendations when site-id is omitted.",
                 "value": {
                   "count": 1,
                   "id": "network-notifications/v1/insights",
@@ -234,10 +403,6 @@
                       "type": "network-notifications/insight"
                     }
                   ],
-                  "message": {
-                    "info": "For site-level recommendations, siteId is required. For full recommendation, insight id is required.",
-                    "type": "WARNING"
-                  },
                   "type": "collection"
                 }
               },
@@ -249,7 +414,7 @@
                   "items": [
                     {
                       "category": "Wireless",
-                      "data": "{\"analyzer_id\":\"c539f92800ea11edbc10aa7fd39913ac_6985764272_702_8646_4_1770855661607\"}",
+                      "data": "{\"actions_per_coverage_hole\":[{\"coverage_hole_network_impact\":[{\"coverage_description\":\"Network quality in terms of uplink signal-to-noise ratio (SNR) of?access point BO-IND-AP01?in comparison with all other access points in the site.\",\"proportion_of_client_minutes\":[{\"impacted_ap_proportion_of_client_minutes\":0,\"other_ap_proportion_of_client_minutes\":0,\"snr_inDB\":64}]}],\"devices_per_floor\":[{\"device_list\":[{\"client_type\":\"Debian\",\"client_vendor\":\"Big Field Global PTE. Ltd.\",\"impacted_clients_count\":7,\"oui_year\":\"2023\"}],\"impacted_clients_per_client_type\":[{\"impacted_clients_count\":2,\"name\":\"User Experience Insight Sensor\"}],\"ssid\":\"IND-1X\"},{\"impacted_client_details\":[{\"client_type\":\"User Experience Insight Sensor\",\"client_vendor\":\"Aruba, a Hewlett Packard Enterprise Company\",\"impacted_clients_count\":2,\"oui_year\":\"2022\"}],\"impacted_clients_per_client_type\":[{\"impacted_clients_count\":2,\"name\":\"User Experience Insight Sensor\"},{\"impacted_clients_count\":1,\"name\":\"Apple iPhone\"}],\"ssid\":\"IND-PSK\"}],\"impacted_client_type_details_description\":\"Clients impacted on access point: BO-IND-AP01\",\"impacted_clients_count\":19,\"recommendation\":\"Add AP(s) to sufficiently cover area\",\"root_cause\":\"Low Uplink SNR\"},{\"coverage_hole_network_impact\":[{\"coverage_description\":\"Network quality in terms of downlink 2.4GHz signal-to-noise ratio (SNR) of?access point BO-IND-AP04?in comparison with all other access points in the site.\",\"proportion_of_client_minutes\":[{\"impacted_ap_proportion_of_client_minutes\":0,\"other_ap_proportion_of_client_minutes\":0,\"snr_inDB\":64}]}],\"devices_per_floor\":[{\"device_list\":[{\"device_serial\":\"VNLSK9Y14H\",\"device_tag\":\"coverage_hole_ap\",\"device_type\":\"Access Point\"}],\"floor_id\":\"1.0\"}],\"impacted_ap_name\":\"BO-IND-AP04\",\"impacted_client_type_details\":[{\"impacted_client_details\":[{\"client_type\":\"Unclassified Device\",\"client_vendor\":\"Big Field Global PTE. Ltd.\",\"impacted_clients_count\":1,\"oui_year\":\"2023\"}],\"impacted_clients_per_client_type\":[{\"impacted_clients_count\":1,\"name\":\"Unclassified Device\"}],\"ssid\":\"IND-1X\"},{\"impacted_client_details\":[{\"client_type\":\"Sonos\",\"client_vendor\":\"Sonos, Inc.\",\"impacted_clients_count\":1,\"oui_year\":\"2020\"}],\"impacted_clients_per_client_type\":[{\"impacted_clients_count\":1,\"name\":\"Polycom IP Phone/Conference\"}],\"ssid\":\"IND-PSK\"}],\"impacted_client_type_details_description\":\"Clients impacted on access point: BO-IND-AP04\",\"impacted_clients_count\":19,\"recommendation\":\"Increase minimum transmit power of the AP Group:Radio Profile::Branch Offices IAP:default from 9dBm to 12dBm for 5GHz radio\",\"root_cause\":\"Low Downlink SNR for 5GHz radio\"}],\"analyzer_id\":\"75cdc36000ea11ed98cf1aed776dc866_18567345677_728_26030_2_1775607696334\",\"analyzer_type_id\":\"728\",\"coverage_hole_impact_summary\":[{\"coverage_hole_summary_detail\":{\"description\":\"Impacted APs\",\"downlink_2g_5g_coverage_hole\":0,\"downlink_2g_coverage_hole\":0,\"downlink_5g_coverage_hole\":1,\"healthy_minutes\":0,\"total_count\":2,\"uplink_coverage_hole\":1},\"coverage_hole_summary_type\":\"Impacted APs\"}],\"coverage_hole_network_impact\":[{\"coverage_description\":\"Check below for?network quality?in terms of signal-to-noise ratio (SNR) of the impacted access points relative to other access points in the site.\",\"coverage_type\":\"Overall SNR coverage\",\"proportion_of_client_minutes\":[{\"impacted_ap_proportion_of_client_minutes\":0,\"other_ap_proportion_of_client_minutes\":0,\"snr_inDB\":0}]},{\"coverage_description\":\"Check below for?network quality?in terms of downlink 5GHz signal-to-noise ratio (SNR) of the impacted access points relative to other access points across sites.\",\"coverage_type\":\"Downlink 5GHz SNR coverage\",\"proportion_of_client_minutes\":[{\"impacted_ap_proportion_of_client_minutes\":0,\"other_ap_proportion_of_client_minutes\":0,\"snr_inDB\":64}]},{\"coverage_description\":\"Check below for?network quality?in terms of uplink signal-to-noise ratio (SNR) of the impacted access points relative to other access points in the site.\",\"coverage_type\":\"Uplink SNR coverage\",\"proportion_of_client_minutes\":[{\"impacted_ap_proportion_of_client_minutes\":0,\"other_ap_proportion_of_client_minutes\":0,\"snr_inDB\":64}]}],\"devices_per_floor\":[{\"device_list\":[{\"device_serial\":\"VNLSK9Y14H\",\"device_tag\":\"coverage_hole_ap\",\"device_type\":\"Access Point\"}],\"floor_id\":\"1.0\"}],\"impacted_clients_per_site\":[{\"count\":38,\"name\":\"IWF-BAI01 - Bengaluru - Branch\",\"site_id\":\"18567345677\"}],\"impacted_devices_per_site\":[{\"count\":2,\"name\":\"IWF-BAI01 - Bengaluru - Branch\",\"site_id\":\"18567345677\"}],\"no_of_sites_w_recommendations\":1,\"schema_version\":\"v2\",\"site\":\"IWF-BAI01 - Bengaluru - Branch\",\"is_active\":true,\"user_allow_list\":[],\"derived_policy_rules\":[],\"derived_anomalies_upload\":[],\"derived_anomalies\":[],\"derived_anomalies_new_country_upload\":[],\"derived_anomalies_new_host_access\":[],\"derived_anomalies_excessive_host_access\":[],\"derived_anomalies_suspicious_protocols\":[],\"site_count\":1,\"impacted_app_per_site\":[],\"rollup\":[],\"dfs_channel_summary\":[],\"site_map\":[],\"swap_ap_action\":[],\"ap_coverage_score\":[],\"iap_config_11ax_feature_contrib\":[]}",
                       "description": "New firmware recommendation available for 3 access point(s) in the site. These upgrades provide new features and bug fixes.",
                       "id": "c539f92800ea11edbc10aa7fd39913ac_6985764272_702_8646_4_1770855661607",
                       "insightId": "702",
@@ -261,10 +426,6 @@
                       "type": "network-notifications/insight"
                     }
                   ],
-                  "message": {
-                    "info": "Successfully fetched. For global-level recommendations, omit siteId",
-                    "type": "WARNING"
-                  },
                   "type": "collection"
                 }
               }
@@ -331,24 +492,6 @@
       }
     },
     "schemas": {
-      "AIOpsGenericMessage": {
-        "properties": {
-          "info": {
-            "example": "Successfully fetched.",
-            "type": "string"
-          },
-          "type": {
-            "enum": [
-              "INFO",
-              "WARNING",
-              "ERROR"
-            ],
-            "example": "WARNING",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
       "AIOpsGlobalSites": {
         "properties": {
           "impactedClientCount": {
@@ -376,6 +519,26 @@
         ],
         "type": "object"
       },
+      "AIOpsInsightsSchemasResult": {
+        "properties": {
+          "count": {
+            "description": "Number of insight schemas returned.",
+            "example": 1,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "schemaJson": {
+            "description": "JSON string containing schema definitions keyed by insight ID.",
+            "example": "{\"702\":{\"analyzer_id\":\"string\",\"category\":\"string\",\"timestamp\":\"long\"}}",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schemaJson",
+          "count"
+        ],
+        "type": "object"
+      },
       "AIOpsSourceRecommendations": {
         "properties": {
           "category": {
@@ -383,6 +546,7 @@
             "type": "string"
           },
           "data": {
+            "description": "Complete recommendation payload serialized as a JSON string. Contains detailed information about the recommendation, including root cause analysis, and suggested actions and impacted devices.",
             "example": "{\"analyzer_id\":\"c539f92800ea11edbc10aa7fd39913ac_6985764272_702_8646_4_1770855661607\"}",
             "type": [
               "string",
@@ -394,6 +558,7 @@
             "type": "string"
           },
           "id": {
+            "description": "Unique identifier for this record.",
             "example": "c539f92800ea11edbc10aa7fd39913ac_6985764272_702_8646_4_1770855661607",
             "type": "string"
           },
@@ -405,10 +570,6 @@
           },
           "insightId": {
             "example": "702",
-            "type": "string"
-          },
-          "recordId": {
-            "example": "c539f92800ea11edbc10aa7fd39913ac_6985764272_702_8646_4_1770855661607",
             "type": "string"
           },
           "siteId": {
@@ -441,8 +602,7 @@
           "title",
           "description",
           "category",
-          "insightId",
-          "recordId"
+          "insightId"
         ],
         "type": "object"
       },
@@ -454,6 +614,7 @@
             "type": "integer"
           },
           "id": {
+            "description": "Unique identifier for this API resource.",
             "example": "network-notifications/v1/insights",
             "type": "string"
           },
@@ -462,16 +623,6 @@
               "$ref": "#/components/schemas/AIOpsSourceRecommendations"
             },
             "type": "array"
-          },
-          "message": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/AIOpsGenericMessage"
-              },
-              {
-                "type": "null"
-              }
-            ]
           },
           "type": {
             "example": "collection",
@@ -604,6 +755,11 @@
           "error": {
             "$ref": "#/components/schemas/AsyncOperationError"
           },
+          "id": {
+            "description": "Unique identifier for this async operation resource.\n",
+            "example": "network-notifications/v1/alerts/action-status",
+            "type": "string"
+          },
           "logMessages": {
             "description": "Log messages associated with the operation.\n",
             "items": {
@@ -639,6 +795,175 @@
             ],
             "example": "SUCCEEDED",
             "type": "string"
+          },
+          "type": {
+            "description": "Resource type identifier.\n",
+            "example": "network-notifications/alert-action-status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object"
+      },
+      "AlertConfigResponse": {
+        "description": "A single alert configuration entry returned from the list endpoint.\n",
+        "properties": {
+          "category": {
+            "description": "Category the alert belongs to.\n",
+            "example": "System",
+            "type": "string"
+          },
+          "clearTimeout": {
+            "description": "Auto-clear timeout duration, e.g. `1H`, `30D`.\n",
+            "example": "1H",
+            "type": "string"
+          },
+          "description": {
+            "description": "Description of what the alert monitors.\n",
+            "example": "Triggers when access point CPU usage exceeds configured thresholds.",
+            "type": "string"
+          },
+          "deviceType": {
+            "description": "Type of device this alert applies to.\n",
+            "example": "Access Point",
+            "type": "string"
+          },
+          "enabled": {
+            "description": "Indicates whether this alert configuration is currently active or not.\n",
+            "example": true,
+            "type": "boolean"
+          },
+          "inherited": {
+            "description": "Indicates whether this configuration is inherited from a parent scope or not.\n",
+            "example": false,
+            "type": "boolean"
+          },
+          "label": {
+            "description": "Display label or tag for the alert configuration.\n",
+            "example": "CPU",
+            "type": "string"
+          },
+          "name": {
+            "description": "Human-readable name of the alert type.\n",
+            "example": "AP CPU Utilization",
+            "type": "string"
+          },
+          "ruleSource": {
+            "description": "Indicates whether the rule is system-defined or user-defined.\n",
+            "enum": [
+              "SYSTEM",
+              "USER"
+            ],
+            "example": "USER",
+            "type": "string"
+          },
+          "rules": {
+            "description": "List of threshold rules for this alert configuration.\n",
+            "items": {
+              "$ref": "#/components/schemas/AlertConfigRuleResponse"
+            },
+            "type": "array"
+          },
+          "scopeId": {
+            "description": "The scope identifier this configuration belongs to.\n",
+            "example": "1021882040",
+            "type": "string"
+          },
+          "scopeType": {
+            "description": "The scope type this configuration belongs to.\n",
+            "enum": [
+              "GLOBAL",
+              "SITE",
+              "DEVICE"
+            ],
+            "example": "GLOBAL",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "AlertConfigRuleResponse": {
+        "description": "A rule entry as returned by the list endpoint.\n",
+        "properties": {
+          "rule": {
+            "description": "Rule details.\n",
+            "properties": {
+              "additionalCondition": {
+                "description": "List of supplementary metric conditions.\n",
+                "items": {
+                  "properties": {
+                    "expression": {
+                      "properties": {
+                        "metric": {
+                          "example": "occurrences",
+                          "type": "string"
+                        },
+                        "operator": {
+                          "example": "GTE",
+                          "type": "string"
+                        },
+                        "valueNumber": {
+                          "example": 100,
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "index": {
+                      "example": 0,
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "condition": {
+                "description": "List of severity-to-threshold conditions.\n",
+                "items": {
+                  "properties": {
+                    "expression": {
+                      "properties": {
+                        "metric": {
+                          "example": "cpu_utilization",
+                          "type": "string"
+                        },
+                        "operator": {
+                          "example": "GTE",
+                          "type": "string"
+                        },
+                        "valueNumber": {
+                          "example": 90,
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "severity": {
+                      "description": "Severity level for this condition.\n",
+                      "example": "CRITICAL",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "duration": {
+                "description": "Observation window in minutes.\n",
+                "example": 5,
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          },
+          "ruleNumber": {
+            "description": "Ordering index of this rule.\n",
+            "example": 0,
+            "type": "integer"
           }
         },
         "type": "object"
@@ -754,21 +1079,22 @@
         "type": "object"
       },
       "BadRequestErrorDetails": {
+        "description": "Error details returned from the server.\n",
         "properties": {
           "debugId": {
             "$ref": "#/components/schemas/DebugId"
           },
           "errorCode": {
-            "enum": [
-              "HPE_GL_NETWORKING_ERROR_INVALID_INPUT"
-            ],
-            "example": "HPE_GL_NETWORKING_ERROR_INVALID_INPUT",
+            "description": "Internal error code.\n",
+            "example": "HPE_GL_ERROR_BAD_REQUEST",
+            "format": "const",
             "maxLength": 128,
             "type": "string"
           },
           "httpStatusCode": {
+            "description": "HTTP status code.\n",
             "example": 400,
-            "maximum": 400,
+            "maximum": 500,
             "minimum": 400,
             "type": "integer"
           },
@@ -843,6 +1169,13 @@
         "type": "object"
       },
       "DebugId": {
+        "description": "A unique identifier used for troubleshooting and debugging purposes.\n",
+        "example": "78f002e32e0cefba3d8cc94fa8179342",
+        "format": "const",
+        "maxLength": 512,
+        "type": "string"
+      },
+      "DebugIdinsights": {
         "description": "Unique identifier for debugging purposes. This ID can be used to trace the error in server logs.",
         "maxLength": 256,
         "type": "string"
@@ -875,25 +1208,35 @@
         "type": "object"
       },
       "ErrorMessage": {
+        "description": "Error message indicating the cause of the failure.\n",
+        "example": "Error message indicating the cause of the failure.",
+        "format": "const",
+        "maxLength": 512,
+        "type": "string"
+      },
+      "ErrorMessageinsights": {
         "description": "Error message providing additional details about the error.",
         "maxLength": 512,
         "type": "string"
       },
       "ForbiddenErrorDetails": {
+        "description": "Error details returned from the server.\n",
         "properties": {
           "debugId": {
             "$ref": "#/components/schemas/DebugId"
           },
           "errorCode": {
-            "description": "Error code indicating the reason for access denial.",
-            "example": "HPE_GL_NETWORKING_ERROR_FORBIDDEN",
+            "description": "Internal error code.\n",
+            "example": "HPE_GL_ERROR_FORBIDDEN",
+            "format": "const",
             "maxLength": 128,
             "type": "string"
           },
           "httpStatusCode": {
+            "description": "HTTP status code.\n",
             "example": 403,
-            "maximum": 403,
-            "minimum": 403,
+            "maximum": 500,
+            "minimum": 400,
             "type": "integer"
           },
           "message": {
@@ -909,19 +1252,23 @@
         "type": "object"
       },
       "InternalServerErrorDetails": {
+        "description": "Error details returned from the server.\n",
         "properties": {
           "debugId": {
             "$ref": "#/components/schemas/DebugId"
           },
           "errorCode": {
-            "example": "HPE_GL_NETWORKING_ERROR_INTERNAL_SERVER_ERROR",
+            "description": "Internal error code.\n",
+            "example": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+            "format": "const",
             "maxLength": 128,
             "type": "string"
           },
           "httpStatusCode": {
+            "description": "HTTP status code.\n",
             "example": 500,
             "maximum": 500,
-            "minimum": 500,
+            "minimum": 400,
             "type": "integer"
           },
           "message": {
@@ -956,7 +1303,7 @@
       "NotFoundError": {
         "properties": {
           "debugId": {
-            "$ref": "#/components/schemas/DebugId"
+            "$ref": "#/components/schemas/DebugIdinsights"
           },
           "errorCode": {
             "example": "HPE_GL_NETWORKING_ERROR_NOT_FOUND",
@@ -970,7 +1317,7 @@
             "type": "integer"
           },
           "message": {
-            "$ref": "#/components/schemas/ErrorMessage"
+            "$ref": "#/components/schemas/ErrorMessageinsights"
           }
         },
         "required": [
@@ -1035,19 +1382,23 @@
         "type": "object"
       },
       "TooManyRequestsErrorDetails": {
+        "description": "Error details returned from the server.\n",
         "properties": {
           "debugId": {
             "$ref": "#/components/schemas/DebugId"
           },
           "errorCode": {
-            "example": "HPE_GL_NETWORKING_ERROR_TOO_MANY_REQUESTS",
+            "description": "Internal error code.\n",
+            "example": "HPE_GL_ERROR_TOO_MANY_REQUESTS",
+            "format": "const",
             "maxLength": 128,
             "type": "string"
           },
           "httpStatusCode": {
+            "description": "HTTP status code.\n",
             "example": 429,
-            "maximum": 429,
-            "minimum": 429,
+            "maximum": 500,
+            "minimum": 400,
             "type": "integer"
           },
           "message": {
@@ -1063,19 +1414,23 @@
         "type": "object"
       },
       "UnauthorizedErrorDetails": {
+        "description": "Error details returned from the server.\n",
         "properties": {
           "debugId": {
             "$ref": "#/components/schemas/DebugId"
           },
           "errorCode": {
-            "example": "HPE_GL_NETWORKING_ERROR_UNAUTHORIZED",
-            "maxLength": 256,
+            "description": "Internal error code.\n",
+            "example": "HPE_GL_ERROR_UNAUTHORIZED",
+            "format": "const",
+            "maxLength": 128,
             "type": "string"
           },
           "httpStatusCode": {
+            "description": "HTTP status code.\n",
             "example": 401,
-            "maximum": 401,
-            "minimum": 401,
+            "maximum": 500,
+            "minimum": 400,
             "type": "integer"
           },
           "message": {
@@ -1105,7 +1460,7 @@
     }
   },
   "info": {
-    "description": "This is a v1 release of the Alerts-Framework APIs.",
+    "description": "This is a v1 release of source recommendation APIs under network notifications.",
     "license": {
       "name": "HPE",
       "url": "https://www.hpe.com/us/en/software/licensing.html"
@@ -1115,6 +1470,97 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/network-notifications/v1/alert-config": {
+      "get": {
+        "description": "Retrieves alert configurations for a given scope. Each configuration defines the threshold rules, severity mappings, and settings for a specific alert type. Configurations may be locally defined or inherited from a parent scope.\n\n**Scope types:**\n\n| Value | Description |\n|-------|-------------|\n| `GLOBAL` | Tenant-level scope (default) |\n| `SITE` | Site-level scope |\n| `DEVICE` | Device-level scope |\n\n**Pagination:**\n\nUse `limit` and `next` together to page through large result sets. When `limit` is supplied the response includes `total` (total available configurations) and `offset` (zero-based index of the first item returned), enabling clients to determine whether additional pages exist.\n",
+        "operationId": "getAlertConfigs",
+        "parameters": [
+          {
+            "description": "The scope identifier for which alert configurations are retrieved.\n",
+            "in": "query",
+            "name": "scope-id",
+            "required": true,
+            "schema": {
+              "example": "1021882040",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The scope type. Determines the level at which the configuration applies.\n\n| Value | Description |\n|-------|-------------|\n| `GLOBAL` | Tenant-level scope (default) |\n| `SITE` | Site-level scope |\n| `DEVICE` | Device-level scope |\n",
+            "in": "query",
+            "name": "scope-type",
+            "required": false,
+            "schema": {
+              "default": "GLOBAL",
+              "enum": [
+                "GLOBAL",
+                "SITE",
+                "DEVICE"
+              ],
+              "example": "SITE",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of alert configurations to return per page. Defaults to `20` when not specified.\n",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "example": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zero-based offset of the first alert configuration to return. Use together with `limit` to paginate through results. Defaults to `0` when not specified.\n",
+            "in": "query",
+            "name": "next",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AlertConfigListResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "List alert configurations",
+        "tags": [
+          "Alert Configurations"
+        ]
+      }
+    },
     "/network-notifications/v1/alerts": {
       "get": {
         "description": "This API endpoint retrieves the list of Alerts based on the query parameters provided. The alerts list includes details such as name, type, category, severity, status, etc. The query parameters allow you to filter results that meet specific criteria, ensuring you receive only relevant data.\n",
@@ -1509,11 +1955,11 @@
     },
     "/network-notifications/v1/insights": {
       "get": {
-        "description": "Returns AI powered recommendations for optimizing performance. For site level granularity `site-id` and `id` filter shall be provided and for global recommendations `site-id` and `id` filter shall be omitted. At global level api returns global recommendations (across all sites) along with siteId and insightId.",
+        "description": "Returns AI-powered recommendations for optimizing performance. For site-level granularity `site-id` and `insight-id` filter shall be provided and for global recommendations `site-id` and `insight-id` filter shall be omitted. At the global level, the API returns global recommendations (across all sites) along with siteId and insightId.",
         "operationId": "getSourceRecommendationsV1",
         "parameters": [
           {
-            "description": "Site identifier. Omit site-id to retrieve global recommendations across all sites. For site level recommendations site-id can be obtained from the same api from global recommendations through the field `siteId.",
+            "description": "Site identifier. Omit site-id to retrieve global recommendations across all sites. For site-level recommendations site-id can be obtained from the same API from global recommendations through the field `siteId`.",
             "in": "query",
             "name": "site-id",
             "schema": {
@@ -1522,11 +1968,44 @@
             }
           },
           {
-            "description": "Insight identifier. Id is insightId which is used to filter recommendations, id can be obtained from the same api from global level recommendations through the field 'insightId'.",
+            "description": "Insight identifier. `insight-id` is used to filter recommendations, it can be obtained from the same API from global-level recommendations through the field 'insightId'.",
             "in": "query",
-            "name": "id",
+            "name": "insight-id",
             "schema": {
               "example": "702",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of recommendations to return per page.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "example": 50,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Number of recommendations to skip before starting to collect the result set.",
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "example": 0,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Sort order for recommendations based on implicit field insight-id.",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "enum": [
+                "ASC",
+                "DESC"
+              ],
+              "example": "ASC",
               "type": "string"
             }
           }
@@ -1560,6 +2039,55 @@
           }
         ],
         "summary": "List source recommendations",
+        "tags": [
+          "Insights"
+        ]
+      }
+    },
+    "/network-notifications/v1/insights-schema": {
+      "get": {
+        "description": "Returns the JSON schema definition for one or all available insights.\n\nBehavior:\n- If `insight-id` is provided, returns only the schema for that specific insight.\n- If `insight-id` is omitted, returns schemas for all available insights as a JSON string.",
+        "operationId": "getInsightSchemasV1",
+        "parameters": [
+          {
+            "description": "Insight type identifier (e.g. `702`). When omitted, all insight schemas are returned. `insight-id` can be obtained from global-level recommendations through the field `insightId`.",
+            "in": "query",
+            "name": "insight-id",
+            "schema": {
+              "example": "702",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/InsightsSchemasResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get insight schemas",
         "tags": [
           "Insights"
         ]
@@ -1633,6 +2161,10 @@
     }
   ],
   "tags": [
+    {
+      "description": "APIs for managing alert configurations — retrieve threshold rules and severity settings per alert type and scope.",
+      "name": "Alert Configurations"
+    },
     {
       "description": "APIs for managing alerts.",
       "name": "Alerts"
