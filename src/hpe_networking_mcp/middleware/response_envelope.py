@@ -65,6 +65,17 @@ _NO_ENVELOPE_TOOLS: frozenset[str] = frozenset(
         "get_schema",
         "skills_list",
         "skills_load",
+        # GenerativeUI provider (MCP_ENABLE_GENERATIVE_UI). Both tools carry an
+        # ``x-fastmcp-wrap-result`` output schema requiring a top-level ``result``
+        # key; wrapping them in the envelope strips ``result`` and the tool's own
+        # output validation fails with "'result' is a required property" — the same
+        # failure mode as the discovery tools above (#293/#302). ``generate_prefab_ui``
+        # also returns a ``$prefab`` UI view (caught by the marker bypass below), but
+        # naming it here covers its non-UI/error returns too. Names are the
+        # GenerativeUI defaults — keep in sync if the provider is constructed with
+        # custom tool_name / components_tool_name.
+        "generate_prefab_ui",
+        "search_prefab_components",
     }
 )
 

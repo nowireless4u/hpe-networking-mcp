@@ -17,6 +17,12 @@ FROM python:3.12-slim-bookworm
 # Install uv in runtime
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
+# Deno binary — required ONLY by the optional Generative UI provider
+# (MCP_ENABLE_GENERATIVE_UI), which runs Prefab/Pyodide in a Deno subprocess for
+# server-side validation. prefab_ui does shutil.which("deno") and raises if it's
+# absent (it does NOT auto-install). Harmless dead weight when the feature is off.
+COPY --from=denoland/deno:bin /deno /usr/local/bin/deno
+
 # Create non-root user
 RUN groupadd -g 1000 mcpuser && useradd -u 1000 -g mcpuser -m mcpuser
 
@@ -43,6 +49,8 @@ ENV MCP_PORT=8000
 ENV MCP_HOST=0.0.0.0
 ENV LOG_LEVEL=info
 ENV SECRETS_DIR=/run/secrets
+# Deno download cache (Generative UI / Prefab sandbox) — under the writable HOME.
+ENV DENO_DIR=/home/mcpuser/.cache/deno
 ENV ENABLE_MIST_WRITE_TOOLS=false
 ENV ENABLE_CENTRAL_WRITE_TOOLS=false
 ENV DISABLE_ELICITATION=false

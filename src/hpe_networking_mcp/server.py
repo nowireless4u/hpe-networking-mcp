@@ -242,6 +242,40 @@ def _file_upload_enabled() -> bool:
     return os.environ.get("MCP_ENABLE_FILE_UPLOAD", "").strip().lower() in ("1", "true", "yes")
 
 
+def _generative_ui_enabled() -> bool:
+    """Whether the experimental Generative UI provider is enabled (env-gated)."""
+    import os
+
+    return os.environ.get("MCP_ENABLE_GENERATIVE_UI", "").strip().lower() in ("1", "true", "yes")
+
+
+# Prepended to the GenerativeUI tool's own description. Tool descriptions are part
+# of the function-calling contract a client uses to PICK a tool — unlike
+# INSTRUCTIONS.md, which MCP clients treat as untrusted server content and largely
+# ignore (see the project_mcp_memory_arch_finding note). Putting the steer HERE is
+# what actually makes the model reach for generate_prefab_ui instead of hand-writing
+# HTML for a dashboard request.
+_GENERATIVE_UI_GUIDANCE = (
+    "USE THIS TOOL FIRST for any request to build, render, draw, show, or visualize "
+    "a dashboard, report, chart, graph, table, scorecard, status board, or any "
+    "graphical / interactive view of network data (Juniper Mist, Aruba Central + MRT, "
+    "HPE GreenLake, ClearPass, Apstra, Axis, AOS 8, UXI). Workflow: gather the data "
+    "first (platform read tools / an `execute` block), then pass it here and compose "
+    "the view from Prefab components (metric cards, bar/line/area/pie charts, data "
+    "tables, badges) with reactive state for in-window filtering. Do NOT hand-write "
+    "raw HTML as a text response for visualization requests — render it through this "
+    "tool so the client shows a live, interactive widget instead of a static blob.\n\n"
+    "DATA CONTRACT (avoids the #1 error): pass the values you gathered as the `data` "
+    "argument, which MUST be a dict. Each TOP-LEVEL KEY of that dict becomes a global "
+    "variable of that same name inside your `code` — reference those names directly. "
+    "Example: data={'devices': [...], 'top_aps': [...]} -> in code use `devices` and "
+    "`top_aps`. There is NO variable named `data` in the sandbox; writing `data[...]` "
+    "or `data.get(...)` raises `NameError: name 'data' is not defined`. Embed the real "
+    "values you collected (do not invent placeholders).\n\n"
+    "---\n\n"
+)
+
+
 def create_server(config: ServerConfig) -> FastMCP:
     """Create and configure the FastMCP server with all enabled platform tools."""
     from hpe_networking_mcp.middleware.elicitation import (
@@ -333,6 +367,39 @@ def create_server(config: ServerConfig) -> FastMCP:
 
         mcp.add_provider(FileUpload())
         logger.info("File upload: FileUpload provider registered (MCP_ENABLE_FILE_UPLOAD=true)")
+
+    # --- Generative UI (experimental, env-gated) ---
+    # MCP_ENABLE_GENERATIVE_UI=true registers FastMCP's GenerativeUI provider
+    # (FastMCP 3.2.0+; the fastmcp[apps] extra is already pinned). It exposes a
+    # `generate_prefab_ui` tool — the model writes Prefab Python that renders as
+    # a live dashboard from data it collected (e.g. AP health across sites) — a
+    # `search_prefab_components` discovery tool, and a `ui://` streaming-renderer
+    # resource. In code mode the CodeMode transform would bury the two tools, so
+    # _register_code_mode() re-exposes them top-level via discovery_tools (their
+    # `ui` render metadata rides through intact). Renders only in MCP-Apps hosts
+    # (Claude Desktop / ChatGPT / claude.ai); a no-op visual in Claude Code.
+    # Server-side validation uses Deno (auto-installs on first use).
+    if _generative_ui_enabled():
+        import asyncio
+
+        from fastmcp.apps.generative import GenerativeUI
+
+        mcp.add_provider(GenerativeUI())
+        logger.info("Generative UI: GenerativeUI provider registered (MCP_ENABLE_GENERATIVE_UI=true)")
+
+        # Steer dashboard/visualization requests to this tool by prepending
+        # networking-specific guidance to its description (preserving the upstream
+        # Prefab authoring instructions). get_tool returns the live instance and the
+        # change persists to list_tools, so this covers BOTH code and dynamic mode.
+        # create_server runs before the event loop, so a one-shot asyncio.run is safe
+        # (same justification as the code-mode re-expose below).
+        try:
+            _gen_tool = asyncio.run(mcp.get_tool("generate_prefab_ui"))
+            if _gen_tool is not None:
+                _gen_tool.description = _GENERATIVE_UI_GUIDANCE + (_gen_tool.description or "")
+                logger.info("Generative UI: generate_prefab_ui description augmented with dashboard guidance")
+        except Exception as e:  # pragma: no cover - defensive
+            logger.warning("Generative UI: could not augment generate_prefab_ui description: {}", e)
 
     # --- Cross-platform aggregators ---
     # These are workarounds for dynamic mode's "AI picks one platform and stops"
@@ -615,6 +682,22 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
                 logger.info("File upload: {} re-exposed top-level in code mode", app_tool_name)
             except Exception as e:  # pragma: no cover - defensive
                 logger.warning("File upload: could not expose {} top-level: {}", app_tool_name, e)
+
+    # Same pattern for Generative UI: re-expose its two model-visible tools so
+    # CodeMode doesn't bury them behind `execute`. generate_prefab_ui carries the
+    # MCP-Apps `ui` render metadata (the streaming Prefab renderer); it rides
+    # through the discovery factory unchanged. The `ui://` renderer resource is
+    # not a tool, so the CodeMode tool transform leaves it untouched.
+    if _generative_ui_enabled():
+        import asyncio
+
+        for app_tool_name in ("generate_prefab_ui", "search_prefab_components"):
+            try:
+                app_tool = asyncio.run(mcp.get_tool(app_tool_name))
+                discovery_tools.append(lambda get_catalog, _t=app_tool: _t)
+                logger.info("Generative UI: {} re-exposed top-level in code mode", app_tool_name)
+            except Exception as e:  # pragma: no cover - defensive
+                logger.warning("Generative UI: could not expose {} top-level: {}", app_tool_name, e)
 
     mcp.add_transform(
         CodeMode(
