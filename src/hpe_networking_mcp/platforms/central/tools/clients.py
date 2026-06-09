@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Annotated, Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
@@ -11,6 +11,7 @@ from hpe_networking_mcp.platforms.central.utils import (
     FilterField,
     build_odata_filter,
     clean_client_data,
+    coerce_enum,
 )
 
 MISSING_CLIENT_RESPONSE = "Resource not found for the given input."
@@ -32,11 +33,14 @@ async def central_get_clients(
     site_id: str | None = None,
     site_name: str | None = None,
     serial_number: str | None = None,
-    connection_type: Literal["Wired", "Wireless"] | None = None,
-    status: Literal["Connected", "Failed"] | None = None,
+    connection_type: Annotated[Literal["Wired", "Wireless"] | None, coerce_enum(("Wired", "Wireless"))] = None,
+    status: Annotated[Literal["Connected", "Failed"] | None, coerce_enum(("Connected", "Failed"))] = None,
     wlan_name: str | None = None,
     vlan_id: str | None = None,
-    tunnel_type: Literal["Port-based", "User-based", "Overlay"] | None = None,
+    tunnel_type: Annotated[
+        Literal["Port-based", "User-based", "Overlay"] | None,
+        coerce_enum(("Port-based", "User-based", "Overlay")),
+    ] = None,
     start_query_time: str | None = None,
     end_query_time: str | None = None,
 ) -> list[Client] | str:
@@ -51,11 +55,11 @@ async def central_get_clients(
         - site_id: Exact site ID.
         - site_name: Exact site name.
         - serial_number: Serial number of the device to which the client is connected.
-        - connection_type: "Wired" or "Wireless".
-        - status: "Connected" or "Failed".
+        - connection_type: "Wired" or "Wireless" (case-insensitive).
+        - status: "Connected" or "Failed" (case-insensitive).
         - wlan_name: WLAN name filter (wireless clients only).
         - vlan_id: VLAN ID filter.
-        - tunnel_type: "Port-based", "User-based", or "Overlay".
+        - tunnel_type: "Port-based", "User-based", or "Overlay" (case-insensitive).
         - start_query_time: Start of the query time window (ISO 8601).
         - end_query_time: End of the query time window (ISO 8601).
 

@@ -14,7 +14,7 @@ from pydantic import Field
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import coerce_enum, retry_central_command
 
 
 def _get(conn, path: str, params: dict | None = None) -> dict | str:
@@ -291,18 +291,22 @@ async def central_get_top_aps_by_usage(
     ctx: Context,
     metric: Annotated[
         _UsageMetric,
+        coerce_enum(("wireless", "wired", "usage"), {"combined": "usage"}),
         Field(
             description=(
                 "``'wireless'`` (top-aps-by-wireless-usage), ``'wired'`` "
-                "(top-aps-by-wired-usage), or ``'usage'`` (combined "
-                "top-aps-by-usage)."
+                "(top-aps-by-wired-usage), or ``'usage'`` — the combined "
+                "wired+wireless view (top-aps-by-usage). The synonym "
+                "``'combined'`` is accepted as an alias for ``'usage'``, "
+                "and values are matched case-insensitively."
             ),
         ),
     ],
     top_n: Annotated[int, Field(ge=1, le=100, description="Number of APs to return (default 10).")] = 10,
     filter: str | None = None,
 ) -> dict | str:
-    """Get top-N APs by usage (wireless / wired / combined).
+    """Get top-N APs by usage — metric ``'wireless'`` / ``'wired'`` / ``'usage'``
+    (``'usage'`` = combined wired+wireless; ``'combined'`` is accepted as an alias).
 
     Consolidates the three ``/top-aps-by-{wireless,wired,}usage`` endpoints.
     """

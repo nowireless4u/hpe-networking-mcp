@@ -6,6 +6,7 @@ from typing import Any
 
 from fastmcp.exceptions import ToolError
 from loguru import logger
+from pydantic import BeforeValidator
 
 from hpe_networking_mcp.platforms.central.models import (
     Alert,
@@ -29,6 +30,44 @@ _RETRY_BACKOFF_CAP_SECS = 5.0
 def _retry_backoff_secs(attempt: int) -> float:
     """Seconds to wait before the next retry (1-indexed attempt). Capped exponential."""
     return min(_RETRY_BACKOFF_BASE_SECS * (2 ** (attempt - 1)), _RETRY_BACKOFF_CAP_SECS)
+
+
+def coerce_enum(canonical: tuple[str, ...], aliases: dict[str, str] | None = None) -> BeforeValidator:
+    """Build a Pydantic ``BeforeValidator`` that folds case-insensitive and known
+    alias inputs onto a canonical enum value, leaving the enclosing ``Literal`` intact.
+
+    Attach it to a ``Literal`` tool parameter so callers (and LLMs) can pass a value in
+    any case, or a documented synonym, without a hard validation rejection::
+
+        status: Annotated[
+            Literal["Connected", "Failed"] | None,
+            coerce_enum(("Connected", "Failed")),
+        ] = None
+
+    The ``Literal`` still surfaces as an ``enum`` in the generated JSON schema (so the
+    canonical values stay discoverable), and genuinely invalid values still fail with
+    the standard ``Input should be 'Connected' or 'Failed'`` message — this validator
+    only rewrites recognized case / alias variants and passes everything else through
+    unchanged. ``None`` and non-string inputs are returned untouched.
+
+    Args:
+        canonical: The canonical enum values, in the exact case declared in the Literal.
+        aliases: Optional ``{synonym: canonical}`` map (e.g. ``{"combined": "usage"}``);
+            synonym keys are matched case-insensitively.
+
+    Returns:
+        A ``BeforeValidator`` suitable for use inside ``Annotated[...]``.
+    """
+    lookup = {value.lower(): value for value in canonical}
+    if aliases:
+        lookup.update({alias.lower(): target for alias, target in aliases.items()})
+
+    def _coerce(value: Any) -> Any:
+        if isinstance(value, str):
+            return lookup.get(value.lower(), value)
+        return value
+
+    return BeforeValidator(_coerce)
 
 
 def normalize_site_name_filter(value: str | list[str] | None) -> list[str] | None:

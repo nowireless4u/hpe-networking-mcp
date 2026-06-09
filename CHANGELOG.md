@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.8.2] - 2026-06-09
+
+**Patch — `central_get_applications` now validates the time window up front (#458).** The applications endpoint expects epoch **milliseconds**; an ISO-8601 string, a plain date, or a reversed window produced an opaque upstream `HTTP 400 BAD_REQUEST` ("Your request was incorrect or incomplete") wrapped as a 502, leaving the caller with no idea what was wrong.
+
+- The tool now validates `start_query_time` / `end_query_time` before calling Central and raises a clear `ToolError` (400) naming the offending value and the expected format (e.g. *"start_query_time must be an epoch timestamp in milliseconds (e.g. '1780876800000'), got '2026-06-08T00:00:00Z'"*).
+- Epoch **seconds** (10-digit) are accepted as a convenience and normalized to ms (the seconds-vs-ms mixup is the most common mistake; 10- vs 13-digit values don't overlap for present-day timestamps).
+- `start_query_time` must be before `end_query_time`, and `site_id` must be non-empty — both checked with clear messages.
+
+Live-verified: the endpoint + its `v1alpha1` path are correct (a valid site_id + epoch-ms window returns data); the 400 was purely a malformed-input passthrough. New unit tests cover the helper and the tool-level validation paths.
+
+## [3.3.8.1] - 2026-06-09
+
+**Patch — Central read-tool enum filters now fold case + known synonyms (#455, #456, #457).** Three MRT read tools rejected reasonable-but-non-canonical enum inputs with a hard validation error. A new shared `coerce_enum` helper (a Pydantic `BeforeValidator`) folds recognized case/alias variants onto the canonical `Literal` value while keeping the enum in the JSON schema (discoverability) and still rejecting genuinely invalid values.
+
+- **`central_get_top_aps_by_usage`** (#455) — the tool's description advertised a `combined` metric, but the enum value is `usage`; `metric="combined"` was rejected. Now `'combined'` is accepted as an alias for `'usage'`, the description/enum agree, and the metric is matched case-insensitively.
+- **`central_get_clients`** (#456) — `status="CONNECTED"` (valid value, wrong case) was rejected. The `status`, `connection_type`, and `tunnel_type` filters are now case-insensitive.
+- **`central_get_alerts`** (#457) — `status="Open"` (a common synonym) was rejected; the enum is `Active`/`Cleared`/`Deferred`. `status`, `device_type`, and `category` are now case-insensitive, and `Open` is accepted as a synonym for `Active`.
+
+Invalid values still fail with the standard `Input should be …` message listing the canonical values. New unit tests cover the folding, the synonym maps, schema-enum preservation, and rejection of unknown values. (The `central_get_applications` HTTP 400, #458, is tracked separately.)
+
 ## [3.3.8.0] - 2026-06-08
 
 **Minor — aos-migration Stage 9b now wires the full AAA chain + surfaces target collisions (#437).** Closes the gap where Stage 9b's deterministic preview documented only five translation IDs while six more shipped specs (the AAA chain) were silently omitted — an operator could read the preview as complete when it skipped auth-servers, server-groups, and auth profiles entirely.
