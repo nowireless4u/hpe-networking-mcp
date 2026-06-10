@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.10.0] - 2026-06-10
+
+**Minor — new bundled skill `central-ucc-quality`: trustworthy UCC (voice/video) call-quality on AOS-10 APs, with a Generative-UI dashboard.** Closes #400. Asking "check call quality on the garage AP" now runs a vetted correlation runbook instead of a naive single-command read.
+
+### Added
+- **`central-ucc-quality` skill** — correlates three live UCM tables from a single atomic `central_show_commands` snapshot to report *genuinely-live* calls (not stale records) with per-stream quality:
+  - `show ucm hashtable` → **client IP → MAC join** (identity only).
+  - `show datapath session ucc` → **liveness source of truth**: a stream is live only if its IP 5-tuple appears here with a populated `Codec:` field.
+  - `show ucm cdrs` → the metrics (delay / jitter / loss / **UCC Score**).
+  - Why a skill and not a tool: the CDR is a *log that persists after calls end* with no timestamp or active/ended flag, so a torn-down call is byte-for-byte indistinguishable from a live degraded one. A tool wrapping `show ucm cdrs` alone reports phantom "active calls" with stale metrics. The value is the **join + stale-vs-live discrimination**, which this runbook encodes (verified against live AOS-10 capture).
+  - Quality is gated on the **UCC Score** (≥80 good / 70–79 fair / <70 poor), deliberately **not** on the Delay field (which reads thousands of ms — it is not one-way latency, so the ITU-T G.114 150 ms threshold would flag nearly every record). Delay/jitter/loss are shown as context.
+  - Renders an interactive **Generative-UI dashboard** (`generate_prefab_ui`, KPI cards + worst-first data table + per-app/per-band charts) when the server runs with `MCP_APP_ENABLE=true`; falls back to an emoji-coded Markdown table otherwise. Works on AOS-10 APs and gateways. **Read-only.**
+
+This is a runbook-only change — no new tools, no code paths altered. Both skill-hygiene regression tests (sandbox-snippet compatibility + tool-reference resolution) pass.
+
 ## [3.3.9.0] - 2026-06-10
 
 **Minor — Generative UI dashboards + a single `MCP_APP_ENABLE` switch for all MCP-Apps providers.** The model can now build a live, interactive dashboard from the data it gathered — "build me an MRT dashboard for site HOME" → it pulls the Central/ClearPass data, then calls `generate_prefab_ui` and a Prefab app (tabs, KPI cards, charts, searchable data tables) renders inline. Live-validated end to end.
