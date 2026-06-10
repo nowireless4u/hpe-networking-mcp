@@ -1,5 +1,6 @@
 """Unit tests for hpe_networking_mcp.platforms.greenlake.auth — TokenInfo, TokenManager."""
 
+import threading
 import time
 from unittest.mock import patch
 
@@ -135,6 +136,46 @@ class TestTokenManager:
         assert tm.is_token_valid() is True
         assert tm.get_raw_token() == "mock-token"
         mock_get_token.assert_called_once()
+
+    def test_concurrent_refresh_does_not_stampede_token_endpoint(self):
+        """#440 follow-up — when many requests run ``get_auth_headers`` in their
+        own ``asyncio.to_thread`` worker and the cached token has expired, only
+        one thread should hit the token endpoint (double-checked locking), not
+        every thread firing its own refresh."""
+        calls: list[int] = []
+        call_lock = threading.Lock()
+
+        def _slow_get_token():
+            with call_lock:
+                calls.append(1)
+            time.sleep(0.05)  # widen the race window so unlocked code would stampede
+            return _mock_oauth2_response()
+
+        with patch.object(OAuth2Provider, "get_token", side_effect=_slow_get_token):
+            # Seed with an initial token (no fetch in __init__), then expire it.
+            tm = TokenManager(
+                api_base_url="https://api.example.com",
+                client_id="cid",
+                client_secret="csec",
+                workspace_id="wid",
+                initial_token="seed-token",
+            )
+            tm._token_info = TokenInfo(token="seed-token", expires_at=time.time() - 100)
+
+            barrier = threading.Barrier(8)
+
+            def _worker():
+                barrier.wait()  # all threads arrive at the expired-token check together
+                tm.get_auth_headers()
+
+            threads = [threading.Thread(target=_worker) for _ in range(8)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+
+        assert sum(calls) == 1, f"expected a single token refresh, got {sum(calls)}"
+        assert tm.get_raw_token() == "mock-token"
 
     @patch.object(OAuth2Provider, "get_token", return_value=_mock_oauth2_response())
     def test_initializes_with_initial_token(self, mock_get_token):

@@ -7,6 +7,7 @@ subscriptions, users, workspaces) which were identical.
 
 from __future__ import annotations
 
+import threading
 import time
 
 import httpx
@@ -190,6 +191,10 @@ class TokenManager:
         initial_token: str | None = None,
     ) -> None:
         self._token_info: TokenInfo | None = None
+        # Guards check-and-refresh so concurrent requests (each running
+        # ``get_auth_headers`` in its own ``asyncio.to_thread`` worker, #440)
+        # don't stampede the token endpoint when the cached token expires.
+        self._refresh_lock = threading.Lock()
 
         token_url = f"{api_base_url}/authorization/v2/oauth2/{workspace_id}/token"
 
@@ -235,11 +240,16 @@ class TokenManager:
 
     def _ensure_valid_token(self) -> None:
         if not self._token_info or self._token_info.is_expired():
-            if self._oauth2_provider:
-                logger.info("Token expired or missing, generating new token")
-                self._generate_new_token()
-            else:
-                raise RuntimeError("Token expired and no OAuth2 provider configured for renewal")
+            # Double-checked locking: only one thread refreshes; the rest wait
+            # and then observe the freshly-set token instead of each firing
+            # their own request to the token endpoint (#440 stampede guard).
+            with self._refresh_lock:
+                if not self._token_info or self._token_info.is_expired():
+                    if self._oauth2_provider:
+                        logger.info("Token expired or missing, generating new token")
+                        self._generate_new_token()
+                    else:
+                        raise RuntimeError("Token expired and no OAuth2 provider configured for renewal")
 
     # -- public API --------------------------------------------------------
 
