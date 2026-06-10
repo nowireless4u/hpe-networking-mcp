@@ -60,14 +60,28 @@ async def central_get_ap_trend(
             ),
         ),
     ],
-    start: Annotated[str | None, Field(description="ISO-8601 start timestamp.")] = None,
-    end: Annotated[str | None, Field(description="ISO-8601 end timestamp.")] = None,
+    interface_type: Annotated[
+        Literal["WIRELESS", "WIRED", "LTE"] | None,
+        coerce_enum(("WIRELESS", "WIRED", "LTE")),
+        Field(
+            description=(
+                "Interface to aggregate throughput over — REQUIRED by the API for "
+                "``dimension='throughput'`` (defaults to ``'WIRELESS'`` if omitted). "
+                "Ignored for the cpu/memory/power dimensions."
+            ),
+        ),
+    ] = None,
+    start: Annotated[str | None, Field(description="ISO-8601 start timestamp (optional; defaults to last 3h).")] = None,
+    end: Annotated[str | None, Field(description="ISO-8601 end timestamp (optional; defaults to last 3h).")] = None,
 ) -> dict | str:
     """Get one of an AP's top-level time-series trends.
 
     Consolidates the four trend endpoints under
     ``/aps/:serial/<dim>-trends`` (throughput, cpu-utilization,
-    memory-utilization, power-consumption).
+    memory-utilization, power-consumption). Omit ``start`` / ``end`` for the
+    last-3-hours default. The ``throughput`` dimension additionally requires an
+    ``interface_type`` (WIRELESS / WIRED / LTE) — the API 400s without it; this tool
+    defaults it to ``WIRELESS`` so an AP throughput query works out of the box.
     """
     suffix_map = {
         "throughput": "throughput-trends",
@@ -76,10 +90,15 @@ async def central_get_ap_trend(
         "power": "power-consumption-trends",
     }
     conn = ctx.lifespan_context["central_conn"]
+    params = _time_params(start, end)
+    if dimension == "throughput":
+        # interface-type is a mandatory query param for throughput-trends (enum
+        # WIRELESS/WIRED/LTE); WIRELESS is the sensible default for an AP.
+        params["interface-type"] = interface_type or "WIRELESS"
     return _get(
         conn,
         f"network-monitoring/v1/aps/{serial_number}/{suffix_map[dimension]}",
-        _time_params(start, end),
+        params,
     )
 
 
