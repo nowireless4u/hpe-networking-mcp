@@ -55,7 +55,7 @@ These rules are load-bearing — they come from live AOS-10 capture
 (issue #400). Violate them and the output lies.
 
 1. **Liveness is decided by `show datapath session ucc`, never by the
-   CDR.** A CDR stream is **LIVE** only if its IP 5-tuple appears in
+   CDR.** A CDR stream is **LIVE** only if its IP/port flow appears in
    `show datapath session ucc` with a populated **`Codec:`** field
    (e.g. `Codec:G711`). `Codec:--` or absent = not currently flowing.
    Everything in the CDR that is *not* backed by a live datapath session
@@ -65,10 +65,21 @@ These rules are load-bearing — they come from live AOS-10 capture
    live.** Captured fact: a client sat at `Callinfo list:2` with frozen
    metrics across every poll while its datapath sessions were long gone.
    Use the hashtable for the **IP → MAC join only**, not for liveness.
-3. **The join key is the IP 5-tuple** (`src_ip + src_port + dst_ip +
-   dst_port`). It's the only field shared by all three tables. The CDR's
-   `src_ip` is the **client IP**; the hashtable maps client IP → client
-   MAC. That's how a CDR row becomes "Hayley's Pixel".
+3. **The join key is the IP/port 4-tuple** — `src_ip + src_port +
+   dst_ip + dst_port`. It's the field set shared by all three tables.
+   **Why 4-tuple and not a strict 5-tuple:** `show ucm cdrs` does **not**
+   emit a protocol column, so protocol can't be part of the CDR↔datapath
+   match — the join is on IPs + ports only. For UCC media this is
+   effectively unique: the streams are UDP (RTP/SRTP, IKE/4500), and two
+   *simultaneous* flows sharing the exact same `src_ip:src_port →
+   dst_ip:dst_port` on different protocols (one stale in the CDR, one live
+   in datapath) is not a real-world condition. `show datapath session
+   ucc` *does* carry protocol (column 3, `17` = UDP) — if you want to
+   harden the match, restrict the live set to `proto == "17"` before
+   correlating; the residual collision risk without it is negligible but
+   non-zero, so don't claim a strict 5-tuple match. The CDR's `src_ip`
+   is the **client IP**; the hashtable maps client IP → client MAC.
+   That's how a CDR row becomes "Hayley's Pixel".
 4. **Gate quality on the UCC Score (0–100 composite), not on the Delay
    field.** The `Delay` value routinely reads thousands of ms (≈9000 ms
    observed) — it is **not** one-way latency, so applying the ITU-T
@@ -100,8 +111,8 @@ These rules are load-bearing — they come from live AOS-10 capture
 | Command | What it gives you | Role in the correlation |
 |---|---|---|
 | `show ucm hashtable` | per-client `vc:` entries — `mac:`, `IP:`, the ALGs tracked, and `Callinfo list:N` | **IP → MAC join.** Identity only — NOT liveness (rule 2). |
-| `show datapath session ucc` | active UCC datapath sessions — 5-tuple, `Prio:`, `ToS:`, `Flags:`, **`Codec:`** | **Liveness source of truth.** A populated `Codec:` = the flow is live right now. |
-| `show ucm cdrs` | per-stream call records — `[A]`/`[V]` marker, 5-tuple, app, `(delay)/(jitter)/(loss)/(UCC-Score)` | **The metrics.** Filter to only the streams that datapath says are live. |
+| `show datapath session ucc` | active UCC datapath sessions — full 5-tuple (incl. protocol col), `Prio:`, `ToS:`, `Flags:`, **`Codec:`** | **Liveness source of truth.** A populated `Codec:` = the flow is live right now. |
+| `show ucm cdrs` | per-stream call records — `[A]`/`[V]` marker, IP/port 4-tuple (no protocol col), app, `(delay)/(jitter)/(loss)/(UCC-Score)` | **The metrics.** Filter to only the streams that datapath says are live. |
 
 ## Procedure
 
@@ -178,7 +189,10 @@ def parse_hashtable(text):
     return ip_to
 
 def parse_datapath(text):
-    # Build a set of LIVE 5-tuples (both orientations) + codec per tuple.
+    # Build a set of LIVE IP/port 4-tuples (both orientations) + codec per
+    # tuple. datapath carries protocol (col 3); the CDR does not, so the
+    # correlation key is the 4-tuple (see rule 3). UCC media is UDP — to
+    # harden, add `and proto == "17"` to the guard below.
     live = set()
     codec_of = {}
     for line in text.splitlines():
@@ -194,7 +208,7 @@ def parse_datapath(text):
         # leading columns: src_ip dst_ip proto src_port dst_port ...
         if len(toks) < 5:
             continue
-        s_ip, d_ip, _proto, s_port, d_port = toks[0], toks[1], toks[2], toks[3], toks[4]
+        s_ip, d_ip, proto, s_port, d_port = toks[0], toks[1], toks[2], toks[3], toks[4]
         fwd = (s_ip, s_port, d_ip, d_port)
         rev = (d_ip, d_port, s_ip, s_port)
         live.add(fwd); live.add(rev)
@@ -235,18 +249,57 @@ def parse_cdrs(text):
 
 ### Step 3 — Correlate: live vs stale, and join to the MAC
 
+First, a sandbox-safe extractor that pulls the three raw command outputs
+out of the `central_show_commands` response across the shapes it comes
+back in (list of `{command, output}` blocks, dict keyed by command, or a
+single concatenated string). It's keyed on a keyword in each command
+label; if the response can't be split per-command it returns the whole
+blob — harmless, because every parser above is **line-filtered** (mac/IP
+lines, `Codec:` lines, metric rows), so a concatenated output still
+parses correctly.
+
 ```python
+def pick_blocks(resp):
+    # Normalize the response to a list of (command_label, output_text) pairs.
+    body = resp
+    if isinstance(body, dict):
+        inner = body.get("result") or body.get("output") or body.get("commands")
+        if isinstance(inner, (list, dict)):
+            body = inner
+    pairs = []
+    if isinstance(body, dict):
+        for k, v in body.items():
+            pairs.append((str(k), v if isinstance(v, str) else str(v)))
+    elif isinstance(body, list):
+        for item in body:
+            if isinstance(item, dict):
+                cmd = item.get("command") or item.get("cmd") or item.get("name") or ""
+                out = item.get("output") or item.get("result") or item.get("data") or ""
+                pairs.append((str(cmd), out if isinstance(out, str) else str(out)))
+            elif isinstance(item, str):
+                pairs.append(("", item))
+    elif isinstance(body, str):
+        pairs.append(("", body))
+
+    def find(keyword):
+        for cmd, out in pairs:
+            if keyword in cmd.lower():
+                return out
+        return "\n".join([o for _, o in pairs])   # un-split: parsers self-filter
+    return find("hashtable"), find("datapath"), find("cdr")
+
 def band(score):
     if score >= 80: return "GOOD"
     if score >= 70: return "FAIR"
     return "POOR"
 
 calls, stale = [], []
-for serial, blocks in RAW.items():
-    ht_text, dp_text, cdr_text = blocks_for(serial)   # pull the 3 raw strings
+for serial, resp in RAW.items():
+    ht_text, dp_text, cdr_text = pick_blocks(resp)
     ip_to = parse_hashtable(ht_text)
     live, codec_of = parse_datapath(dp_text)
     for r in parse_cdrs(cdr_text):
+        # 4-tuple key — the CDR exposes no protocol column (see rule 3).
         tup = (r["src_ip"], r["src_port"], r["dst_ip"], r["dst_port"])
         ident = ip_to.get(r["src_ip"], {})
         row = dict(r)
@@ -299,6 +352,12 @@ return payload
 you then hand it to the dashboard step.
 
 ### Step 4 — Render the dashboard (Generative UI)
+
+The UCC check is **already complete** after Step 3 — Step 4 is only
+*presentation*. Whether `generate_prefab_ui` exists changes how you show
+the result, never whether the check succeeded. A "tool not found" /
+disabled-app condition is **not** a UCC failure: fall through to the
+Markdown rendering and report the same data.
 
 If `generate_prefab_ui` is available (it's exposed when the server runs
 with `MCP_APP_ENABLE=true`), build an interactive Prefab dashboard.
