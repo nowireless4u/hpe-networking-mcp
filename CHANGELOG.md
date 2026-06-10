@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.9.0] - 2026-06-10
+
+**Minor — Generative UI dashboards + a single `MCP_APP_ENABLE` switch for all MCP-Apps providers.** The model can now build a live, interactive dashboard from the data it gathered — "build me an MRT dashboard for site HOME" → it pulls the Central/ClearPass data, then calls `generate_prefab_ui` and a Prefab app (tabs, KPI cards, charts, searchable data tables) renders inline. Live-validated end to end.
+
+### ⚠️ BREAKING
+- **`MCP_ENABLE_FILE_UPLOAD` is removed; use `MCP_APP_ENABLE`.** A single switch now gates *all* MCP-Apps capabilities (the `FileUpload` provider **and** the new `GenerativeUI` provider) — both emit `ui://` MCP-Apps resources that render only in MCP-Apps hosts (Claude Desktop / ChatGPT / claude.ai). If you set `MCP_ENABLE_FILE_UPLOAD=true`, change it to `MCP_APP_ENABLE=true` (file upload silently disables otherwise).
+
+### Added
+- **`GenerativeUI` provider** (FastMCP 3.2.0+, behind `MCP_APP_ENABLE`): exposes `generate_prefab_ui` + `search_prefab_components`, re-exposed top-level in code mode. The tool description is augmented with networking-specific guidance steering dashboard/visualization requests to it, plus an explicit **data contract** (values passed via `data` become globals by key — not a `data` variable) that eliminates the `NameError: name 'data'` trap.
+- **Deno** is baked into the image (the Prefab sandbox shells out to it for server-side validation; it does not auto-install).
+
+### Fixed
+- **Response envelope pass-through for the prefab tools** — `generate_prefab_ui` / `search_prefab_components` carry `x-fastmcp-wrap-result` output schemas; the envelope was stripping their required `result` field (same class as #293/#302). Now bypassed.
+- **`central_get_applications` made forgiving** (surfaced during dashboard testing): `start_query_time`/`end_query_time` accept epoch ms (13-digit), epoch seconds (10-digit), **or ISO-8601** (the sandbox blocks `time.now()`, so an LLM naturally passes ISO) — all normalized to epoch ms; the `sort` param accepts OData (`usage desc`) **and** the `-field` shorthand (`-usage` → `usage desc`).
+- **`central_get_ap_trend` throughput** now sends the API-required `interface-type` query param (WIRELESS / WIRED / LTE; defaults WIRELESS) — it was 400ing on every call without it. cpu/memory/power dimensions are unaffected.
+
+New unit tests for the provider wiring (single-flag gating, envelope pass-through, description/data-contract), the applications time/sort normalization, and the ap_trend interface-type. Full suite green.
+
 ## [3.3.8.2] - 2026-06-09
 
 **Patch — `central_get_applications` now validates the time window up front (#458).** The applications endpoint expects epoch **milliseconds**; an ISO-8601 string, a plain date, or a reversed window produced an opaque upstream `HTTP 400 BAD_REQUEST` ("Your request was incorrect or incomplete") wrapped as a 502, leaving the caller with no idea what was wrong.
