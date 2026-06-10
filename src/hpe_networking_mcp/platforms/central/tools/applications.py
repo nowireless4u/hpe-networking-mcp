@@ -31,12 +31,13 @@ def _to_epoch_ms(label: str, value: str) -> int:
     * **13-digit** epoch milliseconds — used as-is.
     * **10-digit** epoch seconds — converted to ms (the seconds-vs-ms mixup is the
       most common mistake; 10- vs 13-digit values don't overlap for present-day times).
-    * **ISO-8601** datetimes (e.g. ``2026-06-08T23:00:00Z``) — converted to ms. This
-      is the natural form for an LLM that can't read the clock inside the code-mode
-      sandbox (``datetime.now()`` / ``time.time()`` are blocked there), so accept it
-      and do the conversion server-side where a clock is available.
+    * **ISO-8601** datetimes *and bare dates* (e.g. ``2026-06-08T23:00:00Z`` or
+      ``2026-06-08``, taken as midnight UTC) — converted to ms. ISO is the natural
+      form for an LLM that can't read the clock inside the code-mode sandbox
+      (``datetime.now()`` / ``time.time()`` are blocked there), so accept it and do
+      the conversion server-side where a clock is available.
 
-    Anything else (a plain date, a word, an 11/12/14-digit typo) is rejected.
+    Anything else (a word, an 11/12/14-digit typo, a malformed datetime) is rejected.
 
     Args:
         label: Parameter name, used in the error message.
@@ -79,7 +80,9 @@ def _normalize_sort(value: str) -> str:
     """
     s = value.strip()
     if s and s[0] in "+-" and " " not in s and "," not in s:
-        return f"{s[1:].strip()} {'desc' if s[0] == '-' else 'asc'}"
+        field = s[1:].strip()
+        if field:  # ignore a bare "-"/"+" (no field) — leave it for Central to reject
+            return f"{field} {'desc' if s[0] == '-' else 'asc'}"
     return s
 
 

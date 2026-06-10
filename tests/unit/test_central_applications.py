@@ -93,6 +93,8 @@ def test_unparseable_timestamp_rejected(bad: str) -> None:
         ("usage asc", "usage asc"),
         ("usage desc, name asc", "usage desc, name asc"),  # multi-field → unchanged
         ("usage", "usage"),  # bare field → left for Central to interpret
+        ("-", "-"),  # bare sign, no field → passed through (no " desc")
+        ("+", "+"),
     ],
 )
 def test_normalize_sort(raw: str, expected: str) -> None:
