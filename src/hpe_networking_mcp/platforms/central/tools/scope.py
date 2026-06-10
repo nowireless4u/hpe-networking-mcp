@@ -32,6 +32,7 @@ from hpe_networking_mcp.platforms.central.scope_queries import (
     tree_to_mermaid,
 )
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
+from hpe_networking_mcp.platforms.central.utils import get_central_conn
 
 
 @tool(annotations=READ_ONLY)
@@ -54,7 +55,7 @@ async def central_get_scope_tree(
         (resources), and children at each level. Device leaf nodes
         include device_info and persona fields.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
         tree = build_scope_tree(conn)
         return tree_to_dict(tree, effective=(view == "effective"))
@@ -85,7 +86,7 @@ async def central_get_scope_resources(
         Dict with scope_id, scope_name, type, and a personas list. Each
         persona has a name and list of resources with name and has_details.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
         tree = build_scope_tree(conn)
     except Exception as e:
@@ -168,7 +169,7 @@ async def central_get_committed_config(
         intermediate site-collection nodes that exist purely as
         organizational containers).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
         tree = build_scope_tree(conn)
     except Exception as e:
@@ -238,7 +239,7 @@ async def central_get_effective_config(
         resource group has a name and list of instances showing
         origin_scope_id, origin_scope_name, persona, and has_details.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
         tree = build_scope_tree(conn)
     except Exception as e:
@@ -291,7 +292,7 @@ async def central_get_devices_in_scope(
         scope_name, category, persona, device_type, device_model,
         serial_number, mac_address, and part_number.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
         tree = build_scope_tree(conn)
     except Exception as e:
@@ -339,7 +340,7 @@ async def central_get_scope_diagram(
     Returns:
         Mermaid flowchart string ready for rendering.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
         tree = build_scope_tree(conn)
         return tree_to_mermaid(tree, scope_id, include_resources, include_devices)

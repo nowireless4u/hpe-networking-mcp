@@ -12,7 +12,7 @@ from pydantic import Field
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
 def _get(conn, path: str, params: dict | None = None) -> dict | str:
@@ -41,7 +41,7 @@ async def central_get_clients_trend(
     filter: str | None = None,
 ) -> dict | str:
     """Get tenant-wide client-count trend over a time window."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {}
     if start:
         params["start"] = start
@@ -59,7 +59,7 @@ async def central_get_clients_topn_usage(
     filter: str | None = None,
 ) -> dict | str:
     """Get the top-N clients by usage."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {"topN": top_n}
     if filter:
         params["filter"] = filter
@@ -74,7 +74,7 @@ async def central_get_client_mobility_trail(
     end: Annotated[str | None, Field(description="ISO-8601 end timestamp.")] = None,
 ) -> dict | str:
     """Get a client's roaming / mobility history (AP-to-AP transitions)."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {}
     if start:
         params["start"] = start
@@ -89,7 +89,7 @@ async def central_get_client_detail(
     mac_address: Annotated[str, Field(description="Client MAC address.")],
 ) -> dict | str:
     """Get one client's full record (deeper than ``central_get_clients`` list view)."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _get(conn, f"network-monitoring/v1/clients/{mac_address}")
 
 
@@ -104,7 +104,7 @@ async def central_get_client_onboarding_score(
     filter: str | None = None,
 ) -> dict | str:
     """Get the aggregate client-onboarding score (success-rate KPI)."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {}
     if filter:
         params["filter"] = filter
@@ -122,7 +122,7 @@ async def central_get_client_onboarding_stage_export(
     they reached / where they failed. Larger payload — use the count /
     reasons endpoints for summary views.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {}
     if filter:
         params["filter"] = filter
@@ -135,7 +135,7 @@ async def central_get_client_onboarding_stage_reasons(
     filter: str | None = None,
 ) -> dict | str:
     """Get aggregated reasons clients failed onboarding (top failure categories)."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {}
     if filter:
         params["filter"] = filter
@@ -148,7 +148,7 @@ async def central_get_client_onboarding_stage_count(
     filter: str | None = None,
 ) -> dict | str:
     """Get the count of clients at each onboarding stage (funnel view)."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {}
     if filter:
         params["filter"] = filter
@@ -193,7 +193,7 @@ async def central_get_firewall_sessions(
     | client | /client-firewall-sessions |
     | firewall-clients | /firewall-clients |
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     path_map = {
         "site": "network-monitoring/v1/site-firewall-sessions",
         "client": "network-monitoring/v1/client-firewall-sessions",

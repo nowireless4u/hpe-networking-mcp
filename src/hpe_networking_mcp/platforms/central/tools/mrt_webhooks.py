@@ -19,7 +19,7 @@ from pydantic import Field
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 WRITE_DELETE = ToolAnnotations(
     readOnlyHint=False,
@@ -41,7 +41,7 @@ async def central_get_webhooks(
     enabled flag). Use ``central_get_webhook`` for a single webhook's
     full configuration.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     response = retry_central_command(
         central_conn=conn,
         api_method="GET",
@@ -60,7 +60,7 @@ async def central_get_webhook(
     webhook_id: Annotated[str, Field(description="Webhook identifier.")],
 ) -> dict:
     """Get one webhook's full configuration by ID."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     response = retry_central_command(
         central_conn=conn,
         api_method="GET",
@@ -112,7 +112,7 @@ async def central_manage_webhook(
     PATCH semantics; pass ``replace_existing=True`` for PUT (wholesale
     replace).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     if action_type == "create":
         if not payload:
@@ -163,7 +163,7 @@ async def central_rotate_webhook_hmac_key(
     Receivers must update to the new key from the response immediately.
     Requires ``ENABLE_CENTRAL_WRITE_TOOLS=true``.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     response = retry_central_command(
         central_conn=conn,
         api_method="POST",

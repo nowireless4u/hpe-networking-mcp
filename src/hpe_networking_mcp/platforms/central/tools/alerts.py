@@ -12,6 +12,7 @@ from hpe_networking_mcp.platforms.central.utils import (
     build_odata_filter,
     clean_alert_data,
     coerce_enum,
+    get_central_conn,
     retry_central_command,
 )
 
@@ -117,7 +118,7 @@ async def central_get_alerts(
         query_params["next"] = cursor
 
     response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+        get_central_conn(ctx),
         api_method="GET",
         api_path="network-notifications/v1/alerts",
         api_params=query_params,
@@ -185,7 +186,7 @@ async def central_get_alert_classification(
         query_params["search"] = search
 
     response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+        get_central_conn(ctx),
         api_method="GET",
         api_path="network-notifications/v1/alerts/classification",
         api_params=query_params,
@@ -217,7 +218,7 @@ async def central_get_alert_action_status(
     Returns the task status payload from Central.
     """
     response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+        get_central_conn(ctx),
         api_method="GET",
         api_path=f"network-notifications/v1/alerts/async-operations/{task_id}",
     )
@@ -277,7 +278,7 @@ async def central_clear_alerts(
         body["notes"] = notes
 
     response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+        get_central_conn(ctx),
         api_method="POST",
         api_path="network-notifications/v1/alerts/clear",
         api_data=body,
@@ -315,7 +316,7 @@ async def central_defer_alerts(
     body = {"keys": keys, "deferUntil": defer_until}
 
     response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+        get_central_conn(ctx),
         api_method="POST",
         api_path="network-notifications/v1/alerts/defer",
         api_data=body,
@@ -348,7 +349,7 @@ async def central_reactivate_alerts(
     body = {"keys": keys}
 
     response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+        get_central_conn(ctx),
         api_method="POST",
         api_path="network-notifications/v1/alerts/active",
         api_data=body,
@@ -384,7 +385,7 @@ async def central_set_alert_priority(
     body = {"keys": keys, "priority": priority}
 
     response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+        get_central_conn(ctx),
         api_method="POST",
         api_path="network-notifications/v1/alerts/priority",
         api_data=body,

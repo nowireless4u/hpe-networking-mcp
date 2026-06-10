@@ -1749,3 +1749,49 @@ class TestRealisticCentralFixture:
         detokenized, unknown = detokenize_arguments(outbound_args, tokenizer)
         assert detokenized["profile_data"]["personal-security"]["wpa-passphrase"] == "OurCentralWifi2024!"
         assert unknown == []
+
+
+@pytest.mark.unit
+class TestShowCommandOutputSweep:
+    """Issue #411 — raw device CLI output returned by show-command tools is
+    held as a free-text blob under ``results[].output``. Before the fix that
+    field classified ``SKIP`` and only the universal scan (emails / AWS-signed
+    URLs) ran over it, so PEM cert/key blocks and MACs embedded in CLI text
+    passed through unswept. Classifying ``output`` as a free-text field runs
+    the full ``_scan_free_text`` sweep (PEM → email → MAC normalize)."""
+
+    def _tokenizer(self, label: str) -> Tokenizer:
+        return Tokenizer(SessionKeymap(), session_id=f"test-session-411-{label}", max_entries=100)
+
+    def test_output_field_classifies_scan_free_text(self) -> None:
+        cls, kind = classify_field("output", "some show command text")
+        assert cls == FieldClassification.SCAN_FREE_TEXT
+        assert kind is None
+
+    def test_pem_block_in_show_output_is_tokenized(self) -> None:
+        tokenizer = self._tokenizer("pem")
+        pem = "-----BEGIN CERTIFICATE-----\nMIIBfakecertdata1234567890ABCDEF\n-----END CERTIFICATE-----"
+        response = {"results": [{"command": "show crypto pki certificate", "output": f"Certificate:\n{pem}\n"}]}
+        out = tokenize_response(response, tokenizer)
+        swept = out["results"][0]["output"]
+        # The PEM block is tokenized as CERT and no raw markers remain.
+        assert "BEGIN CERTIFICATE" not in swept
+        assert TOKEN_RE.search(swept).group(1) == "CERT"
+
+    def test_email_in_show_output_is_tokenized(self) -> None:
+        tokenizer = self._tokenizer("email")
+        response = {"results": [{"command": "show run", "output": "snmp-server contact admin@example.com"}]}
+        out = tokenize_response(response, tokenizer)
+        swept = out["results"][0]["output"]
+        assert "admin@example.com" not in swept
+        assert TOKEN_RE.search(swept).group(1) == "EMAIL"
+
+    def test_mac_in_show_output_is_normalized(self) -> None:
+        tokenizer = self._tokenizer("mac")
+        # Uppercase / dotted MAC in a CLI blob is normalized to canonical form
+        # (MACs are normalize-only, never tokenized — per the v2.3.0.10 design).
+        response = {"results": [{"command": "show mac-address", "output": "port 1/1/1  AABB.CCDD.EEFF  vlan 10"}]}
+        out = tokenize_response(response, tokenizer)
+        swept = out["results"][0]["output"]
+        assert "aa:bb:cc:dd:ee:ff" in swept
+        assert "AABB.CCDD.EEFF" not in swept

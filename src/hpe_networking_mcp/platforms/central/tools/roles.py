@@ -15,7 +15,7 @@ from fastmcp import Context
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
 def _extract_policy_names(role_body: dict) -> list[str]:
@@ -102,7 +102,7 @@ async def central_get_role_with_policy(
         skeletal and a role may legitimately reference no policies.
         Surface ``not_found`` to the operator as informational.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     result: dict = {
         "name": name,

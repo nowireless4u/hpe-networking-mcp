@@ -16,7 +16,7 @@ from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import elicitation_handler
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 WRITE_DELETE = ToolAnnotations(
     readOnlyHint=False,
@@ -313,7 +313,7 @@ async def _execute_config_action(
         elif elicitation_response.action == "cancel":
             return {"message": "Action canceled by user."}
 
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     if action_type == ActionType.CREATE:
         api_method = "POST"
@@ -373,7 +373,7 @@ async def _execute_collection_site_action(
     if not site_ids:
         raise ToolError({"status_code": 400, "message": "payload must contain 'siteIds' list."})
 
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     if action == "add":
         api_method = "POST"

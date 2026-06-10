@@ -314,6 +314,61 @@ def deprecation_notice(resp: dict[str, Any]) -> dict[str, Any] | None:
     return {"deprecated": True, "sunset": sunset, "message": message}
 
 
+def get_central_conn(ctx: Any) -> Any:
+    """Return the Central connection, or raise a clear 503 ToolError.
+
+    Central is optional: when its Docker secrets are absent or startup failed,
+    ``server.py`` stores ``central_conn = None``. Tools that pass that straight
+    into ``central_conn.command(...)`` crash with an opaque ``AttributeError``
+    (``None.command``), and the exception handler then crashes again on
+    ``None.logger`` (issue #443). This helper checks up front and raises an
+    actionable ``ToolError`` so a disabled/failed integration produces a
+    recoverable "not configured" response instead of an internal error.
+
+    Args:
+        ctx: The FastMCP request context.
+
+    Returns:
+        The ``pycentral`` connection object.
+
+    Raises:
+        ToolError: 503 when Central is not configured or failed to start.
+    """
+    conn = ctx.lifespan_context.get("central_conn")
+    if conn is None:
+        raise ToolError(
+            {
+                "status_code": 503,
+                "message": (
+                    "Central is not configured or failed to initialize. Provide the Central "
+                    "Docker secrets (central_base_url, central_client_id, central_client_secret) "
+                    "and restart the server."
+                ),
+            }
+        )
+    return conn
+
+
+def _log_transport_error(central_conn: Any, message: str) -> None:
+    """Log a transport error without assuming ``central_conn`` (or its logger) exists.
+
+    The original handler called ``central_conn.logger.error(...)`` directly; if
+    ``central_conn`` is ``None`` (issue #443) that raises a second
+    ``AttributeError`` inside the ``except`` block. Prefer the connection's own
+    logger when present, else fall back to the module logger. The message is
+    pre-formatted, so it's passed as a literal (``"{}"``) to loguru to avoid its
+    brace-format parser choking on braces in an exception string.
+    """
+    conn_logger = getattr(central_conn, "logger", None)
+    if conn_logger is not None:
+        try:
+            conn_logger.error(message)
+            return
+        except Exception:
+            pass
+    logger.error("{}", message)
+
+
 def retry_central_command(
     central_conn: Any,
     api_method: str,
@@ -339,6 +394,17 @@ def retry_central_command(
             masking (a bare ``Exception`` here gets reduced to "Error calling
             tool …" and the AI can't self-correct).
     """
+    if central_conn is None:
+        raise ToolError(
+            {
+                "status_code": 503,
+                "message": (
+                    "Central is not configured or failed to initialize. Provide the Central "
+                    "Docker secrets (central_base_url, central_client_id, central_client_secret) "
+                    "and restart the server."
+                ),
+            }
+        )
     api_params = api_params or {}
     api_data = api_data or {}
     last_response: dict | None = None
@@ -351,13 +417,9 @@ def retry_central_command(
                 api_data=api_data,
             )
         except Exception as exc:
-            central_conn.logger.error(
-                "Central transport error attempt %d/%d %s %s: %s",
-                attempt,
-                max_retries,
-                api_method,
-                api_path,
-                exc,
+            _log_transport_error(
+                central_conn,
+                f"Central transport error attempt {attempt}/{max_retries} {api_method} {api_path}: {exc}",
             )
             last_response = {"code": 0, "msg": str(exc)}
             if attempt < max_retries:

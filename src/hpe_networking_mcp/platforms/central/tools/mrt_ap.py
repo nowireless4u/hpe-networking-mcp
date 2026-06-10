@@ -14,7 +14,7 @@ from pydantic import Field
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import coerce_enum, retry_central_command
+from hpe_networking_mcp.platforms.central.utils import coerce_enum, get_central_conn, retry_central_command
 
 
 def _get(conn, path: str, params: dict | None = None) -> dict | str:
@@ -89,7 +89,7 @@ async def central_get_ap_trend(
         "memory": "memory-utilization-trends",
         "power": "power-consumption-trends",
     }
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params = _time_params(start, end)
     if dimension == "throughput":
         # interface-type is a mandatory query param for throughput-trends (enum
@@ -113,7 +113,7 @@ async def central_get_ap_radios(
     serial_number: Annotated[str, Field(description="AP serial number.")],
 ) -> dict | str:
     """List the radios on an AP (2.4, 5, 6 GHz typically)."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _get(conn, f"network-monitoring/v1/aps/{serial_number}/radios")
 
 
@@ -145,7 +145,7 @@ async def central_get_ap_radio_trend(
         "noise-floor": "noise-floor-trends",
         "frames": "frames-trends",
     }
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _get(
         conn,
         f"network-monitoring/v1/aps/{serial_number}/radios/{radio_number}/{suffix_map[dimension]}",
@@ -164,7 +164,7 @@ async def central_get_ap_ports(
     serial_number: Annotated[str, Field(description="AP serial number.")],
 ) -> dict | str:
     """List the Ethernet ports on an AP."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _get(conn, f"network-monitoring/v1/aps/{serial_number}/ports")
 
 
@@ -190,7 +190,7 @@ async def central_get_ap_port_trend(
         "crc": "crc-trends",
         "collisions": "collisions-trends",
     }
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _get(
         conn,
         f"network-monitoring/v1/aps/{serial_number}/ports/{port_index}/{suffix_map[dimension]}",
@@ -209,7 +209,7 @@ async def central_get_ap_tunnels(
     serial_number: Annotated[str, Field(description="AP serial number.")],
 ) -> dict | str:
     """List active tunnels on an AP."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _get(conn, f"network-monitoring/v1/aps/{serial_number}/tunnels")
 
 
@@ -220,7 +220,7 @@ async def central_get_ap_tunnel(
     tunnel_id: Annotated[str, Field(description="Tunnel identifier.")],
 ) -> dict | str:
     """Get one tunnel's detail on an AP."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _get(conn, f"network-monitoring/v1/aps/{serial_number}/tunnels/{tunnel_id}")
 
 
@@ -252,7 +252,7 @@ async def central_get_ap_tunnel_trend(
         "jitter": "jitter-trends",
         "latency": "latency-trends",
     }
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _get(
         conn,
         f"network-monitoring/v1/aps/{serial_number}/tunnels/{tunnel_id}/{suffix_map[dimension]}",
@@ -276,7 +276,7 @@ async def central_get_ap_wlans_monitoring(
     through a different code path; this hits the
     ``/aps/:serial/wlans`` endpoint directly.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _get(conn, f"network-monitoring/v1/aps/{serial_number}/wlans")
 
 
@@ -289,7 +289,7 @@ async def central_get_ap_wlan_throughput(
     end: Annotated[str | None, Field(description="ISO-8601 end timestamp.")] = None,
 ) -> dict | str:
     """Get throughput trend for one WLAN as broadcast by one AP."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _get(
         conn,
         f"network-monitoring/v1/aps/{serial_number}/wlans/{wlan_name}/throughput-trends",
@@ -334,7 +334,7 @@ async def central_get_top_aps_by_usage(
         "wired": "top-aps-by-wired-usage",
         "usage": "top-aps-by-usage",
     }
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {"topN": top_n}
     if filter:
         params["filter"] = filter
@@ -354,7 +354,7 @@ async def central_get_radios(
     offset: int = 0,
 ) -> dict | str:
     """List all radios across the tenant (network-monitoring view)."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
@@ -369,7 +369,7 @@ async def central_get_bssids(
     offset: int = 0,
 ) -> dict | str:
     """List all BSSIDs (per-radio-per-SSID broadcast records) across the tenant."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
@@ -389,7 +389,7 @@ async def central_get_wlans_monitoring(
     statistics-side view) and ``central_get_wlan_profiles`` (config-model
     view). This hits ``network-monitoring/v1/wlans``.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
@@ -402,7 +402,7 @@ async def central_get_wlan_monitoring_detail(
     wlan_name: Annotated[str, Field(description="WLAN / SSID name.")],
 ) -> dict | str:
     """Get one WLAN's monitoring-side detail by name."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _get(conn, f"network-monitoring/v1/wlans/{wlan_name}")
 
 
@@ -414,7 +414,7 @@ async def central_get_swarms(
     offset: int = 0,
 ) -> dict | str:
     """List IAP / Instant clusters (swarms) across the tenant."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
@@ -427,7 +427,7 @@ async def central_get_swarm(
     cluster_id: Annotated[str, Field(description="Swarm / cluster identifier.")],
 ) -> dict | str:
     """Get one swarm / IAP cluster's detail."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _get(conn, f"network-monitoring/v1/swarms/{cluster_id}")
 
 
@@ -443,7 +443,7 @@ async def central_get_applications_v1(
     Distinct from the existing ``central_get_applications`` which uses
     the ``v1alpha1`` path.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter

@@ -6,6 +6,7 @@ from pycentral.troubleshooting.troubleshooting import Troubleshooting
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
+from hpe_networking_mcp.platforms.central.utils import get_central_conn
 
 
 def _resolve_if_switch(conn, serial_number: str, device_type: str) -> str:
@@ -42,7 +43,7 @@ async def central_ping(
         count: Number of pings to send.
         packet_size: Ping packet size in bytes.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     resolved_id = _resolve_if_switch(conn, serial_number, device_type)
 
     kwargs: dict = {
@@ -89,7 +90,7 @@ async def central_traceroute(
         destination: IP address or hostname to traceroute (required).
         device_type: Type of device — "ap", "cx", or "gateway" (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     resolved_id = _resolve_if_switch(conn, serial_number, device_type)
 
     method_map = {
@@ -147,7 +148,7 @@ async def central_cable_test(
     if not 1 <= poll_interval <= 10:
         raise ToolError({"status_code": 400, "message": f"poll_interval must be 1-10, got {poll_interval}"})
 
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     resolved_id = _resolve_if_switch(conn, serial_number, device_type)
     port_list = [p.strip() for p in ports.split(",")]
 
@@ -188,7 +189,7 @@ async def central_show_commands(
         device_type: Device type — "aos-s", "aps", "cx", or "gateways" (required).
         commands: Comma-separated show commands, e.g. "show version,show interfaces" (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     resolved_id = _resolve_if_switch(conn, serial_number, device_type)
     command_list = [c.strip() for c in commands.split(",")]
 

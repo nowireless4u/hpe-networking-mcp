@@ -12,6 +12,7 @@ from hpe_networking_mcp.platforms.central.utils import (
     as_comma_separated,
     build_odata_filter,
     clean_device_data,
+    get_central_conn,
 )
 
 # API field definitions — update allowed_values when Central adds/removes enum options
@@ -90,7 +91,7 @@ async def central_get_devices(
 
     try:
         devices = MonitoringDevices.get_all_device_inventory(
-            central_conn=ctx.lifespan_context["central_conn"],
+            central_conn=get_central_conn(ctx),
             filter_str=filter_str,
             site_assigned=site_assigned_str,
             sort=sort,
@@ -138,7 +139,7 @@ async def central_find_device(
         raise ToolError({"status_code": 502, "message": f"Error: {e}"}) from e
     try:
         device_resp = MonitoringDevices.get_device_inventory(
-            central_conn=ctx.lifespan_context["central_conn"],
+            central_conn=get_central_conn(ctx),
             filter_str=filter_str,
         )
     except Exception as e:

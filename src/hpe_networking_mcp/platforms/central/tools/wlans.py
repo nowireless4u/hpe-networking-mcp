@@ -6,7 +6,7 @@ from pycentral.new_monitoring.aps import MonitoringAPs
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import resolve_time_window, retry_central_command
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, resolve_time_window, retry_central_command
 
 
 @tool(annotations=READ_ONLY)
@@ -33,7 +33,7 @@ async def central_get_wlans(
         sort: Sort expression (e.g., 'essid asc').
         limit: Maximum results to return (default 100).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
         kwargs: dict = {
             "central_conn": conn,
@@ -92,7 +92,7 @@ async def central_get_wlan_stats(
             Overrides time_range when combined with start_time.
     """
     start_at, end_at = resolve_time_window(time_range, start_time, end_time)
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     try:
         response = retry_central_command(

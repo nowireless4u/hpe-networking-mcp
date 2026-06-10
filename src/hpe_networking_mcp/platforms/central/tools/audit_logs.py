@@ -3,7 +3,7 @@ from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import deprecation_notice, retry_central_command
+from hpe_networking_mcp.platforms.central.utils import deprecation_notice, get_central_conn, retry_central_command
 
 
 @tool(annotations=READ_ONLY)
@@ -34,7 +34,7 @@ async def central_get_audit_logs(
             etc. The API returns HTTP 500 for offset 0, so values < 1 are
             clamped to 1.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     # The audit API paginates by 1-based page number and returns a 500 for
     # offset 0, so clamp it; limit is capped at the documented max of 200.
@@ -87,7 +87,7 @@ async def central_get_audit_log_detail(
     Parameters:
         id: Audit log entry ID (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     try:
         resp = retry_central_command(

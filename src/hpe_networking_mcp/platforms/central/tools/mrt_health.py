@@ -14,7 +14,7 @@ from pydantic import Field
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
 def _get(conn, path: str, params: dict | None = None) -> dict | str:
@@ -41,7 +41,7 @@ async def central_get_site_health_detail(
     and queries the dashboard view) — this hits the ``/site-health/:site-id``
     endpoint directly for one site's full health detail.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _get(conn, f"network-monitoring/v1/site-health/{site_id}")
 
 
@@ -53,7 +53,7 @@ async def central_get_sites_client_health(
     offset: int = 0,
 ) -> dict | str:
     """Get per-site client-health summaries across the tenant."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
@@ -66,7 +66,7 @@ async def central_get_tenant_device_health(
     filter: str | None = None,
 ) -> dict | str:
     """Get tenant-wide device health rollup (single record, tenant scope)."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {}
     if filter:
         params["filter"] = filter
@@ -79,7 +79,7 @@ async def central_get_tenant_client_health(
     filter: str | None = None,
 ) -> dict | str:
     """Get tenant-wide client health rollup (single record, tenant scope)."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {}
     if filter:
         params["filter"] = filter

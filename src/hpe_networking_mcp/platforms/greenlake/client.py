@@ -8,12 +8,55 @@ Ported from the per-service ``AuditLogsHttpClient`` /
 
 from __future__ import annotations
 
-from typing import Any
+import asyncio
+from typing import TYPE_CHECKING, Any
 
 import httpx
+from fastmcp.exceptions import ToolError
 from loguru import logger
 
 from hpe_networking_mcp.platforms.greenlake.auth import TokenManager
+
+if TYPE_CHECKING:
+    from fastmcp import Context
+
+
+def get_greenlake_client(ctx: Context) -> GreenLakeHttpClient:
+    """Return a configured GreenLake client, or raise a clear 503 ToolError.
+
+    GreenLake is optional: when its Docker secrets are absent or startup
+    failed, ``server.py`` stores ``greenlake_token_manager = None`` and
+    ``config.greenlake`` is ``None``. Tools that dereference those directly
+    crash with an opaque ``AttributeError`` (issue #444). This helper checks
+    both up front and raises an actionable ``ToolError`` instead, so a
+    disabled/failed integration produces a recoverable "not configured"
+    response rather than an internal error.
+
+    Args:
+        ctx: The FastMCP request context.
+
+    Returns:
+        A ``GreenLakeHttpClient`` bound to the configured base URL.
+
+    Raises:
+        ToolError: 503 when GreenLake is not configured or failed to start.
+    """
+    lifespan = ctx.lifespan_context
+    token_manager = lifespan.get("greenlake_token_manager")
+    config = lifespan.get("config")
+    greenlake_cfg = getattr(config, "greenlake", None) if config is not None else None
+    if token_manager is None or greenlake_cfg is None:
+        raise ToolError(
+            {
+                "status_code": 503,
+                "message": (
+                    "GreenLake is not configured or failed to initialize. Provide the GreenLake "
+                    "Docker secrets (greenlake_api_base_url, greenlake_client_id, "
+                    "greenlake_client_secret, greenlake_workspace_id) and restart the server."
+                ),
+            }
+        )
+    return GreenLakeHttpClient(token_manager=token_manager, base_url=greenlake_cfg.api_base_url)
 
 
 class GreenLakeHttpClient:
@@ -38,7 +81,7 @@ class GreenLakeHttpClient:
     ) -> dict[str, Any]:
         """Perform an authenticated GET request."""
         url = f"{self.base_url}{endpoint}"
-        headers = self._get_auth_headers()
+        headers = await self._get_auth_headers()
         if additional_headers:
             headers.update(additional_headers)
 
@@ -66,7 +109,7 @@ class GreenLakeHttpClient:
     ) -> dict[str, Any]:
         """Perform an authenticated POST request."""
         url = f"{self.base_url}{endpoint}"
-        headers = self._get_auth_headers()
+        headers = await self._get_auth_headers()
         if additional_headers:
             headers.update(additional_headers)
 
@@ -88,9 +131,15 @@ class GreenLakeHttpClient:
 
     # -- helpers -----------------------------------------------------------
 
-    def _get_auth_headers(self) -> dict[str, str]:
-        """Build auth + accept headers, refreshing if needed."""
-        headers: dict[str, str] = self.token_manager.get_auth_headers()
+    async def _get_auth_headers(self) -> dict[str, str]:
+        """Build auth + accept headers, refreshing if needed.
+
+        Token acquisition/refresh in ``TokenManager`` is synchronous
+        (``httpx.Client``). Run it in a worker thread so a slow or hung
+        token endpoint can't block the event loop and stall unrelated
+        tools (issue #440).
+        """
+        headers: dict[str, str] = await asyncio.to_thread(self.token_manager.get_auth_headers)
         headers["Accept"] = "application/json"
         return headers
 

@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.10.1] - 2026-06-10
+
+**Patch — defensive hardening for unavailable/misconfigured platforms, an async-token fix, and a PII sweep gap.** A batch of bug fixes from a `bug`-label triage. No new tools or behavior changes for configured platforms.
+
+### Fixed
+- **Central tools returned an opaque `AttributeError` when Central was unavailable** (#443). Added a shared `get_central_conn(ctx)` helper that raises a clear `ToolError` (503) when `central_conn` is `None` (not configured / failed startup), and routed **every** Central tool's connection access through it. Hardened `retry_central_command` to (a) raise the same 503 up front when handed a `None` connection and (b) log transport errors through a safe logger that no longer dereferences `central_conn.logger` inside the `except` block (the original code raised a *second* `AttributeError` there).
+- **GreenLake tools crashed instead of returning 503 when GreenLake was not configured** (#444). Added `get_greenlake_client(ctx)` which validates both `config.greenlake` and the token manager before building a client, raising a clear 503 otherwise; applied across all GreenLake tools.
+- **GreenLake OAuth token acquisition blocked the async event loop** (#440). The token fetch/refresh is synchronous (`httpx.Client`); it now runs via `asyncio.to_thread` on the request path, and the startup `TokenManager` construction (which does a blocking initial fetch) is built off-loop in the lifespan handler.
+- **Mist `getSelf` startup resolver crashed on an HTTP 200 with a non-JSON body** (#442). A proxy/WAF/login-page interstitial returning `200` with HTML no longer raises during org-id resolution — the JSON decode is guarded, a bounded body preview is logged, and the resolver fails closed to `None`.
+- **PII tokenization skipped raw show-command CLI output** (#411). The `output` blob from show-command tools (`central_show_commands` etc.) classified `SKIP`, so only the universal email/AWS-URL scan ran over it. It's now classified as a free-text field, so the full sweep (PEM cert/key blocks, emails, MAC normalization) runs over CLI dumps when `ENABLE_PII_TOKENIZATION=true`. (Field-name-keyed secrets like PSKs have no value-shape regex and remain undetectable inside an opaque CLI blob — a dedicated CLI-grammar sweep is out of scope.)
+
+New unit tests cover each guard (Central/GreenLake 503 paths, the safe transport logger, the GreenLake async header builder, the Mist non-JSON resolver, and the show-output PII sweep). Full suite green; ruff + format + mypy clean.
+
 ## [3.3.10.0] - 2026-06-10
 
 **Minor — new bundled skill `central-ucc-quality`: trustworthy UCC (voice/video) call-quality on AOS-10 APs, with a Generative-UI dashboard.** Closes #400. Asking "check call quality on the garage AP" now runs a vetted correlation runbook instead of a naive single-command read.

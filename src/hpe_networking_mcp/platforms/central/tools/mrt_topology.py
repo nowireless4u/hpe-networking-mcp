@@ -14,7 +14,7 @@ from pydantic import Field
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 WRITE_DELETE = ToolAnnotations(
     readOnlyHint=False,
@@ -44,7 +44,7 @@ async def central_get_topology(
     site_id: Annotated[str, Field(description="Site identifier.")],
 ) -> dict | str:
     """Get the network topology graph for a site (nodes + edges)."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _call(conn, "GET", f"network-monitoring/v1/topology/{site_id}")
 
 
@@ -54,7 +54,7 @@ async def central_get_neighbours(
     serial_number: Annotated[str, Field(description="Device serial number.")],
 ) -> dict | str:
     """Get LLDP / CDP neighbour records as seen by a specific device."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _call(conn, "GET", f"network-monitoring/v1/neighbours/{serial_number}")
 
 
@@ -64,7 +64,7 @@ async def central_get_unmanaged_device(
     mac_address: Annotated[str, Field(description="MAC address of the unmanaged device.")],
 ) -> dict | str:
     """Get details on an unmanaged device (seen on the network but not under Central management)."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _call(conn, "GET", f"network-monitoring/v1/unmanaged-device/{mac_address}")
 
 
@@ -74,7 +74,7 @@ async def central_get_isolated_devices(
     site_id: Annotated[str, Field(description="Site identifier.")],
 ) -> dict | str:
     """List isolated devices at a site (managed devices that lost connectivity to peers)."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _call(conn, "GET", f"network-monitoring/v1/isolated-devices/{site_id}")
 
 
@@ -91,7 +91,7 @@ async def central_get_device_inventory(
     devices) — this includes lifecycle states the live-device view
     filters out.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
@@ -112,7 +112,7 @@ async def central_update_device(
     Requires ``ENABLE_CENTRAL_WRITE_TOOLS=true``. Typical use: rename a
     device, change its assigned site, update notes.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     response = retry_central_command(
         central_conn=conn,
         api_method="PATCH",
@@ -137,7 +137,7 @@ async def central_delete_device(
     ``central_reboot_device`` or vendor tools to reset the hardware
     first if recommissioning.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     response = retry_central_command(
         central_conn=conn,
         api_method="DELETE",

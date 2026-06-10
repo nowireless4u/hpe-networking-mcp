@@ -16,7 +16,7 @@ from mcp.types import ToolAnnotations
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 # Per the upstream OpenAPI: search must be 3-128 chars when supplied.
 _SEARCH_MIN_CHARS = 3
@@ -59,7 +59,7 @@ async def central_get_device_config_issues(
         response shape.
     """
     response = retry_central_command(
-        central_conn=ctx.lifespan_context["central_conn"],
+        central_conn=get_central_conn(ctx),
         api_method="GET",
         api_path="network-config/v1alpha1/config-health/active-issue",
         api_params={"serial": serial},
@@ -121,7 +121,7 @@ async def central_get_devices_config_health(
         api_params["search"] = search
 
     response = retry_central_command(
-        central_conn=ctx.lifespan_context["central_conn"],
+        central_conn=get_central_conn(ctx),
         api_method="GET",
         api_path="network-config/v1alpha1/config-health/devices",
         api_params=api_params,
@@ -171,7 +171,7 @@ async def central_resync_device_config(
         )
 
     response = retry_central_command(
-        central_conn=ctx.lifespan_context["central_conn"],
+        central_conn=get_central_conn(ctx),
         api_method="POST",
         api_path="network-config/v1alpha1/config-health/devices-resync",
         api_data={"serials": serials},

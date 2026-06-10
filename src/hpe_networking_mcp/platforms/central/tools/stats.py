@@ -7,6 +7,7 @@ from pycentral.new_monitoring.gateways import MonitoringGateways
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
+from hpe_networking_mcp.platforms.central.utils import get_central_conn
 
 
 @tool(annotations=READ_ONLY)
@@ -31,7 +32,7 @@ async def central_get_ap_stats(
         duration: Time duration shorthand (e.g. "3H", "1D", "1W").
             Ignored if both start_time and end_time are provided.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     kwargs: dict = {"central_conn": conn, "serial_number": serial_number}
     if start_time:
         kwargs["from_timestamp"] = start_time
@@ -74,7 +75,7 @@ async def central_get_ap_utilization(
         duration: Time duration shorthand (e.g. "3H", "1D", "1W").
             Ignored if both start_time and end_time are provided.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     kwargs: dict = {"central_conn": conn, "serial_number": serial_number}
     if start_time:
         kwargs["from_timestamp"] = start_time
@@ -121,7 +122,7 @@ async def central_get_gateway_stats(
         duration: Time duration shorthand (e.g. "3H", "1D", "1W").
             Ignored if both start_time and end_time are provided.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     kwargs: dict = {"central_conn": conn, "serial_number": serial_number}
     if start_time:
         kwargs["from_timestamp"] = start_time
@@ -164,7 +165,7 @@ async def central_get_gateway_utilization(
         duration: Time duration shorthand (e.g. "3H", "1D", "1W").
             Ignored if both start_time and end_time are provided.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     kwargs: dict = {"central_conn": conn, "serial_number": serial_number}
     if start_time:
         kwargs["from_timestamp"] = start_time
@@ -212,7 +213,7 @@ async def central_get_gateway_wan_availability(
         duration: Time duration shorthand (e.g. "3H", "1D", "1W").
             Ignored if both start_time and end_time are provided.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     kwargs: dict = {"central_conn": conn, "serial_number": serial_number}
     if start_time:
         kwargs["from_timestamp"] = start_time
@@ -247,7 +248,7 @@ async def central_get_tunnel_health(
     Parameters:
         serial_number: Gateway serial number (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     try:
         resp = MonitoringGateways.get_tunnel_health_summary(

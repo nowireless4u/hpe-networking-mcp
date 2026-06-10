@@ -265,7 +265,23 @@ async def resolve_org_id_from_self(client: httpx.AsyncClient) -> str | None:
             response.text[:200],
         )
         return None
-    body = response.json()
+    # An HTTP 200 with a non-JSON body (proxy/WAF interstitial, login page,
+    # truncated/corrupted response) must not raise here and degrade org-id
+    # caching — log a bounded preview and fail closed to None (issue #442).
+    try:
+        body = response.json()
+    except (ValueError, _json.JSONDecodeError):
+        logger.warning(
+            "Mist getSelf returned HTTP 200 with a non-JSON body at lifespan startup — {}",
+            response.text[:200],
+        )
+        return None
+    if not isinstance(body, dict):
+        logger.warning(
+            "Mist getSelf returned HTTP 200 with an unexpected non-object body at lifespan startup — {}",
+            response.text[:200],
+        )
+        return None
     privileges = body.get("privileges", [])
     org_privs = [p for p in privileges if p.get("scope") == "org"]
     if not org_privs:

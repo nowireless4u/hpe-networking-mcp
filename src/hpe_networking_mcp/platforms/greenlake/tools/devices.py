@@ -17,7 +17,7 @@ from loguru import logger
 from pydantic import Field
 
 from hpe_networking_mcp.platforms.greenlake._registry import tool
-from hpe_networking_mcp.platforms.greenlake.client import GreenLakeHttpClient
+from hpe_networking_mcp.platforms.greenlake.client import get_greenlake_client
 
 
 def _coerce_int(value: Any, name: str) -> int:
@@ -134,11 +134,7 @@ async def greenlake_get_devices(
     except ValueError as e:
         raise ToolError({"status_code": 400, "message": f"Invalid parameter: {e}"}) from e
 
-    token_manager = ctx.lifespan_context["greenlake_token_manager"]
-    config = ctx.lifespan_context["config"]
-    base_url = config.greenlake.api_base_url
-
-    async with GreenLakeHttpClient(token_manager=token_manager, base_url=base_url) as client:
+    async with get_greenlake_client(ctx) as client:
         return await client.get("/devices/v1/devices", params=params)
 
 
@@ -176,9 +172,5 @@ async def greenlake_get_device_by_id(
     if not id or not id.strip():
         raise ToolError({"status_code": 400, "message": "id is required and cannot be empty"})
 
-    token_manager = ctx.lifespan_context["greenlake_token_manager"]
-    config = ctx.lifespan_context["config"]
-    base_url = config.greenlake.api_base_url
-
-    async with GreenLakeHttpClient(token_manager=token_manager, base_url=base_url) as client:
+    async with get_greenlake_client(ctx) as client:
         return await client.get(f"/devices/v1/devices/{id}")

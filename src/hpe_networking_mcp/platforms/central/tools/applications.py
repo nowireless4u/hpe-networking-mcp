@@ -5,7 +5,7 @@ from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
 def _parse_iso_to_epoch_ms(value: str) -> int | None:
@@ -134,7 +134,7 @@ async def central_get_applications(
             }
         )
 
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     query_params: dict = {
         "site-id": site_id,

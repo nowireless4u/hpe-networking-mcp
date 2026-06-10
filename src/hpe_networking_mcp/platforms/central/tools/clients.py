@@ -12,6 +12,7 @@ from hpe_networking_mcp.platforms.central.utils import (
     build_odata_filter,
     clean_client_data,
     coerce_enum,
+    get_central_conn,
 )
 
 MISSING_CLIENT_RESPONSE = "Resource not found for the given input."
@@ -82,7 +83,7 @@ async def central_get_clients(
 
     try:
         clients = Clients.get_all_clients(
-            central_conn=ctx.lifespan_context["central_conn"],
+            central_conn=get_central_conn(ctx),
             site_id=site_id,
             site_name=site_name,
             serial_number=serial_number,
@@ -116,7 +117,7 @@ async def central_find_client(
     """
     try:
         result = Clients.get_client_details(
-            central_conn=ctx.lifespan_context["central_conn"],
+            central_conn=get_central_conn(ctx),
             client_mac=mac_address,
         )
     except Exception as e:

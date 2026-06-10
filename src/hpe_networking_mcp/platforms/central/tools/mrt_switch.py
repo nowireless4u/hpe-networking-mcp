@@ -13,7 +13,7 @@ from pydantic import Field
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
 def _get(conn, path: str, params: dict | None = None) -> dict | str:
@@ -41,7 +41,7 @@ async def central_get_switches(
     Returns the monitoring-side switch list. Use
     ``central_get_switch_details`` for one switch's deeper record.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
@@ -54,7 +54,7 @@ async def central_get_switch_lag(
     serial_number: Annotated[str, Field(description="Switch serial number.")],
 ) -> dict | str:
     """Get LAG (link-aggregation) state for a switch."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _get(conn, f"network-monitoring/v1/switches/{serial_number}/lag")
 
 
@@ -64,7 +64,7 @@ async def central_get_switch_vlans(
     serial_number: Annotated[str, Field(description="Switch serial number.")],
 ) -> dict | str:
     """Get configured VLANs on a switch (runtime view)."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _get(conn, f"network-monitoring/v1/switches/{serial_number}/vlans")
 
 
@@ -74,7 +74,7 @@ async def central_get_switch_hardware_categories(
     serial_number: Annotated[str, Field(description="Switch serial number.")],
 ) -> dict | str:
     """Get available hardware-trend categories for a switch (drives the trend dimensions valid for this model)."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _get(conn, f"network-monitoring/v1/switches/{serial_number}/hardware-categories")
 
 
@@ -89,7 +89,7 @@ async def central_get_switch_interface_trends(
     end: Annotated[str | None, Field(description="ISO-8601 end timestamp.")] = None,
 ) -> dict | str:
     """Get per-interface throughput / utilization trends for a switch."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {}
     if interface_name:
         params["interfaceName"] = interface_name
@@ -107,7 +107,7 @@ async def central_get_switches_topn_interface_trends(
     filter: str | None = None,
 ) -> dict | str:
     """Get the top-N busiest switch interfaces across the tenant."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {"topN": top_n}
     if filter:
         params["filter"] = filter
@@ -120,7 +120,7 @@ async def central_get_switch_vsx(
     serial_number: Annotated[str, Field(description="Switch serial number.")],
 ) -> dict | str:
     """Get the VSX pairing state for a switch (peer / status / sync info)."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _get(conn, f"network-monitoring/v1/switches/{serial_number}/vsx")
 
 
@@ -130,5 +130,5 @@ async def central_get_switch_stack_members(
     serial_number: Annotated[str, Field(description="Conductor switch serial number.")],
 ) -> dict | str:
     """Get stack members for a stacked switch (returns members of the stack the conductor belongs to)."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     return _get(conn, f"network-monitoring/v1/stack/{serial_number}/members")

@@ -19,7 +19,7 @@ from pydantic import Field
 from hpe_networking_mcp.middleware.elicitation import elicitation_handler
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 WRITE_DELETE = {
     "readOnlyHint": False,
@@ -91,7 +91,7 @@ async def central_get_config_assignments(
         List of config-assignment entries with scope-id, device-function,
         profile-type, profile-instance, scope-name, and scope-type.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     api_params: dict = {}
     if scope_id:
@@ -198,7 +198,7 @@ async def central_manage_config_assignment(
             }
         )
 
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     if action_type == "assign":
         action_wording = f"assign profile '{profile_instance}' ({profile_type}) to scope '{scope_id}'"

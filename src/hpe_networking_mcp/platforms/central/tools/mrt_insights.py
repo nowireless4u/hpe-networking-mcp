@@ -9,7 +9,7 @@ from fastmcp import Context
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
 @tool(annotations=READ_ONLY)
@@ -31,7 +31,7 @@ async def central_get_insights(
         limit: Results per page (default 100).
         offset: Pagination offset (default 0).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     api_params: dict = {"limit": limit, "offset": offset}
     if filter:
         api_params["filter"] = filter

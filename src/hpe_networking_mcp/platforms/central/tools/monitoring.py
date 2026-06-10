@@ -11,6 +11,7 @@ from hpe_networking_mcp.platforms.central.utils import (
     FilterField,
     as_comma_separated,
     build_odata_filter,
+    get_central_conn,
     retry_central_command,
 )
 
@@ -62,7 +63,7 @@ async def central_get_aps(
         sort: Sort expression (e.g. 'deviceName asc'). Supported fields:
             siteId, serialNumber, deviceName, model, status, deployment.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     raw_pairs = [
         ("site_id", site_id),
@@ -110,7 +111,7 @@ async def central_get_ap_wlans(
         serial_number: AP serial number (required).
         wlan_name: Filter by exact WLAN name (SSID). Applied client-side.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
         resp = MonitoringAPs.get_ap_wlans(
             central_conn=conn,
@@ -144,7 +145,7 @@ async def central_get_ap_details(
     Parameters:
         serial_number: AP serial number (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
         resp = MonitoringAPs.get_ap_details(
             central_conn=conn,
@@ -174,7 +175,7 @@ async def central_get_switch_details(
     Parameters:
         serial_number: Switch serial number (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
         resp = retry_central_command(
             central_conn=conn,
@@ -258,7 +259,7 @@ async def central_get_gateway_details(
     Parameters:
         serial_number: Gateway serial number (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
         resp = MonitoringGateways.get_gateway_details(
             central_conn=conn,

@@ -6,6 +6,7 @@ from mcp.types import ToolAnnotations
 from pycentral.troubleshooting.troubleshooting import Troubleshooting
 
 from hpe_networking_mcp.platforms.central._registry import tool
+from hpe_networking_mcp.platforms.central.utils import get_central_conn
 
 OPERATIONAL = ToolAnnotations(
     readOnlyHint=False,
@@ -63,7 +64,7 @@ async def central_disconnect_users_ssid(
         device_type: Switch type — "aos-s" or "cx" (required).
         ssid: SSID/WLAN name to disconnect users from (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     resolved_id = _resolve_switch_id(conn, serial_number)
 
     try:
@@ -96,7 +97,7 @@ async def central_disconnect_users_ap(
         serial_number: Switch serial number (required).
         device_type: Switch type — "aos-s" or "cx" (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     resolved_id = _resolve_switch_id(conn, serial_number)
 
     try:
@@ -132,7 +133,7 @@ async def central_disconnect_client_switch(
         device_type: Switch type — "aos-s" or "cx" (required).
         mac_address: Client MAC address to disconnect (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     resolved_id = _resolve_switch_id(conn, serial_number)
 
     try:
@@ -166,7 +167,7 @@ async def central_disconnect_client_gateway(
         serial_number: Gateway serial number (required).
         mac_address: Client MAC address to disconnect (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     try:
         resp = Troubleshooting.disconnect_user_mac_addr(
@@ -196,7 +197,7 @@ async def central_disconnect_clients_gateway(
     Parameters:
         serial_number: Gateway serial number (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     try:
         resp = Troubleshooting.disconnect_all_clients(
@@ -281,7 +282,7 @@ async def central_port_bounce_switch(
         serial_number: CX switch serial number.
         ports: Comma-separated port list, e.g. "1/1/1,1/1/2".
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     resolved_id = _resolve_switch_id(conn, serial_number)
     port_list = [p.strip() for p in ports.split(",")]
 
@@ -346,7 +347,7 @@ async def central_poe_bounce_switch(
         serial_number: CX switch serial number.
         ports: Comma-separated port list, e.g. "1/1/1,1/1/2".
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     resolved_id = _resolve_switch_id(conn, serial_number)
     port_list = [p.strip() for p in ports.split(",")]
 
@@ -427,7 +428,7 @@ async def central_port_bounce_gateway(
         serial_number: Gateway serial number.
         ports: Comma-separated port list.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     port_list = [p.strip() for p in ports.split(",")]
 
     try:
@@ -463,7 +464,7 @@ async def central_poe_bounce_gateway(
         serial_number: Gateway serial number (required).
         ports: Comma-separated port list (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     port_list = [p.strip() for p in ports.split(",")]
 
     try:

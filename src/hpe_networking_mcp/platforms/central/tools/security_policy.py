@@ -20,7 +20,7 @@ from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import elicitation_handler
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 WRITE_DELETE = ToolAnnotations(
     readOnlyHint=False,
@@ -37,7 +37,7 @@ WRITE_DELETE = ToolAnnotations(
 
 async def _get_resource(ctx: Context, api_base: str, name: str | None) -> dict | list | str:
     """Generic GET for /network-config/v1alpha1/{api_base}[/{name}]."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     api_path = f"network-config/v1alpha1/{api_base}/{name}" if name else f"network-config/v1alpha1/{api_base}"
     response = retry_central_command(central_conn=conn, api_method="GET", api_path=api_path)
     code = response.get("code", 0)
@@ -101,7 +101,7 @@ async def _manage_resource(
         elif elicitation_response.action == "cancel":
             return {"message": "Action canceled by user."}
 
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     api_params: dict = {}
     if scope_id and device_function:
@@ -176,7 +176,7 @@ async def _operation_request(
         elif elicitation_response.action == "cancel":
             return {"message": "Action canceled by user."}
 
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     # Send the request body for any write method that carries one. Unlike CRUD
     # ``_manage_resource`` (which never bodies a delete), operation endpoints
     # such as ``.../bulk`` are DELETEs whose payload (``{"items": [...]}``)

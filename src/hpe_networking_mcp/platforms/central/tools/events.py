@@ -13,6 +13,7 @@ from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import (
     clean_event_filters,
     compute_time_window,
+    get_central_conn,
     retry_central_command,
 )
 
@@ -116,7 +117,7 @@ async def central_get_events(
 
     try:
         response = retry_central_command(
-            ctx.lifespan_context["central_conn"],
+            get_central_conn(ctx),
             api_method="GET",
             api_path="network-troubleshooting/v1/events",
             api_params=query_params,
@@ -172,7 +173,7 @@ async def central_get_events_count(
         raise ToolError({"status_code": 502, "message": f"Error: {e}"}) from e
 
     response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+        get_central_conn(ctx),
         api_method="GET",
         api_path="network-troubleshooting/v1/event-filters",
         api_params={

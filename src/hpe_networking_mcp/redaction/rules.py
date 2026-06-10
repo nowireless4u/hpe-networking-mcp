@@ -388,6 +388,18 @@ FREE_TEXT_FIELD_NAMES: frozenset[str] = frozenset(
         "comments",
         "remarks",
         "details",
+        # Raw device CLI output blob from show-command tools
+        # (``central_show_commands`` and AOS 8 equivalents return
+        # ``results[].output`` holding a ``show run`` / ``show ...`` dump).
+        # Without this the blob classifies SKIP and only the universal scan
+        # (emails / AWS-signed URLs) runs over it, so PEM cert/key blocks and
+        # MACs embedded in CLI text pass through unswept (issue #411). As a
+        # free-text field it now gets the full ``_scan_free_text`` sweep
+        # (PEM → email → MAC normalize). Note: field-name-keyed secrets
+        # (PSKs, shared secrets) have no value-shape regex and are not
+        # detectable inside an opaque CLI blob — that requires a dedicated
+        # CLI-grammar sweep and stays out of scope here.
+        "output",
     }
 )
 

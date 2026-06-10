@@ -25,7 +25,7 @@ from pydantic import BaseModel, Field
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
 class FirmwareRecommendation(BaseModel):
@@ -291,7 +291,7 @@ async def central_recommend_firmware(
     in the fleet, SSR devices fall back to Central's recommendation with
     a note.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     filter_str = _build_filter(serial_number, device_type, site_id, site_name)
 

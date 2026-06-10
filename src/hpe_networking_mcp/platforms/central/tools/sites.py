@@ -12,6 +12,7 @@ from hpe_networking_mcp.platforms.central.models import SiteData
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import (
     fetch_site_data_parallel,
+    get_central_conn,
     groups_to_map,
     normalize_site_name_filter,
     retry_central_command,
@@ -45,7 +46,7 @@ async def _scope_write(
         guard = await confirm_write(ctx, message=action_message)
         if guard is not None:
             return guard
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     response = retry_central_command(central_conn=conn, api_method=method, api_path=path, api_data=body)
     code = response.get("code", 0)
     if not 200 <= code < 300:
@@ -81,7 +82,7 @@ async def central_get_sites(
     Returns:
         Dict with sites list and pagination info.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     api_params: dict = {"limit": limit, "offset": offset}
     if filter:
         api_params["filter"] = filter
@@ -122,7 +123,7 @@ async def central_get_site_health(
             (e.g. ["Owls Nest", "HQ"]). If omitted, all sites are returned (use sparingly).
     """
     wanted = normalize_site_name_filter(site_name)
-    sites_data = fetch_site_data_parallel(ctx.lifespan_context["central_conn"])
+    sites_data = fetch_site_data_parallel(get_central_conn(ctx))
     if wanted:
         return [sites_data[name] for name in wanted if name in sites_data]
     return list(sites_data.values())
@@ -150,7 +151,7 @@ async def central_get_site_name_id_mapping(ctx: Context) -> dict:
     - total_clients: Total number of clients at the site.
     - total_alerts: Total number of alerts at the site.
     """
-    sites = MonitoringSites.get_all_sites(central_conn=ctx.lifespan_context["central_conn"])
+    sites = MonitoringSites.get_all_sites(central_conn=get_central_conn(ctx))
     mapping = {}
     for site in sites:
         health_obj = groups_to_map(site.get("health", {}))
@@ -182,7 +183,7 @@ async def central_get_global_scope(ctx: Context) -> dict | str:
     Use it as the ``scope_id`` (with ``scope_type='org'``) when rooting
     ``central_get_hierarchy`` at the tenant root.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     response = retry_central_command(
         central_conn=conn,
         api_method="GET",
@@ -223,7 +224,7 @@ async def central_get_hierarchy(
     Returns the tree of child scopes (site-collections, sites, device-groups,
     devices) beneath the resource identified by ``scope_id`` + ``scope_type``.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     response = retry_central_command(
         central_conn=conn,
         api_method="GET",

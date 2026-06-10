@@ -18,7 +18,7 @@ from loguru import logger
 from pydantic import Field
 
 from hpe_networking_mcp.platforms.greenlake._registry import tool
-from hpe_networking_mcp.platforms.greenlake.client import GreenLakeHttpClient
+from hpe_networking_mcp.platforms.greenlake.client import get_greenlake_client
 
 # ---------------------------------------------------------------------------
 # greenlake_get_workspace
@@ -55,11 +55,7 @@ async def greenlake_get_workspace(
     if not workspaceId or not workspaceId.strip():
         raise ToolError({"status_code": 400, "message": "workspaceId is required and cannot be empty"})
 
-    token_manager = ctx.lifespan_context["greenlake_token_manager"]
-    config = ctx.lifespan_context["config"]
-    base_url = config.greenlake.api_base_url
-
-    async with GreenLakeHttpClient(token_manager=token_manager, base_url=base_url) as client:
+    async with get_greenlake_client(ctx) as client:
         return await client.get(f"/workspaces/v1/workspaces/{workspaceId}")
 
 
@@ -98,9 +94,5 @@ async def greenlake_get_workspace_details(
     if not workspaceId or not workspaceId.strip():
         raise ToolError({"status_code": 400, "message": "workspaceId is required and cannot be empty"})
 
-    token_manager = ctx.lifespan_context["greenlake_token_manager"]
-    config = ctx.lifespan_context["config"]
-    base_url = config.greenlake.api_base_url
-
-    async with GreenLakeHttpClient(token_manager=token_manager, base_url=base_url) as client:
+    async with get_greenlake_client(ctx) as client:
         return await client.get(f"/workspaces/v1/workspaces/{workspaceId}/contact")

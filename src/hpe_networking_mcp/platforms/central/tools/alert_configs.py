@@ -36,7 +36,7 @@ from mcp.types import ToolAnnotations
 
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 WRITE_DELETE = ToolAnnotations(
     readOnlyHint=False,
@@ -99,7 +99,7 @@ async def central_get_alert_configs(
         `rule.condition[].expression.operator`, etc.).
     """
     response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+        get_central_conn(ctx),
         api_method="GET",
         api_path="network-notifications/v1/alert-config",
         api_params=_scope_query_params(scope_id, scope_type),
@@ -178,7 +178,7 @@ async def central_create_alert_config(
         body["rules"] = rules
 
     response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+        get_central_conn(ctx),
         api_method="POST",
         api_path="network-notifications/v1/alert-config/create",
         api_params=_typed_scope_query_params(type_id, scope_id, scope_type),
@@ -231,7 +231,7 @@ async def central_update_alert_config(
         return "No fields to update — pass at least one of `enabled`, `clear_timeout`, or `rules`."
 
     response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+        get_central_conn(ctx),
         api_method="PUT",
         api_path="network-notifications/v1/alert-config/update",
         api_params=_typed_scope_query_params(type_id, scope_id, scope_type),
@@ -265,7 +265,7 @@ async def central_reset_alert_config(
     return `name` in the response (per the Central spec).
     """
     response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+        get_central_conn(ctx),
         api_method="DELETE",
         api_path="network-notifications/v1/alert-config/delete",
         api_params=_typed_scope_query_params(type_id, scope_id, scope_type),

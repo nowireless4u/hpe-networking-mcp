@@ -15,7 +15,7 @@ from pydantic import Field
 from hpe_networking_mcp.middleware.elicitation import elicitation_handler
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 WRITE_DELETE = ToolAnnotations(
     readOnlyHint=False,
@@ -46,7 +46,7 @@ async def central_get_wlan_profiles(
     Returns:
         Single profile dict if ssid specified, or list of all profiles.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     api_path = f"network-config/v1alpha1/wlan-ssids/{ssid}" if ssid else "network-config/v1alpha1/wlan-ssids"
 
@@ -193,7 +193,7 @@ async def central_manage_wlan_profile(
             )
 
     api_path = f"network-config/v1alpha1/wlan-ssids/{ssid}"
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     # Method selection: update defaults to PATCH (partial merge on the
     # server). replace_existing=True forces PUT (full replacement).
