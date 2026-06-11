@@ -17,13 +17,13 @@ from __future__ import annotations
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_certificates(
     ctx: Context,
     certificate_id: str | None = None,
@@ -54,22 +54,20 @@ async def clearpass_get_certificates(
     (Certificate Authority → /certificate, /certificate/{id}, /certificate/{id}/chain)
     """
     try:
-        from pyclearpass.api_certificateauthority import ApiCertificateAuthority
-
-        client = await get_clearpass_session(ApiCertificateAuthority)
+        client = await get_clearpass_client()
         if certificate_id and chain:
-            return clearpass_get(client, f"/certificate/{certificate_id}/chain")
+            return await clearpass_get(client, f"/certificate/{certificate_id}/chain")
         if certificate_id:
-            return clearpass_get(client, f"/certificate/{certificate_id}")
+            return await clearpass_get(client, f"/certificate/{certificate_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/certificate" + query)
+        return await clearpass_get(client, "/certificate" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching CA certificates: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_onboard_devices(
     ctx: Context,
     onboard_device_id: str | None = None,
@@ -103,13 +101,11 @@ async def clearpass_get_onboard_devices(
     See: https://developer.arubanetworks.com/cppm/reference (Certificate Authority → /onboard/device)
     """
     try:
-        from pyclearpass.api_certificateauthority import ApiCertificateAuthority
-
-        client = await get_clearpass_session(ApiCertificateAuthority)
+        client = await get_clearpass_client()
         if onboard_device_id:
-            return clearpass_get(client, f"/onboard/device/{onboard_device_id}")
+            return await clearpass_get(client, f"/onboard/device/{onboard_device_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/onboard/device" + query)
+        return await clearpass_get(client, "/onboard/device" + query)
     except ToolError:
         raise
     except Exception as e:

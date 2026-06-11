@@ -127,14 +127,13 @@ async def _probe_greenlake(ctx: Context) -> dict[str, Any]:
 
 
 async def _probe_clearpass(ctx: Context) -> dict[str, Any]:
-    tm = ctx.lifespan_context.get("clearpass_token_manager")
-    if tm is None:
+    client = ctx.lifespan_context.get("clearpass_client")
+    if client is None:
         return {"status": "unavailable", "message": "ClearPass is not configured or failed to initialize"}
     try:
-        token = tm.get_token()
-        if token:
+        if await client.health_check():
             return {"status": "ok", "message": "ClearPass OAuth2 token active"}
-        return {"status": "degraded", "message": "ClearPass token manager returned empty token"}
+        return {"status": "degraded", "message": "ClearPass token acquisition returned no token"}
     except Exception as e:
         return {"status": "degraded", "message": f"ClearPass probe failed: {e}"}
 

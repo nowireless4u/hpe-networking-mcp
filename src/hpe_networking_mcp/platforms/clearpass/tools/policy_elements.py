@@ -5,13 +5,13 @@ from __future__ import annotations
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_services(
     ctx: Context,
     config_service_id: str | None = None,
@@ -36,22 +36,20 @@ async def clearpass_get_services(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
+        client = await get_clearpass_client()
         if config_service_id:
-            return client.get_config_service_by_config_service_id(config_service_id=config_service_id)
+            return await client.request("get", f"/config/service/{config_service_id}")
         if name:
-            return client.get_config_service_name_by_name(name=name)
+            return await client.request("get", f"/config/service/name/{name}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/config/service" + query)
+        return await clearpass_get(client, "/config/service" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching services: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_posture_policies(
     ctx: Context,
     posture_policy_id: str | None = None,
@@ -76,22 +74,20 @@ async def clearpass_get_posture_policies(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
+        client = await get_clearpass_client()
         if posture_policy_id:
-            return client.get_posture_policy_by_posture_policy_id(posture_policy_id=posture_policy_id)
+            return await client.request("get", f"/posture-policy/{posture_policy_id}")
         if name:
-            return client.get_posture_policy_name_by_name(name=name)
+            return await client.request("get", f"/posture-policy/name/{name}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/posture-policy" + query)
+        return await clearpass_get(client, "/posture-policy" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching posture policies: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_device_groups(
     ctx: Context,
     network_device_group_id: str | None = None,
@@ -116,24 +112,20 @@ async def clearpass_get_device_groups(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
+        client = await get_clearpass_client()
         if network_device_group_id:
-            return client.get_network_device_group_by_network_device_group_id(
-                network_device_group_id=network_device_group_id,
-            )
+            return await client.request("get", f"/network-device-group/{network_device_group_id}")
         if name:
-            return client.get_network_device_group_name_by_name(name=name)
+            return await client.request("get", f"/network-device-group/name/{name}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/network-device-group" + query)
+        return await clearpass_get(client, "/network-device-group" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching device groups: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_proxy_targets(
     ctx: Context,
     proxy_target_id: str | None = None,
@@ -158,22 +150,20 @@ async def clearpass_get_proxy_targets(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
+        client = await get_clearpass_client()
         if proxy_target_id:
-            return client.get_proxy_target_by_proxy_target_id(proxy_target_id=proxy_target_id)
+            return await client.request("get", f"/proxy-target/{proxy_target_id}")
         if name:
-            return client.get_proxy_target_name_by_name(name=name)
+            return await client.request("get", f"/proxy-target/name/{name}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/proxy-target" + query)
+        return await clearpass_get(client, "/proxy-target" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching proxy targets: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_radius_dictionaries(
     ctx: Context,
     radius_dictionary_id: str | None = None,
@@ -198,24 +188,20 @@ async def clearpass_get_radius_dictionaries(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
+        client = await get_clearpass_client()
         if radius_dictionary_id:
-            return client.get_radius_dictionary_by_radius_dictionary_id(
-                radius_dictionary_id=radius_dictionary_id,
-            )
+            return await client.request("get", f"/radius-dictionary/{radius_dictionary_id}")
         if name:
-            return client.get_radius_dictionary_name_by_name(name=name)
+            return await client.request("get", f"/radius-dictionary/name/{name}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/radius-dictionary" + query)
+        return await clearpass_get(client, "/radius-dictionary" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching RADIUS dictionaries: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_tacacs_dictionaries(
     ctx: Context,
     tacacs_service_dictionary_id: str | None = None,
@@ -240,24 +226,20 @@ async def clearpass_get_tacacs_dictionaries(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
+        client = await get_clearpass_client()
         if tacacs_service_dictionary_id:
-            return client.get_tacacs_service_dictionary_by_tacacs_service_dictionary_id(
-                tacacs_service_dictionary_id=tacacs_service_dictionary_id,
-            )
+            return await client.request("get", f"/tacacs-service-dictionary/{tacacs_service_dictionary_id}")
         if name:
-            return client.get_tacacs_service_dictionary_name_by_name(name=name)
+            return await client.request("get", f"/tacacs-service-dictionary/name/{name}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/tacacs-service-dictionary" + query)
+        return await clearpass_get(client, "/tacacs-service-dictionary" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching TACACS+ dictionaries: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_application_dictionaries(
     ctx: Context,
     application_dictionary_id: str | None = None,
@@ -282,24 +264,20 @@ async def clearpass_get_application_dictionaries(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
+        client = await get_clearpass_client()
         if application_dictionary_id:
-            return client.get_application_dictionary_by_application_dictionary_id(
-                application_dictionary_id=application_dictionary_id,
-            )
+            return await client.request("get", f"/application-dictionary/{application_dictionary_id}")
         if name:
-            return client.get_application_dictionary_name_by_name(name=name)
+            return await client.request("get", f"/application-dictionary/name/{name}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/application-dictionary" + query)
+        return await clearpass_get(client, "/application-dictionary" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching application dictionaries: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_radius_dynamic_authorization_template(
     ctx: Context,
     template_id: str | None = None,
@@ -331,15 +309,13 @@ async def clearpass_get_radius_dynamic_authorization_template(
     See: https://developer.arubanetworks.com/cppm/reference (Policy Elements → /radius-dynamic-authorization-template)
     """
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
+        client = await get_clearpass_client()
         if template_id:
-            return clearpass_get(client, f"/radius-dynamic-authorization-template/{template_id}")
+            return await clearpass_get(client, f"/radius-dynamic-authorization-template/{template_id}")
         if name:
-            return clearpass_get(client, f"/radius-dynamic-authorization-template/name/{name}")
+            return await clearpass_get(client, f"/radius-dynamic-authorization-template/name/{name}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/radius-dynamic-authorization-template" + query)
+        return await clearpass_get(client, "/radius-dynamic-authorization-template" + query)
     except ToolError:
         raise
     except Exception as e:

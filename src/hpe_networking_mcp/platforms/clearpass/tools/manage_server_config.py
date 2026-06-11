@@ -9,9 +9,9 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import WRITE_DELETE
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
 
 async def _confirm_write(
@@ -27,7 +27,7 @@ async def _confirm_write(
     return await confirm_write(ctx, f"ClearPass: {action_type} {resource} '{label}'. Confirm?")
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_admin_user(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
@@ -48,28 +48,26 @@ async def clearpass_manage_admin_user(
     if decline:
         return decline
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
+        client = await get_clearpass_client()
         if action_type == "create":
-            return client._send_request("/admin-user", "post", query=payload)
+            return await client.request("post", "/admin-user", json_body=payload)
         if not admin_user_id and not name:
             raise ToolError(
                 {"status_code": 400, "message": "Either admin_user_id or name is required for update/delete."}
             )
         if action_type == "update":
             path = f"/admin-user/{admin_user_id}" if admin_user_id else f"/admin-user/name/{name}"
-            return client._send_request(path, "patch", query=payload)
+            return await client.request("patch", path, json_body=payload)
         if admin_user_id:
-            return client.delete_admin_user_by_admin_user_id(admin_user_id=admin_user_id)
-        return client._send_request(f"/admin-user/name/{name}", "delete")
+            return await client.request("delete", f"/admin-user/{admin_user_id}")
+        return await client.request("delete", f"/admin-user/name/{name}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing admin user: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_admin_privilege(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
@@ -90,28 +88,26 @@ async def clearpass_manage_admin_privilege(
     if decline:
         return decline
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
+        client = await get_clearpass_client()
         if action_type == "create":
-            return client._send_request("/admin-privilege", "post", query=payload)
+            return await client.request("post", "/admin-privilege", json_body=payload)
         if not admin_privilege_id and not name:
             raise ToolError(
                 {"status_code": 400, "message": "Either admin_privilege_id or name is required for update/delete."}
             )
         if action_type == "update":
             path = f"/admin-privilege/{admin_privilege_id}" if admin_privilege_id else f"/admin-privilege/name/{name}"
-            return client._send_request(path, "patch", query=payload)
+            return await client.request("patch", path, json_body=payload)
         if admin_privilege_id:
-            return client.delete_admin_privilege_by_admin_privilege_id(admin_privilege_id=admin_privilege_id)
-        return client._send_request(f"/admin-privilege/name/{name}", "delete")
+            return await client.request("delete", f"/admin-privilege/{admin_privilege_id}")
+        return await client.request("delete", f"/admin-privilege/name/{name}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing admin privilege: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_operator_profile(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
@@ -134,11 +130,9 @@ async def clearpass_manage_operator_profile(
     if decline:
         return decline
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
+        client = await get_clearpass_client()
         if action_type == "create":
-            return client._send_request("/operator-profile", "post", query=payload)
+            return await client.request("post", "/operator-profile", json_body=payload)
         if not operator_profile_id and not name:
             raise ToolError(
                 {"status_code": 400, "message": "Either operator_profile_id or name is required for update/delete."}
@@ -147,17 +141,17 @@ async def clearpass_manage_operator_profile(
             path = (
                 f"/operator-profile/{operator_profile_id}" if operator_profile_id else f"/operator-profile/name/{name}"
             )
-            return client._send_request(path, "patch", query=payload)
+            return await client.request("patch", path, json_body=payload)
         if operator_profile_id:
-            return client.delete_operator_profile_by_operator_profile_id(operator_profile_id=operator_profile_id)
-        return client._send_request(f"/operator-profile/name/{name}", "delete")
+            return await client.request("delete", f"/operator-profile/{operator_profile_id}")
+        return await client.request("delete", f"/operator-profile/name/{name}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing operator profile: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_license(
     ctx: Context,
     action_type: Annotated[
@@ -177,25 +171,23 @@ async def clearpass_manage_license(
     if decline:
         return decline
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
+        client = await get_clearpass_client()
         if action_type == "create":
-            return client._send_request("/application-license", "post", query=payload)
+            return await client.request("post", "/application-license", json_body=payload)
         if not license_id:
             raise ToolError({"status_code": 400, "message": "license_id is required for delete/activate operations."})
         if action_type == "delete":
-            return client.delete_application_license_by_license_id(license_id=license_id)
+            return await client.request("delete", f"/application-license/{license_id}")
         if action_type == "activate_online":
-            return client.update_application_license_activate_online_by_license_id(license_id=license_id)
-        return client.update_application_license_activate_offline_by_license_id(license_id=license_id)
+            return await client.request("patch", f"/application-license/activate-online/{license_id}")
+        return await client.request("patch", f"/application-license/activate-offline/{license_id}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing license: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_cluster_params(
     ctx: Context,
     payload: Annotated[dict, Field(description="Cluster parameters config payload.")],
@@ -206,17 +198,15 @@ async def clearpass_manage_cluster_params(
     if decline:
         return decline
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
-        return client._send_request("/cluster/parameters", "patch", query=payload)
+        client = await get_clearpass_client()
+        return await client.request("patch", "/cluster/parameters", json_body=payload)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing cluster parameters: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_password_policy(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'update_admin' or 'update_local'.")],
@@ -233,18 +223,16 @@ async def clearpass_manage_password_policy(
     if decline:
         return decline
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
+        client = await get_clearpass_client()
         path = "/admin-user/password-policy" if action_type == "update_admin" else "/local-user/password-policy"
-        return client._send_request(path, "patch", query=payload)
+        return await client.request("patch", path, json_body=payload)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing password policy: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_attribute(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
@@ -265,28 +253,26 @@ async def clearpass_manage_attribute(
     if decline:
         return decline
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
+        client = await get_clearpass_client()
         if action_type == "create":
-            return client._send_request("/attribute", "post", query=payload)
+            return await client.request("post", "/attribute", json_body=payload)
         if not attribute_id and not name:
             raise ToolError(
                 {"status_code": 400, "message": "Either attribute_id or name is required for update/delete."}
             )
         if action_type == "update":
             path = f"/attribute/{attribute_id}" if attribute_id else f"/attribute/name/{name}"
-            return client._send_request(path, "patch", query=payload)
+            return await client.request("patch", path, json_body=payload)
         if attribute_id:
-            return client.delete_attribute_by_attribute_id(attribute_id=attribute_id)
-        return client._send_request(f"/attribute/name/{name}", "delete")
+            return await client.request("delete", f"/attribute/{attribute_id}")
+        return await client.request("delete", f"/attribute/name/{name}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing attribute: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_data_filter(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
@@ -307,28 +293,26 @@ async def clearpass_manage_data_filter(
     if decline:
         return decline
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
+        client = await get_clearpass_client()
         if action_type == "create":
-            return client._send_request("/data-filter", "post", query=payload)
+            return await client.request("post", "/data-filter", json_body=payload)
         if not data_filter_id and not name:
             raise ToolError(
                 {"status_code": 400, "message": "Either data_filter_id or name is required for update/delete."}
             )
         if action_type == "update":
             path = f"/data-filter/{data_filter_id}" if data_filter_id else f"/data-filter/name/{name}"
-            return client._send_request(path, "patch", query=payload)
+            return await client.request("patch", path, json_body=payload)
         if data_filter_id:
-            return client.delete_data_filter_by_data_filter_id(data_filter_id=data_filter_id)
-        return client._send_request(f"/data-filter/name/{name}", "delete")
+            return await client.request("delete", f"/data-filter/{data_filter_id}")
+        return await client.request("delete", f"/data-filter/name/{name}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing data filter: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_file_backup_server(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
@@ -351,11 +335,9 @@ async def clearpass_manage_file_backup_server(
     if decline:
         return decline
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
+        client = await get_clearpass_client()
         if action_type == "create":
-            return client._send_request("/file-backup-server", "post", query=payload)
+            return await client.request("post", "/file-backup-server", json_body=payload)
         if not file_backup_server_id and not name:
             raise ToolError(
                 {"status_code": 400, "message": "Either file_backup_server_id or name is required for update/delete."}
@@ -366,19 +348,17 @@ async def clearpass_manage_file_backup_server(
                 if file_backup_server_id
                 else f"/file-backup-server/name/{name}"
             )
-            return client._send_request(path, "patch", query=payload)
+            return await client.request("patch", path, json_body=payload)
         if file_backup_server_id:
-            return client.delete_file_backup_server_by_file_backup_server_id(
-                file_backup_server_id=file_backup_server_id
-            )
-        return client._send_request(f"/file-backup-server/name/{name}", "delete")
+            return await client.request("delete", f"/file-backup-server/{file_backup_server_id}")
+        return await client.request("delete", f"/file-backup-server/name/{name}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing file backup server: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_messaging_setup(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
@@ -397,21 +377,19 @@ async def clearpass_manage_messaging_setup(
     if decline:
         return decline
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
+        client = await get_clearpass_client()
         if action_type == "create":
-            return client._send_request("/messaging-setup", "post", query=payload)
+            return await client.request("post", "/messaging-setup", json_body=payload)
         if action_type == "update":
-            return client._send_request("/messaging-setup", "patch", query=payload)
-        return client.delete_messaging_setup()
+            return await client.request("patch", "/messaging-setup", json_body=payload)
+        return await client.request("delete", "/messaging-setup")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing messaging setup: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_snmp_trap_receiver(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
@@ -434,11 +412,9 @@ async def clearpass_manage_snmp_trap_receiver(
     if decline:
         return decline
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
+        client = await get_clearpass_client()
         if action_type == "create":
-            return client._send_request("/snmp-trap-receiver", "post", query=payload)
+            return await client.request("post", "/snmp-trap-receiver", json_body=payload)
         if not snmp_trap_receiver_id and not name:
             raise ToolError(
                 {"status_code": 400, "message": "Either snmp_trap_receiver_id or name is required for update/delete."}
@@ -449,19 +425,17 @@ async def clearpass_manage_snmp_trap_receiver(
                 if snmp_trap_receiver_id
                 else f"/snmp-trap-receiver/name/{name}"
             )
-            return client._send_request(path, "patch", query=payload)
+            return await client.request("patch", path, json_body=payload)
         if snmp_trap_receiver_id:
-            return client.delete_snmp_trap_receiver_by_snmp_trap_receiver_id(
-                snmp_trap_receiver_id=snmp_trap_receiver_id
-            )
-        return client._send_request(f"/snmp-trap-receiver/name/{name}", "delete")
+            return await client.request("delete", f"/snmp-trap-receiver/{snmp_trap_receiver_id}")
+        return await client.request("delete", f"/snmp-trap-receiver/name/{name}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing SNMP trap receiver: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_policy_manager_zone(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
@@ -484,11 +458,9 @@ async def clearpass_manage_policy_manager_zone(
     if decline:
         return decline
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
+        client = await get_clearpass_client()
         if action_type == "create":
-            return client._send_request("/server/policy-manager-zones", "post", query=payload)
+            return await client.request("post", "/server/policy-manager-zones", json_body=payload)
         if not policy_manager_zones_id and not name:
             raise ToolError(
                 {"status_code": 400, "message": "Either policy_manager_zones_id or name is required for update/delete."}
@@ -499,12 +471,10 @@ async def clearpass_manage_policy_manager_zone(
                 if policy_manager_zones_id
                 else f"/server/policy-manager-zones/name/{name}"
             )
-            return client._send_request(path, "patch", query=payload)
+            return await client.request("patch", path, json_body=payload)
         if policy_manager_zones_id:
-            return client.delete_server_policy_manager_zones_by_policy_manager_zones_id(
-                policy_manager_zones_id=policy_manager_zones_id
-            )
-        return client._send_request(f"/server/policy-manager-zones/name/{name}", "delete")
+            return await client.request("delete", f"/server/policy-manager-zones/{policy_manager_zones_id}")
+        return await client.request("delete", f"/server/policy-manager-zones/name/{name}")
     except ToolError:
         raise
     except Exception as e:

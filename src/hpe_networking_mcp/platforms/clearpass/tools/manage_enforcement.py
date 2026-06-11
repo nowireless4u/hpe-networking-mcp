@@ -9,9 +9,9 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import WRITE_DELETE
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
 
 async def _confirm_write(ctx: Context, action: str, identifier: str | None) -> dict | None:
@@ -25,7 +25,7 @@ async def _confirm_write(ctx: Context, action: str, identifier: str | None) -> d
     return await confirm_write(ctx, f"ClearPass: {action} '{label}'. Confirm?")
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_enforcement_policy(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
@@ -60,29 +60,27 @@ async def clearpass_manage_enforcement_policy(
             return decline
 
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
+        client = await get_clearpass_client()
 
         if action_type == "create":
-            return client._send_request("/enforcement-policy", "post", query=payload)
+            return await client.request("post", "/enforcement-policy", json_body=payload)
         if not policy_id and not name:
             raise ToolError({"status_code": 400, "message": "Either policy_id or name is required for update/delete."})
         if action_type == "update":
             if policy_id:
-                return client._send_request(f"/enforcement-policy/{policy_id}", "patch", query=payload)
-            return client._send_request(f"/enforcement-policy/name/{name}", "patch", query=payload)
+                return await client.request("patch", f"/enforcement-policy/{policy_id}", json_body=payload)
+            return await client.request("patch", f"/enforcement-policy/name/{name}", json_body=payload)
         # delete
         if policy_id:
-            return client.delete_enforcement_policy_by_enforcement_policy_id(enforcement_policy_id=policy_id)
-        return client.delete_enforcement_policy_name_by_name(name=name)
+            return await client.request("delete", f"/enforcement-policy/{policy_id}")
+        return await client.request("delete", f"/enforcement-policy/name/{name}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing enforcement policy: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_enforcement_profile(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
@@ -117,22 +115,20 @@ async def clearpass_manage_enforcement_profile(
             return decline
 
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
+        client = await get_clearpass_client()
 
         if action_type == "create":
-            return client._send_request("/enforcement-profile", "post", query=payload)
+            return await client.request("post", "/enforcement-profile", json_body=payload)
         if not profile_id and not name:
             raise ToolError({"status_code": 400, "message": "Either profile_id or name is required for update/delete."})
         if action_type == "update":
             if profile_id:
-                return client._send_request(f"/enforcement-profile/{profile_id}", "patch", query=payload)
-            return client._send_request(f"/enforcement-profile/name/{name}", "patch", query=payload)
+                return await client.request("patch", f"/enforcement-profile/{profile_id}", json_body=payload)
+            return await client.request("patch", f"/enforcement-profile/name/{name}", json_body=payload)
         # delete
         if profile_id:
-            return client.delete_enforcement_profile_by_enforcement_profile_id(enforcement_profile_id=profile_id)
-        return client.delete_enforcement_profile_name_by_name(name=name)
+            return await client.request("delete", f"/enforcement-profile/{profile_id}")
+        return await client.request("delete", f"/enforcement-profile/name/{name}")
     except ToolError:
         raise
     except Exception as e:

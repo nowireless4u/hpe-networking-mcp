@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hpe-networking-mcp"
-version = "3.3.11.0"
+version = "3.3.12.0"
 description = "Unofficial, community-driven MCP server for Juniper Mist, Aruba Central, HPE GreenLake, and ClearPass. Not affiliated with HPE, Aruba, or Juniper."
 readme = "README.md"
 license = "MIT"
@@ -31,8 +31,6 @@ dependencies = [
     "loguru>=0.7.3",
     # Tree data structure for Central scope hierarchy
     "treelib>=1.7.0",
-    # Aruba ClearPass API client
-    "pyclearpass>=1.0.0",
 ]
 
 [project.scripts]
@@ -95,7 +93,6 @@ disallow_untyped_defs = false
 
 [[tool.mypy.overrides]]
 module = [
-    "pyclearpass.*",
     "fastmcp.tools.*",
 ]
 ignore_missing_imports = true

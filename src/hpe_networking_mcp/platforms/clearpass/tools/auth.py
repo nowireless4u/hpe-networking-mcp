@@ -5,13 +5,13 @@ from __future__ import annotations
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import clearpass_get
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_auth_sources(
     ctx: Context,
     auth_source_id: str | None = None,
@@ -36,13 +36,11 @@ async def clearpass_get_auth_sources(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
+        client = await get_clearpass_client()
         if auth_source_id:
-            return client.get_auth_source_by_auth_source_id(auth_source_id=auth_source_id)
+            return await client.request("get", f"/auth-source/{auth_source_id}")
         if name:
-            return client.get_auth_source_name_by_name(name=name)
+            return await client.request("get", f"/auth-source/name/{name}")
         params = [
             f"filter={filter}" if filter else "",
             f"sort={sort}" if sort else "",
@@ -51,14 +49,14 @@ async def clearpass_get_auth_sources(
             f"calculate_count={'true' if calculate_count else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
-        return clearpass_get(client, "/auth-source" + query)
+        return await clearpass_get(client, "/auth-source" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching auth sources: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_auth_source_status(
     ctx: Context,
     auth_source_id: str,
@@ -72,17 +70,15 @@ async def clearpass_get_auth_source_status(
         auth_source_id: Numeric ID of the authentication source.
     """
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
-        return client.get_auth_source_by_auth_source_id(auth_source_id=auth_source_id)
+        client = await get_clearpass_client()
+        return await client.request("get", f"/auth-source/{auth_source_id}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching auth source status: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_test_auth_source(
     ctx: Context,
     auth_source_id: str,
@@ -97,10 +93,8 @@ async def clearpass_test_auth_source(
         auth_source_id: Numeric ID of the authentication source to test.
     """
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
-        result = client.get_auth_source_by_auth_source_id(auth_source_id=auth_source_id)
+        client = await get_clearpass_client()
+        result = await client.request("get", f"/auth-source/{auth_source_id}")
         return {
             "auth_source": result,
             "note": "Actual connectivity testing (LDAP bind, AD join check) "
@@ -112,7 +106,7 @@ async def clearpass_test_auth_source(
         raise ToolError({"status_code": 502, "message": f"Error fetching auth source for testing: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_auth_methods(
     ctx: Context,
     auth_method_id: str | None = None,
@@ -137,13 +131,11 @@ async def clearpass_get_auth_methods(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
+        client = await get_clearpass_client()
         if auth_method_id:
-            return client.get_auth_method_by_auth_method_id(auth_method_id=auth_method_id)
+            return await client.request("get", f"/auth-method/{auth_method_id}")
         if name:
-            return client.get_auth_method_name_by_name(name=name)
+            return await client.request("get", f"/auth-method/name/{name}")
         params = [
             f"filter={filter}" if filter else "",
             f"sort={sort}" if sort else "",
@@ -152,7 +144,7 @@ async def clearpass_get_auth_methods(
             f"calculate_count={'true' if calculate_count else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
-        return clearpass_get(client, "/auth-method" + query)
+        return await clearpass_get(client, "/auth-method" + query)
     except ToolError:
         raise
     except Exception as e:

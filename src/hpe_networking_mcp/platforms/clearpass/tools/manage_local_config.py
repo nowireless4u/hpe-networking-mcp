@@ -9,9 +9,9 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import WRITE_DELETE
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
 
 async def _confirm_write(
@@ -27,7 +27,7 @@ async def _confirm_write(
     return await confirm_write(ctx, f"ClearPass: {action_type} {resource} '{label}'. Confirm?")
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_access_control(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'update' or 'delete'.")],
@@ -53,21 +53,19 @@ async def clearpass_manage_access_control(
     if decline:
         return decline
     try:
-        from pyclearpass.api_localserverconfiguration import ApiLocalServerConfiguration
-
-        client = await get_clearpass_session(ApiLocalServerConfiguration)
+        client = await get_clearpass_client()
         if action_type == "update":
-            return client._send_request(f"/server/access-control/{server_uuid}/{resource_name}", "patch", query=payload)
-        return client.delete_server_access_control_by_server_uuid_resource_name(
-            server_uuid=server_uuid, resource_name=resource_name
-        )
+            return await client.request(
+                "patch", f"/server/access-control/{server_uuid}/{resource_name}", json_body=payload
+            )
+        return await client.request("delete", f"/server/access-control/{server_uuid}/{resource_name}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing access control: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_ad_domain(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'join', 'leave', or 'configure_password_servers'.")],
@@ -96,17 +94,15 @@ async def clearpass_manage_ad_domain(
     if decline:
         return decline
     try:
-        from pyclearpass.api_localserverconfiguration import ApiLocalServerConfiguration
-
-        client = await get_clearpass_session(ApiLocalServerConfiguration)
+        client = await get_clearpass_client()
         if action_type == "join":
-            return client._send_request(f"/ad-domain/{server_uuid}/join", "put", query=payload)
+            return await client.request("put", f"/ad-domain/{server_uuid}/join", json_body=payload)
         if action_type == "leave":
-            return client._send_request(f"/ad-domain/{server_uuid}/leave", "put", query=payload)
+            return await client.request("put", f"/ad-domain/{server_uuid}/leave", json_body=payload)
         if not netbios_name:
             raise ToolError({"status_code": 400, "message": "netbios_name is required for configure_password_servers."})
-        return client._send_request(
-            f"/ad-domain/{server_uuid}/netbios-name/{netbios_name}/password-servers", "patch", query=payload
+        return await client.request(
+            "patch", f"/ad-domain/{server_uuid}/netbios-name/{netbios_name}/password-servers", json_body=payload
         )
     except ToolError:
         raise
@@ -114,7 +110,7 @@ async def clearpass_manage_ad_domain(
         raise ToolError({"status_code": 502, "message": f"Error managing AD domain: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_cluster_server(
     ctx: Context,
     server_uuid: Annotated[str, Field(description="Server UUID to update.")],
@@ -132,17 +128,15 @@ async def clearpass_manage_cluster_server(
     if decline:
         return decline
     try:
-        from pyclearpass.api_localserverconfiguration import ApiLocalServerConfiguration
-
-        client = await get_clearpass_session(ApiLocalServerConfiguration)
-        return client._send_request(f"/cluster/server/{server_uuid}", "patch", query=payload)
+        client = await get_clearpass_client()
+        return await client.request("patch", f"/cluster/server/{server_uuid}", json_body=payload)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing cluster server: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.OPERATIONAL, enable_gated=True)
 async def clearpass_manage_server_service(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'start' or 'stop'.")],
@@ -166,23 +160,17 @@ async def clearpass_manage_server_service(
     if decline:
         return decline
     try:
-        from pyclearpass.api_localserverconfiguration import ApiLocalServerConfiguration
-
-        client = await get_clearpass_session(ApiLocalServerConfiguration)
+        client = await get_clearpass_client()
         if action_type == "start":
-            return client.update_server_service_by_server_uuid_service_name_start(
-                server_uuid=server_uuid, service_name=service_name
-            )
-        return client.update_server_service_by_server_uuid_service_name_stop(
-            server_uuid=server_uuid, service_name=service_name
-        )
+            return await client.request("patch", f"/server/service/{server_uuid}/{service_name}/start")
+        return await client.request("patch", f"/server/service/{server_uuid}/{service_name}/stop")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing server service: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_service_params(
     ctx: Context,
     server_uuid: Annotated[str, Field(description="UUID of the ClearPass server node.")],
@@ -232,11 +220,8 @@ async def clearpass_manage_service_params(
     if decline:
         return decline
     try:
-        from pyclearpass.api_localserverconfiguration import ApiLocalServerConfiguration
-
-        client = await get_clearpass_session(ApiLocalServerConfiguration)
-        path = f"/server/{server_uuid}/service/{service_id}"
-        return client._send_request(path, "patch", query=param_values)
+        client = await get_clearpass_client()
+        return await client.request("patch", f"/server/{server_uuid}/service/{service_id}", json_body=param_values)
     except ToolError:
         raise
     except Exception as e:

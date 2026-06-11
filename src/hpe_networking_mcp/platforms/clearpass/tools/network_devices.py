@@ -5,13 +5,13 @@ from __future__ import annotations
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_network_devices(
     ctx: Context,
     device_id: str | None = None,
@@ -36,22 +36,20 @@ async def clearpass_get_network_devices(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
+        client = await get_clearpass_client()
         if device_id:
-            return client.get_network_device_by_network_device_id(network_device_id=device_id)
+            return await client.request("get", f"/network-device/{device_id}")
         if name:
-            return client.get_network_device_name_by_name(name=name)
+            return await client.request("get", f"/network-device/name/{name}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/network-device" + query)
+        return await clearpass_get(client, "/network-device" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching network devices: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_network_device_stats(
     ctx: Context,
     device_id: str,
@@ -65,17 +63,15 @@ async def clearpass_get_network_device_stats(
         device_id: Numeric ID of the network device.
     """
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
-        return client.get_network_device_by_network_device_id(network_device_id=device_id)
+        client = await get_clearpass_client()
+        return await client.request("get", f"/network-device/{device_id}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching network device stats: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_test_device_connectivity(
     ctx: Context,
     device_id: str,
@@ -90,10 +86,8 @@ async def clearpass_test_device_connectivity(
         device_id: Numeric ID of the network device to check.
     """
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
-        result = client.get_network_device_by_network_device_id(network_device_id=device_id)
+        client = await get_clearpass_client()
+        result = await client.request("get", f"/network-device/{device_id}")
         return {
             "device": result,
             "note": "Actual connectivity testing requires ClearPass server-side capabilities.",
@@ -104,7 +98,7 @@ async def clearpass_test_device_connectivity(
         raise ToolError({"status_code": 502, "message": f"Error fetching device for connectivity review: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_validate_device_config(
     ctx: Context,
     device_id: str,
@@ -118,10 +112,8 @@ async def clearpass_validate_device_config(
         device_id: Numeric ID of the network device to validate.
     """
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
-        device = client.get_network_device_by_network_device_id(network_device_id=device_id)
+        client = await get_clearpass_client()
+        device = await client.request("get", f"/network-device/{device_id}")
 
         issues: list[str] = []
         if isinstance(device, dict):

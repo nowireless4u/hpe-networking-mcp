@@ -23,14 +23,14 @@ from typing import Any
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
+from hpe_networking_mcp.platforms.clearpass.client import ClearPassClient, get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.policy_visualizer.api_adapter import adapt
 from hpe_networking_mcp.platforms.clearpass.policy_visualizer.flow_graph import compile_service
 from hpe_networking_mcp.platforms.clearpass.policy_visualizer.mermaid_render import format_mermaid
 from hpe_networking_mcp.platforms.clearpass.policy_visualizer.policy_details import build_details
 from hpe_networking_mcp.platforms.clearpass.policy_visualizer.policy_model import build
-from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
 from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
 
 # High default fan-out limit for the compile path. ClearPass tenants
@@ -56,13 +56,13 @@ def _unwrap_items(response: Any) -> list[dict]:
     return []
 
 
-def _bulk_get(client: Any, path: str) -> list[dict]:
+async def _bulk_get(client: ClearPassClient, path: str) -> list[dict]:
     """Fetch a full collection in one call (no pagination loop in v1)."""
     query = build_query_string(filter=None, sort=None, offset=0, limit=_BULK_LIMIT, calculate_count=False)
-    return _unwrap_items(clearpass_get(client, path + query))
+    return _unwrap_items(await clearpass_get(client, path + query))
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_list_policy_services(
     ctx: Context,
     filter: str | None = None,
@@ -85,11 +85,9 @@ async def clearpass_list_policy_services(
         offset: Pagination offset (default 0).
     """
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
+        client = await get_clearpass_client()
         query = build_query_string(filter, sort, offset, limit, calculate_count=False)
-        items = _unwrap_items(clearpass_get(client, "/config/service" + query))
+        items = _unwrap_items(await clearpass_get(client, "/config/service" + query))
         return [
             {
                 "id": s.get("id"),
@@ -165,7 +163,7 @@ def _resolve_service_name(
     return (None, [])
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_compile_policy_flow(
     ctx: Context,
     service_id: int | None = None,
@@ -259,19 +257,15 @@ async def clearpass_compile_policy_flow(
         raise ToolError({"status_code": 400, "message": "Error: provide exactly one of service_id or service_name"})
 
     try:
-        from pyclearpass.api_enforcementprofile import ApiEnforcementProfile
-        from pyclearpass.api_policyelements import ApiPolicyElements
+        client = await get_clearpass_client()
 
-        client_pe = await get_clearpass_session(ApiPolicyElements)
-        client_ep = await get_clearpass_session(ApiEnforcementProfile)
-
-        services = _bulk_get(client_pe, "/config/service")
-        role_mappings = _bulk_get(client_pe, "/role-mapping")
-        enforcement_policies = _bulk_get(client_pe, "/enforcement-policy")
-        enforcement_profiles = _bulk_get(client_ep, "/enforcement-profile")
-        roles = _bulk_get(client_pe, "/role")
-        auth_methods = _bulk_get(client_pe, "/auth-method")
-        auth_sources = _bulk_get(client_pe, "/auth-source")
+        services = await _bulk_get(client, "/config/service")
+        role_mappings = await _bulk_get(client, "/role-mapping")
+        enforcement_policies = await _bulk_get(client, "/enforcement-policy")
+        enforcement_profiles = await _bulk_get(client, "/enforcement-profile")
+        roles = await _bulk_get(client, "/role")
+        auth_methods = await _bulk_get(client, "/auth-method")
+        auth_sources = await _bulk_get(client, "/auth-source")
 
         target_name, candidates = _resolve_service_name(services, service_id, service_name)
         if candidates:

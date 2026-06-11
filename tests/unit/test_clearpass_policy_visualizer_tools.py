@@ -1,6 +1,6 @@
 """Unit tests for the ClearPass policy-visualizer MCP tools.
 
-Mocks ``get_clearpass_session`` + ``clearpass_get`` at the import site
+Mocks ``get_clearpass_client`` + ``clearpass_get`` at the import site
 so the tools never reach the network. Verifies endpoint paths, parameter
 validation, and the fan-out shape for the compile path.
 """
@@ -27,9 +27,9 @@ def _hal(items: list[dict]) -> dict:
 
 
 class TestListPolicyServices:
-    @patch("hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.clearpass_get")
+    @patch("hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.clearpass_get", new_callable=AsyncMock)
     @patch(
-        "hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.get_clearpass_session",
+        "hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.get_clearpass_client",
         new_callable=AsyncMock,
     )
     async def test_returns_slim_summary(self, mock_session, mock_get):
@@ -67,9 +67,9 @@ class TestListPolicyServices:
         # extra unrelated fields are dropped
         assert "this_should_be_dropped" not in entry
 
-    @patch("hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.clearpass_get")
+    @patch("hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.clearpass_get", new_callable=AsyncMock)
     @patch(
-        "hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.get_clearpass_session",
+        "hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.get_clearpass_client",
         new_callable=AsyncMock,
     )
     async def test_hits_config_service_endpoint(self, mock_session, mock_get):
@@ -198,9 +198,9 @@ class TestResolveServiceName:
 
 
 class TestCompilePolicyFlowAmbiguousResponse:
-    @patch("hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.clearpass_get")
+    @patch("hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.clearpass_get", new_callable=AsyncMock)
     @patch(
-        "hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.get_clearpass_session",
+        "hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.get_clearpass_client",
         new_callable=AsyncMock,
     )
     async def test_substring_matching_multiple_services_returns_ambiguous_with_names_only(self, mock_session, mock_get):
@@ -232,9 +232,9 @@ class TestCompilePolicyFlowAmbiguousResponse:
 
 
 class TestCompilePolicyFlowFanout:
-    @patch("hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.clearpass_get")
+    @patch("hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.clearpass_get", new_callable=AsyncMock)
     @patch(
-        "hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.get_clearpass_session",
+        "hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.get_clearpass_client",
         new_callable=AsyncMock,
     )
     async def test_service_not_found_returns_available_list(self, mock_session, mock_get):
@@ -250,9 +250,9 @@ class TestCompilePolicyFlowFanout:
         assert result["status"] == "service_not_found"
         assert "[Existing Service]" in result["available_services"]
 
-    @patch("hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.clearpass_get")
+    @patch("hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.clearpass_get", new_callable=AsyncMock)
     @patch(
-        "hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.get_clearpass_session",
+        "hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.get_clearpass_client",
         new_callable=AsyncMock,
     )
     async def test_fans_out_to_seven_endpoints(self, mock_session, mock_get):
@@ -275,9 +275,9 @@ class TestCompilePolicyFlowFanout:
         assert paths.count("/auth-source") == 1
         assert len(paths) == 7
 
-    @patch("hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.clearpass_get")
+    @patch("hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.clearpass_get", new_callable=AsyncMock)
     @patch(
-        "hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.get_clearpass_session",
+        "hpe_networking_mcp.platforms.clearpass.tools.policy_visualizer.get_clearpass_client",
         new_callable=AsyncMock,
     )
     async def test_end_to_end_compiles_a_minimal_service(self, mock_session, mock_get):

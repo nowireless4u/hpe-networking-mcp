@@ -9,9 +9,9 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import WRITE_DELETE
+from hpe_networking_mcp.platforms.clearpass.client import ClearPassClient, get_clearpass_client
 
 _SOURCE_ACTIONS = ("create", "update", "delete", "configure_backup", "configure_filters", "configure_radius_attrs")
 
@@ -27,7 +27,7 @@ async def _confirm_write(ctx: Context, action: str, identifier: str | None) -> d
     return await confirm_write(ctx, f"ClearPass: {action} '{label}'. Confirm?")
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_auth_source(
     ctx: Context,
     action_type: Annotated[
@@ -76,23 +76,21 @@ async def clearpass_manage_auth_source(
             return decline
 
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
-        return _execute_auth_source_action(client, action_type, payload, auth_source_id, name)
+        client = await get_clearpass_client()
+        return await _execute_auth_source_action(client, action_type, payload, auth_source_id, name)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing auth source: {e}"}) from e
 
 
-def _execute_auth_source_action(
-    client, action_type: str, payload: dict, auth_source_id: str | None, name: str | None
+async def _execute_auth_source_action(
+    client: ClearPassClient, action_type: str, payload: dict, auth_source_id: str | None, name: str | None
 ) -> dict | str:
     """Execute the resolved auth source action.
 
     Args:
-        client: pyclearpass ApiPolicyElements instance.
+        client: ClearPass API client.
         action_type: Operation to perform.
         payload: Configuration payload.
         auth_source_id: Auth source ID.
@@ -102,23 +100,23 @@ def _execute_auth_source_action(
         API response dict or error string.
     """
     if action_type == "create":
-        return client._send_request("/auth-source", "post", query=payload)
+        return await client.request("post", "/auth-source", json_body=payload)
 
     if not auth_source_id and not name:
         raise ToolError({"status_code": 400, "message": "Either auth_source_id or name is required for this action."})
 
     if action_type == "delete":
         if auth_source_id:
-            return client.delete_auth_source_by_auth_source_id(auth_source_id=auth_source_id)
-        return client.delete_auth_source_name_by_name(name=name)
+            return await client.request("delete", f"/auth-source/{auth_source_id}")
+        return await client.request("delete", f"/auth-source/name/{name}")
 
     # update, configure_backup, configure_filters, configure_radius_attrs — all PATCH
     if auth_source_id:
-        return client._send_request(f"/auth-source/{auth_source_id}", "patch", query=payload)
-    return client._send_request(f"/auth-source/name/{name}", "patch", query=payload)
+        return await client.request("patch", f"/auth-source/{auth_source_id}", json_body=payload)
+    return await client.request("patch", f"/auth-source/name/{name}", json_body=payload)
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_auth_method(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
@@ -153,24 +151,22 @@ async def clearpass_manage_auth_method(
             return decline
 
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
+        client = await get_clearpass_client()
 
         if action_type == "create":
-            return client._send_request("/auth-method", "post", query=payload)
+            return await client.request("post", "/auth-method", json_body=payload)
         if not auth_method_id and not name:
             raise ToolError(
                 {"status_code": 400, "message": "Either auth_method_id or name is required for update/delete."}
             )
         if action_type == "update":
             if auth_method_id:
-                return client._send_request(f"/auth-method/{auth_method_id}", "patch", query=payload)
-            return client._send_request(f"/auth-method/name/{name}", "patch", query=payload)
+                return await client.request("patch", f"/auth-method/{auth_method_id}", json_body=payload)
+            return await client.request("patch", f"/auth-method/name/{name}", json_body=payload)
         # delete
         if auth_method_id:
-            return client.delete_auth_method_by_auth_method_id(auth_method_id=auth_method_id)
-        return client.delete_auth_method_name_by_name(name=name)
+            return await client.request("delete", f"/auth-method/{auth_method_id}")
+        return await client.request("delete", f"/auth-method/name/{name}")
     except ToolError:
         raise
     except Exception as e:

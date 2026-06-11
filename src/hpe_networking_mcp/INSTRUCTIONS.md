@@ -626,7 +626,7 @@ All GreenLake tools are read-only in v2.0. Use the standard dynamic-mode discove
 
 # ARUBA CLEARPASS (clearpass_* tools)
 
-ClearPass Policy Manager provides network access control (NAC), guest access management, device profiling, and policy enforcement. Tools use the pyclearpass SDK with OAuth2 client credentials authentication.
+ClearPass Policy Manager provides network access control (NAC), guest access management, device profiling, and policy enforcement. Tools use an async httpx client with OAuth2 client-credentials authentication.
 
 ## Starting a ClearPass Session
 No special ID resolution needed. ClearPass tools connect directly to the configured CPPM server. The API token is acquired automatically at startup.

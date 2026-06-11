@@ -5,13 +5,13 @@ from __future__ import annotations
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import clearpass_get
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_roles(
     ctx: Context,
     role_id: str | None = None,
@@ -36,13 +36,11 @@ async def clearpass_get_roles(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
+        client = await get_clearpass_client()
         if role_id:
-            return client.get_role_by_role_id(role_id=role_id)
+            return await client.request("get", f"/role/{role_id}")
         if name:
-            return client.get_role_name_by_name(name=name)
+            return await client.request("get", f"/role/name/{name}")
         params = [
             f"filter={filter}" if filter else "",
             f"sort={sort}" if sort else "",
@@ -51,14 +49,14 @@ async def clearpass_get_roles(
             f"calculate_count={'true' if calculate_count else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
-        return clearpass_get(client, "/role" + query)
+        return await clearpass_get(client, "/role" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching roles: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_role_mappings(
     ctx: Context,
     role_mapping_id: str | None = None,
@@ -86,13 +84,11 @@ async def clearpass_get_role_mappings(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
+        client = await get_clearpass_client()
         if role_mapping_id:
-            return client.get_role_mapping_by_role_mapping_id(role_mapping_id=role_mapping_id)
+            return await client.request("get", f"/role-mapping/{role_mapping_id}")
         if name:
-            return client.get_role_mapping_name_by_name(name=name)
+            return await client.request("get", f"/role-mapping/name/{name}")
         params = [
             f"filter={filter}" if filter else "",
             f"sort={sort}" if sort else "",
@@ -101,7 +97,7 @@ async def clearpass_get_role_mappings(
             f"calculate_count={'true' if calculate_count else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
-        return clearpass_get(client, "/role-mapping" + query)
+        return await clearpass_get(client, "/role-mapping" + query)
     except ToolError:
         raise
     except Exception as e:

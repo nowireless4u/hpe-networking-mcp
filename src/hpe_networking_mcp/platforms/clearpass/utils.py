@@ -4,10 +4,10 @@ Exposes:
 - ``build_query_string`` — formats the five list-endpoint pagination /
   filter parameters (filter, sort, offset, limit, calculate_count) into
   a query string. Consolidated from 10 file-local copies (issue #125).
-- ``clearpass_get`` — single-purpose wrapper for ``ClearPassAPILogin._send_request(path, "get")``.
-  Centralizes the use of pyclearpass's private transport method so a
-  future SDK change (e.g. addition of a public list method) only needs
-  updating in one place rather than ~70 call sites (issue #126).
+- ``clearpass_get`` — single-purpose GET wrapper. Originally isolated
+  pyclearpass's private ``_send_request`` (issue #126); the isolation paid
+  off — the SDK removal updated exactly this one function for ~70 read
+  call sites.
 """
 
 from __future__ import annotations
@@ -15,25 +15,19 @@ from __future__ import annotations
 from typing import Any
 
 
-def clearpass_get(client: Any, path: str) -> Any:
-    """Send a GET request via pyclearpass's transport layer.
-
-    pyclearpass does not expose a public list method for most resource
-    types — list and single-item reads have to use the private
-    ``ClearPassAPILogin._send_request(path, "get")`` method. This wrapper
-    isolates the dependency so a future SDK change only requires
-    updating a single call site.
+async def clearpass_get(client: Any, path: str) -> Any:
+    """Send a GET request via the ClearPass client.
 
     Args:
-        client: A ``ClearPassAPILogin`` instance returned by
-            ``get_clearpass_session()``.
+        client: A ``ClearPassClient`` returned by ``get_clearpass_client()``.
         path: API path (including any pre-built query string from
             ``build_query_string``).
 
     Returns:
-        The decoded JSON body returned by pyclearpass.
+        The decoded JSON body (pyclearpass-compatible contract — error
+        bodies are returned, not raised).
     """
-    return client._send_request(path, "get")
+    return await client.request("get", path)
 
 
 def build_query_string(

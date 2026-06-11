@@ -386,21 +386,11 @@ async def _collect_clearpass(
 
     summary = ClearPassSummary(queried=True)
 
-    try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-        from pyclearpass.api_sessioncontrol import ApiSessionControl
-
-        from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-    except ImportError as e:
-        return ClearPassSummary(queried=False, error=f"pyclearpass not available: {e}")
+    from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
     try:
-        nad_client = await get_clearpass_session(ApiPolicyElements)
-        nad_resp = await asyncio.to_thread(
-            nad_client._send_request,
-            "/network-device?limit=1000",
-            "get",
-        )
+        client = await get_clearpass_client()
+        nad_resp = await client.request("get", "/network-device?limit=1000")
         all_nads = nad_resp.get("_embedded", {}).get("items", []) if isinstance(nad_resp, dict) else []
     except Exception as e:
         logger.warning("site_health_check: ClearPass NAD fetch failed — {}", e)
@@ -436,13 +426,8 @@ async def _collect_clearpass(
     # device inventory.
     cutoff = int(time.time()) - window_hours * 3600
     try:
-        session_client = await get_clearpass_session(ApiSessionControl)
         sess_filter = json.dumps({"acctstarttime": {"$gt": cutoff}})
-        sess_resp = await asyncio.to_thread(
-            session_client._send_request,
-            f"/session?filter={sess_filter}&limit=500",
-            "get",
-        )
+        sess_resp = await client.request("get", f"/session?filter={sess_filter}&limit=500")
         items = sess_resp.get("_embedded", {}).get("items", []) if isinstance(sess_resp, dict) else []
         matched_count = sum(1 for s in items if _ip_in_any(s.get("nasipaddress", ""), site_nad_matchers))
         summary.active_sessions = matched_count
@@ -459,11 +444,7 @@ async def _collect_clearpass(
     # auth-failure counter over REST.
     try:
         event_filter = json.dumps({"timestamp_utc": {"$gt": cutoff}, "level": "ERROR"})
-        events_resp = await asyncio.to_thread(
-            session_client._send_request,
-            f"/system-event?filter={event_filter}&limit=500",
-            "get",
-        )
+        events_resp = await client.request("get", f"/system-event?filter={event_filter}&limit=500")
         event_items = events_resp.get("_embedded", {}).get("items", []) if isinstance(events_resp, dict) else []
         name_set = {n.lower() for n in site_nad_names}
         if name_set:

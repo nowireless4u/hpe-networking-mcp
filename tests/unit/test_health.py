@@ -94,21 +94,21 @@ class TestRunProbes:
         assert results["apstra"]["status"] == "unavailable"
 
     async def test_clearpass_ok_when_token_returns(self):
-        tm = MagicMock()
-        tm.get_token = MagicMock(return_value="fake-token-abc")
+        client = MagicMock()
+        client.health_check = AsyncMock(return_value=True)
 
         ctx = MagicMock()
-        ctx.lifespan_context = {"clearpass_token_manager": tm}
+        ctx.lifespan_context = {"clearpass_client": client}
 
         results = await run_probes(ctx, ["clearpass"])
         assert results["clearpass"]["status"] == "ok"
 
     async def test_clearpass_degraded_on_refresh_failure(self):
-        tm = MagicMock()
-        tm.get_token = MagicMock(side_effect=RuntimeError("OAuth2 rejected"))
+        client = MagicMock()
+        client.health_check = AsyncMock(side_effect=RuntimeError("OAuth2 rejected"))
 
         ctx = MagicMock()
-        ctx.lifespan_context = {"clearpass_token_manager": tm}
+        ctx.lifespan_context = {"clearpass_client": client}
 
         results = await run_probes(ctx, ["clearpass"])
         assert results["clearpass"]["status"] == "degraded"

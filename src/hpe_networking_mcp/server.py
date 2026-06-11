@@ -104,17 +104,16 @@ async def lifespan(server: FastMCP):
     # --- ClearPass ---
     if config.clearpass:
         try:
-            from hpe_networking_mcp.platforms.clearpass.client import ClearPassTokenManager
+            from hpe_networking_mcp.platforms.clearpass.client import create_client
 
-            context["clearpass_token_manager"] = ClearPassTokenManager(config.clearpass)
-            context["clearpass_config"] = config.clearpass
+            # Construction is non-blocking: the first API call triggers the
+            # initial OAuth2 token fetch via the shared AsyncTokenManager.
+            context["clearpass_client"] = create_client(config.clearpass)
         except Exception as e:
             logger.warning("ClearPass: failed to initialize — {}", e)
-            context["clearpass_config"] = None
-            context["clearpass_token_manager"] = None
+            context["clearpass_client"] = None
     else:
-        context["clearpass_config"] = None
-        context["clearpass_token_manager"] = None
+        context["clearpass_client"] = None
 
     # --- Apstra ---
     if config.apstra:
@@ -215,6 +214,12 @@ async def lifespan(server: FastMCP):
                 await central.aclose()
             except Exception as e:  # noqa: BLE001 — shutdown must not raise
                 logger.warning("Central: aclose failed during shutdown — {}", e)
+        clearpass = context.get("clearpass_client")
+        if clearpass is not None:
+            try:
+                await clearpass.aclose()
+            except Exception as e:  # noqa: BLE001 — shutdown must not raise
+                logger.warning("ClearPass: aclose failed during shutdown — {}", e)
         mist_client_cleanup: Any = context.get("mist_client")
         if mist_client_cleanup is not None:
             try:

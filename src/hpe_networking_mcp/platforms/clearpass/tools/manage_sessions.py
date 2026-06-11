@@ -9,9 +9,9 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import WRITE_DELETE
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
 _VALID_TARGETS = ("session_id", "username", "mac", "ip", "bulk")
 
@@ -27,7 +27,7 @@ async def _confirm_session_action(ctx: Context, action: str, target_type: str, t
     return await confirm_write(ctx, f"ClearPass: {action} session for {label}. Confirm?")
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.OPERATIONAL, enable_gated=True)
 async def clearpass_disconnect_session(
     ctx: Context,
     target_type: Annotated[str, Field(description="Target type: 'session_id', 'username', 'mac', 'ip', or 'bulk'.")],
@@ -76,25 +76,23 @@ async def clearpass_disconnect_session(
             return decline
 
     try:
-        from pyclearpass.api_sessioncontrol import ApiSessionControl
-
-        client = await get_clearpass_session(ApiSessionControl)
+        client = await get_clearpass_client()
 
         if target_type == "session_id":
-            return client._send_request(f"/session/{target_value}/disconnect", "post", query={})
+            return await client.request("post", f"/session/{target_value}/disconnect", json_body={})
         if target_type == "bulk":
-            return client._send_request("/session/disconnect", "post", query=filter)
+            return await client.request("post", "/session/disconnect", json_body=filter)
         # username, mac, ip — use filtered disconnect
         filter_map = {"username": "username", "mac": "mac_address", "ip": "framedipaddress"}
-        query = {filter_map[target_type]: target_value}
-        return client._send_request("/session/disconnect", "post", query=query)
+        body = {filter_map[target_type]: target_value}
+        return await client.request("post", "/session/disconnect", json_body=body)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error disconnecting session: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.OPERATIONAL, enable_gated=True)
 async def clearpass_perform_coa(
     ctx: Context,
     target_type: Annotated[str, Field(description="Target type: 'session_id', 'username', 'mac', 'ip', or 'bulk'.")],
@@ -146,18 +144,16 @@ async def clearpass_perform_coa(
             return decline
 
     try:
-        from pyclearpass.api_sessioncontrol import ApiSessionControl
-
-        client = await get_clearpass_session(ApiSessionControl)
+        client = await get_clearpass_client()
 
         if target_type == "session_id":
-            return client.get_session_by_id_reauthorize(id=target_value)
+            return await client.request("get", f"/session/{target_value}/reauthorize")
         if target_type == "bulk":
-            return client._send_request("/session/reauthorize", "post", query=filter)
+            return await client.request("post", "/session/reauthorize", json_body=filter)
         # username, mac, ip — use filtered reauthorize
         filter_map = {"username": "username", "mac": "mac_address", "ip": "framedipaddress"}
-        query = {filter_map[target_type]: target_value}
-        return client._send_request("/session/reauthorize", "post", query=query)
+        body = {filter_map[target_type]: target_value}
+        return await client.request("post", "/session/reauthorize", json_body=body)
     except ToolError:
         raise
     except Exception as e:

@@ -5,12 +5,12 @@ from __future__ import annotations
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_generate_random_password(
     ctx: Context,
     type: str = "password",
@@ -24,12 +24,10 @@ async def clearpass_generate_random_password(
         type: Type of random string to generate. Either "password" or "mpsk".
     """
     try:
-        from pyclearpass.api_toolsandutilities import ApiToolsAndUtilities
-
-        client = await get_clearpass_session(ApiToolsAndUtilities)
+        client = await get_clearpass_client()
         if type == "mpsk":
-            return client.get_random_mpsk()
-        return client.get_random_password()
+            return await client.request("get", "/random-mpsk")
+        return await client.request("get", "/random-password")
     except ToolError:
         raise
     except Exception as e:

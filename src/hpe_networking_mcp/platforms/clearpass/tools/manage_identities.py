@@ -9,9 +9,9 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import WRITE_DELETE
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
 
 async def _confirm_write(
@@ -27,7 +27,7 @@ async def _confirm_write(
     return await confirm_write(ctx, f"ClearPass: {action_type} {resource} '{label}'. Confirm?")
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_api_client(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
@@ -54,23 +54,21 @@ async def clearpass_manage_api_client(
     if decline:
         return decline
     try:
-        from pyclearpass.api_identities import ApiIdentities
-
-        client = await get_clearpass_session(ApiIdentities)
+        client = await get_clearpass_client()
         if action_type == "create":
-            return client._send_request("/api-client", "post", query=payload)
+            return await client.request("post", "/api-client", json_body=payload)
         if not client_id:
             raise ToolError({"status_code": 400, "message": "client_id is required for update/delete."})
         if action_type == "update":
-            return client._send_request(f"/api-client/{client_id}", "patch", query=payload)
-        return client.delete_api_client_by_client_id(client_id=client_id)
+            return await client.request("patch", f"/api-client/{client_id}", json_body=payload)
+        return await client.request("delete", f"/api-client/{client_id}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing API client: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_local_user(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
@@ -99,28 +97,26 @@ async def clearpass_manage_local_user(
     if decline:
         return decline
     try:
-        from pyclearpass.api_identities import ApiIdentities
-
-        client = await get_clearpass_session(ApiIdentities)
+        client = await get_clearpass_client()
         if action_type == "create":
-            return client._send_request("/local-user", "post", query=payload)
+            return await client.request("post", "/local-user", json_body=payload)
         if not local_user_id and not user_id:
             raise ToolError(
                 {"status_code": 400, "message": "Either local_user_id or user_id is required for update/delete."}
             )
         if action_type == "update":
             path = f"/local-user/{local_user_id}" if local_user_id else f"/local-user/user-id/{user_id}"
-            return client._send_request(path, "patch", query=payload)
+            return await client.request("patch", path, json_body=payload)
         if local_user_id:
-            return client.delete_local_user_by_local_user_id(local_user_id=local_user_id)
-        return client.delete_local_user_user_id_by_user_id(user_id=user_id)
+            return await client.request("delete", f"/local-user/{local_user_id}")
+        return await client.request("delete", f"/local-user/user-id/{user_id}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing local user: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_static_host_list(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
@@ -151,11 +147,9 @@ async def clearpass_manage_static_host_list(
     if decline:
         return decline
     try:
-        from pyclearpass.api_identities import ApiIdentities
-
-        client = await get_clearpass_session(ApiIdentities)
+        client = await get_clearpass_client()
         if action_type == "create":
-            return client._send_request("/static-host-list", "post", query=payload)
+            return await client.request("post", "/static-host-list", json_body=payload)
         if not static_host_list_id and not name:
             raise ToolError(
                 {"status_code": 400, "message": "Either static_host_list_id or name is required for update/delete."}
@@ -164,17 +158,17 @@ async def clearpass_manage_static_host_list(
             path = (
                 f"/static-host-list/{static_host_list_id}" if static_host_list_id else f"/static-host-list/name/{name}"
             )
-            return client._send_request(path, "patch", query=payload)
+            return await client.request("patch", path, json_body=payload)
         if static_host_list_id:
-            return client.delete_static_host_list_by_static_host_list_id(static_host_list_id=static_host_list_id)
-        return client.delete_static_host_list_name_by_name(name=name)
+            return await client.request("delete", f"/static-host-list/{static_host_list_id}")
+        return await client.request("delete", f"/static-host-list/name/{name}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing static host list: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_device(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
@@ -203,28 +197,26 @@ async def clearpass_manage_device(
     if decline:
         return decline
     try:
-        from pyclearpass.api_identities import ApiIdentities
-
-        client = await get_clearpass_session(ApiIdentities)
+        client = await get_clearpass_client()
         if action_type == "create":
-            return client._send_request("/device", "post", query=payload)
+            return await client.request("post", "/device", json_body=payload)
         if not device_id and not macaddr:
             raise ToolError(
                 {"status_code": 400, "message": "Either device_id or macaddr is required for update/delete."}
             )
         if action_type == "update":
             path = f"/device/{device_id}" if device_id else f"/device/mac/{macaddr}"
-            return client._send_request(path, "patch", query=payload)
+            return await client.request("patch", path, json_body=payload)
         if device_id:
-            return client.delete_device_by_device_id(device_id=device_id)
-        return client.delete_device_mac_by_macaddr(macaddr=macaddr)
+            return await client.request("delete", f"/device/{device_id}")
+        return await client.request("delete", f"/device/mac/{macaddr}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing device: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_deny_listed_user(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create' or 'delete'.")],
@@ -248,14 +240,12 @@ async def clearpass_manage_deny_listed_user(
     if decline:
         return decline
     try:
-        from pyclearpass.api_identities import ApiIdentities
-
-        client = await get_clearpass_session(ApiIdentities)
+        client = await get_clearpass_client()
         if action_type == "create":
-            return client._send_request("/deny-listed-users", "post", query=payload)
+            return await client.request("post", "/deny-listed-users", json_body=payload)
         if not deny_listed_users_id:
             raise ToolError({"status_code": 400, "message": "deny_listed_users_id is required for delete."})
-        return client.delete_deny_listed_users_by_deny_listed_users_id(deny_listed_users_id=deny_listed_users_id)
+        return await client.request("delete", f"/deny-listed-users/{deny_listed_users_id}")
     except ToolError:
         raise
     except Exception as e:

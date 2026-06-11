@@ -1871,7 +1871,7 @@ All 10 GreenLake tools are read-only today. Write tools would follow the same ga
 
 ## Aruba ClearPass (142 tools)
 
-ClearPass tools use the `pyclearpass` SDK with OAuth2 client credentials. Write tools require
+ClearPass tools use an async httpx client with OAuth2 client credentials. Write tools require
 `ENABLE_CLEARPASS_WRITE_TOOLS=true`. Update/delete operations require user confirmation.
 
 ### Network Devices (4 read + 1 write)

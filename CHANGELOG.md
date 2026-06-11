@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.12.0] - 2026-06-11
+
+**Minor — ClearPass rebuilt on async httpx; pyclearpass SDK removed; full `capability=` migration.** Closes #441, #465. Step 3 of the platform-standardization effort (#466). No release/tag until the auth migration completes across all platforms.
+
+### Changed
+- **New `ClearPassClient`** (`platforms/clearpass/client.py`) replaces the pyclearpass SDK + `ClearPassTokenManager` + the `_send_request` monkey-patch. The response contract is pyclearpass-identical: decoded JSON with raw-text fallback, raw bytes for non-JSON accepts, and **error bodies returned, never raised**. Wire parity preserved down to pyclearpass's quirks: `""`-valued query params and top-level body keys are dropped, dict-valued params are compact-JSON encoded. Token lifecycle runs through the shared `AsyncTokenManager` (JSON `POST /oauth`, proactive 8-hour expiry tracking — the 403 storm after a token aged out structurally can't happen anymore); 401/403 auth-failure bodies trigger one refresh + replay, now first-class instead of monkey-patched.
+- **Every ClearPass call is now genuinely async** (closes #441): ~250 call sites across 36 files (35 tool modules + `site_health_check`) converted from sync SDK calls to `await client.request(...)`; the `clearpass_get` chokepoint (issue #126's isolation paid off) converted once for ~70 read sites; `asyncio.to_thread` band-aids removed.
+- **Full capability migration** (3/N of the annotation sequence): `_registry.py` on the shared `make_tool_decorator` factory; all 142 tools classified with `capability=` per the rubric (READ for reads, WRITE_DELETE for manage surfaces, OPERATIONAL+`enable_gated` for disruptive non-persistent actions like session disconnect/CoA, guest credential sends, and service start/stop). The derived `clearpass_write_delete` enable tag is byte-identical to the old hand-written tags — write gating is unchanged, and inline confirmation logic is untouched (the universal `requires_confirmation` gate lands in a later PR per the #415/#416 sequence).
+- `pyclearpass` removed from dependencies; permanent guard test (`TestNoPyclearpassAnywhere`) fails on any reappearing import. `server.py` lifespan now builds one lazy `clearpass_client` (replacing the `clearpass_config` + `clearpass_token_manager` pair); the health probe uses the client.
+
+### Fixed
+- **Several tools called pyclearpass methods that don't exist in the SDK** (e.g. `get_admin_user_by_admin_user_id`, `get_config_service_by_config_service_id`) — instant `AttributeError` on every invocation. Path-based calls fix them as a side effect.
+- Pre-existing hand-written endpoints that don't match the CPPM REST surface were **preserved verbatim** (behavior-preserving rebuild) and catalogued in #469 for live probing + fixes.
+
+### Tests
+- New `tests/unit/test_clearpass_client.py` (response contract incl. error-bodies-returned, auth-retry flow, token fetch, pyclearpass parity quirks) + updated health/visualizer/utils test fixtures to async mocks.
+- Full suite **1818 passed** in Docker; ruff + format + mypy + bandit clean. **Live-verified against a real CPPM**: token fetch, NAD/version reads (HAL envelope intact), and the 404-as-dict error contract.
+
 ## [3.3.11.0] - 2026-06-11
 
 **Minor — Central rebuilt on async httpx; pycentral SDK removed entirely.** Closes #464. Step 2 of the platform-standardization effort (#466). No release/tag until the auth migration completes across all platforms.

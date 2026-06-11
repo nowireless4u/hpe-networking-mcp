@@ -9,9 +9,9 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import WRITE_DELETE
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
 
 async def _confirm_write(ctx: Context, action: str, identifier: str | None) -> dict | None:
@@ -25,7 +25,7 @@ async def _confirm_write(ctx: Context, action: str, identifier: str | None) -> d
     return await confirm_write(ctx, f"ClearPass: {action} guest '{label}'. Confirm?")
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_guest_user(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
@@ -57,31 +57,29 @@ async def clearpass_manage_guest_user(
             return decline
 
     try:
-        from pyclearpass.api_identities import ApiIdentities
-
-        client = await get_clearpass_session(ApiIdentities)
+        client = await get_clearpass_client()
 
         if action_type == "create":
-            return client._send_request("/guest", "post", query=payload)
+            return await client.request("post", "/guest", json_body=payload)
         if not guest_id and not username:
             raise ToolError(
                 {"status_code": 400, "message": "Either guest_id or username is required for update/delete."}
             )
         if action_type == "update":
             if guest_id:
-                return client._send_request(f"/guest/{guest_id}", "patch", query=payload)
-            return client._send_request(f"/guest/username/{username}", "patch", query=payload)
+                return await client.request("patch", f"/guest/{guest_id}", json_body=payload)
+            return await client.request("patch", f"/guest/username/{username}", json_body=payload)
         # delete
         if guest_id:
-            return client.delete_guest_by_guest_id(guest_id=guest_id)
-        return client.delete_guest_username_by_username(username=username)
+            return await client.request("delete", f"/guest/{guest_id}")
+        return await client.request("delete", f"/guest/username/{username}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing guest user: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.OPERATIONAL, enable_gated=True)
 async def clearpass_send_guest_credentials(
     ctx: Context,
     guest_id: Annotated[str, Field(description="Guest ID to send credentials for.")],
@@ -106,17 +104,15 @@ async def clearpass_send_guest_credentials(
             return decline
 
     try:
-        from pyclearpass.api_guestactions import ApiGuestActions
-
-        client = await get_clearpass_session(ApiGuestActions)
-        return client._send_request(f"/guest/{guest_id}/send-{delivery_method}", "post", query={})
+        client = await get_clearpass_client()
+        return await client.request("post", f"/guest/{guest_id}/send-{delivery_method}", json_body={})
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error sending guest credentials: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.OPERATIONAL, enable_gated=True)
 async def clearpass_generate_guest_pass(
     ctx: Context,
     guest_id: Annotated[str, Field(description="Guest ID to generate pass for.")],
@@ -141,18 +137,16 @@ async def clearpass_generate_guest_pass(
             return decline
 
     try:
-        from pyclearpass.api_guestactions import ApiGuestActions
-
-        client = await get_clearpass_session(ApiGuestActions)
+        client = await get_clearpass_client()
         endpoint = "pass" if pass_type == "digital" else "receipt"  # nosec B105 — API path, not a password
-        return client._send_request(f"/guest/{guest_id}/{endpoint}", "post", query={})
+        return await client.request("post", f"/guest/{guest_id}/{endpoint}", json_body={})
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error generating guest pass: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_process_sponsor_action(
     ctx: Context,
     guest_id: Annotated[str, Field(description="Guest ID to process sponsor action for.")],
@@ -175,10 +169,8 @@ async def clearpass_process_sponsor_action(
             return decline
 
     try:
-        from pyclearpass.api_guestactions import ApiGuestActions
-
-        client = await get_clearpass_session(ApiGuestActions)
-        return client._send_request(f"/guest/{guest_id}/sponsor/{action}", "post", query={})
+        client = await get_clearpass_client()
+        return await client.request("post", f"/guest/{guest_id}/sponsor/{action}", json_body={})
     except ToolError:
         raise
     except Exception as e:

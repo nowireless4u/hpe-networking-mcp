@@ -5,13 +5,13 @@ from __future__ import annotations
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_admin_users(
     ctx: Context,
     admin_user_id: str | None = None,
@@ -34,20 +34,18 @@ async def clearpass_get_admin_users(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
+        client = await get_clearpass_client()
         if admin_user_id:
-            return client.get_admin_user_by_admin_user_id(admin_user_id=admin_user_id)
+            return await client.request("get", f"/admin-user/{admin_user_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/admin-user" + query)
+        return await clearpass_get(client, "/admin-user" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching admin users: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_admin_privileges(
     ctx: Context,
     admin_privilege_id: str | None = None,
@@ -70,22 +68,18 @@ async def clearpass_get_admin_privileges(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
+        client = await get_clearpass_client()
         if admin_privilege_id:
-            return client.get_admin_privilege_by_admin_privilege_id(
-                admin_privilege_id=admin_privilege_id,
-            )
+            return await client.request("get", f"/admin-privilege/{admin_privilege_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/admin-privilege" + query)
+        return await clearpass_get(client, "/admin-privilege" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching admin privileges: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_operator_profiles(
     ctx: Context,
     filter: str | None = None,
@@ -105,18 +99,16 @@ async def clearpass_get_operator_profiles(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
+        client = await get_clearpass_client()
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/operator-profile" + query)
+        return await clearpass_get(client, "/operator-profile" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching operator profiles: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_licenses(
     ctx: Context,
     license_id: str | None = None,
@@ -130,19 +122,17 @@ async def clearpass_get_licenses(
         license_id: Numeric ID for single license lookup.
     """
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
+        client = await get_clearpass_client()
         if license_id:
-            return client.get_application_license_by_license_id(license_id=license_id)
-        return client.get_application_license_summary()
+            return await client.request("get", f"/application-license/{license_id}")
+        return await client.request("get", "/application-license/summary")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching licenses: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_cluster_params(
     ctx: Context,
 ) -> dict | str:
@@ -152,17 +142,15 @@ async def clearpass_get_cluster_params(
     and replication parameters.
     """
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
-        return client.get_cluster_parameters()
+        client = await get_clearpass_client()
+        return await client.request("get", "/cluster/parameters")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching cluster parameters: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_password_policies(
     ctx: Context,
 ) -> dict | str:
@@ -171,11 +159,9 @@ async def clearpass_get_password_policies(
     Returns both the admin password policy and the local user password policy.
     """
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
-        admin_policy = client.get_admin_password_policy()
-        local_user_policy = client.get_local_user_password_policy()
+        client = await get_clearpass_client()
+        admin_policy = await client.request("get", "/admin-user/password-policy")
+        local_user_policy = await client.request("get", "/local-user/password-policy")
         return {
             "admin_password_policy": admin_policy,
             "local_user_password_policy": local_user_policy,
@@ -186,7 +172,7 @@ async def clearpass_get_password_policies(
         raise ToolError({"status_code": 502, "message": f"Error fetching password policies: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_attributes(
     ctx: Context,
     attribute_id: str | None = None,
@@ -209,20 +195,18 @@ async def clearpass_get_attributes(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
+        client = await get_clearpass_client()
         if attribute_id:
-            return client.get_attribute_by_attribute_id(attribute_id=attribute_id)
+            return await client.request("get", f"/attribute/{attribute_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/attribute" + query)
+        return await clearpass_get(client, "/attribute" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching attributes: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_data_filters(
     ctx: Context,
     data_filter_id: str | None = None,
@@ -245,20 +229,18 @@ async def clearpass_get_data_filters(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
+        client = await get_clearpass_client()
         if data_filter_id:
-            return client.get_data_filter_by_data_filter_id(data_filter_id=data_filter_id)
+            return await client.request("get", f"/data-filter/{data_filter_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/data-filter" + query)
+        return await clearpass_get(client, "/data-filter" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching data filters: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_file_backup_servers(
     ctx: Context,
     file_backup_server_id: str | None = None,
@@ -281,22 +263,18 @@ async def clearpass_get_file_backup_servers(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
+        client = await get_clearpass_client()
         if file_backup_server_id:
-            return client.get_file_backup_server_by_file_backup_server_id(
-                file_backup_server_id=file_backup_server_id,
-            )
+            return await client.request("get", f"/file-backup-server/{file_backup_server_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/file-backup-server" + query)
+        return await clearpass_get(client, "/file-backup-server" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching file backup servers: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_messaging_setup(
     ctx: Context,
 ) -> dict | str:
@@ -306,17 +284,15 @@ async def clearpass_get_messaging_setup(
     and guest account provisioning.
     """
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
-        return client.get_messaging_setup()
+        client = await get_clearpass_client()
+        return await client.request("get", "/messaging-setup")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching messaging setup: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_snmp_trap_receivers(
     ctx: Context,
     snmp_trap_receiver_id: str | None = None,
@@ -339,22 +315,18 @@ async def clearpass_get_snmp_trap_receivers(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
+        client = await get_clearpass_client()
         if snmp_trap_receiver_id:
-            return client.get_snmp_trap_receiver_by_snmp_trap_receiver_id(
-                snmp_trap_receiver_id=snmp_trap_receiver_id,
-            )
+            return await client.request("get", f"/snmp-trap-receiver/{snmp_trap_receiver_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/snmp-trap-receiver" + query)
+        return await clearpass_get(client, "/snmp-trap-receiver" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching SNMP trap receivers: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_policy_manager_zones(
     ctx: Context,
     policy_manager_zones_id: str | None = None,
@@ -377,22 +349,18 @@ async def clearpass_get_policy_manager_zones(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
+        client = await get_clearpass_client()
         if policy_manager_zones_id:
-            return client.get_server_policy_manager_zones_by_policy_manager_zones_id(
-                policy_manager_zones_id=policy_manager_zones_id,
-            )
+            return await client.request("get", f"/server/policy-manager-zones/{policy_manager_zones_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/server/policy-manager-zones" + query)
+        return await clearpass_get(client, "/server/policy-manager-zones" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching Policy Manager zones: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_oauth_privileges(
     ctx: Context,
 ) -> dict | str:
@@ -402,10 +370,8 @@ async def clearpass_get_oauth_privileges(
     assigned to API clients.
     """
     try:
-        from pyclearpass.api_globalserverconfiguration import ApiGlobalServerConfiguration
-
-        client = await get_clearpass_session(ApiGlobalServerConfiguration)
-        return clearpass_get(client, "/oauth/all-privileges")
+        client = await get_clearpass_client()
+        return await clearpass_get(client, "/oauth/all-privileges")
     except ToolError:
         raise
     except Exception as e:
