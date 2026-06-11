@@ -258,7 +258,7 @@ def register(mcp):
 
         # Check both platforms for the SSID
         mist_wlan = await _find_mist_wlan(ctx, ssid)
-        central_profile = _find_central_profile(ctx, ssid)
+        central_profile = await _find_central_profile(ctx, ssid)
 
         exists_mist = mist_wlan is not None
         exists_central = central_profile is not None
@@ -388,14 +388,14 @@ async def _find_mist_wlan(ctx: Context, ssid: str) -> dict | None:
     return None
 
 
-def _find_central_profile(ctx: Context, ssid: str) -> dict | None:
+async def _find_central_profile(ctx: Context, ssid: str) -> dict | None:
     """Check if an SSID exists in Central. Returns profile dict or None."""
     conn = ctx.lifespan_context.get("central_conn")
     if not conn:
         return None
 
     try:
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method="GET",
             api_path=f"network-config/v1alpha1/wlan-ssids/{ssid}",

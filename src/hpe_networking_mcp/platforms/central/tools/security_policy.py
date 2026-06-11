@@ -39,7 +39,7 @@ async def _get_resource(ctx: Context, api_base: str, name: str | None) -> dict |
     """Generic GET for /network-config/v1alpha1/{api_base}[/{name}]."""
     conn = get_central_conn(ctx)
     api_path = f"network-config/v1alpha1/{api_base}/{name}" if name else f"network-config/v1alpha1/{api_base}"
-    response = retry_central_command(central_conn=conn, api_method="GET", api_path=api_path)
+    response = await retry_central_command(central_conn=conn, api_method="GET", api_path=api_path)
     code = response.get("code", 0)
     if code and not 200 <= code < 300:
         raise ToolError(
@@ -113,7 +113,7 @@ async def _manage_resource(
 
     logger.info("Central {}: {} '{}' — path: {}", resource_label, api_method, name, api_path)
 
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method=api_method,
         api_path=api_path,
@@ -185,7 +185,7 @@ async def _operation_request(
 
     logger.info("Central operation: {} — path: {}", method, api_path)
 
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method=method,
         api_path=api_path,

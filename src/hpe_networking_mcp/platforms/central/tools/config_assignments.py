@@ -99,7 +99,7 @@ async def central_get_config_assignments(
     if device_function:
         api_params["device-function"] = device_function
 
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path="network-config/v1alpha1/config-assignments",
@@ -241,7 +241,7 @@ async def central_manage_config_assignment(
             device_function,
         )
 
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method="POST",
             api_path="network-config/v1alpha1/config-assignments",
@@ -281,7 +281,7 @@ async def central_manage_config_assignment(
             device_function,
         )
 
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method="DELETE",
             api_path=api_path,

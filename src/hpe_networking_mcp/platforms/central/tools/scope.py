@@ -57,7 +57,7 @@ async def central_get_scope_tree(
     """
     conn = get_central_conn(ctx)
     try:
-        tree = build_scope_tree(conn)
+        tree = await build_scope_tree(conn)
         return tree_to_dict(tree, effective=(view == "effective"))
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error building scope tree: {e}"}) from e
@@ -88,7 +88,7 @@ async def central_get_scope_resources(
     """
     conn = get_central_conn(ctx)
     try:
-        tree = build_scope_tree(conn)
+        tree = await build_scope_tree(conn)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error building scope tree: {e}"}) from e
 
@@ -171,7 +171,7 @@ async def central_get_committed_config(
     """
     conn = get_central_conn(ctx)
     try:
-        tree = build_scope_tree(conn)
+        tree = await build_scope_tree(conn)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error building scope tree: {e}"}) from e
 
@@ -241,7 +241,7 @@ async def central_get_effective_config(
     """
     conn = get_central_conn(ctx)
     try:
-        tree = build_scope_tree(conn)
+        tree = await build_scope_tree(conn)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error building scope tree: {e}"}) from e
 
@@ -294,7 +294,7 @@ async def central_get_devices_in_scope(
     """
     conn = get_central_conn(ctx)
     try:
-        tree = build_scope_tree(conn)
+        tree = await build_scope_tree(conn)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error building scope tree: {e}"}) from e
 
@@ -342,7 +342,7 @@ async def central_get_scope_diagram(
     """
     conn = get_central_conn(ctx)
     try:
-        tree = build_scope_tree(conn)
+        tree = await build_scope_tree(conn)
         return tree_to_mermaid(tree, scope_id, include_resources, include_devices)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error generating scope diagram: {e}"}) from e

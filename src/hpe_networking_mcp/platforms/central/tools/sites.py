@@ -3,10 +3,10 @@ from typing import Annotated
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from mcp.types import ToolAnnotations
-from pycentral.new_monitoring import MonitoringSites
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.models import SiteData
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
@@ -47,7 +47,7 @@ async def _scope_write(
         if guard is not None:
             return guard
     conn = get_central_conn(ctx)
-    response = retry_central_command(central_conn=conn, api_method=method, api_path=path, api_data=body)
+    response = await retry_central_command(central_conn=conn, api_method=method, api_path=path, api_data=body)
     code = response.get("code", 0)
     if not 200 <= code < 300:
         msg = response.get("msg", "unknown error")
@@ -89,7 +89,7 @@ async def central_get_sites(
     if sort:
         api_params["sort"] = sort
 
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path="network-config/v1/sites",
@@ -123,7 +123,7 @@ async def central_get_site_health(
             (e.g. ["Owls Nest", "HQ"]). If omitted, all sites are returned (use sparingly).
     """
     wanted = normalize_site_name_filter(site_name)
-    sites_data = fetch_site_data_parallel(get_central_conn(ctx))
+    sites_data = await fetch_site_data_parallel(get_central_conn(ctx))
     if wanted:
         return [sites_data[name] for name in wanted if name in sites_data]
     return list(sites_data.values())
@@ -151,7 +151,7 @@ async def central_get_site_name_id_mapping(ctx: Context) -> dict:
     - total_clients: Total number of clients at the site.
     - total_alerts: Total number of alerts at the site.
     """
-    sites = MonitoringSites.get_all_sites(central_conn=get_central_conn(ctx))
+    sites = await monitoring_api.get_all_sites(central_conn=get_central_conn(ctx))
     mapping = {}
     for site in sites:
         health_obj = groups_to_map(site.get("health", {}))
@@ -184,7 +184,7 @@ async def central_get_global_scope(ctx: Context) -> dict | str:
     ``central_get_hierarchy`` at the tenant root.
     """
     conn = get_central_conn(ctx)
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path="network-config/v1/global",
@@ -225,7 +225,7 @@ async def central_get_hierarchy(
     devices) beneath the resource identified by ``scope_id`` + ``scope_type``.
     """
     conn = get_central_conn(ctx)
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path="network-config/v1/hierarchy",

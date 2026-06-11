@@ -58,7 +58,7 @@ async def central_get_device_config_issues(
         Central ``/network-config/v1alpha1/config-health/active-issue``
         response shape.
     """
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=get_central_conn(ctx),
         api_method="GET",
         api_path="network-config/v1alpha1/config-health/active-issue",
@@ -120,7 +120,7 @@ async def central_get_devices_config_health(
     if search is not None:
         api_params["search"] = search
 
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=get_central_conn(ctx),
         api_method="GET",
         api_path="network-config/v1alpha1/config-health/devices",
@@ -170,7 +170,7 @@ async def central_resync_device_config(
             }
         )
 
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=get_central_conn(ctx),
         api_method="POST",
         api_path="network-config/v1alpha1/config-health/devices-resync",

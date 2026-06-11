@@ -53,7 +53,7 @@ async def central_get_audit_logs(
         query_params["sort"] = sort
 
     try:
-        resp = retry_central_command(
+        resp = await retry_central_command(
             conn,
             api_method="GET",
             api_path="network-services/v1/audits",
@@ -90,7 +90,7 @@ async def central_get_audit_log_detail(
     conn = get_central_conn(ctx)
 
     try:
-        resp = retry_central_command(
+        resp = await retry_central_command(
             conn,
             api_method="GET",
             api_path=f"network-services/v1/audit/{id}",

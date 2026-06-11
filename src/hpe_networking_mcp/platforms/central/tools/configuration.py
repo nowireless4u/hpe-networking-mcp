@@ -330,7 +330,7 @@ async def _execute_config_action(
 
     logger.info("Central config: {} {} — path: {}", api_method, resource_name, full_path)
 
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method=api_method,
         api_path=full_path,
@@ -385,7 +385,7 @@ async def _execute_collection_site_action(
     api_data = {"scopeId": collection_id, "siteIds": site_ids}
     logger.info("Central config: {} sites {} collection {}", action, len(site_ids), collection_id)
 
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method=api_method,
         api_path=api_path,

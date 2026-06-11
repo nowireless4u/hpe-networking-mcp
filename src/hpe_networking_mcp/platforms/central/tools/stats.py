@@ -2,9 +2,8 @@ from typing import Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
-from pycentral.new_monitoring.aps import MonitoringAPs
-from pycentral.new_monitoring.gateways import MonitoringGateways
 
+from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn
@@ -17,7 +16,7 @@ async def central_get_ap_stats(
     start_time: str | None = None,
     end_time: str | None = None,
     duration: str | None = None,
-) -> dict | str:
+) -> dict | list | str:
     """
     Get performance statistics for a specific access point.
 
@@ -35,14 +34,14 @@ async def central_get_ap_stats(
     conn = get_central_conn(ctx)
     kwargs: dict = {"central_conn": conn, "serial_number": serial_number}
     if start_time:
-        kwargs["from_timestamp"] = start_time
+        kwargs["start_time"] = start_time
     if end_time:
-        kwargs["to_timestamp"] = end_time
+        kwargs["end_time"] = end_time
     if duration:
         kwargs["duration"] = duration
 
     try:
-        resp = MonitoringAPs.get_ap_stats(**kwargs)
+        resp = await monitoring_api.get_ap_stats(**kwargs)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching AP stats: {e}"}) from e
 
@@ -78,20 +77,20 @@ async def central_get_ap_utilization(
     conn = get_central_conn(ctx)
     kwargs: dict = {"central_conn": conn, "serial_number": serial_number}
     if start_time:
-        kwargs["from_timestamp"] = start_time
+        kwargs["start_time"] = start_time
     if end_time:
-        kwargs["to_timestamp"] = end_time
+        kwargs["end_time"] = end_time
     if duration:
         kwargs["duration"] = duration
 
     method_map = {
-        "cpu": MonitoringAPs.get_ap_cpu_utilization,
-        "memory": MonitoringAPs.get_ap_memory_utilization,
-        "poe": MonitoringAPs.get_ap_poe_utilization,
+        "cpu": monitoring_api.get_ap_cpu_utilization,
+        "memory": monitoring_api.get_ap_memory_utilization,
+        "poe": monitoring_api.get_ap_poe_utilization,
     }
 
     try:
-        resp = method_map[metric](**kwargs)
+        resp = await method_map[metric](**kwargs)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching AP {metric} utilization: {e}"}) from e
 
@@ -107,7 +106,7 @@ async def central_get_gateway_stats(
     start_time: str | None = None,
     end_time: str | None = None,
     duration: str | None = None,
-) -> dict | str:
+) -> dict | list | str:
     """
     Get performance statistics for a specific gateway.
 
@@ -125,14 +124,14 @@ async def central_get_gateway_stats(
     conn = get_central_conn(ctx)
     kwargs: dict = {"central_conn": conn, "serial_number": serial_number}
     if start_time:
-        kwargs["from_timestamp"] = start_time
+        kwargs["start_time"] = start_time
     if end_time:
-        kwargs["to_timestamp"] = end_time
+        kwargs["end_time"] = end_time
     if duration:
         kwargs["duration"] = duration
 
     try:
-        resp = MonitoringGateways.get_gateway_stats(**kwargs)
+        resp = await monitoring_api.get_gateway_stats(**kwargs)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching gateway stats: {e}"}) from e
 
@@ -168,19 +167,19 @@ async def central_get_gateway_utilization(
     conn = get_central_conn(ctx)
     kwargs: dict = {"central_conn": conn, "serial_number": serial_number}
     if start_time:
-        kwargs["from_timestamp"] = start_time
+        kwargs["start_time"] = start_time
     if end_time:
-        kwargs["to_timestamp"] = end_time
+        kwargs["end_time"] = end_time
     if duration:
         kwargs["duration"] = duration
 
     method_map = {
-        "cpu": MonitoringGateways.get_gateway_cpu_utilization,
-        "memory": MonitoringGateways.get_gateway_memory_utilization,
+        "cpu": monitoring_api.get_gateway_cpu_utilization,
+        "memory": monitoring_api.get_gateway_memory_utilization,
     }
 
     try:
-        resp = method_map[metric](**kwargs)
+        resp = await method_map[metric](**kwargs)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching gateway {metric} utilization: {e}"}) from e
 
@@ -216,14 +215,14 @@ async def central_get_gateway_wan_availability(
     conn = get_central_conn(ctx)
     kwargs: dict = {"central_conn": conn, "serial_number": serial_number}
     if start_time:
-        kwargs["from_timestamp"] = start_time
+        kwargs["start_time"] = start_time
     if end_time:
-        kwargs["to_timestamp"] = end_time
+        kwargs["end_time"] = end_time
     if duration:
         kwargs["duration"] = duration
 
     try:
-        resp = MonitoringGateways.get_gateway_wan_availability(**kwargs)
+        resp = await monitoring_api.get_gateway_wan_availability(**kwargs)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching gateway WAN availability: {e}"}) from e
 
@@ -251,7 +250,7 @@ async def central_get_tunnel_health(
     conn = get_central_conn(ctx)
 
     try:
-        resp = MonitoringGateways.get_tunnel_health_summary(
+        resp = await monitoring_api.get_tunnel_health_summary(
             central_conn=conn,
             serial_number=serial_number,
         )

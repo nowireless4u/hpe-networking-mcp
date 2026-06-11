@@ -212,6 +212,27 @@ class TestOAuth2ClientCredentials:
         with pytest.raises(AuthError, match="access_token"):
             await fetch()
 
+    async def test_basic_auth_style_uses_authorization_header(self):
+        """client_secret_basic: credentials in the Basic header, not the form body."""
+        captured: list[httpx.Request] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            captured.append(request)
+            return httpx.Response(200, json={"access_token": "basic-tok", "expires_in": 900})
+
+        fetch = self._fetcher(handler, auth_style="basic")
+        result = await fetch()
+        assert result.token == "basic-tok"
+        request = captured[0]
+        assert request.headers["Authorization"].startswith("Basic ")
+        body = request.content.decode()
+        assert body == "grant_type=client_credentials"
+        assert "client_secret" not in body
+
+    def test_invalid_auth_style_raises_value_error(self):
+        with pytest.raises(ValueError, match="auth_style"):
+            oauth2_client_credentials("https://sso.example.com/t", "id", "sec", name="x", auth_style="header")
+
 
 @pytest.mark.unit
 class TestManagerWithOAuth2EndToEnd:

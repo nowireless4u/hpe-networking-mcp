@@ -51,27 +51,12 @@ class TestCentralUnavailableGuard:
         sentinel = object()
         assert get_central_conn(_ctx(central_conn=sentinel)) is sentinel
 
-    def test_retry_central_command_raises_503_when_conn_none(self) -> None:
+    async def test_retry_central_command_raises_503_when_conn_none(self) -> None:
         from hpe_networking_mcp.platforms.central.utils import retry_central_command
 
         with pytest.raises(ToolError) as exc:
-            retry_central_command(None, "GET", "network-monitoring/v1/sites-health")
+            await retry_central_command(None, "GET", "network-monitoring/v1/sites-health")
         assert exc.value.args[0]["status_code"] == 503
-
-    def test_log_transport_error_does_not_crash_on_none_conn(self) -> None:
-        # The original handler dereferenced ``central_conn.logger`` and raised a
-        # second AttributeError when the conn was None. The safe logger must not.
-        from hpe_networking_mcp.platforms.central.utils import _log_transport_error
-
-        _log_transport_error(None, "transport error with no conn")  # must not raise
-
-    def test_log_transport_error_prefers_conn_logger(self) -> None:
-        from hpe_networking_mcp.platforms.central.utils import _log_transport_error
-
-        calls: list[str] = []
-        conn = SimpleNamespace(logger=SimpleNamespace(error=lambda msg: calls.append(msg)))
-        _log_transport_error(conn, "boom")
-        assert calls == ["boom"]
 
 
 # --------------------------------------------------------------------------- #

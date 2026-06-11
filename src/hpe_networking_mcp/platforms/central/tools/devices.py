@@ -2,8 +2,8 @@ from typing import Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
-from pycentral.new_monitoring import MonitoringDevices
 
+from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.models import Device
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
@@ -90,7 +90,7 @@ async def central_get_devices(
     site_assigned_str: str | None = None if site_assigned is None else ("ASSIGNED" if site_assigned else "UNASSIGNED")
 
     try:
-        devices = MonitoringDevices.get_all_device_inventory(
+        devices = await monitoring_api.get_all_device_inventory(
             central_conn=get_central_conn(ctx),
             filter_str=filter_str,
             site_assigned=site_assigned_str,
@@ -138,7 +138,7 @@ async def central_find_device(
     except ValueError as e:
         raise ToolError({"status_code": 502, "message": f"Error: {e}"}) from e
     try:
-        device_resp = MonitoringDevices.get_device_inventory(
+        device_resp = await monitoring_api.get_device_inventory(
             central_conn=get_central_conn(ctx),
             filter_str=filter_str,
         )

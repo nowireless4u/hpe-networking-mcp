@@ -15,8 +15,8 @@ from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
-def _get(conn, path: str, params: dict | None = None) -> dict | str:
-    response = retry_central_command(
+async def _get(conn, path: str, params: dict | None = None) -> dict | str:
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path=path,
@@ -49,7 +49,7 @@ async def central_get_clients_trend(
         params["end"] = end
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-monitoring/v1/clients-trend", params)
+    return await _get(conn, "network-monitoring/v1/clients-trend", params)
 
 
 @tool(annotations=READ_ONLY)
@@ -63,7 +63,7 @@ async def central_get_clients_topn_usage(
     params: dict = {"topN": top_n}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-monitoring/v1/clients-topn-usage", params)
+    return await _get(conn, "network-monitoring/v1/clients-topn-usage", params)
 
 
 @tool(annotations=READ_ONLY)
@@ -80,7 +80,7 @@ async def central_get_client_mobility_trail(
         params["start"] = start
     if end:
         params["end"] = end
-    return _get(conn, f"network-monitoring/v1/clients/{mac_address}/mobility-trail", params)
+    return await _get(conn, f"network-monitoring/v1/clients/{mac_address}/mobility-trail", params)
 
 
 @tool(annotations=READ_ONLY)
@@ -90,7 +90,7 @@ async def central_get_client_detail(
 ) -> dict | str:
     """Get one client's full record (deeper than ``central_get_clients`` list view)."""
     conn = get_central_conn(ctx)
-    return _get(conn, f"network-monitoring/v1/clients/{mac_address}")
+    return await _get(conn, f"network-monitoring/v1/clients/{mac_address}")
 
 
 # ---------------------------------------------------------------------------
@@ -108,7 +108,7 @@ async def central_get_client_onboarding_score(
     params: dict = {}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-monitoring/v1/client-onboarding-score", params)
+    return await _get(conn, "network-monitoring/v1/client-onboarding-score", params)
 
 
 @tool(annotations=READ_ONLY)
@@ -126,7 +126,7 @@ async def central_get_client_onboarding_stage_export(
     params: dict = {}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-monitoring/v1/client-onboarding-stage/export", params)
+    return await _get(conn, "network-monitoring/v1/client-onboarding-stage/export", params)
 
 
 @tool(annotations=READ_ONLY)
@@ -139,7 +139,7 @@ async def central_get_client_onboarding_stage_reasons(
     params: dict = {}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-monitoring/v1/client-onboarding-stage/reasons", params)
+    return await _get(conn, "network-monitoring/v1/client-onboarding-stage/reasons", params)
 
 
 @tool(annotations=READ_ONLY)
@@ -152,7 +152,7 @@ async def central_get_client_onboarding_stage_count(
     params: dict = {}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-monitoring/v1/client-onboarding-stage/count", params)
+    return await _get(conn, "network-monitoring/v1/client-onboarding-stage/count", params)
 
 
 # ---------------------------------------------------------------------------
@@ -202,4 +202,4 @@ async def central_get_firewall_sessions(
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
-    return _get(conn, path_map[scope], params)
+    return await _get(conn, path_map[scope], params)

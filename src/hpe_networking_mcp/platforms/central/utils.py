@@ -1,5 +1,4 @@
-import time
-from concurrent.futures import ThreadPoolExecutor
+import asyncio
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -145,7 +144,7 @@ def build_odata_filter(
 SITE_LIMIT = 100
 
 
-def fetch_site_data_parallel(
+async def fetch_site_data_parallel(
     central_conn: Any,
 ) -> dict[str, SiteData]:
     """
@@ -166,12 +165,9 @@ def fetch_site_data_parallel(
     # These endpoints are offset-paginated per the Aruba dev portal — they
     # accept ``limit`` + ``offset`` only. Default cursor pagination here
     # silently breaks for tenants with > SITE_LIMIT sites.
-    with ThreadPoolExecutor(max_workers=3) as executor:
-        futures = [
-            executor.submit(paginated_fetch, central_conn, endpoint, SITE_LIMIT, use_cursor=False)
-            for endpoint in endpoints
-        ]
-        results = [future.result() for future in futures]
+    results = await asyncio.gather(
+        *(paginated_fetch(central_conn, endpoint, SITE_LIMIT, use_cursor=False) for endpoint in endpoints)
+    )
 
     return process_site_health_data(*results)
 
@@ -210,7 +206,7 @@ def process_site_health_data(
     return processed_sites
 
 
-def paginated_fetch(
+async def paginated_fetch(
     central_conn: Any,
     api_path: str,
     limit: int,
@@ -249,7 +245,7 @@ def paginated_fetch(
                 "limit": limit,
                 "next": next_cursor,
             }
-            response = retry_central_command(
+            response = await retry_central_command(
                 central_conn,
                 api_method="GET",
                 api_path=api_path,
@@ -271,7 +267,7 @@ def paginated_fetch(
                 "limit": limit,
                 "offset": offset,
             }
-            response = retry_central_command(
+            response = await retry_central_command(
                 central_conn,
                 api_method="GET",
                 api_path=api_path,
@@ -329,7 +325,7 @@ def get_central_conn(ctx: Any) -> Any:
         ctx: The FastMCP request context.
 
     Returns:
-        The ``pycentral`` connection object.
+        The ``CentralClient`` instance.
 
     Raises:
         ToolError: 503 when Central is not configured or failed to start.
@@ -349,27 +345,7 @@ def get_central_conn(ctx: Any) -> Any:
     return conn
 
 
-def _log_transport_error(central_conn: Any, message: str) -> None:
-    """Log a transport error without assuming ``central_conn`` (or its logger) exists.
-
-    The original handler called ``central_conn.logger.error(...)`` directly; if
-    ``central_conn`` is ``None`` (issue #443) that raises a second
-    ``AttributeError`` inside the ``except`` block. Prefer the connection's own
-    logger when present, else fall back to the module logger. The message is
-    pre-formatted, so it's passed as a literal (``"{}"``) to loguru to avoid its
-    brace-format parser choking on braces in an exception string.
-    """
-    conn_logger = getattr(central_conn, "logger", None)
-    if conn_logger is not None:
-        try:
-            conn_logger.error(message)
-            return
-        except Exception:
-            pass
-    logger.error("{}", message)
-
-
-def retry_central_command(
+async def retry_central_command(
     central_conn: Any,
     api_method: str,
     api_path: str,
@@ -380,7 +356,7 @@ def retry_central_command(
     """Call central_conn.command and retry up to max_retries on transient errors.
 
     Args:
-        central_conn: pycentral connection object.
+        central_conn: ``CentralClient`` instance (from ``get_central_conn``).
         api_method: HTTP method (GET, POST, PUT, DELETE).
         api_path: API endpoint path.
         api_params: URL query parameters.
@@ -410,20 +386,20 @@ def retry_central_command(
     last_response: dict | None = None
     for attempt in range(1, max_retries + 1):
         try:
-            resp = central_conn.command(
+            resp = await central_conn.command(
                 api_method=api_method,
                 api_path=api_path,
                 api_params=api_params,
                 api_data=api_data,
             )
         except Exception as exc:
-            _log_transport_error(
-                central_conn,
+            logger.error(
+                "{}",
                 f"Central transport error attempt {attempt}/{max_retries} {api_method} {api_path}: {exc}",
             )
             last_response = {"code": 0, "msg": str(exc)}
             if attempt < max_retries:
-                time.sleep(_retry_backoff_secs(attempt))
+                await asyncio.sleep(_retry_backoff_secs(attempt))
             continue
 
         code = resp.get("code", 0)
@@ -441,8 +417,8 @@ def retry_central_command(
 
         # retry on server errors or rate limiting
         if code == 429 or 500 <= code < 600:
-            central_conn.logger.warning(
-                "Central transient response code=%s for %s %s (attempt %d/%d)",
+            logger.warning(
+                "Central transient response code={} for {} {} (attempt {}/{})",
                 code,
                 api_method,
                 api_path,
@@ -451,7 +427,7 @@ def retry_central_command(
             )
             last_response = resp
             if attempt < max_retries:
-                time.sleep(_retry_backoff_secs(attempt))
+                await asyncio.sleep(_retry_backoff_secs(attempt))
             continue
 
         # client errors -> raise immediately

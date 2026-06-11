@@ -318,14 +318,10 @@ async def _collect_central(
 
     summary = CentralRF()
 
-    try:
-        from pycentral.new_monitoring.aps import MonitoringAPs
-        from pycentral.new_monitoring.sites import MonitoringSites
-    except ImportError as e:
-        return CentralRF(error=f"pycentral not available: {e}"), []
+    from hpe_networking_mcp.platforms.central import monitoring_api
 
     try:
-        sites = await asyncio.to_thread(MonitoringSites.get_all_sites, central_conn=conn)
+        sites = await monitoring_api.get_all_sites(central_conn=conn)
         match = next((s for s in sites if s.get("siteName") == site_name), None)
         if not match:
             return summary, []
@@ -340,8 +336,7 @@ async def _collect_central(
     # details in parallel to get the radios array. Cap to max_aps to bound
     # cost on large sites — users can raise the cap via the tool param.
     try:
-        ap_list = await asyncio.to_thread(
-            MonitoringAPs.get_all_aps,
+        ap_list = await monitoring_api.get_all_aps(
             central_conn=conn,
             filter_str=f"siteId eq '{summary.site_id}'",
         )
@@ -361,10 +356,9 @@ async def _collect_central(
 
     details_list = await asyncio.gather(
         *[
-            asyncio.to_thread(
-                MonitoringAPs.get_ap_details,
+            monitoring_api.get_ap_details(
                 central_conn=conn,
-                serial_number=ap.get("serialNumber"),
+                serial_number=str(ap.get("serialNumber") or ""),
             )
             for ap in targets
         ],
@@ -592,18 +586,14 @@ async def _list_central_site_options(ctx: Context) -> list[SiteOption]:
     if not conn:
         return []
 
-    try:
-        from pycentral.new_monitoring.aps import MonitoringAPs
-        from pycentral.new_monitoring.sites import MonitoringSites
-    except ImportError:
-        return []
+    from hpe_networking_mcp.platforms.central import monitoring_api
 
     sites: Any = None
     aps: Any = None
     try:
         sites, aps = await asyncio.gather(
-            asyncio.to_thread(MonitoringSites.get_all_sites, central_conn=conn),
-            asyncio.to_thread(MonitoringAPs.get_all_aps, central_conn=conn),
+            monitoring_api.get_all_sites(central_conn=conn),
+            monitoring_api.get_all_aps(central_conn=conn),
             return_exceptions=True,
         )
     except Exception as e:

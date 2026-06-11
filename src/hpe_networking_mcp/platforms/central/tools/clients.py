@@ -2,8 +2,8 @@ from typing import Annotated, Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
-from pycentral.new_monitoring.clients import Clients
 
+from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.models import Client
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
@@ -82,7 +82,7 @@ async def central_get_clients(
         raise ToolError({"status_code": 502, "message": f"Error: {e}"}) from e
 
     try:
-        clients = Clients.get_all_clients(
+        clients = await monitoring_api.get_all_clients(
             central_conn=get_central_conn(ctx),
             site_id=site_id,
             site_name=site_name,
@@ -116,7 +116,7 @@ async def central_find_client(
     wired clients. The port field is omitted for wireless clients.
     """
     try:
-        result = Clients.get_client_details(
+        result = await monitoring_api.get_client_details(
             central_conn=get_central_conn(ctx),
             client_mac=mac_address,
         )

@@ -117,7 +117,7 @@ async def central_get_alerts(
     if cursor is not None:
         query_params["next"] = cursor
 
-    response = retry_central_command(
+    response = await retry_central_command(
         get_central_conn(ctx),
         api_method="GET",
         api_path="network-notifications/v1/alerts",
@@ -185,7 +185,7 @@ async def central_get_alert_classification(
     if search is not None:
         query_params["search"] = search
 
-    response = retry_central_command(
+    response = await retry_central_command(
         get_central_conn(ctx),
         api_method="GET",
         api_path="network-notifications/v1/alerts/classification",
@@ -217,7 +217,7 @@ async def central_get_alert_action_status(
 
     Returns the task status payload from Central.
     """
-    response = retry_central_command(
+    response = await retry_central_command(
         get_central_conn(ctx),
         api_method="GET",
         api_path=f"network-notifications/v1/alerts/async-operations/{task_id}",
@@ -277,7 +277,7 @@ async def central_clear_alerts(
     if notes is not None:
         body["notes"] = notes
 
-    response = retry_central_command(
+    response = await retry_central_command(
         get_central_conn(ctx),
         api_method="POST",
         api_path="network-notifications/v1/alerts/clear",
@@ -315,7 +315,7 @@ async def central_defer_alerts(
     """
     body = {"keys": keys, "deferUntil": defer_until}
 
-    response = retry_central_command(
+    response = await retry_central_command(
         get_central_conn(ctx),
         api_method="POST",
         api_path="network-notifications/v1/alerts/defer",
@@ -348,7 +348,7 @@ async def central_reactivate_alerts(
     """
     body = {"keys": keys}
 
-    response = retry_central_command(
+    response = await retry_central_command(
         get_central_conn(ctx),
         api_method="POST",
         api_path="network-notifications/v1/alerts/active",
@@ -384,7 +384,7 @@ async def central_set_alert_priority(
     """
     body = {"keys": keys, "priority": priority}
 
-    response = retry_central_command(
+    response = await retry_central_command(
         get_central_conn(ctx),
         api_method="POST",
         api_path="network-notifications/v1/alerts/priority",

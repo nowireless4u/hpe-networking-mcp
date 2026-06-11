@@ -17,8 +17,8 @@ from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import coerce_enum, get_central_conn, retry_central_command
 
 
-def _get(conn, path: str, params: dict | None = None) -> dict | str:
-    response = retry_central_command(
+async def _get(conn, path: str, params: dict | None = None) -> dict | str:
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path=path,
@@ -95,7 +95,7 @@ async def central_get_ap_trend(
         # interface-type is a mandatory query param for throughput-trends (enum
         # WIRELESS/WIRED/LTE); WIRELESS is the sensible default for an AP.
         params["interface-type"] = interface_type or "WIRELESS"
-    return _get(
+    return await _get(
         conn,
         f"network-monitoring/v1/aps/{serial_number}/{suffix_map[dimension]}",
         params,
@@ -114,7 +114,7 @@ async def central_get_ap_radios(
 ) -> dict | str:
     """List the radios on an AP (2.4, 5, 6 GHz typically)."""
     conn = get_central_conn(ctx)
-    return _get(conn, f"network-monitoring/v1/aps/{serial_number}/radios")
+    return await _get(conn, f"network-monitoring/v1/aps/{serial_number}/radios")
 
 
 _RadioTrendDimension = Literal["throughput", "channel-utilization", "channel-quality", "noise-floor", "frames"]
@@ -146,7 +146,7 @@ async def central_get_ap_radio_trend(
         "frames": "frames-trends",
     }
     conn = get_central_conn(ctx)
-    return _get(
+    return await _get(
         conn,
         f"network-monitoring/v1/aps/{serial_number}/radios/{radio_number}/{suffix_map[dimension]}",
         _time_params(start, end),
@@ -165,7 +165,7 @@ async def central_get_ap_ports(
 ) -> dict | str:
     """List the Ethernet ports on an AP."""
     conn = get_central_conn(ctx)
-    return _get(conn, f"network-monitoring/v1/aps/{serial_number}/ports")
+    return await _get(conn, f"network-monitoring/v1/aps/{serial_number}/ports")
 
 
 _PortTrendDimension = Literal["throughput", "frames", "crc", "collisions"]
@@ -191,7 +191,7 @@ async def central_get_ap_port_trend(
         "collisions": "collisions-trends",
     }
     conn = get_central_conn(ctx)
-    return _get(
+    return await _get(
         conn,
         f"network-monitoring/v1/aps/{serial_number}/ports/{port_index}/{suffix_map[dimension]}",
         _time_params(start, end),
@@ -210,7 +210,7 @@ async def central_get_ap_tunnels(
 ) -> dict | str:
     """List active tunnels on an AP."""
     conn = get_central_conn(ctx)
-    return _get(conn, f"network-monitoring/v1/aps/{serial_number}/tunnels")
+    return await _get(conn, f"network-monitoring/v1/aps/{serial_number}/tunnels")
 
 
 @tool(annotations=READ_ONLY)
@@ -221,7 +221,7 @@ async def central_get_ap_tunnel(
 ) -> dict | str:
     """Get one tunnel's detail on an AP."""
     conn = get_central_conn(ctx)
-    return _get(conn, f"network-monitoring/v1/aps/{serial_number}/tunnels/{tunnel_id}")
+    return await _get(conn, f"network-monitoring/v1/aps/{serial_number}/tunnels/{tunnel_id}")
 
 
 _TunnelTrendDimension = Literal["throughput", "packet-loss", "mos", "jitter", "latency"]
@@ -253,7 +253,7 @@ async def central_get_ap_tunnel_trend(
         "latency": "latency-trends",
     }
     conn = get_central_conn(ctx)
-    return _get(
+    return await _get(
         conn,
         f"network-monitoring/v1/aps/{serial_number}/tunnels/{tunnel_id}/{suffix_map[dimension]}",
         _time_params(start, end),
@@ -277,7 +277,7 @@ async def central_get_ap_wlans_monitoring(
     ``/aps/:serial/wlans`` endpoint directly.
     """
     conn = get_central_conn(ctx)
-    return _get(conn, f"network-monitoring/v1/aps/{serial_number}/wlans")
+    return await _get(conn, f"network-monitoring/v1/aps/{serial_number}/wlans")
 
 
 @tool(annotations=READ_ONLY)
@@ -290,7 +290,7 @@ async def central_get_ap_wlan_throughput(
 ) -> dict | str:
     """Get throughput trend for one WLAN as broadcast by one AP."""
     conn = get_central_conn(ctx)
-    return _get(
+    return await _get(
         conn,
         f"network-monitoring/v1/aps/{serial_number}/wlans/{wlan_name}/throughput-trends",
         _time_params(start, end),
@@ -338,7 +338,7 @@ async def central_get_top_aps_by_usage(
     params: dict = {"topN": top_n}
     if filter:
         params["filter"] = filter
-    return _get(conn, f"network-monitoring/v1/{suffix_map[metric]}", params)
+    return await _get(conn, f"network-monitoring/v1/{suffix_map[metric]}", params)
 
 
 # ---------------------------------------------------------------------------
@@ -358,7 +358,7 @@ async def central_get_radios(
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-monitoring/v1/radios", params)
+    return await _get(conn, "network-monitoring/v1/radios", params)
 
 
 @tool(annotations=READ_ONLY)
@@ -373,7 +373,7 @@ async def central_get_bssids(
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-monitoring/v1/bssids", params)
+    return await _get(conn, "network-monitoring/v1/bssids", params)
 
 
 @tool(annotations=READ_ONLY)
@@ -393,7 +393,7 @@ async def central_get_wlans_monitoring(
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-monitoring/v1/wlans", params)
+    return await _get(conn, "network-monitoring/v1/wlans", params)
 
 
 @tool(annotations=READ_ONLY)
@@ -403,7 +403,7 @@ async def central_get_wlan_monitoring_detail(
 ) -> dict | str:
     """Get one WLAN's monitoring-side detail by name."""
     conn = get_central_conn(ctx)
-    return _get(conn, f"network-monitoring/v1/wlans/{wlan_name}")
+    return await _get(conn, f"network-monitoring/v1/wlans/{wlan_name}")
 
 
 @tool(annotations=READ_ONLY)
@@ -418,7 +418,7 @@ async def central_get_swarms(
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-monitoring/v1/swarms", params)
+    return await _get(conn, "network-monitoring/v1/swarms", params)
 
 
 @tool(annotations=READ_ONLY)
@@ -428,7 +428,7 @@ async def central_get_swarm(
 ) -> dict | str:
     """Get one swarm / IAP cluster's detail."""
     conn = get_central_conn(ctx)
-    return _get(conn, f"network-monitoring/v1/swarms/{cluster_id}")
+    return await _get(conn, f"network-monitoring/v1/swarms/{cluster_id}")
 
 
 @tool(annotations=READ_ONLY)
@@ -447,4 +447,4 @@ async def central_get_applications_v1(
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-monitoring/v1/applications", params)
+    return await _get(conn, "network-monitoring/v1/applications", params)

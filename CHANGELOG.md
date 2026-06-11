@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.11.0] - 2026-06-11
+
+**Minor — Central rebuilt on async httpx; pycentral SDK removed entirely.** Closes #464. Step 2 of the platform-standardization effort (#466). No release/tag until the auth migration completes across all platforms.
+
+### Changed
+- **New `CentralClient`** (`platforms/central/client.py`) replaces `pycentral.NewCentralBase`. The `command()` return contract (`{code, msg, headers}`), header construction, None-param stripping, empty-body omission, and 401→refresh-once behavior are mirrored from pycentral 2.0a17 so the ~660 Central tools are unaffected at the response layer. Token acquisition runs through the shared `AsyncTokenManager` with a new `auth_style="basic"` mode on `oauth2_client_credentials` (pycentral used `client_secret_basic` at the HPE SSO endpoint; verified live).
+- **Every Central call is now genuinely async.** Previously each call blocked the event loop: `central_conn.command()` was synchronous on the main tool path, `retry_central_command` slept with `time.sleep`, `fetch_site_data_parallel` used a ThreadPoolExecutor, and `NewCentralBase.__init__` did a blocking token fetch inside the lifespan handler. All four are gone — `retry_central_command`/`paginated_fetch`/`fetch_site_data_parallel`/`build_scope_tree` are `async def`, retries use `asyncio.sleep`, parallel fetches use `asyncio.gather`, client construction is lazy/non-blocking, and the `asyncio.to_thread` band-aids in `site_health_check`/`site_rf_check` are removed. ~91 call sites across 35 files now await the chokepoint.
+- **New `platforms/central/monitoring_api.py`** — faithful async port of the pycentral monitoring/troubleshooting helper subset we used (`get_all_sites`/`get_all_aps`/`get_all_clients`/`get_all_device_inventory` pagination loops, AP/gateway stats + trend merging, ping/traceroute/cable-test/show-commands initiate-and-poll flows, disconnect actions). Exception message formats are byte-identical to the SDK (two call sites string-match them). Retry layering simplified: pycentral's hidden 3-attempt transport retry no longer multiplies under `retry_central_command`'s 5 attempts.
+- `pycentral` removed from dependencies (was pinned to alpha `2.0a17`). A permanent guard test (`TestNoPycentralAnywhere`) AST-scans `src/` and fails if any pycentral import reappears.
+
+### Fixed
+- **`central_get_ap_stats` / `central_get_gateway_stats` time windows were broken in production**: the tools passed `from_timestamp`/`to_timestamp` to SDK functions whose signatures only accept `start_time`/`end_time`, raising `TypeError` on every time-windowed call. Call sites now pass the correct kwargs (caught by the port's signature-fidelity check; covered by the live integration suite).
+- Generated MRT troubleshooting tools returned un-executed coroutines after the async flip (13 `_post_action` call sites) — caught by an AST audit for un-awaited async calls and fixed; the audit also validated the rest of the sweep.
+
+### Tests
+- New `tests/unit/test_central_client.py` (pycentral-compat contract: return shape, param stripping, body semantics, Bearer/Accept headers, 401-refresh-once, lazy construction, health probe) + `client_secret_basic` tests in `test_common_auth.py`.
+- Central test fixtures converted to async mocks; live integration fixtures are now function-scoped (an `httpx.AsyncClient` cannot outlive its event loop).
+- Full suite **1802 passed** in Docker including live integration tests against a real tenant (token fetch, reads, pagination, time-windowed stats); ruff + format + mypy + bandit clean.
+
 ## [3.3.10.2] - 2026-06-11
 
 **Patch — shared async auth primitive (`platforms/_common/auth.py`); UXI + Apstra + `_template` adopt it.** First step of the platform-standardization effort (#466): one token lifecycle for all platforms instead of per-platform token managers. Pure refactor — no tool changes, no behavior changes.

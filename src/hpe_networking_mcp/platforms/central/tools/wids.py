@@ -154,7 +154,7 @@ async def central_get_wids_monitored_aps(
         api_params["filter"] = odata_filter
 
     conn = get_central_conn(ctx)
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path="network-services/v1alpha1/wids-monitored-aps",

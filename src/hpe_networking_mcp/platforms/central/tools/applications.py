@@ -151,7 +151,7 @@ async def central_get_applications(
         query_params["sort"] = _normalize_sort(sort)
 
     try:
-        resp = retry_central_command(
+        resp = await retry_central_command(
             conn,
             api_method="GET",
             api_path="network-monitoring/v1alpha1/applications",

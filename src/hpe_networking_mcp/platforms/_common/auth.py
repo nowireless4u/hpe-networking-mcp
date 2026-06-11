@@ -31,6 +31,7 @@ import asyncio
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import Any
 
 import httpx
 from loguru import logger
@@ -190,6 +191,7 @@ def oauth2_client_credentials(
     client_secret: str,
     *,
     name: str,
+    auth_style: str = "post",
     timeout: float = _DEFAULT_AUTH_TIMEOUT,
     default_expires_in: float = 3600.0,
     _client_factory: Callable[[], httpx.AsyncClient] | None = None,
@@ -205,6 +207,10 @@ def oauth2_client_credentials(
         client_id: OAuth2 client id.
         client_secret: OAuth2 client secret.
         name: Platform label used in log lines.
+        auth_style: How credentials reach the token endpoint —
+            ``"post"`` (RFC 6749 ``client_secret_post``: id + secret in the
+            form body; UXI flavor) or ``"basic"`` (``client_secret_basic``:
+            HTTP Basic header; what pycentral used for Central).
         timeout: Token request timeout in seconds.
         default_expires_in: Expiry to assume when the response omits
             ``expires_in``.
@@ -215,22 +221,29 @@ def oauth2_client_credentials(
         A coroutine suitable as :class:`AsyncTokenManager`'s ``fetch``.
 
     Raises:
+        ValueError: If ``auth_style`` is not ``"post"`` or ``"basic"``.
         httpx.HTTPStatusError: (from the fetcher) on a non-2xx token response.
         AuthError: (from the fetcher) when the response lacks ``access_token``.
     """
+    if auth_style not in ("post", "basic"):
+        raise ValueError(f"auth_style must be 'post' or 'basic', got {auth_style!r}")
     factory = _client_factory or (lambda: httpx.AsyncClient(timeout=timeout))
 
     async def fetch() -> TokenResult:
         logger.info("{}: requesting new access token (client_id: {})", name, mask_secret(client_id))
+        form = {"grant_type": "client_credentials"}
+        post_kwargs: dict[str, Any] = {}
+        if auth_style == "basic":
+            post_kwargs["auth"] = httpx.BasicAuth(client_id, client_secret)
+        else:
+            form["client_id"] = client_id
+            form["client_secret"] = client_secret
         async with factory() as auth_http:
             response = await auth_http.post(
                 token_url,
-                data={
-                    "grant_type": "client_credentials",
-                    "client_id": client_id,
-                    "client_secret": client_secret,
-                },
+                data=form,
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
+                **post_kwargs,
             )
         response.raise_for_status()
         body = response.json()

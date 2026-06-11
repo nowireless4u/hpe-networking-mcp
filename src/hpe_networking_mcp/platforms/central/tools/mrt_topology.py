@@ -24,8 +24,8 @@ WRITE_DELETE = ToolAnnotations(
 )
 
 
-def _call(conn, method: str, path: str, params: dict | None = None, data: dict | None = None) -> dict | str:
-    response = retry_central_command(
+async def _call(conn, method: str, path: str, params: dict | None = None, data: dict | None = None) -> dict | str:
+    response = await retry_central_command(
         central_conn=conn,
         api_method=method,
         api_path=path,
@@ -45,7 +45,7 @@ async def central_get_topology(
 ) -> dict | str:
     """Get the network topology graph for a site (nodes + edges)."""
     conn = get_central_conn(ctx)
-    return _call(conn, "GET", f"network-monitoring/v1/topology/{site_id}")
+    return await _call(conn, "GET", f"network-monitoring/v1/topology/{site_id}")
 
 
 @tool(annotations=READ_ONLY)
@@ -55,7 +55,7 @@ async def central_get_neighbours(
 ) -> dict | str:
     """Get LLDP / CDP neighbour records as seen by a specific device."""
     conn = get_central_conn(ctx)
-    return _call(conn, "GET", f"network-monitoring/v1/neighbours/{serial_number}")
+    return await _call(conn, "GET", f"network-monitoring/v1/neighbours/{serial_number}")
 
 
 @tool(annotations=READ_ONLY)
@@ -65,7 +65,7 @@ async def central_get_unmanaged_device(
 ) -> dict | str:
     """Get details on an unmanaged device (seen on the network but not under Central management)."""
     conn = get_central_conn(ctx)
-    return _call(conn, "GET", f"network-monitoring/v1/unmanaged-device/{mac_address}")
+    return await _call(conn, "GET", f"network-monitoring/v1/unmanaged-device/{mac_address}")
 
 
 @tool(annotations=READ_ONLY)
@@ -75,7 +75,7 @@ async def central_get_isolated_devices(
 ) -> dict | str:
     """List isolated devices at a site (managed devices that lost connectivity to peers)."""
     conn = get_central_conn(ctx)
-    return _call(conn, "GET", f"network-monitoring/v1/isolated-devices/{site_id}")
+    return await _call(conn, "GET", f"network-monitoring/v1/isolated-devices/{site_id}")
 
 
 @tool(annotations=READ_ONLY)
@@ -95,7 +95,7 @@ async def central_get_device_inventory(
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
-    return _call(conn, "GET", "network-monitoring/v1/device-inventory", params=params)
+    return await _call(conn, "GET", "network-monitoring/v1/device-inventory", params=params)
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
@@ -113,7 +113,7 @@ async def central_update_device(
     device, change its assigned site, update notes.
     """
     conn = get_central_conn(ctx)
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="PATCH",
         api_path=f"network-monitoring/v1/devices/{serial_number}",
@@ -138,7 +138,7 @@ async def central_delete_device(
     first if recommissioning.
     """
     conn = get_central_conn(ctx)
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="DELETE",
         api_path=f"network-monitoring/v1/devices/{serial_number}",

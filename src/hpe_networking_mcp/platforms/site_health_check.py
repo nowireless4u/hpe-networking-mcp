@@ -204,9 +204,9 @@ async def _collect_central(ctx: Context, site_name: str, _window_hours: int) -> 
     summary = CentralSummary()
 
     try:
-        from pycentral.new_monitoring import MonitoringSites
+        from hpe_networking_mcp.platforms.central import monitoring_api
 
-        sites = await asyncio.to_thread(MonitoringSites.get_all_sites, central_conn=conn)
+        sites = await monitoring_api.get_all_sites(central_conn=conn)
         match = next((s for s in sites if s.get("siteName") == site_name), None)
         if not match:
             return summary
@@ -256,15 +256,15 @@ async def _collect_central(ctx: Context, site_name: str, _window_hours: int) -> 
     return summary
 
 
-def _extract_central_device_ips(ctx: Context, site_id: str) -> list[str]:
+async def _extract_central_device_ips(ctx: Context, site_id: str) -> list[str]:
     """Fetch devices at a Central site and return their management IPs."""
-    from pycentral.new_monitoring import MonitoringDevices
+    from hpe_networking_mcp.platforms.central import monitoring_api
 
     conn = ctx.lifespan_context.get("central_conn")
     if not conn:
         return []
     try:
-        devices = MonitoringDevices.get_all_device_inventory(
+        devices = await monitoring_api.get_all_device_inventory(
             central_conn=conn,
             filter_str=f"siteId eq '{site_id}'",
         )
@@ -702,7 +702,7 @@ def register(mcp: Any, config: Any) -> None:
 
         device_ips: list[str] = []
         if central_summary and central_summary.found and central_summary.site_id:
-            device_ips.extend(await asyncio.to_thread(_extract_central_device_ips, ctx, central_summary.site_id))
+            device_ips.extend(await _extract_central_device_ips(ctx, central_summary.site_id))
         if mist_summary and mist_summary.found and mist_summary.site_id:
             device_ips.extend(await _extract_mist_device_ips(ctx, mist_summary.site_id))
         device_ips = list(dict.fromkeys(device_ips))  # de-dupe preserving order

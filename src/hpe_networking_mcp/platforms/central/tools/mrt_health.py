@@ -17,8 +17,8 @@ from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
-def _get(conn, path: str, params: dict | None = None) -> dict | str:
-    response = retry_central_command(
+async def _get(conn, path: str, params: dict | None = None) -> dict | str:
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path=path,
@@ -42,7 +42,7 @@ async def central_get_site_health_detail(
     endpoint directly for one site's full health detail.
     """
     conn = get_central_conn(ctx)
-    return _get(conn, f"network-monitoring/v1/site-health/{site_id}")
+    return await _get(conn, f"network-monitoring/v1/site-health/{site_id}")
 
 
 @tool(annotations=READ_ONLY)
@@ -57,7 +57,7 @@ async def central_get_sites_client_health(
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-monitoring/v1/sites-client-health", params)
+    return await _get(conn, "network-monitoring/v1/sites-client-health", params)
 
 
 @tool(annotations=READ_ONLY)
@@ -70,7 +70,7 @@ async def central_get_tenant_device_health(
     params: dict = {}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-monitoring/v1/tenant-device-health", params)
+    return await _get(conn, "network-monitoring/v1/tenant-device-health", params)
 
 
 @tool(annotations=READ_ONLY)
@@ -83,4 +83,4 @@ async def central_get_tenant_client_health(
     params: dict = {}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-monitoring/v1/tenant-client-health", params)
+    return await _get(conn, "network-monitoring/v1/tenant-client-health", params)

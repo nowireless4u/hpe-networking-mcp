@@ -2,9 +2,8 @@ from typing import Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
-from pycentral.new_monitoring.aps import MonitoringAPs
-from pycentral.new_monitoring.gateways import MonitoringGateways
 
+from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import (
@@ -87,7 +86,7 @@ async def central_get_aps(
             kwargs["filter_str"] = filter_str
         if sort:
             kwargs["sort"] = sort
-        aps = MonitoringAPs.get_all_aps(**kwargs)
+        aps = await monitoring_api.get_all_aps(**kwargs)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching access points: {e}"}) from e
 
@@ -113,7 +112,7 @@ async def central_get_ap_wlans(
     """
     conn = get_central_conn(ctx)
     try:
-        resp = MonitoringAPs.get_ap_wlans(
+        resp = await monitoring_api.get_ap_wlans(
             central_conn=conn,
             serial_number=serial_number,
         )
@@ -147,7 +146,7 @@ async def central_get_ap_details(
     """
     conn = get_central_conn(ctx)
     try:
-        resp = MonitoringAPs.get_ap_details(
+        resp = await monitoring_api.get_ap_details(
             central_conn=conn,
             serial_number=serial_number,
         )
@@ -177,7 +176,7 @@ async def central_get_switch_details(
     """
     conn = get_central_conn(ctx)
     try:
-        resp = retry_central_command(
+        resp = await retry_central_command(
             central_conn=conn,
             api_method="GET",
             api_path=(f"network-monitoring/v1/switches/{serial_number}"),
@@ -196,7 +195,7 @@ async def central_get_switch_details(
     # Enrich with hardware-trends PoE data for all stack
     # members (switchTrends only shows the conductor)
     try:
-        hw_resp = retry_central_command(
+        hw_resp = await retry_central_command(
             central_conn=conn,
             api_method="GET",
             api_path=(f"network-monitoring/v1/switches/{serial_number}/hardware-trends"),
@@ -261,7 +260,7 @@ async def central_get_gateway_details(
     """
     conn = get_central_conn(ctx)
     try:
-        resp = MonitoringGateways.get_gateway_details(
+        resp = await monitoring_api.get_gateway_details(
             central_conn=conn,
             serial_number=serial_number,
         )

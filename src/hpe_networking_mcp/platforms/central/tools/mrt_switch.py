@@ -16,8 +16,8 @@ from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
-def _get(conn, path: str, params: dict | None = None) -> dict | str:
-    response = retry_central_command(
+async def _get(conn, path: str, params: dict | None = None) -> dict | str:
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path=path,
@@ -45,7 +45,7 @@ async def central_get_switches(
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-monitoring/v1/switches", params)
+    return await _get(conn, "network-monitoring/v1/switches", params)
 
 
 @tool(annotations=READ_ONLY)
@@ -55,7 +55,7 @@ async def central_get_switch_lag(
 ) -> dict | str:
     """Get LAG (link-aggregation) state for a switch."""
     conn = get_central_conn(ctx)
-    return _get(conn, f"network-monitoring/v1/switches/{serial_number}/lag")
+    return await _get(conn, f"network-monitoring/v1/switches/{serial_number}/lag")
 
 
 @tool(annotations=READ_ONLY)
@@ -65,7 +65,7 @@ async def central_get_switch_vlans(
 ) -> dict | str:
     """Get configured VLANs on a switch (runtime view)."""
     conn = get_central_conn(ctx)
-    return _get(conn, f"network-monitoring/v1/switches/{serial_number}/vlans")
+    return await _get(conn, f"network-monitoring/v1/switches/{serial_number}/vlans")
 
 
 @tool(annotations=READ_ONLY)
@@ -75,7 +75,7 @@ async def central_get_switch_hardware_categories(
 ) -> dict | str:
     """Get available hardware-trend categories for a switch (drives the trend dimensions valid for this model)."""
     conn = get_central_conn(ctx)
-    return _get(conn, f"network-monitoring/v1/switches/{serial_number}/hardware-categories")
+    return await _get(conn, f"network-monitoring/v1/switches/{serial_number}/hardware-categories")
 
 
 @tool(annotations=READ_ONLY)
@@ -97,7 +97,7 @@ async def central_get_switch_interface_trends(
         params["start"] = start
     if end:
         params["end"] = end
-    return _get(conn, f"network-monitoring/v1/switches/{serial_number}/interface-trends", params)
+    return await _get(conn, f"network-monitoring/v1/switches/{serial_number}/interface-trends", params)
 
 
 @tool(annotations=READ_ONLY)
@@ -111,7 +111,7 @@ async def central_get_switches_topn_interface_trends(
     params: dict = {"topN": top_n}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-monitoring/v1/switches/topn-interface-trends", params)
+    return await _get(conn, "network-monitoring/v1/switches/topn-interface-trends", params)
 
 
 @tool(annotations=READ_ONLY)
@@ -121,7 +121,7 @@ async def central_get_switch_vsx(
 ) -> dict | str:
     """Get the VSX pairing state for a switch (peer / status / sync info)."""
     conn = get_central_conn(ctx)
-    return _get(conn, f"network-monitoring/v1/switches/{serial_number}/vsx")
+    return await _get(conn, f"network-monitoring/v1/switches/{serial_number}/vsx")
 
 
 @tool(annotations=READ_ONLY)
@@ -131,4 +131,4 @@ async def central_get_switch_stack_members(
 ) -> dict | str:
     """Get stack members for a stacked switch (returns members of the stack the conductor belongs to)."""
     conn = get_central_conn(ctx)
-    return _get(conn, f"network-monitoring/v1/stack/{serial_number}/members")
+    return await _get(conn, f"network-monitoring/v1/stack/{serial_number}/members")

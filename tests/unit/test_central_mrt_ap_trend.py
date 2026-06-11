@@ -27,7 +27,7 @@ def _capture(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
     """Patch the module-level ``_get`` to record (path, params) and return {}."""
     captured: dict[str, Any] = {}
 
-    def fake_get(conn: Any, path: str, params: dict | None = None) -> dict:
+    async def fake_get(conn: Any, path: str, params: dict | None = None) -> dict:
         captured["path"] = path
         captured["params"] = params or {}
         return {}

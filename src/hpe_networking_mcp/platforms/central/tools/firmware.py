@@ -306,7 +306,7 @@ async def central_recommend_firmware(
         if next_cursor:
             params["next"] = next_cursor
 
-        resp = retry_central_command(
+        resp = await retry_central_command(
             central_conn=conn,
             api_method="GET",
             api_path="network-services/v1/firmware-details",

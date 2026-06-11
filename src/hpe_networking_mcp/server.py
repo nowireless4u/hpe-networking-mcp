@@ -66,17 +66,11 @@ async def lifespan(server: FastMCP):
     # --- Central ---
     if config.central:
         try:
-            from pycentral import NewCentralBase
+            from hpe_networking_mcp.platforms.central.client import create_connection
 
-            context["central_conn"] = NewCentralBase(
-                token_info={
-                    "new_central": {
-                        "base_url": config.central.base_url,
-                        "client_id": config.central.client_id,
-                        "client_secret": config.central.client_secret,
-                    }
-                }
-            )
+            # Construction is non-blocking: the first API call triggers the
+            # initial OAuth2 token fetch via the shared AsyncTokenManager.
+            context["central_conn"] = create_connection(config.central)
         except Exception as e:
             logger.warning("Central: failed to initialize — {}", e)
             context["central_conn"] = None
@@ -215,6 +209,12 @@ async def lifespan(server: FastMCP):
         gl_tm = context.get("greenlake_token_manager")
         if gl_tm and hasattr(gl_tm, "close"):
             await gl_tm.close()
+        central = context.get("central_conn")
+        if central is not None:
+            try:
+                await central.aclose()
+            except Exception as e:  # noqa: BLE001 — shutdown must not raise
+                logger.warning("Central: aclose failed during shutdown — {}", e)
         mist_client_cleanup: Any = context.get("mist_client")
         if mist_client_cleanup is not None:
             try:

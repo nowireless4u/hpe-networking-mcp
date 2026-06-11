@@ -25,8 +25,8 @@ WRITE_DELETE = ToolAnnotations(
 )
 
 
-def _call(conn, method: str, path: str, params: dict | None = None, data: dict | None = None) -> dict:
-    response = retry_central_command(
+async def _call(conn, method: str, path: str, params: dict | None = None, data: dict | None = None) -> dict:
+    response = await retry_central_command(
         central_conn=conn,
         api_method=method,
         api_path=path,
@@ -51,7 +51,7 @@ async def central_get_sitemap_summary(
 ) -> dict:
     """Get high-level sitemap summary for a site (counts, floors, devices placed)."""
     conn = get_central_conn(ctx)
-    return _call(conn, "GET", f"network-monitoring/v1/sitemaps-summary/{site_id}")
+    return await _call(conn, "GET", f"network-monitoring/v1/sitemaps-summary/{site_id}")
 
 
 @tool(annotations=READ_ONLY)
@@ -62,7 +62,7 @@ async def central_get_catalogue_aps(
 ) -> dict:
     """List catalogue APs — the AP models available for placement on floor plans."""
     conn = get_central_conn(ctx)
-    return _call(
+    return await _call(
         conn,
         "GET",
         "network-monitoring/v1/catalogue-aps",
@@ -95,7 +95,7 @@ async def central_get_sitemap_devices(
     seen online at the placement.
     """
     conn = get_central_conn(ctx)
-    return _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/network-devices-{status}")
+    return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/network-devices-{status}")
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
@@ -136,7 +136,7 @@ async def central_manage_sitemap_devices(
     if action not in action_map:
         raise ToolError({"status_code": 400, "message": f"unknown action '{action}'."})
     method, segment = action_map[action]
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method=method,
         api_path=f"network-monitoring/v1/sitemaps/{site_id}/{segment}",
@@ -161,7 +161,7 @@ async def central_get_floor(
 ) -> dict:
     """Get one floor's configuration (dimensions, scale, building, image ref)."""
     conn = get_central_conn(ctx)
-    return _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}")
+    return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}")
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
@@ -186,7 +186,7 @@ async def central_manage_floor(
     if action_type == "create":
         if not payload:
             raise ToolError({"status_code": 400, "message": "``payload`` is required for create."})
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method="POST",
             api_path=f"network-monitoring/v1/sitemaps/{site_id}/floors",
@@ -195,7 +195,7 @@ async def central_manage_floor(
     elif action_type == "update":
         if not floor_id or not payload:
             raise ToolError({"status_code": 400, "message": "``floor_id`` and ``payload`` are required for update."})
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method="PUT",
             api_path=f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}",
@@ -204,7 +204,7 @@ async def central_manage_floor(
     elif action_type == "delete":
         if not floor_id:
             raise ToolError({"status_code": 400, "message": "``floor_id`` is required for delete."})
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method="DELETE",
             api_path=f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}",
@@ -229,7 +229,7 @@ async def central_set_floor_scale(
 ) -> dict:
     """Set the physical scale calibration for a floor (drives location accuracy)."""
     conn = get_central_conn(ctx)
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="POST",
         api_path=f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/scale",
@@ -249,7 +249,7 @@ async def central_get_floor_image(
 ) -> dict:
     """Get the floor-plan image reference / metadata."""
     conn = get_central_conn(ctx)
-    return _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/image")
+    return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/image")
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
@@ -264,7 +264,7 @@ async def central_set_floor_image(
 ) -> dict:
     """Upload / replace the floor-plan image for a floor."""
     conn = get_central_conn(ctx)
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="PUT",
         api_path=f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/image",
@@ -288,7 +288,7 @@ async def central_get_buildings(
 ) -> dict:
     """List buildings at a site."""
     conn = get_central_conn(ctx)
-    return _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/buildings")
+    return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/buildings")
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
@@ -310,14 +310,14 @@ async def central_manage_building(
     if action_type == "update":
         if not payload:
             raise ToolError({"status_code": 400, "message": "``payload`` is required for update."})
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method="PUT",
             api_path=f"network-monitoring/v1/sitemaps/{site_id}/buildings/{building_id}",
             api_data=payload,
         )
     elif action_type == "delete":
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method="DELETE",
             api_path=f"network-monitoring/v1/sitemaps/{site_id}/buildings/{building_id}",
@@ -348,7 +348,7 @@ async def central_import_sitemap(
 ) -> dict:
     """Kick off a sitemap import (bulk floor-plan upload). Poll status via ``central_get_sitemap_import_status``."""
     conn = get_central_conn(ctx)
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="POST",
         api_path=f"network-monitoring/v1/sitemaps/{site_id}/import",
@@ -368,7 +368,7 @@ async def central_get_sitemap_import_status(
 ) -> dict:
     """Get the status / result of a sitemap import job."""
     conn = get_central_conn(ctx)
-    return _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/import/{import_id}")
+    return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/import/{import_id}")
 
 
 # ---------------------------------------------------------------------------
@@ -380,7 +380,7 @@ async def central_get_sitemap_import_status(
 async def central_get_wall_types(ctx: Context) -> dict:
     """List the wall types configured at the tenant level (used in floor walls)."""
     conn = get_central_conn(ctx)
-    return _call(conn, "GET", "network-monitoring/v1/wall-types")
+    return await _call(conn, "GET", "network-monitoring/v1/wall-types")
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
@@ -402,7 +402,7 @@ async def central_manage_wall_types(
         raise ToolError({"status_code": 400, "message": f"unknown action_type '{action_type}'."})
     if action_type != "delete" and not payload:
         raise ToolError({"status_code": 400, "message": f"``payload`` is required for {action_type}."})
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method=method_map[action_type],
         api_path="network-monitoring/v1/wall-types",
@@ -427,7 +427,7 @@ async def central_get_floor_walls(
 ) -> dict:
     """List walls placed on a floor (used by location services for signal attenuation modeling)."""
     conn = get_central_conn(ctx)
-    return _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/walls")
+    return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/walls")
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
@@ -451,7 +451,7 @@ async def central_manage_floor_walls(
         raise ToolError({"status_code": 400, "message": f"unknown action_type '{action_type}'."})
     if action_type != "delete" and not payload:
         raise ToolError({"status_code": 400, "message": f"``payload`` is required for {action_type}."})
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method=method_map[action_type],
         api_path=f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/walls",
@@ -471,7 +471,7 @@ async def central_get_floor_zones(
 ) -> dict:
     """List zones placed on a floor (named polygons used for location analytics)."""
     conn = get_central_conn(ctx)
-    return _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/zones")
+    return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/zones")
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
@@ -495,7 +495,7 @@ async def central_manage_floor_zones(
         raise ToolError({"status_code": 400, "message": f"unknown action_type '{action_type}'."})
     if action_type != "delete" and not payload:
         raise ToolError({"status_code": 400, "message": f"``payload`` is required for {action_type}."})
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method=method_map[action_type],
         api_path=f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/zones",

@@ -27,8 +27,8 @@ WRITE_DELETE = ToolAnnotations(
 )
 
 
-def _get(conn, path: str, params: dict | None = None) -> dict:
-    response = retry_central_command(
+async def _get(conn, path: str, params: dict | None = None) -> dict:
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path=path,
@@ -57,7 +57,7 @@ async def central_get_fco_resp_info(
     pre-shared-key / claim-code workflows.
     """
     conn = get_central_conn(ctx)
-    return _get(conn, f"network-services/v1/fco-resp-info/{serial_number}")
+    return await _get(conn, f"network-services/v1/fco-resp-info/{serial_number}")
 
 
 @tool(annotations=READ_ONLY)
@@ -71,7 +71,7 @@ async def central_get_fco_resp_info_all(
     Paginated; use for bulk audits of factory-order state.
     """
     conn = get_central_conn(ctx)
-    return _get(conn, "network-services/v1/fco-resp-info-all", {"limit": limit, "offset": offset})
+    return await _get(conn, "network-services/v1/fco-resp-info-all", {"limit": limit, "offset": offset})
 
 
 # ---------------------------------------------------------------------------
@@ -106,7 +106,7 @@ async def central_get_asset_tags(
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-services/v1/asset-tags", params)
+    return await _get(conn, "network-services/v1/asset-tags", params)
 
 
 @tool(annotations=READ_ONLY)
@@ -123,7 +123,7 @@ async def central_get_asset_tag(
     and the last-known location for the tracked tag.
     """
     conn = get_central_conn(ctx)
-    return _get(conn, f"network-services/v1/asset-tags/{asset_tag_id}")
+    return await _get(conn, f"network-services/v1/asset-tags/{asset_tag_id}")
 
 
 @tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
@@ -166,7 +166,7 @@ async def central_manage_asset_tag_metadata(
     method = method_map[action_type]
     if action_type != "delete" and not payload:
         raise ToolError({"status_code": 400, "message": f"``payload`` is required for {action_type}."})
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method=method,
         api_path=f"network-services/v1/asset-tags/{asset_tag_id}/metadata",
@@ -210,7 +210,7 @@ async def central_start_ap_ranging_scan(
     poll via ``central_get_ap_ranging_scan`` with the returned scan ID.
     """
     conn = get_central_conn(ctx)
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="POST",
         api_path="network-services/v1/ap-ranging-scans",
@@ -230,7 +230,7 @@ async def central_get_ap_ranging_scans(
 ) -> dict:
     """List AP ranging scans for a floor."""
     conn = get_central_conn(ctx)
-    return _get(
+    return await _get(
         conn,
         f"network-services/v1/sitemaps/{site_id}/floors/{floor_id}/ap-ranging-scans",
     )
@@ -245,7 +245,7 @@ async def central_get_ap_ranging_scan(
 ) -> dict:
     """Get one AP ranging scan's results / status."""
     conn = get_central_conn(ctx)
-    return _get(
+    return await _get(
         conn,
         f"network-services/v1/sitemaps/{site_id}/floors/{floor_id}/ap-ranging-scans/{scan_id}",
     )
@@ -260,7 +260,7 @@ async def central_delete_ap_ranging_scan(
 ) -> dict:
     """Delete an AP ranging scan record. Requires ``ENABLE_CENTRAL_WRITE_TOOLS=true``."""
     conn = get_central_conn(ctx)
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="DELETE",
         api_path=f"network-services/v1/sitemaps/{site_id}/floors/{floor_id}/ap-ranging-scans/{scan_id}",
@@ -285,7 +285,7 @@ async def central_get_site_device_locations(
 ) -> dict:
     """List device locations placed at a site (across all floors)."""
     conn = get_central_conn(ctx)
-    return _get(
+    return await _get(
         conn,
         f"network-services/v1/sites/{site_id}/device-locations",
         {"limit": limit, "offset": offset},
@@ -300,7 +300,7 @@ async def central_get_site_device_location(
 ) -> dict:
     """Get one device-location record."""
     conn = get_central_conn(ctx)
-    return _get(conn, f"network-services/v1/sites/{site_id}/device-locations/{location_id}")
+    return await _get(conn, f"network-services/v1/sites/{site_id}/device-locations/{location_id}")
 
 
 @tool(annotations=READ_ONLY)
@@ -311,7 +311,7 @@ async def central_get_device_location(
 ) -> dict:
     """Get the placement (floor + coordinates) for a specific device at a site."""
     conn = get_central_conn(ctx)
-    return _get(
+    return await _get(
         conn,
         f"network-services/v1/sites/{site_id}/devices/{serial_number}/location",
     )
@@ -341,14 +341,14 @@ async def central_manage_device_location(
     if action_type == "set":
         if not payload:
             raise ToolError({"status_code": 400, "message": "``payload`` is required for set."})
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method="POST",
             api_path=f"network-services/v1/sites/{site_id}/devices/{serial_number}/location",
             api_data=payload,
         )
     elif action_type == "delete":
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method="DELETE",
             api_path=f"network-services/v1/sites/{site_id}/devices/{serial_number}/location",
@@ -388,7 +388,7 @@ async def central_get_wifi_clients_locations(
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-services/v1/wifi-clients-locations", params)
+    return await _get(conn, "network-services/v1/wifi-clients-locations", params)
 
 
 @tool(annotations=READ_ONLY)
@@ -411,7 +411,7 @@ async def central_get_location_analytics_trends(
         params["end"] = end
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-services/v1/location-analytics/trends", params)
+    return await _get(conn, "network-services/v1/location-analytics/trends", params)
 
 
 @tool(annotations=READ_ONLY)
@@ -424,4 +424,4 @@ async def central_get_location_analytics_site_insights(
     params: dict = {}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-services/v1/location-analytics/sites/insights", params)
+    return await _get(conn, "network-services/v1/location-analytics/sites/insights", params)

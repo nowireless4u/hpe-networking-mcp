@@ -2,8 +2,8 @@ from typing import Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
-from pycentral.new_monitoring.aps import MonitoringAPs
 
+from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, resolve_time_window, retry_central_command
@@ -48,7 +48,7 @@ async def central_get_wlans(
         if sort is not None:
             kwargs["sort"] = sort
 
-        resp = MonitoringAPs.get_wlans(**kwargs)
+        resp = await monitoring_api.get_wlans(**kwargs)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching WLANs: {e}"}) from e
 
@@ -95,7 +95,7 @@ async def central_get_wlan_stats(
     conn = get_central_conn(ctx)
 
     try:
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method="GET",
             api_path=f"network-monitoring/v1/wlans/{wlan_name}/throughput-trends",

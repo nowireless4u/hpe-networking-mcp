@@ -31,7 +31,7 @@ async def central_get_switch_hardware_trends(
     conn = get_central_conn(ctx)
 
     try:
-        resp = retry_central_command(
+        resp = await retry_central_command(
             central_conn=conn,
             api_method="GET",
             api_path=(f"network-monitoring/v1/switches/{serial_number}/hardware-trends"),
@@ -120,7 +120,7 @@ async def central_get_switch_poe(
     conn = get_central_conn(ctx)
 
     try:
-        resp = retry_central_command(
+        resp = await retry_central_command(
             central_conn=conn,
             api_method="GET",
             api_path=(f"network-monitoring/v1/switches/{serial_number}/interface-poe"),

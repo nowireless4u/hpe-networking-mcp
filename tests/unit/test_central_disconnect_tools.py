@@ -11,7 +11,7 @@ generic "Error calling tool" in code mode).
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastmcp.exceptions import ToolError
@@ -28,7 +28,7 @@ def _ctx() -> MagicMock:
 
 
 class TestDisconnectBodies:
-    @patch(_CMD)
+    @patch(_CMD, new_callable=AsyncMock)
     async def test_by_mac_on_ap_uses_user_mac_address(self, mock_cmd):
         from hpe_networking_mcp.platforms.central.tools.mrt_troubleshooting import (
             central_disconnect_user_by_mac_on_ap,
@@ -41,7 +41,7 @@ class TestDisconnectBodies:
         assert kw["api_path"] == "network-troubleshooting/v1/aps/CNT123/disconnectUserByMacAddress"
         assert kw["api_data"] == {"userMacAddress": "00:BD:3E:E4:8C:5D"}
 
-    @patch(_CMD)
+    @patch(_CMD, new_callable=AsyncMock)
     async def test_by_network_uses_network_name(self, mock_cmd):
         from hpe_networking_mcp.platforms.central.tools.mrt_troubleshooting import (
             central_disconnect_user_by_network,
@@ -53,7 +53,7 @@ class TestDisconnectBodies:
         assert kw["api_path"] == "network-troubleshooting/v1/aps/CNT123/disconnectUserByNetwork"
         assert kw["api_data"] == {"networkName": "CORP-WIFI"}
 
-    @patch(_CMD)
+    @patch(_CMD, new_callable=AsyncMock)
     async def test_by_mac_on_gateway_uses_client_mac_address(self, mock_cmd):
         from hpe_networking_mcp.platforms.central.tools.mrt_troubleshooting import (
             central_disconnect_client_by_mac_on_gateway,
@@ -67,7 +67,7 @@ class TestDisconnectBodies:
         assert kw["api_path"] == "network-troubleshooting/v1/gateways/GW9/disconnectClientByMacAddress"
         assert kw["api_data"] == {"clientMacAddress": "aa:bb:cc:dd:ee:ff"}
 
-    @patch(_CMD)
+    @patch(_CMD, new_callable=AsyncMock)
     async def test_all_on_ap_sends_empty_body(self, mock_cmd):
         from hpe_networking_mcp.platforms.central.tools.mrt_troubleshooting import (
             central_disconnect_user_all_on_ap,
@@ -79,7 +79,7 @@ class TestDisconnectBodies:
         assert kw["api_path"] == "network-troubleshooting/v1/aps/CNT123/disconnectUserAll"
         assert kw["api_data"] == {}
 
-    @patch(_CMD)
+    @patch(_CMD, new_callable=AsyncMock)
     async def test_all_on_gateway_sends_empty_body(self, mock_cmd):
         from hpe_networking_mcp.platforms.central.tools.mrt_troubleshooting import (
             central_disconnect_client_all_on_gateway,
@@ -93,7 +93,7 @@ class TestDisconnectBodies:
 
 
 class TestCallErrorSurfacing:
-    @patch(_CMD)
+    @patch(_CMD, new_callable=AsyncMock)
     async def test_non_2xx_raises_tool_error_with_detail(self, mock_cmd):
         """A 4xx body must surface as a ToolError carrying the real message —
         not be masked to a generic 'Error calling tool' in code mode."""
@@ -110,7 +110,7 @@ class TestCallErrorSurfacing:
         assert exc.value.args[0]["status_code"] == 400
         assert "Bad Request" in exc.value.args[0]["message"]
 
-    @patch(_CMD)
+    @patch(_CMD, new_callable=AsyncMock)
     async def test_upstream_exception_wrapped_as_tool_error(self, mock_cmd):
         from hpe_networking_mcp.platforms.central.tools.mrt_troubleshooting import (
             central_disconnect_user_by_mac_on_ap,

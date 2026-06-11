@@ -42,7 +42,7 @@ async def central_get_webhooks(
     full configuration.
     """
     conn = get_central_conn(ctx)
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path="network-services/v1/webhooks",
@@ -61,7 +61,7 @@ async def central_get_webhook(
 ) -> dict:
     """Get one webhook's full configuration by ID."""
     conn = get_central_conn(ctx)
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path=f"network-services/v1/webhooks/{webhook_id}",
@@ -117,7 +117,7 @@ async def central_manage_webhook(
     if action_type == "create":
         if not payload:
             raise ToolError({"status_code": 400, "message": "``payload`` is required for create."})
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method="POST",
             api_path="network-services/v1/webhooks",
@@ -129,7 +129,7 @@ async def central_manage_webhook(
         if not payload:
             raise ToolError({"status_code": 400, "message": "``payload`` is required for update."})
         method = "PUT" if replace_existing else "PATCH"
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method=method,
             api_path=f"network-services/v1/webhooks/{webhook_id}",
@@ -138,7 +138,7 @@ async def central_manage_webhook(
     elif action_type == "delete":
         if not webhook_id:
             raise ToolError({"status_code": 400, "message": "``webhook_id`` is required for delete."})
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method="DELETE",
             api_path=f"network-services/v1/webhooks/{webhook_id}",
@@ -164,7 +164,7 @@ async def central_rotate_webhook_hmac_key(
     Requires ``ENABLE_CENTRAL_WRITE_TOOLS=true``.
     """
     conn = get_central_conn(ctx)
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="POST",
         api_path=f"network-services/v1/webhooks/{webhook_id}/rotate-hmac-key",

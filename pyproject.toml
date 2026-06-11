@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hpe-networking-mcp"
-version = "3.3.10.2"
+version = "3.3.11.0"
 description = "Unofficial, community-driven MCP server for Juniper Mist, Aruba Central, HPE GreenLake, and ClearPass. Not affiliated with HPE, Aruba, or Juniper."
 readme = "README.md"
 license = "MIT"
@@ -19,10 +19,8 @@ dependencies = [
     "fastmcp[code-mode,apps]>=3.4.0",
     # MCP protocol — GreenLake requires >=1.20.0
     "mcp[cli]>=1.20.0",
-    # HPE Aruba Central API client
-    "pycentral==2.0a17",
-    # Async HTTP client — used by Mist (v3.1.0.0 spec-driven, replaced mistapi),
-    # GreenLake, Apstra, Axis, AOS 8
+    # Async HTTP client — used by all platforms (Central since v3.3.11.0,
+    # replacing pycentral; Mist since v3.1.0.0, replacing mistapi)
     "httpx>=0.28.0",
     # Data validation — GreenLake explicit, others via FastMCP
     "pydantic>=2.12.0",
@@ -97,7 +95,6 @@ disallow_untyped_defs = false
 
 [[tool.mypy.overrides]]
 module = [
-    "pycentral.*",
     "pyclearpass.*",
     "fastmcp.tools.*",
 ]

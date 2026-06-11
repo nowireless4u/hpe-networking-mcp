@@ -116,7 +116,7 @@ async def central_get_events(
         query_params["next"] = cursor
 
     try:
-        response = retry_central_command(
+        response = await retry_central_command(
             get_central_conn(ctx),
             api_method="GET",
             api_path="network-troubleshooting/v1/events",
@@ -172,7 +172,7 @@ async def central_get_events_count(
     except ValueError as e:
         raise ToolError({"status_code": 502, "message": f"Error: {e}"}) from e
 
-    response = retry_central_command(
+    response = await retry_central_command(
         get_central_conn(ctx),
         api_method="GET",
         api_path="network-troubleshooting/v1/event-filters",

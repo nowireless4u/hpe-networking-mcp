@@ -116,7 +116,7 @@ async def central_get_role_with_policy(
     role_path = f"network-config/v1alpha1/roles/{name}"
     role_body: dict = {}
     try:
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method="GET",
             api_path=role_path,
@@ -135,7 +135,7 @@ async def central_get_role_with_policy(
     for policy_name in _extract_policy_names(role_body):
         policy_path = f"network-config/v1alpha1/policies/{policy_name}"
         try:
-            response = retry_central_command(
+            response = await retry_central_command(
                 central_conn=conn,
                 api_method="GET",
                 api_path=policy_path,

@@ -50,7 +50,7 @@ async def central_get_wlan_profiles(
 
     api_path = f"network-config/v1alpha1/wlan-ssids/{ssid}" if ssid else "network-config/v1alpha1/wlan-ssids"
 
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path=api_path,
@@ -222,7 +222,7 @@ async def central_manage_wlan_profile(
         ]
     else:
         action_wording = "patch (partial update of)"
-        diff_lines = _build_patch_diff(conn, api_path, payload)
+        diff_lines = await _build_patch_diff(conn, api_path, payload)
 
     # Confirm for update and delete only
     if action_type != "create" and not confirmed:
@@ -252,7 +252,7 @@ async def central_manage_wlan_profile(
 
     logger.info("Central WLAN: {} '{}' — path: {}", api_method, ssid, api_path)
 
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method=api_method,
         api_path=api_path,
@@ -275,7 +275,7 @@ async def central_manage_wlan_profile(
     }
 
 
-def _build_patch_diff(conn: object, api_path: str, payload: dict) -> list[str]:
+async def _build_patch_diff(conn: object, api_path: str, payload: dict) -> list[str]:
     """Compute a human-readable diff of what a PATCH will change.
 
     Fetches the current profile and reports, per top-level key in the
@@ -284,7 +284,7 @@ def _build_patch_diff(conn: object, api_path: str, payload: dict) -> list[str]:
     message so the write isn't held up by a display-only helper.
     """
     try:
-        resp = retry_central_command(
+        resp = await retry_central_command(
             central_conn=conn,
             api_method="GET",
             api_path=api_path,

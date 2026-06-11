@@ -35,7 +35,7 @@ async def central_get_insights(
     api_params: dict = {"limit": limit, "offset": offset}
     if filter:
         api_params["filter"] = filter
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path="network-notifications/v1/insights",
