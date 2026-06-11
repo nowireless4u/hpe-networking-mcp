@@ -20,7 +20,7 @@ dependencies = [
     # MCP protocol — GreenLake requires >=1.20.0
     "mcp[cli]>=1.20.0",
     # HPE Aruba Central API client
-    "pycentral==2.0a17",
+    "pycentral==2.0a22",
     # Async HTTP client — used by Mist (v3.1.0.0 spec-driven, replaced mistapi),
     # GreenLake, Apstra, Axis, AOS 8
     "httpx>=0.28.0",
