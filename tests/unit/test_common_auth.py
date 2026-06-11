@@ -141,6 +141,18 @@ class TestAsyncTokenManagerLifecycle:
         assert mgr.token == "fixed-tok"
         assert mgr.expires_at is None
 
+    def test_static_rejects_empty_token(self):
+        with pytest.raises(AuthError, match="static token is empty"):
+            AsyncTokenManager.static("", name="test")
+
+    def test_prime_rejects_empty_token(self):
+        async def fetch() -> TokenResult:  # pragma: no cover - never called
+            raise AssertionError("fetch must not run")
+
+        mgr = AsyncTokenManager(fetch, name="test")
+        with pytest.raises(AuthError, match="empty token"):
+            mgr.prime("")
+
 
 @pytest.mark.unit
 class TestOAuth2ClientCredentials:

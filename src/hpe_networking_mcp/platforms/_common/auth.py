@@ -102,7 +102,15 @@ class AsyncTokenManager:
 
     @classmethod
     def static(cls, token: str, *, name: str) -> AsyncTokenManager:
-        """Build a manager for a fixed, never-refreshed token."""
+        """Build a manager for a fixed, never-refreshed token.
+
+        Raises:
+            AuthError: If ``token`` is empty — same guard as the fetch path,
+                so a missing secret fails loudly at construction instead of
+                producing requests with a blank credential.
+        """
+        if not token:
+            raise AuthError(f"{name}: static token is empty")
 
         async def fetch() -> TokenResult:
             return TokenResult(token)
@@ -122,7 +130,14 @@ class AsyncTokenManager:
         return self._expires_at
 
     def prime(self, token: str, expires_in: float | None = None) -> None:
-        """Seed the cache directly (static tokens, tests)."""
+        """Seed the cache directly (static tokens, tests).
+
+        Raises:
+            AuthError: If ``token`` is empty — an empty cached token would
+                pass ``_is_fresh()`` and be sent as a blank credential.
+        """
+        if not token:
+            raise AuthError(f"{self._name}: cannot prime with an empty token")
         self._token = token
         self._expires_at = time.time() + expires_in if expires_in is not None else None
 
