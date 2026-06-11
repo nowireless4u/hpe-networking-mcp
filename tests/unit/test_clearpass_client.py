@@ -176,6 +176,44 @@ class TestRequestContract:
 
 
 @pytest.mark.unit
+class TestBasePathJoining:
+    """The configured server URL carries a path component (e.g. ``/api``).
+
+    httpx keeps the base path as a prefix when joining request paths —
+    load-bearing for every call now that raw paths go straight to httpx.
+    Pins both the API-call path and the ``/oauth`` token path.
+    """
+
+    async def test_api_paths_land_under_the_base_path(self):
+        captured: list[httpx.Request] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            captured.append(request)
+            return httpx.Response(200, json={})
+
+        client = _make_client(handler)
+        await client.request("get", "/guest/42")
+        assert captured[0].url.path == "/api/guest/42"
+        await client.aclose()
+
+    async def test_oauth_token_path_lands_under_the_base_path(self):
+        captured: list[httpx.Request] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            captured.append(request)
+            return httpx.Response(200, json={"access_token": "t", "expires_in": 28800})
+
+        client = ClearPassClient(_make_secrets())
+        client._http = httpx.AsyncClient(
+            base_url="https://clearpass.example.test:443/api",
+            transport=httpx.MockTransport(handler),
+        )
+        await client._fetch_token()
+        assert captured[0].url.path == "/api/oauth"
+        await client.aclose()
+
+
+@pytest.mark.unit
 class TestAuthRetry:
     async def test_403_body_refreshes_and_replays_once(self):
         calls: list[str] = []
