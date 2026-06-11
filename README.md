@@ -673,7 +673,7 @@ hpe-networking-mcp/
 │   ├── middleware/              # null-strip, validation-catch, sandbox-error-catch, elicitation, retry
 │   ├── skills/                  # Markdown-defined multi-step procedures + skills engine
 │   └── platforms/
-│       ├── _common/             # Shared tool registry + meta-tool factory (dynamic mode)
+│       ├── _common/             # Shared tool registry, capability annotations, async auth primitive
 │       ├── health.py            # Cross-platform health probe tool
 │       ├── mist/                # 1037 Mist tools (spec-driven) + 2 prompts + API client
 │       ├── central/             # 660 Central tools + 12 prompts + API client

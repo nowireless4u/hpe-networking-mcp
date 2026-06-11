@@ -54,10 +54,10 @@ class TestApstraClientLogin:
             return httpx.Response(201, json={"token": "apstra-token-abc"})
 
         _install_mock_transport(client, handler)
-        await client._ensure_token()
-        assert client._token == "apstra-token-abc"
+        await client._tokens.get_token()
+        assert client._tokens.token == "apstra-token-abc"
         # Second call must not re-login
-        await client._ensure_token()
+        await client._tokens.get_token()
         assert len(calls) == 1
         await client.aclose()
 
@@ -68,8 +68,8 @@ class TestApstraClientLogin:
             return httpx.Response(200, json={"token": "200-token"})
 
         _install_mock_transport(client, handler)
-        await client._ensure_token()
-        assert client._token == "200-token"
+        await client._tokens.get_token()
+        assert client._tokens.token == "200-token"
         await client.aclose()
 
     async def test_login_non_2xx_raises(self):
@@ -80,7 +80,7 @@ class TestApstraClientLogin:
 
         _install_mock_transport(client, handler)
         with pytest.raises(ApstraAuthError, match="401"):
-            await client._ensure_token()
+            await client._tokens.get_token()
         await client.aclose()
 
     async def test_login_missing_token_raises(self):
@@ -91,7 +91,7 @@ class TestApstraClientLogin:
 
         _install_mock_transport(client, handler)
         with pytest.raises(ApstraAuthError, match="missing 'token'"):
-            await client._ensure_token()
+            await client._tokens.get_token()
         await client.aclose()
 
     async def test_login_non_json_raises(self):
@@ -102,7 +102,7 @@ class TestApstraClientLogin:
 
         _install_mock_transport(client, handler)
         with pytest.raises(ApstraAuthError, match="non-JSON"):
-            await client._ensure_token()
+            await client._tokens.get_token()
         await client.aclose()
 
     async def test_login_serialized_under_lock(self):
@@ -121,7 +121,7 @@ class TestApstraClientLogin:
 
         _install_mock_transport(client, handler)
         release.set()
-        await asyncio.gather(client._ensure_token(), client._ensure_token(), client._ensure_token())
+        await asyncio.gather(client._tokens.get_token(), client._tokens.get_token(), client._tokens.get_token())
         assert call_count == 1
         await client.aclose()
 
@@ -203,11 +203,11 @@ class TestApstraClientRequest:
             return httpx.Response(201, json={"token": f"t-{logins}"})
 
         _install_mock_transport(client, handler)
-        await client._ensure_token()
-        assert client._token == "t-1"
-        new_token = await client._refresh_token()
+        await client._tokens.get_token()
+        assert client._tokens.token == "t-1"
+        new_token = await client._tokens.refresh()
         assert new_token == "t-2"
-        assert client._token == "t-2"
+        assert client._tokens.token == "t-2"
         await client.aclose()
 
 

@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.10.2] - 2026-06-11
+
+**Patch — shared async auth primitive (`platforms/_common/auth.py`); UXI + Apstra + `_template` adopt it.** First step of the platform-standardization effort (#466): one token lifecycle for all platforms instead of per-platform token managers. Pure refactor — no tool changes, no behavior changes.
+
+### Changed
+- **New `platforms/_common/auth.py`** — `AsyncTokenManager` (cached token + expiry buffer + `asyncio.Lock` with double-checked locking, `invalidate()` / `refresh()` / `prime()` / `static()`), `TokenResult`, the shared `AuthError` base, and the `oauth2_client_credentials(...)` fetch-strategy factory. Extracted verbatim-in-spirit from the two proven in-tree implementations rather than designed fresh:
+  - **UXI** donated the OAuth2 client-credentials flow (time-based expiry with 60-second buffer, lock-serialized refresh, token POST on a fresh no-base_url client). `UXIClient` now wires `oauth2_client_credentials` into an `AsyncTokenManager` and drops its inline `_ensure_token` / `_fetch_token_locked` / `_invalidate_token` machinery.
+  - **Apstra** donated the login-session flow (no expiry; 401 → forced re-login under the lock). `ApstraClient._login()` is now the manager's fetch strategy returning `TokenResult(token)`; `ApstraAuthError` subclasses the shared `AuthError`.
+- **`platforms/_template/client.py`** rewritten as the canonical consumer: static-token fetch strategy by default, with docstring pointers to the UXI (OAuth2) and Apstra (login-session) flavors. Credential *attachment* (header name, cookie/query-param injection) intentionally stays in the platform client — the manager owns acquisition, caching, and invalidation only.
+- Remaining platforms adopt in follow-ups per the #466 sequencing (GreenLake next — its 290-line sync OAuth2 provider collapses into the shared strategy; then AOS8; Central/ClearPass arrive via their httpx rebuilds #464/#465).
+
+### Tests
+- New `tests/unit/test_common_auth.py` (16 tests): lifecycle (cache/buffer/invalidate/refresh/concurrent single-fetch/empty-token guard) + OAuth2 fetcher (form encoding, default expiry, non-2xx propagation, missing `access_token`) + manager-with-fetcher end-to-end.
+- UXI/Apstra client tests updated to target the manager API; public client surfaces unchanged.
+
 ## [3.3.10.1] - 2026-06-10
 
 **Patch — defensive hardening for unavailable/misconfigured platforms, an async-token fix, and a PII sweep gap.** A batch of bug fixes from a `bug`-label triage. No new tools or behavior changes for configured platforms.

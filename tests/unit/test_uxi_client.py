@@ -7,7 +7,6 @@ Covers UXI-AUTH-02, UXI-AUTH-03, UXI-AUTH-04 from the phase requirements.
 from __future__ import annotations
 
 import inspect
-import time
 from unittest.mock import patch
 
 import pytest
@@ -70,13 +69,13 @@ class TestUXIClientInit:
         from hpe_networking_mcp.platforms.uxi.client import UXIClient
 
         client = UXIClient(_make_secrets())
-        assert client._token is None
+        assert client._tokens.token is None
 
-    def test_init_expires_at_is_zero(self):
+    def test_init_no_expiry_until_first_fetch(self):
         from hpe_networking_mcp.platforms.uxi.client import UXIClient
 
         client = UXIClient(_make_secrets())
-        assert client._expires_at == 0.0
+        assert client._tokens.expires_at is None  # no token yet → first get_token() fetches
 
     def test_init_http_client_has_base_url(self):
         from hpe_networking_mcp.platforms.uxi.client import _UXI_BASE_URL, UXIClient
@@ -87,65 +86,61 @@ class TestUXIClientInit:
 
 @pytest.mark.unit
 class TestUXIClientTokenExpiry:
-    """UXI-AUTH-04: Time-based token expiry with 60-second buffer."""
+    """UXI-AUTH-04: Time-based token expiry with 60-second buffer (via AsyncTokenManager)."""
 
-    async def test_ensure_token_calls_fetch_when_expires_at_zero(self):
-        """_expires_at=0.0 means always-expired; _fetch_token_locked must be called."""
+    async def test_get_token_fetches_when_no_token_cached(self):
+        """A fresh client has no cached token; the first get_token() must fetch."""
+        from hpe_networking_mcp.platforms._common.auth import TokenResult
         from hpe_networking_mcp.platforms.uxi.client import UXIClient
 
         client = UXIClient(_make_secrets())
-        assert client._expires_at == 0.0  # always expired
-
         fetch_called = []
 
         async def mock_fetch():
             fetch_called.append(True)
-            client._token = "fresh-token"
-            client._expires_at = time.time() + 7199
+            return TokenResult("fresh-token", expires_in=7199)
 
-        client._fetch_token_locked = mock_fetch
-        token = await client._ensure_token()
-        assert fetch_called, "_fetch_token_locked was not called for expired token"
+        client._tokens._fetch = mock_fetch
+        token = await client._tokens.get_token()
+        assert fetch_called, "fetch was not called for a client with no cached token"
         assert token == "fresh-token"
 
-    async def test_ensure_token_returns_cached_when_valid(self):
+    async def test_get_token_returns_cached_when_valid(self):
         """Valid cached token (within TTL) must be returned without re-fetching."""
         from hpe_networking_mcp.platforms.uxi.client import _TOKEN_BUFFER_SECS, UXIClient
 
         client = UXIClient(_make_secrets())
-        client._token = "cached-token"
         # Set expiry well beyond the buffer
-        client._expires_at = time.time() + _TOKEN_BUFFER_SECS + 600
+        client._tokens.prime("cached-token", expires_in=_TOKEN_BUFFER_SECS + 600)
 
         fetch_called = []
 
         async def mock_fetch():
             fetch_called.append(True)
 
-        client._fetch_token_locked = mock_fetch
-        token = await client._ensure_token()
-        assert not fetch_called, "_fetch_token_locked should NOT be called for valid cached token"
+        client._tokens._fetch = mock_fetch
+        token = await client._tokens.get_token()
+        assert not fetch_called, "fetch should NOT be called for valid cached token"
         assert token == "cached-token"
 
-    async def test_ensure_token_refreshes_when_within_buffer(self):
+    async def test_get_token_refreshes_when_within_buffer(self):
         """Token expiring within the 60-second buffer triggers a refresh."""
+        from hpe_networking_mcp.platforms._common.auth import TokenResult
         from hpe_networking_mcp.platforms.uxi.client import _TOKEN_BUFFER_SECS, UXIClient
 
         client = UXIClient(_make_secrets())
-        client._token = "about-to-expire"
         # Set expiry within the buffer window (30 seconds from now < 60 second buffer)
-        client._expires_at = time.time() + (_TOKEN_BUFFER_SECS - 30)
+        client._tokens.prime("about-to-expire", expires_in=_TOKEN_BUFFER_SECS - 30)
 
         fetch_called = []
 
         async def mock_fetch():
             fetch_called.append(True)
-            client._token = "refreshed-token"
-            client._expires_at = time.time() + 7199
+            return TokenResult("refreshed-token", expires_in=7199)
 
-        client._fetch_token_locked = mock_fetch
-        token = await client._ensure_token()
-        assert fetch_called, "_fetch_token_locked must be called when token is within buffer"
+        client._tokens._fetch = mock_fetch
+        token = await client._tokens.get_token()
+        assert fetch_called, "fetch must be called when token is within buffer"
         assert token == "refreshed-token"
 
 
@@ -158,8 +153,7 @@ class TestUXIClientPaginationParams:
         from hpe_networking_mcp.platforms.uxi.client import UXIClient
 
         client = UXIClient(_make_secrets())
-        client._token = "tok"
-        client._expires_at = time.time() + 9999
+        client._tokens.prime("tok", expires_in=9999)
 
         captured_params = {}
 
@@ -179,8 +173,7 @@ class TestUXIClientPaginationParams:
         from hpe_networking_mcp.platforms.uxi.client import UXIClient
 
         client = UXIClient(_make_secrets())
-        client._token = "tok"
-        client._expires_at = time.time() + 9999
+        client._tokens.prime("tok", expires_in=9999)
 
         captured_params = {}
 
@@ -198,8 +191,7 @@ class TestUXIClientPaginationParams:
         from hpe_networking_mcp.platforms.uxi.client import UXIClient
 
         client = UXIClient(_make_secrets())
-        client._token = "tok"
-        client._expires_at = time.time() + 9999
+        client._tokens.prime("tok", expires_in=9999)
 
         captured_params = {}
 
