@@ -16,6 +16,7 @@ from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.greenlake._registry import tool
 from hpe_networking_mcp.platforms.greenlake.client import get_greenlake_client
 
@@ -52,13 +53,7 @@ def _coerce_int(value: Any, name: str) -> int:
         "warranty."
     ),
     tags={"greenlake", "devices"},
-    annotations={
-        "title": "Get GreenLake devices",
-        "readOnlyHint": True,
-        "destructiveHint": False,
-        "idempotentHint": True,
-        "openWorldHint": True,
-    },
+    capability=Capability.READ,
 )
 async def greenlake_get_devices(
     ctx: Context,
@@ -151,13 +146,7 @@ async def greenlake_get_devices(
         "Rate limit: 40 requests/min per workspace."
     ),
     tags={"greenlake", "devices"},
-    annotations={
-        "title": "Get GreenLake device by ID",
-        "readOnlyHint": True,
-        "destructiveHint": False,
-        "idempotentHint": True,
-        "openWorldHint": True,
-    },
+    capability=Capability.READ,
 )
 async def greenlake_get_device_by_id(
     ctx: Context,

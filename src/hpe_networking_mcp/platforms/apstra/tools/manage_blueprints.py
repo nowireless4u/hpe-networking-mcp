@@ -8,13 +8,13 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.apstra import guidelines
 from hpe_networking_mcp.platforms.apstra._registry import tool
 from hpe_networking_mcp.platforms.apstra.client import format_http_error, get_apstra_client
-from hpe_networking_mcp.platforms.apstra.tools import WRITE, WRITE_DELETE
 
 
-@tool(annotations=WRITE_DELETE, tags={"apstra_write_delete"})
+@tool(capability=Capability.OPERATIONAL, enable_gated=True)
 async def apstra_deploy(
     ctx: Context,
     blueprint_id: str,
@@ -55,7 +55,7 @@ async def apstra_deploy(
         raise ToolError({"status_code": 502, "message": f"Error deploying blueprint: {detail}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"apstra_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def apstra_delete_blueprint(
     ctx: Context,
     blueprint_id: str,
@@ -95,7 +95,7 @@ async def apstra_delete_blueprint(
         raise ToolError({"status_code": 502, "message": f"Error deleting blueprint: {detail}"}) from e
 
 
-@tool(annotations=WRITE, tags={"apstra_write"})
+@tool(capability=Capability.WRITE)
 async def apstra_create_datacenter_blueprint(
     ctx: Context,
     blueprint_name: str,
@@ -138,7 +138,7 @@ async def apstra_create_datacenter_blueprint(
         raise ToolError({"status_code": 502, "message": f"Error creating datacenter blueprint: {detail}"}) from e
 
 
-@tool(annotations=WRITE, tags={"apstra_write"})
+@tool(capability=Capability.WRITE)
 async def apstra_create_freeform_blueprint(
     ctx: Context,
     blueprint_name: str,

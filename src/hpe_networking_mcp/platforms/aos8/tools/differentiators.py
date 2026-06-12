@@ -22,6 +22,7 @@ from fastmcp import Context
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.aos8._registry import tool
 from hpe_networking_mcp.platforms.aos8.cli_parser import parse_aos8_cli
+from hpe_networking_mcp.platforms.aos8.client import get_aos8_client
 from hpe_networking_mcp.platforms.aos8.tools._helpers import (
     format_aos8_error,
     get_object,
@@ -58,7 +59,7 @@ async def aos8_get_md_hierarchy(ctx: Context) -> dict[str, Any] | str:
         Dict with the AOS8 ``Configuration node hierarchy`` table on success;
         error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, "show configuration node-hierarchy")
     except Exception as exc:  # noqa: BLE001
@@ -94,7 +95,7 @@ async def aos8_get_effective_config(
     Returns:
         Parsed JSON body on success; error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await get_object(
             client,
@@ -166,7 +167,7 @@ async def aos8_get_pending_changes(ctx: Context) -> dict[str, Any] | str:
     Returns:
         Parsed JSON body on success; error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, "show configuration pending")
     except Exception as exc:  # noqa: BLE001
@@ -194,7 +195,7 @@ async def aos8_get_rf_neighbors(
     Returns:
         Parsed JSON body on success; error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(
             client,
@@ -220,7 +221,7 @@ async def aos8_get_cluster_state(ctx: Context) -> dict[str, Any] | str:
     Returns:
         Parsed JSON body on success; error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, "show lc-cluster group-membership")
     except Exception as exc:  # noqa: BLE001
@@ -242,7 +243,7 @@ async def aos8_get_air_monitors(ctx: Context) -> dict[str, Any] | str:
     Returns:
         Parsed JSON body on success; error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, "show ap monitor active-laser-beams")
     except Exception as exc:  # noqa: BLE001
@@ -268,7 +269,7 @@ async def aos8_get_ap_wired_ports(
     Returns:
         Parsed JSON body on success; error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, f"show ap port status ap-name {ap_name}")
     except Exception as exc:  # noqa: BLE001
@@ -290,7 +291,7 @@ async def aos8_get_ipsec_tunnels(ctx: Context) -> dict[str, Any] | str:
     Returns:
         Parsed JSON body on success; error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, "show crypto ipsec sa")
     except Exception as exc:  # noqa: BLE001
@@ -323,7 +324,7 @@ async def aos8_get_md_health_check(
         Dict with keys ``config_path``, ``aps``, ``clients``, ``alarms``,
         ``firmware``. On full failure returns an error string.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         results: Any = await asyncio.gather(
             run_show(client, "show ap active", config_path=config_path),

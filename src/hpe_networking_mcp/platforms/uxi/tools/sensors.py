@@ -7,13 +7,13 @@ from typing import Any
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.uxi._registry import tool
 from hpe_networking_mcp.platforms.uxi.client import format_http_error, get_uxi_client
-from hpe_networking_mcp.platforms.uxi.tools import READ_ONLY
 from hpe_networking_mcp.platforms.uxi.tools._validators import validate_id
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def uxi_list_sensors(
     ctx: Context,
     next_cursor: str | None = None,
@@ -37,7 +37,7 @@ async def uxi_list_sensors(
         return format_http_error(e)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def uxi_get_sensor_status(
     ctx: Context,
     sensor_id: str,

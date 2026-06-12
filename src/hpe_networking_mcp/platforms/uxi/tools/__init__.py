@@ -1,27 +1,8 @@
-"""Shared ToolAnnotations constants for UXI tools.
+"""Tool modules for the Aruba UXI platform.
 
-Apply via the @tool decorator's ``annotations`` kwarg.
+Tools are classified with the ``capability=`` kwarg on the ``@tool`` decorator
+(see ``platforms/_common/annotations.py`` and ``docs/tool-annotation-rubric.md``).
+That single classification derives the MCP annotations, the
+``uxi_write[_delete]`` enable tag, and the ``requires_confirmation`` gate tag —
+there are no hand-written ``ToolAnnotations`` constants.
 """
-
-from mcp.types import ToolAnnotations
-
-READ_ONLY = ToolAnnotations(
-    readOnlyHint=True,
-    destructiveHint=False,
-    idempotentHint=True,
-    openWorldHint=True,
-)
-
-WRITE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=False,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)

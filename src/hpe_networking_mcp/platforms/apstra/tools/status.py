@@ -7,13 +7,13 @@ from typing import Any
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.apstra import guidelines
 from hpe_networking_mcp.platforms.apstra._registry import tool
 from hpe_networking_mcp.platforms.apstra.client import format_http_error, get_apstra_client
-from hpe_networking_mcp.platforms.apstra.tools import READ_ONLY
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def apstra_get_anomalies(ctx: Context, blueprint_id: str) -> dict[str, Any]:
     """Get anomalies for a blueprint.
 
@@ -32,7 +32,7 @@ async def apstra_get_anomalies(ctx: Context, blueprint_id: str) -> dict[str, Any
         raise ToolError({"status_code": 502, "message": f"Error fetching anomalies: {detail}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def apstra_get_diff_status(ctx: Context, blueprint_id: str) -> dict[str, Any]:
     """Get configuration diff status (staging vs active) for a blueprint.
 
@@ -54,7 +54,7 @@ async def apstra_get_diff_status(ctx: Context, blueprint_id: str) -> dict[str, A
         raise ToolError({"status_code": 502, "message": f"Error fetching diff status: {detail}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def apstra_get_protocol_sessions(ctx: Context, blueprint_id: str) -> dict[str, Any]:
     """Get all protocol (e.g. BGP) sessions in a blueprint.
 

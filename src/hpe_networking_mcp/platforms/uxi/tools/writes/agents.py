@@ -13,15 +13,15 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.uxi._registry import tool
 from hpe_networking_mcp.platforms.uxi.client import format_http_error, get_uxi_client
-from hpe_networking_mcp.platforms.uxi.tools import WRITE, WRITE_DELETE
 from hpe_networking_mcp.platforms.uxi.tools._validators import validate_id
 
 _VALID_PCAP_MODES = {"light", "full", "off"}
 
 
-@tool(annotations=WRITE, tags={"uxi_write"})
+@tool(capability=Capability.WRITE)
 async def uxi_update_agent(
     ctx: Context,
     agent_id: str,
@@ -75,7 +75,7 @@ async def uxi_update_agent(
         return format_http_error(e)
 
 
-@tool(annotations=WRITE_DELETE, tags={"uxi_write", "uxi_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def uxi_delete_agent(
     ctx: Context,
     agent_id: str,

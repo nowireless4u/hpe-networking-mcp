@@ -18,13 +18,13 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.uxi._registry import tool
 from hpe_networking_mcp.platforms.uxi.client import format_http_error, get_uxi_client
-from hpe_networking_mcp.platforms.uxi.tools import WRITE, WRITE_DELETE
 from hpe_networking_mcp.platforms.uxi.tools._validators import validate_id
 
 
-@tool(annotations=WRITE, tags={"uxi_write"})
+@tool(capability=Capability.WRITE)
 async def uxi_assign_agent_to_group(
     ctx: Context,
     agent_id: str,
@@ -58,7 +58,7 @@ async def uxi_assign_agent_to_group(
         return format_http_error(e)
 
 
-@tool(annotations=WRITE_DELETE, tags={"uxi_write", "uxi_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def uxi_remove_agent_from_group(
     ctx: Context,
     assignment_id: str,
@@ -89,7 +89,7 @@ async def uxi_remove_agent_from_group(
         return format_http_error(e)
 
 
-@tool(annotations=WRITE, tags={"uxi_write"})
+@tool(capability=Capability.WRITE)
 async def uxi_assign_sensor_to_group(
     ctx: Context,
     sensor_id: str,
@@ -123,7 +123,7 @@ async def uxi_assign_sensor_to_group(
         return format_http_error(e)
 
 
-@tool(annotations=WRITE_DELETE, tags={"uxi_write", "uxi_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def uxi_remove_sensor_from_group(
     ctx: Context,
     assignment_id: str,

@@ -16,6 +16,7 @@ from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.greenlake._registry import tool
 from hpe_networking_mcp.platforms.greenlake.client import get_greenlake_client
 
@@ -50,13 +51,7 @@ def _coerce_int(value: Any, name: str) -> int:
         "workspace/workspaceName, application/id, region, hasDetails."
     ),
     tags={"greenlake", "audit_logs"},
-    annotations={
-        "title": "Get GreenLake audit logs",
-        "readOnlyHint": True,
-        "destructiveHint": False,
-        "idempotentHint": True,
-        "openWorldHint": True,
-    },
+    capability=Capability.READ,
 )
 async def greenlake_get_audit_logs(
     ctx: Context,
@@ -137,13 +132,7 @@ async def greenlake_get_audit_logs(
     name="greenlake_get_audit_log_details",
     description=("Get additional detail of an HPE GreenLake audit log entry."),
     tags={"greenlake", "audit_logs"},
-    annotations={
-        "title": "Get GreenLake audit log details",
-        "readOnlyHint": True,
-        "destructiveHint": False,
-        "idempotentHint": True,
-        "openWorldHint": True,
-    },
+    capability=Capability.READ,
 )
 async def greenlake_get_audit_log_details(
     ctx: Context,

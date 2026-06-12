@@ -16,6 +16,7 @@ from fastmcp import Context
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.aos8._registry import tool
+from hpe_networking_mcp.platforms.aos8.client import get_aos8_client
 from hpe_networking_mcp.platforms.aos8.tools._helpers import (
     format_aos8_error,
     run_show,
@@ -35,7 +36,7 @@ async def aos8_get_controllers(ctx: Context) -> dict[str, Any] | str:
         Parsed JSON body (``_meta`` / ``_global_result`` stripped) on success;
         error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, "show switches")
     except Exception as exc:  # noqa: BLE001
@@ -55,7 +56,7 @@ async def aos8_get_ap_database(ctx: Context, config_path: str = "/md") -> dict[s
     Returns:
         Parsed JSON body on success; error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, "show ap database", config_path=config_path)
     except Exception as exc:  # noqa: BLE001
@@ -75,7 +76,7 @@ async def aos8_get_active_aps(ctx: Context, config_path: str = "/md") -> dict[st
     Returns:
         Parsed JSON body on success; error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, "show ap active", config_path=config_path)
     except Exception as exc:  # noqa: BLE001
@@ -106,7 +107,7 @@ async def aos8_get_ap_detail(
     if (ap_name is None) == (ap_mac is None):
         return "Must provide exactly one of ap_name or ap_mac"
     selector = f"ap-name {ap_name}" if ap_name else f"ap-mac {ap_mac}"
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, f"show ap details {selector}", config_path=config_path)
     except Exception as exc:  # noqa: BLE001
@@ -126,7 +127,7 @@ async def aos8_get_bss_table(ctx: Context, config_path: str = "/md") -> dict[str
     Returns:
         Parsed JSON body on success; error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, "show ap bss-table", config_path=config_path)
     except Exception as exc:  # noqa: BLE001
@@ -146,7 +147,7 @@ async def aos8_get_radio_summary(ctx: Context, config_path: str = "/md") -> dict
     Returns:
         Parsed JSON body on success; error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, "show ap radio-summary", config_path=config_path)
     except Exception as exc:  # noqa: BLE001
@@ -165,7 +166,7 @@ async def aos8_get_version(ctx: Context) -> dict[str, Any] | str:
     Returns:
         Parsed JSON body on success; error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, "show version")
     except Exception as exc:  # noqa: BLE001
@@ -184,7 +185,7 @@ async def aos8_get_licenses(ctx: Context) -> dict[str, Any] | str:
     Returns:
         Parsed JSON body on success; error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, "show license")
     except Exception as exc:  # noqa: BLE001

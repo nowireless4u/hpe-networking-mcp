@@ -21,6 +21,7 @@ from fastmcp import Context
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.aos8._registry import tool
+from hpe_networking_mcp.platforms.aos8.client import get_aos8_client
 from hpe_networking_mcp.platforms.aos8.tools._helpers import (
     format_aos8_error,
     run_show,
@@ -38,7 +39,7 @@ async def aos8_get_clients(ctx: Context, config_path: str = "/md") -> dict[str, 
     Returns:
         Cleaned showcommand body, or an error string when the request fails.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, "show user-table", config_path=config_path)
     except Exception as exc:  # noqa: BLE001
@@ -81,7 +82,7 @@ async def aos8_find_client(
         # username is not None by elimination
         command = f"show user-table name {username}"
 
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, command, config_path=config_path)
     except Exception as exc:  # noqa: BLE001
@@ -104,7 +105,7 @@ async def aos8_get_client_detail(
     Returns:
         Cleaned showcommand body, or an error string when the request fails.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(
             client,
@@ -129,7 +130,7 @@ async def aos8_get_client_history(ctx: Context, mac: str) -> dict[str, Any] | st
     Returns:
         Cleaned showcommand body, or an error string when the request fails.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, f"show ap association history client-mac {mac}")
     except Exception as exc:  # noqa: BLE001

@@ -14,17 +14,19 @@ References:
 
 from __future__ import annotations
 
+import json
 import re
 from typing import Any, Literal
 
 import httpx
+from fastmcp.exceptions import ToolError
 from loguru import logger
 
 from hpe_networking_mcp.config import AOS8Secrets
 from hpe_networking_mcp.platforms._common.auth import AsyncTokenManager, AuthError, TokenResult
 from hpe_networking_mcp.utils.logging import mask_secret
 
-__all__ = ["AOS8Client", "AOS8AuthError", "AOS8APIError"]
+__all__ = ["AOS8APIError", "AOS8AuthError", "AOS8Client", "format_http_error", "get_aos8_client"]
 
 _AUTH_TIMEOUT = 15.0
 _REQUEST_TIMEOUT = 30.0
@@ -350,3 +352,48 @@ class AOS8Client:
             finally:
                 self._tokens.invalidate()
         await self._http.aclose()
+
+
+def get_aos8_client(ctx: Any) -> AOS8Client:
+    """Return the AOS8Client from the request context, or raise a clear 503.
+
+    Takes ``ctx`` explicitly (the ``get_central_conn`` pattern) so tests can
+    pass a fake context directly.
+
+    Raises:
+        ToolError: 503 when AOS 8 is not configured or failed to initialize —
+            the same guard pattern as every other platform (issues #443/#444),
+            so a disabled integration produces a recoverable "not configured"
+            response instead of an opaque ``AttributeError`` on ``None``.
+    """
+    client: AOS8Client | None = ctx.lifespan_context.get("aos8_client")
+    if client is None:
+        raise ToolError(
+            {
+                "status_code": 503,
+                "message": (
+                    "AOS 8 API client not available. Provide the AOS 8 Docker secrets "
+                    "(aos8_host, aos8_username, aos8_password) and restart the server."
+                ),
+            }
+        )
+    return client
+
+
+def format_http_error(exc: BaseException) -> dict[str, Any]:
+    """Shape any exception into a consistent dict for tool returns.
+
+    Surfaces status code and response body for ``httpx.HTTPStatusError``;
+    everything else falls back to a generic shape so call sites can use this
+    helper uniformly inside broad ``except Exception`` blocks. Same pattern
+    used by every other platform.
+    """
+    if isinstance(exc, httpx.HTTPStatusError):
+        status = exc.response.status_code
+        text = exc.response.text[:500]
+        try:
+            body: Any = exc.response.json()
+        except (ValueError, json.JSONDecodeError):
+            body = text
+        return {"status_code": status, "message": str(exc), "body": body}
+    return {"status_code": 0, "message": str(exc), "body": None}
