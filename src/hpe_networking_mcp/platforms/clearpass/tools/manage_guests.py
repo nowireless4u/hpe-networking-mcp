@@ -105,45 +105,49 @@ async def clearpass_send_guest_credentials(
 
     try:
         client = await get_clearpass_client()
-        return await client.request("post", f"/guest/{guest_id}/send-{delivery_method}", json_body={})
+        # Live-verified route (#469): /sendreceipt/sms|smtp with a required
+        # confirm flag — the old /send-sms|send-email paths return HTTP 405.
+        channel = "sms" if delivery_method == "sms" else "smtp"
+        return await client.request("post", f"/guest/{guest_id}/sendreceipt/{channel}", json_body={"confirm": 1})
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error sending guest credentials: {e}"}) from e
 
 
-@tool(capability=Capability.OPERATIONAL, enable_gated=True)
+@tool(capability=Capability.READ)
 async def clearpass_generate_guest_pass(
     ctx: Context,
-    guest_id: Annotated[str, Field(description="Guest ID to generate pass for.")],
+    guest_id: Annotated[str, Field(description="Guest ID to render the pass for.")],
     pass_type: Annotated[str, Field(description="Pass type: 'digital' or 'receipt'.")],
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    template_id: Annotated[str, Field(description="ID of the pass/receipt template to render with.")],
 ) -> dict | str:
-    """Generate a digital pass or receipt for a guest account.
+    """Render a digital pass or receipt for a guest account.
+
+    Live-verified route (#469): rendering is a GET against
+    ``/guest/{id}/pass/{template_id}`` (or ``/receipt/{template_id}``) — the
+    old body-less POSTs return HTTP 405. Rendering has no side effects, so
+    this is a READ (no confirmation).
 
     Args:
         guest_id: Numeric ID of the guest account.
-        pass_type: Type of pass — 'digital' generates a digital pass, 'receipt' generates a receipt.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        pass_type: 'digital' renders a pass, 'receipt' renders a receipt.
+        template_id: Pass/print template ID (see clearpass_get_pass_templates
+            / clearpass_get_print_templates).
     """
     if pass_type not in ("digital", "receipt"):
         raise ToolError(
             {"status_code": 400, "message": f"Invalid pass_type '{pass_type}'. Must be 'digital' or 'receipt'."}
         )
 
-    if not confirmed:
-        decline = await _confirm_write(ctx, f"generate {pass_type} pass", guest_id)
-        if decline:
-            return decline
-
     try:
         client = await get_clearpass_client()
         endpoint = "pass" if pass_type == "digital" else "receipt"  # nosec B105 — API path, not a password
-        return await client.request("post", f"/guest/{guest_id}/{endpoint}", json_body={})
+        return await client.request("get", f"/guest/{guest_id}/{endpoint}/{template_id}")
     except ToolError:
         raise
     except Exception as e:
-        raise ToolError({"status_code": 502, "message": f"Error generating guest pass: {e}"}) from e
+        raise ToolError({"status_code": 502, "message": f"Error rendering guest pass: {e}"}) from e
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -151,13 +155,26 @@ async def clearpass_process_sponsor_action(
     ctx: Context,
     guest_id: Annotated[str, Field(description="Guest ID to process sponsor action for.")],
     action: Annotated[str, Field(description="Sponsor action: 'approve' or 'reject'.")],
+    token: Annotated[str, Field(description="Registration token from the sponsor confirmation link.")],
+    register_token: Annotated[str, Field(description="Register token from the sponsor confirmation link.")],
+    gsr_id: Annotated[
+        str | None,
+        Field(description="Optional self-registration name carrying the sponsor confirmation configuration."),
+    ] = None,
     confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
 ) -> dict | str:
     """Process a sponsor approval or rejection for a guest account.
 
+    Live-verified route (#469): one ``POST /guest/{id}/sponsor`` with the
+    sponsor-confirmation tokens; rejection travels as ``register_reject`` in
+    the body — the old ``/sponsor/approve|reject`` paths return HTTP 405.
+
     Args:
         guest_id: Numeric ID of the guest account awaiting sponsor action.
         action: Sponsor decision — 'approve' or 'reject'.
+        token: Registration token (from the sponsor confirmation email/link).
+        register_token: Register token paired with ``token``.
+        gsr_id: Optional self-registration page name.
         confirmed: Set true after user confirms. Skips re-prompting.
     """
     if action not in ("approve", "reject"):
@@ -168,9 +185,18 @@ async def clearpass_process_sponsor_action(
         if decline:
             return decline
 
+    body: dict = {"token": token, "register_token": register_token}
+    if action == "reject":
+        body["register_reject"] = True
+
     try:
         client = await get_clearpass_client()
-        return await client.request("post", f"/guest/{guest_id}/sponsor/{action}", json_body={})
+        return await client.request(
+            "post",
+            f"/guest/{guest_id}/sponsor",
+            params={"gsr_id": gsr_id} if gsr_id else None,
+            json_body=body,
+        )
     except ToolError:
         raise
     except Exception as e:

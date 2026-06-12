@@ -101,11 +101,11 @@ async def clearpass_manage_syslog_target(
                 {"status_code": 400, "message": "Either syslog_target_id or name is required for update/delete."}
             )
         if action_type == "update":
-            path = f"/syslog-target/{syslog_target_id}" if syslog_target_id else f"/syslog-target/name/{name}"
+            path = f"/syslog-target/{syslog_target_id}" if syslog_target_id else f"/syslog-target/host-address/{name}"
             return await client.request("patch", path, json_body=payload)
         if syslog_target_id:
             return await client.request("delete", f"/syslog-target/{syslog_target_id}")
-        return await client.request("delete", f"/syslog-target/name/{name}")
+        return await client.request("delete", f"/syslog-target/host-address/{name}")
     except ToolError:
         raise
     except Exception as e:
@@ -206,7 +206,7 @@ async def clearpass_manage_endpoint_context_server(
             path = (
                 f"/endpoint-context-server/{endpoint_context_server_id}"
                 if endpoint_context_server_id
-                else f"/endpoint-context-server/name/{name}"
+                else f"/endpoint-context-server/server-name/{name}"
             )
             return await client.request("patch", path, json_body=payload)
         if not endpoint_context_server_id:

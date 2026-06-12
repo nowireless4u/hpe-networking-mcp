@@ -56,7 +56,7 @@ async def clearpass_manage_access_control(
         client = await get_clearpass_client()
         if action_type == "update":
             return await client.request(
-                "patch", f"/server/access-control/{server_uuid}/{resource_name}", json_body=payload
+                "put", f"/server/access-control/{server_uuid}/{resource_name}", json_body=payload
             )
         return await client.request("delete", f"/server/access-control/{server_uuid}/{resource_name}")
     except ToolError:
@@ -96,13 +96,13 @@ async def clearpass_manage_ad_domain(
     try:
         client = await get_clearpass_client()
         if action_type == "join":
-            return await client.request("put", f"/ad-domain/{server_uuid}/join", json_body=payload)
+            return await client.request("put", f"/ad-domain/join/{server_uuid}", json_body=payload)
         if action_type == "leave":
-            return await client.request("put", f"/ad-domain/{server_uuid}/leave", json_body=payload)
+            return await client.request("put", f"/ad-domain/leave/{server_uuid}", json_body=payload)
         if not netbios_name:
             raise ToolError({"status_code": 400, "message": "netbios_name is required for configure_password_servers."})
         return await client.request(
-            "patch", f"/ad-domain/{server_uuid}/netbios-name/{netbios_name}/password-servers", json_body=payload
+            "patch", f"/ad-domain/password-servers/{server_uuid}", json_body={"netbios_name": netbios_name, **payload}
         )
     except ToolError:
         raise
@@ -221,7 +221,7 @@ async def clearpass_manage_service_params(
         return decline
     try:
         client = await get_clearpass_client()
-        return await client.request("patch", f"/server/{server_uuid}/service/{service_id}", json_body=param_values)
+        return await client.request("patch", f"/service-parameter/{server_uuid}/{service_id}", json_body=param_values)
     except ToolError:
         raise
     except Exception as e:

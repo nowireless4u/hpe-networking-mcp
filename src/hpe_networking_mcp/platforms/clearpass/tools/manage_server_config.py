@@ -56,11 +56,11 @@ async def clearpass_manage_admin_user(
                 {"status_code": 400, "message": "Either admin_user_id or name is required for update/delete."}
             )
         if action_type == "update":
-            path = f"/admin-user/{admin_user_id}" if admin_user_id else f"/admin-user/name/{name}"
+            path = f"/admin-user/{admin_user_id}" if admin_user_id else f"/admin-user/user-id/{name}"
             return await client.request("patch", path, json_body=payload)
         if admin_user_id:
             return await client.request("delete", f"/admin-user/{admin_user_id}")
-        return await client.request("delete", f"/admin-user/name/{name}")
+        return await client.request("delete", f"/admin-user/user-id/{name}")
     except ToolError:
         raise
     except Exception as e:
@@ -238,7 +238,13 @@ async def clearpass_manage_attribute(
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
     payload: Annotated[dict, Field(description="Attribute config payload. Empty dict {} for delete.")],
     attribute_id: Annotated[str | None, Field(description="Attribute ID (required for update/delete).")] = None,
-    name: Annotated[str | None, Field(description="Attribute name (alternative to ID).")] = None,
+    name: Annotated[str | None, Field(description="Attribute name (alternative to ID; requires entity_name).")] = None,
+    entity_name: Annotated[
+        str | None,
+        Field(
+            description="Entity the attribute belongs to (e.g. 'Endpoint', 'Device', 'GuestUser', 'LocalUser', 'Onboard'). Required when selecting by name."
+        ),
+    ] = None,
     confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
 ) -> dict | str:
     """Create, update, or delete a ClearPass attribute."""
@@ -260,12 +266,20 @@ async def clearpass_manage_attribute(
             raise ToolError(
                 {"status_code": 400, "message": "Either attribute_id or name is required for update/delete."}
             )
+        if name and not entity_name:
+            raise ToolError(
+                {
+                    "status_code": 400,
+                    "message": "entity_name is required when selecting an attribute by name "
+                    "(the API route is /attribute/{entity_name}/name/{name}).",
+                }
+            )
         if action_type == "update":
-            path = f"/attribute/{attribute_id}" if attribute_id else f"/attribute/name/{name}"
+            path = f"/attribute/{attribute_id}" if attribute_id else f"/attribute/{entity_name}/name/{name}"
             return await client.request("patch", path, json_body=payload)
         if attribute_id:
             return await client.request("delete", f"/attribute/{attribute_id}")
-        return await client.request("delete", f"/attribute/name/{name}")
+        return await client.request("delete", f"/attribute/{entity_name}/name/{name}")
     except ToolError:
         raise
     except Exception as e:
@@ -346,12 +360,12 @@ async def clearpass_manage_file_backup_server(
             path = (
                 f"/file-backup-server/{file_backup_server_id}"
                 if file_backup_server_id
-                else f"/file-backup-server/name/{name}"
+                else f"/file-backup-server/host-address/{name}"
             )
             return await client.request("patch", path, json_body=payload)
         if file_backup_server_id:
             return await client.request("delete", f"/file-backup-server/{file_backup_server_id}")
-        return await client.request("delete", f"/file-backup-server/name/{name}")
+        return await client.request("delete", f"/file-backup-server/host-address/{name}")
     except ToolError:
         raise
     except Exception as e:
@@ -471,7 +485,7 @@ async def clearpass_manage_policy_manager_zone(
                 if policy_manager_zones_id
                 else f"/server/policy-manager-zones/name/{name}"
             )
-            return await client.request("patch", path, json_body=payload)
+            return await client.request("put", path, json_body=payload)
         if policy_manager_zones_id:
             return await client.request("delete", f"/server/policy-manager-zones/{policy_manager_zones_id}")
         return await client.request("delete", f"/server/policy-manager-zones/name/{name}")

@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.12.5] - 2026-06-11
+
+**Patch — all 14 broken ClearPass endpoints from #469 live-probed and fixed.** Closes #469. Every suspect path was confirmed broken against a live CPPM (HTTP 405 / page-404 / wrong-ID parse), every corrected route verified live with bogus identifiers before and after the fix, and regression tests now pin verb + path + load-bearing body fields.
+
+### Fixed
+- **Guest actions**: `clearpass_send_guest_credentials` → `POST /guest/{id}/sendreceipt/{sms|smtp}` with the required `confirm` flag; `clearpass_generate_guest_pass` → `GET /guest/{id}/pass|receipt/{template_id}` (rendering — reclassified READ, new required `template_id`); `clearpass_process_sponsor_action` → single `POST /guest/{id}/sponsor` with sponsor-link `token`/`register_token` (rejection travels as `register_reject`; new params).
+- **Session control**: bulk/selector disconnects → `/session-action/disconnect[/{mac|username|ip}/{value}]` (filter properly wrapped); single-session disconnect now sends the API's `confirm_disconnect` body. **`clearpass_perform_coa` actually performs the CoA now** — the old session-ID path issued a GET that returned reauthorization templates without doing anything; it's `POST /session/{id}/reauthorize` with `confirm_reauthorize` (optional `reauthorize_profile`), and username/mac/ip/bulk targets use `/session-action/coa[...]` with the API-mandated `enforcement_profile` (new required param for those targets).
+- **Server config**: admin-user by name → `/admin-user/user-id/{user_id}`; file-backup-server by name → `/host-address/{host_address}`; attribute by name → `/attribute/{entity_name}/name/{name}` (new `entity_name` param, validated); policy-manager-zone updates PATCH → PUT.
+- **Local config**: AD-domain join/leave/password-servers → action-prefix routes (`/ad-domain/join/{uuid}` etc., `netbios_name` moved into the body per the API); access-control updates PATCH → PUT; service parameters → `/service-parameter/{server_uuid}/{service_id}`.
+- **Integrations**: extension log → `/extension/instance/{id}/log`; syslog-target by name → `/host-address/{h}`; endpoint-context-server by name → `/server-name/{s}`.
+
+Several of these tools called pyclearpass methods that never existed (pre-rebuild `AttributeError`) or hand-written paths that 405'd — none of them ever worked against a live CPPM, so the signature additions (`template_id`, sponsor tokens, `enforcement_profile`, `entity_name`) break no working callers.
+
+### Tests
+- New `tests/unit/test_clearpass_endpoint_routes.py` (12 tests) pinning every corrected route. Full suite **1814 passed**; ruff + format + mypy + bandit clean. Live re-probe of all 19 fixed routes: zero broken.
+
 ## [3.3.12.4] - 2026-06-11
 
 **Patch — Mist generator emits capability classification; full regen (8/8 — annotation migration COMPLETE).** Closes #368 (surface regenerated against the current vendored spec, 2604.1.5). Every platform's tools are now capability-classified; the universal confirmation gate PR is unblocked.

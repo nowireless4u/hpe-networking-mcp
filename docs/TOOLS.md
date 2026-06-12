@@ -1891,8 +1891,8 @@ ClearPass tools use an async httpx client with OAuth2 client credentials. Write 
 | `clearpass_get_guest_users` | List or get guest users by ID or username |
 | `clearpass_manage_guest_user` | Create, update, delete guest users |
 | `clearpass_send_guest_credentials` | Send credentials via SMS or email (`delivery_method`: sms/email) |
-| `clearpass_generate_guest_pass` | Generate digital pass or receipt (`pass_type`: digital/receipt) |
-| `clearpass_process_sponsor_action` | Approve or reject guest sponsorship requests |
+| `clearpass_generate_guest_pass` | Render digital pass or receipt (`pass_type`: digital/receipt; requires `template_id`) |
+| `clearpass_process_sponsor_action` | Approve or reject guest sponsorship (requires `token` + `register_token` from the sponsor link; optional `gsr_id`) |
 
 ### Guest Configuration (5 read + 4 write)
 
@@ -1942,7 +1942,7 @@ ClearPass tools use an async httpx client with OAuth2 client credentials. Write 
 | `clearpass_get_session_action_status` | Check status of disconnect/CoA action |
 | `clearpass_get_reauth_profiles` | Get reauthorization profiles for a session |
 | `clearpass_disconnect_session` | Disconnect session(s) — `target_type`: session_id/username/mac/ip/bulk |
-| `clearpass_perform_coa` | Change of Authorization — `target_type`: session_id/username/mac/ip/bulk |
+| `clearpass_perform_coa` | Change of Authorization — `target_type`: session_id/username/mac/ip/bulk; `enforcement_profile` required for non-session targets |
 
 ### Roles & Role Mappings (2 read + 2 write)
 
@@ -2067,7 +2067,7 @@ Backed by an internal engine that compiles a ClearPass service's full decision c
 | `clearpass_manage_license` | Create, delete, activate_online, activate_offline |
 | `clearpass_manage_cluster_params` | Update cluster parameters |
 | `clearpass_manage_password_policy` | Update admin or local user password policies |
-| `clearpass_manage_attribute` | Create, update, delete attributes |
+| `clearpass_manage_attribute` | Create, update, delete attributes (`entity_name` required when selecting by name) |
 | `clearpass_manage_data_filter` | Create, update, delete data filters |
 | `clearpass_manage_file_backup_server` | Create, update, delete backup servers |
 | `clearpass_manage_messaging_setup` | Create, update, delete messaging config |

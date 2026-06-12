@@ -239,7 +239,7 @@ async def clearpass_get_extension_log(
     """
     try:
         client = await get_clearpass_client()
-        path = f"/extension-instance/{extension_id}/log"
+        path = f"/extension/instance/{extension_id}/log"
         if tail is not None:
             path += f"?tail={tail}"
         return await clearpass_get(client, path)

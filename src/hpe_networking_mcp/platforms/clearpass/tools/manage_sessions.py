@@ -78,14 +78,21 @@ async def clearpass_disconnect_session(
     try:
         client = await get_clearpass_client()
 
+        # Live-verified routes (#469): the old bulk/selector POSTs to
+        # /session/disconnect return HTTP 405; the API surface is
+        # /session-action/disconnect[/<selector>/{value}].
         if target_type == "session_id":
-            return await client.request("post", f"/session/{target_value}/disconnect", json_body={})
+            return await client.request(
+                "post",
+                f"/session/{target_value}/disconnect",
+                json_body={"id": target_value, "confirm_disconnect": True},
+            )
         if target_type == "bulk":
-            return await client.request("post", "/session/disconnect", json_body=filter)
-        # username, mac, ip — use filtered disconnect
-        filter_map = {"username": "username", "mac": "mac_address", "ip": "framedipaddress"}
-        body = {filter_map[target_type]: target_value}
-        return await client.request("post", "/session/disconnect", json_body=body)
+            return await client.request("post", "/session-action/disconnect", json_body={"filter": filter})
+        selector_map = {"username": "username", "mac": "mac", "ip": "ip"}
+        return await client.request(
+            "post", f"/session-action/disconnect/{selector_map[target_type]}/{target_value}", json_body={}
+        )
     except ToolError:
         raise
     except Exception as e:
@@ -103,6 +110,19 @@ async def clearpass_perform_coa(
     filter: Annotated[
         dict | None,
         Field(description="Filter criteria for bulk CoA (e.g. {'nasipaddress': '10.1.1.1'})."),
+    ] = None,
+    enforcement_profile: Annotated[
+        list[str] | None,
+        Field(
+            description=(
+                "Enforcement profile name(s) to apply. REQUIRED for username/mac/ip/bulk targets "
+                "(the /session-action/coa API mandates it). Not used for session_id."
+            ),
+        ),
+    ] = None,
+    reauthorize_profile: Annotated[
+        str | None,
+        Field(description="Optional reauthorization profile name (session_id target only)."),
     ] = None,
     confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
 ) -> dict | str:
@@ -138,6 +158,17 @@ async def clearpass_perform_coa(
     if target_type == "bulk" and not filter:
         raise ToolError({"status_code": 400, "message": "filter is required when target_type is 'bulk'."})
 
+    if target_type != "session_id" and not enforcement_profile:
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": (
+                    "enforcement_profile is required for username/mac/ip/bulk CoA — the "
+                    "/session-action/coa API mandates the enforcement profile(s) to apply."
+                ),
+            }
+        )
+
     if not confirmed:
         decline = await _confirm_session_action(ctx, "CoA", target_type, target_value)
         if decline:
@@ -146,14 +177,29 @@ async def clearpass_perform_coa(
     try:
         client = await get_clearpass_client()
 
+        # Live-verified routes (#469): the old GET /session/{id}/reauthorize
+        # returned reauth *templates* without performing anything, and the
+        # bulk POST /session/reauthorize returns HTTP 405. Performing a CoA is
+        # POST /session/{id}/reauthorize (confirm flag in the body) for a
+        # single session, or /session-action/coa[/<selector>/{value}] with
+        # the mandatory enforcement_profile otherwise.
         if target_type == "session_id":
-            return await client.request("get", f"/session/{target_value}/reauthorize")
+            body: dict = {"confirm_reauthorize": True}
+            if reauthorize_profile:
+                body["reauthorize_profile"] = reauthorize_profile
+            return await client.request("post", f"/session/{target_value}/reauthorize", json_body=body)
         if target_type == "bulk":
-            return await client.request("post", "/session/reauthorize", json_body=filter)
-        # username, mac, ip — use filtered reauthorize
-        filter_map = {"username": "username", "mac": "mac_address", "ip": "framedipaddress"}
-        body = {filter_map[target_type]: target_value}
-        return await client.request("post", "/session/reauthorize", json_body=body)
+            return await client.request(
+                "post",
+                "/session-action/coa",
+                json_body={"filter": filter, "enforcement_profile": enforcement_profile},
+            )
+        selector_map = {"username": "username", "mac": "mac", "ip": "ip"}
+        return await client.request(
+            "post",
+            f"/session-action/coa/{selector_map[target_type]}/{target_value}",
+            json_body={"enforcement_profile": enforcement_profile},
+        )
     except ToolError:
         raise
     except Exception as e:
