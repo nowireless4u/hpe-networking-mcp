@@ -242,7 +242,10 @@ async def clearpass_manage_attribute(
     entity_name: Annotated[
         str | None,
         Field(
-            description="Entity the attribute belongs to (e.g. 'Endpoint', 'Device', 'GuestUser', 'LocalUser', 'Onboard'). Required when selecting by name."
+            description=(
+                "Entity the attribute belongs to (e.g. 'Endpoint', 'Device', 'GuestUser', "
+                "'LocalUser', 'Onboard'). Required when selecting by name."
+            )
         ),
     ] = None,
     confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,

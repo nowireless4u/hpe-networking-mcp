@@ -176,7 +176,9 @@ class TestConfigSelectorRoutes:
 
         mock_get.return_value = _client()
         with pytest.raises(ToolError) as exc:
-            await clearpass_manage_attribute(_ctx(), action_type="delete", payload={}, name="probe-attr", confirmed=True)
+            await clearpass_manage_attribute(
+                _ctx(), action_type="delete", payload={}, name="probe-attr", confirmed=True
+            )
         assert exc.value.args[0]["status_code"] == 400
         assert "entity_name" in exc.value.args[0]["message"]
 
