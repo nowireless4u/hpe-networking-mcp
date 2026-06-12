@@ -8,6 +8,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.uxi._registry import tool
 from hpe_networking_mcp.platforms.uxi.client import format_http_error, get_uxi_client
 from hpe_networking_mcp.platforms.uxi.tools._validators import validate_id
@@ -52,7 +53,7 @@ async def uxi_get_sensor_status(
     validate_id(sensor_id, "sensor_id")
     try:
         client = await get_uxi_client()
-        return await client.uxi_get_single(f"/sensors/{sensor_id}/status")
+        return await client.uxi_get_single(f"/sensors/{path_seg(sensor_id)}/status")
     except ToolError:
         raise
     except Exception as e:

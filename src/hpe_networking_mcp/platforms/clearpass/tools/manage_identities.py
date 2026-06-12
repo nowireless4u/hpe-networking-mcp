@@ -9,6 +9,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
@@ -50,8 +51,8 @@ async def clearpass_manage_api_client(
         if not client_id:
             raise ToolError({"status_code": 400, "message": "client_id is required for update/delete."})
         if action_type == "update":
-            return await client.request("patch", f"/api-client/{client_id}", json_body=payload)
-        return await client.request("delete", f"/api-client/{client_id}")
+            return await client.request("patch", f"/api-client/{path_seg(client_id)}", json_body=payload)
+        return await client.request("delete", f"/api-client/{path_seg(client_id)}")
     except ToolError:
         raise
     except Exception as e:
@@ -99,11 +100,15 @@ async def clearpass_manage_local_user(
                 {"status_code": 400, "message": "Either local_user_id or user_id is required for update/delete."}
             )
         if action_type == "update":
-            path = f"/local-user/{local_user_id}" if local_user_id else f"/local-user/user-id/{user_id}"
+            path = (
+                f"/local-user/{path_seg(local_user_id)}"
+                if local_user_id
+                else f"/local-user/user-id/{path_seg(user_id)}"
+            )
             return await client.request("patch", path, json_body=payload)
         if local_user_id:
-            return await client.request("delete", f"/local-user/{local_user_id}")
-        return await client.request("delete", f"/local-user/user-id/{user_id}")
+            return await client.request("delete", f"/local-user/{path_seg(local_user_id)}")
+        return await client.request("delete", f"/local-user/user-id/{path_seg(user_id)}")
     except ToolError:
         raise
     except Exception as e:
@@ -154,12 +159,14 @@ async def clearpass_manage_static_host_list(
             )
         if action_type == "update":
             path = (
-                f"/static-host-list/{static_host_list_id}" if static_host_list_id else f"/static-host-list/name/{name}"
+                f"/static-host-list/{path_seg(static_host_list_id)}"
+                if static_host_list_id
+                else f"/static-host-list/name/{path_seg(name)}"
             )
             return await client.request("patch", path, json_body=payload)
         if static_host_list_id:
-            return await client.request("delete", f"/static-host-list/{static_host_list_id}")
-        return await client.request("delete", f"/static-host-list/name/{name}")
+            return await client.request("delete", f"/static-host-list/{path_seg(static_host_list_id)}")
+        return await client.request("delete", f"/static-host-list/name/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:
@@ -207,11 +214,11 @@ async def clearpass_manage_device(
                 {"status_code": 400, "message": "Either device_id or macaddr is required for update/delete."}
             )
         if action_type == "update":
-            path = f"/device/{device_id}" if device_id else f"/device/mac/{macaddr}"
+            path = f"/device/{path_seg(device_id)}" if device_id else f"/device/mac/{path_seg(macaddr)}"
             return await client.request("patch", path, json_body=payload)
         if device_id:
-            return await client.request("delete", f"/device/{device_id}")
-        return await client.request("delete", f"/device/mac/{macaddr}")
+            return await client.request("delete", f"/device/{path_seg(device_id)}")
+        return await client.request("delete", f"/device/mac/{path_seg(macaddr)}")
     except ToolError:
         raise
     except Exception as e:
@@ -251,7 +258,7 @@ async def clearpass_manage_deny_listed_user(
             return await client.request("post", "/deny-listed-users", json_body=payload)
         if not deny_listed_users_id:
             raise ToolError({"status_code": 400, "message": "deny_listed_users_id is required for delete."})
-        return await client.request("delete", f"/deny-listed-users/{deny_listed_users_id}")
+        return await client.request("delete", f"/deny-listed-users/{path_seg(deny_listed_users_id)}")
     except ToolError:
         raise
     except Exception as e:

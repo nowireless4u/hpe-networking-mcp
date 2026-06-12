@@ -15,6 +15,7 @@ from fastmcp.exceptions import ToolError
 from loguru import logger
 
 from hpe_networking_mcp.platforms._common.auth import AsyncTokenManager, oauth2_client_credentials
+from hpe_networking_mcp.platforms._common.url import path_seg
 
 if TYPE_CHECKING:
     from fastmcp import Context
@@ -34,7 +35,7 @@ def make_token_manager(secrets: GreenLakeSecrets) -> AsyncTokenManager:
     (``client_secret_post`` — what the old ``OAuth2Provider`` sent).
     Construction is non-blocking; the first request fetches the token.
     """
-    token_url = f"{secrets.api_base_url.rstrip('/')}/authorization/v2/oauth2/{secrets.workspace_id}/token"
+    token_url = f"{secrets.api_base_url.rstrip('/')}/authorization/v2/oauth2/{path_seg(secrets.workspace_id)}/token"
     return AsyncTokenManager(
         oauth2_client_credentials(
             token_url,

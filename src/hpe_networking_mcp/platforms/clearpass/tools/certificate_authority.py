@@ -18,6 +18,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
@@ -56,9 +57,9 @@ async def clearpass_get_certificates(
     try:
         client = await get_clearpass_client()
         if certificate_id and chain:
-            return await clearpass_get(client, f"/certificate/{certificate_id}/chain")
+            return await clearpass_get(client, f"/certificate/{path_seg(certificate_id)}/chain")
         if certificate_id:
-            return await clearpass_get(client, f"/certificate/{certificate_id}")
+            return await clearpass_get(client, f"/certificate/{path_seg(certificate_id)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/certificate" + query)
     except ToolError:
@@ -103,7 +104,7 @@ async def clearpass_get_onboard_devices(
     try:
         client = await get_clearpass_client()
         if onboard_device_id:
-            return await clearpass_get(client, f"/onboard/device/{onboard_device_id}")
+            return await clearpass_get(client, f"/onboard/device/{path_seg(onboard_device_id)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/onboard/device" + query)
     except ToolError:

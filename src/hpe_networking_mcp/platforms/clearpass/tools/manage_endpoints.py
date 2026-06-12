@@ -9,6 +9,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
@@ -66,13 +67,13 @@ async def clearpass_manage_endpoint(
 
         if action_type == "update":
             if endpoint_id:
-                return await client.request("patch", f"/endpoint/{endpoint_id}", json_body=payload)
-            return await client.request("patch", f"/endpoint/mac-address/{mac_address}", json_body=payload)
+                return await client.request("patch", f"/endpoint/{path_seg(endpoint_id)}", json_body=payload)
+            return await client.request("patch", f"/endpoint/mac-address/{path_seg(mac_address)}", json_body=payload)
 
         # delete
         if endpoint_id:
-            return await client.request("delete", f"/endpoint/{endpoint_id}")
-        return await client.request("delete", f"/endpoint/mac-address/{mac_address}")
+            return await client.request("delete", f"/endpoint/{path_seg(endpoint_id)}")
+        return await client.request("delete", f"/endpoint/mac-address/{path_seg(mac_address)}")
     except ToolError:
         raise
     except Exception as e:

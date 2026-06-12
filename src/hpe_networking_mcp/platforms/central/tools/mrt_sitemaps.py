@@ -13,6 +13,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
@@ -43,7 +44,7 @@ async def central_get_sitemap_summary(
 ) -> dict:
     """Get high-level sitemap summary for a site (counts, floors, devices placed)."""
     conn = get_central_conn(ctx)
-    return await _call(conn, "GET", f"network-monitoring/v1/sitemaps-summary/{site_id}")
+    return await _call(conn, "GET", f"network-monitoring/v1/sitemaps-summary/{path_seg(site_id)}")
 
 
 @tool(capability=Capability.READ)
@@ -87,7 +88,11 @@ async def central_get_sitemap_devices(
     seen online at the placement.
     """
     conn = get_central_conn(ctx)
-    return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/network-devices-{status}")
+    return await _call(
+        conn,
+        "GET",
+        f"network-monitoring/v1/sitemaps/{path_seg(site_id)}/network-devices-{path_seg(status)}",
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -131,7 +136,7 @@ async def central_manage_sitemap_devices(
     response = await retry_central_command(
         central_conn=conn,
         api_method=method,
-        api_path=f"network-monitoring/v1/sitemaps/{site_id}/{segment}",
+        api_path=f"network-monitoring/v1/sitemaps/{path_seg(site_id)}/{path_seg(segment)}",
         api_data=payload,
     )
     code = response.get("code", 0)
@@ -153,7 +158,7 @@ async def central_get_floor(
 ) -> dict:
     """Get one floor's configuration (dimensions, scale, building, image ref)."""
     conn = get_central_conn(ctx)
-    return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}")
+    return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{path_seg(site_id)}/floors/{path_seg(floor_id)}")
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -181,7 +186,7 @@ async def central_manage_floor(
         response = await retry_central_command(
             central_conn=conn,
             api_method="POST",
-            api_path=f"network-monitoring/v1/sitemaps/{site_id}/floors",
+            api_path=f"network-monitoring/v1/sitemaps/{path_seg(site_id)}/floors",
             api_data=payload,
         )
     elif action_type == "update":
@@ -190,7 +195,7 @@ async def central_manage_floor(
         response = await retry_central_command(
             central_conn=conn,
             api_method="PUT",
-            api_path=f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}",
+            api_path=f"network-monitoring/v1/sitemaps/{path_seg(site_id)}/floors/{path_seg(floor_id)}",
             api_data=payload,
         )
     elif action_type == "delete":
@@ -199,7 +204,7 @@ async def central_manage_floor(
         response = await retry_central_command(
             central_conn=conn,
             api_method="DELETE",
-            api_path=f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}",
+            api_path=f"network-monitoring/v1/sitemaps/{path_seg(site_id)}/floors/{path_seg(floor_id)}",
         )
     else:
         raise ToolError({"status_code": 400, "message": f"unknown action_type '{action_type}'."})
@@ -224,7 +229,7 @@ async def central_set_floor_scale(
     response = await retry_central_command(
         central_conn=conn,
         api_method="POST",
-        api_path=f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/scale",
+        api_path=f"network-monitoring/v1/sitemaps/{path_seg(site_id)}/floors/{path_seg(floor_id)}/scale",
         api_data=payload,
     )
     code = response.get("code", 0)
@@ -241,7 +246,11 @@ async def central_get_floor_image(
 ) -> dict:
     """Get the floor-plan image reference / metadata."""
     conn = get_central_conn(ctx)
-    return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/image")
+    return await _call(
+        conn,
+        "GET",
+        f"network-monitoring/v1/sitemaps/{path_seg(site_id)}/floors/{path_seg(floor_id)}/image",
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -259,7 +268,7 @@ async def central_set_floor_image(
     response = await retry_central_command(
         central_conn=conn,
         api_method="PUT",
-        api_path=f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/image",
+        api_path=f"network-monitoring/v1/sitemaps/{path_seg(site_id)}/floors/{path_seg(floor_id)}/image",
         api_data=payload,
     )
     code = response.get("code", 0)
@@ -280,7 +289,7 @@ async def central_get_buildings(
 ) -> dict:
     """List buildings at a site."""
     conn = get_central_conn(ctx)
-    return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/buildings")
+    return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{path_seg(site_id)}/buildings")
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -305,14 +314,14 @@ async def central_manage_building(
         response = await retry_central_command(
             central_conn=conn,
             api_method="PUT",
-            api_path=f"network-monitoring/v1/sitemaps/{site_id}/buildings/{building_id}",
+            api_path=f"network-monitoring/v1/sitemaps/{path_seg(site_id)}/buildings/{path_seg(building_id)}",
             api_data=payload,
         )
     elif action_type == "delete":
         response = await retry_central_command(
             central_conn=conn,
             api_method="DELETE",
-            api_path=f"network-monitoring/v1/sitemaps/{site_id}/buildings/{building_id}",
+            api_path=f"network-monitoring/v1/sitemaps/{path_seg(site_id)}/buildings/{path_seg(building_id)}",
         )
     else:
         raise ToolError({"status_code": 400, "message": f"unknown action_type '{action_type}'."})
@@ -343,7 +352,7 @@ async def central_import_sitemap(
     response = await retry_central_command(
         central_conn=conn,
         api_method="POST",
-        api_path=f"network-monitoring/v1/sitemaps/{site_id}/import",
+        api_path=f"network-monitoring/v1/sitemaps/{path_seg(site_id)}/import",
         api_data=payload,
     )
     code = response.get("code", 0)
@@ -360,7 +369,7 @@ async def central_get_sitemap_import_status(
 ) -> dict:
     """Get the status / result of a sitemap import job."""
     conn = get_central_conn(ctx)
-    return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/import/{import_id}")
+    return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{path_seg(site_id)}/import/{path_seg(import_id)}")
 
 
 # ---------------------------------------------------------------------------
@@ -419,7 +428,11 @@ async def central_get_floor_walls(
 ) -> dict:
     """List walls placed on a floor (used by location services for signal attenuation modeling)."""
     conn = get_central_conn(ctx)
-    return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/walls")
+    return await _call(
+        conn,
+        "GET",
+        f"network-monitoring/v1/sitemaps/{path_seg(site_id)}/floors/{path_seg(floor_id)}/walls",
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -446,7 +459,7 @@ async def central_manage_floor_walls(
     response = await retry_central_command(
         central_conn=conn,
         api_method=method_map[action_type],
-        api_path=f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/walls",
+        api_path=f"network-monitoring/v1/sitemaps/{path_seg(site_id)}/floors/{path_seg(floor_id)}/walls",
         api_data=payload or {},
     )
     code = response.get("code", 0)
@@ -463,7 +476,11 @@ async def central_get_floor_zones(
 ) -> dict:
     """List zones placed on a floor (named polygons used for location analytics)."""
     conn = get_central_conn(ctx)
-    return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/zones")
+    return await _call(
+        conn,
+        "GET",
+        f"network-monitoring/v1/sitemaps/{path_seg(site_id)}/floors/{path_seg(floor_id)}/zones",
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -490,7 +507,7 @@ async def central_manage_floor_zones(
     response = await retry_central_command(
         central_conn=conn,
         api_method=method_map[action_type],
-        api_path=f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/zones",
+        api_path=f"network-monitoring/v1/sitemaps/{path_seg(site_id)}/floors/{path_seg(floor_id)}/zones",
         api_data=payload or {},
     )
     code = response.get("code", 0)

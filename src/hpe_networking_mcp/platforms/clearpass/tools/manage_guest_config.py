@@ -9,6 +9,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
@@ -55,10 +56,10 @@ async def clearpass_manage_pass_template(
         if not template_id:
             raise ToolError({"status_code": 400, "message": "template_id is required for update/replace/delete."})
         if action_type == "update":
-            return await client.request("patch", f"/template/pass/{template_id}", json_body=payload)
+            return await client.request("patch", f"/template/pass/{path_seg(template_id)}", json_body=payload)
         if action_type == "replace":
-            return await client.request("put", f"/template/pass/{template_id}", json_body=payload)
-        return await client.request("delete", f"/template/pass/{template_id}")
+            return await client.request("put", f"/template/pass/{path_seg(template_id)}", json_body=payload)
+        return await client.request("delete", f"/template/pass/{path_seg(template_id)}")
     except ToolError:
         raise
     except Exception as e:
@@ -106,10 +107,10 @@ async def clearpass_manage_print_template(
         if not template_id:
             raise ToolError({"status_code": 400, "message": "template_id is required for update/replace/delete."})
         if action_type == "update":
-            return await client.request("patch", f"/template/print/{template_id}", json_body=payload)
+            return await client.request("patch", f"/template/print/{path_seg(template_id)}", json_body=payload)
         if action_type == "replace":
-            return await client.request("put", f"/template/print/{template_id}", json_body=payload)
-        return await client.request("delete", f"/template/print/{template_id}")
+            return await client.request("put", f"/template/print/{path_seg(template_id)}", json_body=payload)
+        return await client.request("delete", f"/template/print/{path_seg(template_id)}")
     except ToolError:
         raise
     except Exception as e:
@@ -162,10 +163,10 @@ async def clearpass_manage_weblogin_page(
             )
         if action_type == "delete":
             if page_id:
-                return await client.request("delete", f"/weblogin/{page_id}")
-            return await client.request("delete", f"/weblogin/page-name/{page_name}")
+                return await client.request("delete", f"/weblogin/{path_seg(page_id)}")
+            return await client.request("delete", f"/weblogin/page-name/{path_seg(page_name)}")
         # update or replace
-        path_suffix = f"/{page_id}" if page_id else f"/page-name/{page_name}"
+        path_suffix = f"/{path_seg(page_id)}" if page_id else f"/page-name/{path_seg(page_name)}"
         method = "patch" if action_type == "update" else "put"
         return await client.request(method, f"/weblogin{path_suffix}", json_body=payload)
     except ToolError:

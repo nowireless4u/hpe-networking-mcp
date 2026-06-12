@@ -22,6 +22,8 @@ from typing import Any
 
 from loguru import logger
 
+from hpe_networking_mcp.platforms._common.url import path_seg
+
 
 class ParameterError(ValueError):
     """Invalid or missing parameter (local stand-in for pycentral's ParameterError)."""
@@ -1332,7 +1334,10 @@ async def disconnect_all_clients(central_conn: Any, device_type: str, serial_num
 
     resp = await central_conn.command(
         api_method="POST",
-        api_path=_generate_url(f"{device_type}/{serial_number}/disconnectClientAll", "troubleshooting"),
+        api_path=_generate_url(
+            f"{path_seg(device_type)}/{path_seg(serial_number)}/disconnectClientAll",
+            "troubleshooting",
+        ),
     )
     if resp["code"] != 202:
         raise Exception(f"Failed to initiate disconnect for all clients: {resp['code']} - {resp['msg']}")
@@ -1363,7 +1368,10 @@ async def disconnect_all_users(central_conn: Any, device_type: str, serial_numbe
 
     resp = await central_conn.command(
         api_method="POST",
-        api_path=_generate_url(f"{device_type}/{serial_number}/disconnectUserAll", "troubleshooting"),
+        api_path=_generate_url(
+            f"{path_seg(device_type)}/{path_seg(serial_number)}/disconnectUserAll",
+            "troubleshooting",
+        ),
     )
     if resp["code"] != 202:
         raise Exception(f"Failed to initiate disconnect for all users: {resp['code']} - {resp['msg']}")
@@ -1406,7 +1414,10 @@ async def disconnect_all_users_ssid(
 
     resp = await central_conn.command(
         api_method="POST",
-        api_path=_generate_url(f"{device_type}/{serial_number}/disconnectUserByNetwork", "troubleshooting"),
+        api_path=_generate_url(
+            f"{path_seg(device_type)}/{path_seg(serial_number)}/disconnectUserByNetwork",
+            "troubleshooting",
+        ),
         api_data=api_data,
     )
     if resp["code"] != 202:
@@ -1453,7 +1464,10 @@ async def disconnect_client_mac_addr(
 
     resp = await central_conn.command(
         api_method="POST",
-        api_path=_generate_url(f"{device_type}/{serial_number}/disconnectClientByMacAddress", "troubleshooting"),
+        api_path=_generate_url(
+            f"{path_seg(device_type)}/{path_seg(serial_number)}/disconnectClientByMacAddress",
+            "troubleshooting",
+        ),
         api_data=api_data,
     )
     if resp["code"] != 202:
@@ -1498,7 +1512,10 @@ async def disconnect_user_mac_addr(
 
     resp = await central_conn.command(
         api_method="POST",
-        api_path=_generate_url(f"{device_type}/{serial_number}/disconnectUserByMacAddress", "troubleshooting"),
+        api_path=_generate_url(
+            f"{path_seg(device_type)}/{path_seg(serial_number)}/disconnectUserByMacAddress",
+            "troubleshooting",
+        ),
         api_data=api_data,
     )
     if resp["code"] != 202:
@@ -1597,7 +1614,7 @@ async def initiate_port_bounce_test(
 
     api_data = {"ports": ports}
 
-    api_path = _generate_url(f"{device_type}/{serial_number}/portBounce", "troubleshooting")
+    api_path = _generate_url(f"{path_seg(device_type)}/{path_seg(serial_number)}/portBounce", "troubleshooting")
     resp = await central_conn.command(api_method="POST", api_path=api_path, api_data=api_data)
 
     if resp["code"] != 202:
@@ -1641,7 +1658,7 @@ async def get_port_bounce_test_result(
     resp = await central_conn.command(
         api_method="GET",
         api_path=_generate_url(
-            f"{device_type}/{serial_number}/portBounce/async-operations/{task_id}",
+            f"{path_seg(device_type)}/{path_seg(serial_number)}/portBounce/async-operations/{path_seg(task_id)}",
             "troubleshooting",
         ),
     )
@@ -1748,7 +1765,7 @@ async def initiate_poe_bounce_test(
 
     api_data = {"ports": ports}
 
-    api_path = _generate_url(f"{device_type}/{serial_number}/poeBounce", "troubleshooting")
+    api_path = _generate_url(f"{path_seg(device_type)}/{path_seg(serial_number)}/poeBounce", "troubleshooting")
     resp = await central_conn.command(api_method="POST", api_path=api_path, api_data=api_data)
 
     if resp["code"] != 202:
@@ -1792,7 +1809,7 @@ async def get_poe_bounce_test_result(
     resp = await central_conn.command(
         api_method="GET",
         api_path=_generate_url(
-            f"{device_type}/{serial_number}/poeBounce/async-operations/{task_id}",
+            f"{path_seg(device_type)}/{path_seg(serial_number)}/poeBounce/async-operations/{path_seg(task_id)}",
             "troubleshooting",
         ),
     )
@@ -2093,7 +2110,7 @@ async def initiate_ping_aps_test(
     elif include_raw_output:
         raise ParameterError("include_raw_output must be a boolean value.")
 
-    api_path = _generate_url(f"{device_type}/{serial_number}/ping", "troubleshooting")
+    api_path = _generate_url(f"{path_seg(device_type)}/{path_seg(serial_number)}/ping", "troubleshooting")
     resp = await central_conn.command(api_method="POST", api_path=api_path, api_data=api_data)
 
     if resp["code"] != 202:
@@ -2179,7 +2196,7 @@ async def initiate_ping_cx_test(
     elif include_raw_output:
         raise ParameterError("include_raw_output must be a boolean value.")
 
-    api_path = _generate_url(f"{device_type}/{serial_number}/ping", "troubleshooting")
+    api_path = _generate_url(f"{path_seg(device_type)}/{path_seg(serial_number)}/ping", "troubleshooting")
     resp = await central_conn.command(api_method="POST", api_path=api_path, api_data=api_data)
 
     if resp["code"] != 202:
@@ -2286,7 +2303,7 @@ async def initiate_ping_gateways_test(
     elif include_raw_output:
         raise ParameterError("include_raw_output must be a boolean value.")
 
-    api_path = _generate_url(f"{device_type}/{serial_number}/ping", "troubleshooting")
+    api_path = _generate_url(f"{path_seg(device_type)}/{path_seg(serial_number)}/ping", "troubleshooting")
     resp = await central_conn.command(api_method="POST", api_path=api_path, api_data=api_data)
 
     if resp["code"] != 202:
@@ -2326,7 +2343,7 @@ async def get_ping_test_result(
     resp = await central_conn.command(
         api_method="GET",
         api_path=_generate_url(
-            f"{device_type}/{serial_number}/ping/async-operations/{task_id}",
+            f"{path_seg(device_type)}/{path_seg(serial_number)}/ping/async-operations/{path_seg(task_id)}",
             "troubleshooting",
         ),
     )
@@ -2560,7 +2577,7 @@ async def initiate_traceroute_aps_test(
 
     resp = await central_conn.command(
         api_method="POST",
-        api_path=_generate_url(f"{device_type}/{serial_number}/traceroute", "troubleshooting"),
+        api_path=_generate_url(f"{path_seg(device_type)}/{path_seg(serial_number)}/traceroute", "troubleshooting"),
         api_data=api_data,
     )
 
@@ -2634,7 +2651,7 @@ async def initiate_traceroute_cx_test(
 
     resp = await central_conn.command(
         api_method="POST",
-        api_path=_generate_url(f"{device_type}/{serial_number}/traceroute", "troubleshooting"),
+        api_path=_generate_url(f"{path_seg(device_type)}/{path_seg(serial_number)}/traceroute", "troubleshooting"),
         api_data=api_data,
     )
 
@@ -2695,7 +2712,7 @@ async def initiate_traceroute_gateways_test(
 
     resp = await central_conn.command(
         api_method="POST",
-        api_path=_generate_url(f"{device_type}/{serial_number}/traceroute", "troubleshooting"),
+        api_path=_generate_url(f"{path_seg(device_type)}/{path_seg(serial_number)}/traceroute", "troubleshooting"),
         api_data=api_data,
     )
 
@@ -2736,7 +2753,7 @@ async def get_traceroute_test_result(
     resp = await central_conn.command(
         api_method="GET",
         api_path=_generate_url(
-            f"{device_type}/{serial_number}/traceroute/async-operations/{task_id}",
+            f"{path_seg(device_type)}/{path_seg(serial_number)}/traceroute/async-operations/{path_seg(task_id)}",
             "troubleshooting",
         ),
     )
@@ -2850,7 +2867,7 @@ async def initiate_cable_test(
 
     api_data = {"ports": ports}
 
-    api_path = _generate_url(f"{device_type}/{serial_number}/cableTest", "troubleshooting")
+    api_path = _generate_url(f"{path_seg(device_type)}/{path_seg(serial_number)}/cableTest", "troubleshooting")
     resp = await central_conn.command(api_method="POST", api_path=api_path, api_data=api_data)
 
     if resp["code"] != 202:
@@ -2893,7 +2910,7 @@ async def get_cable_test_result(
     resp = await central_conn.command(
         api_method="GET",
         api_path=_generate_url(
-            f"{device_type}/{serial_number}/cableTest/async-operations/{task_id}",
+            f"{path_seg(device_type)}/{path_seg(serial_number)}/cableTest/async-operations/{path_seg(task_id)}",
             "troubleshooting",
         ),
     )
@@ -3043,7 +3060,7 @@ async def initiate_show_commands(
 
     api_data = {"commands": commands_list}
 
-    api_path = _generate_url(f"{device_type}/{serial_number}/showCommands", "troubleshooting")
+    api_path = _generate_url(f"{path_seg(device_type)}/{path_seg(serial_number)}/showCommands", "troubleshooting")
     resp = await central_conn.command(api_method="POST", api_path=api_path, api_data=api_data)
 
     if resp["code"] != 202:
@@ -3088,7 +3105,7 @@ async def get_show_commands_result(
     resp = await central_conn.command(
         api_method="GET",
         api_path=_generate_url(
-            f"{device_type}/{serial_number}/showCommands/async-operations/{task_id}",
+            f"{path_seg(device_type)}/{path_seg(serial_number)}/showCommands/async-operations/{path_seg(task_id)}",
             "troubleshooting",
         ),
     )

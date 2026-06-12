@@ -8,6 +8,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.apstra import guidelines
 from hpe_networking_mcp.platforms.apstra._registry import tool
 from hpe_networking_mcp.platforms.apstra.client import format_http_error, get_apstra_client
@@ -24,7 +25,7 @@ async def apstra_get_connectivity_templates(ctx: Context, blueprint_id: str) -> 
     """
     try:
         client = await get_apstra_client()
-        payload = await client.get_json(f"/api/blueprints/{blueprint_id}/obj-policy-export")
+        payload = await client.get_json(f"/api/blueprints/{path_seg(blueprint_id)}/obj-policy-export")
         return {
             "guidelines": guidelines.get_base_guidelines() + guidelines.get_network_guidelines(),
             "data": payload,
@@ -46,7 +47,10 @@ async def apstra_get_application_endpoints(ctx: Context, blueprint_id: str) -> d
     """
     try:
         client = await get_apstra_client()
-        response = await client.request("POST", f"/api/blueprints/{blueprint_id}/obj-policy-application-points")
+        response = await client.request(
+            "POST",
+            f"/api/blueprints/{path_seg(blueprint_id)}/obj-policy-application-points",
+        )
         payload = response.json()
         return {
             "guidelines": guidelines.get_base_guidelines() + guidelines.get_network_guidelines(),

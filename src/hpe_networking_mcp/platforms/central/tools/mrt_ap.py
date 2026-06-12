@@ -13,6 +13,7 @@ from fastmcp import Context
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.utils import coerce_enum, get_central_conn, retry_central_command
 
@@ -97,7 +98,7 @@ async def central_get_ap_trend(
         params["interface-type"] = interface_type or "WIRELESS"
     return await _get(
         conn,
-        f"network-monitoring/v1/aps/{serial_number}/{suffix_map[dimension]}",
+        f"network-monitoring/v1/aps/{path_seg(serial_number)}/{path_seg(suffix_map[dimension])}",
         params,
     )
 
@@ -114,7 +115,7 @@ async def central_get_ap_radios(
 ) -> dict | str:
     """List the radios on an AP (2.4, 5, 6 GHz typically)."""
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/aps/{serial_number}/radios")
+    return await _get(conn, f"network-monitoring/v1/aps/{path_seg(serial_number)}/radios")
 
 
 _RadioTrendDimension = Literal["throughput", "channel-utilization", "channel-quality", "noise-floor", "frames"]
@@ -148,7 +149,8 @@ async def central_get_ap_radio_trend(
     conn = get_central_conn(ctx)
     return await _get(
         conn,
-        f"network-monitoring/v1/aps/{serial_number}/radios/{radio_number}/{suffix_map[dimension]}",
+        f"network-monitoring/v1/aps/{path_seg(serial_number)}/radios/"
+        f"{path_seg(radio_number)}/{path_seg(suffix_map[dimension])}",
         _time_params(start, end),
     )
 
@@ -165,7 +167,7 @@ async def central_get_ap_ports(
 ) -> dict | str:
     """List the Ethernet ports on an AP."""
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/aps/{serial_number}/ports")
+    return await _get(conn, f"network-monitoring/v1/aps/{path_seg(serial_number)}/ports")
 
 
 _PortTrendDimension = Literal["throughput", "frames", "crc", "collisions"]
@@ -193,7 +195,8 @@ async def central_get_ap_port_trend(
     conn = get_central_conn(ctx)
     return await _get(
         conn,
-        f"network-monitoring/v1/aps/{serial_number}/ports/{port_index}/{suffix_map[dimension]}",
+        f"network-monitoring/v1/aps/{path_seg(serial_number)}/ports/"
+        f"{path_seg(port_index)}/{path_seg(suffix_map[dimension])}",
         _time_params(start, end),
     )
 
@@ -210,7 +213,7 @@ async def central_get_ap_tunnels(
 ) -> dict | str:
     """List active tunnels on an AP."""
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/aps/{serial_number}/tunnels")
+    return await _get(conn, f"network-monitoring/v1/aps/{path_seg(serial_number)}/tunnels")
 
 
 @tool(capability=Capability.READ)
@@ -221,7 +224,7 @@ async def central_get_ap_tunnel(
 ) -> dict | str:
     """Get one tunnel's detail on an AP."""
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/aps/{serial_number}/tunnels/{tunnel_id}")
+    return await _get(conn, f"network-monitoring/v1/aps/{path_seg(serial_number)}/tunnels/{path_seg(tunnel_id)}")
 
 
 _TunnelTrendDimension = Literal["throughput", "packet-loss", "mos", "jitter", "latency"]
@@ -255,7 +258,8 @@ async def central_get_ap_tunnel_trend(
     conn = get_central_conn(ctx)
     return await _get(
         conn,
-        f"network-monitoring/v1/aps/{serial_number}/tunnels/{tunnel_id}/{suffix_map[dimension]}",
+        f"network-monitoring/v1/aps/{path_seg(serial_number)}/tunnels/"
+        f"{path_seg(tunnel_id)}/{path_seg(suffix_map[dimension])}",
         _time_params(start, end),
     )
 
@@ -277,7 +281,7 @@ async def central_get_ap_wlans_monitoring(
     ``/aps/:serial/wlans`` endpoint directly.
     """
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/aps/{serial_number}/wlans")
+    return await _get(conn, f"network-monitoring/v1/aps/{path_seg(serial_number)}/wlans")
 
 
 @tool(capability=Capability.READ)
@@ -292,7 +296,7 @@ async def central_get_ap_wlan_throughput(
     conn = get_central_conn(ctx)
     return await _get(
         conn,
-        f"network-monitoring/v1/aps/{serial_number}/wlans/{wlan_name}/throughput-trends",
+        f"network-monitoring/v1/aps/{path_seg(serial_number)}/wlans/{path_seg(wlan_name)}/throughput-trends",
         _time_params(start, end),
     )
 
@@ -338,7 +342,7 @@ async def central_get_top_aps_by_usage(
     params: dict = {"topN": top_n}
     if filter:
         params["filter"] = filter
-    return await _get(conn, f"network-monitoring/v1/{suffix_map[metric]}", params)
+    return await _get(conn, f"network-monitoring/v1/{path_seg(suffix_map[metric])}", params)
 
 
 # ---------------------------------------------------------------------------
@@ -403,7 +407,7 @@ async def central_get_wlan_monitoring_detail(
 ) -> dict | str:
     """Get one WLAN's monitoring-side detail by name."""
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/wlans/{wlan_name}")
+    return await _get(conn, f"network-monitoring/v1/wlans/{path_seg(wlan_name)}")
 
 
 @tool(capability=Capability.READ)
@@ -428,7 +432,7 @@ async def central_get_swarm(
 ) -> dict | str:
     """Get one swarm / IAP cluster's detail."""
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/swarms/{cluster_id}")
+    return await _get(conn, f"network-monitoring/v1/swarms/{path_seg(cluster_id)}")
 
 
 @tool(capability=Capability.READ)

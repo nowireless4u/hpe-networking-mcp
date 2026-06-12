@@ -6,6 +6,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
@@ -38,9 +39,9 @@ async def clearpass_get_services(
     try:
         client = await get_clearpass_client()
         if config_service_id:
-            return await client.request("get", f"/config/service/{config_service_id}")
+            return await client.request("get", f"/config/service/{path_seg(config_service_id)}")
         if name:
-            return await client.request("get", f"/config/service/name/{name}")
+            return await client.request("get", f"/config/service/name/{path_seg(name)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/config/service" + query)
     except ToolError:
@@ -76,9 +77,9 @@ async def clearpass_get_posture_policies(
     try:
         client = await get_clearpass_client()
         if posture_policy_id:
-            return await client.request("get", f"/posture-policy/{posture_policy_id}")
+            return await client.request("get", f"/posture-policy/{path_seg(posture_policy_id)}")
         if name:
-            return await client.request("get", f"/posture-policy/name/{name}")
+            return await client.request("get", f"/posture-policy/name/{path_seg(name)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/posture-policy" + query)
     except ToolError:
@@ -114,9 +115,9 @@ async def clearpass_get_device_groups(
     try:
         client = await get_clearpass_client()
         if network_device_group_id:
-            return await client.request("get", f"/network-device-group/{network_device_group_id}")
+            return await client.request("get", f"/network-device-group/{path_seg(network_device_group_id)}")
         if name:
-            return await client.request("get", f"/network-device-group/name/{name}")
+            return await client.request("get", f"/network-device-group/name/{path_seg(name)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/network-device-group" + query)
     except ToolError:
@@ -152,9 +153,9 @@ async def clearpass_get_proxy_targets(
     try:
         client = await get_clearpass_client()
         if proxy_target_id:
-            return await client.request("get", f"/proxy-target/{proxy_target_id}")
+            return await client.request("get", f"/proxy-target/{path_seg(proxy_target_id)}")
         if name:
-            return await client.request("get", f"/proxy-target/name/{name}")
+            return await client.request("get", f"/proxy-target/name/{path_seg(name)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/proxy-target" + query)
     except ToolError:
@@ -190,9 +191,9 @@ async def clearpass_get_radius_dictionaries(
     try:
         client = await get_clearpass_client()
         if radius_dictionary_id:
-            return await client.request("get", f"/radius-dictionary/{radius_dictionary_id}")
+            return await client.request("get", f"/radius-dictionary/{path_seg(radius_dictionary_id)}")
         if name:
-            return await client.request("get", f"/radius-dictionary/name/{name}")
+            return await client.request("get", f"/radius-dictionary/name/{path_seg(name)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/radius-dictionary" + query)
     except ToolError:
@@ -228,9 +229,9 @@ async def clearpass_get_tacacs_dictionaries(
     try:
         client = await get_clearpass_client()
         if tacacs_service_dictionary_id:
-            return await client.request("get", f"/tacacs-service-dictionary/{tacacs_service_dictionary_id}")
+            return await client.request("get", f"/tacacs-service-dictionary/{path_seg(tacacs_service_dictionary_id)}")
         if name:
-            return await client.request("get", f"/tacacs-service-dictionary/name/{name}")
+            return await client.request("get", f"/tacacs-service-dictionary/name/{path_seg(name)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/tacacs-service-dictionary" + query)
     except ToolError:
@@ -266,9 +267,9 @@ async def clearpass_get_application_dictionaries(
     try:
         client = await get_clearpass_client()
         if application_dictionary_id:
-            return await client.request("get", f"/application-dictionary/{application_dictionary_id}")
+            return await client.request("get", f"/application-dictionary/{path_seg(application_dictionary_id)}")
         if name:
-            return await client.request("get", f"/application-dictionary/name/{name}")
+            return await client.request("get", f"/application-dictionary/name/{path_seg(name)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/application-dictionary" + query)
     except ToolError:
@@ -311,9 +312,9 @@ async def clearpass_get_radius_dynamic_authorization_template(
     try:
         client = await get_clearpass_client()
         if template_id:
-            return await clearpass_get(client, f"/radius-dynamic-authorization-template/{template_id}")
+            return await clearpass_get(client, f"/radius-dynamic-authorization-template/{path_seg(template_id)}")
         if name:
-            return await clearpass_get(client, f"/radius-dynamic-authorization-template/name/{name}")
+            return await clearpass_get(client, f"/radius-dynamic-authorization-template/name/{path_seg(name)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/radius-dynamic-authorization-template" + query)
     except ToolError:

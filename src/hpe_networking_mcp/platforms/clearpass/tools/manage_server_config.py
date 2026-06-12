@@ -9,6 +9,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
@@ -45,11 +46,13 @@ async def clearpass_manage_admin_user(
                 {"status_code": 400, "message": "Either admin_user_id or name is required for update/delete."}
             )
         if action_type == "update":
-            path = f"/admin-user/{admin_user_id}" if admin_user_id else f"/admin-user/user-id/{name}"
+            path = (
+                f"/admin-user/{path_seg(admin_user_id)}" if admin_user_id else f"/admin-user/user-id/{path_seg(name)}"
+            )
             return await client.request("patch", path, json_body=payload)
         if admin_user_id:
-            return await client.request("delete", f"/admin-user/{admin_user_id}")
-        return await client.request("delete", f"/admin-user/user-id/{name}")
+            return await client.request("delete", f"/admin-user/{path_seg(admin_user_id)}")
+        return await client.request("delete", f"/admin-user/user-id/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:
@@ -88,11 +91,15 @@ async def clearpass_manage_admin_privilege(
                 {"status_code": 400, "message": "Either admin_privilege_id or name is required for update/delete."}
             )
         if action_type == "update":
-            path = f"/admin-privilege/{admin_privilege_id}" if admin_privilege_id else f"/admin-privilege/name/{name}"
+            path = (
+                f"/admin-privilege/{path_seg(admin_privilege_id)}"
+                if admin_privilege_id
+                else f"/admin-privilege/name/{path_seg(name)}"
+            )
             return await client.request("patch", path, json_body=payload)
         if admin_privilege_id:
-            return await client.request("delete", f"/admin-privilege/{admin_privilege_id}")
-        return await client.request("delete", f"/admin-privilege/name/{name}")
+            return await client.request("delete", f"/admin-privilege/{path_seg(admin_privilege_id)}")
+        return await client.request("delete", f"/admin-privilege/name/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:
@@ -134,12 +141,14 @@ async def clearpass_manage_operator_profile(
             )
         if action_type == "update":
             path = (
-                f"/operator-profile/{operator_profile_id}" if operator_profile_id else f"/operator-profile/name/{name}"
+                f"/operator-profile/{path_seg(operator_profile_id)}"
+                if operator_profile_id
+                else f"/operator-profile/name/{path_seg(name)}"
             )
             return await client.request("patch", path, json_body=payload)
         if operator_profile_id:
-            return await client.request("delete", f"/operator-profile/{operator_profile_id}")
-        return await client.request("delete", f"/operator-profile/name/{name}")
+            return await client.request("delete", f"/operator-profile/{path_seg(operator_profile_id)}")
+        return await client.request("delete", f"/operator-profile/name/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:
@@ -175,10 +184,10 @@ async def clearpass_manage_license(
         if not license_id:
             raise ToolError({"status_code": 400, "message": "license_id is required for delete/activate operations."})
         if action_type == "delete":
-            return await client.request("delete", f"/application-license/{license_id}")
+            return await client.request("delete", f"/application-license/{path_seg(license_id)}")
         if action_type == "activate_online":
-            return await client.request("patch", f"/application-license/activate-online/{license_id}")
-        return await client.request("patch", f"/application-license/activate-offline/{license_id}")
+            return await client.request("patch", f"/application-license/activate-online/{path_seg(license_id)}")
+        return await client.request("patch", f"/application-license/activate-offline/{path_seg(license_id)}")
     except ToolError:
         raise
     except Exception as e:
@@ -285,11 +294,15 @@ async def clearpass_manage_attribute(
                 }
             )
         if action_type == "update":
-            path = f"/attribute/{attribute_id}" if attribute_id else f"/attribute/{entity_name}/name/{name}"
+            path = (
+                f"/attribute/{path_seg(attribute_id)}"
+                if attribute_id
+                else f"/attribute/{path_seg(entity_name)}/name/{path_seg(name)}"
+            )
             return await client.request("patch", path, json_body=payload)
         if attribute_id:
-            return await client.request("delete", f"/attribute/{attribute_id}")
-        return await client.request("delete", f"/attribute/{entity_name}/name/{name}")
+            return await client.request("delete", f"/attribute/{path_seg(attribute_id)}")
+        return await client.request("delete", f"/attribute/{path_seg(entity_name)}/name/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:
@@ -328,11 +341,13 @@ async def clearpass_manage_data_filter(
                 {"status_code": 400, "message": "Either data_filter_id or name is required for update/delete."}
             )
         if action_type == "update":
-            path = f"/data-filter/{data_filter_id}" if data_filter_id else f"/data-filter/name/{name}"
+            path = (
+                f"/data-filter/{path_seg(data_filter_id)}" if data_filter_id else f"/data-filter/name/{path_seg(name)}"
+            )
             return await client.request("patch", path, json_body=payload)
         if data_filter_id:
-            return await client.request("delete", f"/data-filter/{data_filter_id}")
-        return await client.request("delete", f"/data-filter/name/{name}")
+            return await client.request("delete", f"/data-filter/{path_seg(data_filter_id)}")
+        return await client.request("delete", f"/data-filter/name/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:
@@ -374,14 +389,14 @@ async def clearpass_manage_file_backup_server(
             )
         if action_type == "update":
             path = (
-                f"/file-backup-server/{file_backup_server_id}"
+                f"/file-backup-server/{path_seg(file_backup_server_id)}"
                 if file_backup_server_id
-                else f"/file-backup-server/host-address/{name}"
+                else f"/file-backup-server/host-address/{path_seg(name)}"
             )
             return await client.request("patch", path, json_body=payload)
         if file_backup_server_id:
-            return await client.request("delete", f"/file-backup-server/{file_backup_server_id}")
-        return await client.request("delete", f"/file-backup-server/host-address/{name}")
+            return await client.request("delete", f"/file-backup-server/{path_seg(file_backup_server_id)}")
+        return await client.request("delete", f"/file-backup-server/host-address/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:
@@ -457,14 +472,14 @@ async def clearpass_manage_snmp_trap_receiver(
             )
         if action_type == "update":
             path = (
-                f"/snmp-trap-receiver/{snmp_trap_receiver_id}"
+                f"/snmp-trap-receiver/{path_seg(snmp_trap_receiver_id)}"
                 if snmp_trap_receiver_id
-                else f"/snmp-trap-receiver/name/{name}"
+                else f"/snmp-trap-receiver/name/{path_seg(name)}"
             )
             return await client.request("patch", path, json_body=payload)
         if snmp_trap_receiver_id:
-            return await client.request("delete", f"/snmp-trap-receiver/{snmp_trap_receiver_id}")
-        return await client.request("delete", f"/snmp-trap-receiver/name/{name}")
+            return await client.request("delete", f"/snmp-trap-receiver/{path_seg(snmp_trap_receiver_id)}")
+        return await client.request("delete", f"/snmp-trap-receiver/name/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:
@@ -506,14 +521,14 @@ async def clearpass_manage_policy_manager_zone(
             )
         if action_type == "update":
             path = (
-                f"/server/policy-manager-zones/{policy_manager_zones_id}"
+                f"/server/policy-manager-zones/{path_seg(policy_manager_zones_id)}"
                 if policy_manager_zones_id
-                else f"/server/policy-manager-zones/name/{name}"
+                else f"/server/policy-manager-zones/name/{path_seg(name)}"
             )
             return await client.request("put", path, json_body=payload)
         if policy_manager_zones_id:
-            return await client.request("delete", f"/server/policy-manager-zones/{policy_manager_zones_id}")
-        return await client.request("delete", f"/server/policy-manager-zones/name/{name}")
+            return await client.request("delete", f"/server/policy-manager-zones/{path_seg(policy_manager_zones_id)}")
+        return await client.request("delete", f"/server/policy-manager-zones/name/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:

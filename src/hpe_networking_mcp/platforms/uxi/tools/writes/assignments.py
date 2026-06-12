@@ -18,6 +18,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.uxi._registry import tool
 from hpe_networking_mcp.platforms.uxi.client import format_http_error, get_uxi_client
 from hpe_networking_mcp.platforms.uxi.tools._validators import validate_id
@@ -72,7 +73,7 @@ async def uxi_remove_agent_from_group(
 
     try:
         client = await get_uxi_client()
-        result = await client.uxi_delete(f"/agent-group-assignments/{assignment_id}")
+        result = await client.uxi_delete(f"/agent-group-assignments/{path_seg(assignment_id)}")
         return {"result": result}
     except ToolError:
         raise
@@ -129,7 +130,7 @@ async def uxi_remove_sensor_from_group(
 
     try:
         client = await get_uxi_client()
-        result = await client.uxi_delete(f"/sensor-group-assignments/{assignment_id}")
+        result = await client.uxi_delete(f"/sensor-group-assignments/{path_seg(assignment_id)}")
         return {"result": result}
     except ToolError:
         raise

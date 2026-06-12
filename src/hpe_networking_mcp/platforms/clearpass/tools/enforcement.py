@@ -6,6 +6,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import clearpass_get
@@ -41,9 +42,9 @@ async def clearpass_get_enforcement_policies(
     try:
         client = await get_clearpass_client()
         if policy_id:
-            return await client.request("get", f"/enforcement-policy/{policy_id}")
+            return await client.request("get", f"/enforcement-policy/{path_seg(policy_id)}")
         if name:
-            return await client.request("get", f"/enforcement-policy/name/{name}")
+            return await client.request("get", f"/enforcement-policy/name/{path_seg(name)}")
         params = [
             f"filter={filter}" if filter else "",
             f"sort={sort}" if sort else "",
@@ -89,9 +90,9 @@ async def clearpass_get_enforcement_profiles(
     try:
         client = await get_clearpass_client()
         if profile_id:
-            return await client.request("get", f"/enforcement-profile/{profile_id}")
+            return await client.request("get", f"/enforcement-profile/{path_seg(profile_id)}")
         if name:
-            return await client.request("get", f"/enforcement-profile/name/{name}")
+            return await client.request("get", f"/enforcement-profile/name/{path_seg(name)}")
         params = [
             f"filter={filter}" if filter else "",
             f"sort={sort}" if sort else "",

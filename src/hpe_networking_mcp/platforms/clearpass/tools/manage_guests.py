@@ -9,6 +9,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
@@ -57,12 +58,12 @@ async def clearpass_manage_guest_user(
             )
         if action_type == "update":
             if guest_id:
-                return await client.request("patch", f"/guest/{guest_id}", json_body=payload)
-            return await client.request("patch", f"/guest/username/{username}", json_body=payload)
+                return await client.request("patch", f"/guest/{path_seg(guest_id)}", json_body=payload)
+            return await client.request("patch", f"/guest/username/{path_seg(username)}", json_body=payload)
         # delete
         if guest_id:
-            return await client.request("delete", f"/guest/{guest_id}")
-        return await client.request("delete", f"/guest/username/{username}")
+            return await client.request("delete", f"/guest/{path_seg(guest_id)}")
+        return await client.request("delete", f"/guest/username/{path_seg(username)}")
     except ToolError:
         raise
     except Exception as e:
@@ -100,7 +101,9 @@ async def clearpass_send_guest_credentials(
         # Live-verified route (#469): /sendreceipt/sms|smtp with a required
         # confirm flag — the old /send-sms|send-email paths return HTTP 405.
         channel = "sms" if delivery_method == "sms" else "smtp"
-        return await client.request("post", f"/guest/{guest_id}/sendreceipt/{channel}", json_body={"confirm": 1})
+        return await client.request(
+            "post", f"/guest/{path_seg(guest_id)}/sendreceipt/{path_seg(channel)}", json_body={"confirm": 1}
+        )
     except ToolError:
         raise
     except Exception as e:
@@ -135,7 +138,7 @@ async def clearpass_generate_guest_pass(
     try:
         client = await get_clearpass_client()
         endpoint = "pass" if pass_type == "digital" else "receipt"  # nosec B105 — API path, not a password
-        return await client.request("get", f"/guest/{guest_id}/{endpoint}/{template_id}")
+        return await client.request("get", f"/guest/{path_seg(guest_id)}/{path_seg(endpoint)}/{path_seg(template_id)}")
     except ToolError:
         raise
     except Exception as e:
@@ -187,7 +190,7 @@ async def clearpass_process_sponsor_action(
         client = await get_clearpass_client()
         return await client.request(
             "post",
-            f"/guest/{guest_id}/sponsor",
+            f"/guest/{path_seg(guest_id)}/sponsor",
             params={"gsr_id": gsr_id} if gsr_id else None,
             json_body=body,
         )

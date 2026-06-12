@@ -18,6 +18,7 @@ from loguru import logger
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.greenlake._registry import tool
 from hpe_networking_mcp.platforms.greenlake.client import get_greenlake_client
 
@@ -51,7 +52,7 @@ async def greenlake_get_workspace(
         raise ToolError({"status_code": 400, "message": "workspaceId is required and cannot be empty"})
 
     async with get_greenlake_client(ctx) as client:
-        return await client.get(f"/workspaces/v1/workspaces/{workspaceId}")
+        return await client.get(f"/workspaces/v1/workspaces/{path_seg(workspaceId)}")
 
 
 # ---------------------------------------------------------------------------
@@ -84,4 +85,4 @@ async def greenlake_get_workspace_details(
         raise ToolError({"status_code": 400, "message": "workspaceId is required and cannot be empty"})
 
     async with get_greenlake_client(ctx) as client:
-        return await client.get(f"/workspaces/v1/workspaces/{workspaceId}/contact")
+        return await client.get(f"/workspaces/v1/workspaces/{path_seg(workspaceId)}/contact")

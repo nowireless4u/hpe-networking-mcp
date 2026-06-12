@@ -4,6 +4,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
@@ -34,7 +35,7 @@ async def central_get_switch_hardware_trends(
         resp = await retry_central_command(
             central_conn=conn,
             api_method="GET",
-            api_path=(f"network-monitoring/v1/switches/{serial_number}/hardware-trends"),
+            api_path=(f"network-monitoring/v1/switches/{path_seg(serial_number)}/hardware-trends"),
         )
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching hardware trends: {e}"}) from e
@@ -123,7 +124,7 @@ async def central_get_switch_poe(
         resp = await retry_central_command(
             central_conn=conn,
             api_method="GET",
-            api_path=(f"network-monitoring/v1/switches/{serial_number}/interface-poe"),
+            api_path=(f"network-monitoring/v1/switches/{path_seg(serial_number)}/interface-poe"),
             api_params={"limit": limit},
         )
     except Exception as e:

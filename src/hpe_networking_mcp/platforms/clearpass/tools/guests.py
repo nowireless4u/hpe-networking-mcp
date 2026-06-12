@@ -6,6 +6,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import clearpass_get
@@ -38,9 +39,9 @@ async def clearpass_get_guest_users(
     try:
         client = await get_clearpass_client()
         if guest_id:
-            return await client.request("get", f"/guest/{guest_id}")
+            return await client.request("get", f"/guest/{path_seg(guest_id)}")
         if username:
-            return await client.request("get", f"/guest/username/{username}")
+            return await client.request("get", f"/guest/username/{path_seg(username)}")
         params = [
             f"filter={filter}" if filter else "",
             f"sort={sort}" if sort else "",

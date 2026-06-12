@@ -13,6 +13,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.axis._registry import tool
 from hpe_networking_mcp.platforms.axis.client import format_http_error, get_axis_client
 from hpe_networking_mcp.platforms.axis.tools._manage import manage_entity
@@ -38,7 +39,7 @@ async def axis_get_tunnels(
     try:
         client = await get_axis_client()
         if tunnel_id:
-            return await client.get_json(f"/Tunnels/{tunnel_id}")
+            return await client.get_json(f"/Tunnels/{path_seg(tunnel_id)}")
         return await client.get_paged("/Tunnels", page_number=page_number, page_size=page_size)
     except Exception as e:
         detail = format_http_error(e)

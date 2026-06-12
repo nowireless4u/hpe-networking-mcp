@@ -14,6 +14,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.axis._registry import tool
 from hpe_networking_mcp.platforms.axis.client import format_http_error, get_axis_client
 
@@ -35,9 +36,9 @@ async def axis_get_status(
         entity_id: GUID of the connector or tunnel.
     """
     if entity_type == "connector":
-        path = f"/Connectors/{entity_id}/status"
+        path = f"/Connectors/{path_seg(entity_id)}/status"
     elif entity_type == "tunnel":
-        path = f"/Tunnels/{entity_id}/status"
+        path = f"/Tunnels/{path_seg(entity_id)}/status"
     else:
         raise ToolError(
             {"status_code": 400, "message": f"Invalid entity_type '{entity_type}'. Must be 'connector' or 'tunnel'."}

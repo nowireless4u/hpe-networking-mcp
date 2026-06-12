@@ -9,6 +9,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
@@ -58,12 +59,12 @@ async def clearpass_manage_enforcement_policy(
             raise ToolError({"status_code": 400, "message": "Either policy_id or name is required for update/delete."})
         if action_type == "update":
             if policy_id:
-                return await client.request("patch", f"/enforcement-policy/{policy_id}", json_body=payload)
-            return await client.request("patch", f"/enforcement-policy/name/{name}", json_body=payload)
+                return await client.request("patch", f"/enforcement-policy/{path_seg(policy_id)}", json_body=payload)
+            return await client.request("patch", f"/enforcement-policy/name/{path_seg(name)}", json_body=payload)
         # delete
         if policy_id:
-            return await client.request("delete", f"/enforcement-policy/{policy_id}")
-        return await client.request("delete", f"/enforcement-policy/name/{name}")
+            return await client.request("delete", f"/enforcement-policy/{path_seg(policy_id)}")
+        return await client.request("delete", f"/enforcement-policy/name/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:
@@ -115,12 +116,12 @@ async def clearpass_manage_enforcement_profile(
             raise ToolError({"status_code": 400, "message": "Either profile_id or name is required for update/delete."})
         if action_type == "update":
             if profile_id:
-                return await client.request("patch", f"/enforcement-profile/{profile_id}", json_body=payload)
-            return await client.request("patch", f"/enforcement-profile/name/{name}", json_body=payload)
+                return await client.request("patch", f"/enforcement-profile/{path_seg(profile_id)}", json_body=payload)
+            return await client.request("patch", f"/enforcement-profile/name/{path_seg(name)}", json_body=payload)
         # delete
         if profile_id:
-            return await client.request("delete", f"/enforcement-profile/{profile_id}")
-        return await client.request("delete", f"/enforcement-profile/name/{name}")
+            return await client.request("delete", f"/enforcement-profile/{path_seg(profile_id)}")
+        return await client.request("delete", f"/enforcement-profile/name/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:

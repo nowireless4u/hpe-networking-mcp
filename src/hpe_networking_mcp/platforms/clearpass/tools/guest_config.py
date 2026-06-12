@@ -6,6 +6,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
@@ -36,7 +37,7 @@ async def clearpass_get_pass_templates(
     try:
         client = await get_clearpass_client()
         if template_id:
-            return await client.request("get", f"/template/pass/{template_id}")
+            return await client.request("get", f"/template/pass/{path_seg(template_id)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/template/pass" + query)
     except ToolError:
@@ -70,7 +71,7 @@ async def clearpass_get_print_templates(
     try:
         client = await get_clearpass_client()
         if template_id:
-            return await client.request("get", f"/template/print/{template_id}")
+            return await client.request("get", f"/template/print/{path_seg(template_id)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/template/print" + query)
     except ToolError:
@@ -106,9 +107,9 @@ async def clearpass_get_weblogin_pages(
     try:
         client = await get_clearpass_client()
         if page_id:
-            return await client.request("get", f"/weblogin/{page_id}")
+            return await client.request("get", f"/weblogin/{path_seg(page_id)}")
         if page_name:
-            return await client.request("get", f"/weblogin/page-name/{page_name}")
+            return await client.request("get", f"/weblogin/page-name/{path_seg(page_name)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/weblogin" + query)
     except ToolError:

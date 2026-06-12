@@ -13,6 +13,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.uxi._registry import tool
 from hpe_networking_mcp.platforms.uxi.client import format_http_error, get_uxi_client
 from hpe_networking_mcp.platforms.uxi.tools._validators import validate_id
@@ -67,7 +68,7 @@ async def uxi_update_group(
 
     try:
         client = await get_uxi_client()
-        result = await client.uxi_patch(f"/groups/{group_id}", {"name": name})
+        result = await client.uxi_patch(f"/groups/{path_seg(group_id)}", {"name": name})
         return {"result": result}
     except ToolError:
         raise
@@ -92,7 +93,7 @@ async def uxi_delete_group(
 
     try:
         client = await get_uxi_client()
-        result = await client.uxi_delete(f"/groups/{group_id}")
+        result = await client.uxi_delete(f"/groups/{path_seg(group_id)}")
         return {"result": result}
     except ToolError:
         raise

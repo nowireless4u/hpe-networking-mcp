@@ -26,6 +26,7 @@ from fastmcp.exceptions import ToolError
 from loguru import logger
 
 from hpe_networking_mcp.platforms._common.auth import AsyncTokenManager
+from hpe_networking_mcp.platforms._common.url import path_seg
 
 # Status code → human-friendly message used in ToolError responses when the
 # server doesn't return a useful detail body.
@@ -224,7 +225,7 @@ async def mist_request(
         for name, value in path_params.items():
             if name == "org_id":
                 value = _validate_org_id(ctx, value)
-            substituted = substituted.replace("{" + name + "}", str(value))
+            substituted = substituted.replace("{" + name + "}", path_seg(value))
 
     clean_query = _strip_none(query_params or {})
     request_kwargs: dict[str, Any] = {"params": clean_query} if clean_query else {}

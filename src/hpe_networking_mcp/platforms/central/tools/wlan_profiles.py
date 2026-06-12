@@ -12,6 +12,7 @@ from loguru import logger
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
@@ -39,7 +40,7 @@ async def central_get_wlan_profiles(
     """
     conn = get_central_conn(ctx)
 
-    api_path = f"network-config/v1alpha1/wlan-ssids/{ssid}" if ssid else "network-config/v1alpha1/wlan-ssids"
+    api_path = f"network-config/v1alpha1/wlan-ssids/{path_seg(ssid)}" if ssid else "network-config/v1alpha1/wlan-ssids"
 
     response = await retry_central_command(
         central_conn=conn,
@@ -186,7 +187,7 @@ async def central_manage_wlan_profile(
                 }
             )
 
-    api_path = f"network-config/v1alpha1/wlan-ssids/{ssid}"
+    api_path = f"network-config/v1alpha1/wlan-ssids/{path_seg(ssid)}"
     conn = get_central_conn(ctx)
 
     # Method selection: update defaults to PATCH (partial merge on the

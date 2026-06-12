@@ -9,6 +9,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import ClearPassClient, get_clearpass_client
 
@@ -38,7 +39,7 @@ async def _resolve_device_id(client: ClearPassClient, device_id: str | None, nam
     if device_id:
         return device_id
     if name:
-        result = await client.request("get", f"/network-device/name/{name}")
+        result = await client.request("get", f"/network-device/name/{path_seg(name)}")
         if isinstance(result, dict) and "id" in result:
             return str(result["id"])
     return None
@@ -131,7 +132,7 @@ async def _execute_device_action(
     if action_type == "clone":
         if not source_device_id:
             raise ToolError({"status_code": 400, "message": "source_device_id is required for clone action."})
-        source = await client.request("get", f"/network-device/{source_device_id}")
+        source = await client.request("get", f"/network-device/{path_seg(source_device_id)}")
         if not isinstance(source, dict):
             raise ToolError({"status_code": 404, "message": f"Failed to retrieve source device {source_device_id}."})
         source.pop("id", None)
@@ -140,14 +141,14 @@ async def _execute_device_action(
 
     resolved_id = await _resolve_device_id(client, device_id, name)
     if not resolved_id and action_type == "delete" and name:
-        return await client.request("delete", f"/network-device/name/{name}")
+        return await client.request("delete", f"/network-device/name/{path_seg(name)}")
     if not resolved_id:
         raise ToolError({"status_code": 400, "message": "Either device_id or name is required for this action."})
 
     if action_type == "update":
-        return await client.request("patch", f"/network-device/{resolved_id}", json_body=payload)
+        return await client.request("patch", f"/network-device/{path_seg(resolved_id)}", json_body=payload)
     if action_type == "delete":
-        return await client.request("delete", f"/network-device/{resolved_id}")
+        return await client.request("delete", f"/network-device/{path_seg(resolved_id)}")
 
     # configure_snmp, configure_radsec, configure_cli, configure_onconnect
-    return await client.request("patch", f"/network-device/{resolved_id}", json_body=payload)
+    return await client.request("patch", f"/network-device/{path_seg(resolved_id)}", json_body=payload)

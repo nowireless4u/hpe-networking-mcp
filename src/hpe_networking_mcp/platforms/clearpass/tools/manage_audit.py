@@ -9,6 +9,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import ClearPassClient, get_clearpass_client
 
@@ -81,17 +82,17 @@ async def _execute_alert_action(
     if not alert_id:
         raise ToolError({"status_code": 400, "message": "alert_id is required for this action."})
     if action_type == "update":
-        return await client.request("patch", f"/alert/{alert_id}", json_body=payload)
+        return await client.request("patch", f"/alert/{path_seg(alert_id)}", json_body=payload)
     if action_type == "delete":
-        return await client.request("delete", f"/alert/{alert_id}")
+        return await client.request("delete", f"/alert/{path_seg(alert_id)}")
     if action_type == "enable":
-        return await client.request("patch", f"/alert/{alert_id}/enable")
+        return await client.request("patch", f"/alert/{path_seg(alert_id)}/enable")
     if action_type == "disable":
-        return await client.request("patch", f"/alert/{alert_id}/disable")
+        return await client.request("patch", f"/alert/{path_seg(alert_id)}/disable")
     if action_type == "mute":
-        return await client.request("patch", f"/alert/{alert_id}/mute", json_body={})
+        return await client.request("patch", f"/alert/{path_seg(alert_id)}/mute", json_body={})
     if action_type == "unmute":
-        return await client.request("patch", f"/alert/{alert_id}/unmute", json_body={})
+        return await client.request("patch", f"/alert/{path_seg(alert_id)}/unmute", json_body={})
     raise ToolError({"status_code": 500, "message": f"Unhandled action_type: {action_type}"})
 
 
@@ -160,13 +161,13 @@ async def _execute_report_action(
     if not report_id:
         raise ToolError({"status_code": 400, "message": "report_id is required for this action."})
     if action_type == "delete":
-        return await client.request("delete", f"/report/{report_id}")
+        return await client.request("delete", f"/report/{path_seg(report_id)}")
     if action_type == "enable":
-        return await client.request("patch", f"/report/{report_id}/enable")
+        return await client.request("patch", f"/report/{path_seg(report_id)}/enable")
     if action_type == "disable":
-        return await client.request("patch", f"/report/{report_id}/disable")
+        return await client.request("patch", f"/report/{path_seg(report_id)}/disable")
     if action_type == "run":
-        return await client.request("post", f"/report/{report_id}/run")
+        return await client.request("post", f"/report/{path_seg(report_id)}/run")
     raise ToolError({"status_code": 500, "message": f"Unhandled action_type: {action_type}"})
 
 

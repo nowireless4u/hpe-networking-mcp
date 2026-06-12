@@ -31,6 +31,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
@@ -67,7 +68,7 @@ async def _post_action(conn, family: str, serial: str, action: str, payload: dic
     return await _call(
         conn,
         "POST",
-        f"network-troubleshooting/v1/{family}/{serial}/{action}",
+        f"network-troubleshooting/v1/{path_seg(family)}/{path_seg(serial)}/{path_seg(action)}",
         data=payload or {},
     )
 
@@ -109,7 +110,8 @@ async def central_get_troubleshooting_task_status(
     return await _call(
         conn,
         "GET",
-        f"network-troubleshooting/v1/{device_family}/{serial_number}/{action}/async-operations/{task_id}",
+        f"network-troubleshooting/v1/{path_seg(device_family)}/{path_seg(serial_number)}"
+        f"/{path_seg(action)}/async-operations/{path_seg(task_id)}",
     )
 
 
@@ -127,7 +129,7 @@ async def central_list_troubleshooting_tasks(
     return await _call(
         conn,
         "GET",
-        f"network-troubleshooting/v1/{device_family}/{serial_number}/list-tasks",
+        f"network-troubleshooting/v1/{path_seg(device_family)}/{path_seg(serial_number)}/list-tasks",
     )
 
 
@@ -150,7 +152,7 @@ async def central_list_supported_show_commands(
     return await _call(
         conn,
         "GET",
-        f"network-troubleshooting/v1/{device_family}/{serial_number}/show-commands",
+        f"network-troubleshooting/v1/{path_seg(device_family)}/{path_seg(serial_number)}/show-commands",
     )
 
 

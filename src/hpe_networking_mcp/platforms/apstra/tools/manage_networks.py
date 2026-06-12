@@ -8,6 +8,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.apstra import guidelines
 from hpe_networking_mcp.platforms.apstra._registry import tool
 from hpe_networking_mcp.platforms.apstra.client import format_http_error, get_apstra_client
@@ -161,7 +162,7 @@ async def apstra_create_virtual_network(
 
         response = await client.request(
             "POST",
-            f"/api/blueprints/{blueprint_id}/virtual-networks-batch",
+            f"/api/blueprints/{path_seg(blueprint_id)}/virtual-networks-batch",
             params={"async": "full"},
             json_body={"virtual_networks": [vn_config]},
         )
@@ -226,7 +227,7 @@ async def apstra_create_remote_gateway(
 
         response = await client.request(
             "POST",
-            f"/api/blueprints/{blueprint_id}/remote_gateways",
+            f"/api/blueprints/{path_seg(blueprint_id)}/remote_gateways",
             json_body=payload,
         )
         return {

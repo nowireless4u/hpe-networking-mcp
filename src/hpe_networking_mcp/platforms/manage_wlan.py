@@ -13,6 +13,7 @@ from fastmcp import Context
 from loguru import logger
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central.utils import retry_central_command
 
 # Mist → Central sync workflow returned when SSID exists in Mist
@@ -376,7 +377,7 @@ async def _find_mist_wlan(ctx: Context, ssid: str) -> dict | None:
         return None
 
     try:
-        response = await client.get(f"/api/v1/orgs/{org_id}/wlans")
+        response = await client.get(f"/api/v1/orgs/{path_seg(org_id)}/wlans")
         if response.status_code == 200:
             payload = response.json()
             if isinstance(payload, list):
@@ -398,7 +399,7 @@ async def _find_central_profile(ctx: Context, ssid: str) -> dict | None:
         response = await retry_central_command(
             central_conn=conn,
             api_method="GET",
-            api_path=f"network-config/v1alpha1/wlan-ssids/{ssid}",
+            api_path=f"network-config/v1alpha1/wlan-ssids/{path_seg(ssid)}",
         )
         code = response.get("code", 0)
         if 200 <= code < 300:

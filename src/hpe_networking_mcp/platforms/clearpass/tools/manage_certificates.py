@@ -9,6 +9,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import ClearPassClient, get_clearpass_client
 
@@ -117,12 +118,12 @@ async def _execute_cert_action(
     if action_type == "delete_trust_list":
         if not cert_id:
             raise ToolError({"status_code": 400, "message": "cert_id is required for delete_trust_list."})
-        return await client.request("delete", f"/cert-trust-list/{cert_id}")
+        return await client.request("delete", f"/cert-trust-list/{path_seg(cert_id)}")
 
     if action_type == "delete_client_cert":
         if not cert_id:
             raise ToolError({"status_code": 400, "message": "cert_id is required for delete_client_cert."})
-        return await client.request("delete", f"/client-cert/{cert_id}")
+        return await client.request("delete", f"/client-cert/{path_seg(cert_id)}")
 
     if action_type in ("enable_server_cert", "disable_server_cert"):
         if not server_uuid or not service_name:
@@ -133,7 +134,7 @@ async def _execute_cert_action(
                 }
             )
         action = "enable" if action_type == "enable_server_cert" else "disable"
-        path = f"/server-cert/name/{server_uuid}/{service_name}/{action}"
+        path = f"/server-cert/name/{path_seg(server_uuid)}/{path_seg(service_name)}/{path_seg(action)}"
         return await client.request("patch", path, json_body={})
 
     raise ToolError({"status_code": 500, "message": f"Unhandled action_type: {action_type}"})
