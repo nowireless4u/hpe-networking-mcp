@@ -7,7 +7,6 @@ from typing import Any
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.apstra import guidelines
 from hpe_networking_mcp.platforms.apstra._registry import tool
@@ -66,18 +65,11 @@ async def apstra_create_virtual_network(
         create_policy_tagged: Optional "true"/"false" or bool (omitted if None).
         virtual_gateway_ipv6_enabled: "true"/"false" or bool (default: False).
         ipv6_enabled: "true"/"false" or bool (default: False).
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if vn_type not in ("vxlan", "vlan"):
         raise ToolError({"status_code": 400, "message": f"Invalid vn_type '{vn_type}'. Must be 'vxlan' or 'vlan'."})
-
-    if not confirmed:
-        decline = await confirm_write(
-            ctx,
-            f"Apstra: create virtual network '{vn_name}' ({vn_type}) in blueprint {blueprint_id}. Confirm?",
-        )
-        if decline:
-            return decline
 
     try:
         ipv4_enabled_b = bool(parse_bool(ipv4_enabled))
@@ -212,16 +204,9 @@ async def apstra_create_remote_gateway(
         evpn_interconnect_group_id: Optional interconnect-group UUID.
         holdtime_timer: BGP hold time seconds (default: 30).
         ttl: BGP TTL (default: 30).
-        confirmed: Set true after user confirms.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
-    if not confirmed:
-        decline = await confirm_write(
-            ctx,
-            f"Apstra: create remote EVPN gateway '{gw_name}' ({gw_ip}) in blueprint {blueprint_id}. Confirm?",
-        )
-        if decline:
-            return decline
-
     try:
         client = await get_apstra_client()
         payload: dict[str, Any] = {

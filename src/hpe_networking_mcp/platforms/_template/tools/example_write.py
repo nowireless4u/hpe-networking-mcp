@@ -5,10 +5,14 @@ replace it with your real ``<platform>_manage_*`` tools.
 
 Demonstrates two important patterns every write tool should follow:
 
-1. ``confirm_write(ctx, message)`` — opens an MCP elicitation prompt so
-   the user has to confirm the change before it lands. The middleware
-   threads ``confirmed=True`` through the call after the user accepts,
-   skipping the prompt on retry.
+1. **No inline confirmation.** Confirmation is structural: the universal
+   gate at the ``<platform>_invoke_tool`` dispatch chokepoint prompts the
+   user (via MCP elicitation) for every tool whose ``capability=``
+   classification derives the ``requires_confirmation`` tag — which
+   ``WRITE`` / ``WRITE_DELETE`` / gated ``OPERATIONAL`` all do. Tools never
+   call ``confirm_write`` themselves (that double-prompts). Keep the
+   ``confirmed`` parameter: the gate consumes ``confirmed=true`` from params
+   as the popup-less fallback when the client cannot present a prompt.
 2. ``action_type`` parameter (``create`` / ``update`` / ``delete``) — one
    write tool per entity, dispatched by ``action_type`` inside the
    function body. Reduces tool surface count without losing clarity.
@@ -20,7 +24,6 @@ from typing import Any, Literal
 
 from fastmcp import Context
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms._template._registry import tool
 from hpe_networking_mcp.platforms._template.client import format_http_error, get_template_client
@@ -42,20 +45,10 @@ async def template_manage_example(
         thing_id: Required for update/delete. The thing's UUID.
         name: Required for create.
         payload: Body for create/update.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client
+            cannot show a confirmation prompt (the universal gate prompts
+            otherwise).
     """
-    if action_type == "create":
-        prompt = f"Template: create thing '{name}'. Confirm?"
-    elif action_type == "update":
-        prompt = f"Template: update thing {thing_id}. Confirm?"
-    else:  # delete
-        prompt = f"Template: permanently DELETE thing {thing_id}. Cannot be undone. Confirm?"
-
-    if not confirmed:
-        decline = await confirm_write(ctx, prompt)
-        if decline:
-            return decline
-
     try:
         client = await get_template_client()
         if action_type == "create":

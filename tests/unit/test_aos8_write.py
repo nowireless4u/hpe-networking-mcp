@@ -597,11 +597,14 @@ async def test_no_implicit_write_memory():
 # ---------------------------------------------------------------------------
 
 
-async def test_elicitation_required_when_not_confirmed():
-    """When mode=chat_confirm and confirmed=False, tool must return confirmation_required."""
+async def test_tool_body_has_no_inline_confirmation():
+    """Confirmation moved to the universal gate at aos8_invoke_tool dispatch
+    (see test_universal_confirmation_gate / test_gate_end_to_end). The tool
+    body itself dispatches regardless of confirmed — direct calls only exist
+    behind the gate."""
     from hpe_networking_mcp.platforms.aos8.tools.writes import aos8_manage_ssid_profile
 
-    ctx, client = _make_ctx({}, elicitation_mode="chat_confirm")
+    ctx, client = _make_ctx(_load_fixture("write_ssid_prof_success.json"), elicitation_mode="chat_confirm")
     result = await aos8_manage_ssid_profile(
         ctx,
         config_path="/md",
@@ -611,8 +614,7 @@ async def test_elicitation_required_when_not_confirmed():
     )
 
     assert isinstance(result, dict)
-    assert result.get("status") == "confirmation_required"
-    client.request.assert_not_awaited()
+    client.request.assert_awaited()
 
 
 async def test_elicitation_disabled_state_auto_accepts():

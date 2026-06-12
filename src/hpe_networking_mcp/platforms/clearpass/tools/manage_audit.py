@@ -8,24 +8,12 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import ClearPassClient, get_clearpass_client
 
 _ALERT_ACTIONS = ("create", "update", "delete", "enable", "disable", "mute", "unmute")
 _REPORT_ACTIONS = ("create", "delete", "enable", "disable", "run")
-
-
-async def _confirm_write(ctx: Context, action: str, identifier: str | None) -> dict | None:
-    """Thin wrapper over :func:`middleware.elicitation.confirm_write`.
-
-    Kept as a local helper so existing call sites don't change; the
-    shared elicitation/decline/cancel logic now lives in the middleware
-    (#148).
-    """
-    label = identifier or "unknown"
-    return await confirm_write(ctx, f"ClearPass: {action} '{label}'. Confirm?")
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -37,7 +25,13 @@ async def clearpass_manage_insight_alert(
     ],
     payload: Annotated[dict, Field(description="Alert config payload. For delete/enable/disable/mute/unmute: {}.")],
     alert_id: Annotated[str | None, Field(description="Alert ID (required for all actions except create).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, delete, enable, disable, mute, or unmute a ClearPass Insight alert.
 
@@ -48,7 +42,8 @@ async def clearpass_manage_insight_alert(
         action_type: Operation to perform on the alert.
         payload: JSON config body. Required for create/update. Empty dict for other actions.
         alert_id: Alert ID. Required for all actions except create.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in _ALERT_ACTIONS:
         raise ToolError(
@@ -57,11 +52,6 @@ async def clearpass_manage_insight_alert(
                 "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(_ALERT_ACTIONS)}.",
             }
         )
-
-    if action_type != "create" and not confirmed:
-        decline = await _confirm_write(ctx, f"{action_type} insight alert", alert_id)
-        if decline:
-            return decline
 
     try:
         client = await get_clearpass_client()
@@ -114,7 +104,13 @@ async def clearpass_manage_insight_report(
     ],
     payload: Annotated[dict, Field(description="Report config payload. For delete/enable/disable/run: {}.")],
     report_id: Annotated[str | None, Field(description="Report ID (required for all actions except create).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, delete, enable, disable, or run a ClearPass Insight report.
 
@@ -125,7 +121,8 @@ async def clearpass_manage_insight_report(
         action_type: Operation to perform on the report.
         payload: JSON config body. Required for create. Empty dict for other actions.
         report_id: Report ID. Required for all actions except create.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in _REPORT_ACTIONS:
         raise ToolError(
@@ -134,11 +131,6 @@ async def clearpass_manage_insight_report(
                 "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(_REPORT_ACTIONS)}.",
             }
         )
-
-    if action_type != "create" and not confirmed:
-        decline = await _confirm_write(ctx, f"{action_type} insight report", report_id)
-        if decline:
-            return decline
 
     try:
         client = await get_clearpass_client()
@@ -186,7 +178,13 @@ async def clearpass_create_system_event(
     category: Annotated[str, Field(description="Event category (e.g. 'Configuration', 'Authentication').")],
     action: Annotated[str, Field(description="Event action description (e.g. 'Policy Updated').")],
     description: Annotated[str, Field(description="Detailed event description.")],
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create a custom system event in ClearPass for audit logging.
 
@@ -199,17 +197,13 @@ async def clearpass_create_system_event(
         category: Event category for classification.
         action: Short action description.
         description: Detailed description of the event.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if level not in ("INFO", "WARN", "ERROR"):
         raise ToolError(
             {"status_code": 400, "message": f"Invalid level '{level}'. Must be 'INFO', 'WARN', or 'ERROR'."}
         )
-
-    if not confirmed:
-        decline = await _confirm_write(ctx, "create system event", f"{source}/{action}")
-        if decline:
-            return decline
 
     try:
         client = await get_clearpass_client()

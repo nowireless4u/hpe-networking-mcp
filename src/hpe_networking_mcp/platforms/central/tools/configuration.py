@@ -1,8 +1,8 @@
 """Aruba Central configuration write tools — sites, site collections, device groups.
 
 Provides CRUD operations for Central network configuration objects.
-All write tools are gated behind ENABLE_CENTRAL_WRITE_TOOLS and require
-user confirmation for update/delete operations.
+All write tools are gated behind ENABLE_CENTRAL_WRITE_TOOLS; confirmation
+is handled by the universal gate at the invoke-tool dispatch chokepoint.
 """
 
 from enum import Enum
@@ -13,7 +13,6 @@ from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import elicitation_handler
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
@@ -70,7 +69,10 @@ async def central_manage_site(
     confirmed: Annotated[
         bool,
         Field(
-            description="Set to true when the user has confirmed the operation in chat. Required for update/delete.",
+            description=(
+                "Fallback confirmation flag — honored only when the client cannot "
+                "show a confirmation prompt (the universal gate prompts otherwise)."
+            ),
             default=False,
         ),
     ],
@@ -139,7 +141,10 @@ async def central_manage_site_collection(
     confirmed: Annotated[
         bool,
         Field(
-            description="Set to true when the user has confirmed the operation in chat. Required for update/delete.",
+            description=(
+                "Fallback confirmation flag — honored only when the client cannot "
+                "show a confirmation prompt (the universal gate prompts otherwise)."
+            ),
             default=False,
         ),
     ],
@@ -210,7 +215,10 @@ async def central_manage_device_group(
     confirmed: Annotated[
         bool,
         Field(
-            description="Set to true when the user has confirmed the operation in chat. Required for update/delete.",
+            description=(
+                "Fallback confirmation flag — honored only when the client cannot "
+                "show a confirmation prompt (the universal gate prompts otherwise)."
+            ),
             default=False,
         ),
     ],
@@ -254,7 +262,7 @@ async def _execute_config_action(
     confirmed: bool = False,
     replace_existing: bool = False,
 ) -> dict | str:
-    """Execute a configuration CRUD action with confirmation and error handling.
+    """Execute a configuration CRUD action with error handling.
 
     Central API patterns:
     - CREATE: POST to base path, payload as JSON body
@@ -270,41 +278,6 @@ async def _execute_config_action(
     """
     if action_type in (ActionType.UPDATE, ActionType.DELETE) and not resource_id:
         raise ToolError({"status_code": 400, "message": f"Resource ID is required for {action_type.value} operations."})
-
-    action_wording = {
-        ActionType.CREATE: "create a new",
-        ActionType.UPDATE: "update an existing",
-        ActionType.DELETE: "delete an existing",
-    }[action_type]
-
-    # Confirm with user for update and delete only (skip if already confirmed)
-    if action_type != ActionType.CREATE and not confirmed:
-        if action_type == ActionType.UPDATE and replace_existing:
-            warning = (
-                " NOTE: replace_existing=True — this is a full-resource PUT. Any "
-                "field not in the payload will be dropped from the stored resource."
-            )
-        else:
-            warning = ""
-        elicitation_response = await elicitation_handler(
-            message=(
-                f"The LLM wants to {action_wording} {resource_name}.{warning} Do you accept to trigger the API call?"
-            ),
-            ctx=ctx,
-        )
-        if elicitation_response.action == "decline":
-            if await ctx.get_state("elicitation_mode") == "chat_confirm":
-                return {
-                    "status": "confirmation_required",
-                    "message": (
-                        f"This operation will {action_wording} {resource_name}. "
-                        "Please confirm with the user before proceeding. "
-                        "Call this tool again with the same parameters and confirmed=true after the user confirms."
-                    ),
-                }
-            return {"message": "Action declined by user."}
-        elif elicitation_response.action == "cancel":
-            return {"message": "Action canceled by user."}
 
     conn = get_central_conn(ctx)
 

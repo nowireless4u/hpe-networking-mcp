@@ -8,23 +8,9 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
-
-
-async def _confirm_write(
-    ctx: Context, action_type: str, resource: str, identifier: str | None, confirmed: bool
-) -> dict | None:
-    """Thin wrapper over :func:`middleware.elicitation.confirm_write`.
-
-    Kept as a local helper so existing call sites don't change; the
-    shared elicitation/decline/cancel logic now lives in the middleware
-    (#148).
-    """
-    label = identifier or "unknown"
-    return await confirm_write(ctx, f"ClearPass: {action_type} {resource} '{label}'. Confirm?")
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -34,7 +20,13 @@ async def clearpass_manage_admin_user(
     payload: Annotated[dict, Field(description="Admin user config payload. Empty dict {} for delete.")],
     admin_user_id: Annotated[str | None, Field(description="Admin user ID (required for update/delete).")] = None,
     name: Annotated[str | None, Field(description="Admin username (alternative to ID).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, or delete a ClearPass admin user."""
     if action_type not in ("create", "update", "delete"):
@@ -44,9 +36,6 @@ async def clearpass_manage_admin_user(
                 "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
             }
         )
-    decline = await _confirm_write(ctx, action_type, "admin user", admin_user_id or name, confirmed)
-    if decline:
-        return decline
     try:
         client = await get_clearpass_client()
         if action_type == "create":
@@ -74,7 +63,13 @@ async def clearpass_manage_admin_privilege(
     payload: Annotated[dict, Field(description="Admin privilege config payload. Empty dict {} for delete.")],
     admin_privilege_id: Annotated[str | None, Field(description="Privilege ID (required for update/delete).")] = None,
     name: Annotated[str | None, Field(description="Privilege name (alternative to ID).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, or delete a ClearPass admin privilege."""
     if action_type not in ("create", "update", "delete"):
@@ -84,9 +79,6 @@ async def clearpass_manage_admin_privilege(
                 "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
             }
         )
-    decline = await _confirm_write(ctx, action_type, "admin privilege", admin_privilege_id or name, confirmed)
-    if decline:
-        return decline
     try:
         client = await get_clearpass_client()
         if action_type == "create":
@@ -116,7 +108,13 @@ async def clearpass_manage_operator_profile(
         str | None, Field(description="Operator profile ID (required for update/delete).")
     ] = None,
     name: Annotated[str | None, Field(description="Profile name (alternative to ID).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, or delete a ClearPass operator profile."""
     if action_type not in ("create", "update", "delete"):
@@ -126,9 +124,6 @@ async def clearpass_manage_operator_profile(
                 "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
             }
         )
-    decline = await _confirm_write(ctx, action_type, "operator profile", operator_profile_id or name, confirmed)
-    if decline:
-        return decline
     try:
         client = await get_clearpass_client()
         if action_type == "create":
@@ -159,7 +154,13 @@ async def clearpass_manage_license(
     ],
     payload: Annotated[dict, Field(description="License config payload. Empty dict {} for delete.")],
     license_id: Annotated[str | None, Field(description="License ID (required for delete/activate).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, delete, or activate a ClearPass application license."""
     valid = ("create", "delete", "activate_online", "activate_offline")
@@ -167,9 +168,6 @@ async def clearpass_manage_license(
         raise ToolError(
             {"status_code": 400, "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(valid)}."}
         )
-    decline = await _confirm_write(ctx, action_type, "license", license_id, confirmed)
-    if decline:
-        return decline
     try:
         client = await get_clearpass_client()
         if action_type == "create":
@@ -191,12 +189,15 @@ async def clearpass_manage_license(
 async def clearpass_manage_cluster_params(
     ctx: Context,
     payload: Annotated[dict, Field(description="Cluster parameters config payload.")],
-    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Update ClearPass cluster parameters."""
-    decline = await _confirm_write(ctx, "update", "cluster parameters", "global", confirmed)
-    if decline:
-        return decline
     try:
         client = await get_clearpass_client()
         return await client.request("patch", "/cluster/parameters", json_body=payload)
@@ -211,7 +212,13 @@ async def clearpass_manage_password_policy(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'update_admin' or 'update_local'.")],
     payload: Annotated[dict, Field(description="Password policy config payload.")],
-    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Update ClearPass admin or local user password policy."""
     valid = ("update_admin", "update_local")
@@ -219,9 +226,6 @@ async def clearpass_manage_password_policy(
         raise ToolError(
             {"status_code": 400, "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(valid)}."}
         )
-    decline = await _confirm_write(ctx, action_type, "password policy", action_type, confirmed)
-    if decline:
-        return decline
     try:
         client = await get_clearpass_client()
         path = "/admin-user/password-policy" if action_type == "update_admin" else "/local-user/password-policy"
@@ -248,7 +252,13 @@ async def clearpass_manage_attribute(
             )
         ),
     ] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, or delete a ClearPass attribute."""
     if action_type not in ("create", "update", "delete"):
@@ -258,9 +268,6 @@ async def clearpass_manage_attribute(
                 "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
             }
         )
-    decline = await _confirm_write(ctx, action_type, "attribute", attribute_id or name, confirmed)
-    if decline:
-        return decline
     try:
         client = await get_clearpass_client()
         if action_type == "create":
@@ -296,7 +303,13 @@ async def clearpass_manage_data_filter(
     payload: Annotated[dict, Field(description="Data filter config payload. Empty dict {} for delete.")],
     data_filter_id: Annotated[str | None, Field(description="Data filter ID (required for update/delete).")] = None,
     name: Annotated[str | None, Field(description="Filter name (alternative to ID).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, or delete a ClearPass data filter."""
     if action_type not in ("create", "update", "delete"):
@@ -306,9 +319,6 @@ async def clearpass_manage_data_filter(
                 "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
             }
         )
-    decline = await _confirm_write(ctx, action_type, "data filter", data_filter_id or name, confirmed)
-    if decline:
-        return decline
     try:
         client = await get_clearpass_client()
         if action_type == "create":
@@ -338,7 +348,13 @@ async def clearpass_manage_file_backup_server(
         str | None, Field(description="Backup server ID (required for update/delete).")
     ] = None,
     name: Annotated[str | None, Field(description="Server name (alternative to ID).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, or delete a ClearPass file backup server."""
     if action_type not in ("create", "update", "delete"):
@@ -348,9 +364,6 @@ async def clearpass_manage_file_backup_server(
                 "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
             }
         )
-    decline = await _confirm_write(ctx, action_type, "file backup server", file_backup_server_id or name, confirmed)
-    if decline:
-        return decline
     try:
         client = await get_clearpass_client()
         if action_type == "create":
@@ -380,7 +393,13 @@ async def clearpass_manage_messaging_setup(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
     payload: Annotated[dict, Field(description="Messaging setup config payload. Empty dict {} for delete.")],
-    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, or delete the ClearPass messaging setup."""
     if action_type not in ("create", "update", "delete"):
@@ -390,9 +409,6 @@ async def clearpass_manage_messaging_setup(
                 "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
             }
         )
-    decline = await _confirm_write(ctx, action_type, "messaging setup", "global", confirmed)
-    if decline:
-        return decline
     try:
         client = await get_clearpass_client()
         if action_type == "create":
@@ -415,7 +431,13 @@ async def clearpass_manage_snmp_trap_receiver(
         str | None, Field(description="SNMP trap receiver ID (required for update/delete).")
     ] = None,
     name: Annotated[str | None, Field(description="Receiver name (alternative to ID).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, or delete a ClearPass SNMP trap receiver."""
     if action_type not in ("create", "update", "delete"):
@@ -425,9 +447,6 @@ async def clearpass_manage_snmp_trap_receiver(
                 "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
             }
         )
-    decline = await _confirm_write(ctx, action_type, "SNMP trap receiver", snmp_trap_receiver_id or name, confirmed)
-    if decline:
-        return decline
     try:
         client = await get_clearpass_client()
         if action_type == "create":
@@ -461,7 +480,13 @@ async def clearpass_manage_policy_manager_zone(
         str | None, Field(description="Policy manager zone ID (required for update/delete).")
     ] = None,
     name: Annotated[str | None, Field(description="Zone name (alternative to ID).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, or delete a ClearPass policy manager zone."""
     if action_type not in ("create", "update", "delete"):
@@ -471,9 +496,6 @@ async def clearpass_manage_policy_manager_zone(
                 "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
             }
         )
-    decline = await _confirm_write(ctx, action_type, "policy manager zone", policy_manager_zones_id or name, confirmed)
-    if decline:
-        return decline
     try:
         client = await get_clearpass_client()
         if action_type == "create":

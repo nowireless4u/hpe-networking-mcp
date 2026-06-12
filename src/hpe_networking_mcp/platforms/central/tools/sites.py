@@ -4,7 +4,6 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
@@ -20,7 +19,13 @@ from hpe_networking_mcp.platforms.central.utils import (
 # Write annotations. Central's elicitation middleware enables the
 # ``central_write_delete`` tag when ENABLE_CENTRAL_WRITE_TOOLS=true, so ALL
 # central write tools carry that tag regardless of destructiveness.
-_CONFIRMED_FIELD = Field(default=False, description="Set to true when the user has confirmed the operation in chat.")
+_CONFIRMED_FIELD = Field(
+    default=False,
+    description=(
+        "Fallback confirmation flag — honored only when the client cannot "
+        "show a confirmation prompt (the universal gate prompts otherwise)."
+    ),
+)
 
 
 async def _scope_write(
@@ -32,17 +37,13 @@ async def _scope_write(
     action_message: str,
     confirmed: bool,
 ) -> dict | str:
-    """Shared confirm-then-write helper for scope mutation tools.
+    """Shared write helper for scope mutation tools.
 
-    Fires elicitation confirmation (unless ``confirmed``); on accept, issues the
-    request and returns the response body, raising ``ToolError`` on non-2xx.
-    Returns the elicitation guard dict (confirmation_required / declined /
-    cancelled) when the user does not accept.
+    Issues the request and returns the response body, raising ``ToolError``
+    on non-2xx. Confirmation is handled by the universal gate at the
+    invoke-tool dispatch chokepoint (``confirmed`` is the fallback flag
+    passed through by the tools).
     """
-    if not confirmed:
-        guard = await confirm_write(ctx, message=action_message)
-        if guard is not None:
-            return guard
     conn = get_central_conn(ctx)
     response = await retry_central_command(central_conn=conn, api_method=method, api_path=path, api_data=body)
     code = response.get("code", 0)

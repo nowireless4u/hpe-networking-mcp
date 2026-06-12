@@ -8,7 +8,6 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
@@ -24,7 +23,13 @@ async def clearpass_manage_endpoint(
         str | None,
         Field(description="MAC address (alternative to ID for update/delete, e.g. '001122334455')."),
     ] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, or delete a ClearPass endpoint in the endpoint database.
 
@@ -37,7 +42,8 @@ async def clearpass_manage_endpoint(
             For create, must include mac_address at minimum.
         endpoint_id: Numeric ID. Required for update/delete (or use mac_address).
         mac_address: MAC address. Alternative to endpoint_id for update/delete.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in ("create", "update", "delete"):
         raise ToolError(
@@ -46,12 +52,6 @@ async def clearpass_manage_endpoint(
                 "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
             }
         )
-
-    if action_type != "create" and not confirmed:
-        identifier = endpoint_id or mac_address or "unknown"
-        decline = await confirm_write(ctx, f"ClearPass: {action_type} endpoint '{identifier}'. Confirm?")
-        if decline:
-            return decline
 
     try:
         client = await get_clearpass_client()

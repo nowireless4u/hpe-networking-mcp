@@ -16,6 +16,7 @@ from fastmcp.exceptions import ToolError
 from mcp.types import ToolAnnotations
 
 from hpe_networking_mcp.config import ServerConfig
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms._common.meta_tools import build_meta_tools
 from hpe_networking_mcp.platforms._common.tool_registry import (
     REGISTRIES,
@@ -53,6 +54,7 @@ def stub_apstra_registry():
         category="blueprints",
         description="List every Apstra datacenter blueprint.",
         tags=set(),
+        capability=Capability.READ,
     )
     REGISTRIES["apstra"]["apstra_create_virtual_network"] = ToolSpec(
         name="apstra_create_virtual_network",
@@ -61,6 +63,7 @@ def stub_apstra_registry():
         category="manage_networks",
         description="Create a VXLAN or VLAN virtual network.",
         tags={"apstra_write"},
+        capability=Capability.READ,
     )
     return {"get_blueprints": get_blueprints, "create_vn": create_vn}
 
@@ -383,6 +386,7 @@ def mcp_with_fake_tools():
             category="testing",
             description=description,
             tags=set(),
+            capability=Capability.READ,
         )
         # Register with FastMCP so the meta-tool's _get_tool lookup
         # returns a real Tool object with parsed parameters.
@@ -455,6 +459,7 @@ class TestInvokeToolCoercion:
             category="testing",
             description="Test tool with optional UUID param.",
             tags=set(),
+            capability=Capability.READ,
         )
         mcp = FastMCP(name="test-optional")
         build_meta_tools("apstra", mcp)

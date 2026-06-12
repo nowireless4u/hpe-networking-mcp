@@ -8,21 +8,9 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
-
-
-async def _confirm_write(ctx: Context, action: str, identifier: str | None) -> dict | None:
-    """Thin wrapper over :func:`middleware.elicitation.confirm_write`.
-
-    Kept as a local helper so existing call sites don't change; the
-    shared elicitation/decline/cancel logic now lives in the middleware
-    (#148).
-    """
-    label = identifier or "unknown"
-    return await confirm_write(ctx, f"ClearPass: {action} guest config '{label}'. Confirm?")
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -31,7 +19,13 @@ async def clearpass_manage_pass_template(
     action_type: Annotated[str, Field(description="Action: 'create', 'update', 'replace', or 'delete'.")],
     payload: Annotated[dict, Field(description="Template config payload. For delete: empty dict {}.")],
     template_id: Annotated[str | None, Field(description="Template ID (required for update/replace/delete).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, replace, or delete a ClearPass guest pass template.
 
@@ -42,7 +36,8 @@ async def clearpass_manage_pass_template(
         action_type: Operation — 'create', 'update', 'replace', or 'delete'.
         payload: JSON config body. Required for create/update/replace. Empty dict for delete.
         template_id: Numeric ID. Required for update/replace/delete.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in ("create", "update", "replace", "delete"):
         raise ToolError(
@@ -51,11 +46,6 @@ async def clearpass_manage_pass_template(
                 "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', 'replace', or 'delete'.",
             }
         )
-
-    if action_type != "create" and not confirmed:
-        decline = await _confirm_write(ctx, f"{action_type} pass template", template_id)
-        if decline:
-            return decline
 
     try:
         client = await get_clearpass_client()
@@ -81,7 +71,13 @@ async def clearpass_manage_print_template(
     action_type: Annotated[str, Field(description="Action: 'create', 'update', 'replace', or 'delete'.")],
     payload: Annotated[dict, Field(description="Template config payload. For delete: empty dict {}.")],
     template_id: Annotated[str | None, Field(description="Template ID (required for update/replace/delete).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, replace, or delete a ClearPass guest print template.
 
@@ -91,7 +87,8 @@ async def clearpass_manage_print_template(
         action_type: Operation — 'create', 'update', 'replace', or 'delete'.
         payload: JSON config body. Required for create/update/replace. Empty dict for delete.
         template_id: Numeric ID. Required for update/replace/delete.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in ("create", "update", "replace", "delete"):
         raise ToolError(
@@ -100,11 +97,6 @@ async def clearpass_manage_print_template(
                 "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', 'replace', or 'delete'.",
             }
         )
-
-    if action_type != "create" and not confirmed:
-        decline = await _confirm_write(ctx, f"{action_type} print template", template_id)
-        if decline:
-            return decline
 
     try:
         client = await get_clearpass_client()
@@ -131,7 +123,13 @@ async def clearpass_manage_weblogin_page(
     payload: Annotated[dict, Field(description="Weblogin page config payload. For delete: empty dict {}.")],
     page_id: Annotated[str | None, Field(description="Weblogin page ID (for update/replace/delete).")] = None,
     page_name: Annotated[str | None, Field(description="Weblogin page name (alternative to ID).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, replace, or delete a ClearPass weblogin (captive portal) page.
 
@@ -142,7 +140,8 @@ async def clearpass_manage_weblogin_page(
         payload: JSON config body. Required for create/update/replace. Empty dict for delete.
         page_id: Numeric ID. Required for update/replace/delete (or use page_name).
         page_name: Page name. Alternative to page_id for update/replace/delete.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in ("create", "update", "replace", "delete"):
         raise ToolError(
@@ -151,11 +150,6 @@ async def clearpass_manage_weblogin_page(
                 "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', 'replace', or 'delete'.",
             }
         )
-
-    if action_type != "create" and not confirmed:
-        decline = await _confirm_write(ctx, f"{action_type} weblogin page", page_id or page_name)
-        if decline:
-            return decline
 
     try:
         client = await get_clearpass_client()
@@ -185,14 +179,21 @@ async def clearpass_manage_guest_settings(
     ctx: Context,
     setting_type: Annotated[str, Field(description="Setting type: 'authentication' or 'manager'.")],
     payload: Annotated[dict, Field(description="Settings payload to apply.")],
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Update ClearPass guest authentication or guest manager settings.
 
     Args:
         setting_type: Which settings to update — 'authentication' or 'manager'.
         payload: JSON settings body to apply.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if setting_type not in ("authentication", "manager"):
         raise ToolError(
@@ -201,11 +202,6 @@ async def clearpass_manage_guest_settings(
                 "message": f"Invalid setting_type '{setting_type}'. Must be 'authentication' or 'manager'.",
             }
         )
-
-    if not confirmed:
-        decline = await _confirm_write(ctx, f"update guest {setting_type} settings", setting_type)
-        if decline:
-            return decline
 
     try:
         client = await get_clearpass_client()

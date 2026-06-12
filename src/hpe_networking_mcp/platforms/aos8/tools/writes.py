@@ -4,8 +4,9 @@ Classified via ``capability=`` (see ``docs/tool-annotation-rubric.md``): the 9
 ``aos8_manage_*`` tools are WRITE_DELETE; ``aos8_disconnect_client`` /
 ``aos8_reboot_ap`` / ``aos8_write_memory`` are OPERATIONAL with
 ``enable_gated=True``. All carry the derived ``aos8_write_delete`` enable tag,
-so all are gated behind ENABLE_AOS8_WRITE_TOOLS=true, and every tool runs
-through the elicitation middleware (confirm_write) before executing.
+so all are gated behind ENABLE_AOS8_WRITE_TOOLS=true. Confirmation happens at
+the universal gate in ``<platform>_invoke_tool`` dispatch (confirm_gated_invoke)
+before these tools run — no per-tool prompting here.
 
 Every tool except aos8_write_memory returns:
     {"result": <api response>, "requires_write_memory_for": [<config_path>]}
@@ -24,7 +25,6 @@ from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.aos8._registry import tool
 from hpe_networking_mcp.platforms.aos8.client import AOS8APIError, AOS8AuthError, get_aos8_client
@@ -42,7 +42,15 @@ _AAA_SERVER_OBJECT_BY_TYPE: dict[str, str] = {
 # Shared parameter type aliases to reduce boilerplate across the 9 manage_X tools.
 _ConfigPath = Annotated[str, Field(description="AOS8 hierarchy node (e.g. '/md', '/md/branch1'). Required.")]
 _ActionType = Annotated[str, Field(description="One of 'create', 'update', or 'delete'.")]
-_Confirmed = Annotated[bool, Field(description="Set to true after the user confirms in chat.")]
+_Confirmed = Annotated[
+    bool,
+    Field(
+        description=(
+            "Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        )
+    ),
+]
 
 
 async def _post_managed_object(
@@ -55,8 +63,12 @@ async def _post_managed_object(
     payload: dict[str, Any],
     confirmed: bool,
     pretty_label: str,
-) -> dict[str, Any] | str:
-    """Shared body for the 9 manage_X tools (WRITE-01..09)."""
+) -> dict[str, Any]:
+    """Shared body for the 9 manage_X tools (WRITE-01..09).
+
+    ``confirmed`` is accepted as a pass-through of the tools' fallback
+    confirmation flag; confirmation itself happens at the universal gate.
+    """
     if action_type not in _ACTION_MAP:
         raise ToolError(
             {
@@ -70,11 +82,6 @@ async def _post_managed_object(
     action = _ACTION_MAP[action_type]
     identifier = payload[identifier_field]
     summary = f"{action_type} {pretty_label} {identifier!r} at {config_path}"
-
-    if not confirmed:
-        decision = await confirm_write(ctx, message=f"The LLM wants to {summary}. Do you accept?")
-        if decision is not None:
-            return decision  # type: ignore[return-value]
 
     body = {object_name: {**payload, "_action": action}}
     client = get_aos8_client(ctx)
@@ -98,7 +105,7 @@ async def aos8_manage_ssid_profile(
         Field(description="SSID profile body. Must include 'profile-name'."),
     ],
     confirmed: _Confirmed = False,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Create, update, or delete an SSID profile.
 
     Returns ``{"result": ..., "requires_write_memory_for": [config_path]}`` on success.
@@ -123,7 +130,7 @@ async def aos8_manage_virtual_ap(
     action_type: _ActionType,
     payload: Annotated[dict, Field(description="Virtual AP body. Must include 'profile-name'.")],
     confirmed: _Confirmed = False,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Create, update, or delete a virtual AP profile.
 
     Returns ``{"result": ..., "requires_write_memory_for": [config_path]}`` on success.
@@ -147,7 +154,7 @@ async def aos8_manage_ap_group(
     action_type: _ActionType,
     payload: Annotated[dict, Field(description="AP group body. Must include 'profile-name'.")],
     confirmed: _Confirmed = False,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Create, update, or delete an AP group.
 
     Returns ``{"result": ..., "requires_write_memory_for": [config_path]}`` on success.
@@ -171,7 +178,7 @@ async def aos8_manage_user_role(
     action_type: _ActionType,
     payload: Annotated[dict, Field(description="User role body. Must include 'rolename'.")],
     confirmed: _Confirmed = False,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Create, update, or delete a user role.
 
     Returns ``{"result": ..., "requires_write_memory_for": [config_path]}`` on success.
@@ -195,7 +202,7 @@ async def aos8_manage_vlan(
     action_type: _ActionType,
     payload: Annotated[dict, Field(description="VLAN body. Must include 'id' (integer VLAN ID).")],
     confirmed: _Confirmed = False,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Create, update, or delete a VLAN.
 
     Returns ``{"result": ..., "requires_write_memory_for": [config_path]}`` on success.
@@ -236,7 +243,7 @@ async def aos8_manage_aaa_server(
         ),
     ],
     confirmed: _Confirmed = False,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Create, update, or delete an AAA server (RADIUS/TACACS/LDAP/internal).
 
     Returns ``{"result": ..., "requires_write_memory_for": [config_path]}`` on success.
@@ -268,7 +275,7 @@ async def aos8_manage_aaa_server_group(
     action_type: _ActionType,
     payload: Annotated[dict, Field(description="AAA server group body. Must include 'sg_name'.")],
     confirmed: _Confirmed = False,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Create, update, or delete an AAA server group.
 
     Returns ``{"result": ..., "requires_write_memory_for": [config_path]}`` on success.
@@ -292,7 +299,7 @@ async def aos8_manage_acl(
     action_type: _ActionType,
     payload: Annotated[dict, Field(description="Session ACL body. Must include 'accname'.")],
     confirmed: _Confirmed = False,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Create, update, or delete a session ACL.
 
     Returns ``{"result": ..., "requires_write_memory_for": [config_path]}`` on success.
@@ -316,7 +323,7 @@ async def aos8_manage_netdestination(
     action_type: _ActionType,
     payload: Annotated[dict, Field(description="Netdestination body. Must include 'dstname'.")],
     confirmed: _Confirmed = False,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Create, update, or delete a netdestination.
 
     Returns ``{"result": ..., "requires_write_memory_for": [config_path]}`` on success.
@@ -338,7 +345,7 @@ async def aos8_disconnect_client(
     ctx: Context,
     mac: Annotated[str, Field(description="Client MAC address (e.g. 'aa:bb:cc:dd:ee:ff').")],
     confirmed: _Confirmed = False,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Force-disconnect a wireless client by MAC address.
 
     Issues 'aaa user delete mac <mac>' via the operational POST endpoint.
@@ -346,11 +353,6 @@ async def aos8_disconnect_client(
     Returns ``{"result": ..., "requires_write_memory_for": []}`` —
     operational actions produce no pending config state.
     """
-    if not confirmed:
-        decision = await confirm_write(ctx, message=f"The LLM wants to disconnect client {mac}. Do you accept?")
-        if decision is not None:
-            return decision  # type: ignore[return-value]
-
     body = {"aaa_user_delete": {"mac": mac}}
     client = get_aos8_client(ctx)
     try:
@@ -367,17 +369,12 @@ async def aos8_reboot_ap(
     ctx: Context,
     ap_name: Annotated[str, Field(description="AP hostname (as shown by aos8_get_ap_database).")],
     confirmed: _Confirmed = False,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Reboot a specific AP by name via the apboot endpoint.
 
     Calling this tool twice issues two reboot commands.
     Returns ``{"result": ..., "requires_write_memory_for": []}``.
     """
-    if not confirmed:
-        decision = await confirm_write(ctx, message=f"The LLM wants to reboot AP {ap_name}. Do you accept?")
-        if decision is not None:
-            return decision  # type: ignore[return-value]
-
     body = {"apboot": {"ap-name": ap_name}}
     client = get_aos8_client(ctx)
     try:
@@ -401,7 +398,7 @@ async def aos8_write_memory(
         ),
     ],
     confirmed: _Confirmed = False,
-) -> dict[str, Any] | str:
+) -> dict[str, Any]:
     """Persist staged AOS8 config to startup-config for one config_path.
 
     AOS8 stages config per hierarchy node; nothing survives reboot until
@@ -411,11 +408,6 @@ async def aos8_write_memory(
     Returns ``{"result": ...}``. Does NOT include ``requires_write_memory_for``
     — that field would be circular here.
     """
-    if not confirmed:
-        decision = await confirm_write(ctx, message=f"The LLM wants to write memory at {config_path}. Do you accept?")
-        if decision is not None:
-            return decision  # type: ignore[return-value]
-
     client = get_aos8_client(ctx)
     try:
         response = await client.request(

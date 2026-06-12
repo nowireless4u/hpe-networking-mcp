@@ -19,7 +19,6 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
@@ -67,7 +66,13 @@ async def clearpass_manage_certificate_authority(
         str | None,
         Field(description="Cert ID. Required for sign, revoke, reject, export, delete."),
     ] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Manage ClearPass internal-CA certificates.
 
@@ -85,7 +90,8 @@ async def clearpass_manage_certificate_authority(
         payload: Request body. Varies by action — empty dict ``{}`` is
             fine for delete/sign/revoke/reject/export.
         certificate_id: Cert ID. Required for sign/revoke/reject/export/delete.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in _CA_ACTIONS:
         raise ToolError(
@@ -96,10 +102,6 @@ async def clearpass_manage_certificate_authority(
         )
     if action_type in ("sign", "revoke", "reject", "export", "delete") and not certificate_id:
         raise ToolError({"status_code": 400, "message": f"certificate_id is required for action '{action_type}'."})
-
-    decline = await confirm_write(ctx, f"ClearPass CA: {action_type} certificate {certificate_id or '(new)'}. Confirm?")
-    if decline:
-        return decline
 
     try:
         client = await get_clearpass_client()
@@ -135,7 +137,13 @@ async def clearpass_manage_onboard_device(
         dict | None,
         Field(description="PATCH body for update. Empty dict or omit for delete."),
     ] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Update or delete a ClearPass onboard device record.
 
@@ -152,7 +160,8 @@ async def clearpass_manage_onboard_device(
         action_type: 'update' (PATCH) or 'delete'.
         record_id: Numeric ID of the onboard device record.
         payload: PATCH body. Required for update, ignored for delete.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in _ONBOARD_ACTIONS:
         raise ToolError(
@@ -160,13 +169,6 @@ async def clearpass_manage_onboard_device(
         )
     if action_type == "update" and not payload:
         raise ToolError({"status_code": 400, "message": "payload is required for action 'update'."})
-
-    decline = await confirm_write(
-        ctx,
-        f"ClearPass: {action_type} onboard device record {record_id}. Confirm?",
-    )
-    if decline:
-        return decline
 
     try:
         client = await get_clearpass_client()

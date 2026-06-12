@@ -1,8 +1,8 @@
 """UXI agent write tools (PATCH + DELETE).
 
 Tools in this module mutate or remove UXI agent resources. They are gated
-behind ``ENABLE_UXI_WRITE_TOOLS=true`` and require user confirmation via
-``confirm_write`` elicitation before any HTTP mutation is issued.
+behind ``ENABLE_UXI_WRITE_TOOLS=true``; the universal confirmation gate at
+``uxi_invoke_tool`` prompts the user before any HTTP mutation is issued.
 """
 
 from __future__ import annotations
@@ -12,7 +12,6 @@ from typing import Any
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.uxi._registry import tool
 from hpe_networking_mcp.platforms.uxi.client import format_http_error, get_uxi_client
@@ -61,10 +60,6 @@ async def uxi_update_agent(
     if not body:
         return {"status": "no_op", "message": "No fields provided — nothing to update."}
 
-    decision = await confirm_write(ctx, f"Update agent {agent_id!r} — fields: {', '.join(body.keys())}")
-    if decision is not None:
-        return decision
-
     try:
         client = await get_uxi_client()
         result = await client.uxi_patch(f"/agents/{agent_id}", body)
@@ -88,10 +83,6 @@ async def uxi_delete_agent(
         agent_id: The agent's UXI resource ID (from ``uxi_list_agents`` items[].id).
     """
     validate_id(agent_id, "agent_id")
-
-    decision = await confirm_write(ctx, f"Permanently delete agent {agent_id!r}?")
-    if decision is not None:
-        return decision
 
     try:
         client = await get_uxi_client()

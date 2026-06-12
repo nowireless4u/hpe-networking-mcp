@@ -164,15 +164,10 @@ class TestSessionControlRoutes:
 @pytest.mark.unit
 class TestConfigSelectorRoutes:
     @patch(
-        "hpe_networking_mcp.platforms.clearpass.tools.manage_server_config._confirm_write",
-        new_callable=AsyncMock,
-        return_value=None,
-    )
-    @patch(
         "hpe_networking_mcp.platforms.clearpass.tools.manage_server_config.get_clearpass_client",
         new_callable=AsyncMock,
     )
-    async def test_admin_user_by_name_uses_user_id_route(self, mock_get, _mock_confirm):
+    async def test_admin_user_by_name_uses_user_id_route(self, mock_get):
         from hpe_networking_mcp.platforms.clearpass.tools.manage_server_config import clearpass_manage_admin_user
 
         client = _client()
@@ -182,15 +177,10 @@ class TestConfigSelectorRoutes:
         assert (method, path) == ("delete", "/admin-user/user-id/ops-admin")
 
     @patch(
-        "hpe_networking_mcp.platforms.clearpass.tools.manage_server_config._confirm_write",
-        new_callable=AsyncMock,
-        return_value=None,
-    )
-    @patch(
         "hpe_networking_mcp.platforms.clearpass.tools.manage_server_config.get_clearpass_client",
         new_callable=AsyncMock,
     )
-    async def test_attribute_by_name_requires_entity(self, mock_get, _mock_confirm):
+    async def test_attribute_by_name_requires_entity(self, mock_get):
         from fastmcp.exceptions import ToolError
 
         from hpe_networking_mcp.platforms.clearpass.tools.manage_server_config import clearpass_manage_attribute
@@ -204,15 +194,10 @@ class TestConfigSelectorRoutes:
         assert "entity_name" in exc.value.args[0]["message"]
 
     @patch(
-        "hpe_networking_mcp.platforms.clearpass.tools.manage_local_config._confirm_write",
-        new_callable=AsyncMock,
-        return_value=None,
-    )
-    @patch(
         "hpe_networking_mcp.platforms.clearpass.tools.manage_local_config.get_clearpass_client",
         new_callable=AsyncMock,
     )
-    async def test_ad_join_uses_action_prefix_route(self, mock_get, _mock_confirm):
+    async def test_ad_join_uses_action_prefix_route(self, mock_get):
         from hpe_networking_mcp.platforms.clearpass.tools.manage_local_config import clearpass_manage_ad_domain
 
         client = _client()

@@ -18,7 +18,6 @@ from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import elicitation_handler
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 # ---------------------------------------------------------------------------
@@ -68,30 +67,6 @@ async def _manage_resource(
     api_method = method_map[action_type]
     api_path = f"network-config/v1alpha1/{api_base}/{name}" if name else f"network-config/v1alpha1/{api_base}"
 
-    action_wording = {"create": "create a new", "update": "update an existing", "delete": "delete an existing"}[
-        action_type
-    ]
-
-    target_phrase = f"{resource_label} '{name}'" if name else f"singleton {resource_label}"
-    if action_type != "create" and not confirmed:
-        elicitation_response = await elicitation_handler(
-            message=f"The LLM wants to {action_wording} {target_phrase}. Do you accept?",
-            ctx=ctx,
-        )
-        if elicitation_response.action == "decline":
-            if await ctx.get_state("elicitation_mode") == "chat_confirm":
-                return {
-                    "status": "confirmation_required",
-                    "message": (
-                        f"This operation will {action_wording} {target_phrase}. "
-                        "Please confirm with the user before proceeding. "
-                        "Call this tool again with confirmed=true after the user confirms."
-                    ),
-                }
-            return {"message": "Action declined by user."}
-        elif elicitation_response.action == "cancel":
-            return {"message": "Action canceled by user."}
-
     conn = get_central_conn(ctx)
 
     api_params: dict = {}
@@ -137,35 +112,14 @@ async def _operation_request(
     (fixed-verb actions like ``revoke``/``upload``/``import``/``export``/``bulk``
     and job/status reads).
 
-    For write methods (POST/PATCH/PUT/DELETE) when ``not confirmed``, runs the
-    same elicitation flow ``_manage_resource`` uses (respecting ``chat_confirm``
-    state). GET requests skip elicitation. Returns ``{"status": "success", ...}``
-    on 2xx; raises :class:`ToolError` (``{"status_code", "message"}``) on any
-    non-2xx so the calling AI sees a real failure rather than an ok-wrapped
-    error dict (elicitation decline/cancel still return ordinary dicts).
+    Confirmation is handled by the universal gate at the invoke-tool dispatch
+    chokepoint (``confirmed`` is the fallback flag passed through by callers).
+    Returns ``{"status": "success", ...}`` on 2xx; raises :class:`ToolError`
+    (``{"status_code", "message"}``) on any non-2xx so the calling AI sees a
+    real failure rather than an ok-wrapped error dict.
     """
     method = api_method.upper()
     is_write = method in ("POST", "PATCH", "PUT", "DELETE")
-
-    if is_write and not confirmed:
-        target_phrase = label or api_path
-        elicitation_response = await elicitation_handler(
-            message=f"The LLM wants to perform '{method}' on {target_phrase}. Do you accept?",
-            ctx=ctx,
-        )
-        if elicitation_response.action == "decline":
-            if await ctx.get_state("elicitation_mode") == "chat_confirm":
-                return {
-                    "status": "confirmation_required",
-                    "message": (
-                        f"This operation will perform '{method}' on {target_phrase}. "
-                        "Please confirm with the user before proceeding. "
-                        "Call this tool again with confirmed=true after the user confirms."
-                    ),
-                }
-            return {"message": "Action declined by user."}
-        elif elicitation_response.action == "cancel":
-            return {"message": "Action canceled by user."}
 
     conn = get_central_conn(ctx)
     # Send the request body for any write method that carries one. Unlike CRUD
@@ -209,6 +163,9 @@ _DEVICE_FUNCTION_FIELD = Field(
     default=None,
 )
 _CONFIRMED_FIELD = Field(
-    description="Set to true when the user has confirmed the operation in chat.",
+    description=(
+        "Fallback confirmation flag — honored only when the client cannot "
+        "show a confirmation prompt (the universal gate prompts otherwise)."
+    ),
     default=False,
 )

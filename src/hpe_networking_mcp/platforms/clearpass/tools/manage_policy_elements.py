@@ -8,23 +8,9 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
-
-
-async def _confirm_write(
-    ctx: Context, action_type: str, resource: str, identifier: str | None, confirmed: bool
-) -> dict | None:
-    """Thin wrapper over :func:`middleware.elicitation.confirm_write`.
-
-    Kept as a local helper so existing call sites don't change; the
-    shared elicitation/decline/cancel logic now lives in the middleware
-    (#148).
-    """
-    label = identifier or "unknown"
-    return await confirm_write(ctx, f"ClearPass: {action_type} {resource} '{label}'. Confirm?")
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -34,7 +20,13 @@ async def clearpass_manage_service(
     payload: Annotated[dict, Field(description="Service config payload. Empty dict {} for delete/enable/disable.")],
     config_service_id: Annotated[str | None, Field(description="Service ID (required for all except create).")] = None,
     name: Annotated[str | None, Field(description="Service name (alternative to ID for delete).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, delete, enable, or disable a ClearPass service.
 
@@ -43,16 +35,14 @@ async def clearpass_manage_service(
         payload: JSON config body. Required for create/update. Empty dict for others.
         config_service_id: Numeric service ID. Required for update/delete/enable/disable.
         name: Service name. Alternative to config_service_id for delete.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     valid = ("create", "update", "delete", "enable", "disable")
     if action_type not in valid:
         raise ToolError(
             {"status_code": 400, "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(valid)}."}
         )
-    decline = await _confirm_write(ctx, action_type, "service", config_service_id or name, confirmed)
-    if decline:
-        return decline
     try:
         client = await get_clearpass_client()
         if action_type == "create":
@@ -89,7 +79,13 @@ async def clearpass_manage_device_group(
         str | None, Field(description="Device group ID (required for update/delete).")
     ] = None,
     name: Annotated[str | None, Field(description="Group name (alternative to ID).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, or delete a ClearPass network device group.
 
@@ -98,7 +94,8 @@ async def clearpass_manage_device_group(
         payload: JSON config body. Required for create/update. Empty dict for delete.
         network_device_group_id: Numeric ID. Required for update/delete (or use name).
         name: Group name. Alternative to network_device_group_id.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in ("create", "update", "delete"):
         raise ToolError(
@@ -107,9 +104,6 @@ async def clearpass_manage_device_group(
                 "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
             }
         )
-    decline = await _confirm_write(ctx, action_type, "device group", network_device_group_id or name, confirmed)
-    if decline:
-        return decline
     try:
         client = await get_clearpass_client()
         if action_type == "create":
@@ -143,7 +137,13 @@ async def clearpass_manage_posture_policy(
         str | None, Field(description="Posture policy ID (required for update/delete).")
     ] = None,
     name: Annotated[str | None, Field(description="Policy name (alternative to ID).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, or delete a ClearPass posture policy.
 
@@ -152,7 +152,8 @@ async def clearpass_manage_posture_policy(
         payload: JSON config body. Required for create/update. Empty dict for delete.
         posture_policy_id: Numeric ID. Required for update/delete (or use name).
         name: Policy name. Alternative to posture_policy_id.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in ("create", "update", "delete"):
         raise ToolError(
@@ -161,9 +162,6 @@ async def clearpass_manage_posture_policy(
                 "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
             }
         )
-    decline = await _confirm_write(ctx, action_type, "posture policy", posture_policy_id or name, confirmed)
-    if decline:
-        return decline
     try:
         client = await get_clearpass_client()
         if action_type == "create":
@@ -191,7 +189,13 @@ async def clearpass_manage_proxy_target(
     payload: Annotated[dict, Field(description="Proxy target config payload. Empty dict {} for delete.")],
     proxy_target_id: Annotated[str | None, Field(description="Proxy target ID (required for update/delete).")] = None,
     name: Annotated[str | None, Field(description="Target name (alternative to ID).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, or delete a ClearPass proxy target.
 
@@ -200,7 +204,8 @@ async def clearpass_manage_proxy_target(
         payload: JSON config body. Required for create/update. Empty dict for delete.
         proxy_target_id: Numeric ID. Required for update/delete (or use name).
         name: Target name. Alternative to proxy_target_id.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in ("create", "update", "delete"):
         raise ToolError(
@@ -209,9 +214,6 @@ async def clearpass_manage_proxy_target(
                 "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
             }
         )
-    decline = await _confirm_write(ctx, action_type, "proxy target", proxy_target_id or name, confirmed)
-    if decline:
-        return decline
     try:
         client = await get_clearpass_client()
         if action_type == "create":
@@ -241,7 +243,13 @@ async def clearpass_manage_radius_dictionary(
         str | None, Field(description="Dictionary ID (required for all except create).")
     ] = None,
     name: Annotated[str | None, Field(description="Dictionary name (alternative to ID for delete).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, delete, enable, or disable a ClearPass RADIUS dictionary.
 
@@ -250,16 +258,14 @@ async def clearpass_manage_radius_dictionary(
         payload: JSON config body. Required for create/update. Empty dict for others.
         radius_dictionary_id: Numeric ID. Required for update/delete/enable/disable.
         name: Dictionary name. Alternative to radius_dictionary_id for delete.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     valid = ("create", "update", "delete", "enable", "disable")
     if action_type not in valid:
         raise ToolError(
             {"status_code": 400, "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(valid)}."}
         )
-    decline = await _confirm_write(ctx, action_type, "RADIUS dictionary", radius_dictionary_id or name, confirmed)
-    if decline:
-        return decline
     try:
         client = await get_clearpass_client()
         if action_type == "create":
@@ -300,7 +306,13 @@ async def clearpass_manage_tacacs_dictionary(
         str | None, Field(description="Dictionary ID (required for update/delete).")
     ] = None,
     name: Annotated[str | None, Field(description="Dictionary name (alternative to ID).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, or delete a ClearPass TACACS dictionary.
 
@@ -309,7 +321,8 @@ async def clearpass_manage_tacacs_dictionary(
         payload: JSON config body. Required for create/update. Empty dict for delete.
         tacacs_dictionary_id: Numeric ID. Required for update/delete (or use name).
         name: Dictionary name. Alternative to tacacs_dictionary_id.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in ("create", "update", "delete"):
         raise ToolError(
@@ -318,9 +331,6 @@ async def clearpass_manage_tacacs_dictionary(
                 "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
             }
         )
-    decline = await _confirm_write(ctx, action_type, "TACACS dictionary", tacacs_dictionary_id or name, confirmed)
-    if decline:
-        return decline
     try:
         client = await get_clearpass_client()
         if action_type == "create":
@@ -354,7 +364,13 @@ async def clearpass_manage_application_dictionary(
         str | None, Field(description="Dictionary ID (required for update/delete).")
     ] = None,
     name: Annotated[str | None, Field(description="Dictionary name (alternative to ID).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, or delete a ClearPass application dictionary.
 
@@ -363,7 +379,8 @@ async def clearpass_manage_application_dictionary(
         payload: JSON config body. Required for create/update. Empty dict for delete.
         application_dictionary_id: Numeric ID. Required for update/delete (or use name).
         name: Dictionary name. Alternative to application_dictionary_id.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in ("create", "update", "delete"):
         raise ToolError(
@@ -372,11 +389,6 @@ async def clearpass_manage_application_dictionary(
                 "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
             }
         )
-    decline = await _confirm_write(
-        ctx, action_type, "application dictionary", application_dictionary_id or name, confirmed
-    )
-    if decline:
-        return decline
     try:
         client = await get_clearpass_client()
         if action_type == "create":

@@ -8,23 +8,11 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
 _VALID_TARGETS = ("session_id", "username", "mac", "ip", "bulk")
-
-
-async def _confirm_session_action(ctx: Context, action: str, target_type: str, target: str | None) -> dict | None:
-    """Thin wrapper over :func:`middleware.elicitation.confirm_write`.
-
-    Kept as a local helper so existing call sites don't change; the
-    shared elicitation/decline/cancel logic now lives in the middleware
-    (#148).
-    """
-    label = f"{target_type}={target}" if target else target_type
-    return await confirm_write(ctx, f"ClearPass: {action} session for {label}. Confirm?")
 
 
 @tool(capability=Capability.OPERATIONAL, enable_gated=True)
@@ -39,7 +27,13 @@ async def clearpass_disconnect_session(
         dict | None,
         Field(description="Filter criteria for bulk disconnect (e.g. {'nasipaddress': '10.1.1.1'})."),
     ] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Disconnect an active ClearPass session (send RADIUS Disconnect-Request).
 
@@ -54,7 +48,8 @@ async def clearpass_disconnect_session(
         target_type: How to identify the session(s) to disconnect.
         target_value: The session ID, username, MAC, or IP. Not needed for bulk.
         filter: Filter dict for bulk operations. Used only when target_type is 'bulk'.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if target_type not in _VALID_TARGETS:
         raise ToolError(
@@ -69,11 +64,6 @@ async def clearpass_disconnect_session(
         )
     if target_type == "bulk" and not filter:
         raise ToolError({"status_code": 400, "message": "filter is required when target_type is 'bulk'."})
-
-    if not confirmed:
-        decline = await _confirm_session_action(ctx, "disconnect", target_type, target_value)
-        if decline:
-            return decline
 
     try:
         client = await get_clearpass_client()
@@ -124,7 +114,13 @@ async def clearpass_perform_coa(
         str | None,
         Field(description="Optional reauthorization profile name (session_id target only)."),
     ] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Perform a Change of Authorization (CoA) on active ClearPass sessions.
 
@@ -142,7 +138,8 @@ async def clearpass_perform_coa(
         target_type: How to identify the session(s) for CoA.
         target_value: The session ID, username, MAC, or IP. Not needed for bulk.
         filter: Filter dict for bulk operations. Used only when target_type is 'bulk'.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if target_type not in _VALID_TARGETS:
         raise ToolError(
@@ -168,11 +165,6 @@ async def clearpass_perform_coa(
                 ),
             }
         )
-
-    if not confirmed:
-        decline = await _confirm_session_action(ctx, "CoA", target_type, target_value)
-        if decline:
-            return decline
 
     try:
         client = await get_clearpass_client()

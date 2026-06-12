@@ -282,7 +282,9 @@ The sandbox kills any `execute()` block that runs longer than the configured bud
 
 For these tools: **call them in their own `execute()` block — don't chain other calls after them** — and lower `max_attempts` / `poll_interval` when you need a tighter budget. A block that runs `central_cable_test` plus another Central read will routinely breach the default 30s with `TimeoutError: time limit exceeded`.
 
-### 5. Write confirmation works differently in code mode — expect `confirmation_required`, not a popup
+### 5. Write confirmation is structural — a real prompt first, `confirmation_required` only as fallback
+
+Destructive tools are confirmed by a universal gate at `<platform>_invoke_tool` dispatch: it shows a REAL confirmation prompt whenever your client supports MCP elicitation — including from inside code-mode `execute()` blocks, where the prompt round-trips transparently. Passing `confirmed=true` does NOT skip a working prompt; the human's answer always wins. Only when no prompt can be shown does the flow below apply.
 
 A destructive write (create / update / delete) dispatched via `<platform>_invoke_tool` inside `execute()` **cannot surface an interactive elicitation popup** — the sandbox can't round-trip a server→client prompt. So when you call a write tool with `confirmed=false` (or omit it), it returns a guard dict:
 
@@ -290,7 +292,7 @@ A destructive write (create / update / delete) dispatched via `<platform>_invoke
 {"status": "confirmation_required", "message": "... Call this tool again with confirmed=true after the user confirms."}
 ```
 
-This is the **expected, working** response — NOT a failure and NOT a user decline. When you see it: **stop, describe the exact change to the user in chat, get their explicit go-ahead, then re-invoke the same tool with `confirmed=true`** (or `confirmed=True`). Only re-call after the human actually confirms.
+This is the **expected, working** response when (and only when) the client cannot present a prompt — NOT a failure and NOT a user decline. When you see it: **stop, describe the exact change to the user in chat, get their explicit go-ahead, then re-invoke the same tool with `confirmed=true`** (or `confirmed=True`). Only re-call after the human actually confirms. `confirmed=true` has no effect while a real prompt is available.
 
 A literal `{"message": "Action declined by user."}` (without `confirmation_required`) means the user was shown a real prompt and actively declined — do **not** retry or override it; report the decline and ask how they want to proceed. (Before v3.2.3.10 a code-mode dispatch could return this *without* a prompt ever appearing — issue #413; that false-decline path is fixed, but the contract above is the rule regardless.)
 

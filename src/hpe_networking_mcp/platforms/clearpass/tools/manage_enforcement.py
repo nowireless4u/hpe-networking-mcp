@@ -8,21 +8,9 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
-
-
-async def _confirm_write(ctx: Context, action: str, identifier: str | None) -> dict | None:
-    """Thin wrapper over :func:`middleware.elicitation.confirm_write`.
-
-    Kept as a local helper so existing call sites don't change; the
-    shared elicitation/decline/cancel logic now lives in the middleware
-    (#148).
-    """
-    label = identifier or "unknown"
-    return await confirm_write(ctx, f"ClearPass: {action} '{label}'. Confirm?")
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -32,7 +20,13 @@ async def clearpass_manage_enforcement_policy(
     payload: Annotated[dict, Field(description="Enforcement policy config payload. For delete: empty dict {}.")],
     policy_id: Annotated[str | None, Field(description="Policy ID (required for update/delete).")] = None,
     name: Annotated[str | None, Field(description="Policy name (alternative to ID for update/delete).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, or delete a ClearPass enforcement policy.
 
@@ -44,7 +38,8 @@ async def clearpass_manage_enforcement_policy(
         payload: JSON config body. Required for create/update. Empty dict for delete.
         policy_id: Numeric ID. Required for update/delete (or use name).
         name: Policy name. Alternative to policy_id for update/delete.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in ("create", "update", "delete"):
         raise ToolError(
@@ -53,11 +48,6 @@ async def clearpass_manage_enforcement_policy(
                 "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
             }
         )
-
-    if action_type != "create" and not confirmed:
-        decline = await _confirm_write(ctx, f"{action_type} enforcement policy", policy_id or name)
-        if decline:
-            return decline
 
     try:
         client = await get_clearpass_client()
@@ -87,7 +77,13 @@ async def clearpass_manage_enforcement_profile(
     payload: Annotated[dict, Field(description="Enforcement profile config payload. For delete: empty dict {}.")],
     profile_id: Annotated[str | None, Field(description="Profile ID (required for update/delete).")] = None,
     name: Annotated[str | None, Field(description="Profile name (alternative to ID for update/delete).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, or delete a ClearPass enforcement profile.
 
@@ -99,7 +95,8 @@ async def clearpass_manage_enforcement_profile(
         payload: JSON config body. Required for create/update. Empty dict for delete.
         profile_id: Numeric ID. Required for update/delete (or use name).
         name: Profile name. Alternative to profile_id for update/delete.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in ("create", "update", "delete"):
         raise ToolError(
@@ -108,11 +105,6 @@ async def clearpass_manage_enforcement_profile(
                 "message": f"Invalid action_type '{action_type}'. Must be 'create', 'update', or 'delete'.",
             }
         )
-
-    if action_type != "create" and not confirmed:
-        decline = await _confirm_write(ctx, f"{action_type} enforcement profile", profile_id or name)
-        if decline:
-            return decline
 
     try:
         client = await get_clearpass_client()

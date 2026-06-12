@@ -7,7 +7,6 @@ from typing import Any
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.apstra import guidelines
 from hpe_networking_mcp.platforms.apstra._registry import tool
@@ -30,21 +29,13 @@ async def apstra_apply_ct_policies(
         blueprint_id: Blueprint UUID (MANDATORY).
         application_points: JSON string, single dict, or list of dicts, each with
             shape ``{"id": "<interface_id>", "policies": [{"policy": "<policy_id>", "used": true|false}]}``.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     try:
         normalized = normalize_application_points(application_points)
     except ValueError as e:
         raise ToolError({"status_code": 400, "message": f"Invalid application_points: {e}"}) from e
-
-    if not confirmed:
-        decline = await confirm_write(
-            ctx,
-            f"Apstra: apply/update {len(normalized)} connectivity-template policy binding(s) "
-            f"in blueprint {blueprint_id}. Confirm?",
-        )
-        if decline:
-            return decline
 
     try:
         client = await get_apstra_client()

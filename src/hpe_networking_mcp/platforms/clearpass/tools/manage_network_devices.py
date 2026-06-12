@@ -8,7 +8,6 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import ClearPassClient, get_clearpass_client
@@ -45,17 +44,6 @@ async def _resolve_device_id(client: ClearPassClient, device_id: str | None, nam
     return None
 
 
-async def _confirm_action(ctx: Context, action_type: str, device_id: str | None, name: str | None) -> dict | None:
-    """Thin wrapper over :func:`middleware.elicitation.confirm_write`.
-
-    Kept as a local helper so existing call sites don't change; the
-    shared elicitation/decline/cancel logic now lives in the middleware
-    (#148).
-    """
-    identifier = device_id or name or "unknown"
-    return await confirm_write(ctx, f"ClearPass: {action_type} network device '{identifier}'. Confirm?")
-
-
 @tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_network_device(
     ctx: Context,
@@ -70,7 +58,13 @@ async def clearpass_manage_network_device(
     device_id: Annotated[str | None, Field(description="Device ID (required for update/delete/configure).")] = None,
     name: Annotated[str | None, Field(description="Device name (alternative to ID for update/delete).")] = None,
     source_device_id: Annotated[str | None, Field(description="Source device ID (required for clone).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, delete, clone, or configure a ClearPass network device (RADIUS/TACACS+ client).
 
@@ -90,7 +84,8 @@ async def clearpass_manage_network_device(
         device_id: Numeric ID. Required for update/delete/configure (or use name).
         name: Name lookup. Alternative to device_id for update/delete.
         source_device_id: Source device ID for clone action.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in _VALID_ACTIONS:
         raise ToolError(
@@ -99,11 +94,6 @@ async def clearpass_manage_network_device(
                 "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(_VALID_ACTIONS)}.",
             }
         )
-
-    if action_type != "create" and not confirmed:
-        decline = await _confirm_action(ctx, action_type, device_id, name)
-        if decline:
-            return decline
 
     try:
         client = await get_clearpass_client()

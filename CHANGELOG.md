@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.13.0] - 2026-06-12
+
+**Minor — the universal confirmation gate. Closes #415, #416, #436.** Destructive-tool confirmation is now structural and non-bypassable: one gate at the `<platform>_invoke_tool` dispatch chokepoint (the path BOTH code mode and dynamic mode use) replaces ~75 hand-written per-tool confirmation blocks. The capstone of the elicitation-gating effort (#415/#416 design → capability rubric → 8 platform migrations → this).
+
+### Added
+- **`confirm_gated_invoke`** (`middleware/elicitation.py`) + its call in `_invoke_tool`: any tool carrying the `requires_confirmation` tag (derived automatically from its `capability=` classification) is confirmed BEFORE dispatch. **Fail-closed**: an unclassified tool is treated as gated.
+- The decision sequence: `DISABLE_ELICITATION=true` → auto-accept; otherwise a **real `ctx.elicit()` prompt is attempted first** — it round-trips transparently from the code-mode sandbox (verified live 2026-06-03; #414's contrary premise was false). **`confirmed=true` is ignored while a prompt is available** — the human's accept/decline/cancel always wins (this closes the #415 self-authorization hole). Only when the client cannot present a prompt (elicit raises) does `confirmed=true` carry authority as the confirm-in-chat fallback.
+- The ~20 formerly-ungated Central MRT/alert destructive tools (#416) and all 558 generated Mist write tools (#436) are now confirmed through the gate — no per-tool opt-in required, ever again.
+
+### Removed
+- All inline per-tool confirmation machinery: ~75 `confirm_write`/local-helper constructs across 34 files (ClearPass 56, plus Central scope/config/security/WLAN, Apstra, UXI, Axis, AOS8), their local `_confirm_*` helpers, and the dead `_build_patch_diff` elicitation-diff renderer. `confirmed` tool parameters REMAIN (the gate consumes them for the fallback path); their descriptions now state the fallback-only semantics.
+- `manage_wlan_profile` (direct-call static) verified mutation-free — it returns workflow guidance only and performs no writes, so it carries no confirmation (enable-gating retained).
+
+### Tests
+- `test_universal_confirmation_gate.py` (9 tests): decision sequence incl. the confirmed-ignored-while-prompt-available pin and fail-closed predicate.
+- `test_gate_end_to_end.py` (4 tests): a REAL in-memory MCP session with an elicitation handler driving `_invoke_tool` — prompt fires and dispatches on accept, decline blocks even with `confirmed=true`, reads never prompt, and a no-elicitation client gets `confirmation_required` then succeeds via the `confirmed=true` retry.
+- Obsolete inline-confirm tests updated/retired across aos8/uxi/central/clearpass suites. Full suite **1826 passed**; ruff + format + mypy + bandit clean.
+
 ## [3.3.12.5] - 2026-06-11
 
 **Patch — all 14 broken ClearPass endpoints from #469 live-probed and fixed.** Closes #469. Every suspect path was confirmed broken against a live CPPM (HTTP 405 / page-404 / wrong-ID parse), every corrected route verified live with bogus identifiers before and after the fix, and regression tests now pin verb + path + load-bearing body fields.

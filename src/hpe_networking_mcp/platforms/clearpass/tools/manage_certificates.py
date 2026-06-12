@@ -8,7 +8,6 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import ClearPassClient, get_clearpass_client
@@ -20,17 +19,6 @@ _CERT_ACTIONS = (
     "enable_server_cert",
     "disable_server_cert",
 )
-
-
-async def _confirm_write(ctx: Context, action: str, identifier: str | None) -> dict | None:
-    """Thin wrapper over :func:`middleware.elicitation.confirm_write`.
-
-    Kept as a local helper so existing call sites don't change; the
-    shared elicitation/decline/cancel logic now lives in the middleware
-    (#148).
-    """
-    label = identifier or "unknown"
-    return await confirm_write(ctx, f"ClearPass: {action} certificate '{label}'. Confirm?")
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -59,7 +47,13 @@ async def clearpass_manage_certificate(
         str | None,
         Field(description="Service name (required for enable/disable_server_cert, e.g. 'RADIUS', 'HTTPS')."),
     ] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Manage ClearPass certificates (trust lists, client certs, server certs).
 
@@ -76,7 +70,8 @@ async def clearpass_manage_certificate(
         cert_id: Certificate ID. Required for delete_trust_list and delete_client_cert.
         server_uuid: Server UUID. Required for enable/disable_server_cert.
         service_name: Service name (e.g. 'RADIUS', 'HTTPS'). Required for enable/disable_server_cert.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in _CERT_ACTIONS:
         raise ToolError(
@@ -85,12 +80,6 @@ async def clearpass_manage_certificate(
                 "message": f"Invalid action_type '{action_type}'. Must be one of: {', '.join(_CERT_ACTIONS)}.",
             }
         )
-
-    if not confirmed:
-        identifier = cert_id or server_uuid or "certificate"
-        decline = await _confirm_write(ctx, action_type.replace("_", " "), identifier)
-        if decline:
-            return decline
 
     try:
         client = await get_clearpass_client()
@@ -160,7 +149,13 @@ async def clearpass_create_csr(
             "organizational_unit, locality, state, country, san_dns, san_ip."
         ),
     ],
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Generate a Certificate Signing Request (CSR) on ClearPass.
 
@@ -171,14 +166,9 @@ async def clearpass_create_csr(
         payload: CSR subject fields. Must include common_name at minimum.
             Supported fields: common_name, organization, organizational_unit,
             locality, state, country, san_dns (list), san_ip (list).
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
-    if not confirmed:
-        cn = payload.get("common_name", "unknown")
-        decline = await _confirm_write(ctx, "generate CSR", cn)
-        if decline:
-            return decline
-
     try:
         client = await get_clearpass_client()
         return await client.request("post", "/certificate/csr", json_body=payload)
