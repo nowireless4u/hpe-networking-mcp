@@ -134,19 +134,23 @@ class TestConfirmGatedInvoke:
             return AcceptedElicitation(data=None)
 
         ctx = _ctx(elicit=AsyncMock(side_effect=grab))
+        # Bind leak markers to variables (not literals in secret-named
+        # positions) so review-tooling diff maskers render call and assert
+        # identically.
+        leaks = [f"leak-marker-{i}" for i in range(1, 6)]
         await confirm_gated_invoke(
             ctx,
             "central tool 'x'",
             {
-                "apiKey": "LEAK1",
-                "clientSecret": "LEAK2",
-                "refreshToken": "LEAK3",
-                "private-key": "LEAK4",
-                "payload": {"radiusSharedSecret": "LEAK5", "site_name": "HQ"},
+                "apiKey": leaks[0],
+                "clientSecret": leaks[1],
+                "refreshToken": leaks[2],
+                "private-key": leaks[3],
+                "payload": {"radiusSharedSecret": leaks[4], "site_name": "HQ"},
             },
         )
         prompt = captured[0]
-        for leak in ("LEAK1", "LEAK2", "LEAK3", "LEAK4", "LEAK5"):
+        for leak in leaks:
             assert leak not in prompt
         assert "HQ" in prompt  # non-sensitive values stay visible
 
