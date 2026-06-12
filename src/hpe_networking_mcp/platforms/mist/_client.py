@@ -25,6 +25,8 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
 
+from hpe_networking_mcp.platforms._common.auth import AsyncTokenManager
+
 # Status code → human-friendly message used in ToolError responses when the
 # server doesn't return a useful detail body.
 _STATUS_MESSAGES: dict[int, str] = {
@@ -39,6 +41,12 @@ _STATUS_MESSAGES: dict[int, str] = {
 def build_mist_client(host: str, api_token: str) -> httpx.AsyncClient:
     """Construct the httpx AsyncClient stashed on the lifespan context.
 
+    The static token is routed through the shared :class:`AsyncTokenManager`
+    (``AsyncTokenManager.static``) for platform uniformity — it validates
+    non-emptiness at construction and gives Mist the same auth surface as
+    every other platform, even though the token never refreshes. Attachment
+    uses Mist's ``Authorization: Token <value>`` header form.
+
     Args:
         host: Mist API host (e.g. ``api.mist.com``, ``api.eu.mist.com``,
             ``api.gc1.mist.com``).
@@ -48,11 +56,12 @@ def build_mist_client(host: str, api_token: str) -> httpx.AsyncClient:
     Returns:
         Configured ``httpx.AsyncClient`` with base URL + auth header set.
     """
+    tokens = AsyncTokenManager.static(api_token, name="Mist")
     base_url = host if host.startswith("http") else f"https://{host}"
     return httpx.AsyncClient(
         base_url=base_url,
         headers={
-            "Authorization": f"Token {api_token}",
+            "Authorization": f"Token {tokens.token}",
             "Accept": "application/json",
             "User-Agent": "hpe-networking-mcp/3 (https://github.com/nowireless4u/hpe-networking-mcp)",
         },

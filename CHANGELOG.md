@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.12.1] - 2026-06-11
+
+**Patch — final shared-auth adoptions: GreenLake, AOS8, Mist, Axis. The auth migration is COMPLETE — all 8 platforms (+ `_template`) now run token lifecycle through `AsyncTokenManager`.** Pure refactor, no tool changes. This closes the release gate: this version is the tag candidate.
+
+### Changed
+- **GreenLake**: the 290-line sync `OAuth2Provider`/`TokenManager` module (`greenlake/auth.py`) is **deleted**, replaced by `make_token_manager()` — a configuration of the shared `oauth2_client_credentials` strategy (workspace-scoped token URL, form-body credentials, the old 300-second expiry buffer preserved). Token acquisition is natively async — the #440 `asyncio.to_thread` workaround and the eager blocking fetch at startup are gone. Health probe updated.
+- **AOS8**: login-session lifecycle (UIDARUBA) adopted onto `AsyncTokenManager` — `_login()` is the fetch strategy; the per-response SESSION-cookie rotation syncs via `manager.prime()`; cookie+query credential attachment stays in the client. `AOS8AuthError` now subclasses the shared `AuthError`.
+- **Mist + Axis**: static tokens routed through `AsyncTokenManager.static()` (validates non-emptiness at construction; uniform auth surface). `AxisAuthError` subclasses `AuthError`. Axis keeps its JWT expiry-days advisory.
+- Verified live: GreenLake token fetch (expiry tracked) and AOS8 controller login + version read through the manager-backed flow.
+
+### Tests
+- `test_greenlake_auth.py` (22 tests for the deleted module) replaced by `test_greenlake_token_manager.py` (wiring: lazy construction, 300 s buffer, workspace token URL + form credentials, header builder); AOS8/guard tests updated to the manager API. Full suite **1802 passed** in Docker; ruff + format + mypy + bandit clean.
+
 ## [3.3.12.0] - 2026-06-11
 
 **Minor — ClearPass rebuilt on async httpx; pyclearpass SDK removed; full `capability=` migration.** Closes #441, #465. Step 3 of the platform-standardization effort (#466). No release/tag until the auth migration completes across all platforms.

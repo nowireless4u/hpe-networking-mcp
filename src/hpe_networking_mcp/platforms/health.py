@@ -114,11 +114,7 @@ async def _probe_greenlake(ctx: Context) -> dict[str, Any]:
     if tm is None:
         return {"status": "unavailable", "message": "GreenLake is not configured or failed to initialize"}
     try:
-        token = tm.get_raw_token() if hasattr(tm, "get_raw_token") else None
-        if not token and hasattr(tm, "get_auth_headers"):
-            # Force a refresh by asking for headers, then re-read the token
-            tm.get_auth_headers()
-            token = tm.get_raw_token() if hasattr(tm, "get_raw_token") else None
+        token = await tm.get_token()
         if token:
             return {"status": "ok", "message": "GreenLake access token available"}
         return {"status": "degraded", "message": "GreenLake token manager returned empty token"}

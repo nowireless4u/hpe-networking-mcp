@@ -8,17 +8,44 @@ Ported from the per-service ``AuditLogsHttpClient`` /
 
 from __future__ import annotations
 
-import asyncio
 from typing import TYPE_CHECKING, Any
 
 import httpx
 from fastmcp.exceptions import ToolError
 from loguru import logger
 
-from hpe_networking_mcp.platforms.greenlake.auth import TokenManager
+from hpe_networking_mcp.platforms._common.auth import AsyncTokenManager, oauth2_client_credentials
 
 if TYPE_CHECKING:
     from fastmcp import Context
+
+    from hpe_networking_mcp.config import GreenLakeSecrets
+
+# The old TokenManager refreshed when within 300 s of expiry — preserved here.
+_TOKEN_EXPIRY_BUFFER_SECS = 300.0
+_AUTH_TIMEOUT = 30.0
+
+
+def make_token_manager(secrets: GreenLakeSecrets) -> AsyncTokenManager:
+    """Build the GreenLake token manager on the shared auth primitive.
+
+    Token endpoint: ``{api_base_url}/authorization/v2/oauth2/{workspace_id}/token``
+    with the client-credentials grant, credentials in the form body
+    (``client_secret_post`` — what the old ``OAuth2Provider`` sent).
+    Construction is non-blocking; the first request fetches the token.
+    """
+    token_url = f"{secrets.api_base_url.rstrip('/')}/authorization/v2/oauth2/{secrets.workspace_id}/token"
+    return AsyncTokenManager(
+        oauth2_client_credentials(
+            token_url,
+            secrets.client_id,
+            secrets.client_secret,
+            name="GreenLake",
+            timeout=_AUTH_TIMEOUT,
+        ),
+        name="GreenLake",
+        expiry_buffer=_TOKEN_EXPIRY_BUFFER_SECS,
+    )
 
 
 def get_greenlake_client(ctx: Context) -> GreenLakeHttpClient:
@@ -62,7 +89,7 @@ def get_greenlake_client(ctx: Context) -> GreenLakeHttpClient:
 class GreenLakeHttpClient:
     """Async HTTP client with automatic OAuth2 token management."""
 
-    def __init__(self, token_manager: TokenManager, base_url: str) -> None:
+    def __init__(self, token_manager: AsyncTokenManager, base_url: str) -> None:
         self.token_manager = token_manager
         self.base_url = base_url.rstrip("/")
 
@@ -134,14 +161,16 @@ class GreenLakeHttpClient:
     async def _get_auth_headers(self) -> dict[str, str]:
         """Build auth + accept headers, refreshing if needed.
 
-        Token acquisition/refresh in ``TokenManager`` is synchronous
-        (``httpx.Client``). Run it in a worker thread so a slow or hung
-        token endpoint can't block the event loop and stall unrelated
-        tools (issue #440).
+        Token acquisition runs through the shared ``AsyncTokenManager`` —
+        natively async, so a slow token endpoint can't block the event loop
+        (the #440 ``to_thread`` workaround is no longer needed).
         """
-        headers: dict[str, str] = await asyncio.to_thread(self.token_manager.get_auth_headers)
-        headers["Accept"] = "application/json"
-        return headers
+        token = await self.token_manager.get_token()
+        return {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
 
     async def close(self) -> None:
         """Close the underlying httpx client."""

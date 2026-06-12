@@ -93,18 +93,19 @@ class TestGreenLakeUnavailableGuard:
 
 class TestGreenLakeAsyncTokenHeaders:
     def test_get_auth_headers_is_coroutine(self) -> None:
-        # #440 — token acquisition runs off the event loop via asyncio.to_thread,
-        # so the header builder must be a coroutine function now.
+        # #440 — token acquisition must never block the event loop; since the
+        # shared-auth adoption it's natively async (no to_thread workaround).
         from hpe_networking_mcp.platforms.greenlake.client import GreenLakeHttpClient
 
         assert inspect.iscoroutinefunction(GreenLakeHttpClient._get_auth_headers)
 
-    async def test_get_auth_headers_runs_sync_token_manager_off_loop(self) -> None:
+    async def test_get_auth_headers_builds_bearer_from_async_manager(self) -> None:
         from hpe_networking_mcp.platforms.greenlake.client import GreenLakeHttpClient
 
-        # A synchronous token manager (as TokenManager really is) must still work
-        # when awaited through to_thread, and Accept is appended.
-        token_manager = SimpleNamespace(get_auth_headers=lambda: {"Authorization": "Bearer abc"})
+        async def fake_get_token() -> str:
+            return "abc"
+
+        token_manager = SimpleNamespace(get_token=fake_get_token)
         client = GreenLakeHttpClient(token_manager=token_manager, base_url="https://gl.example.com")
         try:
             headers = await client._get_auth_headers()

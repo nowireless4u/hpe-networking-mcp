@@ -14,7 +14,6 @@ References:
 
 from __future__ import annotations
 
-import asyncio
 import re
 from typing import Any, Literal
 
@@ -22,6 +21,7 @@ import httpx
 from loguru import logger
 
 from hpe_networking_mcp.config import AOS8Secrets
+from hpe_networking_mcp.platforms._common.auth import AsyncTokenManager, AuthError, TokenResult
 from hpe_networking_mcp.utils.logging import mask_secret
 
 __all__ = ["AOS8Client", "AOS8AuthError", "AOS8APIError"]
@@ -60,7 +60,7 @@ def _sanitize_for_log(value: str | httpx.URL) -> str:
 _sanitize_url_for_log = _sanitize_for_log
 
 
-class AOS8AuthError(RuntimeError):
+class AOS8AuthError(AuthError):
     """Raised when login fails (HTTP, JSON, or _global_result rejection)."""
 
 
@@ -72,8 +72,8 @@ class AOS8Client:
     """Async AOS8 REST API client with UIDARUBA token caching and 401-refresh retry.
 
     The constructor performs NO HTTP I/O — login is lazy and occurs on the
-    first call to ``_ensure_token()``. An ``asyncio.Lock`` serializes token
-    acquisition so concurrent callers never fire parallel logins.
+    first request via the shared ``AsyncTokenManager``, whose lock serializes
+    token acquisition so concurrent callers never fire parallel logins.
 
     Usage in tools::
 
@@ -89,8 +89,7 @@ class AOS8Client:
             config: AOS8 credentials and connection settings.
         """
         self._config = config
-        self._lock = asyncio.Lock()
-        self._token: str | None = None
+        self._tokens = AsyncTokenManager(self._login, name="AOS8")
         self._http = self._make_http_client()
         if config.verify_ssl is False:
             logger.warning("AOS8: SSL verification disabled — operator opted in via aos8_verify_ssl=false")
@@ -139,45 +138,13 @@ class AOS8Client:
         """
         return f"{self._config.host}:{self._config.port}"
 
-    async def _ensure_token(self) -> str:
-        """Return the cached UIDARUBA token, acquiring one under the lock if needed.
+    async def _login(self) -> TokenResult:
+        """Fetch strategy for :class:`AsyncTokenManager` — one login request.
 
-        Returns:
-            The UIDARUBA session token string.
-
-        Raises:
-            AOS8AuthError: If login fails or token is not set after login.
-        """
-        if self._token is not None:
-            return self._token
-        async with self._lock:
-            if self._token is None:
-                await self._login_locked()
-        if self._token is None:
-            raise AOS8AuthError("login completed without setting token")
-        return self._token
-
-    async def _refresh_token(self) -> str:
-        """Force-refresh the UIDARUBA token under the lock.
-
-        Returns:
-            The new UIDARUBA session token string.
-
-        Raises:
-            AOS8AuthError: If the refresh login fails or token is not set.
-        """
-        async with self._lock:
-            self._token = None
-            await self._login_locked()
-        if self._token is None:
-            raise AOS8AuthError("refresh login completed without setting token")
-        return self._token
-
-    async def _login_locked(self) -> None:
-        """Perform the login request. Caller must hold ``self._lock``.
-
-        Posts credentials to ``/v1/api/login`` with form-encoded body.
-        On success, stores the UIDARUBA token in ``self._token``.
+        Posts credentials to ``/v1/api/login`` with form-encoded body and
+        returns the UIDARUBA session token (no expiry — the token lives until
+        a 401 forces re-login, and rotates via the SESSION cookie on every
+        response, synced back through ``_sync_token_from_cookie``).
 
         Raises:
             AOS8AuthError: On transport error, non-200 status, non-JSON response,
@@ -216,8 +183,8 @@ class AOS8Client:
         if not token:
             raise AOS8AuthError(f"AOS8 login response missing UIDARUBA field: {gr}")
 
-        self._token = token
         logger.info("AOS8: obtained session token {}", mask_secret(token))
+        return TokenResult(token)
 
     def _check_global_result(self, response: httpx.Response) -> None:
         """Raise AOS8APIError if the response contains a non-zero _global_result.
@@ -259,9 +226,9 @@ class AOS8Client:
             response: The httpx response to inspect for a rotated SESSION cookie.
         """
         session_cookie = response.cookies.get("SESSION")
-        if session_cookie and session_cookie != self._token:
+        if session_cookie and session_cookie != self._tokens.token:
             logger.debug("AOS8: session token rotated — updating cached token")
-            self._token = session_cookie
+            self._tokens.prime(session_cookie)
 
     async def request(
         self,
@@ -301,7 +268,7 @@ class AOS8Client:
         if method_up not in ("GET", "POST"):
             raise ValueError(f"AOS8 only supports GET and POST; got {method!r}")
 
-        token = await self._ensure_token()
+        token = await self._tokens.get_token()
         merged_params: dict[str, Any] = {"UIDARUBA": token, **(params or {})}
         effective_timeout = timeout if timeout is not None else _REQUEST_TIMEOUT
 
@@ -320,7 +287,7 @@ class AOS8Client:
                 method_up,
                 _sanitize_url_for_log(path),
             )
-            token = await self._refresh_token()
+            token = await self._tokens.refresh()
             merged_params = {"UIDARUBA": token, **(params or {})}
             response = await self._http.request(
                 method_up,
@@ -374,12 +341,12 @@ class AOS8Client:
         logout are caught and logged as warnings — shutdown must not fail because
         the controller is unreachable.
         """
-        if self._token is not None:
+        if self._tokens.token is not None:
             try:
                 await self._http.post("/v1/api/logout", timeout=_AUTH_TIMEOUT)
                 logger.info("AOS8: logged out cleanly")
             except Exception as exc:  # noqa: BLE001
                 logger.warning("AOS8: logout failed during shutdown — {}", exc)
             finally:
-                self._token = None
+                self._tokens.invalidate()
         await self._http.aclose()

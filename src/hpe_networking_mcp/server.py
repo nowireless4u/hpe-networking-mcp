@@ -80,21 +80,12 @@ async def lifespan(server: FastMCP):
     # --- GreenLake ---
     if config.greenlake:
         try:
-            import asyncio
+            from hpe_networking_mcp.platforms.greenlake.client import make_token_manager
 
-            from hpe_networking_mcp.platforms.greenlake.auth import TokenManager
-
-            # TokenManager.__init__ performs a blocking OAuth token fetch
-            # (synchronous httpx). Construct it in a worker thread so a slow
-            # or hung token endpoint can't stall the async lifespan / event
-            # loop during startup (issue #440).
-            context["greenlake_token_manager"] = await asyncio.to_thread(
-                TokenManager,
-                api_base_url=config.greenlake.api_base_url,
-                client_id=config.greenlake.client_id,
-                client_secret=config.greenlake.client_secret,
-                workspace_id=config.greenlake.workspace_id,
-            )
+            # Construction is non-blocking: the first API call triggers the
+            # initial token fetch via the shared AsyncTokenManager (the #440
+            # to_thread workaround is no longer needed).
+            context["greenlake_token_manager"] = make_token_manager(config.greenlake)
         except Exception as e:
             logger.warning("GreenLake: failed to initialize — {}", e)
             context["greenlake_token_manager"] = None
