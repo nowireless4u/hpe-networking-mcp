@@ -88,6 +88,15 @@ class TestConfirmGatedInvoke:
         assert result["status"] == "confirmation_required"
         assert "confirmed=true" in result["message"]
 
+    async def test_other_mcp_errors_fail_closed_even_with_confirmed(self):
+        """An McpError that is NOT the no-capability signal (e.g. transport
+        failure) must fail closed — confirmed=true is not honored."""
+        transport_err = McpError(ErrorData(code=-32000, message="transport went sideways"))
+        ctx = _ctx(elicit=AsyncMock(side_effect=transport_err))
+        result = await confirm_gated_invoke(ctx, "central tool 'x'", {"confirmed": True})
+        assert result is not None
+        assert result["status"] == "confirmation_unavailable"
+
     async def test_unexpected_elicit_failure_fails_closed_even_with_confirmed(self):
         """A handler crash / framework bug is NOT a license to skip
         confirmation — confirmed=true is not honored for unknown failures."""
@@ -115,6 +124,31 @@ class TestConfirmGatedInvoke:
         assert '"id": "7"' in captured[0]  # target visible
         assert "supersecret" not in captured[0]  # secret redacted
         assert "confirmed" not in captured[0]  # bookkeeping flag dropped
+
+    async def test_redaction_covers_camel_and_compound_keys(self):
+        """api_key / apiKey / clientSecret / refreshToken / private-key all redact."""
+        captured: list[str] = []
+
+        async def grab(message, response_type=None):
+            captured.append(message)
+            return AcceptedElicitation(data=None)
+
+        ctx = _ctx(elicit=AsyncMock(side_effect=grab))
+        await confirm_gated_invoke(
+            ctx,
+            "central tool 'x'",
+            {
+                "apiKey": "LEAK1",
+                "clientSecret": "LEAK2",
+                "refreshToken": "LEAK3",
+                "private-key": "LEAK4",
+                "payload": {"radiusSharedSecret": "LEAK5", "site_name": "HQ"},
+            },
+        )
+        prompt = captured[0]
+        for leak in ("LEAK1", "LEAK2", "LEAK3", "LEAK4", "LEAK5"):
+            assert leak not in prompt
+        assert "HQ" in prompt  # non-sensitive values stay visible
 
     def test_param_summary_caps_length(self):
         summary = _sanitized_param_summary({"payload": {"x" * 10: "y" * 1000}})

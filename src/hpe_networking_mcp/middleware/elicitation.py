@@ -24,11 +24,29 @@ from fastmcp.server.middleware import Middleware, MiddlewareContext
 from loguru import logger
 from mcp.shared.exceptions import McpError
 
-# Keys whose VALUES are redacted from confirmation-prompt parameter summaries.
-_SENSITIVE_PARAM_KEYS = frozenset(
-    {"password", "secret", "client_secret", "token", "api_token", "key", "psk", "passphrase", "community"}
+# Normalized suffixes whose VALUES are redacted from confirmation-prompt
+# parameter summaries. Keys are normalized (lowercased, separators stripped)
+# before matching, so ``api_key`` / ``apiKey`` / ``api-key`` all redact; the
+# suffix match catches compound names (``clientSecret``, ``refreshToken``,
+# ``radiusSharedSecret``). Over-redaction is acceptable; leaking is not.
+_SENSITIVE_KEY_SUFFIXES = (
+    "password",
+    "secret",
+    "token",
+    "key",
+    "psk",
+    "passphrase",
+    "community",
+    "credential",
+    "credentials",
 )
 _PARAM_SUMMARY_MAX_LEN = 300
+
+
+def _is_sensitive_key(key: str) -> bool:
+    """True when a (normalized) parameter key names secret material."""
+    normalized = "".join(ch for ch in key.lower() if ch.isalnum())
+    return any(normalized == suffix or normalized.endswith(suffix) for suffix in _SENSITIVE_KEY_SUFFIXES)
 
 
 def _sanitized_param_summary(params: dict | None) -> str:
@@ -45,11 +63,7 @@ def _sanitized_param_summary(params: dict | None) -> str:
 
     def scrub(value):
         if isinstance(value, dict):
-            return {
-                k: ("***" if k.lower() in _SENSITIVE_PARAM_KEYS else scrub(v))
-                for k, v in value.items()
-                if k != "confirmed"
-            }
+            return {k: ("***" if _is_sensitive_key(k) else scrub(v)) for k, v in value.items() if k != "confirmed"}
         if isinstance(value, list):
             return [scrub(v) for v in value]
         return value
@@ -274,11 +288,33 @@ async def confirm_gated_invoke(
     prompt = f"Confirm: {description}\nParams: {param_summary}"
     try:
         result = await ctx.elicit(prompt, response_type=None)
-    except McpError:
-        # The CLIENT cannot present a prompt ("Elicitation not supported" —
-        # the legitimate fallback trigger, verified against fastmcp). ONLY
-        # here does confirmed=true carry authority — the human-in-chat
-        # fallback.
+    except McpError as e:
+        # Only the specific no-capability signal opens the fallback path:
+        # "Elicitation not supported" / METHOD_NOT_FOUND (verified against
+        # fastmcp). Every other MCP-layer error (transport failure, malformed
+        # elicitation response, framework bug surfaced as McpError) fails
+        # CLOSED below, exactly like non-MCP failures.
+        error = getattr(e, "error", None)
+        code = getattr(error, "code", None)
+        message = (getattr(error, "message", None) or str(e)).lower()
+        is_no_capability = code == -32601 or "elicitation not supported" in message
+        if not is_no_capability:
+            logger.error(
+                "Gate: MCP-layer elicitation failure (code={}, {}) — failing closed for {}",
+                code,
+                message[:120],
+                description,
+            )
+            return {
+                "status": "confirmation_unavailable",
+                "message": (
+                    f"{description} requires user confirmation, but the confirmation prompt failed "
+                    "at the MCP layer. The action was NOT performed. Retry later, or have the "
+                    "operator set DISABLE_ELICITATION=true if confirmations must be bypassed "
+                    "deliberately."
+                ),
+            }
+        # ONLY here does confirmed=true carry authority — the human-in-chat fallback.
         if params and params.get("confirmed") is True:
             logger.info("Gate: client lacks elicitation — honoring confirmed=true for {}", description)
             return None
