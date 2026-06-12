@@ -70,6 +70,8 @@ class TestMakeTokenManager:
         body = request.content.decode()
         assert "grant_type=client_credentials" in body
         assert "client_id=gl-client-id" in body  # credentials in the form body (client_secret_post)
+        assert "client_secret=gl-client-secret" in body
+        assert "Authorization" not in request.headers  # NOT client_secret_basic — body only
 
 
 class TestClientHeaderBuilder:
