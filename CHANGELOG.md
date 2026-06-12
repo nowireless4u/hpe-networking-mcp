@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.13.1] - 2026-06-12
+
+**Patch — refactor: retire the legacy inline-confirmation layer.** The final cleanup step of the elicitation-gating effort. With the universal gate (`confirm_gated_invoke`, v3.3.13.0) handling all confirmation at the `<platform>_invoke_tool` chokepoint, the pre-gate per-tool confirmation machinery had zero remaining callers.
+
+### Removed
+- `middleware/elicitation.py`: the orphaned `confirm_write` (#148 consolidation helper), `elicitation_handler`, and `_resolve_elicitation_mode` (#413 code-mode fix) — a dead three-function chain nothing in production imported. The `elicitation_mode` session state they read is gone too: `ElicitationMiddleware.on_initialize` no longer sniffs client elicitation capability or stores a mode (the gate attempts a real `ctx.elicit()` per call regardless), keeping only the write-tool enablement and the `DISABLE_ELICITATION` warning.
+- `tests/unit/test_elicitation_mode_resolution.py` (11 tests for the removed functions; the behavior they pinned — code-mode confirmation without fabricated declines — is covered by `test_universal_confirmation_gate.py` + `test_gate_end_to_end.py`).
+- Vestigial `elicitation_mode` mock plumbing in the aos8/uxi test helpers, and `test_elicitation_disabled_state_auto_accepts` (aos8) — with the per-tool auto-accept mechanism gone it had become an exact duplicate of `test_tool_body_has_no_inline_confirmation`.
+
+### Fixed
+- Stale references to the removed pattern: `_template/README.md` no longer recommends vendor SDKs (pycentral/pyclearpass were removed in #468/#470) and now documents the universal gate instead of `confirm_write`; docstring mentions scrubbed from `_template/tools/example_write.py` and the uxi/central/axis test suites.
+
 ## [3.3.13.0] - 2026-06-12
 
 **Minor — the universal confirmation gate. Closes #415, #416, #436.** Destructive-tool confirmation is now structural and non-bypassable: one gate at the `<platform>_invoke_tool` dispatch chokepoint (the path BOTH code mode and dynamic mode use) replaces ~75 hand-written per-tool confirmation blocks. The capstone of the elicitation-gating effort (#415/#416 design → capability rubric → 8 platform migrations → this).

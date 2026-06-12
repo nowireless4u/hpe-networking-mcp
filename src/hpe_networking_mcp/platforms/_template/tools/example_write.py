@@ -10,7 +10,7 @@ Demonstrates two important patterns every write tool should follow:
    user (via MCP elicitation) for every tool whose ``capability=``
    classification derives the ``requires_confirmation`` tag — which
    ``WRITE`` / ``WRITE_DELETE`` / gated ``OPERATIONAL`` all do. Tools never
-   call ``confirm_write`` themselves (that double-prompts). Keep the
+   run their own confirmation prompt (that double-prompts). Keep the
    ``confirmed`` parameter: the gate consumes ``confirmed=true`` from params
    as the popup-less fallback when the client cannot present a prompt.
 2. ``action_type`` parameter (``create`` / ``update`` / ``delete``) — one

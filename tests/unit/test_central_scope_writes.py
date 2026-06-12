@@ -1,7 +1,9 @@
 """Unit tests for the Central scope write tools (membership + bulk delete).
 
-Covers the seven mutation tools added to ``sites.py``. Mocks ``confirm_write``
-(the elicitation guard) and ``retry_central_command`` at their import sites.
+Covers the seven mutation tools added to ``sites.py``. Mocks
+``retry_central_command`` at its import site (confirmation is structural —
+the universal gate at ``central_invoke_tool`` dispatch — so direct calls
+need no confirm mocking).
 Also asserts every tool carries the ``central_write_delete`` gating tag — the
 ONLY tag Central's write gate (server-side ``Visibility`` transform +
 ``_WRITE_TAG_BY_PLATFORM``) acts on. A bare ``central_write`` tag would ship

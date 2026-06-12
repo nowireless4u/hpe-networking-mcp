@@ -25,14 +25,13 @@ def _load_fixture(name: str) -> dict:
     return json.loads((FIXTURES / name).read_text(encoding="utf-8"))
 
 
-def _make_ctx(response_body: dict, *, elicitation_mode: str = "disabled") -> tuple[MagicMock, MagicMock]:
+def _make_ctx(response_body: dict) -> tuple[MagicMock, MagicMock]:
     response = MagicMock(spec=httpx.Response)
     response.json.return_value = response_body
     client = MagicMock()
     client.request = AsyncMock(return_value=response)
     ctx = MagicMock()
     ctx.lifespan_context = {"aos8_client": client}
-    ctx.get_state = AsyncMock(return_value=elicitation_mode)
     return ctx, client
 
 
@@ -604,7 +603,7 @@ async def test_tool_body_has_no_inline_confirmation():
     behind the gate."""
     from hpe_networking_mcp.platforms.aos8.tools.writes import aos8_manage_ssid_profile
 
-    ctx, client = _make_ctx(_load_fixture("write_ssid_prof_success.json"), elicitation_mode="chat_confirm")
+    ctx, client = _make_ctx(_load_fixture("write_ssid_prof_success.json"))
     result = await aos8_manage_ssid_profile(
         ctx,
         config_path="/md",
@@ -615,22 +614,6 @@ async def test_tool_body_has_no_inline_confirmation():
 
     assert isinstance(result, dict)
     client.request.assert_awaited()
-
-
-async def test_elicitation_disabled_state_auto_accepts():
-    """When mode=disabled, confirmed=False still proceeds — elicitation auto-accepts."""
-    from hpe_networking_mcp.platforms.aos8.tools.writes import aos8_manage_ssid_profile
-
-    ctx, client = _make_ctx(_load_fixture("write_ssid_prof_success.json"), elicitation_mode="disabled")
-    await aos8_manage_ssid_profile(
-        ctx,
-        config_path="/md",
-        action_type="create",
-        payload={"profile-name": "guest"},
-        confirmed=False,
-    )
-
-    client.request.assert_awaited_once()
 
 
 # ---------------------------------------------------------------------------
@@ -682,7 +665,6 @@ async def test_elicitation_middleware_enables_aos8_tags():
     # Build a fake MiddlewareContext
     mock_ctx = MagicMock()
     mock_ctx.enable_components = AsyncMock()
-    mock_ctx.set_state = AsyncMock()
 
     config = MagicMock()
     config.enable_aos8_write_tools = True

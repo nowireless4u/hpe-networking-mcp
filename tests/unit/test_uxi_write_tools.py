@@ -2,7 +2,6 @@
 
 Covers:
 - TestUXIWriteRegistry: 10 write tools registered in REGISTRIES["uxi"]
-- TestConfirmWrite:    confirm_write called BEFORE the mutation (D-02)
 - TestElicitationWiring: elicitation.py source contains enable_uxi_write_tools (D-03)
 - TestIDValidation:    _validate_id raises ToolError for path-traversal IDs (D-07)
 - TestToolErrorPropagation: ToolError re-raised from client (CR-02)
@@ -49,15 +48,13 @@ def uxi_write_registry_populated():
     clear_registry("uxi")
 
 
-def _make_uxi_ctx(*, elicitation_mode: str = "disabled") -> MagicMock:
-    """Build a MagicMock Context with ``ctx.get_state`` returning the chosen mode.
+def _make_uxi_ctx() -> MagicMock:
+    """Build a MagicMock Context for calling tool functions directly.
 
-    ``disabled`` mode causes ``confirm_write`` to auto-accept so tools proceed
-    straight to the mocked client call.
+    Confirmation is structural (the universal gate at ``uxi_invoke_tool``
+    dispatch), so direct calls proceed straight to the mocked client call.
     """
-    ctx = MagicMock()
-    ctx.get_state = AsyncMock(return_value=elicitation_mode)
-    return ctx
+    return MagicMock()
 
 
 @pytest.mark.unit
@@ -172,11 +169,6 @@ class TestToolErrorPropagation:
 
 
 @pytest.mark.unit
-# NOTE: the former TestConfirmWrite class asserted inline confirm_write
-# ordering. Confirmation is now enforced structurally by the universal gate
-# at uxi_invoke_tool dispatch — covered by test_universal_confirmation_gate
-# and test_gate_end_to_end.
-
 class TestElicitationWiring:
     """elicitation.py source must wire uxi_write into any_write and enable_components (D-03)."""
 
