@@ -23,8 +23,15 @@ from fastmcp.server.elicitation import (
     CancelledElicitation,
     DeclinedElicitation,
 )
+from mcp.shared.exceptions import McpError
+from mcp.types import ErrorData
 
-from hpe_networking_mcp.middleware.elicitation import confirm_gated_invoke
+from hpe_networking_mcp.middleware.elicitation import _sanitized_param_summary, confirm_gated_invoke
+
+
+def _no_elicitation_error() -> McpError:
+    return McpError(ErrorData(code=-32601, message="Elicitation not supported"))
+
 
 pytestmark = pytest.mark.unit
 
@@ -67,18 +74,51 @@ class TestConfirmGatedInvoke:
         assert result["status"] == "declined"  # human's decline wins over the flag
         ctx.elicit.assert_awaited_once()  # the prompt WAS shown despite confirmed=true
 
-    async def test_prompt_failure_with_confirmed_true_proceeds(self):
-        """Popup-less fallback: confirmed=true carries authority ONLY after elicit raises."""
-        ctx = _ctx(elicit=AsyncMock(side_effect=RuntimeError("client has no elicitation")))
+    async def test_client_without_elicitation_with_confirmed_true_proceeds(self):
+        """Popup-less fallback: confirmed=true carries authority ONLY on the
+        legitimate no-capability signal (McpError 'Elicitation not supported')."""
+        ctx = _ctx(elicit=AsyncMock(side_effect=_no_elicitation_error()))
         result = await confirm_gated_invoke(ctx, "central tool 'x'", {"confirmed": True})
         assert result is None
 
-    async def test_prompt_failure_without_confirmed_requires_chat_confirmation(self):
-        ctx = _ctx(elicit=AsyncMock(side_effect=RuntimeError("client has no elicitation")))
+    async def test_client_without_elicitation_requires_chat_confirmation(self):
+        ctx = _ctx(elicit=AsyncMock(side_effect=_no_elicitation_error()))
         result = await confirm_gated_invoke(ctx, "central tool 'x'", {})
         assert result is not None
         assert result["status"] == "confirmation_required"
         assert "confirmed=true" in result["message"]
+
+    async def test_unexpected_elicit_failure_fails_closed_even_with_confirmed(self):
+        """A handler crash / framework bug is NOT a license to skip
+        confirmation — confirmed=true is not honored for unknown failures."""
+        ctx = _ctx(elicit=AsyncMock(side_effect=RuntimeError("handler exploded")))
+        result = await confirm_gated_invoke(ctx, "central tool 'x'", {"confirmed": True})
+        assert result is not None
+        assert result["status"] == "confirmation_unavailable"
+        assert "NOT performed" in result["message"]
+
+    async def test_prompt_includes_sanitized_params(self):
+        """The human must see WHAT they approve — targets shown, secrets redacted."""
+        captured: list[str] = []
+
+        async def grab(message, response_type=None):
+            captured.append(message)
+            return AcceptedElicitation(data=None)
+
+        ctx = _ctx(elicit=AsyncMock(side_effect=grab))
+        await confirm_gated_invoke(
+            ctx,
+            "central tool 'central_bulk_delete_sites'",
+            {"items": [{"id": "7"}], "psk": "supersecret", "confirmed": True},
+        )
+        assert len(captured) == 1
+        assert '"id": "7"' in captured[0]  # target visible
+        assert "supersecret" not in captured[0]  # secret redacted
+        assert "confirmed" not in captured[0]  # bookkeeping flag dropped
+
+    def test_param_summary_caps_length(self):
+        summary = _sanitized_param_summary({"payload": {"x" * 10: "y" * 1000}})
+        assert len(summary) <= 300
 
 
 class TestInvokeToolGating:

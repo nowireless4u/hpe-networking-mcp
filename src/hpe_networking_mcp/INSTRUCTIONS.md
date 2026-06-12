@@ -286,7 +286,7 @@ For these tools: **call them in their own `execute()` block — don't chain othe
 
 Destructive tools are confirmed by a universal gate at `<platform>_invoke_tool` dispatch: it shows a REAL confirmation prompt whenever your client supports MCP elicitation — including from inside code-mode `execute()` blocks, where the prompt round-trips transparently. Passing `confirmed=true` does NOT skip a working prompt; the human's answer always wins. Only when no prompt can be shown does the flow below apply.
 
-A destructive write (create / update / delete) dispatched via `<platform>_invoke_tool` inside `execute()` **cannot surface an interactive elicitation popup** — the sandbox can't round-trip a server→client prompt. So when you call a write tool with `confirmed=false` (or omit it), it returns a guard dict:
+A destructive write (create / update / delete) dispatched via `<platform>_invoke_tool` — including inside `execute()` — **shows a real confirmation prompt when your client supports MCP elicitation** (the prompt round-trips from the sandbox). When the client cannot show a prompt, the call returns a guard dict instead:
 
 ```python
 {"status": "confirmation_required", "message": "... Call this tool again with confirmed=true after the user confirms."}

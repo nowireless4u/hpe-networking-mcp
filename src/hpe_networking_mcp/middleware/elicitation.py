@@ -10,6 +10,8 @@ to get user confirmation. Behavior depends on config and client:
 - Client lacks elicitation: decline and instruct AI to ask user in chat
 """
 
+import json as _json
+
 import mcp.types
 from fastmcp import Context
 from fastmcp.client.elicitation import ElicitResult
@@ -20,6 +22,42 @@ from fastmcp.server.elicitation import (
 )
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from loguru import logger
+from mcp.shared.exceptions import McpError
+
+# Keys whose VALUES are redacted from confirmation-prompt parameter summaries.
+_SENSITIVE_PARAM_KEYS = frozenset(
+    {"password", "secret", "client_secret", "token", "api_token", "key", "psk", "passphrase", "community"}
+)
+_PARAM_SUMMARY_MAX_LEN = 300
+
+
+def _sanitized_param_summary(params: dict | None) -> str:
+    """Render a compact, redacted view of invocation params for the prompt.
+
+    The human must see WHAT they are approving (target IDs, payload fields),
+    not just the tool name — but never secret values, and never unbounded
+    payload dumps. Sensitive keys are redacted by name at any nesting depth,
+    the bookkeeping ``confirmed`` flag is dropped, and the rendering is
+    length-capped.
+    """
+    if not params:
+        return "(no parameters)"
+
+    def scrub(value):
+        if isinstance(value, dict):
+            return {
+                k: ("***" if k.lower() in _SENSITIVE_PARAM_KEYS else scrub(v))
+                for k, v in value.items()
+                if k != "confirmed"
+            }
+        if isinstance(value, list):
+            return [scrub(v) for v in value]
+        return value
+
+    rendered = _json.dumps(scrub(params), separators=(", ", ": "), ensure_ascii=False, default=str)
+    if len(rendered) > _PARAM_SUMMARY_MAX_LEN:
+        rendered = rendered[: _PARAM_SUMMARY_MAX_LEN - 1] + "…"
+    return rendered
 
 
 class ElicitationMiddleware(Middleware):
@@ -232,21 +270,41 @@ async def confirm_gated_invoke(
         logger.debug("Gate: auto-accepting (DISABLE_ELICITATION) — {}", description)
         return None
 
+    param_summary = _sanitized_param_summary(params)
+    prompt = f"Confirm: {description}\nParams: {param_summary}"
     try:
-        result = await ctx.elicit(f"Confirm: {description}", response_type=None)
-    except Exception:
-        # The client cannot present a prompt (no elicitation capability, or
-        # transport refused). ONLY here does confirmed=true carry authority —
-        # the human-in-chat fallback.
+        result = await ctx.elicit(prompt, response_type=None)
+    except McpError:
+        # The CLIENT cannot present a prompt ("Elicitation not supported" —
+        # the legitimate fallback trigger, verified against fastmcp). ONLY
+        # here does confirmed=true carry authority — the human-in-chat
+        # fallback.
         if params and params.get("confirmed") is True:
-            logger.info("Gate: prompt unavailable — honoring confirmed=true for {}", description)
+            logger.info("Gate: client lacks elicitation — honoring confirmed=true for {}", description)
             return None
         return {
             "status": "confirmation_required",
             "message": (
                 f"{description} requires user confirmation and this client cannot show a "
-                "confirmation prompt. Confirm with the user in chat, then call again with "
-                "confirmed=true in params."
+                f"confirmation prompt. Params: {param_summary}. Confirm with the user in "
+                "chat, then call again with confirmed=true in params."
+            ),
+        }
+    except Exception as e:
+        # Any OTHER failure (handler crash, serialization bug, framework
+        # regression) is NOT a license to skip confirmation — fail closed.
+        # confirmed=true is deliberately not honored here: the gate only
+        # opens when it knows the fallback path is legitimate.
+        logger.error(
+            "Gate: elicitation failed unexpectedly ({}: {}) — failing closed for {}", type(e).__name__, e, description
+        )
+        return {
+            "status": "confirmation_unavailable",
+            "message": (
+                f"{description} requires user confirmation, but the confirmation prompt failed "
+                f"unexpectedly ({type(e).__name__}). The action was NOT performed. Retry later, "
+                "or have the operator set DISABLE_ELICITATION=true if confirmations must be "
+                "bypassed deliberately."
             ),
         }
 
