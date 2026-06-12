@@ -22,6 +22,7 @@ from fastmcp import Context
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
@@ -459,7 +460,7 @@ async def central_get_cnac_image_download(
     Parameters:
         image_id: Path parameter (OpenAPI path param: ``image-id``).
     """
-    api_path = f"network-config/v1alpha1/cnac-image/download/{image_id}"
+    api_path = f"network-config/v1alpha1/cnac-image/download/{path_seg(image_id)}"
     return await _operation_request(ctx, "GET", api_path)
 
 
@@ -478,7 +479,7 @@ async def central_get_cnac_job_error(
     Parameters:
         job_id: Path parameter (OpenAPI path param: ``job-id``).
     """
-    api_path = f"network-config/v1alpha1/cnac-job/{job_id}/error"
+    api_path = f"network-config/v1alpha1/cnac-job/{path_seg(job_id)}/error"
     return await _operation_request(ctx, "GET", api_path)
 
 
@@ -497,7 +498,7 @@ async def central_get_cnac_job_input(
     Parameters:
         job_id: Path parameter (OpenAPI path param: ``job-id``).
     """
-    api_path = f"network-config/v1alpha1/cnac-job/{job_id}/input"
+    api_path = f"network-config/v1alpha1/cnac-job/{path_seg(job_id)}/input"
     return await _operation_request(ctx, "GET", api_path)
 
 
@@ -516,7 +517,7 @@ async def central_get_cnac_job_status(
     Parameters:
         job_id: Path parameter (OpenAPI path param: ``job-id``).
     """
-    api_path = f"network-config/v1alpha1/cnac-job/{job_id}/status"
+    api_path = f"network-config/v1alpha1/cnac-job/{path_seg(job_id)}/status"
     return await _operation_request(ctx, "GET", api_path)
 
 

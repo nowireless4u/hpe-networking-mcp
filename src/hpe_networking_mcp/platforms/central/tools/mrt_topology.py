@@ -12,6 +12,7 @@ from fastmcp import Context
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
@@ -37,7 +38,7 @@ async def central_get_topology(
 ) -> dict | str:
     """Get the network topology graph for a site (nodes + edges)."""
     conn = get_central_conn(ctx)
-    return await _call(conn, "GET", f"network-monitoring/v1/topology/{site_id}")
+    return await _call(conn, "GET", f"network-monitoring/v1/topology/{path_seg(site_id)}")
 
 
 @tool(capability=Capability.READ)
@@ -47,7 +48,7 @@ async def central_get_neighbours(
 ) -> dict | str:
     """Get LLDP / CDP neighbour records as seen by a specific device."""
     conn = get_central_conn(ctx)
-    return await _call(conn, "GET", f"network-monitoring/v1/neighbours/{serial_number}")
+    return await _call(conn, "GET", f"network-monitoring/v1/neighbours/{path_seg(serial_number)}")
 
 
 @tool(capability=Capability.READ)
@@ -57,7 +58,7 @@ async def central_get_unmanaged_device(
 ) -> dict | str:
     """Get details on an unmanaged device (seen on the network but not under Central management)."""
     conn = get_central_conn(ctx)
-    return await _call(conn, "GET", f"network-monitoring/v1/unmanaged-device/{mac_address}")
+    return await _call(conn, "GET", f"network-monitoring/v1/unmanaged-device/{path_seg(mac_address)}")
 
 
 @tool(capability=Capability.READ)
@@ -67,7 +68,7 @@ async def central_get_isolated_devices(
 ) -> dict | str:
     """List isolated devices at a site (managed devices that lost connectivity to peers)."""
     conn = get_central_conn(ctx)
-    return await _call(conn, "GET", f"network-monitoring/v1/isolated-devices/{site_id}")
+    return await _call(conn, "GET", f"network-monitoring/v1/isolated-devices/{path_seg(site_id)}")
 
 
 @tool(capability=Capability.READ)
@@ -108,7 +109,7 @@ async def central_update_device(
     response = await retry_central_command(
         central_conn=conn,
         api_method="PATCH",
-        api_path=f"network-monitoring/v1/devices/{serial_number}",
+        api_path=f"network-monitoring/v1/devices/{path_seg(serial_number)}",
         api_data=payload,
     )
     code = response.get("code", 0)
@@ -133,7 +134,7 @@ async def central_delete_device(
     response = await retry_central_command(
         central_conn=conn,
         api_method="DELETE",
-        api_path=f"network-monitoring/v1/devices/{serial_number}",
+        api_path=f"network-monitoring/v1/devices/{path_seg(serial_number)}",
     )
     code = response.get("code", 0)
     if 200 <= code < 300:

@@ -14,6 +14,8 @@ from fastmcp import Context
 from loguru import logger
 from pydantic import BaseModel, Field
 
+from hpe_networking_mcp.platforms._common.url import path_seg
+
 # Response models — kept compact to minimize token cost in Claude's context.
 
 
@@ -121,7 +123,7 @@ async def _collect_mist(ctx: Context, site_name: str, window_hours: int) -> Mist
     summary = MistSummary()
 
     try:
-        sites_resp = await client.get(f"/api/v1/orgs/{org_id}/sites")
+        sites_resp = await client.get(f"/api/v1/orgs/{path_seg(org_id)}/sites")
         if sites_resp.status_code != 200:
             summary.error = f"Mist listOrgSites HTTP {sites_resp.status_code}"
             return summary
@@ -149,9 +151,9 @@ async def _collect_mist(ctx: Context, site_name: str, window_hours: int) -> Mist
     alarms_resp: Any = None
     try:
         stats_resp, alarms_resp = await asyncio.gather(
-            client.get(f"/api/v1/sites/{site_id}/stats"),
+            client.get(f"/api/v1/sites/{path_seg(site_id)}/stats"),
             client.get(
-                f"/api/v1/sites/{site_id}/alarms/search",
+                f"/api/v1/sites/{path_seg(site_id)}/alarms/search",
                 params={"start": start, "end": end, "limit": 100},
             ),
             return_exceptions=True,
@@ -286,7 +288,7 @@ async def _extract_mist_device_ips(ctx: Context, site_id: str) -> list[str]:
     if not client:
         return []
     try:
-        resp = await client.get(f"/api/v1/sites/{site_id}/devices")
+        resp = await client.get(f"/api/v1/sites/{path_seg(site_id)}/devices")
         if resp.status_code != 200:
             return []
         devices = resp.json()

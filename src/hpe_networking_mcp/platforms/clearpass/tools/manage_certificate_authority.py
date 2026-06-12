@@ -20,6 +20,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
@@ -113,9 +114,11 @@ async def clearpass_manage_certificate_authority(
         if action_type == "request":
             return await client.request("post", "/certificate/request", json_body=payload)
         if action_type == "delete":
-            return await client.request("delete", f"/certificate/{certificate_id}")
+            return await client.request("delete", f"/certificate/{path_seg(certificate_id)}")
         # sign / revoke / reject / export
-        return await client.request("post", f"/certificate/{certificate_id}/{action_type}", json_body=payload)
+        return await client.request(
+            "post", f"/certificate/{path_seg(certificate_id)}/{path_seg(action_type)}", json_body=payload
+        )
     except ToolError:
         raise
     except Exception as e:
@@ -172,7 +175,7 @@ async def clearpass_manage_onboard_device(
 
     try:
         client = await get_clearpass_client()
-        path = f"/onboard/device/{record_id}"
+        path = f"/onboard/device/{path_seg(record_id)}"
         if action_type == "delete":
             return await client.request("delete", path)
         body: Any = payload if payload is not None else {}

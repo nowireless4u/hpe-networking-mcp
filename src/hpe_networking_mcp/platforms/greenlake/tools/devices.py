@@ -17,6 +17,7 @@ from loguru import logger
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.greenlake._registry import tool
 from hpe_networking_mcp.platforms.greenlake.client import get_greenlake_client
 
@@ -162,4 +163,4 @@ async def greenlake_get_device_by_id(
         raise ToolError({"status_code": 400, "message": "id is required and cannot be empty"})
 
     async with get_greenlake_client(ctx) as client:
-        return await client.get(f"/devices/v1/devices/{id}")
+        return await client.get(f"/devices/v1/devices/{path_seg(id)}")

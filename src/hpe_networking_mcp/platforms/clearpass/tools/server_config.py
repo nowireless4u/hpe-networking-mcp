@@ -6,6 +6,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
@@ -36,7 +37,7 @@ async def clearpass_get_admin_users(
     try:
         client = await get_clearpass_client()
         if admin_user_id:
-            return await client.request("get", f"/admin-user/{admin_user_id}")
+            return await client.request("get", f"/admin-user/{path_seg(admin_user_id)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/admin-user" + query)
     except ToolError:
@@ -70,7 +71,7 @@ async def clearpass_get_admin_privileges(
     try:
         client = await get_clearpass_client()
         if admin_privilege_id:
-            return await client.request("get", f"/admin-privilege/{admin_privilege_id}")
+            return await client.request("get", f"/admin-privilege/{path_seg(admin_privilege_id)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/admin-privilege" + query)
     except ToolError:
@@ -124,7 +125,7 @@ async def clearpass_get_licenses(
     try:
         client = await get_clearpass_client()
         if license_id:
-            return await client.request("get", f"/application-license/{license_id}")
+            return await client.request("get", f"/application-license/{path_seg(license_id)}")
         return await client.request("get", "/application-license/summary")
     except ToolError:
         raise
@@ -197,7 +198,7 @@ async def clearpass_get_attributes(
     try:
         client = await get_clearpass_client()
         if attribute_id:
-            return await client.request("get", f"/attribute/{attribute_id}")
+            return await client.request("get", f"/attribute/{path_seg(attribute_id)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/attribute" + query)
     except ToolError:
@@ -231,7 +232,7 @@ async def clearpass_get_data_filters(
     try:
         client = await get_clearpass_client()
         if data_filter_id:
-            return await client.request("get", f"/data-filter/{data_filter_id}")
+            return await client.request("get", f"/data-filter/{path_seg(data_filter_id)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/data-filter" + query)
     except ToolError:
@@ -265,7 +266,7 @@ async def clearpass_get_file_backup_servers(
     try:
         client = await get_clearpass_client()
         if file_backup_server_id:
-            return await client.request("get", f"/file-backup-server/{file_backup_server_id}")
+            return await client.request("get", f"/file-backup-server/{path_seg(file_backup_server_id)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/file-backup-server" + query)
     except ToolError:
@@ -317,7 +318,7 @@ async def clearpass_get_snmp_trap_receivers(
     try:
         client = await get_clearpass_client()
         if snmp_trap_receiver_id:
-            return await client.request("get", f"/snmp-trap-receiver/{snmp_trap_receiver_id}")
+            return await client.request("get", f"/snmp-trap-receiver/{path_seg(snmp_trap_receiver_id)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/snmp-trap-receiver" + query)
     except ToolError:
@@ -351,7 +352,7 @@ async def clearpass_get_policy_manager_zones(
     try:
         client = await get_clearpass_client()
         if policy_manager_zones_id:
-            return await client.request("get", f"/server/policy-manager-zones/{policy_manager_zones_id}")
+            return await client.request("get", f"/server/policy-manager-zones/{path_seg(policy_manager_zones_id)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/server/policy-manager-zones" + query)
     except ToolError:

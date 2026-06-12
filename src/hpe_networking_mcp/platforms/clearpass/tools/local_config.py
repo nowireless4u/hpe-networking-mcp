@@ -6,6 +6,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
@@ -28,8 +29,10 @@ async def clearpass_get_access_controls(
     try:
         client = await get_clearpass_client()
         if resource_name:
-            return await client.request("get", f"/server/access-control/{server_uuid}/{resource_name}")
-        return await client.request("get", f"/server/access-control/{server_uuid}")
+            return await client.request(
+                "get", f"/server/access-control/{path_seg(server_uuid)}/{path_seg(resource_name)}"
+            )
+        return await client.request("get", f"/server/access-control/{path_seg(server_uuid)}")
     except ToolError:
         raise
     except Exception as e:
@@ -54,8 +57,10 @@ async def clearpass_get_ad_domains(
     try:
         client = await get_clearpass_client()
         if netbios_name:
-            return await client.request("get", f"/ad-domain/{server_uuid}/netbios-name/{netbios_name}")
-        return await client.request("get", f"/ad-domain/{server_uuid}")
+            return await client.request(
+                "get", f"/ad-domain/{path_seg(server_uuid)}/netbios-name/{path_seg(netbios_name)}"
+            )
+        return await client.request("get", f"/ad-domain/{path_seg(server_uuid)}")
     except ToolError:
         raise
     except Exception as e:
@@ -78,7 +83,7 @@ async def clearpass_get_server_version(
     try:
         client = await get_clearpass_client()
         if uuid:
-            return await client.request("get", f"/cluster/server/{uuid}")
+            return await client.request("get", f"/cluster/server/{path_seg(uuid)}")
         return {
             "cppm_version": await client.request("get", "/cppm-version"),
             "server_version": await client.request("get", "/server/version"),
@@ -124,8 +129,8 @@ async def clearpass_get_server_services(
     try:
         client = await get_clearpass_client()
         if service_name:
-            return await client.request("get", f"/server/service/{server_uuid}/{service_name}")
-        return await client.request("get", f"/server/service/{server_uuid}")
+            return await client.request("get", f"/server/service/{path_seg(server_uuid)}/{path_seg(service_name)}")
+        return await client.request("get", f"/server/service/{path_seg(server_uuid)}")
     except ToolError:
         raise
     except Exception as e:
@@ -147,7 +152,7 @@ async def clearpass_get_server_snmp(
     """
     try:
         client = await get_clearpass_client()
-        return await client.request("get", f"/server/snmp/{server_uuid}")
+        return await client.request("get", f"/server/snmp/{path_seg(server_uuid)}")
     except ToolError:
         raise
     except Exception as e:

@@ -6,6 +6,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
@@ -25,7 +26,7 @@ async def clearpass_get_audit_logs(
     """
     try:
         client = await get_clearpass_client()
-        return await client.request("get", f"/login-audit/{username}")
+        return await client.request("get", f"/login-audit/{path_seg(username)}")
     except ToolError:
         raise
     except Exception as e:
@@ -92,9 +93,9 @@ async def clearpass_get_insight_alerts(
     try:
         client = await get_clearpass_client()
         if alert_id:
-            return await client.request("get", f"/alert/{alert_id}")
+            return await client.request("get", f"/alert/{path_seg(alert_id)}")
         if name:
-            return await client.request("get", f"/alert/{name}")
+            return await client.request("get", f"/alert/{path_seg(name)}")
         query = f"?offset={offset}&limit={limit}&calculate_count={'true' if calculate_count else 'false'}"
         return await clearpass_get(client, "/alert" + query)
     except ToolError:
@@ -131,9 +132,9 @@ async def clearpass_get_insight_reports(
     try:
         client = await get_clearpass_client()
         if report_id:
-            return await client.request("get", f"/report/{report_id}")
+            return await client.request("get", f"/report/{path_seg(report_id)}")
         if name:
-            return await client.request("get", f"/report/{name}")
+            return await client.request("get", f"/report/{path_seg(name)}")
         query = f"?offset={offset}&limit={limit}&calculate_count={'true' if calculate_count else 'false'}"
         return await clearpass_get(client, "/report" + query)
     except ToolError:
@@ -166,13 +167,15 @@ async def clearpass_get_endpoint_insights(
     try:
         client = await get_clearpass_client()
         if mac:
-            return await client.request("get", f"/insight/endpoint/mac/{mac}")
+            return await client.request("get", f"/insight/endpoint/mac/{path_seg(mac)}")
         if ip:
-            return await client.request("get", f"/insight/endpoint/ip/{ip}")
+            return await client.request("get", f"/insight/endpoint/ip/{path_seg(ip)}")
         if ip_range:
-            return await client.request("get", f"/insight/endpoint/ip-range/{ip_range}")
+            return await client.request("get", f"/insight/endpoint/ip-range/{path_seg(ip_range)}")
         if from_time and to_time:
-            return await client.request("get", f"/insight/endpoint/time-range/{from_time}/{to_time}")
+            return await client.request(
+                "get", f"/insight/endpoint/time-range/{path_seg(from_time)}/{path_seg(to_time)}"
+            )
         raise ToolError(
             {
                 "status_code": 400,

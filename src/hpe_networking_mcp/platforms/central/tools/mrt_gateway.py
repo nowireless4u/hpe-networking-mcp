@@ -13,6 +13,7 @@ from fastmcp import Context
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
@@ -90,7 +91,7 @@ async def central_get_gateway_trend(
     conn = get_central_conn(ctx)
     return await _get(
         conn,
-        f"network-monitoring/v1/gateways/{serial_number}/{suffix_map[dimension]}",
+        f"network-monitoring/v1/gateways/{path_seg(serial_number)}/{path_seg(suffix_map[dimension])}",
         _time_params(start, end),
     )
 
@@ -107,7 +108,7 @@ async def central_get_gateway_ports(
 ) -> dict | str:
     """List ports on a gateway."""
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/gateways/{serial_number}/ports")
+    return await _get(conn, f"network-monitoring/v1/gateways/{path_seg(serial_number)}/ports")
 
 
 @tool(capability=Capability.READ)
@@ -118,7 +119,7 @@ async def central_get_gateway_port(
 ) -> dict | str:
     """Get one gateway-port's detail."""
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/gateways/{serial_number}/ports/{port_number}")
+    return await _get(conn, f"network-monitoring/v1/gateways/{path_seg(serial_number)}/ports/{path_seg(port_number)}")
 
 
 _GwPortTrendDimension = Literal["throughput", "frames", "frames-errors", "frames-packets"]
@@ -148,7 +149,8 @@ async def central_get_gateway_port_trend(
     conn = get_central_conn(ctx)
     return await _get(
         conn,
-        f"network-monitoring/v1/gateways/{serial_number}/ports/{port_number}/{suffix_map[dimension]}",
+        f"network-monitoring/v1/gateways/{path_seg(serial_number)}/ports/"
+        f"{path_seg(port_number)}/{path_seg(suffix_map[dimension])}",
         _time_params(start, end),
     )
 
@@ -165,7 +167,7 @@ async def central_get_gateway_tunnels(
 ) -> dict | str:
     """List active tunnels terminating on a gateway."""
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/gateways/{serial_number}/tunnels")
+    return await _get(conn, f"network-monitoring/v1/gateways/{path_seg(serial_number)}/tunnels")
 
 
 @tool(capability=Capability.READ)
@@ -176,7 +178,7 @@ async def central_get_gateway_tunnel(
 ) -> dict | str:
     """Get one tunnel's detail on a gateway."""
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/gateways/{serial_number}/tunnels/{tunnel_name}")
+    return await _get(conn, f"network-monitoring/v1/gateways/{path_seg(serial_number)}/tunnels/{path_seg(tunnel_name)}")
 
 
 _GwTunnelTrendDimension = Literal["throughput", "status", "dropped-packet"]
@@ -203,7 +205,8 @@ async def central_get_gateway_tunnel_trend(
     conn = get_central_conn(ctx)
     return await _get(
         conn,
-        f"network-monitoring/v1/gateways/{serial_number}/tunnels/{tunnel_name}/{suffix_map[dimension]}",
+        f"network-monitoring/v1/gateways/{path_seg(serial_number)}/tunnels/"
+        f"{path_seg(tunnel_name)}/{path_seg(suffix_map[dimension])}",
         _time_params(start, end),
     )
 
@@ -222,7 +225,10 @@ async def central_get_gateway_tunnels_health_summary(
 ) -> dict | str:
     """Get tunnel health summary for a gateway (LAN-side or WAN-side rollup)."""
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/gateways/{serial_number}/{scope}-tunnels-health-summary")
+    return await _get(
+        conn,
+        f"network-monitoring/v1/gateways/{path_seg(serial_number)}/{path_seg(scope)}-tunnels-health-summary",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -237,7 +243,7 @@ async def central_get_gateway_vlans_runtime(
 ) -> dict | str:
     """List runtime VLANs on a gateway."""
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/gateways/{serial_number}/vlans")
+    return await _get(conn, f"network-monitoring/v1/gateways/{path_seg(serial_number)}/vlans")
 
 
 @tool(capability=Capability.READ)
@@ -248,7 +254,7 @@ async def central_get_gateway_vlan_runtime(
 ) -> dict | str:
     """Get one runtime VLAN's detail on a gateway."""
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/gateways/{serial_number}/vlans/{vlan_id}")
+    return await _get(conn, f"network-monitoring/v1/gateways/{path_seg(serial_number)}/vlans/{path_seg(vlan_id)}")
 
 
 # ---------------------------------------------------------------------------
@@ -263,7 +269,7 @@ async def central_get_gateway_uplinks(
 ) -> dict | str:
     """List uplinks (WAN links) on a gateway."""
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/gateways/{serial_number}/uplinks")
+    return await _get(conn, f"network-monitoring/v1/gateways/{path_seg(serial_number)}/uplinks")
 
 
 @tool(capability=Capability.READ)
@@ -274,7 +280,7 @@ async def central_get_gateway_uplink(
 ) -> dict | str:
     """Get one gateway-uplink's detail."""
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/gateways/{serial_number}/uplinks/{link_tag}")
+    return await _get(conn, f"network-monitoring/v1/gateways/{path_seg(serial_number)}/uplinks/{path_seg(link_tag)}")
 
 
 _UplinkTrendDimension = Literal["throughput", "wan-compression", "wan-availability"]
@@ -301,7 +307,8 @@ async def central_get_gateway_uplink_trend(
     conn = get_central_conn(ctx)
     return await _get(
         conn,
-        f"network-monitoring/v1/gateways/{serial_number}/uplinks/{link_tag}/{suffix_map[dimension]}",
+        f"network-monitoring/v1/gateways/{path_seg(serial_number)}/uplinks/"
+        f"{path_seg(link_tag)}/{path_seg(suffix_map[dimension])}",
         _time_params(start, end),
     )
 
@@ -314,7 +321,10 @@ async def central_get_gateway_uplink_probes(
 ) -> dict | str:
     """List configured uplink probes on a gateway uplink."""
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/gateways/{serial_number}/uplinks/{link_tag}/probes")
+    return await _get(
+        conn,
+        f"network-monitoring/v1/gateways/{path_seg(serial_number)}/uplinks/{path_seg(link_tag)}/probes",
+    )
 
 
 @tool(capability=Capability.READ)
@@ -330,7 +340,8 @@ async def central_get_gateway_uplink_probe_performance(
     conn = get_central_conn(ctx)
     return await _get(
         conn,
-        f"network-monitoring/v1/gateways/{serial_number}/uplinks/{link_tag}/probes/{probe}/performance-trends",
+        f"network-monitoring/v1/gateways/{path_seg(serial_number)}/uplinks/"
+        f"{path_seg(link_tag)}/probes/{path_seg(probe)}/performance-trends",
         _time_params(start, end),
     )
 
@@ -354,7 +365,7 @@ async def central_get_gateway_uplink_vpn_availability(
     conn = get_central_conn(ctx)
     return await _get(
         conn,
-        f"network-monitoring/v1/gateways/{serial_number}/uplinks/{vlan_id}/vpn-availability-trends",
+        f"network-monitoring/v1/gateways/{path_seg(serial_number)}/uplinks/{path_seg(vlan_id)}/vpn-availability-trends",
         _time_params(start, end),
     )
 
@@ -378,7 +389,7 @@ async def central_get_gateway_dhcp(
 ) -> dict | str:
     """Get DHCP state on a gateway (pools or active client leases)."""
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/gateways/{serial_number}/dhcp-{view}")
+    return await _get(conn, f"network-monitoring/v1/gateways/{path_seg(serial_number)}/dhcp-{path_seg(view)}")
 
 
 # ---------------------------------------------------------------------------
@@ -393,7 +404,7 @@ async def central_get_cluster_members(
 ) -> dict | str:
     """List member gateways of a cluster."""
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/clusters/{cluster_name}/members")
+    return await _get(conn, f"network-monitoring/v1/clusters/{path_seg(cluster_name)}/members")
 
 
 _ClusterSummaryKind = Literal[
@@ -423,7 +434,7 @@ async def central_get_cluster_summary(
 ) -> dict | str:
     """Get one of the cluster-level summary endpoints."""
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/clusters/{cluster_name}/{kind}")
+    return await _get(conn, f"network-monitoring/v1/clusters/{path_seg(cluster_name)}/{path_seg(kind)}")
 
 
 @tool(capability=Capability.READ)
@@ -444,6 +455,6 @@ async def central_get_cluster_capacity_trends(
 ) -> dict | str:
     """Get cluster capacity trends (cluster-wide or per-member)."""
     conn = get_central_conn(ctx)
-    base = f"network-monitoring/v1/clusters/{cluster_name}/capacity-trends"
-    path = f"{base}/{serial_number}" if serial_number else base
+    base = f"network-monitoring/v1/clusters/{path_seg(cluster_name)}/capacity-trends"
+    path = f"{base}/{path_seg(serial_number)}" if serial_number else base
     return await _get(conn, path, _time_params(start, end))

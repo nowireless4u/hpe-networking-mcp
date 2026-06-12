@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.13.2] - 2026-06-12
+
+**Patch — fix: centralized URL path-segment escaping for interpolated selector values.** Closes #476. Operator-supplied selectors (usernames, MACs, attribute/template/server names, IDs) interpolated into URL paths were sent raw: httpx already percent-encodes spaces and unicode, but a value containing `/` restructured the route, `?` started the query string, and `#` silently truncated the path — a delete aimed at `Policy #2` would have quietly targeted `Policy ` instead of failing loudly.
+
+### Added
+- `platforms/_common/url.py` — `path_seg(value)` (`urllib.parse.quote(str(value), safe="")`): one encoded path segment, no characters exempt.
+- `tests/unit/test_path_seg.py` — encoding-contract pins for the hostile characters, plus a **creep guard**: an AST scan of every f-string in the platform tree (call-shape-independent, so paths assigned to variables before the request call can't dodge it) asserting URL-path interpolations are `path_seg`-wrapped. Partial adoption is how this class of bug returns.
+
+### Fixed
+- **~450 interpolation sites wrapped across all 8 platforms** (ClearPass ~300 — the highest-value surface, free-text name selectors are common there; Central ~120 incl. the `monitoring_api` port and all MRT modules; Apstra, Axis, UXI, GreenLake, AOS8, and the cross-platform statics). The sweep ran to convergence against the guard: three rounds, each extending the guard's reach (wrapper-method call shapes, `retry_central_command`/`base_path` kwargs, variable-assigned path f-strings) until it found nothing.
+- Mist's 1037 generated tools fixed at the single `mist_request` path-substitution chokepoint (no regen needed).
+- MAC colons now percent-encode in paths (`aa%3Abb…`). **Live-verified harmless on all three changed gateways**: ClearPass, Central, and Mist each return the identical record for percent-encoded vs raw path segments (RFC 3986 decode confirmed against real tenants before shipping).
+
 ## [3.3.13.1] - 2026-06-12
 
 **Patch — refactor: retire the legacy inline-confirmation layer.** The final cleanup step of the elicitation-gating effort. With the universal gate (`confirm_gated_invoke`, v3.3.13.0) handling all confirmation at the `<platform>_invoke_tool` chokepoint, the pre-gate per-tool confirmation machinery had zero remaining callers.

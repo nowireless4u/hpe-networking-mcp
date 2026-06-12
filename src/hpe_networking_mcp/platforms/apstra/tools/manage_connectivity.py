@@ -8,6 +8,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.apstra import guidelines
 from hpe_networking_mcp.platforms.apstra._registry import tool
 from hpe_networking_mcp.platforms.apstra.client import format_http_error, get_apstra_client
@@ -41,7 +42,7 @@ async def apstra_apply_ct_policies(
         client = await get_apstra_client()
         response = await client.request(
             "PATCH",
-            f"/api/blueprints/{blueprint_id}/obj-policy-batch-apply",
+            f"/api/blueprints/{path_seg(blueprint_id)}/obj-policy-batch-apply",
             params={"async": "full"},
             json_body={"application_points": normalized},
         )

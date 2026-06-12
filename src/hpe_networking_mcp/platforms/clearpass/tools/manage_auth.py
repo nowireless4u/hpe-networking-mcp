@@ -9,6 +9,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import ClearPassClient, get_clearpass_client
 
@@ -97,13 +98,13 @@ async def _execute_auth_source_action(
 
     if action_type == "delete":
         if auth_source_id:
-            return await client.request("delete", f"/auth-source/{auth_source_id}")
-        return await client.request("delete", f"/auth-source/name/{name}")
+            return await client.request("delete", f"/auth-source/{path_seg(auth_source_id)}")
+        return await client.request("delete", f"/auth-source/name/{path_seg(name)}")
 
     # update, configure_backup, configure_filters, configure_radius_attrs — all PATCH
     if auth_source_id:
-        return await client.request("patch", f"/auth-source/{auth_source_id}", json_body=payload)
-    return await client.request("patch", f"/auth-source/name/{name}", json_body=payload)
+        return await client.request("patch", f"/auth-source/{path_seg(auth_source_id)}", json_body=payload)
+    return await client.request("patch", f"/auth-source/name/{path_seg(name)}", json_body=payload)
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -153,12 +154,12 @@ async def clearpass_manage_auth_method(
             )
         if action_type == "update":
             if auth_method_id:
-                return await client.request("patch", f"/auth-method/{auth_method_id}", json_body=payload)
-            return await client.request("patch", f"/auth-method/name/{name}", json_body=payload)
+                return await client.request("patch", f"/auth-method/{path_seg(auth_method_id)}", json_body=payload)
+            return await client.request("patch", f"/auth-method/name/{path_seg(name)}", json_body=payload)
         # delete
         if auth_method_id:
-            return await client.request("delete", f"/auth-method/{auth_method_id}")
-        return await client.request("delete", f"/auth-method/name/{name}")
+            return await client.request("delete", f"/auth-method/{path_seg(auth_method_id)}")
+        return await client.request("delete", f"/auth-method/name/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:

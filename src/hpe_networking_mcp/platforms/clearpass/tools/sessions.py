@@ -6,6 +6,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import clearpass_get
@@ -36,7 +37,7 @@ async def clearpass_get_sessions(
     try:
         client = await get_clearpass_client()
         if session_id:
-            return await client.request("get", f"/session/{session_id}")
+            return await client.request("get", f"/session/{path_seg(session_id)}")
         params = [
             f"filter={filter}" if filter else "",
             f"sort={sort}" if sort else "",
@@ -67,7 +68,7 @@ async def clearpass_get_session_action_status(
     """
     try:
         client = await get_clearpass_client()
-        return await client.request("get", f"/session-action/{action_id}")
+        return await client.request("get", f"/session-action/{path_seg(action_id)}")
     except ToolError:
         raise
     except Exception as e:
@@ -89,7 +90,7 @@ async def clearpass_get_reauth_profiles(
     """
     try:
         client = await get_clearpass_client()
-        return await client.request("get", f"/session/{session_id}/reauthorize")
+        return await client.request("get", f"/session/{path_seg(session_id)}/reauthorize")
     except ToolError:
         raise
     except Exception as e:

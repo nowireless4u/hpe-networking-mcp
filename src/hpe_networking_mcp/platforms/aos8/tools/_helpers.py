@@ -14,6 +14,7 @@ from typing import Any
 
 import httpx
 
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.aos8.client import (
     AOS8APIError,
     AOS8AuthError,
@@ -196,7 +197,7 @@ async def get_object(
         params["type"] = entry_type
     response = await client.request(
         "GET",
-        f"/v1/configuration/object/{object_path}",
+        f"/v1/configuration/object/{path_seg(object_path)}",
         params=params,
     )
     return strip_meta(_decode_json_or_raise(response, f"object {object_path!r}"))

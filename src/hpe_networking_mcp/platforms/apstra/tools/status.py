@@ -8,6 +8,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.apstra import guidelines
 from hpe_networking_mcp.platforms.apstra._registry import tool
 from hpe_networking_mcp.platforms.apstra.client import format_http_error, get_apstra_client
@@ -22,7 +23,7 @@ async def apstra_get_anomalies(ctx: Context, blueprint_id: str) -> dict[str, Any
     """
     try:
         client = await get_apstra_client()
-        payload = await client.get_json(f"/api/blueprints/{blueprint_id}/anomalies")
+        payload = await client.get_json(f"/api/blueprints/{path_seg(blueprint_id)}/anomalies")
         return {
             "guidelines": guidelines.get_base_guidelines() + guidelines.get_anomaly_guidelines(),
             "data": payload,
@@ -44,7 +45,7 @@ async def apstra_get_diff_status(ctx: Context, blueprint_id: str) -> dict[str, A
     """
     try:
         client = await get_apstra_client()
-        payload = await client.get_json(f"/api/blueprints/{blueprint_id}/diff-status")
+        payload = await client.get_json(f"/api/blueprints/{path_seg(blueprint_id)}/diff-status")
         return {
             "guidelines": guidelines.get_base_guidelines() + guidelines.get_status_guidelines(),
             "data": payload,
@@ -63,7 +64,7 @@ async def apstra_get_protocol_sessions(ctx: Context, blueprint_id: str) -> dict[
     """
     try:
         client = await get_apstra_client()
-        payload = await client.get_json(f"/api/blueprints/{blueprint_id}/protocol-sessions")
+        payload = await client.get_json(f"/api/blueprints/{path_seg(blueprint_id)}/protocol-sessions")
         return {
             "guidelines": guidelines.get_base_guidelines() + guidelines.get_status_guidelines(),
             "data": payload,

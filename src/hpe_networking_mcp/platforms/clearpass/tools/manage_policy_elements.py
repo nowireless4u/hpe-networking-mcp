@@ -9,6 +9,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
@@ -50,20 +51,24 @@ async def clearpass_manage_service(
         if not config_service_id and not name:
             raise ToolError({"status_code": 400, "message": "Either config_service_id or name is required."})
         if action_type == "update":
-            path = f"/config/service/{config_service_id}" if config_service_id else f"/config/service/name/{name}"
+            path = (
+                f"/config/service/{path_seg(config_service_id)}"
+                if config_service_id
+                else f"/config/service/name/{path_seg(name)}"
+            )
             return await client.request("patch", path, json_body=payload)
         if action_type == "enable":
             if not config_service_id:
                 raise ToolError({"status_code": 400, "message": "config_service_id is required for enable."})
-            return await client.request("patch", f"/config/service/{config_service_id}/enable")
+            return await client.request("patch", f"/config/service/{path_seg(config_service_id)}/enable")
         if action_type == "disable":
             if not config_service_id:
                 raise ToolError({"status_code": 400, "message": "config_service_id is required for disable."})
-            return await client.request("patch", f"/config/service/{config_service_id}/disable")
+            return await client.request("patch", f"/config/service/{path_seg(config_service_id)}/disable")
         # delete
         if config_service_id:
-            return await client.request("delete", f"/config/service/{config_service_id}")
-        return await client.request("delete", f"/config/service/name/{name}")
+            return await client.request("delete", f"/config/service/{path_seg(config_service_id)}")
+        return await client.request("delete", f"/config/service/name/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:
@@ -114,14 +119,14 @@ async def clearpass_manage_device_group(
             )
         if action_type == "update":
             path = (
-                f"/network-device-group/{network_device_group_id}"
+                f"/network-device-group/{path_seg(network_device_group_id)}"
                 if network_device_group_id
-                else f"/network-device-group/name/{name}"
+                else f"/network-device-group/name/{path_seg(name)}"
             )
             return await client.request("patch", path, json_body=payload)
         if network_device_group_id:
-            return await client.request("delete", f"/network-device-group/{network_device_group_id}")
-        return await client.request("delete", f"/network-device-group/name/{name}")
+            return await client.request("delete", f"/network-device-group/{path_seg(network_device_group_id)}")
+        return await client.request("delete", f"/network-device-group/name/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:
@@ -171,11 +176,15 @@ async def clearpass_manage_posture_policy(
                 {"status_code": 400, "message": "Either posture_policy_id or name is required for update/delete."}
             )
         if action_type == "update":
-            path = f"/posture-policy/{posture_policy_id}" if posture_policy_id else f"/posture-policy/name/{name}"
+            path = (
+                f"/posture-policy/{path_seg(posture_policy_id)}"
+                if posture_policy_id
+                else f"/posture-policy/name/{path_seg(name)}"
+            )
             return await client.request("patch", path, json_body=payload)
         if posture_policy_id:
-            return await client.request("delete", f"/posture-policy/{posture_policy_id}")
-        return await client.request("delete", f"/posture-policy/name/{name}")
+            return await client.request("delete", f"/posture-policy/{path_seg(posture_policy_id)}")
+        return await client.request("delete", f"/posture-policy/name/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:
@@ -223,11 +232,15 @@ async def clearpass_manage_proxy_target(
                 {"status_code": 400, "message": "Either proxy_target_id or name is required for update/delete."}
             )
         if action_type == "update":
-            path = f"/proxy-target/{proxy_target_id}" if proxy_target_id else f"/proxy-target/name/{name}"
+            path = (
+                f"/proxy-target/{path_seg(proxy_target_id)}"
+                if proxy_target_id
+                else f"/proxy-target/name/{path_seg(name)}"
+            )
             return await client.request("patch", path, json_body=payload)
         if proxy_target_id:
-            return await client.request("delete", f"/proxy-target/{proxy_target_id}")
-        return await client.request("delete", f"/proxy-target/name/{name}")
+            return await client.request("delete", f"/proxy-target/{path_seg(proxy_target_id)}")
+        return await client.request("delete", f"/proxy-target/name/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:
@@ -274,23 +287,23 @@ async def clearpass_manage_radius_dictionary(
             raise ToolError({"status_code": 400, "message": "Either radius_dictionary_id or name is required."})
         if action_type == "update":
             path = (
-                f"/radius-dictionary/{radius_dictionary_id}"
+                f"/radius-dictionary/{path_seg(radius_dictionary_id)}"
                 if radius_dictionary_id
-                else f"/radius-dictionary/name/{name}"
+                else f"/radius-dictionary/name/{path_seg(name)}"
             )
             return await client.request("patch", path, json_body=payload)
         if action_type == "enable":
             if not radius_dictionary_id:
                 raise ToolError({"status_code": 400, "message": "radius_dictionary_id is required for enable."})
-            return await client.request("patch", f"/radius-dictionary/{radius_dictionary_id}/enable")
+            return await client.request("patch", f"/radius-dictionary/{path_seg(radius_dictionary_id)}/enable")
         if action_type == "disable":
             if not radius_dictionary_id:
                 raise ToolError({"status_code": 400, "message": "radius_dictionary_id is required for disable."})
-            return await client.request("patch", f"/radius-dictionary/{radius_dictionary_id}/disable")
+            return await client.request("patch", f"/radius-dictionary/{path_seg(radius_dictionary_id)}/disable")
         # delete
         if radius_dictionary_id:
-            return await client.request("delete", f"/radius-dictionary/{radius_dictionary_id}")
-        return await client.request("delete", f"/radius-dictionary/name/{name}")
+            return await client.request("delete", f"/radius-dictionary/{path_seg(radius_dictionary_id)}")
+        return await client.request("delete", f"/radius-dictionary/name/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:
@@ -341,14 +354,14 @@ async def clearpass_manage_tacacs_dictionary(
             )
         if action_type == "update":
             path = (
-                f"/tacacs-dictionary/{tacacs_dictionary_id}"
+                f"/tacacs-dictionary/{path_seg(tacacs_dictionary_id)}"
                 if tacacs_dictionary_id
-                else f"/tacacs-dictionary/name/{name}"
+                else f"/tacacs-dictionary/name/{path_seg(name)}"
             )
             return await client.request("patch", path, json_body=payload)
         if tacacs_dictionary_id:
-            return await client.request("delete", f"/tacacs-dictionary/{tacacs_dictionary_id}")
-        return await client.request("delete", f"/tacacs-dictionary/name/{name}")
+            return await client.request("delete", f"/tacacs-dictionary/{path_seg(tacacs_dictionary_id)}")
+        return await client.request("delete", f"/tacacs-dictionary/name/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:
@@ -402,14 +415,14 @@ async def clearpass_manage_application_dictionary(
             )
         if action_type == "update":
             path = (
-                f"/application-dictionary/{application_dictionary_id}"
+                f"/application-dictionary/{path_seg(application_dictionary_id)}"
                 if application_dictionary_id
-                else f"/application-dictionary/name/{name}"
+                else f"/application-dictionary/name/{path_seg(name)}"
             )
             return await client.request("patch", path, json_body=payload)
         if application_dictionary_id:
-            return await client.request("delete", f"/application-dictionary/{application_dictionary_id}")
-        return await client.request("delete", f"/application-dictionary/name/{name}")
+            return await client.request("delete", f"/application-dictionary/{path_seg(application_dictionary_id)}")
+        return await client.request("delete", f"/application-dictionary/name/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:

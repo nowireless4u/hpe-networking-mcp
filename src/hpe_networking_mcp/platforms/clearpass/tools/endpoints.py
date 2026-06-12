@@ -6,6 +6,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import clearpass_get
@@ -43,9 +44,9 @@ async def clearpass_get_endpoints(
     try:
         client = await get_clearpass_client()
         if endpoint_id:
-            return await client.request("get", f"/endpoint/{endpoint_id}")
+            return await client.request("get", f"/endpoint/{path_seg(endpoint_id)}")
         if mac_address:
-            return await client.request("get", f"/endpoint/mac-address/{mac_address}")
+            return await client.request("get", f"/endpoint/mac-address/{path_seg(mac_address)}")
         params = [
             f"filter={filter}" if filter else "",
             f"sort={sort}" if sort else "",
@@ -79,7 +80,7 @@ async def clearpass_get_endpoint_profiler(
     """
     try:
         client = await get_clearpass_client()
-        return await client.request("get", f"/device-profiler/device-fingerprint/{mac_or_ip}")
+        return await client.request("get", f"/device-profiler/device-fingerprint/{path_seg(mac_or_ip)}")
     except ToolError:
         raise
     except Exception as e:

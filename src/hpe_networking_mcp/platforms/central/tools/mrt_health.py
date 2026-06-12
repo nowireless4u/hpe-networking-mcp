@@ -13,6 +13,7 @@ from fastmcp import Context
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
@@ -42,7 +43,7 @@ async def central_get_site_health_detail(
     endpoint directly for one site's full health detail.
     """
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/site-health/{site_id}")
+    return await _get(conn, f"network-monitoring/v1/site-health/{path_seg(site_id)}")
 
 
 @tool(capability=Capability.READ)

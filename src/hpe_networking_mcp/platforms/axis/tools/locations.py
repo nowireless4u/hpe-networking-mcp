@@ -12,6 +12,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.axis._registry import tool
 from hpe_networking_mcp.platforms.axis.client import format_http_error, get_axis_client
 from hpe_networking_mcp.platforms.axis.tools._manage import manage_entity
@@ -34,7 +35,7 @@ async def axis_get_locations(
     try:
         client = await get_axis_client()
         if location_id:
-            return await client.get_json(f"/Locations/{location_id}")
+            return await client.get_json(f"/Locations/{path_seg(location_id)}")
         return await client.get_paged("/Locations", page_number=page_number, page_size=page_size)
     except Exception as e:
         detail = format_http_error(e)
@@ -60,9 +61,9 @@ async def axis_get_sub_locations(
     try:
         client = await get_axis_client()
         if sub_location_id:
-            return await client.get_json(f"/Locations/{location_id}/SubLocations/{sub_location_id}")
+            return await client.get_json(f"/Locations/{path_seg(location_id)}/SubLocations/{path_seg(sub_location_id)}")
         return await client.get_paged(
-            f"/Locations/{location_id}/SubLocations",
+            f"/Locations/{path_seg(location_id)}/SubLocations",
             page_number=page_number,
             page_size=page_size,
         )
@@ -122,7 +123,7 @@ async def axis_manage_sub_location(
     """
     return await manage_entity(
         ctx,
-        base_path=f"/Locations/{location_id}/SubLocations",
+        base_path=f"/Locations/{path_seg(location_id)}/SubLocations",
         label=f"sub-location under location {location_id}",
         action_type=action_type,
         payload=payload,

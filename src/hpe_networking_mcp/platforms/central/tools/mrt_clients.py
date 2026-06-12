@@ -11,6 +11,7 @@ from fastmcp import Context
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
@@ -80,7 +81,7 @@ async def central_get_client_mobility_trail(
         params["start"] = start
     if end:
         params["end"] = end
-    return await _get(conn, f"network-monitoring/v1/clients/{mac_address}/mobility-trail", params)
+    return await _get(conn, f"network-monitoring/v1/clients/{path_seg(mac_address)}/mobility-trail", params)
 
 
 @tool(capability=Capability.READ)
@@ -90,7 +91,7 @@ async def central_get_client_detail(
 ) -> dict | str:
     """Get one client's full record (deeper than ``central_get_clients`` list view)."""
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-monitoring/v1/clients/{mac_address}")
+    return await _get(conn, f"network-monitoring/v1/clients/{path_seg(mac_address)}")
 
 
 # ---------------------------------------------------------------------------

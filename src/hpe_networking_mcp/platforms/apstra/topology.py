@@ -6,6 +6,7 @@ from typing import Any
 
 from loguru import logger
 
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.apstra.client import ApstraClient
 
 
@@ -31,7 +32,7 @@ async def get_individual_leafs_from_system_ids(
         are returned unchanged so callers still receive a best-effort value.
     """
     try:
-        response = await client.request("GET", f"/api/blueprints/{blueprint_id}/experience/web/system-info")
+        response = await client.request("GET", f"/api/blueprints/{path_seg(blueprint_id)}/experience/web/system-info")
         payload: Any = response.json()
     except Exception as e:
         logger.error("Apstra: failed to resolve system-info for leaf expansion — {}", e)

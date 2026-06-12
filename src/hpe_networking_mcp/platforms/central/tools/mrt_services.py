@@ -15,6 +15,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
@@ -49,7 +50,7 @@ async def central_get_fco_resp_info(
     pre-shared-key / claim-code workflows.
     """
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-services/v1/fco-resp-info/{serial_number}")
+    return await _get(conn, f"network-services/v1/fco-resp-info/{path_seg(serial_number)}")
 
 
 @tool(capability=Capability.READ)
@@ -115,7 +116,7 @@ async def central_get_asset_tag(
     and the last-known location for the tracked tag.
     """
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-services/v1/asset-tags/{asset_tag_id}")
+    return await _get(conn, f"network-services/v1/asset-tags/{path_seg(asset_tag_id)}")
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -161,7 +162,7 @@ async def central_manage_asset_tag_metadata(
     response = await retry_central_command(
         central_conn=conn,
         api_method=method,
-        api_path=f"network-services/v1/asset-tags/{asset_tag_id}/metadata",
+        api_path=f"network-services/v1/asset-tags/{path_seg(asset_tag_id)}/metadata",
         api_data=payload or {},
     )
     code = response.get("code", 0)
@@ -224,7 +225,7 @@ async def central_get_ap_ranging_scans(
     conn = get_central_conn(ctx)
     return await _get(
         conn,
-        f"network-services/v1/sitemaps/{site_id}/floors/{floor_id}/ap-ranging-scans",
+        f"network-services/v1/sitemaps/{path_seg(site_id)}/floors/{path_seg(floor_id)}/ap-ranging-scans",
     )
 
 
@@ -239,7 +240,8 @@ async def central_get_ap_ranging_scan(
     conn = get_central_conn(ctx)
     return await _get(
         conn,
-        f"network-services/v1/sitemaps/{site_id}/floors/{floor_id}/ap-ranging-scans/{scan_id}",
+        f"network-services/v1/sitemaps/{path_seg(site_id)}/floors/"
+        f"{path_seg(floor_id)}/ap-ranging-scans/{path_seg(scan_id)}",
     )
 
 
@@ -255,7 +257,10 @@ async def central_delete_ap_ranging_scan(
     response = await retry_central_command(
         central_conn=conn,
         api_method="DELETE",
-        api_path=f"network-services/v1/sitemaps/{site_id}/floors/{floor_id}/ap-ranging-scans/{scan_id}",
+        api_path=(
+            f"network-services/v1/sitemaps/{path_seg(site_id)}"
+            f"/floors/{path_seg(floor_id)}/ap-ranging-scans/{path_seg(scan_id)}"
+        ),
     )
     code = response.get("code", 0)
     if 200 <= code < 300:
@@ -279,7 +284,7 @@ async def central_get_site_device_locations(
     conn = get_central_conn(ctx)
     return await _get(
         conn,
-        f"network-services/v1/sites/{site_id}/device-locations",
+        f"network-services/v1/sites/{path_seg(site_id)}/device-locations",
         {"limit": limit, "offset": offset},
     )
 
@@ -292,7 +297,7 @@ async def central_get_site_device_location(
 ) -> dict:
     """Get one device-location record."""
     conn = get_central_conn(ctx)
-    return await _get(conn, f"network-services/v1/sites/{site_id}/device-locations/{location_id}")
+    return await _get(conn, f"network-services/v1/sites/{path_seg(site_id)}/device-locations/{path_seg(location_id)}")
 
 
 @tool(capability=Capability.READ)
@@ -305,7 +310,7 @@ async def central_get_device_location(
     conn = get_central_conn(ctx)
     return await _get(
         conn,
-        f"network-services/v1/sites/{site_id}/devices/{serial_number}/location",
+        f"network-services/v1/sites/{path_seg(site_id)}/devices/{path_seg(serial_number)}/location",
     )
 
 
@@ -336,14 +341,14 @@ async def central_manage_device_location(
         response = await retry_central_command(
             central_conn=conn,
             api_method="POST",
-            api_path=f"network-services/v1/sites/{site_id}/devices/{serial_number}/location",
+            api_path=f"network-services/v1/sites/{path_seg(site_id)}/devices/{path_seg(serial_number)}/location",
             api_data=payload,
         )
     elif action_type == "delete":
         response = await retry_central_command(
             central_conn=conn,
             api_method="DELETE",
-            api_path=f"network-services/v1/sites/{site_id}/devices/{serial_number}/location",
+            api_path=f"network-services/v1/sites/{path_seg(site_id)}/devices/{path_seg(serial_number)}/location",
         )
     else:
         raise ToolError({"status_code": 400, "message": f"unknown action_type '{action_type}'."})

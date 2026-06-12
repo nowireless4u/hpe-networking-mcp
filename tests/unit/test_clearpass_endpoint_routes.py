@@ -117,7 +117,8 @@ class TestSessionControlRoutes:
         mock_get.return_value = client
         await clearpass_disconnect_session(_ctx(), target_type="mac", target_value="aa:bb:cc:dd:ee:ff", confirmed=True)
         method, path, _, _ = _call(client)
-        assert (method, path) == ("post", "/session-action/disconnect/mac/aa:bb:cc:dd:ee:ff")
+        # Colons percent-encode via path_seg (#476); CPPM decodes path segments per RFC 3986.
+        assert (method, path) == ("post", "/session-action/disconnect/mac/aa%3Abb%3Acc%3Add%3Aee%3Aff")
 
     @patch("hpe_networking_mcp.platforms.clearpass.tools.manage_sessions.get_clearpass_client", new_callable=AsyncMock)
     async def test_coa_by_session_id_posts_reauthorize_with_confirm(self, mock_get):

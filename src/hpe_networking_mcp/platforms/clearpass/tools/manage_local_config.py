@@ -9,6 +9,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
@@ -46,9 +47,11 @@ async def clearpass_manage_access_control(
         client = await get_clearpass_client()
         if action_type == "update":
             return await client.request(
-                "put", f"/server/access-control/{server_uuid}/{resource_name}", json_body=payload
+                "put", f"/server/access-control/{path_seg(server_uuid)}/{path_seg(resource_name)}", json_body=payload
             )
-        return await client.request("delete", f"/server/access-control/{server_uuid}/{resource_name}")
+        return await client.request(
+            "delete", f"/server/access-control/{path_seg(server_uuid)}/{path_seg(resource_name)}"
+        )
     except ToolError:
         raise
     except Exception as e:
@@ -90,13 +93,15 @@ async def clearpass_manage_ad_domain(
     try:
         client = await get_clearpass_client()
         if action_type == "join":
-            return await client.request("put", f"/ad-domain/join/{server_uuid}", json_body=payload)
+            return await client.request("put", f"/ad-domain/join/{path_seg(server_uuid)}", json_body=payload)
         if action_type == "leave":
-            return await client.request("put", f"/ad-domain/leave/{server_uuid}", json_body=payload)
+            return await client.request("put", f"/ad-domain/leave/{path_seg(server_uuid)}", json_body=payload)
         if not netbios_name:
             raise ToolError({"status_code": 400, "message": "netbios_name is required for configure_password_servers."})
         return await client.request(
-            "patch", f"/ad-domain/password-servers/{server_uuid}", json_body={"netbios_name": netbios_name, **payload}
+            "patch",
+            f"/ad-domain/password-servers/{path_seg(server_uuid)}",
+            json_body={"netbios_name": netbios_name, **payload},
         )
     except ToolError:
         raise
@@ -127,7 +132,7 @@ async def clearpass_manage_cluster_server(
     """
     try:
         client = await get_clearpass_client()
-        return await client.request("patch", f"/cluster/server/{server_uuid}", json_body=payload)
+        return await client.request("patch", f"/cluster/server/{path_seg(server_uuid)}", json_body=payload)
     except ToolError:
         raise
     except Exception as e:
@@ -164,8 +169,10 @@ async def clearpass_manage_server_service(
     try:
         client = await get_clearpass_client()
         if action_type == "start":
-            return await client.request("patch", f"/server/service/{server_uuid}/{service_name}/start")
-        return await client.request("patch", f"/server/service/{server_uuid}/{service_name}/stop")
+            return await client.request(
+                "patch", f"/server/service/{path_seg(server_uuid)}/{path_seg(service_name)}/start"
+            )
+        return await client.request("patch", f"/server/service/{path_seg(server_uuid)}/{path_seg(service_name)}/stop")
     except ToolError:
         raise
     except Exception as e:
@@ -221,7 +228,9 @@ async def clearpass_manage_service_params(
     """
     try:
         client = await get_clearpass_client()
-        return await client.request("patch", f"/service-parameter/{server_uuid}/{service_id}", json_body=param_values)
+        return await client.request(
+            "patch", f"/service-parameter/{path_seg(server_uuid)}/{path_seg(service_id)}", json_body=param_values
+        )
     except ToolError:
         raise
     except Exception as e:

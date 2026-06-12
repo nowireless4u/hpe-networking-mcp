@@ -4,6 +4,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, resolve_time_window, retry_central_command
@@ -98,7 +99,7 @@ async def central_get_wlan_stats(
         response = await retry_central_command(
             central_conn=conn,
             api_method="GET",
-            api_path=f"network-monitoring/v1/wlans/{wlan_name}/throughput-trends",
+            api_path=f"network-monitoring/v1/wlans/{path_seg(wlan_name)}/throughput-trends",
             api_params={"filter": f"timestamp gt {start_at} and timestamp lt {end_at}"},
         )
     except Exception as e:

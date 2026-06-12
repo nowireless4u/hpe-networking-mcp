@@ -2,6 +2,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.utils import deprecation_notice, get_central_conn, retry_central_command
 
@@ -93,7 +94,7 @@ async def central_get_audit_log_detail(
         resp = await retry_central_command(
             conn,
             api_method="GET",
-            api_path=f"network-services/v1/audit/{id}",
+            api_path=f"network-services/v1/audit/{path_seg(id)}",
             api_params={},
         )
     except Exception as e:

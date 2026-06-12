@@ -4,6 +4,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.models import PaginatedAlerts
 from hpe_networking_mcp.platforms.central.utils import (
@@ -212,7 +213,7 @@ async def central_get_alert_action_status(
     response = await retry_central_command(
         get_central_conn(ctx),
         api_method="GET",
-        api_path=f"network-notifications/v1/alerts/async-operations/{task_id}",
+        api_path=f"network-notifications/v1/alerts/async-operations/{path_seg(task_id)}",
     )
     msg = response.get("msg", response)
     if not msg:

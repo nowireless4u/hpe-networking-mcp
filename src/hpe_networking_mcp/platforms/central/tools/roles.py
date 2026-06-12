@@ -14,6 +14,7 @@ API: GET /network-config/v1alpha1/roles/{name},
 from fastmcp import Context
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
@@ -113,7 +114,7 @@ async def central_get_role_with_policy(
     }
 
     # --- 1. Fetch the role ---
-    role_path = f"network-config/v1alpha1/roles/{name}"
+    role_path = f"network-config/v1alpha1/roles/{path_seg(name)}"
     role_body: dict = {}
     try:
         response = await retry_central_command(
@@ -133,7 +134,7 @@ async def central_get_role_with_policy(
 
     # --- 2. Resolve each policy the role is bound to ---
     for policy_name in _extract_policy_names(role_body):
-        policy_path = f"network-config/v1alpha1/policies/{policy_name}"
+        policy_path = f"network-config/v1alpha1/policies/{path_seg(policy_name)}"
         try:
             response = await retry_central_command(
                 central_conn=conn,

@@ -17,6 +17,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
@@ -56,7 +57,7 @@ async def central_get_webhook(
     response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
-        api_path=f"network-services/v1/webhooks/{webhook_id}",
+        api_path=f"network-services/v1/webhooks/{path_seg(webhook_id)}",
     )
     code = response.get("code", 0)
     if 200 <= code < 300:
@@ -124,7 +125,7 @@ async def central_manage_webhook(
         response = await retry_central_command(
             central_conn=conn,
             api_method=method,
-            api_path=f"network-services/v1/webhooks/{webhook_id}",
+            api_path=f"network-services/v1/webhooks/{path_seg(webhook_id)}",
             api_data=payload,
         )
     elif action_type == "delete":
@@ -133,7 +134,7 @@ async def central_manage_webhook(
         response = await retry_central_command(
             central_conn=conn,
             api_method="DELETE",
-            api_path=f"network-services/v1/webhooks/{webhook_id}",
+            api_path=f"network-services/v1/webhooks/{path_seg(webhook_id)}",
         )
     else:
         raise ToolError({"status_code": 400, "message": f"unknown action_type '{action_type}'."})
@@ -159,7 +160,7 @@ async def central_rotate_webhook_hmac_key(
     response = await retry_central_command(
         central_conn=conn,
         api_method="POST",
-        api_path=f"network-services/v1/webhooks/{webhook_id}/rotate-hmac-key",
+        api_path=f"network-services/v1/webhooks/{path_seg(webhook_id)}/rotate-hmac-key",
     )
     code = response.get("code", 0)
     if 200 <= code < 300:

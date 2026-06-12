@@ -6,6 +6,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
@@ -38,9 +39,9 @@ async def clearpass_get_network_devices(
     try:
         client = await get_clearpass_client()
         if device_id:
-            return await client.request("get", f"/network-device/{device_id}")
+            return await client.request("get", f"/network-device/{path_seg(device_id)}")
         if name:
-            return await client.request("get", f"/network-device/name/{name}")
+            return await client.request("get", f"/network-device/name/{path_seg(name)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/network-device" + query)
     except ToolError:
@@ -64,7 +65,7 @@ async def clearpass_get_network_device_stats(
     """
     try:
         client = await get_clearpass_client()
-        return await client.request("get", f"/network-device/{device_id}")
+        return await client.request("get", f"/network-device/{path_seg(device_id)}")
     except ToolError:
         raise
     except Exception as e:
@@ -87,7 +88,7 @@ async def clearpass_test_device_connectivity(
     """
     try:
         client = await get_clearpass_client()
-        result = await client.request("get", f"/network-device/{device_id}")
+        result = await client.request("get", f"/network-device/{path_seg(device_id)}")
         return {
             "device": result,
             "note": "Actual connectivity testing requires ClearPass server-side capabilities.",
@@ -113,7 +114,7 @@ async def clearpass_validate_device_config(
     """
     try:
         client = await get_clearpass_client()
-        device = await client.request("get", f"/network-device/{device_id}")
+        device = await client.request("get", f"/network-device/{path_seg(device_id)}")
 
         issues: list[str] = []
         if isinstance(device, dict):

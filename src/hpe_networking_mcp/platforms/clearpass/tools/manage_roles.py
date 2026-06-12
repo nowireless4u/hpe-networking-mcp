@@ -9,6 +9,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
@@ -59,12 +60,12 @@ async def clearpass_manage_role(
             raise ToolError({"status_code": 400, "message": "Either role_id or name is required for update/delete."})
         if action_type == "update":
             if role_id:
-                return await client.request("patch", f"/role/{role_id}", json_body=payload)
-            return await client.request("patch", f"/role/name/{name}", json_body=payload)
+                return await client.request("patch", f"/role/{path_seg(role_id)}", json_body=payload)
+            return await client.request("patch", f"/role/name/{path_seg(name)}", json_body=payload)
         # delete
         if role_id:
-            return await client.request("delete", f"/role/{role_id}")
-        return await client.request("delete", f"/role/name/{name}")
+            return await client.request("delete", f"/role/{path_seg(role_id)}")
+        return await client.request("delete", f"/role/name/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:
@@ -118,12 +119,12 @@ async def clearpass_manage_role_mapping(
             )
         if action_type == "update":
             if role_mapping_id:
-                return await client.request("patch", f"/role-mapping/{role_mapping_id}", json_body=payload)
-            return await client.request("patch", f"/role-mapping/name/{name}", json_body=payload)
+                return await client.request("patch", f"/role-mapping/{path_seg(role_mapping_id)}", json_body=payload)
+            return await client.request("patch", f"/role-mapping/name/{path_seg(name)}", json_body=payload)
         # delete
         if role_mapping_id:
-            return await client.request("delete", f"/role-mapping/{role_mapping_id}")
-        return await client.request("delete", f"/role-mapping/name/{name}")
+            return await client.request("delete", f"/role-mapping/{path_seg(role_mapping_id)}")
+        return await client.request("delete", f"/role-mapping/name/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:

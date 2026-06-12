@@ -18,6 +18,7 @@ from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 # ---------------------------------------------------------------------------
@@ -28,7 +29,7 @@ from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_c
 async def _get_resource(ctx: Context, api_base: str, name: str | None) -> dict | list | str:
     """Generic GET for /network-config/v1alpha1/{api_base}[/{name}]."""
     conn = get_central_conn(ctx)
-    api_path = f"network-config/v1alpha1/{api_base}/{name}" if name else f"network-config/v1alpha1/{api_base}"
+    api_path = f"network-config/v1alpha1/{api_base}/{path_seg(name)}" if name else f"network-config/v1alpha1/{api_base}"
     response = await retry_central_command(central_conn=conn, api_method="GET", api_path=api_path)
     code = response.get("code", 0)
     if code and not 200 <= code < 300:
@@ -65,7 +66,7 @@ async def _manage_resource(
 
     method_map = {"create": "POST", "update": "PATCH", "delete": "DELETE"}
     api_method = method_map[action_type]
-    api_path = f"network-config/v1alpha1/{api_base}/{name}" if name else f"network-config/v1alpha1/{api_base}"
+    api_path = f"network-config/v1alpha1/{api_base}/{path_seg(name)}" if name else f"network-config/v1alpha1/{api_base}"
 
     conn = get_central_conn(ctx)
 

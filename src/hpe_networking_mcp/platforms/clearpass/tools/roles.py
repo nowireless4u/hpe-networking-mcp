@@ -6,6 +6,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import clearpass_get
@@ -38,9 +39,9 @@ async def clearpass_get_roles(
     try:
         client = await get_clearpass_client()
         if role_id:
-            return await client.request("get", f"/role/{role_id}")
+            return await client.request("get", f"/role/{path_seg(role_id)}")
         if name:
-            return await client.request("get", f"/role/name/{name}")
+            return await client.request("get", f"/role/name/{path_seg(name)}")
         params = [
             f"filter={filter}" if filter else "",
             f"sort={sort}" if sort else "",
@@ -86,9 +87,9 @@ async def clearpass_get_role_mappings(
     try:
         client = await get_clearpass_client()
         if role_mapping_id:
-            return await client.request("get", f"/role-mapping/{role_mapping_id}")
+            return await client.request("get", f"/role-mapping/{path_seg(role_mapping_id)}")
         if name:
-            return await client.request("get", f"/role-mapping/name/{name}")
+            return await client.request("get", f"/role-mapping/name/{path_seg(name)}")
         params = [
             f"filter={filter}" if filter else "",
             f"sort={sort}" if sort else "",

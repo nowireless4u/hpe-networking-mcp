@@ -12,6 +12,7 @@ from fastmcp import Context
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
@@ -73,7 +74,7 @@ async def central_get_report_runs(
     response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
-        api_path=f"network-reporting/v1/reports/{report_id}/report-runs",
+        api_path=f"network-reporting/v1/reports/{path_seg(report_id)}/report-runs",
         api_params=api_params,
     )
     code = response.get("code", 0)
@@ -109,7 +110,7 @@ async def central_update_report(
     response = await retry_central_command(
         central_conn=conn,
         api_method="PUT",
-        api_path=f"network-reporting/v1/reports/{report_id}",
+        api_path=f"network-reporting/v1/reports/{path_seg(report_id)}",
         api_data=payload,
     )
     code = response.get("code", 0)

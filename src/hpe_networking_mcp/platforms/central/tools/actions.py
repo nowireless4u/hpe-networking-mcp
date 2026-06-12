@@ -4,6 +4,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.utils import get_central_conn
@@ -25,7 +26,7 @@ async def _resolve_switch_id(conn, serial_number: str) -> str:
         resp = await retry_central_command(
             central_conn=conn,
             api_method="GET",
-            api_path=(f"network-monitoring/v1/switches/{serial_number}"),
+            api_path=(f"network-monitoring/v1/switches/{path_seg(serial_number)}"),
         )
         msg = resp.get("msg", {})
         stack_id = msg.get("stackId")
@@ -223,7 +224,7 @@ async def _get_switch_total_poe(conn, serial_number: str) -> float:
         resp = await retry_central_command(
             central_conn=conn,
             api_method="GET",
-            api_path=(f"network-monitoring/v1/switches/{serial_number}/hardware-trends"),
+            api_path=(f"network-monitoring/v1/switches/{path_seg(serial_number)}/hardware-trends"),
         )
         msg = resp.get("msg", {})
         data = msg.get("response", msg)
@@ -248,7 +249,7 @@ async def _get_switch_ports(conn, serial_number: str) -> dict:
     resp = await retry_central_command(
         central_conn=conn,
         api_method="GET",
-        api_path=(f"network-monitoring/v1/switches/{serial_number}/interfaces"),
+        api_path=(f"network-monitoring/v1/switches/{path_seg(serial_number)}/interfaces"),
         api_params={"limit": 200},
     )
     items = resp.get("msg", {}).get("items", [])

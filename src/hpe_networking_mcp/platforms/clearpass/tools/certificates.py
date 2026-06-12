@@ -6,6 +6,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
@@ -39,9 +40,9 @@ async def clearpass_get_trust_list(
     try:
         client = await get_clearpass_client()
         if details_id:
-            return await client.request("get", f"/cert-trust-list-details/{details_id}")
+            return await client.request("get", f"/cert-trust-list-details/{path_seg(details_id)}")
         if cert_trust_list_id:
-            return await client.request("get", f"/cert-trust-list/{cert_trust_list_id}")
+            return await client.request("get", f"/cert-trust-list/{path_seg(cert_trust_list_id)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/cert-trust-list" + query)
     except ToolError:
@@ -75,7 +76,7 @@ async def clearpass_get_client_certificates(
     try:
         client = await get_clearpass_client()
         if client_cert_id:
-            return await client.request("get", f"/client-cert/{client_cert_id}")
+            return await client.request("get", f"/client-cert/{path_seg(client_cert_id)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/client-cert" + query)
     except ToolError:
@@ -105,9 +106,9 @@ async def clearpass_get_server_certificates(
     try:
         client = await get_clearpass_client()
         if service_id:
-            return await client.request("get", f"/server-cert/{service_id}")
+            return await client.request("get", f"/server-cert/{path_seg(service_id)}")
         if server_uuid and service_name:
-            return await client.request("get", f"/server-cert/name/{server_uuid}/{service_name}")
+            return await client.request("get", f"/server-cert/name/{path_seg(server_uuid)}/{path_seg(service_name)}")
         return await clearpass_get(client, "/server-cert")
     except ToolError:
         raise
@@ -140,7 +141,7 @@ async def clearpass_get_service_certificates(
     try:
         client = await get_clearpass_client()
         if service_cert_id:
-            return await client.request("get", f"/service-cert/{service_cert_id}")
+            return await client.request("get", f"/service-cert/{path_seg(service_cert_id)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/service-cert" + query)
     except ToolError:
@@ -180,7 +181,7 @@ async def clearpass_get_revocation_list(
     try:
         client = await get_clearpass_client()
         if revocation_list_id:
-            return await clearpass_get(client, f"/revocation-list/{revocation_list_id}")
+            return await clearpass_get(client, f"/revocation-list/{path_seg(revocation_list_id)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/revocation-list" + query)
     except ToolError:

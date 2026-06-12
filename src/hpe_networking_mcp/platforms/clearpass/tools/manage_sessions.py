@@ -9,6 +9,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
@@ -74,14 +75,16 @@ async def clearpass_disconnect_session(
         if target_type == "session_id":
             return await client.request(
                 "post",
-                f"/session/{target_value}/disconnect",
+                f"/session/{path_seg(target_value)}/disconnect",
                 json_body={"id": target_value, "confirm_disconnect": True},
             )
         if target_type == "bulk":
             return await client.request("post", "/session-action/disconnect", json_body={"filter": filter})
         selector_map = {"username": "username", "mac": "mac", "ip": "ip"}
         return await client.request(
-            "post", f"/session-action/disconnect/{selector_map[target_type]}/{target_value}", json_body={}
+            "post",
+            f"/session-action/disconnect/{path_seg(selector_map[target_type])}/{path_seg(target_value)}",
+            json_body={},
         )
     except ToolError:
         raise
@@ -179,7 +182,7 @@ async def clearpass_perform_coa(
             body: dict = {"confirm_reauthorize": True}
             if reauthorize_profile:
                 body["reauthorize_profile"] = reauthorize_profile
-            return await client.request("post", f"/session/{target_value}/reauthorize", json_body=body)
+            return await client.request("post", f"/session/{path_seg(target_value)}/reauthorize", json_body=body)
         if target_type == "bulk":
             return await client.request(
                 "post",
@@ -189,7 +192,7 @@ async def clearpass_perform_coa(
         selector_map = {"username": "username", "mac": "mac", "ip": "ip"}
         return await client.request(
             "post",
-            f"/session-action/coa/{selector_map[target_type]}/{target_value}",
+            f"/session-action/coa/{path_seg(selector_map[target_type])}/{path_seg(target_value)}",
             json_body={"enforcement_profile": enforcement_profile},
         )
     except ToolError:

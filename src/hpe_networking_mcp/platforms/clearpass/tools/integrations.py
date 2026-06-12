@@ -6,6 +6,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
@@ -39,9 +40,9 @@ async def clearpass_get_extensions(
     try:
         client = await get_clearpass_client()
         if extension_id and show_config:
-            return await client.request("get", f"/extension/instance/{extension_id}/config")
+            return await client.request("get", f"/extension/instance/{path_seg(extension_id)}/config")
         if extension_id:
-            return await client.request("get", f"/extension/instance/{extension_id}")
+            return await client.request("get", f"/extension/instance/{path_seg(extension_id)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/extension/instance" + query)
     except ToolError:
@@ -75,7 +76,7 @@ async def clearpass_get_syslog_targets(
     try:
         client = await get_clearpass_client()
         if syslog_target_id:
-            return await client.request("get", f"/syslog-target/{syslog_target_id}")
+            return await client.request("get", f"/syslog-target/{path_seg(syslog_target_id)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/syslog-target" + query)
     except ToolError:
@@ -109,7 +110,7 @@ async def clearpass_get_syslog_export_filters(
     try:
         client = await get_clearpass_client()
         if syslog_export_filter_id:
-            return await client.request("get", f"/syslog-export-filter/{syslog_export_filter_id}")
+            return await client.request("get", f"/syslog-export-filter/{path_seg(syslog_export_filter_id)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/syslog-export-filter" + query)
     except ToolError:
@@ -143,7 +144,7 @@ async def clearpass_get_event_sources(
     try:
         client = await get_clearpass_client()
         if event_sources_id:
-            return await client.request("get", f"/event-sources/{event_sources_id}")
+            return await client.request("get", f"/event-sources/{path_seg(event_sources_id)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/event-sources" + query)
     except ToolError:
@@ -177,7 +178,7 @@ async def clearpass_get_context_servers(
     try:
         client = await get_clearpass_client()
         if context_server_action_id:
-            return await client.request("get", f"/context-server-action/{context_server_action_id}")
+            return await client.request("get", f"/context-server-action/{path_seg(context_server_action_id)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/context-server-action" + query)
     except ToolError:
@@ -211,7 +212,7 @@ async def clearpass_get_endpoint_context_servers(
     try:
         client = await get_clearpass_client()
         if endpoint_context_server_id:
-            return await client.request("get", f"/endpoint-context-server/{endpoint_context_server_id}")
+            return await client.request("get", f"/endpoint-context-server/{path_seg(endpoint_context_server_id)}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
         return await clearpass_get(client, "/endpoint-context-server" + query)
     except ToolError:
@@ -239,7 +240,7 @@ async def clearpass_get_extension_log(
     """
     try:
         client = await get_clearpass_client()
-        path = f"/extension/instance/{extension_id}/log"
+        path = f"/extension/instance/{path_seg(extension_id)}/log"
         if tail is not None:
             path += f"?tail={tail}"
         return await clearpass_get(client, path)

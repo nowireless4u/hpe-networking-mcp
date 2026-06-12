@@ -6,6 +6,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import clearpass_get
@@ -38,9 +39,9 @@ async def clearpass_get_auth_sources(
     try:
         client = await get_clearpass_client()
         if auth_source_id:
-            return await client.request("get", f"/auth-source/{auth_source_id}")
+            return await client.request("get", f"/auth-source/{path_seg(auth_source_id)}")
         if name:
-            return await client.request("get", f"/auth-source/name/{name}")
+            return await client.request("get", f"/auth-source/name/{path_seg(name)}")
         params = [
             f"filter={filter}" if filter else "",
             f"sort={sort}" if sort else "",
@@ -71,7 +72,7 @@ async def clearpass_get_auth_source_status(
     """
     try:
         client = await get_clearpass_client()
-        return await client.request("get", f"/auth-source/{auth_source_id}")
+        return await client.request("get", f"/auth-source/{path_seg(auth_source_id)}")
     except ToolError:
         raise
     except Exception as e:
@@ -94,7 +95,7 @@ async def clearpass_test_auth_source(
     """
     try:
         client = await get_clearpass_client()
-        result = await client.request("get", f"/auth-source/{auth_source_id}")
+        result = await client.request("get", f"/auth-source/{path_seg(auth_source_id)}")
         return {
             "auth_source": result,
             "note": "Actual connectivity testing (LDAP bind, AD join check) "
@@ -133,9 +134,9 @@ async def clearpass_get_auth_methods(
     try:
         client = await get_clearpass_client()
         if auth_method_id:
-            return await client.request("get", f"/auth-method/{auth_method_id}")
+            return await client.request("get", f"/auth-method/{path_seg(auth_method_id)}")
         if name:
-            return await client.request("get", f"/auth-method/name/{name}")
+            return await client.request("get", f"/auth-method/name/{path_seg(name)}")
         params = [
             f"filter={filter}" if filter else "",
             f"sort={sort}" if sort else "",

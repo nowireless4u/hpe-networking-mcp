@@ -24,6 +24,7 @@ from typing import Any
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.axis.client import format_http_error, get_axis_client
 
 _VALID_ACTIONS = ("create", "update", "delete")
@@ -73,9 +74,9 @@ async def manage_entity(
         if action_type == "create":
             result = await client.post_json(base_path, payload)
         elif action_type == "update":
-            result = await client.put_json(f"{base_path}/{entity_id}", payload)
+            result = await client.put_json(f"{base_path}/{path_seg(entity_id)}", payload)
         else:
-            result = await client.delete_resource(f"{base_path}/{entity_id}")
+            result = await client.delete_resource(f"{base_path}/{path_seg(entity_id)}")
     except Exception as e:
         detail = format_http_error(e)
         raise ToolError({"status_code": 502, "message": f"Error during {action_type} {label}: {detail}"}) from e

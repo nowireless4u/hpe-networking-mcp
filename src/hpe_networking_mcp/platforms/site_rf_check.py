@@ -21,6 +21,8 @@ from fastmcp import Context
 from loguru import logger
 from pydantic import BaseModel, Field
 
+from hpe_networking_mcp.platforms._common.url import path_seg
+
 # Response models — compact shapes to keep Claude's context cheap.
 
 
@@ -208,7 +210,7 @@ async def _collect_mist(
     summary = MistRF()
 
     try:
-        sites_resp = await client.get(f"/api/v1/orgs/{org_id}/sites")
+        sites_resp = await client.get(f"/api/v1/orgs/{path_seg(org_id)}/sites")
         if sites_resp.status_code != 200:
             summary.error = f"Mist listOrgSites HTTP {sites_resp.status_code}"
             return summary, []
@@ -237,10 +239,10 @@ async def _collect_mist(
     try:
         stats_resp, template_resp = await asyncio.gather(
             client.get(
-                f"/api/v1/sites/{site_id}/stats/devices",
+                f"/api/v1/sites/{path_seg(site_id)}/stats/devices",
                 params={"type": "ap", "limit": 100},
             ),
-            client.get(f"/api/v1/sites/{site_id}/rrm/current"),
+            client.get(f"/api/v1/sites/{path_seg(site_id)}/rrm/current"),
             return_exceptions=True,
         )
     except Exception as e:
@@ -528,9 +530,9 @@ async def _list_mist_site_options(ctx: Context) -> list[SiteOption]:
     devices_resp: Any = None
     try:
         sites_resp, devices_resp = await asyncio.gather(
-            client.get(f"/api/v1/orgs/{org_id}/sites"),
+            client.get(f"/api/v1/orgs/{path_seg(org_id)}/sites"),
             client.get(
-                f"/api/v1/orgs/{org_id}/inventory",
+                f"/api/v1/orgs/{path_seg(org_id)}/inventory",
                 params={"type": "ap", "limit": 1000},
             ),
             return_exceptions=True,

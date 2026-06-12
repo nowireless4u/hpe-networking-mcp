@@ -9,6 +9,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.clearpass._registry import tool
 from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
@@ -42,12 +43,12 @@ async def clearpass_manage_extension(
     try:
         client = await get_clearpass_client()
         if action_type == "start":
-            return await client.request("post", f"/extension/instance/{extension_id}/start")
+            return await client.request("post", f"/extension/instance/{path_seg(extension_id)}/start")
         if action_type == "stop":
-            return await client.request("post", f"/extension/instance/{extension_id}/stop")
+            return await client.request("post", f"/extension/instance/{path_seg(extension_id)}/stop")
         if action_type == "restart":
-            return await client.request("post", f"/extension/instance/{extension_id}/restart")
-        return await client.request("delete", f"/extension/instance/{extension_id}")
+            return await client.request("post", f"/extension/instance/{path_seg(extension_id)}/restart")
+        return await client.request("delete", f"/extension/instance/{path_seg(extension_id)}")
     except ToolError:
         raise
     except Exception as e:
@@ -95,11 +96,15 @@ async def clearpass_manage_syslog_target(
                 {"status_code": 400, "message": "Either syslog_target_id or name is required for update/delete."}
             )
         if action_type == "update":
-            path = f"/syslog-target/{syslog_target_id}" if syslog_target_id else f"/syslog-target/host-address/{name}"
+            path = (
+                f"/syslog-target/{path_seg(syslog_target_id)}"
+                if syslog_target_id
+                else f"/syslog-target/host-address/{path_seg(name)}"
+            )
             return await client.request("patch", path, json_body=payload)
         if syslog_target_id:
-            return await client.request("delete", f"/syslog-target/{syslog_target_id}")
-        return await client.request("delete", f"/syslog-target/host-address/{name}")
+            return await client.request("delete", f"/syslog-target/{path_seg(syslog_target_id)}")
+        return await client.request("delete", f"/syslog-target/host-address/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:
@@ -150,14 +155,14 @@ async def clearpass_manage_syslog_export_filter(
             )
         if action_type == "update":
             path = (
-                f"/syslog-export-filter/{syslog_export_filter_id}"
+                f"/syslog-export-filter/{path_seg(syslog_export_filter_id)}"
                 if syslog_export_filter_id
-                else f"/syslog-export-filter/name/{name}"
+                else f"/syslog-export-filter/name/{path_seg(name)}"
             )
             return await client.request("patch", path, json_body=payload)
         if syslog_export_filter_id:
-            return await client.request("delete", f"/syslog-export-filter/{syslog_export_filter_id}")
-        return await client.request("delete", f"/syslog-export-filter/name/{name}")
+            return await client.request("delete", f"/syslog-export-filter/{path_seg(syslog_export_filter_id)}")
+        return await client.request("delete", f"/syslog-export-filter/name/{path_seg(name)}")
     except ToolError:
         raise
     except Exception as e:
@@ -204,9 +209,9 @@ async def clearpass_manage_endpoint_context_server(
             raise ToolError({"status_code": 400, "message": "Either endpoint_context_server_id or name is required."})
         if action_type == "update":
             path = (
-                f"/endpoint-context-server/{endpoint_context_server_id}"
+                f"/endpoint-context-server/{path_seg(endpoint_context_server_id)}"
                 if endpoint_context_server_id
-                else f"/endpoint-context-server/server-name/{name}"
+                else f"/endpoint-context-server/server-name/{path_seg(name)}"
             )
             return await client.request("patch", path, json_body=payload)
         if not endpoint_context_server_id:
@@ -214,8 +219,10 @@ async def clearpass_manage_endpoint_context_server(
                 {"status_code": 400, "message": "endpoint_context_server_id is required for delete/trigger_poll."}
             )
         if action_type == "trigger_poll":
-            return await client.request("patch", f"/endpoint-context-server/{endpoint_context_server_id}/trigger-poll")
-        return await client.request("delete", f"/endpoint-context-server/{endpoint_context_server_id}")
+            return await client.request(
+                "patch", f"/endpoint-context-server/{path_seg(endpoint_context_server_id)}/trigger-poll"
+            )
+        return await client.request("delete", f"/endpoint-context-server/{path_seg(endpoint_context_server_id)}")
     except ToolError:
         raise
     except Exception as e:
