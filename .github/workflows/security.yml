@@ -25,11 +25,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
       - name: Run pip-audit against the locked environment
-        run: uv run --frozen pip-audit --ignore-vuln CVE-2026-25645
-        # CVE-2026-25645 is in requests 2.32.5, which is pinned by pycentral==2.0a17.
-        # Standard requests usage is not affected; only direct calls to
-        # requests.utils.extract_zipped_paths() are impacted. Keep this explicit
-        # ignore until pycentral allows requests>=2.33.0, then remove it.
+        run: uv run --frozen pip-audit
 
   gitleaks:
     name: Secret Detection

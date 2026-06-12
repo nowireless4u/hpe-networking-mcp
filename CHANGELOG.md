@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.13.3] - 2026-06-12
+
+**Patch — fix: regenerate the stale lockfile; pip-audit now clean with zero ignores.** Closes #445. `uv.lock` had not been regenerated since v3.3.6.0, and because `uv sync --frozen` skips the pyproject↔lock consistency check, every container build since the SDK removals (#468/#470) **kept installing pycentral 2.0a17 and pyclearpass 1.0.8** — inert (nothing imports them; the import guards are clean) but shipped, along with the vulnerable requests 2.32.5 chain that pycentral's pin had frozen in place.
+
+### Fixed
+- `uv.lock` regenerated: **pycentral and pyclearpass pruned from the install graph** (with their orbit: requests-oauthlib, oauthlib, websocket-client, pytz, protobuf, h2/hpack/hyperframe); lockfile version metadata caught up from 3.3.6.0.
+- **requests 2.32.5 → 2.34.2**, closing CVE-2026-25645 — the last open advisory from the #445 audit, previously unfixable behind pycentral's `requests<2.33` pin.
+- `security.yml`: the `--ignore-vuln CVE-2026-25645` escape hatch and its stale pycentral comment removed — CI's `pip-audit` now passes with **zero ignores**.
+
+### Tests
+- Lockfile guards added to `TestNoPycentralAnywhere` / `TestNoPyclearpassAnywhere`: the SDK names must not appear in `uv.lock` — import guards alone cannot catch a stale lock reinstalling a removed dependency.
+
 ## [3.3.13.2] - 2026-06-12
 
 **Patch — fix: centralized URL path-segment escaping for interpolated selector values.** Closes #476. Operator-supplied selectors (usernames, MACs, attribute/template/server names, IDs) interpolated into URL paths were sent raw: httpx already percent-encodes spaces and unicode, but a value containing `/` restructured the route, `?` started the query string, and `#` silently truncated the path — a delete aimed at `Policy #2` would have quietly targeted `Policy ` instead of failing loudly.

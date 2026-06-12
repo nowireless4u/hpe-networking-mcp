@@ -43,6 +43,19 @@ class TestNoPycentralAnywhere:
                     offenders.append(f"{path}:{node.lineno}")
         assert not offenders, f"pycentral imports found (SDK was removed): {offenders}"
 
+    def test_no_pycentral_in_lockfile(self):
+        """A stale uv.lock kept INSTALLING pycentral for 7 releases after the
+        SDK was removed from pyproject (#445) — `uv sync --frozen` skips the
+        pyproject↔lock consistency check, so import guards alone can't see it.
+        """
+        import pathlib
+
+        lockfile = pathlib.Path(__file__).resolve().parents[2] / "uv.lock"
+        assert lockfile.is_file(), "uv.lock not found next to pyproject.toml"
+        assert 'name = "pycentral"' not in lockfile.read_text(), (
+            "pycentral is in uv.lock — regenerate the lock (uv lock); the SDK was removed in v3.3.11.0"
+        )
+
 
 def _make_secrets(**overrides) -> CentralSecrets:
     base = {
