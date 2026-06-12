@@ -52,7 +52,7 @@ class TestNoPycentralAnywhere:
 
         lockfile = pathlib.Path(__file__).resolve().parents[2] / "uv.lock"
         assert lockfile.is_file(), "uv.lock not found next to pyproject.toml"
-        assert 'name = "pycentral"' not in lockfile.read_text(), (
+        assert 'name = "pycentral"' not in lockfile.read_text(encoding="utf-8"), (
             "pycentral is in uv.lock — regenerate the lock (uv lock); the SDK was removed in v3.3.11.0"
         )
 
