@@ -5,18 +5,63 @@ services:
     # To build from source instead, comment out 'image' and uncomment 'build':
     # build: .
     ports:
-      - "127.0.0.1:${MCP_PORT:-8000}:8000"
+      - "0.0.0.0:${MCP_PORT:-8000}:8000"
+    env_file:
+      - path: .env
+        required: false
     environment:
-      - MCP_PORT=8000
+      - MCP_PORT=${MCP_PORT:-8000}
       - MCP_HOST=0.0.0.0
+      - CUSTOMER_NAME=${CUSTOMER_NAME:-}
       - LOG_LEVEL=${LOG_LEVEL:-info}
+      # --- Platform credentials (set in .env or shell) ---
+      # Mist
+      - MIST_API_TOKEN=${MIST_API_TOKEN:-}
+      - MIST_HOST=${MIST_HOST:-}
+      # Aruba Central
+      - CENTRAL_BASE_URL=${CENTRAL_BASE_URL:-}
+      - CENTRAL_CLIENT_ID=${CENTRAL_CLIENT_ID:-}
+      - CENTRAL_CLIENT_SECRET=${CENTRAL_CLIENT_SECRET:-}
+      # HPE GreenLake
+      - GREENLAKE_API_BASE_URL=${GREENLAKE_API_BASE_URL:-}
+      - GREENLAKE_CLIENT_ID=${GREENLAKE_CLIENT_ID:-}
+      - GREENLAKE_CLIENT_SECRET=${GREENLAKE_CLIENT_SECRET:-}
+      - GREENLAKE_WORKSPACE_ID=${GREENLAKE_WORKSPACE_ID:-}
+      # ClearPass
+      - CLEARPASS_SERVER=${CLEARPASS_SERVER:-}
+      - CLEARPASS_CLIENT_ID=${CLEARPASS_CLIENT_ID:-}
+      - CLEARPASS_CLIENT_SECRET=${CLEARPASS_CLIENT_SECRET:-}
+      - CLEARPASS_VERIFY_SSL=${CLEARPASS_VERIFY_SSL:-}
+      # Juniper Apstra
+      - APSTRA_SERVER=${APSTRA_SERVER:-}
+      - APSTRA_PORT=${APSTRA_PORT:-}
+      - APSTRA_USERNAME=${APSTRA_USERNAME:-}
+      - APSTRA_PASSWORD=${APSTRA_PASSWORD:-}
+      - APSTRA_VERIFY_SSL=${APSTRA_VERIFY_SSL:-}
+      # Axis Atmos Cloud
+      - AXIS_API_TOKEN=${AXIS_API_TOKEN:-}
+      # Aruba OS 8 / Mobility Conductor
+      - AOS8_HOST=${AOS8_HOST:-}
+      - AOS8_USERNAME=${AOS8_USERNAME:-}
+      - AOS8_PASSWORD=${AOS8_PASSWORD:-}
+      - AOS8_PORT=${AOS8_PORT:-}
+      - AOS8_VERIFY_SSL=${AOS8_VERIFY_SSL:-}
+      # HPE UXI
+      - UXI_CLIENT_ID=${UXI_CLIENT_ID:-}
+      - UXI_CLIENT_SECRET=${UXI_CLIENT_SECRET:-}
+      # --- Behavioral settings ---
       - ENABLE_MIST_WRITE_TOOLS=${ENABLE_MIST_WRITE_TOOLS:-false}
       - ENABLE_CENTRAL_WRITE_TOOLS=${ENABLE_CENTRAL_WRITE_TOOLS:-false}
       - ENABLE_CLEARPASS_WRITE_TOOLS=${ENABLE_CLEARPASS_WRITE_TOOLS:-false}
       - ENABLE_APSTRA_WRITE_TOOLS=${ENABLE_APSTRA_WRITE_TOOLS:-false}
       - ENABLE_AXIS_WRITE_TOOLS=${ENABLE_AXIS_WRITE_TOOLS:-false}
       - ENABLE_AOS8_WRITE_TOOLS=${ENABLE_AOS8_WRITE_TOOLS:-false}
+      - ENABLE_UXI_WRITE_TOOLS=${ENABLE_UXI_WRITE_TOOLS:-false}
       - DISABLE_ELICITATION=${DISABLE_ELICITATION:-false}
+      # Origin validation allowlist. Comma-separated origins, or "*" to
+      # disable the check (useful behind a reverse proxy or when binding
+      # to 0.0.0.0 for non-localhost access). Default: localhost only.
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-}
       # PII tokenization (opt-in). When true, sensitive fields (PSKs, RADIUS
       # secrets, hostnames, emails, usernames, serials) are replaced with
       # session-stable [[KIND:uuid]] tokens before responses reach the AI.
@@ -27,101 +72,9 @@ services:
       # Uncomment + set to "dynamic" to opt back into the per-platform meta-tool
       # surface (the v2.x default). The "static" value was REMOVED in v3.0.0.0.
       # - MCP_TOOL_MODE=${MCP_TOOL_MODE:-code}
-    secrets:
-      # Mist (remove lines for platforms you don't use)
-      - mist_api_token
-      - mist_host
-      # Aruba Central (remove lines for platforms you don't use)
-      - central_base_url
-      - central_client_id
-      - central_client_secret
-      # HPE GreenLake (remove lines for platforms you don't use)
-      - greenlake_api_base_url
-      - greenlake_client_id
-      - greenlake_client_secret
-      - greenlake_workspace_id
-      # ClearPass (remove lines for platforms you don't use)
-      - clearpass_server
-      - clearpass_client_id
-      - clearpass_client_secret
-      - clearpass_verify_ssl
-      # Juniper Apstra (remove lines for platforms you don't use)
-      - apstra_server
-      - apstra_port
-      - apstra_username
-      - apstra_password
-      - apstra_verify_ssl
-      # Axis Atmos Cloud (remove lines for platforms you don't use)
-      - axis_api_token
-      # Aruba OS 8 / Mobility Conductor (remove lines for platforms you don't use)
-      - aos8_host
-      - aos8_username
-      - aos8_password
-      - aos8_port
-      - aos8_verify_ssl
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "uv", "run", "--no-sync", "python", "-c", "import httpx; r = httpx.get('http://localhost:8000/mcp', timeout=5); assert r.status_code in (200, 405, 406)"]
+      test: [ "CMD", "uv", "run", "--no-sync", "python", "-c", "import httpx; r = httpx.get('http://localhost:8000/mcp', timeout=5); assert r.status_code in (200, 405, 406)" ]
       interval: 30s
       timeout: 10s
       retries: 3
-
-# Each secret is a separate file — create them from the .example templates:
-#   cp secrets/mist_api_token.example secrets/mist_api_token
-#   # edit with your real credentials
-secrets:
-  # Mist
-  mist_api_token:
-    file: ./secrets/mist_api_token
-  mist_host:
-    file: ./secrets/mist_host
-  # Aruba Central
-  central_base_url:
-    file: ./secrets/central_base_url
-  central_client_id:
-    file: ./secrets/central_client_id
-  central_client_secret:
-    file: ./secrets/central_client_secret
-  # HPE GreenLake
-  greenlake_api_base_url:
-    file: ./secrets/greenlake_api_base_url
-  greenlake_client_id:
-    file: ./secrets/greenlake_client_id
-  greenlake_client_secret:
-    file: ./secrets/greenlake_client_secret
-  greenlake_workspace_id:
-    file: ./secrets/greenlake_workspace_id
-  # ClearPass
-  clearpass_server:
-    file: ./secrets/clearpass_server
-  clearpass_client_id:
-    file: ./secrets/clearpass_client_id
-  clearpass_client_secret:
-    file: ./secrets/clearpass_client_secret
-  clearpass_verify_ssl:
-    file: ./secrets/clearpass_verify_ssl
-  # Juniper Apstra
-  apstra_server:
-    file: ./secrets/apstra_server
-  apstra_port:
-    file: ./secrets/apstra_port
-  apstra_username:
-    file: ./secrets/apstra_username
-  apstra_password:
-    file: ./secrets/apstra_password
-  apstra_verify_ssl:
-    file: ./secrets/apstra_verify_ssl
-  # Axis Atmos Cloud
-  axis_api_token:
-    file: ./secrets/axis_api_token
-  # Aruba OS 8 / Mobility Conductor
-  aos8_host:
-    file: ./secrets/aos8_host
-  aos8_username:
-    file: ./secrets/aos8_username
-  aos8_password:
-    file: ./secrets/aos8_password
-  aos8_port:
-    file: ./secrets/aos8_port
-  aos8_verify_ssl:
-    file: ./secrets/aos8_verify_ssl

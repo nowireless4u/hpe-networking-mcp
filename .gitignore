@@ -98,6 +98,11 @@ docs/mappings/
 # Local-only inventory of probed-live undocumented Central endpoints.
 # Sourced from non-public material; never tracked or redistributed.
 docs/central-undocumented-endpoints.md
+docs/env_secrets_migration_plan.md
+
+AGENTS.md
+docker-compose.override.yml copy.example
+.rest
 
 # Copyrighted Aruba/HPE reference PDFs kept locally for authoring (e.g. the
 # ArubaOS CLI Reference Guide) — reference only, never redistributed in-repo.
