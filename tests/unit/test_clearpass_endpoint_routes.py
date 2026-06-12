@@ -60,6 +60,16 @@ class TestGuestActionRoutes:
         assert (method, path) == ("get", "/guest/42/pass/7")
 
     @patch("hpe_networking_mcp.platforms.clearpass.tools.manage_guests.get_clearpass_client", new_callable=AsyncMock)
+    async def test_generate_receipt_renders_receipt_route(self, mock_get):
+        from hpe_networking_mcp.platforms.clearpass.tools.manage_guests import clearpass_generate_guest_pass
+
+        client = _client()
+        mock_get.return_value = client
+        await clearpass_generate_guest_pass(_ctx(), guest_id="42", pass_type="receipt", template_id="3")
+        method, path, _, _ = _call(client)
+        assert (method, path) == ("get", "/guest/42/receipt/3")
+
+    @patch("hpe_networking_mcp.platforms.clearpass.tools.manage_guests.get_clearpass_client", new_callable=AsyncMock)
     async def test_sponsor_reject_travels_as_register_reject(self, mock_get):
         from hpe_networking_mcp.platforms.clearpass.tools.manage_guests import clearpass_process_sponsor_action
 
