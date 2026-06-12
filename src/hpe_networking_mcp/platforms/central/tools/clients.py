@@ -3,10 +3,10 @@ from typing import Annotated, Literal
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.models import Client
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import (
     FilterField,
     build_odata_filter,
@@ -28,7 +28,7 @@ CLIENT_FILTER_FIELDS: dict[str, FilterField] = {
 }
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_clients(
     ctx: Context,
     site_id: str | None = None,
@@ -99,7 +99,7 @@ async def central_get_clients(
     return clean_client_data(clients)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_find_client(
     ctx: Context,
     mac_address: str,

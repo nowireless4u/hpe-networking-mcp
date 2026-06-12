@@ -12,8 +12,8 @@ from typing import Annotated, Literal
 from fastmcp import Context
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
@@ -44,7 +44,7 @@ def _time_params(start: str | None, end: str | None) -> dict:
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateways(
     ctx: Context,
     filter: str | None = None,
@@ -62,7 +62,7 @@ async def central_get_gateways(
 _GwTrendDimension = Literal["cpu", "memory", "hardware-temperature", "wan-availability", "vpn-availability"]
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_trend(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
@@ -100,7 +100,7 @@ async def central_get_gateway_trend(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_ports(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
@@ -110,7 +110,7 @@ async def central_get_gateway_ports(
     return await _get(conn, f"network-monitoring/v1/gateways/{serial_number}/ports")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_port(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
@@ -124,7 +124,7 @@ async def central_get_gateway_port(
 _GwPortTrendDimension = Literal["throughput", "frames", "frames-errors", "frames-packets"]
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_port_trend(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
@@ -158,7 +158,7 @@ async def central_get_gateway_port_trend(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_tunnels(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
@@ -168,7 +168,7 @@ async def central_get_gateway_tunnels(
     return await _get(conn, f"network-monitoring/v1/gateways/{serial_number}/tunnels")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_tunnel(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
@@ -182,7 +182,7 @@ async def central_get_gateway_tunnel(
 _GwTunnelTrendDimension = Literal["throughput", "status", "dropped-packet"]
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_tunnel_trend(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
@@ -211,7 +211,7 @@ async def central_get_gateway_tunnel_trend(
 _TunnelHealthScope = Literal["lan", "wan"]
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_tunnels_health_summary(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
@@ -230,7 +230,7 @@ async def central_get_gateway_tunnels_health_summary(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_vlans_runtime(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
@@ -240,7 +240,7 @@ async def central_get_gateway_vlans_runtime(
     return await _get(conn, f"network-monitoring/v1/gateways/{serial_number}/vlans")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_vlan_runtime(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
@@ -256,7 +256,7 @@ async def central_get_gateway_vlan_runtime(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_uplinks(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
@@ -266,7 +266,7 @@ async def central_get_gateway_uplinks(
     return await _get(conn, f"network-monitoring/v1/gateways/{serial_number}/uplinks")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_uplink(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
@@ -280,7 +280,7 @@ async def central_get_gateway_uplink(
 _UplinkTrendDimension = Literal["throughput", "wan-compression", "wan-availability"]
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_uplink_trend(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
@@ -306,7 +306,7 @@ async def central_get_gateway_uplink_trend(
     )
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_uplink_probes(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
@@ -317,7 +317,7 @@ async def central_get_gateway_uplink_probes(
     return await _get(conn, f"network-monitoring/v1/gateways/{serial_number}/uplinks/{link_tag}/probes")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_uplink_probe_performance(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
@@ -335,7 +335,7 @@ async def central_get_gateway_uplink_probe_performance(
     )
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_uplink_vpn_availability(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
@@ -367,7 +367,7 @@ async def central_get_gateway_uplink_vpn_availability(
 _DhcpView = Literal["pools", "clients"]
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_dhcp(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
@@ -386,7 +386,7 @@ async def central_get_gateway_dhcp(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_cluster_members(
     ctx: Context,
     cluster_name: Annotated[str, Field(description="Cluster name.")],
@@ -405,7 +405,7 @@ _ClusterSummaryKind = Literal[
 ]
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_cluster_summary(
     ctx: Context,
     cluster_name: Annotated[str, Field(description="Cluster name.")],
@@ -426,7 +426,7 @@ async def central_get_cluster_summary(
     return await _get(conn, f"network-monitoring/v1/clusters/{cluster_name}/{kind}")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_cluster_capacity_trends(
     ctx: Context,
     cluster_name: Annotated[str, Field(description="Cluster name.")],

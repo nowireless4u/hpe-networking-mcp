@@ -19,11 +19,10 @@ helpers used by the hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
@@ -32,17 +31,10 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _manage_resource,
 )
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
 # ----- psm -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_psm(
     ctx: Context,
     name: str | None = None,
@@ -57,7 +49,7 @@ async def central_get_psm(
     return await _get_resource(ctx, "psm", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_psm(
     ctx: Context,
     name: Annotated[str, Field(description="``psm`` identifier (OpenAPI path param: ``name``).")],
@@ -98,7 +90,7 @@ async def central_manage_psm(
 # ----- splunk-instances -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_splunk_instances(
     ctx: Context,
     name: str | None = None,
@@ -113,7 +105,7 @@ async def central_get_splunk_instances(
     return await _get_resource(ctx, "splunk-instances", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_splunk_instances(
     ctx: Context,
     name: Annotated[str, Field(description="``splunk-instances`` identifier (OpenAPI path param: ``name``).")],
@@ -154,7 +146,7 @@ async def central_manage_splunk_instances(
 # ----- vsphere-instances -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_vsphere_instances(
     ctx: Context,
     name: str | None = None,
@@ -169,7 +161,7 @@ async def central_get_vsphere_instances(
     return await _get_resource(ctx, "vsphere-instances", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_vsphere_instances(
     ctx: Context,
     name: Annotated[str, Field(description="``vsphere-instances`` identifier (OpenAPI path param: ``name``).")],

@@ -28,19 +28,11 @@ from typing import Annotated, Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
-
-OPERATIONAL = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=False,
-    idempotentHint=True,
-    openWorldHint=True,
-)
 
 DeviceFamilyAll = Literal["aos-s", "aps", "cx", "gateways"]
 DeviceFamilyApGwSw = Literal["aps", "cx", "gateways"]
@@ -85,7 +77,7 @@ async def _post_action(conn, family: str, serial: str, action: str, payload: dic
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_troubleshooting_task_status(
     ctx: Context,
     device_family: Annotated[
@@ -121,7 +113,7 @@ async def central_get_troubleshooting_task_status(
     )
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_list_troubleshooting_tasks(
     ctx: Context,
     device_family: Annotated[
@@ -139,7 +131,7 @@ async def central_list_troubleshooting_tasks(
     )
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_list_supported_show_commands(
     ctx: Context,
     device_family: Annotated[
@@ -167,7 +159,7 @@ async def central_list_supported_show_commands(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_event_extra_attributes(
     ctx: Context,
     filter: str | None = None,
@@ -194,7 +186,7 @@ async def central_get_event_extra_attributes(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_probe_http(
     ctx: Context,
     device_family: Annotated[DeviceFamilyApGwSw, Field(description="``'aps'``, ``'cx'``, or ``'gateways'``.")],
@@ -211,7 +203,7 @@ async def central_probe_http(
     return await _post_action(get_central_conn(ctx), device_family, serial_number, "http", payload)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_probe_https(
     ctx: Context,
     device_family: Annotated[DeviceFamilyApGwSw, Field(description="``'aps'``, ``'cx'``, or ``'gateways'``.")],
@@ -228,7 +220,7 @@ async def central_probe_https(
     return await _post_action(get_central_conn(ctx), device_family, serial_number, "https", payload)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_probe_tcp(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number (TCP probe is only offered on APs).")],
@@ -241,7 +233,7 @@ async def central_probe_tcp(
     return await _post_action(get_central_conn(ctx), "aps", serial_number, "tcp", payload)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_iperf_test(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number (iperf is only offered on gateways).")],
@@ -254,7 +246,7 @@ async def central_iperf_test(
     return await _post_action(get_central_conn(ctx), "gateways", serial_number, "iperf", payload)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_speedtest(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number (speedtest is only offered on APs).")],
@@ -267,7 +259,7 @@ async def central_speedtest(
     return await _post_action(get_central_conn(ctx), "aps", serial_number, "speedtest", payload)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_nslookup(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number (nslookup is only offered on APs).")],
@@ -280,7 +272,7 @@ async def central_nslookup(
     return await _post_action(get_central_conn(ctx), "aps", serial_number, "nslookup", payload)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_test_aaa(
     ctx: Context,
     device_family: Annotated[DeviceFamilyApCx, Field(description="``'aps'`` or ``'cx'``.")],
@@ -301,7 +293,7 @@ async def central_test_aaa(
     return await _post_action(get_central_conn(ctx), device_family, serial_number, "aaa", payload)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_arp_table(
     ctx: Context,
     device_family: Annotated[
@@ -328,7 +320,7 @@ async def central_get_arp_table(
     )
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_ping_sweep(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number (pingSweep is only offered on gateways).")],
@@ -346,7 +338,7 @@ async def central_ping_sweep(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_reboot_device(
     ctx: Context,
     device_family: Annotated[DeviceFamilyAll, Field(description="Device family.")],
@@ -366,7 +358,7 @@ async def central_reboot_device(
     )
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_reboot_swarm(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Swarm conductor AP serial number.")],
@@ -379,7 +371,7 @@ async def central_reboot_swarm(
     return await _post_action(get_central_conn(ctx), "aps", serial_number, "rebootSwarm", payload)
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL, gated=False)
 async def central_locate_device(
     ctx: Context,
     device_family: Annotated[
@@ -402,7 +394,7 @@ async def central_locate_device(
     )
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_halt_gateway(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
@@ -415,7 +407,7 @@ async def central_halt_gateway(
     return await _post_action(get_central_conn(ctx), "gateways", serial_number, "halt", payload)
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_disconnect_user_by_network(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
@@ -431,7 +423,7 @@ async def central_disconnect_user_by_network(
     )
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_disconnect_user_by_mac_on_ap(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
@@ -447,7 +439,7 @@ async def central_disconnect_user_by_mac_on_ap(
     )
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_disconnect_user_all_on_ap(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
@@ -466,7 +458,7 @@ async def central_disconnect_user_all_on_ap(
     )
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_disconnect_client_all_on_gateway(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
@@ -485,7 +477,7 @@ async def central_disconnect_client_all_on_gateway(
     )
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_disconnect_client_by_mac_on_gateway(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],

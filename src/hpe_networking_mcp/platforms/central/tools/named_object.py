@@ -19,11 +19,10 @@ helpers used by the hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
@@ -32,17 +31,10 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _manage_resource,
 )
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
 # ----- aliases -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_aliases(
     ctx: Context,
     name: str | None = None,
@@ -57,7 +49,7 @@ async def central_get_aliases(
     return await _get_resource(ctx, "aliases", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_aliases(
     ctx: Context,
     name: Annotated[str, Field(description="``aliases`` identifier (OpenAPI path param: ``name``).")],
@@ -98,7 +90,7 @@ async def central_manage_aliases(
 # ----- named-conditions -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_named_conditions(
     ctx: Context,
     name: str | None = None,
@@ -113,7 +105,7 @@ async def central_get_named_conditions(
     return await _get_resource(ctx, "named-conditions", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_named_conditions(
     ctx: Context,
     name: Annotated[str, Field(description="``named-conditions`` identifier (OpenAPI path param: ``name``).")],
@@ -154,7 +146,7 @@ async def central_manage_named_conditions(
 # ----- net-services -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_net_services(
     ctx: Context,
     name: str | None = None,
@@ -169,7 +161,7 @@ async def central_get_net_services(
     return await _get_resource(ctx, "net-services", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_net_services(
     ctx: Context,
     name: Annotated[str, Field(description="``net-services`` identifier (OpenAPI path param: ``name``).")],

@@ -19,11 +19,10 @@ helpers used by the hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
@@ -32,17 +31,10 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _manage_resource,
 )
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
 # ----- device-firmware -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_device_firmware(
     ctx: Context,
 ) -> dict | list | str:
@@ -53,7 +45,7 @@ async def central_get_device_firmware(
     return await _get_resource(ctx, "device-firmware", None)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_device_firmware(
     ctx: Context,
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
@@ -92,7 +84,7 @@ async def central_manage_device_firmware(
 # ----- dsm -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_dsm(
     ctx: Context,
     name: str | None = None,
@@ -107,7 +99,7 @@ async def central_get_dsm(
     return await _get_resource(ctx, "dsm", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_dsm(
     ctx: Context,
     name: Annotated[str, Field(description="``dsm`` identifier (OpenAPI path param: ``name``).")],
@@ -148,7 +140,7 @@ async def central_manage_dsm(
 # ----- features -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_features(
     ctx: Context,
 ) -> dict | list | str:
@@ -159,7 +151,7 @@ async def central_get_features(
     return await _get_resource(ctx, "features", None)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_features(
     ctx: Context,
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
@@ -198,7 +190,7 @@ async def central_manage_features(
 # ----- node-operations -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_node_operations(
     ctx: Context,
     xpath: str | None = None,
@@ -213,7 +205,7 @@ async def central_get_node_operations(
     return await _get_resource(ctx, "node-operations", xpath)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_node_operations(
     ctx: Context,
     xpath: Annotated[str, Field(description="``node-operations`` identifier (OpenAPI path param: ``xpath``).")],
@@ -254,7 +246,7 @@ async def central_manage_node_operations(
 # ----- overlay-wlan -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_overlay_wlan(
     ctx: Context,
     profile: str | None = None,
@@ -269,7 +261,7 @@ async def central_get_overlay_wlan(
     return await _get_resource(ctx, "overlay-wlan", profile)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_overlay_wlan(
     ctx: Context,
     profile: Annotated[str, Field(description="``overlay-wlan`` identifier (OpenAPI path param: ``profile``).")],
@@ -310,7 +302,7 @@ async def central_manage_overlay_wlan(
 # ----- vsx-config -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_vsx_config(
     ctx: Context,
     name: str | None = None,
@@ -325,7 +317,7 @@ async def central_get_vsx_config(
     return await _get_resource(ctx, "vsx-config", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_vsx_config(
     ctx: Context,
     name: Annotated[str, Field(description="``vsx-config`` identifier (OpenAPI path param: ``name``).")],
@@ -366,7 +358,7 @@ async def central_manage_vsx_config(
 # ----- vxlan -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_vxlan(
     ctx: Context,
     name: str | None = None,
@@ -381,7 +373,7 @@ async def central_get_vxlan(
     return await _get_resource(ctx, "vxlan", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_vxlan(
     ctx: Context,
     name: Annotated[str, Field(description="``vxlan`` identifier (OpenAPI path param: ``name``).")],

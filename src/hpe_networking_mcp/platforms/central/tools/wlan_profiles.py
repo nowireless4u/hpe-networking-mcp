@@ -9,23 +9,15 @@ from typing import Annotated
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import elicitation_handler
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
 
-
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_wlan_profiles(
     ctx: Context,
     ssid: str | None = None,
@@ -58,7 +50,7 @@ async def central_get_wlan_profiles(
     return response.get("msg", {})
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_wlan_profile(
     ctx: Context,
     ssid: Annotated[

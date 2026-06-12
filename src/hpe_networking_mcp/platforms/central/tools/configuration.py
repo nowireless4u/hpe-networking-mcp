@@ -11,19 +11,12 @@ from typing import Annotated
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import elicitation_handler
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
-
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
 
 
 class ActionType(Enum):
@@ -45,7 +38,7 @@ class CollectionActionType(Enum):
 # ------------------------------------------------------------------
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_site(
     ctx: Context,
     action_type: Annotated[
@@ -111,7 +104,7 @@ async def central_manage_site(
 # ------------------------------------------------------------------
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_site_collection(
     ctx: Context,
     action_type: Annotated[
@@ -189,7 +182,7 @@ async def central_manage_site_collection(
 # ------------------------------------------------------------------
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_device_group(
     ctx: Context,
     action_type: Annotated[

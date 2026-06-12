@@ -38,8 +38,8 @@ from typing import Any
 
 from fastmcp import Context
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.translations import (
     EngineError,
     LoaderError,
@@ -139,7 +139,7 @@ def _target_object_keys(call: dict[str, Any]) -> list[tuple]:
     return [(call["method"], endpoint, json.dumps(call.get("query_params") or {}, sort_keys=True))]
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_translation_preview(
     ctx: Context,
     translation_id: str,

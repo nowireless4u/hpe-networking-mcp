@@ -19,11 +19,10 @@ helpers used by the hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
@@ -33,17 +32,10 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _operation_request,
 )
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
 # ----- cnac-certificate -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_cnac_certificate(
     ctx: Context,
 ) -> dict | list | str:
@@ -57,7 +49,7 @@ async def central_get_cnac_certificate(
 # ----- cnac-dpp-reg -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_cnac_dpp_reg(
     ctx: Context,
     id: str | None = None,
@@ -72,7 +64,7 @@ async def central_get_cnac_dpp_reg(
     return await _get_resource(ctx, "cnac-dpp-reg", id)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_cnac_dpp_reg(
     ctx: Context,
     id: Annotated[str, Field(description="``cnac-dpp-reg`` identifier (OpenAPI path param: ``id``).")],
@@ -113,7 +105,7 @@ async def central_manage_cnac_dpp_reg(
 # ----- cnac-image -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_cnac_image(
     ctx: Context,
     image_id: str | None = None,
@@ -131,7 +123,7 @@ async def central_get_cnac_image(
 # ----- cnac-job -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_cnac_job(
     ctx: Context,
     job_id: str | None = None,
@@ -146,7 +138,7 @@ async def central_get_cnac_job(
     return await _get_resource(ctx, "cnac-job", job_id)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_cnac_job(
     ctx: Context,
     job_id: Annotated[str, Field(description="``cnac-job`` identifier (OpenAPI path param: ``job-id``).")],
@@ -187,7 +179,7 @@ async def central_manage_cnac_job(
 # ----- cnac-mac-reg -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_cnac_mac_reg(
     ctx: Context,
     id: str | None = None,
@@ -202,7 +194,7 @@ async def central_get_cnac_mac_reg(
     return await _get_resource(ctx, "cnac-mac-reg", id)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_cnac_mac_reg(
     ctx: Context,
     id: Annotated[str, Field(description="``cnac-mac-reg`` identifier (OpenAPI path param: ``id``).")],
@@ -243,7 +235,7 @@ async def central_manage_cnac_mac_reg(
 # ----- cnac-named-mpsk-reg -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_cnac_named_mpsk_reg(
     ctx: Context,
     id: str | None = None,
@@ -258,7 +250,7 @@ async def central_get_cnac_named_mpsk_reg(
     return await _get_resource(ctx, "cnac-named-mpsk-reg", id)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_cnac_named_mpsk_reg(
     ctx: Context,
     id: Annotated[str, Field(description="``cnac-named-mpsk-reg`` identifier (OpenAPI path param: ``id``).")],
@@ -299,7 +291,7 @@ async def central_manage_cnac_named_mpsk_reg(
 # ----- cnac-visitor -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_cnac_visitor(
     ctx: Context,
     id: str | None = None,
@@ -314,7 +306,7 @@ async def central_get_cnac_visitor(
     return await _get_resource(ctx, "cnac-visitor", id)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_cnac_visitor(
     ctx: Context,
     id: Annotated[str, Field(description="``cnac-visitor`` identifier (OpenAPI path param: ``id``).")],
@@ -355,7 +347,7 @@ async def central_manage_cnac_visitor(
 # ----- operation: cnac-certificate/revoke -----
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_cnac_certificate_revoke(
     ctx: Context,
     payload: Annotated[
@@ -380,7 +372,7 @@ async def central_cnac_certificate_revoke(
 # ----- operation: cnac-image/upload -----
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_cnac_image_upload(
     ctx: Context,
     payload: Annotated[
@@ -405,7 +397,7 @@ async def central_cnac_image_upload(
 # ----- operation: cnac-mac-reg/import -----
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_cnac_mac_reg_import(
     ctx: Context,
     payload: Annotated[
@@ -430,7 +422,7 @@ async def central_cnac_mac_reg_import(
 # ----- operation: cnac-named-mpsk-reg/import -----
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_cnac_named_mpsk_reg_import(
     ctx: Context,
     payload: Annotated[
@@ -455,7 +447,7 @@ async def central_cnac_named_mpsk_reg_import(
 # ----- operation: cnac-image/download/{image-id} -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_cnac_image_download(
     ctx: Context,
     image_id: Annotated[str, Field(description="Path parameter (OpenAPI: ``image-id``).")],
@@ -474,7 +466,7 @@ async def central_get_cnac_image_download(
 # ----- operation: cnac-job/{job-id}/error -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_cnac_job_error(
     ctx: Context,
     job_id: Annotated[str, Field(description="Path parameter (OpenAPI: ``job-id``).")],
@@ -493,7 +485,7 @@ async def central_get_cnac_job_error(
 # ----- operation: cnac-job/{job-id}/input -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_cnac_job_input(
     ctx: Context,
     job_id: Annotated[str, Field(description="Path parameter (OpenAPI: ``job-id``).")],
@@ -512,7 +504,7 @@ async def central_get_cnac_job_input(
 # ----- operation: cnac-job/{job-id}/status -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_cnac_job_status(
     ctx: Context,
     job_id: Annotated[str, Field(description="Path parameter (OpenAPI: ``job-id``).")],
@@ -531,7 +523,7 @@ async def central_get_cnac_job_status(
 # ----- operation: cnac-mac-reg/export -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_cnac_mac_reg_export(
     ctx: Context,
 ) -> dict | str:
@@ -546,7 +538,7 @@ async def central_get_cnac_mac_reg_export(
 # ----- operation: cnac-named-mpsk-reg/export -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_cnac_named_mpsk_reg_export(
     ctx: Context,
 ) -> dict | str:
@@ -561,7 +553,7 @@ async def central_get_cnac_named_mpsk_reg_export(
 # ----- operation: cnac-visitor/export -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_cnac_visitor_export(
     ctx: Context,
 ) -> dict | str:
@@ -576,7 +568,7 @@ async def central_get_cnac_visitor_export(
 # ----- operation: cnac-static-tags/usage -----
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_cnac_static_tags_usage(
     ctx: Context,
     payload: Annotated[

@@ -12,29 +12,21 @@ from typing import Any
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
-from mcp.types import ToolAnnotations
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 # Per the upstream OpenAPI: search must be 3-128 chars when supplied.
 _SEARCH_MIN_CHARS = 3
 _SEARCH_MAX_CHARS = 128
 
+
 # Resync is operational, not a config edit: it re-pushes the *intended*
 # config (idempotent, non-destructive). Like the disconnect/reboot tools it
 # runs immediately without elicitation and isn't gated behind
 # ENABLE_CENTRAL_WRITE_TOOLS.
-OPERATIONAL = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=False,
-    idempotentHint=True,
-    openWorldHint=True,
-)
-
-
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_device_config_issues(
     ctx: Context,
     serial: str,
@@ -67,7 +59,7 @@ async def central_get_device_config_issues(
     return response.get("msg", {})
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_devices_config_health(
     ctx: Context,
     limit: int = 100,
@@ -129,7 +121,7 @@ async def central_get_devices_config_health(
     return response.get("msg", {})
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_resync_device_config(
     ctx: Context,
     serials: list[str],

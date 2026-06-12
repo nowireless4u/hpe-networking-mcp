@@ -19,11 +19,10 @@ helpers used by the hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
@@ -32,17 +31,10 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _manage_resource,
 )
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
 # ----- advanced-intelligent-forwarding -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_advanced_intelligent_forwarding(
     ctx: Context,
     name: str | None = None,
@@ -57,7 +49,7 @@ async def central_get_advanced_intelligent_forwarding(
     return await _get_resource(ctx, "advanced-intelligent-forwarding", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_advanced_intelligent_forwarding(
     ctx: Context,
     name: Annotated[
@@ -100,7 +92,7 @@ async def central_manage_advanced_intelligent_forwarding(
 # ----- aspath-lists -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_aspath_lists(
     ctx: Context,
     aspath_list_name: str | None = None,
@@ -115,7 +107,7 @@ async def central_get_aspath_lists(
     return await _get_resource(ctx, "aspath-lists", aspath_list_name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_aspath_lists(
     ctx: Context,
     aspath_list_name: Annotated[
@@ -158,7 +150,7 @@ async def central_manage_aspath_lists(
 # ----- bfd -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_bfd(
     ctx: Context,
     name: str | None = None,
@@ -173,7 +165,7 @@ async def central_get_bfd(
     return await _get_resource(ctx, "bfd", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_bfd(
     ctx: Context,
     name: Annotated[str, Field(description="``bfd`` identifier (OpenAPI path param: ``name``).")],
@@ -214,7 +206,7 @@ async def central_manage_bfd(
 # ----- bgp -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_bgp(
     ctx: Context,
     name: str | None = None,
@@ -229,7 +221,7 @@ async def central_get_bgp(
     return await _get_resource(ctx, "bgp", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_bgp(
     ctx: Context,
     name: Annotated[str, Field(description="``bgp`` identifier (OpenAPI path param: ``name``).")],
@@ -270,7 +262,7 @@ async def central_manage_bgp(
 # ----- community-lists -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_community_lists(
     ctx: Context,
     community_list_name_community_type: str | None = None,
@@ -285,7 +277,7 @@ async def central_get_community_lists(
     return await _get_resource(ctx, "community-lists", community_list_name_community_type)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_community_lists(
     ctx: Context,
     community_list_name_community_type: Annotated[
@@ -331,7 +323,7 @@ async def central_manage_community_lists(
 # ----- evpn -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_evpn(
     ctx: Context,
     name: str | None = None,
@@ -346,7 +338,7 @@ async def central_get_evpn(
     return await _get_resource(ctx, "evpn", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_evpn(
     ctx: Context,
     name: Annotated[str, Field(description="``evpn`` identifier (OpenAPI path param: ``name``).")],
@@ -387,7 +379,7 @@ async def central_manage_evpn(
 # ----- ip-routing -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ip_routing(
     ctx: Context,
     name: str | None = None,
@@ -402,7 +394,7 @@ async def central_get_ip_routing(
     return await _get_resource(ctx, "ip-routing", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_ip_routing(
     ctx: Context,
     name: Annotated[str, Field(description="``ip-routing`` identifier (OpenAPI path param: ``name``).")],
@@ -443,7 +435,7 @@ async def central_manage_ip_routing(
 # ----- l3-route -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_l3_route(
     ctx: Context,
     name: str | None = None,
@@ -458,7 +450,7 @@ async def central_get_l3_route(
     return await _get_resource(ctx, "l3-route", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_l3_route(
     ctx: Context,
     name: Annotated[str, Field(description="``l3-route`` identifier (OpenAPI path param: ``name``).")],
@@ -499,7 +491,7 @@ async def central_manage_l3_route(
 # ----- mpls -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_mpls(
     ctx: Context,
     name: str | None = None,
@@ -514,7 +506,7 @@ async def central_get_mpls(
     return await _get_resource(ctx, "mpls", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_mpls(
     ctx: Context,
     name: Annotated[str, Field(description="``mpls`` identifier (OpenAPI path param: ``name``).")],
@@ -555,7 +547,7 @@ async def central_manage_mpls(
 # ----- msdp -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_msdp(
     ctx: Context,
     name: str | None = None,
@@ -570,7 +562,7 @@ async def central_get_msdp(
     return await _get_resource(ctx, "msdp", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_msdp(
     ctx: Context,
     name: Annotated[str, Field(description="``msdp`` identifier (OpenAPI path param: ``name``).")],
@@ -611,7 +603,7 @@ async def central_manage_msdp(
 # ----- multicast-global -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_multicast_global(
     ctx: Context,
     name: str | None = None,
@@ -626,7 +618,7 @@ async def central_get_multicast_global(
     return await _get_resource(ctx, "multicast-global", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_multicast_global(
     ctx: Context,
     name: Annotated[str, Field(description="``multicast-global`` identifier (OpenAPI path param: ``name``).")],
@@ -667,7 +659,7 @@ async def central_manage_multicast_global(
 # ----- multicast-static-route -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_multicast_static_route(
     ctx: Context,
     name: str | None = None,
@@ -682,7 +674,7 @@ async def central_get_multicast_static_route(
     return await _get_resource(ctx, "multicast-static-route", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_multicast_static_route(
     ctx: Context,
     name: Annotated[str, Field(description="``multicast-static-route`` identifier (OpenAPI path param: ``name``).")],
@@ -723,7 +715,7 @@ async def central_manage_multicast_static_route(
 # ----- nexthop-groups -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_nexthop_groups(
     ctx: Context,
     name: str | None = None,
@@ -738,7 +730,7 @@ async def central_get_nexthop_groups(
     return await _get_resource(ctx, "nexthop-groups", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_nexthop_groups(
     ctx: Context,
     name: Annotated[str, Field(description="``nexthop-groups`` identifier (OpenAPI path param: ``name``).")],
@@ -779,7 +771,7 @@ async def central_manage_nexthop_groups(
 # ----- ospfv2 -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ospfv2(
     ctx: Context,
     name: str | None = None,
@@ -794,7 +786,7 @@ async def central_get_ospfv2(
     return await _get_resource(ctx, "ospfv2", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_ospfv2(
     ctx: Context,
     name: Annotated[str, Field(description="``ospfv2`` identifier (OpenAPI path param: ``name``).")],
@@ -835,7 +827,7 @@ async def central_manage_ospfv2(
 # ----- ospfv3 -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ospfv3(
     ctx: Context,
     name: str | None = None,
@@ -850,7 +842,7 @@ async def central_get_ospfv3(
     return await _get_resource(ctx, "ospfv3", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_ospfv3(
     ctx: Context,
     name: Annotated[str, Field(description="``ospfv3`` identifier (OpenAPI path param: ``name``).")],
@@ -891,7 +883,7 @@ async def central_manage_ospfv3(
 # ----- pim-router -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_pim_router(
     ctx: Context,
     name: str | None = None,
@@ -906,7 +898,7 @@ async def central_get_pim_router(
     return await _get_resource(ctx, "pim-router", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_pim_router(
     ctx: Context,
     name: Annotated[str, Field(description="``pim-router`` identifier (OpenAPI path param: ``name``).")],
@@ -947,7 +939,7 @@ async def central_manage_pim_router(
 # ----- prefix-lists -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_prefix_lists(
     ctx: Context,
     prefix_list_name_address_family: str | None = None,
@@ -962,7 +954,7 @@ async def central_get_prefix_lists(
     return await _get_resource(ctx, "prefix-lists", prefix_list_name_address_family)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_prefix_lists(
     ctx: Context,
     prefix_list_name_address_family: Annotated[
@@ -1005,7 +997,7 @@ async def central_manage_prefix_lists(
 # ----- rip -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_rip(
     ctx: Context,
     name: str | None = None,
@@ -1020,7 +1012,7 @@ async def central_get_rip(
     return await _get_resource(ctx, "rip", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_rip(
     ctx: Context,
     name: Annotated[str, Field(description="``rip`` identifier (OpenAPI path param: ``name``).")],
@@ -1061,7 +1053,7 @@ async def central_manage_rip(
 # ----- route-maps -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_route_maps(
     ctx: Context,
     route_map_name: str | None = None,
@@ -1076,7 +1068,7 @@ async def central_get_route_maps(
     return await _get_resource(ctx, "route-maps", route_map_name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_route_maps(
     ctx: Context,
     route_map_name: Annotated[
@@ -1119,7 +1111,7 @@ async def central_manage_route_maps(
 # ----- static-route -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_static_route(
     ctx: Context,
     name: str | None = None,
@@ -1134,7 +1126,7 @@ async def central_get_static_route(
     return await _get_resource(ctx, "static-route", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_static_route(
     ctx: Context,
     name: Annotated[str, Field(description="``static-route`` identifier (OpenAPI path param: ``name``).")],
@@ -1175,7 +1167,7 @@ async def central_manage_static_route(
 # ----- tracking-object -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_tracking_object(
     ctx: Context,
     identifier: str | None = None,
@@ -1190,7 +1182,7 @@ async def central_get_tracking_object(
     return await _get_resource(ctx, "tracking-object", identifier)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_tracking_object(
     ctx: Context,
     identifier: Annotated[
@@ -1233,7 +1225,7 @@ async def central_manage_tracking_object(
 # ----- vrfs -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_vrfs(
     ctx: Context,
     name: str | None = None,
@@ -1248,7 +1240,7 @@ async def central_get_vrfs(
     return await _get_resource(ctx, "vrfs", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_vrfs(
     ctx: Context,
     name: Annotated[str, Field(description="``vrfs`` identifier (OpenAPI path param: ``name``).")],

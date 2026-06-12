@@ -10,19 +10,11 @@ from typing import Annotated, Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
-
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
 
 
 async def _call(conn, method: str, path: str, params: dict | None = None, data: dict | None = None) -> dict:
@@ -44,7 +36,7 @@ async def _call(conn, method: str, path: str, params: dict | None = None, data: 
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_sitemap_summary(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -54,7 +46,7 @@ async def central_get_sitemap_summary(
     return await _call(conn, "GET", f"network-monitoring/v1/sitemaps-summary/{site_id}")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_catalogue_aps(
     ctx: Context,
     limit: int = 100,
@@ -78,7 +70,7 @@ async def central_get_catalogue_aps(
 _DeviceStatus = Literal["deployed", "assigned", "planned"]
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_sitemap_devices(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -98,7 +90,7 @@ async def central_get_sitemap_devices(
     return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/network-devices-{status}")
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_sitemap_devices(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -153,7 +145,7 @@ async def central_manage_sitemap_devices(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_floor(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -164,7 +156,7 @@ async def central_get_floor(
     return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}")
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_floor(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -217,7 +209,7 @@ async def central_manage_floor(
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_set_floor_scale(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -241,7 +233,7 @@ async def central_set_floor_scale(
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_floor_image(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -252,7 +244,7 @@ async def central_get_floor_image(
     return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/image")
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_set_floor_image(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -281,7 +273,7 @@ async def central_set_floor_image(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_buildings(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -291,7 +283,7 @@ async def central_get_buildings(
     return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/buildings")
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_building(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -335,7 +327,7 @@ async def central_manage_building(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_import_sitemap(
     ctx: Context,
     site_id: Annotated[str, Field(description="Target site identifier.")],
@@ -360,7 +352,7 @@ async def central_import_sitemap(
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_sitemap_import_status(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -376,14 +368,14 @@ async def central_get_sitemap_import_status(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_wall_types(ctx: Context) -> dict:
     """List the wall types configured at the tenant level (used in floor walls)."""
     conn = get_central_conn(ctx)
     return await _call(conn, "GET", "network-monitoring/v1/wall-types")
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_wall_types(
     ctx: Context,
     action_type: Annotated[
@@ -419,7 +411,7 @@ async def central_manage_wall_types(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_floor_walls(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -430,7 +422,7 @@ async def central_get_floor_walls(
     return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/walls")
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_floor_walls(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -463,7 +455,7 @@ async def central_manage_floor_walls(
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_floor_zones(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -474,7 +466,7 @@ async def central_get_floor_zones(
     return await _call(conn, "GET", f"network-monitoring/v1/sitemaps/{site_id}/floors/{floor_id}/zones")
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_floor_zones(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],

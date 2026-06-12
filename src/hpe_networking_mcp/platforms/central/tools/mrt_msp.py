@@ -7,12 +7,12 @@ empty / 403 responses.
 
 from fastmcp import Context
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_list_msp_tenants(
     ctx: Context,
     limit: int = 100,

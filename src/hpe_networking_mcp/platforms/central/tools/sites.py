@@ -2,14 +2,13 @@ from typing import Annotated
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.models import SiteData
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import (
     fetch_site_data_parallel,
     get_central_conn,
@@ -21,8 +20,6 @@ from hpe_networking_mcp.platforms.central.utils import (
 # Write annotations. Central's elicitation middleware enables the
 # ``central_write_delete`` tag when ENABLE_CENTRAL_WRITE_TOOLS=true, so ALL
 # central write tools carry that tag regardless of destructiveness.
-_WRITE = ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True)
-_WRITE_DELETE = ToolAnnotations(readOnlyHint=False, destructiveHint=True, idempotentHint=False, openWorldHint=True)
 _CONFIRMED_FIELD = Field(default=False, description="Set to true when the user has confirmed the operation in chat.")
 
 
@@ -55,7 +52,7 @@ async def _scope_write(
     return response.get("msg", {})
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_sites(
     ctx: Context,
     filter: str | None = None,
@@ -98,7 +95,7 @@ async def central_get_sites(
     return response.get("msg", {})
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_site_health(
     ctx: Context,
     site_name: str | list[str] | None = None,
@@ -129,7 +126,7 @@ async def central_get_site_health(
     return list(sites_data.values())
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_site_name_id_mapping(ctx: Context) -> dict:
     """
     Returns a lightweight mapping of all site names to their IDs and health
@@ -175,7 +172,7 @@ async def central_get_site_name_id_mapping(ctx: Context) -> dict:
     return mapping
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_global_scope(ctx: Context) -> dict | str:
     """Get the Global scope id for the tenant.
 
@@ -197,7 +194,7 @@ async def central_get_global_scope(ctx: Context) -> dict | str:
     return response.get("msg", {})
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_hierarchy(
     ctx: Context,
     scope_id: Annotated[
@@ -246,7 +243,7 @@ async def central_get_hierarchy(
 _DEVICES_FIELD = Field(description="List of device serial numbers to act on.")
 
 
-@tool(annotations=_WRITE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE, tags={"central_write_delete"})
 async def central_add_devices_to_device_group(
     ctx: Context,
     dest_scope_id: Annotated[
@@ -266,7 +263,7 @@ async def central_add_devices_to_device_group(
     )
 
 
-@tool(annotations=_WRITE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE, tags={"central_write_delete"})
 async def central_remove_devices_from_device_group(
     ctx: Context,
     devices: Annotated[list[str], _DEVICES_FIELD],
@@ -283,7 +280,7 @@ async def central_remove_devices_from_device_group(
     )
 
 
-@tool(annotations=_WRITE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE, tags={"central_write_delete"})
 async def central_create_device_group_with_devices(
     ctx: Context,
     scope_name: Annotated[str, Field(description="Name for the new device-group.")],
@@ -308,7 +305,7 @@ async def central_create_device_group_with_devices(
     )
 
 
-@tool(annotations=_WRITE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE, tags={"central_write_delete"})
 async def central_add_devices_to_site(
     ctx: Context,
     dest_scope_id: Annotated[
@@ -341,7 +338,7 @@ _BULK_ITEMS_FIELD = Field(
 )
 
 
-@tool(annotations=_WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_bulk_delete_device_groups(
     ctx: Context,
     items: Annotated[list[dict], _BULK_ITEMS_FIELD],
@@ -358,7 +355,7 @@ async def central_bulk_delete_device_groups(
     )
 
 
-@tool(annotations=_WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_bulk_delete_sites(
     ctx: Context,
     items: Annotated[list[dict], _BULK_ITEMS_FIELD],
@@ -375,7 +372,7 @@ async def central_bulk_delete_sites(
     )
 
 
-@tool(annotations=_WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_bulk_delete_site_collections(
     ctx: Context,
     items: Annotated[list[dict], _BULK_ITEMS_FIELD],

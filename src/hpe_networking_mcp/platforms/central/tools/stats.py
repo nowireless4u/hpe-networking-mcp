@@ -3,13 +3,13 @@ from typing import Literal
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_stats(
     ctx: Context,
     serial_number: str,
@@ -50,7 +50,7 @@ async def central_get_ap_stats(
     return resp
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_utilization(
     ctx: Context,
     serial_number: str,
@@ -99,7 +99,7 @@ async def central_get_ap_utilization(
     return resp
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_stats(
     ctx: Context,
     serial_number: str,
@@ -140,7 +140,7 @@ async def central_get_gateway_stats(
     return resp
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_utilization(
     ctx: Context,
     serial_number: str,
@@ -190,7 +190,7 @@ async def central_get_gateway_utilization(
     return resp
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_wan_availability(
     ctx: Context,
     serial_number: str,
@@ -231,7 +231,7 @@ async def central_get_gateway_wan_availability(
     return resp
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_tunnel_health(
     ctx: Context,
     serial_number: str,

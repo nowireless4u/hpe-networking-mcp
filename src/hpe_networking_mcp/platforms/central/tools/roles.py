@@ -13,8 +13,8 @@ API: GET /network-config/v1alpha1/roles/{name},
 
 from fastmcp import Context
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
@@ -53,7 +53,7 @@ def _extract_policy_names(role_body: dict) -> list[str]:
     return names
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_role_with_policy(
     ctx: Context,
     name: str,

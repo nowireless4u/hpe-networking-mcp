@@ -9,22 +9,14 @@ report has zero or more report-runs (one per generation cycle).
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
 
-
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_reports(
     ctx: Context,
     filter: str | None = None,
@@ -58,7 +50,7 @@ async def central_get_reports(
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_report_runs(
     ctx: Context,
     report_id: Annotated[str, Field(description="Report identifier (from ``central_get_reports``).")],
@@ -90,7 +82,7 @@ async def central_get_report_runs(
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_update_report(
     ctx: Context,
     report_id: Annotated[str, Field(description="Report identifier to update.")],

@@ -1,12 +1,12 @@
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import deprecation_notice, get_central_conn, retry_central_command
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_audit_logs(
     ctx: Context,
     start_at: str,
@@ -72,7 +72,7 @@ async def central_get_audit_logs(
     return body
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_audit_log_detail(
     ctx: Context,
     id: str,

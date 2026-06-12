@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.12.3] - 2026-06-11
+
+**Patch — Central capability migration (7/N): all 660 Central tools classified; #416 mis-annotations corrected.** The largest annotation migration; one platform remains (Mist, generator-side) before the universal confirmation gate.
+
+### Changed
+- **All 660 Central tools migrated to `capability=`** (381 READ, ~250 WRITE_DELETE, 23 OPERATIONAL, plus the scope writes); registry on the shared `make_tool_decorator` factory; all per-file `ToolAnnotations` constants deleted. Visibility gating byte-equivalent. 8 of 9 platform registries on the factory.
+- **The formerly-ungated MRT/alert write surface (#416) now derives `requires_confirmation`** — OPERATIONAL's gated default and WRITE_DELETE classification cover the ~20 destructive tools that previously had no confirmation pathway; the tag activates when the universal gate lands.
+- Benign operational tools (`central_clear_alerts`, `central_defer_alerts`, `central_reactivate_alerts`, `central_set_alert_priority`, `central_locate_device`) classify `OPERATIONAL, gated=False` — no prompt, per the rubric.
+- Scope-membership writes keep an explicit `central_write_delete` tag on top of `Capability.WRITE` (Central's visibility transform only hides `_write_delete` — the documented footgun; gating preserved exactly).
+- NOTE for #429 (future auto-regen): the regenerated config tool files are source-of-truth since #423; any future generator must emit `capability=` in this form.
+
+### Fixed
+- **`central_start_ap_ranging_scan` reclassified WRITE_DELETE → DIAGNOSTIC** (#416's mis-annotation call-out): it triggers a calibration scan returning results with no persistent change; it no longer hides behind the write-enable flag.
+
+### Tests
+- Runtime tag-derivation verified (gated/ungated/diagnostic samples). Full suite **1802 passed**; ruff + format + mypy + bandit clean.
+
 ## [3.3.12.2] - 2026-06-11
 
 **Patch — capability migrations 4–6/N (Apstra, UXI, GreenLake) + AOS8 client conformance.** Advances the annotation sequence toward the universal confirmation gate (#415/#416, tracked in #466). The `requires_confirmation` tag remains inert until the gate PR; all visibility gating is byte-equivalent.

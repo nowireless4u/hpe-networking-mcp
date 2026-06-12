@@ -19,11 +19,10 @@ helpers used by the hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
@@ -33,17 +32,10 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _operation_request,
 )
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
 # ----- device-collection-add-devices -----
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_device_collection_add_devices(
     ctx: Context,
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
@@ -82,7 +74,7 @@ async def central_manage_device_collection_add_devices(
 # ----- device-collection-create-and-add-devices -----
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_device_collection_create_and_add_devices(
     ctx: Context,
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
@@ -121,7 +113,7 @@ async def central_manage_device_collection_create_and_add_devices(
 # ----- device-collection-remove-devices -----
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_device_collection_remove_devices(
     ctx: Context,
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
@@ -160,7 +152,7 @@ async def central_manage_device_collection_remove_devices(
 # ----- device-collections -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_device_collections(
     ctx: Context,
 ) -> dict | list | str:
@@ -171,7 +163,7 @@ async def central_get_device_collections(
     return await _get_resource(ctx, "device-collections", None)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_device_collections(
     ctx: Context,
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
@@ -210,7 +202,7 @@ async def central_manage_device_collections(
 # ----- operation: device-collections/bulk -----
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_device_collections_bulk_delete(
     ctx: Context,
     payload: Annotated[

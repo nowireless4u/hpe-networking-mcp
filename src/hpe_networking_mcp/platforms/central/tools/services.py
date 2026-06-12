@@ -19,11 +19,10 @@ helpers used by the hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
@@ -32,17 +31,10 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _manage_resource,
 )
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
 # ----- airgroup-policies -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_airgroup_policies(
     ctx: Context,
     name: str | None = None,
@@ -57,7 +49,7 @@ async def central_get_airgroup_policies(
     return await _get_resource(ctx, "airgroup-policies", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_airgroup_policies(
     ctx: Context,
     name: Annotated[str, Field(description="``airgroup-policies`` identifier (OpenAPI path param: ``name``).")],
@@ -98,7 +90,7 @@ async def central_manage_airgroup_policies(
 # ----- airgroup-servers -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_airgroup_servers(
     ctx: Context,
     mac_address: str | None = None,
@@ -113,7 +105,7 @@ async def central_get_airgroup_servers(
     return await _get_resource(ctx, "airgroup-servers", mac_address)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_airgroup_servers(
     ctx: Context,
     mac_address: Annotated[
@@ -156,7 +148,7 @@ async def central_manage_airgroup_servers(
 # ----- airgroup-service-definitions -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_airgroup_service_definitions(
     ctx: Context,
     name: str | None = None,
@@ -171,7 +163,7 @@ async def central_get_airgroup_service_definitions(
     return await _get_resource(ctx, "airgroup-service-definitions", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_airgroup_service_definitions(
     ctx: Context,
     name: Annotated[
@@ -214,7 +206,7 @@ async def central_manage_airgroup_service_definitions(
 # ----- airgroup-system -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_airgroup_system(
     ctx: Context,
 ) -> dict | list | str:
@@ -225,7 +217,7 @@ async def central_get_airgroup_system(
     return await _get_resource(ctx, "airgroup-system", None)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_airgroup_system(
     ctx: Context,
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
@@ -264,7 +256,7 @@ async def central_manage_airgroup_system(
 # ----- location -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_location(
     ctx: Context,
     name: str | None = None,
@@ -279,7 +271,7 @@ async def central_get_location(
     return await _get_resource(ctx, "location", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_location(
     ctx: Context,
     name: Annotated[str, Field(description="``location`` identifier (OpenAPI path param: ``name``).")],

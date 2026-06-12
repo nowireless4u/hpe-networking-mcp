@@ -17,16 +17,9 @@ from loguru import logger
 from pydantic import Field
 
 from hpe_networking_mcp.middleware.elicitation import elicitation_handler
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
-
-WRITE_DELETE = {
-    "readOnlyHint": False,
-    "destructiveHint": True,
-    "idempotentHint": False,
-    "openWorldHint": True,
-}
 
 # Valid device-function values from the API schema
 VALID_DEVICE_FUNCTIONS = {
@@ -51,7 +44,7 @@ VALID_DEVICE_FUNCTIONS = {
 }
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_config_assignments(
     ctx: Context,
     scope_id: Annotated[
@@ -108,7 +101,7 @@ async def central_get_config_assignments(
     return response.get("msg", {})
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_config_assignment(
     ctx: Context,
     action_type: Annotated[

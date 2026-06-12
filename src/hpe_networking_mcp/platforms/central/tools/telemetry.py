@@ -19,11 +19,10 @@ helpers used by the hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
@@ -32,17 +31,10 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _manage_resource,
 )
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
 # ----- client-insight -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_client_insight(
     ctx: Context,
     name: str | None = None,
@@ -57,7 +49,7 @@ async def central_get_client_insight(
     return await _get_resource(ctx, "client-insight", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_client_insight(
     ctx: Context,
     name: Annotated[str, Field(description="``client-insight`` identifier (OpenAPI path param: ``name``).")],
@@ -98,7 +90,7 @@ async def central_manage_client_insight(
 # ----- client-iptracker -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_client_iptracker(
     ctx: Context,
     name: str | None = None,
@@ -113,7 +105,7 @@ async def central_get_client_iptracker(
     return await _get_resource(ctx, "client-iptracker", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_client_iptracker(
     ctx: Context,
     name: Annotated[str, Field(description="``client-iptracker`` identifier (OpenAPI path param: ``name``).")],
@@ -154,7 +146,7 @@ async def central_manage_client_iptracker(
 # ----- client-iptracker-interface -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_client_iptracker_interface(
     ctx: Context,
     name: str | None = None,
@@ -169,7 +161,7 @@ async def central_get_client_iptracker_interface(
     return await _get_resource(ctx, "client-iptracker-interface", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_client_iptracker_interface(
     ctx: Context,
     name: Annotated[
@@ -212,7 +204,7 @@ async def central_manage_client_iptracker_interface(
 # ----- devicefingerprinting -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_devicefingerprinting(
     ctx: Context,
     name: str | None = None,
@@ -227,7 +219,7 @@ async def central_get_devicefingerprinting(
     return await _get_resource(ctx, "devicefingerprinting", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_devicefingerprinting(
     ctx: Context,
     name: Annotated[str, Field(description="``devicefingerprinting`` identifier (OpenAPI path param: ``name``).")],
@@ -268,7 +260,7 @@ async def central_manage_devicefingerprinting(
 # ----- devicefingerprinting-interface -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_devicefingerprinting_interface(
     ctx: Context,
     name: str | None = None,
@@ -283,7 +275,7 @@ async def central_get_devicefingerprinting_interface(
     return await _get_resource(ctx, "devicefingerprinting-interface", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_devicefingerprinting_interface(
     ctx: Context,
     name: Annotated[
@@ -326,7 +318,7 @@ async def central_manage_devicefingerprinting_interface(
 # ----- devicefingerprinting-profile -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_devicefingerprinting_profile(
     ctx: Context,
     name: str | None = None,
@@ -341,7 +333,7 @@ async def central_get_devicefingerprinting_profile(
     return await _get_resource(ctx, "devicefingerprinting-profile", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_devicefingerprinting_profile(
     ctx: Context,
     name: Annotated[
@@ -384,7 +376,7 @@ async def central_manage_devicefingerprinting_profile(
 # ----- flow-tracking -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_flow_tracking(
     ctx: Context,
     name: str | None = None,
@@ -399,7 +391,7 @@ async def central_get_flow_tracking(
     return await _get_resource(ctx, "flow-tracking", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_flow_tracking(
     ctx: Context,
     name: Annotated[str, Field(description="``flow-tracking`` identifier (OpenAPI path param: ``name``).")],
@@ -440,7 +432,7 @@ async def central_manage_flow_tracking(
 # ----- ipfix-flow-exporter -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ipfix_flow_exporter(
     ctx: Context,
     name: str | None = None,
@@ -455,7 +447,7 @@ async def central_get_ipfix_flow_exporter(
     return await _get_resource(ctx, "ipfix-flow-exporter", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_ipfix_flow_exporter(
     ctx: Context,
     name: Annotated[str, Field(description="``ipfix-flow-exporter`` identifier (OpenAPI path param: ``name``).")],
@@ -496,7 +488,7 @@ async def central_manage_ipfix_flow_exporter(
 # ----- traffic-insight -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_traffic_insight(
     ctx: Context,
     name: str | None = None,
@@ -511,7 +503,7 @@ async def central_get_traffic_insight(
     return await _get_resource(ctx, "traffic-insight", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_traffic_insight(
     ctx: Context,
     name: Annotated[str, Field(description="``traffic-insight`` identifier (OpenAPI path param: ``name``).")],

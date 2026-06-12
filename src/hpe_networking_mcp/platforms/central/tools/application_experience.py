@@ -19,11 +19,10 @@ helpers used by the hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
@@ -32,17 +31,10 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _manage_resource,
 )
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
 # ----- app-bandwidth-contracts -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_app_bandwidth_contracts(
     ctx: Context,
     name: str | None = None,
@@ -57,7 +49,7 @@ async def central_get_app_bandwidth_contracts(
     return await _get_resource(ctx, "app-bandwidth-contracts", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_app_bandwidth_contracts(
     ctx: Context,
     name: Annotated[str, Field(description="``app-bandwidth-contracts`` identifier (OpenAPI path param: ``name``).")],
@@ -98,7 +90,7 @@ async def central_manage_app_bandwidth_contracts(
 # ----- arc -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_arc(
     ctx: Context,
     name: str | None = None,
@@ -113,7 +105,7 @@ async def central_get_arc(
     return await _get_resource(ctx, "arc", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_arc(
     ctx: Context,
     name: Annotated[str, Field(description="``arc`` identifier (OpenAPI path param: ``name``).")],

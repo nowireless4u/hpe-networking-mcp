@@ -19,11 +19,10 @@ helpers used by the hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
@@ -32,17 +31,10 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _manage_resource,
 )
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
 # ----- ap-port-profiles -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_port_profiles(
     ctx: Context,
     profile_name: str | None = None,
@@ -57,7 +49,7 @@ async def central_get_ap_port_profiles(
     return await _get_resource(ctx, "ap-port-profiles", profile_name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_ap_port_profiles(
     ctx: Context,
     profile_name: Annotated[
@@ -100,7 +92,7 @@ async def central_manage_ap_port_profiles(
 # ----- ap-uplinks -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_uplinks(
     ctx: Context,
     name: str | None = None,
@@ -115,7 +107,7 @@ async def central_get_ap_uplinks(
     return await _get_resource(ctx, "ap-uplinks", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_ap_uplinks(
     ctx: Context,
     name: Annotated[str, Field(description="``ap-uplinks`` identifier (OpenAPI path param: ``name``).")],
@@ -156,7 +148,7 @@ async def central_manage_ap_uplinks(
 # ----- cdp -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_cdp(
     ctx: Context,
     name: str | None = None,
@@ -171,7 +163,7 @@ async def central_get_cdp(
     return await _get_resource(ctx, "cdp", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_cdp(
     ctx: Context,
     name: Annotated[str, Field(description="``cdp`` identifier (OpenAPI path param: ``name``).")],
@@ -212,7 +204,7 @@ async def central_manage_cdp(
 # ----- device-profile -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_device_profile(
     ctx: Context,
     name: str | None = None,
@@ -227,7 +219,7 @@ async def central_get_device_profile(
     return await _get_resource(ctx, "device-profile", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_device_profile(
     ctx: Context,
     name: Annotated[str, Field(description="``device-profile`` identifier (OpenAPI path param: ``name``).")],
@@ -268,7 +260,7 @@ async def central_manage_device_profile(
 # ----- dhcp-client -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_dhcp_client(
     ctx: Context,
     name: str | None = None,
@@ -283,7 +275,7 @@ async def central_get_dhcp_client(
     return await _get_resource(ctx, "dhcp-client", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_dhcp_client(
     ctx: Context,
     name: Annotated[str, Field(description="``dhcp-client`` identifier (OpenAPI path param: ``name``).")],
@@ -324,7 +316,7 @@ async def central_manage_dhcp_client(
 # ----- ethernet-interfaces -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ethernet_interfaces(
     ctx: Context,
     name: str | None = None,
@@ -339,7 +331,7 @@ async def central_get_ethernet_interfaces(
     return await _get_resource(ctx, "ethernet-interfaces", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_ethernet_interfaces(
     ctx: Context,
     name: Annotated[str, Field(description="``ethernet-interfaces`` identifier (OpenAPI path param: ``name``).")],
@@ -380,7 +372,7 @@ async def central_manage_ethernet_interfaces(
 # ----- fault-monitor -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_fault_monitor(
     ctx: Context,
     name: str | None = None,
@@ -395,7 +387,7 @@ async def central_get_fault_monitor(
     return await _get_resource(ctx, "fault-monitor", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_fault_monitor(
     ctx: Context,
     name: Annotated[str, Field(description="``fault-monitor`` identifier (OpenAPI path param: ``name``).")],
@@ -436,7 +428,7 @@ async def central_manage_fault_monitor(
 # ----- gw-port-profiles -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gw_port_profiles(
     ctx: Context,
     profile_name: str | None = None,
@@ -451,7 +443,7 @@ async def central_get_gw_port_profiles(
     return await _get_resource(ctx, "gw-port-profiles", profile_name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_gw_port_profiles(
     ctx: Context,
     profile_name: Annotated[
@@ -494,7 +486,7 @@ async def central_manage_gw_port_profiles(
 # ----- interface-profiles -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_interface_profiles(
     ctx: Context,
     name: str | None = None,
@@ -509,7 +501,7 @@ async def central_get_interface_profiles(
     return await _get_resource(ctx, "interface-profiles", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_interface_profiles(
     ctx: Context,
     name: Annotated[str, Field(description="``interface-profiles`` identifier (OpenAPI path param: ``name``).")],
@@ -550,7 +542,7 @@ async def central_manage_interface_profiles(
 # ----- lacp -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_lacp(
     ctx: Context,
 ) -> dict | list | str:
@@ -561,7 +553,7 @@ async def central_get_lacp(
     return await _get_resource(ctx, "lacp", None)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_lacp(
     ctx: Context,
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
@@ -600,7 +592,7 @@ async def central_manage_lacp(
 # ----- lldp -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_lldp(
     ctx: Context,
     name: str | None = None,
@@ -615,7 +607,7 @@ async def central_get_lldp(
     return await _get_resource(ctx, "lldp", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_lldp(
     ctx: Context,
     name: Annotated[str, Field(description="``lldp`` identifier (OpenAPI path param: ``name``).")],
@@ -656,7 +648,7 @@ async def central_manage_lldp(
 # ----- loopback-interfaces -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_loopback_interfaces(
     ctx: Context,
     id: str | None = None,
@@ -671,7 +663,7 @@ async def central_get_loopback_interfaces(
     return await _get_resource(ctx, "loopback-interfaces", id)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_loopback_interfaces(
     ctx: Context,
     id: Annotated[str, Field(description="``loopback-interfaces`` identifier (OpenAPI path param: ``id``).")],
@@ -712,7 +704,7 @@ async def central_manage_loopback_interfaces(
 # ----- mgmt-interfaces -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_mgmt_interfaces(
     ctx: Context,
     name: str | None = None,
@@ -727,7 +719,7 @@ async def central_get_mgmt_interfaces(
     return await _get_resource(ctx, "mgmt-interfaces", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_mgmt_interfaces(
     ctx: Context,
     name: Annotated[str, Field(description="``mgmt-interfaces`` identifier (OpenAPI path param: ``name``).")],
@@ -768,7 +760,7 @@ async def central_manage_mgmt_interfaces(
 # ----- mirror-endpoint -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_mirror_endpoint(
     ctx: Context,
     name: str | None = None,
@@ -783,7 +775,7 @@ async def central_get_mirror_endpoint(
     return await _get_resource(ctx, "mirror-endpoint", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_mirror_endpoint(
     ctx: Context,
     name: Annotated[str, Field(description="``mirror-endpoint`` identifier (OpenAPI path param: ``name``).")],
@@ -824,7 +816,7 @@ async def central_manage_mirror_endpoint(
 # ----- mirrors -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_mirrors(
     ctx: Context,
     name: str | None = None,
@@ -839,7 +831,7 @@ async def central_get_mirrors(
     return await _get_resource(ctx, "mirrors", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_mirrors(
     ctx: Context,
     name: Annotated[str, Field(description="``mirrors`` identifier (OpenAPI path param: ``name``).")],
@@ -880,7 +872,7 @@ async def central_manage_mirrors(
 # ----- portchannels -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_portchannels(
     ctx: Context,
     name: str | None = None,
@@ -895,7 +887,7 @@ async def central_get_portchannels(
     return await _get_resource(ctx, "portchannels", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_portchannels(
     ctx: Context,
     name: Annotated[str, Field(description="``portchannels`` identifier (OpenAPI path param: ``name``).")],
@@ -936,7 +928,7 @@ async def central_manage_portchannels(
 # ----- sflow -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_sflow(
     ctx: Context,
     name: str | None = None,
@@ -951,7 +943,7 @@ async def central_get_sflow(
     return await _get_resource(ctx, "sflow", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_sflow(
     ctx: Context,
     name: Annotated[str, Field(description="``sflow`` identifier (OpenAPI path param: ``name``).")],
@@ -992,7 +984,7 @@ async def central_manage_sflow(
 # ----- static-macs -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_static_macs(
     ctx: Context,
     name: str | None = None,
@@ -1007,7 +999,7 @@ async def central_get_static_macs(
     return await _get_resource(ctx, "static-macs", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_static_macs(
     ctx: Context,
     name: Annotated[str, Field(description="``static-macs`` identifier (OpenAPI path param: ``name``).")],
@@ -1048,7 +1040,7 @@ async def central_manage_static_macs(
 # ----- sub-interfaces -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_sub_interfaces(
     ctx: Context,
     parent_name_id: str | None = None,
@@ -1063,7 +1055,7 @@ async def central_get_sub_interfaces(
     return await _get_resource(ctx, "sub-interfaces", parent_name_id)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_sub_interfaces(
     ctx: Context,
     parent_name_id: Annotated[
@@ -1106,7 +1098,7 @@ async def central_manage_sub_interfaces(
 # ----- sw-port-profiles -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_sw_port_profiles(
     ctx: Context,
     profile_name: str | None = None,
@@ -1121,7 +1113,7 @@ async def central_get_sw_port_profiles(
     return await _get_resource(ctx, "sw-port-profiles", profile_name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_sw_port_profiles(
     ctx: Context,
     profile_name: Annotated[
@@ -1164,7 +1156,7 @@ async def central_manage_sw_port_profiles(
 # ----- ufd -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ufd(
     ctx: Context,
     name: str | None = None,
@@ -1179,7 +1171,7 @@ async def central_get_ufd(
     return await _get_resource(ctx, "ufd", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_ufd(
     ctx: Context,
     name: Annotated[str, Field(description="``ufd`` identifier (OpenAPI path param: ``name``).")],
@@ -1220,7 +1212,7 @@ async def central_manage_ufd(
 # ----- vlan-interfaces -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_vlan_interfaces(
     ctx: Context,
     id: str | None = None,
@@ -1235,7 +1227,7 @@ async def central_get_vlan_interfaces(
     return await _get_resource(ctx, "vlan-interfaces", id)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_vlan_interfaces(
     ctx: Context,
     id: Annotated[str, Field(description="``vlan-interfaces`` identifier (OpenAPI path param: ``id``).")],

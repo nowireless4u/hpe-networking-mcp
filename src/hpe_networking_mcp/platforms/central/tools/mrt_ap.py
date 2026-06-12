@@ -12,8 +12,8 @@ from typing import Annotated, Literal
 from fastmcp import Context
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import coerce_enum, get_central_conn, retry_central_command
 
 
@@ -47,7 +47,7 @@ def _time_params(start: str | None, end: str | None) -> dict:
 _ApTrendDimension = Literal["throughput", "cpu", "memory", "power"]
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_trend(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
@@ -107,7 +107,7 @@ async def central_get_ap_trend(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_radios(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
@@ -120,7 +120,7 @@ async def central_get_ap_radios(
 _RadioTrendDimension = Literal["throughput", "channel-utilization", "channel-quality", "noise-floor", "frames"]
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_radio_trend(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
@@ -158,7 +158,7 @@ async def central_get_ap_radio_trend(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_ports(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
@@ -171,7 +171,7 @@ async def central_get_ap_ports(
 _PortTrendDimension = Literal["throughput", "frames", "crc", "collisions"]
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_port_trend(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
@@ -203,7 +203,7 @@ async def central_get_ap_port_trend(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_tunnels(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
@@ -213,7 +213,7 @@ async def central_get_ap_tunnels(
     return await _get(conn, f"network-monitoring/v1/aps/{serial_number}/tunnels")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_tunnel(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
@@ -227,7 +227,7 @@ async def central_get_ap_tunnel(
 _TunnelTrendDimension = Literal["throughput", "packet-loss", "mos", "jitter", "latency"]
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_tunnel_trend(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
@@ -265,7 +265,7 @@ async def central_get_ap_tunnel_trend(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_wlans_monitoring(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
@@ -280,7 +280,7 @@ async def central_get_ap_wlans_monitoring(
     return await _get(conn, f"network-monitoring/v1/aps/{serial_number}/wlans")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_wlan_throughput(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
@@ -305,7 +305,7 @@ async def central_get_ap_wlan_throughput(
 _UsageMetric = Literal["wireless", "wired", "usage"]
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_top_aps_by_usage(
     ctx: Context,
     metric: Annotated[
@@ -346,7 +346,7 @@ async def central_get_top_aps_by_usage(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_radios(
     ctx: Context,
     filter: str | None = None,
@@ -361,7 +361,7 @@ async def central_get_radios(
     return await _get(conn, "network-monitoring/v1/radios", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_bssids(
     ctx: Context,
     filter: str | None = None,
@@ -376,7 +376,7 @@ async def central_get_bssids(
     return await _get(conn, "network-monitoring/v1/bssids", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_wlans_monitoring(
     ctx: Context,
     filter: str | None = None,
@@ -396,7 +396,7 @@ async def central_get_wlans_monitoring(
     return await _get(conn, "network-monitoring/v1/wlans", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_wlan_monitoring_detail(
     ctx: Context,
     wlan_name: Annotated[str, Field(description="WLAN / SSID name.")],
@@ -406,7 +406,7 @@ async def central_get_wlan_monitoring_detail(
     return await _get(conn, f"network-monitoring/v1/wlans/{wlan_name}")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_swarms(
     ctx: Context,
     filter: str | None = None,
@@ -421,7 +421,7 @@ async def central_get_swarms(
     return await _get(conn, "network-monitoring/v1/swarms", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_swarm(
     ctx: Context,
     cluster_id: Annotated[str, Field(description="Swarm / cluster identifier.")],
@@ -431,7 +431,7 @@ async def central_get_swarm(
     return await _get(conn, f"network-monitoring/v1/swarms/{cluster_id}")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_applications_v1(
     ctx: Context,
     filter: str | None = None,

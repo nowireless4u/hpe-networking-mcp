@@ -19,11 +19,10 @@ helpers used by the hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
@@ -32,17 +31,10 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _manage_resource,
 )
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
 # ----- aaa-profile -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_aaa_profile(
     ctx: Context,
     name: str | None = None,
@@ -57,7 +49,7 @@ async def central_get_aaa_profile(
     return await _get_resource(ctx, "aaa-profile", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_aaa_profile(
     ctx: Context,
     name: Annotated[str, Field(description="``aaa-profile`` identifier (OpenAPI path param: ``name``).")],
@@ -98,7 +90,7 @@ async def central_manage_aaa_profile(
 # ----- auth-server-global-config -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_auth_server_global_config(
     ctx: Context,
     name: str | None = None,
@@ -113,7 +105,7 @@ async def central_get_auth_server_global_config(
     return await _get_resource(ctx, "auth-server-global-config", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_auth_server_global_config(
     ctx: Context,
     name: Annotated[str, Field(description="``auth-server-global-config`` identifier (OpenAPI path param: ``name``).")],
@@ -154,7 +146,7 @@ async def central_manage_auth_server_global_config(
 # ----- auth-servers -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_auth_servers(
     ctx: Context,
     name: str | None = None,
@@ -169,7 +161,7 @@ async def central_get_auth_servers(
     return await _get_resource(ctx, "auth-servers", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_auth_servers(
     ctx: Context,
     name: Annotated[str, Field(description="``auth-servers`` identifier (OpenAPI path param: ``name``).")],
@@ -210,7 +202,7 @@ async def central_manage_auth_servers(
 # ----- auth-survivability -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_auth_survivability(
     ctx: Context,
     name: str | None = None,
@@ -225,7 +217,7 @@ async def central_get_auth_survivability(
     return await _get_resource(ctx, "auth-survivability", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_auth_survivability(
     ctx: Context,
     name: Annotated[str, Field(description="``auth-survivability`` identifier (OpenAPI path param: ``name``).")],
@@ -266,7 +258,7 @@ async def central_manage_auth_survivability(
 # ----- bcn-rpt-req-profiles -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_bcn_rpt_req_profiles(
     ctx: Context,
     name: str | None = None,
@@ -281,7 +273,7 @@ async def central_get_bcn_rpt_req_profiles(
     return await _get_resource(ctx, "bcn-rpt-req-profiles", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_bcn_rpt_req_profiles(
     ctx: Context,
     name: Annotated[str, Field(description="``bcn-rpt-req-profiles`` identifier (OpenAPI path param: ``name``).")],
@@ -322,7 +314,7 @@ async def central_manage_bcn_rpt_req_profiles(
 # ----- captive-portal -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_captive_portal(
     ctx: Context,
     name: str | None = None,
@@ -337,7 +329,7 @@ async def central_get_captive_portal(
     return await _get_resource(ctx, "captive-portal", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_captive_portal(
     ctx: Context,
     name: Annotated[str, Field(description="``captive-portal`` identifier (OpenAPI path param: ``name``).")],
@@ -378,7 +370,7 @@ async def central_manage_captive_portal(
 # ----- certificate-rcp -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_certificate_rcp(
     ctx: Context,
     name: str | None = None,
@@ -393,7 +385,7 @@ async def central_get_certificate_rcp(
     return await _get_resource(ctx, "certificate-rcp", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_certificate_rcp(
     ctx: Context,
     name: Annotated[str, Field(description="``certificate-rcp`` identifier (OpenAPI path param: ``name``).")],
@@ -434,7 +426,7 @@ async def central_manage_certificate_rcp(
 # ----- certificate-store -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_certificate_store(
     ctx: Context,
     name: str | None = None,
@@ -449,7 +441,7 @@ async def central_get_certificate_store(
     return await _get_resource(ctx, "certificate-store", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_certificate_store(
     ctx: Context,
     name: Annotated[str, Field(description="``certificate-store`` identifier (OpenAPI path param: ``name``).")],
@@ -490,7 +482,7 @@ async def central_manage_certificate_store(
 # ----- certificate-usage -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_certificate_usage(
     ctx: Context,
     name: str | None = None,
@@ -505,7 +497,7 @@ async def central_get_certificate_usage(
     return await _get_resource(ctx, "certificate-usage", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_certificate_usage(
     ctx: Context,
     name: Annotated[str, Field(description="``certificate-usage`` identifier (OpenAPI path param: ``name``).")],
@@ -546,7 +538,7 @@ async def central_manage_certificate_usage(
 # ----- certificates -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_certificates(
     ctx: Context,
     name: str | None = None,
@@ -561,7 +553,7 @@ async def central_get_certificates(
     return await _get_resource(ctx, "certificates", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_certificates(
     ctx: Context,
     name: Annotated[str, Field(description="``certificates`` identifier (OpenAPI path param: ``name``).")],
@@ -602,7 +594,7 @@ async def central_manage_certificates(
 # ----- copp -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_copp(
     ctx: Context,
     name: str | None = None,
@@ -617,7 +609,7 @@ async def central_get_copp(
     return await _get_resource(ctx, "copp", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_copp(
     ctx: Context,
     name: Annotated[str, Field(description="``copp`` identifier (OpenAPI path param: ``name``).")],
@@ -658,7 +650,7 @@ async def central_manage_copp(
 # ----- device-certificates -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_device_certificates(
     ctx: Context,
     name: str | None = None,
@@ -673,7 +665,7 @@ async def central_get_device_certificates(
     return await _get_resource(ctx, "device-certificates", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_device_certificates(
     ctx: Context,
     name: Annotated[str, Field(description="``device-certificates`` identifier (OpenAPI path param: ``name``).")],
@@ -714,7 +706,7 @@ async def central_manage_device_certificates(
 # ----- dot11k-profiles -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_dot11k_profiles(
     ctx: Context,
     name: str | None = None,
@@ -729,7 +721,7 @@ async def central_get_dot11k_profiles(
     return await _get_resource(ctx, "dot11k-profiles", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_dot11k_profiles(
     ctx: Context,
     name: Annotated[str, Field(description="``dot11k-profiles`` identifier (OpenAPI path param: ``name``).")],
@@ -770,7 +762,7 @@ async def central_manage_dot11k_profiles(
 # ----- dot1xauth -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_dot1xauth(
     ctx: Context,
     name: str | None = None,
@@ -785,7 +777,7 @@ async def central_get_dot1xauth(
     return await _get_resource(ctx, "dot1xauth", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_dot1xauth(
     ctx: Context,
     name: Annotated[str, Field(description="``dot1xauth`` identifier (OpenAPI path param: ``name``).")],
@@ -826,7 +818,7 @@ async def central_manage_dot1xauth(
 # ----- dot1xsupp -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_dot1xsupp(
     ctx: Context,
     name: str | None = None,
@@ -841,7 +833,7 @@ async def central_get_dot1xsupp(
     return await _get_resource(ctx, "dot1xsupp", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_dot1xsupp(
     ctx: Context,
     name: Annotated[str, Field(description="``dot1xsupp`` identifier (OpenAPI path param: ``name``).")],
@@ -882,7 +874,7 @@ async def central_manage_dot1xsupp(
 # ----- est-profiles -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_est_profiles(
     ctx: Context,
     name: str | None = None,
@@ -897,7 +889,7 @@ async def central_get_est_profiles(
     return await _get_resource(ctx, "est-profiles", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_est_profiles(
     ctx: Context,
     name: Annotated[str, Field(description="``est-profiles`` identifier (OpenAPI path param: ``name``).")],
@@ -938,7 +930,7 @@ async def central_manage_est_profiles(
 # ----- firewall -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_firewall(
     ctx: Context,
     name: str | None = None,
@@ -953,7 +945,7 @@ async def central_get_firewall(
     return await _get_resource(ctx, "firewall", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_firewall(
     ctx: Context,
     name: Annotated[str, Field(description="``firewall`` identifier (OpenAPI path param: ``name``).")],
@@ -994,7 +986,7 @@ async def central_manage_firewall(
 # ----- gw-certificate-usage -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gw_certificate_usage(
     ctx: Context,
     name: str | None = None,
@@ -1009,7 +1001,7 @@ async def central_get_gw_certificate_usage(
     return await _get_resource(ctx, "gw-certificate-usage", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_gw_certificate_usage(
     ctx: Context,
     name: Annotated[str, Field(description="``gw-certificate-usage`` identifier (OpenAPI path param: ``name``).")],
@@ -1050,7 +1042,7 @@ async def central_manage_gw_certificate_usage(
 # ----- internal-user -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_internal_user(
     ctx: Context,
     name: str | None = None,
@@ -1065,7 +1057,7 @@ async def central_get_internal_user(
     return await _get_resource(ctx, "internal-user", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_internal_user(
     ctx: Context,
     name: Annotated[str, Field(description="``internal-user`` identifier (OpenAPI path param: ``name``).")],
@@ -1106,7 +1098,7 @@ async def central_manage_internal_user(
 # ----- keychains -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_keychains(
     ctx: Context,
     name: str | None = None,
@@ -1121,7 +1113,7 @@ async def central_get_keychains(
     return await _get_resource(ctx, "keychains", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_keychains(
     ctx: Context,
     name: Annotated[str, Field(description="``keychains`` identifier (OpenAPI path param: ``name``).")],
@@ -1162,7 +1154,7 @@ async def central_manage_keychains(
 # ----- mac-lockout -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_mac_lockout(
     ctx: Context,
     name: str | None = None,
@@ -1177,7 +1169,7 @@ async def central_get_mac_lockout(
     return await _get_resource(ctx, "mac-lockout", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_mac_lockout(
     ctx: Context,
     name: Annotated[str, Field(description="``mac-lockout`` identifier (OpenAPI path param: ``name``).")],
@@ -1218,7 +1210,7 @@ async def central_manage_mac_lockout(
 # ----- macauth -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_macauth(
     ctx: Context,
     name: str | None = None,
@@ -1233,7 +1225,7 @@ async def central_get_macauth(
     return await _get_resource(ctx, "macauth", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_macauth(
     ctx: Context,
     name: Annotated[str, Field(description="``macauth`` identifier (OpenAPI path param: ``name``).")],
@@ -1274,7 +1266,7 @@ async def central_manage_macauth(
 # ----- macsec -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_macsec(
     ctx: Context,
     name: str | None = None,
@@ -1289,7 +1281,7 @@ async def central_get_macsec(
     return await _get_resource(ctx, "macsec", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_macsec(
     ctx: Context,
     name: Annotated[str, Field(description="``macsec`` identifier (OpenAPI path param: ``name``).")],
@@ -1330,7 +1322,7 @@ async def central_manage_macsec(
 # ----- mka -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_mka(
     ctx: Context,
     name: str | None = None,
@@ -1345,7 +1337,7 @@ async def central_get_mka(
     return await _get_resource(ctx, "mka", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_mka(
     ctx: Context,
     name: Annotated[str, Field(description="``mka`` identifier (OpenAPI path param: ``name``).")],
@@ -1386,7 +1378,7 @@ async def central_manage_mka(
 # ----- net-groups -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_net_groups(
     ctx: Context,
     name: str | None = None,
@@ -1401,7 +1393,7 @@ async def central_get_net_groups(
     return await _get_resource(ctx, "net-groups", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_net_groups(
     ctx: Context,
     name: Annotated[str, Field(description="``net-groups`` identifier (OpenAPI path param: ``name``).")],
@@ -1442,7 +1434,7 @@ async def central_manage_net_groups(
 # ----- passpoint-identity -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_passpoint_identity(
     ctx: Context,
     name: str | None = None,
@@ -1457,7 +1449,7 @@ async def central_get_passpoint_identity(
     return await _get_resource(ctx, "passpoint-identity", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_passpoint_identity(
     ctx: Context,
     name: Annotated[str, Field(description="``passpoint-identity`` identifier (OpenAPI path param: ``name``).")],
@@ -1498,7 +1490,7 @@ async def central_manage_passpoint_identity(
 # ----- port-security -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_port_security(
     ctx: Context,
     name: str | None = None,
@@ -1513,7 +1505,7 @@ async def central_get_port_security(
     return await _get_resource(ctx, "port-security", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_port_security(
     ctx: Context,
     name: Annotated[str, Field(description="``port-security`` identifier (OpenAPI path param: ``name``).")],
@@ -1554,7 +1546,7 @@ async def central_manage_port_security(
 # ----- radius-modifiers -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_radius_modifiers(
     ctx: Context,
     name: str | None = None,
@@ -1569,7 +1561,7 @@ async def central_get_radius_modifiers(
     return await _get_resource(ctx, "radius-modifiers", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_radius_modifiers(
     ctx: Context,
     name: Annotated[str, Field(description="``radius-modifiers`` identifier (OpenAPI path param: ``name``).")],
@@ -1610,7 +1602,7 @@ async def central_manage_radius_modifiers(
 # ----- rrm-ie-profiles -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_rrm_ie_profiles(
     ctx: Context,
     name: str | None = None,
@@ -1625,7 +1617,7 @@ async def central_get_rrm_ie_profiles(
     return await _get_resource(ctx, "rrm-ie-profiles", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_rrm_ie_profiles(
     ctx: Context,
     name: Annotated[str, Field(description="``rrm-ie-profiles`` identifier (OpenAPI path param: ``name``).")],
@@ -1666,7 +1658,7 @@ async def central_manage_rrm_ie_profiles(
 # ----- server-groups -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_server_groups(
     ctx: Context,
     name: str | None = None,
@@ -1681,7 +1673,7 @@ async def central_get_server_groups(
     return await _get_resource(ctx, "server-groups", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_server_groups(
     ctx: Context,
     name: Annotated[str, Field(description="``server-groups`` identifier (OpenAPI path param: ``name``).")],
@@ -1722,7 +1714,7 @@ async def central_manage_server_groups(
 # ----- stateful-dot1x-profiles -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_stateful_dot1x_profiles(
     ctx: Context,
     name: str | None = None,
@@ -1737,7 +1729,7 @@ async def central_get_stateful_dot1x_profiles(
     return await _get_resource(ctx, "stateful-dot1x-profiles", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_stateful_dot1x_profiles(
     ctx: Context,
     name: Annotated[str, Field(description="``stateful-dot1x-profiles`` identifier (OpenAPI path param: ``name``).")],
@@ -1778,7 +1770,7 @@ async def central_manage_stateful_dot1x_profiles(
 # ----- ubt -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ubt(
     ctx: Context,
     name: str | None = None,
@@ -1793,7 +1785,7 @@ async def central_get_ubt(
     return await _get_resource(ctx, "ubt", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_ubt(
     ctx: Context,
     name: Annotated[str, Field(description="``ubt`` identifier (OpenAPI path param: ``name``).")],

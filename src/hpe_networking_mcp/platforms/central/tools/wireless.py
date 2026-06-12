@@ -19,11 +19,10 @@ helpers used by the hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
@@ -32,17 +31,10 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _manage_resource,
 )
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
 # ----- alg -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_alg(
     ctx: Context,
     name: str | None = None,
@@ -57,7 +49,7 @@ async def central_get_alg(
     return await _get_resource(ctx, "alg", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_alg(
     ctx: Context,
     name: Annotated[str, Field(description="``alg`` identifier (OpenAPI path param: ``name``).")],
@@ -98,7 +90,7 @@ async def central_manage_alg(
 # ----- ids -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ids(
     ctx: Context,
     name: str | None = None,
@@ -113,7 +105,7 @@ async def central_get_ids(
     return await _get_resource(ctx, "ids", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_ids(
     ctx: Context,
     name: Annotated[str, Field(description="``ids`` identifier (OpenAPI path param: ``name``).")],
@@ -154,7 +146,7 @@ async def central_manage_ids(
 # ----- mesh -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_mesh(
     ctx: Context,
     name: str | None = None,
@@ -169,7 +161,7 @@ async def central_get_mesh(
     return await _get_resource(ctx, "mesh", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_mesh(
     ctx: Context,
     name: Annotated[str, Field(description="``mesh`` identifier (OpenAPI path param: ``name``).")],
@@ -210,7 +202,7 @@ async def central_manage_mesh(
 # ----- mpsk-local -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_mpsk_local(
     ctx: Context,
     name: str | None = None,
@@ -225,7 +217,7 @@ async def central_get_mpsk_local(
     return await _get_resource(ctx, "mpsk-local", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_mpsk_local(
     ctx: Context,
     name: Annotated[str, Field(description="``mpsk-local`` identifier (OpenAPI path param: ``name``).")],
@@ -266,7 +258,7 @@ async def central_manage_mpsk_local(
 # ----- passpoint -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_passpoint(
     ctx: Context,
     name: str | None = None,
@@ -281,7 +273,7 @@ async def central_get_passpoint(
     return await _get_resource(ctx, "passpoint", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_passpoint(
     ctx: Context,
     name: Annotated[str, Field(description="``passpoint`` identifier (OpenAPI path param: ``name``).")],
@@ -322,7 +314,7 @@ async def central_manage_passpoint(
 # ----- radio -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_radio(
     ctx: Context,
     name: str | None = None,
@@ -337,7 +329,7 @@ async def central_get_radio(
     return await _get_resource(ctx, "radios", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_radio(
     ctx: Context,
     name: Annotated[str, Field(description="``radio`` identifier (OpenAPI path param: ``name``).")],

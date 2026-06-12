@@ -3,13 +3,13 @@ from typing import Literal
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.models import (
     Event,
     EventFilters,
     PaginatedEvents,
 )
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import (
     clean_event_filters,
     compute_time_window,
@@ -53,7 +53,7 @@ def _resolve_time_window(
     return fmt(start_dt), fmt(end_dt)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_events(
     ctx: Context,
     context_type: CONTEXT_TYPE,
@@ -134,7 +134,7 @@ async def central_get_events(
     )
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_events_count(
     ctx: Context,
     context_type: CONTEXT_TYPE,

@@ -3,9 +3,9 @@ from typing import Literal
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import (
     FilterField,
     as_comma_separated,
@@ -30,7 +30,7 @@ _AP_FILTER_FIELDS: dict[str, FilterField] = {
 }
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_aps(
     ctx: Context,
     site_id: str | None = None,
@@ -93,7 +93,7 @@ async def central_get_aps(
     return aps or []
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_wlans(
     ctx: Context,
     serial_number: str,
@@ -128,7 +128,7 @@ async def central_get_ap_wlans(
     return items
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_details(
     ctx: Context,
     serial_number: str,
@@ -158,7 +158,7 @@ async def central_get_ap_details(
     return resp
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_switch_details(
     ctx: Context,
     serial_number: str,
@@ -242,7 +242,7 @@ async def central_get_switch_details(
     return result
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_details(
     ctx: Context,
     serial_number: str,

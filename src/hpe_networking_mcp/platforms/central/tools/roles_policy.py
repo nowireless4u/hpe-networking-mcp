@@ -19,11 +19,10 @@ helpers used by the hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
@@ -32,17 +31,10 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _manage_resource,
 )
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
 # ----- object-groups -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_object_groups(
     ctx: Context,
     name: str | None = None,
@@ -57,7 +49,7 @@ async def central_get_object_groups(
     return await _get_resource(ctx, "object-groups", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_object_groups(
     ctx: Context,
     name: Annotated[str, Field(description="``object-groups`` identifier (OpenAPI path param: ``name``).")],
@@ -98,7 +90,7 @@ async def central_manage_object_groups(
 # ----- policies -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_policies(
     ctx: Context,
     name: str | None = None,
@@ -113,7 +105,7 @@ async def central_get_policies(
     return await _get_resource(ctx, "policies", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_policies(
     ctx: Context,
     name: Annotated[str, Field(description="``policies`` identifier (OpenAPI path param: ``name``).")],
@@ -154,7 +146,7 @@ async def central_manage_policies(
 # ----- policy-group-list -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_policy_group_list(
     ctx: Context,
     name: str | None = None,
@@ -169,7 +161,7 @@ async def central_get_policy_group_list(
     return await _get_resource(ctx, "policy-groups/policy-group/policy-group-list", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_policy_group_list(
     ctx: Context,
     name: Annotated[str, Field(description="``policy-group-list`` identifier (OpenAPI path param: ``name``).")],
@@ -210,7 +202,7 @@ async def central_manage_policy_group_list(
 # ----- policy-groups -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_policy_groups(
     ctx: Context,
 ) -> dict | list | str:
@@ -221,7 +213,7 @@ async def central_get_policy_groups(
     return await _get_resource(ctx, "policy-groups", None)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_policy_groups(
     ctx: Context,
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
@@ -260,7 +252,7 @@ async def central_manage_policy_groups(
 # ----- role-acls -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_role_acls(
     ctx: Context,
     name: str | None = None,
@@ -275,7 +267,7 @@ async def central_get_role_acls(
     return await _get_resource(ctx, "role-acls", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_role_acls(
     ctx: Context,
     name: Annotated[str, Field(description="``role-acls`` identifier (OpenAPI path param: ``name``).")],
@@ -316,7 +308,7 @@ async def central_manage_role_acls(
 # ----- role-gpids -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_role_gpids(
     ctx: Context,
     name: str | None = None,
@@ -331,7 +323,7 @@ async def central_get_role_gpids(
     return await _get_resource(ctx, "role-gpids", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_role_gpids(
     ctx: Context,
     name: Annotated[str, Field(description="``role-gpids`` identifier (OpenAPI path param: ``name``).")],
@@ -372,7 +364,7 @@ async def central_manage_role_gpids(
 # ----- roles -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_roles(
     ctx: Context,
     name: str | None = None,
@@ -387,7 +379,7 @@ async def central_get_roles(
     return await _get_resource(ctx, "roles", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_roles(
     ctx: Context,
     name: Annotated[str, Field(description="``roles`` identifier (OpenAPI path param: ``name``).")],

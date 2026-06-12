@@ -19,11 +19,10 @@ helpers used by the hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
@@ -32,17 +31,10 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _manage_resource,
 )
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
 # ----- erps -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_erps(
     ctx: Context,
     name: str | None = None,
@@ -57,7 +49,7 @@ async def central_get_erps(
     return await _get_resource(ctx, "erps", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_erps(
     ctx: Context,
     name: Annotated[str, Field(description="``erps`` identifier (OpenAPI path param: ``name``).")],
@@ -98,7 +90,7 @@ async def central_manage_erps(
 # ----- layer2-vlan -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_layer2_vlan(
     ctx: Context,
     vlan: str | None = None,
@@ -113,7 +105,7 @@ async def central_get_layer2_vlan(
     return await _get_resource(ctx, "layer2-vlan", vlan)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_layer2_vlan(
     ctx: Context,
     vlan: Annotated[str, Field(description="``layer2-vlan`` identifier (OpenAPI path param: ``vlan``).")],
@@ -154,7 +146,7 @@ async def central_manage_layer2_vlan(
 # ----- layer2-vlan-range -----
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_layer2_vlan_range(
     ctx: Context,
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
@@ -193,7 +185,7 @@ async def central_manage_layer2_vlan_range(
 # ----- loop-protect -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_loop_protect(
     ctx: Context,
     name: str | None = None,
@@ -208,7 +200,7 @@ async def central_get_loop_protect(
     return await _get_resource(ctx, "loop-protect", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_loop_protect(
     ctx: Context,
     name: Annotated[str, Field(description="``loop-protect`` identifier (OpenAPI path param: ``name``).")],
@@ -249,7 +241,7 @@ async def central_manage_loop_protect(
 # ----- mvrp -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_mvrp(
     ctx: Context,
     name: str | None = None,
@@ -264,7 +256,7 @@ async def central_get_mvrp(
     return await _get_resource(ctx, "mvrp", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_mvrp(
     ctx: Context,
     name: Annotated[str, Field(description="``mvrp`` identifier (OpenAPI path param: ``name``).")],
@@ -305,7 +297,7 @@ async def central_manage_mvrp(
 # ----- named-vlan -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_named_vlan(
     ctx: Context,
     name: str | None = None,
@@ -320,7 +312,7 @@ async def central_get_named_vlan(
     return await _get_resource(ctx, "named-vlan", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_named_vlan(
     ctx: Context,
     name: Annotated[str, Field(description="``named-vlan`` identifier (OpenAPI path param: ``name``).")],
@@ -361,7 +353,7 @@ async def central_manage_named_vlan(
 # ----- smartlink -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_smartlink(
     ctx: Context,
     name: str | None = None,
@@ -376,7 +368,7 @@ async def central_get_smartlink(
     return await _get_resource(ctx, "smartlink", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_smartlink(
     ctx: Context,
     name: Annotated[str, Field(description="``smartlink`` identifier (OpenAPI path param: ``name``).")],
@@ -417,7 +409,7 @@ async def central_manage_smartlink(
 # ----- static-neighbor -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_static_neighbor(
     ctx: Context,
     name: str | None = None,
@@ -432,7 +424,7 @@ async def central_get_static_neighbor(
     return await _get_resource(ctx, "static-neighbor", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_static_neighbor(
     ctx: Context,
     name: Annotated[str, Field(description="``static-neighbor`` identifier (OpenAPI path param: ``name``).")],
@@ -473,7 +465,7 @@ async def central_manage_static_neighbor(
 # ----- stp -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_stp(
     ctx: Context,
     name: str | None = None,
@@ -488,7 +480,7 @@ async def central_get_stp(
     return await _get_resource(ctx, "stp", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_stp(
     ctx: Context,
     name: Annotated[str, Field(description="``stp`` identifier (OpenAPI path param: ``name``).")],
@@ -529,7 +521,7 @@ async def central_manage_stp(
 # ----- stp-gw -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_stp_gw(
     ctx: Context,
     name: str | None = None,
@@ -544,7 +536,7 @@ async def central_get_stp_gw(
     return await _get_resource(ctx, "stp-gw", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_stp_gw(
     ctx: Context,
     name: Annotated[str, Field(description="``stp-gw`` identifier (OpenAPI path param: ``name``).")],
@@ -585,7 +577,7 @@ async def central_manage_stp_gw(
 # ----- vrrp -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_vrrp(
     ctx: Context,
     name: str | None = None,
@@ -600,7 +592,7 @@ async def central_get_vrrp(
     return await _get_resource(ctx, "vrrp", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_vrrp(
     ctx: Context,
     name: Annotated[str, Field(description="``vrrp`` identifier (OpenAPI path param: ``name``).")],
@@ -641,7 +633,7 @@ async def central_manage_vrrp(
 # ----- vrrp-global -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_vrrp_global(
     ctx: Context,
     name: str | None = None,
@@ -656,7 +648,7 @@ async def central_get_vrrp_global(
     return await _get_resource(ctx, "vrrp-global", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_vrrp_global(
     ctx: Context,
     name: Annotated[str, Field(description="``vrrp-global`` identifier (OpenAPI path param: ``name``).")],

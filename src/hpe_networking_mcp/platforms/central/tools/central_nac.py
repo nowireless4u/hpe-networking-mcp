@@ -19,11 +19,10 @@ helpers used by the hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
@@ -32,17 +31,10 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _manage_resource,
 )
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
 # ----- airpass-approval -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_airpass_approval(
     ctx: Context,
     name: str | None = None,
@@ -60,7 +52,7 @@ async def central_get_airpass_approval(
 # ----- auth-profiles -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_auth_profiles(
     ctx: Context,
     auth_profile_id: str | None = None,
@@ -75,7 +67,7 @@ async def central_get_auth_profiles(
     return await _get_resource(ctx, "auth-profiles", auth_profile_id)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_auth_profiles(
     ctx: Context,
     auth_profile_id: Annotated[
@@ -118,7 +110,7 @@ async def central_manage_auth_profiles(
 # ----- authz-policies -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_authz_policies(
     ctx: Context,
     policy_id: str | None = None,
@@ -133,7 +125,7 @@ async def central_get_authz_policies(
     return await _get_resource(ctx, "authz-policies", policy_id)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_authz_policies(
     ctx: Context,
     policy_id: Annotated[str, Field(description="``authz-policies`` identifier (OpenAPI path param: ``policy-id``).")],
@@ -174,7 +166,7 @@ async def central_manage_authz_policies(
 # ----- custom-messages -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_custom_messages(
     ctx: Context,
     message_id: str | None = None,
@@ -189,7 +181,7 @@ async def central_get_custom_messages(
     return await _get_resource(ctx, "custom-messages", message_id)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_custom_messages(
     ctx: Context,
     message_id: Annotated[
@@ -232,7 +224,7 @@ async def central_manage_custom_messages(
 # ----- default-custom-messages -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_default_custom_messages(
     ctx: Context,
     message_id: str | None = None,
@@ -247,7 +239,7 @@ async def central_get_default_custom_messages(
     return await _get_resource(ctx, "default-custom-messages", message_id)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_default_custom_messages(
     ctx: Context,
     message_id: Annotated[
@@ -290,7 +282,7 @@ async def central_manage_default_custom_messages(
 # ----- identity-stores -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_identity_stores(
     ctx: Context,
     id: str | None = None,
@@ -305,7 +297,7 @@ async def central_get_identity_stores(
     return await _get_resource(ctx, "identity-stores", id)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_identity_stores(
     ctx: Context,
     id: Annotated[str, Field(description="``identity-stores`` identifier (OpenAPI path param: ``id``).")],
@@ -346,7 +338,7 @@ async def central_manage_identity_stores(
 # ----- message-providers -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_message_providers(
     ctx: Context,
     provider_id: str | None = None,
@@ -361,7 +353,7 @@ async def central_get_message_providers(
     return await _get_resource(ctx, "message-providers", provider_id)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_message_providers(
     ctx: Context,
     provider_id: Annotated[
@@ -404,7 +396,7 @@ async def central_manage_message_providers(
 # ----- overrides -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_overrides(
     ctx: Context,
     override_id: str | None = None,
@@ -419,7 +411,7 @@ async def central_get_overrides(
     return await _get_resource(ctx, "overrides", override_id)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_overrides(
     ctx: Context,
     override_id: Annotated[str, Field(description="``overrides`` identifier (OpenAPI path param: ``override-id``).")],
@@ -460,7 +452,7 @@ async def central_manage_overrides(
 # ----- portals -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_portals(
     ctx: Context,
     portal_id: str | None = None,
@@ -475,7 +467,7 @@ async def central_get_portals(
     return await _get_resource(ctx, "portals", portal_id)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_portals(
     ctx: Context,
     portal_id: Annotated[str, Field(description="``portals`` identifier (OpenAPI path param: ``portal-id``).")],
@@ -516,7 +508,7 @@ async def central_manage_portals(
 # ----- skins -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_skins(
     ctx: Context,
     skin_id: str | None = None,
@@ -531,7 +523,7 @@ async def central_get_skins(
     return await _get_resource(ctx, "skins", skin_id)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_skins(
     ctx: Context,
     skin_id: Annotated[str, Field(description="``skins`` identifier (OpenAPI path param: ``skin-id``).")],
@@ -572,7 +564,7 @@ async def central_manage_skins(
 # ----- static-tag -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_static_tag(
     ctx: Context,
     tag_id: str | None = None,
@@ -587,7 +579,7 @@ async def central_get_static_tag(
     return await _get_resource(ctx, "static-tag", tag_id)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_static_tag(
     ctx: Context,
     tag_id: Annotated[str, Field(description="``static-tag`` identifier (OpenAPI path param: ``tag-id``).")],

@@ -9,19 +9,11 @@ write surface.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
-
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
 
 
 async def _call(conn, method: str, path: str, params: dict | None = None, data: dict | None = None) -> dict | str:
@@ -38,7 +30,7 @@ async def _call(conn, method: str, path: str, params: dict | None = None, data: 
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_topology(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -48,7 +40,7 @@ async def central_get_topology(
     return await _call(conn, "GET", f"network-monitoring/v1/topology/{site_id}")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_neighbours(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Device serial number.")],
@@ -58,7 +50,7 @@ async def central_get_neighbours(
     return await _call(conn, "GET", f"network-monitoring/v1/neighbours/{serial_number}")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_unmanaged_device(
     ctx: Context,
     mac_address: Annotated[str, Field(description="MAC address of the unmanaged device.")],
@@ -68,7 +60,7 @@ async def central_get_unmanaged_device(
     return await _call(conn, "GET", f"network-monitoring/v1/unmanaged-device/{mac_address}")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_isolated_devices(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -78,7 +70,7 @@ async def central_get_isolated_devices(
     return await _call(conn, "GET", f"network-monitoring/v1/isolated-devices/{site_id}")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_device_inventory(
     ctx: Context,
     filter: str | None = None,
@@ -98,7 +90,7 @@ async def central_get_device_inventory(
     return await _call(conn, "GET", "network-monitoring/v1/device-inventory", params=params)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_update_device(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Device serial number to update.")],
@@ -125,7 +117,7 @@ async def central_update_device(
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_delete_device(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Device serial number to delete from the inventory.")],

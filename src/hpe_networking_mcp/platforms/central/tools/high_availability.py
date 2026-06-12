@@ -19,11 +19,10 @@ helpers used by the hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
@@ -32,17 +31,10 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _manage_resource,
 )
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
 # ----- gateway-clusters -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_clusters(
     ctx: Context,
     name: str | None = None,
@@ -57,7 +49,7 @@ async def central_get_gateway_clusters(
     return await _get_resource(ctx, "gateway-clusters", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_gateway_clusters(
     ctx: Context,
     name: Annotated[str, Field(description="``gateway-clusters`` identifier (OpenAPI path param: ``name``).")],
@@ -98,7 +90,7 @@ async def central_manage_gateway_clusters(
 # ----- stacks -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_stacks(
     ctx: Context,
     name: str | None = None,
@@ -113,7 +105,7 @@ async def central_get_stacks(
     return await _get_resource(ctx, "stacks", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_stacks(
     ctx: Context,
     name: Annotated[str, Field(description="``stacks`` identifier (OpenAPI path param: ``name``).")],
@@ -154,7 +146,7 @@ async def central_manage_stacks(
 # ----- vsf-templates -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_vsf_templates(
     ctx: Context,
     name: str | None = None,
@@ -169,7 +161,7 @@ async def central_get_vsf_templates(
     return await _get_resource(ctx, "vsf-templates", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_vsf_templates(
     ctx: Context,
     name: Annotated[str, Field(description="``vsf-templates`` identifier (OpenAPI path param: ``name``).")],
@@ -210,7 +202,7 @@ async def central_manage_vsf_templates(
 # ----- vsx-profiles -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_vsx_profiles(
     ctx: Context,
     name: str | None = None,
@@ -225,7 +217,7 @@ async def central_get_vsx_profiles(
     return await _get_resource(ctx, "vsx-profiles", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_vsx_profiles(
     ctx: Context,
     name: Annotated[str, Field(description="``vsx-profiles`` identifier (OpenAPI path param: ``name``).")],

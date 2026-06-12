@@ -2,18 +2,11 @@ from typing import Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
-from mcp.types import ToolAnnotations
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.utils import get_central_conn
-
-OPERATIONAL = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=False,
-    idempotentHint=True,
-    openWorldHint=True,
-)
 
 
 async def _resolve_switch_id(conn, serial_number: str) -> str:
@@ -46,7 +39,7 @@ async def _resolve_switch_id(conn, serial_number: str) -> str:
 # ── Disconnect Tools ─────────────────────────────────────────────
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_disconnect_users_ssid(
     ctx: Context,
     serial_number: str,
@@ -82,7 +75,7 @@ async def central_disconnect_users_ssid(
     return resp
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_disconnect_users_ap(
     ctx: Context,
     serial_number: str,
@@ -114,7 +107,7 @@ async def central_disconnect_users_ap(
     return resp
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_disconnect_client_switch(
     ctx: Context,
     serial_number: str,
@@ -151,7 +144,7 @@ async def central_disconnect_client_switch(
     return resp
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_disconnect_client_gateway(
     ctx: Context,
     serial_number: str,
@@ -184,7 +177,7 @@ async def central_disconnect_client_gateway(
     return resp
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_disconnect_clients_gateway(
     ctx: Context,
     serial_number: str,
@@ -265,7 +258,7 @@ async def _get_switch_ports(conn, serial_number: str) -> dict:
 # ── Port / PoE Bounce Tools ──────────────────────────────────────
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_port_bounce_switch(
     ctx: Context,
     serial_number: str,
@@ -330,7 +323,7 @@ async def central_port_bounce_switch(
     }
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_poe_bounce_switch(
     ctx: Context,
     serial_number: str,
@@ -410,7 +403,7 @@ async def central_poe_bounce_switch(
     }
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_port_bounce_gateway(
     ctx: Context,
     serial_number: str,
@@ -446,7 +439,7 @@ async def central_port_bounce_gateway(
     return resp
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_poe_bounce_gateway(
     ctx: Context,
     serial_number: str,

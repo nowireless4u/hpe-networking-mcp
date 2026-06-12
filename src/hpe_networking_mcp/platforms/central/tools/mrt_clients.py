@@ -10,8 +10,8 @@ from typing import Annotated, Literal
 from fastmcp import Context
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
@@ -33,7 +33,7 @@ async def _get(conn, path: str, params: dict | None = None) -> dict | str:
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_clients_trend(
     ctx: Context,
     start: Annotated[str | None, Field(description="ISO-8601 start timestamp.")] = None,
@@ -52,7 +52,7 @@ async def central_get_clients_trend(
     return await _get(conn, "network-monitoring/v1/clients-trend", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_clients_topn_usage(
     ctx: Context,
     top_n: Annotated[int, Field(ge=1, le=100, description="Number of top-clients to return (default 10).")] = 10,
@@ -66,7 +66,7 @@ async def central_get_clients_topn_usage(
     return await _get(conn, "network-monitoring/v1/clients-topn-usage", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_client_mobility_trail(
     ctx: Context,
     mac_address: Annotated[str, Field(description="Client MAC address.")],
@@ -83,7 +83,7 @@ async def central_get_client_mobility_trail(
     return await _get(conn, f"network-monitoring/v1/clients/{mac_address}/mobility-trail", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_client_detail(
     ctx: Context,
     mac_address: Annotated[str, Field(description="Client MAC address.")],
@@ -98,7 +98,7 @@ async def central_get_client_detail(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_client_onboarding_score(
     ctx: Context,
     filter: str | None = None,
@@ -111,7 +111,7 @@ async def central_get_client_onboarding_score(
     return await _get(conn, "network-monitoring/v1/client-onboarding-score", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_client_onboarding_stage_export(
     ctx: Context,
     filter: str | None = None,
@@ -129,7 +129,7 @@ async def central_get_client_onboarding_stage_export(
     return await _get(conn, "network-monitoring/v1/client-onboarding-stage/export", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_client_onboarding_stage_reasons(
     ctx: Context,
     filter: str | None = None,
@@ -142,7 +142,7 @@ async def central_get_client_onboarding_stage_reasons(
     return await _get(conn, "network-monitoring/v1/client-onboarding-stage/reasons", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_client_onboarding_stage_count(
     ctx: Context,
     filter: str | None = None,
@@ -163,7 +163,7 @@ async def central_get_client_onboarding_stage_count(
 _FirewallScope = Literal["site", "client", "firewall-clients"]
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_firewall_sessions(
     ctx: Context,
     scope: Annotated[

@@ -12,19 +12,11 @@ from typing import Annotated, Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
-
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
 
 
 async def _get(conn, path: str, params: dict | None = None) -> dict:
@@ -45,7 +37,7 @@ async def _get(conn, path: str, params: dict | None = None) -> dict:
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_fco_resp_info(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Device serial number.")],
@@ -60,7 +52,7 @@ async def central_get_fco_resp_info(
     return await _get(conn, f"network-services/v1/fco-resp-info/{serial_number}")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_fco_resp_info_all(
     ctx: Context,
     limit: int = 100,
@@ -79,7 +71,7 @@ async def central_get_fco_resp_info_all(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_asset_tags(
     ctx: Context,
     filter: str | None = None,
@@ -109,7 +101,7 @@ async def central_get_asset_tags(
     return await _get(conn, "network-services/v1/asset-tags", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_asset_tag(
     ctx: Context,
     asset_tag_id: Annotated[
@@ -126,7 +118,7 @@ async def central_get_asset_tag(
     return await _get(conn, f"network-services/v1/asset-tags/{asset_tag_id}")
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_asset_tag_metadata(
     ctx: Context,
     asset_tag_id: Annotated[str, Field(description="Asset-tag identifier.")],
@@ -188,7 +180,7 @@ async def central_manage_asset_tag_metadata(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.DIAGNOSTIC)
 async def central_start_ap_ranging_scan(
     ctx: Context,
     payload: Annotated[
@@ -222,7 +214,7 @@ async def central_start_ap_ranging_scan(
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_ranging_scans(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -236,7 +228,7 @@ async def central_get_ap_ranging_scans(
     )
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_ranging_scan(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -251,7 +243,7 @@ async def central_get_ap_ranging_scan(
     )
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_delete_ap_ranging_scan(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -276,7 +268,7 @@ async def central_delete_ap_ranging_scan(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_site_device_locations(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -292,7 +284,7 @@ async def central_get_site_device_locations(
     )
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_site_device_location(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -303,7 +295,7 @@ async def central_get_site_device_location(
     return await _get(conn, f"network-services/v1/sites/{site_id}/device-locations/{location_id}")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_device_location(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -317,7 +309,7 @@ async def central_get_device_location(
     )
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_device_location(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -371,7 +363,7 @@ async def central_manage_device_location(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_wifi_clients_locations(
     ctx: Context,
     filter: str | None = None,
@@ -391,7 +383,7 @@ async def central_get_wifi_clients_locations(
     return await _get(conn, "network-services/v1/wifi-clients-locations", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_location_analytics_trends(
     ctx: Context,
     start: Annotated[str | None, Field(description="ISO-8601 start timestamp.")] = None,
@@ -414,7 +406,7 @@ async def central_get_location_analytics_trends(
     return await _get(conn, "network-services/v1/location-analytics/trends", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_location_analytics_site_insights(
     ctx: Context,
     filter: str | None = None,

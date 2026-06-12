@@ -2,11 +2,10 @@ from typing import Annotated, Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
-from mcp.types import ToolAnnotations
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.models import PaginatedAlerts
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import (
     FilterField,
     build_odata_filter,
@@ -26,6 +25,7 @@ ALERT_FILTER_FIELDS: dict[str, FilterField] = {
     "site_id": FilterField("siteId"),
 }
 
+
 # Operational annotation for state-transition actions on alerts (clear,
 # defer, reactivate, set_priority). Mirrors the pattern in actions.py:
 # not read-only (changes alert state), not destructive (every transition
@@ -34,15 +34,7 @@ ALERT_FILTER_FIELDS: dict[str, FilterField] = {
 # `central_write_delete` — alert state transitions are operational
 # actions, not config changes, so they ride alongside reboot/AP-action
 # tools rather than gated behind ENABLE_CENTRAL_WRITE_TOOLS.
-OPERATIONAL = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=False,
-    idempotentHint=True,
-    openWorldHint=True,
-)
-
-
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_alerts(
     ctx: Context,
     site_id: str,
@@ -139,7 +131,7 @@ async def central_get_alerts(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_alert_classification(
     ctx: Context,
     classify_by: Literal[
@@ -197,7 +189,7 @@ async def central_get_alert_classification(
     return msg
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_alert_action_status(
     ctx: Context,
     task_id: str,
@@ -238,7 +230,7 @@ async def central_get_alert_action_status(
 # central_get_alert_action_status to confirm completion.
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL, gated=False)
 async def central_clear_alerts(
     ctx: Context,
     keys: list[str],
@@ -287,7 +279,7 @@ async def central_clear_alerts(
     return msg or f"Clear request submitted for {len(keys)} alert(s); response was empty"
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL, gated=False)
 async def central_defer_alerts(
     ctx: Context,
     keys: list[str],
@@ -325,7 +317,7 @@ async def central_defer_alerts(
     return msg or f"Defer request submitted for {len(keys)} alert(s); response was empty"
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL, gated=False)
 async def central_reactivate_alerts(
     ctx: Context,
     keys: list[str],
@@ -358,7 +350,7 @@ async def central_reactivate_alerts(
     return msg or f"Reactivate request submitted for {len(keys)} alert(s); response was empty"
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL, gated=False)
 async def central_set_alert_priority(
     ctx: Context,
     keys: list[str],

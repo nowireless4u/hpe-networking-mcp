@@ -12,8 +12,8 @@ from typing import Annotated
 from fastmcp import Context
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
@@ -30,7 +30,7 @@ async def _get(conn, path: str, params: dict | None = None) -> dict | str:
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_site_health_detail(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
@@ -45,7 +45,7 @@ async def central_get_site_health_detail(
     return await _get(conn, f"network-monitoring/v1/site-health/{site_id}")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_sites_client_health(
     ctx: Context,
     filter: str | None = None,
@@ -60,7 +60,7 @@ async def central_get_sites_client_health(
     return await _get(conn, "network-monitoring/v1/sites-client-health", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_tenant_device_health(
     ctx: Context,
     filter: str | None = None,
@@ -73,7 +73,7 @@ async def central_get_tenant_device_health(
     return await _get(conn, "network-monitoring/v1/tenant-device-health", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_tenant_client_health(
     ctx: Context,
     filter: str | None = None,

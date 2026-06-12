@@ -14,22 +14,14 @@ from typing import Annotated, Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
 
-
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_webhooks(
     ctx: Context,
     limit: int = 100,
@@ -54,7 +46,7 @@ async def central_get_webhooks(
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_webhook(
     ctx: Context,
     webhook_id: Annotated[str, Field(description="Webhook identifier.")],
@@ -72,7 +64,7 @@ async def central_get_webhook(
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_webhook(
     ctx: Context,
     action_type: Annotated[
@@ -152,7 +144,7 @@ async def central_manage_webhook(
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_rotate_webhook_hmac_key(
     ctx: Context,
     webhook_id: Annotated[str, Field(description="Webhook identifier to rotate.")],

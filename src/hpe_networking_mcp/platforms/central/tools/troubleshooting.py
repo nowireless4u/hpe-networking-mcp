@@ -3,9 +3,9 @@ from typing import Any, Literal
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn
 
 
@@ -20,7 +20,7 @@ async def _resolve_if_switch(conn, serial_number: str, device_type: str) -> str:
     return await _resolve_switch_id(conn, serial_number)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_ping(
     ctx: Context,
     serial_number: str,
@@ -72,7 +72,7 @@ async def central_ping(
     return resp
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_traceroute(
     ctx: Context,
     serial_number: str,
@@ -113,7 +113,7 @@ async def central_traceroute(
     return resp
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_cable_test(
     ctx: Context,
     serial_number: str,
@@ -169,7 +169,7 @@ async def central_cable_test(
     return resp
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_show_commands(
     ctx: Context,
     serial_number: str,

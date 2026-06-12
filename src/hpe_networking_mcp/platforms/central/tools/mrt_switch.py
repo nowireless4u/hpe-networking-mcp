@@ -11,8 +11,8 @@ from typing import Annotated
 from fastmcp import Context
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
@@ -29,7 +29,7 @@ async def _get(conn, path: str, params: dict | None = None) -> dict | str:
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_switches(
     ctx: Context,
     filter: str | None = None,
@@ -48,7 +48,7 @@ async def central_get_switches(
     return await _get(conn, "network-monitoring/v1/switches", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_switch_lag(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Switch serial number.")],
@@ -58,7 +58,7 @@ async def central_get_switch_lag(
     return await _get(conn, f"network-monitoring/v1/switches/{serial_number}/lag")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_switch_vlans(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Switch serial number.")],
@@ -68,7 +68,7 @@ async def central_get_switch_vlans(
     return await _get(conn, f"network-monitoring/v1/switches/{serial_number}/vlans")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_switch_hardware_categories(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Switch serial number.")],
@@ -78,7 +78,7 @@ async def central_get_switch_hardware_categories(
     return await _get(conn, f"network-monitoring/v1/switches/{serial_number}/hardware-categories")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_switch_interface_trends(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Switch serial number.")],
@@ -100,7 +100,7 @@ async def central_get_switch_interface_trends(
     return await _get(conn, f"network-monitoring/v1/switches/{serial_number}/interface-trends", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_switches_topn_interface_trends(
     ctx: Context,
     top_n: Annotated[int, Field(ge=1, le=100, description="Number of top interfaces to return (default 10).")] = 10,
@@ -114,7 +114,7 @@ async def central_get_switches_topn_interface_trends(
     return await _get(conn, "network-monitoring/v1/switches/topn-interface-trends", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_switch_vsx(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Switch serial number.")],
@@ -124,7 +124,7 @@ async def central_get_switch_vsx(
     return await _get(conn, f"network-monitoring/v1/switches/{serial_number}/vsx")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_switch_stack_members(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Conductor switch serial number.")],

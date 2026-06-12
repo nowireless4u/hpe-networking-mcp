@@ -23,8 +23,8 @@ from typing import Annotated, Literal
 from fastmcp import Context
 from pydantic import BaseModel, Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
@@ -220,7 +220,7 @@ def _build_filter(
     return " and ".join(parts) if parts else None
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_recommend_firmware(
     ctx: Context,
     serial_number: Annotated[

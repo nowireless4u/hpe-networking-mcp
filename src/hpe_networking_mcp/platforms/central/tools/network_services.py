@@ -19,11 +19,10 @@ helpers used by the hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
@@ -32,17 +31,10 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _manage_resource,
 )
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
 # ----- dhcp-pool -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_dhcp_pool(
     ctx: Context,
     name: str | None = None,
@@ -57,7 +49,7 @@ async def central_get_dhcp_pool(
     return await _get_resource(ctx, "dhcp-pool", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_dhcp_pool(
     ctx: Context,
     name: Annotated[str, Field(description="``dhcp-pool`` identifier (OpenAPI path param: ``name``).")],
@@ -98,7 +90,7 @@ async def central_manage_dhcp_pool(
 # ----- dhcp-relay -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_dhcp_relay(
     ctx: Context,
     name: str | None = None,
@@ -113,7 +105,7 @@ async def central_get_dhcp_relay(
     return await _get_resource(ctx, "dhcp-relay", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_dhcp_relay(
     ctx: Context,
     name: Annotated[str, Field(description="``dhcp-relay`` identifier (OpenAPI path param: ``name``).")],
@@ -154,7 +146,7 @@ async def central_manage_dhcp_relay(
 # ----- dhcp-server -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_dhcp_server(
     ctx: Context,
     name: str | None = None,
@@ -169,7 +161,7 @@ async def central_get_dhcp_server(
     return await _get_resource(ctx, "dhcp-server", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_dhcp_server(
     ctx: Context,
     name: Annotated[str, Field(description="``dhcp-server`` identifier (OpenAPI path param: ``name``).")],
@@ -210,7 +202,7 @@ async def central_manage_dhcp_server(
 # ----- dhcp-snooping -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_dhcp_snooping(
     ctx: Context,
     name: str | None = None,
@@ -225,7 +217,7 @@ async def central_get_dhcp_snooping(
     return await _get_resource(ctx, "dhcp-snooping", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_dhcp_snooping(
     ctx: Context,
     name: Annotated[str, Field(description="``dhcp-snooping`` identifier (OpenAPI path param: ``name``).")],
@@ -266,7 +258,7 @@ async def central_manage_dhcp_snooping(
 # ----- dhcp-snooping-interface -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_dhcp_snooping_interface(
     ctx: Context,
     name: str | None = None,
@@ -281,7 +273,7 @@ async def central_get_dhcp_snooping_interface(
     return await _get_resource(ctx, "dhcp-snooping-interface", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_dhcp_snooping_interface(
     ctx: Context,
     name: Annotated[str, Field(description="``dhcp-snooping-interface`` identifier (OpenAPI path param: ``name``).")],
@@ -322,7 +314,7 @@ async def central_manage_dhcp_snooping_interface(
 # ----- dynamic-arp-inspection-interface -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_dynamic_arp_inspection_interface(
     ctx: Context,
     name: str | None = None,
@@ -337,7 +329,7 @@ async def central_get_dynamic_arp_inspection_interface(
     return await _get_resource(ctx, "dynamic-arp-inspection-interface", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_dynamic_arp_inspection_interface(
     ctx: Context,
     name: Annotated[
@@ -380,7 +372,7 @@ async def central_manage_dynamic_arp_inspection_interface(
 # ----- external-storage -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_external_storage(
     ctx: Context,
     name: str | None = None,
@@ -395,7 +387,7 @@ async def central_get_external_storage(
     return await _get_resource(ctx, "external-storage", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_external_storage(
     ctx: Context,
     name: Annotated[str, Field(description="``external-storage`` identifier (OpenAPI path param: ``name``).")],
@@ -436,7 +428,7 @@ async def central_manage_external_storage(
 # ----- ip-source-lockdown -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ip_source_lockdown(
     ctx: Context,
     name: str | None = None,
@@ -451,7 +443,7 @@ async def central_get_ip_source_lockdown(
     return await _get_resource(ctx, "ip-source-lockdown", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_ip_source_lockdown(
     ctx: Context,
     name: Annotated[str, Field(description="``ip-source-lockdown`` identifier (OpenAPI path param: ``name``).")],
@@ -492,7 +484,7 @@ async def central_manage_ip_source_lockdown(
 # ----- ip-source-lockdown-interface -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ip_source_lockdown_interface(
     ctx: Context,
     name: str | None = None,
@@ -507,7 +499,7 @@ async def central_get_ip_source_lockdown_interface(
     return await _get_resource(ctx, "ip-source-lockdown-interface", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_ip_source_lockdown_interface(
     ctx: Context,
     name: Annotated[
@@ -550,7 +542,7 @@ async def central_manage_ip_source_lockdown_interface(
 # ----- ipsla -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ipsla(
     ctx: Context,
     name: str | None = None,
@@ -565,7 +557,7 @@ async def central_get_ipsla(
     return await _get_resource(ctx, "ipsla", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_ipsla(
     ctx: Context,
     name: Annotated[str, Field(description="``ipsla`` identifier (OpenAPI path param: ``name``).")],
@@ -606,7 +598,7 @@ async def central_manage_ipsla(
 # ----- mgmd-global -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_mgmd_global(
     ctx: Context,
     name: str | None = None,
@@ -621,7 +613,7 @@ async def central_get_mgmd_global(
     return await _get_resource(ctx, "mgmd-global", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_mgmd_global(
     ctx: Context,
     name: Annotated[str, Field(description="``mgmd-global`` identifier (OpenAPI path param: ``name``).")],
@@ -662,7 +654,7 @@ async def central_manage_mgmd_global(
 # ----- multicast-dns -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_multicast_dns(
     ctx: Context,
     name: str | None = None,
@@ -677,7 +669,7 @@ async def central_get_multicast_dns(
     return await _get_resource(ctx, "multicast-dns", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_multicast_dns(
     ctx: Context,
     name: Annotated[str, Field(description="``multicast-dns`` identifier (OpenAPI path param: ``name``).")],
@@ -718,7 +710,7 @@ async def central_manage_multicast_dns(
 # ----- nae-lite -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_nae_lite(
     ctx: Context,
     name: str | None = None,
@@ -733,7 +725,7 @@ async def central_get_nae_lite(
     return await _get_resource(ctx, "nae-lite", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_nae_lite(
     ctx: Context,
     name: Annotated[str, Field(description="``nae-lite`` identifier (OpenAPI path param: ``name``).")],
@@ -774,7 +766,7 @@ async def central_manage_nae_lite(
 # ----- nd-snooping -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_nd_snooping(
     ctx: Context,
     name: str | None = None,
@@ -789,7 +781,7 @@ async def central_get_nd_snooping(
     return await _get_resource(ctx, "nd-snooping", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_nd_snooping(
     ctx: Context,
     name: Annotated[str, Field(description="``nd-snooping`` identifier (OpenAPI path param: ``name``).")],
@@ -830,7 +822,7 @@ async def central_manage_nd_snooping(
 # ----- nd-snooping-interface -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_nd_snooping_interface(
     ctx: Context,
     name: str | None = None,
@@ -845,7 +837,7 @@ async def central_get_nd_snooping_interface(
     return await _get_resource(ctx, "nd-snooping-interface", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_nd_snooping_interface(
     ctx: Context,
     name: Annotated[str, Field(description="``nd-snooping-interface`` identifier (OpenAPI path param: ``name``).")],
@@ -886,7 +878,7 @@ async def central_manage_nd_snooping_interface(
 # ----- ptp -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ptp(
     ctx: Context,
     name: str | None = None,
@@ -901,7 +893,7 @@ async def central_get_ptp(
     return await _get_resource(ctx, "ptp", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_ptp(
     ctx: Context,
     name: Annotated[str, Field(description="``ptp`` identifier (OpenAPI path param: ``name``).")],
@@ -942,7 +934,7 @@ async def central_manage_ptp(
 # ----- qos-global -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_qos_global(
     ctx: Context,
     name: str | None = None,
@@ -957,7 +949,7 @@ async def central_get_qos_global(
     return await _get_resource(ctx, "qos-global", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_qos_global(
     ctx: Context,
     name: Annotated[str, Field(description="``qos-global`` identifier (OpenAPI path param: ``name``).")],
@@ -998,7 +990,7 @@ async def central_manage_qos_global(
 # ----- qos-queues -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_qos_queues(
     ctx: Context,
     q_profile_name: str | None = None,
@@ -1013,7 +1005,7 @@ async def central_get_qos_queues(
     return await _get_resource(ctx, "qos-queues", q_profile_name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_qos_queues(
     ctx: Context,
     q_profile_name: Annotated[
@@ -1056,7 +1048,7 @@ async def central_manage_qos_queues(
 # ----- qos-schedules -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_qos_schedules(
     ctx: Context,
     sched_profile_name: str | None = None,
@@ -1071,7 +1063,7 @@ async def central_get_qos_schedules(
     return await _get_resource(ctx, "qos-schedules", sched_profile_name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_qos_schedules(
     ctx: Context,
     sched_profile_name: Annotated[
@@ -1114,7 +1106,7 @@ async def central_manage_qos_schedules(
 # ----- qos-thresholds -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_qos_thresholds(
     ctx: Context,
     thresh_profile_name: str | None = None,
@@ -1129,7 +1121,7 @@ async def central_get_qos_thresholds(
     return await _get_resource(ctx, "qos-thresholds", thresh_profile_name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_qos_thresholds(
     ctx: Context,
     thresh_profile_name: Annotated[
@@ -1172,7 +1164,7 @@ async def central_manage_qos_thresholds(
 # ----- source-ip-bindings -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_source_ip_bindings(
     ctx: Context,
     ip_version_vlan_client_address: str | None = None,
@@ -1187,7 +1179,7 @@ async def central_get_source_ip_bindings(
     return await _get_resource(ctx, "source-ip-bindings", ip_version_vlan_client_address)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_source_ip_bindings(
     ctx: Context,
     ip_version_vlan_client_address: Annotated[
@@ -1233,7 +1225,7 @@ async def central_manage_source_ip_bindings(
 # ----- udp-broadcast-forwarders -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_udp_broadcast_forwarders(
     ctx: Context,
     name: str | None = None,
@@ -1248,7 +1240,7 @@ async def central_get_udp_broadcast_forwarders(
     return await _get_resource(ctx, "udp-broadcast-forwarders", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_udp_broadcast_forwarders(
     ctx: Context,
     name: Annotated[str, Field(description="``udp-broadcast-forwarders`` identifier (OpenAPI path param: ``name``).")],
