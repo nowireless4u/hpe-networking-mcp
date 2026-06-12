@@ -23,6 +23,7 @@ from fastmcp import Context
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.aos8._registry import tool
+from hpe_networking_mcp.platforms.aos8.client import get_aos8_client
 from hpe_networking_mcp.platforms.aos8.tools._helpers import (
     format_aos8_error,
     run_show,
@@ -45,7 +46,7 @@ async def aos8_ping(ctx: Context, dest: str) -> dict[str, Any] | str:
     """Ping a target from the controller via the showcommand endpoint.
 
     Args:
-        ctx: FastMCP request context; ``ctx.lifespan_context["aos8_client"]``
+        ctx: FastMCP request context (client resolved via ``get_aos8_client()``
             must hold an authenticated ``AOS8Client``.
         dest: Destination host or IP to ping (e.g. ``"8.8.8.8"``).
 
@@ -53,7 +54,7 @@ async def aos8_ping(ctx: Context, dest: str) -> dict[str, Any] | str:
         Parsed JSON body with ``_meta`` and ``_global_result`` stripped, or a
         formatted error string when the API call fails.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, f"ping {dest}")
     except Exception as exc:  # noqa: BLE001
@@ -65,7 +66,7 @@ async def aos8_traceroute(ctx: Context, dest: str) -> dict[str, Any] | str:
     """Traceroute to a target from the controller via the showcommand endpoint.
 
     Args:
-        ctx: FastMCP request context; ``ctx.lifespan_context["aos8_client"]``
+        ctx: FastMCP request context (client resolved via ``get_aos8_client()``
             must hold an authenticated ``AOS8Client``.
         dest: Destination host or IP to traceroute (e.g. ``"8.8.8.8"``).
 
@@ -73,7 +74,7 @@ async def aos8_traceroute(ctx: Context, dest: str) -> dict[str, Any] | str:
         Parsed JSON body with ``_meta`` and ``_global_result`` stripped, or a
         formatted error string when the API call fails.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, f"traceroute {dest}")
     except Exception as exc:  # noqa: BLE001
@@ -91,7 +92,7 @@ async def aos8_show_command(ctx: Context, command: str) -> dict[str, Any] | str:
     wrapped as ``{"output": <text>}``.
 
     Args:
-        ctx: FastMCP request context; ``ctx.lifespan_context["aos8_client"]``
+        ctx: FastMCP request context (client resolved via ``get_aos8_client()``
             must hold an authenticated ``AOS8Client``.
         command: Full CLI string starting with ``"show "``.
 
@@ -103,7 +104,7 @@ async def aos8_show_command(ctx: Context, command: str) -> dict[str, Any] | str:
     normalized = command.strip()
     if not normalized.lower().startswith("show "):
         return f"Only 'show' commands are permitted. Received: {command!r}"
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         response = await client.request(
             "GET",
@@ -124,7 +125,7 @@ async def aos8_get_logs(ctx: Context, count: int = 100) -> dict[str, Any] | str:
     """Return the last ``count`` lines of the controller system log.
 
     Args:
-        ctx: FastMCP request context; ``ctx.lifespan_context["aos8_client"]``
+        ctx: FastMCP request context (client resolved via ``get_aos8_client()``
             must hold an authenticated ``AOS8Client``.
         count: Number of recent log lines to return. Capped at 1000 to keep
             responses manageable; oversized requests are rejected with an
@@ -137,7 +138,7 @@ async def aos8_get_logs(ctx: Context, count: int = 100) -> dict[str, Any] | str:
     """
     if count > 1000:
         return "count must be <= 1000"
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, f"show log system {count}")
     except Exception as exc:  # noqa: BLE001
@@ -154,14 +155,14 @@ async def aos8_get_controller_stats(ctx: Context) -> dict[str, Any] | str:
     three is treated as a single failure for the aggregate.
 
     Args:
-        ctx: FastMCP request context; ``ctx.lifespan_context["aos8_client"]``
+        ctx: FastMCP request context (client resolved via ``get_aos8_client()``
             must hold an authenticated ``AOS8Client``.
 
     Returns:
         Dict with ``cpu``, ``memory``, and ``uptime`` keys, or a formatted
         error string when any of the underlying API calls fails.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         cpu = await run_show(client, "show cpuload")
         memory = await run_show(client, "show memory")
@@ -176,7 +177,7 @@ async def aos8_get_arm_history(ctx: Context, config_path: str = "/md") -> dict[s
     """Fetch ARM (Adaptive Radio Management) channel/power change history.
 
     Args:
-        ctx: FastMCP request context; ``ctx.lifespan_context["aos8_client"]``
+        ctx: FastMCP request context (client resolved via ``get_aos8_client()``
             must hold an authenticated ``AOS8Client``.
         config_path: Hierarchy node to query (e.g. ``"/md"``,
             ``"/md/branch1"``). Defaults to ``"/md"``.
@@ -185,7 +186,7 @@ async def aos8_get_arm_history(ctx: Context, config_path: str = "/md") -> dict[s
         Parsed JSON body with ``_meta`` and ``_global_result`` stripped, or a
         formatted error string when the API call fails.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, "show ap arm history", config_path=config_path)
     except Exception as exc:  # noqa: BLE001
@@ -197,7 +198,7 @@ async def aos8_get_rf_monitor(ctx: Context, config_path: str = "/md") -> dict[st
     """Fetch RF monitor statistics across the AP fleet.
 
     Args:
-        ctx: FastMCP request context; ``ctx.lifespan_context["aos8_client"]``
+        ctx: FastMCP request context (client resolved via ``get_aos8_client()``
             must hold an authenticated ``AOS8Client``.
         config_path: Hierarchy node to query (e.g. ``"/md"``,
             ``"/md/branch1"``). Defaults to ``"/md"``.
@@ -206,7 +207,7 @@ async def aos8_get_rf_monitor(ctx: Context, config_path: str = "/md") -> dict[st
         Parsed JSON body with ``_meta`` and ``_global_result`` stripped, or a
         formatted error string when the API call fails.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, "show ap monitor stats", config_path=config_path)
     except Exception as exc:  # noqa: BLE001

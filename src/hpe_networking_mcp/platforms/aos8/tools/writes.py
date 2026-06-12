@@ -27,7 +27,7 @@ from pydantic import Field
 from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.aos8._registry import tool
-from hpe_networking_mcp.platforms.aos8.client import AOS8APIError, AOS8AuthError
+from hpe_networking_mcp.platforms.aos8.client import AOS8APIError, AOS8AuthError, get_aos8_client
 from hpe_networking_mcp.platforms.aos8.tools._helpers import format_aos8_error, post_object, strip_meta
 
 _ACTION_MAP = {"create": "add", "update": "modify", "delete": "delete"}
@@ -77,7 +77,7 @@ async def _post_managed_object(
             return decision  # type: ignore[return-value]
 
     body = {object_name: {**payload, "_action": action}}
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         result = await post_object(client, object_name, body, config_path=config_path)
     except (AOS8APIError, AOS8AuthError, httpx.HTTPError) as exc:
@@ -352,7 +352,7 @@ async def aos8_disconnect_client(
             return decision  # type: ignore[return-value]
 
     body = {"aaa_user_delete": {"mac": mac}}
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         result = await post_object(client, "aaa_user_delete", body)
     except (AOS8APIError, AOS8AuthError, httpx.HTTPError) as exc:
@@ -379,7 +379,7 @@ async def aos8_reboot_ap(
             return decision  # type: ignore[return-value]
 
     body = {"apboot": {"ap-name": ap_name}}
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         result = await post_object(client, "apboot", body)
     except (AOS8APIError, AOS8AuthError, httpx.HTTPError) as exc:
@@ -416,7 +416,7 @@ async def aos8_write_memory(
         if decision is not None:
             return decision  # type: ignore[return-value]
 
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         response = await client.request(
             "POST",

@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.12.2] - 2026-06-11
+
+**Patch — capability migrations 4–6/N (Apstra, UXI, GreenLake) + AOS8 client conformance.** Advances the annotation sequence toward the universal confirmation gate (#415/#416, tracked in #466). The `requires_confirmation` tag remains inert until the gate PR; all visibility gating is byte-equivalent.
+
+### Changed
+- **Apstra (19), UXI (21), GreenLake (10) tools migrated to `capability=`** per `docs/tool-annotation-rubric.md`; their registries moved onto the shared `make_tool_decorator` factory and the per-platform `ToolAnnotations` constants were deleted. Notable classifications: `apstra_deploy_blueprint` → OPERATIONAL + `enable_gated=True` (applies staged config — the axis-commit pattern); UXI delete tools drop the redundant `uxi_write` tag alongside `uxi_write_delete` (gating-neutral: the Visibility transform hides on either). 7 of 9 platform registries are now on the factory — only the generated Mist/Central surfaces remain.
+- **AOS8 client conformance** (#466): template-style `get_aos8_client(ctx)` accessor + `format_http_error()` added.
+
+### Fixed
+- **AOS8 tools crashed with an opaque `AttributeError` when AOS 8 was not configured** — 55 call sites dereferenced `lifespan_context["aos8_client"]` unguarded (the #443/#444 bug class, previously fixed for Central/GreenLake only). All routed through the new accessor, which raises a clear 503 ToolError instead.
+
+### Tests
+- Full suite **1802 passed** in Docker; ruff + format + mypy + bandit clean.
+
 ## [3.3.12.1] - 2026-06-11
 
 **Patch — final shared-auth adoptions: GreenLake, AOS8, Mist, Axis. The auth migration is COMPLETE — all 8 platforms (+ `_template`) now run token lifecycle through `AsyncTokenManager`.** Pure refactor, no tool changes. This closes the release gate: this version is the tag candidate.

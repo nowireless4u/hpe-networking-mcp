@@ -17,6 +17,7 @@ from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.greenlake._registry import tool
 from hpe_networking_mcp.platforms.greenlake.client import get_greenlake_client
 
@@ -29,13 +30,7 @@ from hpe_networking_mcp.platforms.greenlake.client import get_greenlake_client
     name="greenlake_get_workspace",
     description=("Retrieve basic workspace information for a given HPE GreenLake workspace ID."),
     tags={"greenlake", "workspaces"},
-    annotations={
-        "title": "Get GreenLake workspace",
-        "readOnlyHint": True,
-        "destructiveHint": False,
-        "idempotentHint": True,
-        "openWorldHint": True,
-    },
+    capability=Capability.READ,
 )
 async def greenlake_get_workspace(
     ctx: Context,
@@ -68,13 +63,7 @@ async def greenlake_get_workspace(
     name="greenlake_get_workspace_details",
     description=("Retrieve detailed contact information for an HPE GreenLake workspace."),
     tags={"greenlake", "workspaces"},
-    annotations={
-        "title": "Get GreenLake workspace details",
-        "readOnlyHint": True,
-        "destructiveHint": False,
-        "idempotentHint": True,
-        "openWorldHint": True,
-    },
+    capability=Capability.READ,
 )
 async def greenlake_get_workspace_details(
     ctx: Context,

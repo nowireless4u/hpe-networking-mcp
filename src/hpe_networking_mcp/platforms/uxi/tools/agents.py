@@ -7,12 +7,12 @@ from typing import Any
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.uxi._registry import tool
 from hpe_networking_mcp.platforms.uxi.client import format_http_error, get_uxi_client
-from hpe_networking_mcp.platforms.uxi.tools import READ_ONLY
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def uxi_list_agents(
     ctx: Context,
     next_cursor: str | None = None,

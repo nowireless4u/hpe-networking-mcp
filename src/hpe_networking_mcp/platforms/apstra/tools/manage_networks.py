@@ -8,6 +8,7 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.apstra import guidelines
 from hpe_networking_mcp.platforms.apstra._registry import tool
 from hpe_networking_mcp.platforms.apstra.client import format_http_error, get_apstra_client
@@ -17,11 +18,10 @@ from hpe_networking_mcp.platforms.apstra.models import (
     normalize_to_string_list,
     parse_bool,
 )
-from hpe_networking_mcp.platforms.apstra.tools import WRITE
 from hpe_networking_mcp.platforms.apstra.topology import get_individual_leafs_from_system_ids
 
 
-@tool(annotations=WRITE, tags={"apstra_write"})
+@tool(capability=Capability.WRITE)
 async def apstra_create_virtual_network(
     ctx: Context,
     blueprint_id: str,
@@ -182,7 +182,7 @@ async def apstra_create_virtual_network(
         raise ToolError({"status_code": 502, "message": f"Error creating virtual network: {detail}"}) from e
 
 
-@tool(annotations=WRITE, tags={"apstra_write"})
+@tool(capability=Capability.WRITE)
 async def apstra_create_remote_gateway(
     ctx: Context,
     blueprint_id: str,

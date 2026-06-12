@@ -19,6 +19,7 @@ from fastmcp import Context
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.aos8._registry import tool
+from hpe_networking_mcp.platforms.aos8.client import get_aos8_client
 from hpe_networking_mcp.platforms.aos8.tools._helpers import (
     format_aos8_error,
     get_object,
@@ -37,7 +38,7 @@ async def aos8_get_ssid_profiles(ctx: Context, config_path: str = "/md") -> dict
     """Fetch SSID profiles defined at the given configuration node.
 
     Args:
-        ctx: FastMCP request context; ``ctx.lifespan_context["aos8_client"]``
+        ctx: FastMCP request context (client resolved via ``get_aos8_client()``
             must hold an authenticated ``AOS8Client``.
         config_path: Hierarchy node to query (e.g. ``"/md"``, ``"/md/branch1"``).
             Defaults to ``"/md"``.
@@ -46,7 +47,7 @@ async def aos8_get_ssid_profiles(ctx: Context, config_path: str = "/md") -> dict
         Parsed JSON body with ``_meta`` and ``_global_result`` stripped, or a
         formatted error string when the API call fails.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await get_object(client, "ssid_prof", config_path=config_path)
     except Exception as exc:  # noqa: BLE001
@@ -58,7 +59,7 @@ async def aos8_get_virtual_aps(ctx: Context, config_path: str = "/md") -> dict[s
     """Fetch virtual-AP profiles defined at the given configuration node.
 
     Args:
-        ctx: FastMCP request context; ``ctx.lifespan_context["aos8_client"]``
+        ctx: FastMCP request context (client resolved via ``get_aos8_client()``
             must hold an authenticated ``AOS8Client``.
         config_path: Hierarchy node to query (e.g. ``"/md"``, ``"/md/branch1"``).
             Defaults to ``"/md"``.
@@ -67,7 +68,7 @@ async def aos8_get_virtual_aps(ctx: Context, config_path: str = "/md") -> dict[s
         Parsed JSON body with ``_meta`` and ``_global_result`` stripped, or a
         formatted error string when the API call fails.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await get_object(client, "virtual_ap", config_path=config_path)
     except Exception as exc:  # noqa: BLE001
@@ -79,7 +80,7 @@ async def aos8_get_ap_groups(ctx: Context, config_path: str = "/md") -> dict[str
     """Fetch AP-group definitions at the given configuration node.
 
     Args:
-        ctx: FastMCP request context; ``ctx.lifespan_context["aos8_client"]``
+        ctx: FastMCP request context (client resolved via ``get_aos8_client()``
             must hold an authenticated ``AOS8Client``.
         config_path: Hierarchy node to query (e.g. ``"/md"``, ``"/md/branch1"``).
             Defaults to ``"/md"``.
@@ -88,7 +89,7 @@ async def aos8_get_ap_groups(ctx: Context, config_path: str = "/md") -> dict[str
         Parsed JSON body with ``_meta`` and ``_global_result`` stripped, or a
         formatted error string when the API call fails.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await get_object(client, "ap_group", config_path=config_path)
     except Exception as exc:  # noqa: BLE001
@@ -100,7 +101,7 @@ async def aos8_get_user_roles(ctx: Context, config_path: str = "/md") -> dict[st
     """Fetch user-role definitions at the given configuration node.
 
     Args:
-        ctx: FastMCP request context; ``ctx.lifespan_context["aos8_client"]``
+        ctx: FastMCP request context (client resolved via ``get_aos8_client()``
             must hold an authenticated ``AOS8Client``.
         config_path: Hierarchy node to query (e.g. ``"/md"``, ``"/md/branch1"``).
             Defaults to ``"/md"``.
@@ -109,7 +110,7 @@ async def aos8_get_user_roles(ctx: Context, config_path: str = "/md") -> dict[st
         Parsed JSON body with ``_meta`` and ``_global_result`` stripped, or a
         formatted error string when the API call fails.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await get_object(client, "role", config_path=config_path)
     except Exception as exc:  # noqa: BLE001

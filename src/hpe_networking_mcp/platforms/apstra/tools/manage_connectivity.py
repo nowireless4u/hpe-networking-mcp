@@ -8,14 +8,14 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.apstra import guidelines
 from hpe_networking_mcp.platforms.apstra._registry import tool
 from hpe_networking_mcp.platforms.apstra.client import format_http_error, get_apstra_client
 from hpe_networking_mcp.platforms.apstra.models import normalize_application_points
-from hpe_networking_mcp.platforms.apstra.tools import WRITE
 
 
-@tool(annotations=WRITE, tags={"apstra_write"})
+@tool(capability=Capability.WRITE)
 async def apstra_apply_ct_policies(
     ctx: Context,
     blueprint_id: str,
