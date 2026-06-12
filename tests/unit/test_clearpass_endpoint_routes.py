@@ -75,12 +75,23 @@ class TestGuestActionRoutes:
 
         client = _client()
         mock_get.return_value = client
+        sponsor_token = "sponsor-link-token"  # noqa: S105 - test fixture value, not a credential
+        sponsor_register_token = "sponsor-register-token"  # noqa: S105 - test fixture value
         await clearpass_process_sponsor_action(
-            _ctx(), guest_id="42", action="reject", token="t", register_token="rt", confirmed=True
+            _ctx(),
+            guest_id="42",
+            action="reject",
+            token=sponsor_token,
+            register_token=sponsor_register_token,
+            confirmed=True,
         )
         method, path, _, body = _call(client)
         assert (method, path) == ("post", "/guest/42/sponsor")  # no /approve|/reject path segment
-        assert body == {"token": "t", "register_token": "rt", "register_reject": True}
+        assert body == {
+            "token": sponsor_token,
+            "register_token": sponsor_register_token,
+            "register_reject": True,
+        }
 
 
 @pytest.mark.unit
