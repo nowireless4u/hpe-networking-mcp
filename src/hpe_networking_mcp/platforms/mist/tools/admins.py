@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,22 +16,23 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
 
 @_mcp_tool(
     name="mist_get_admin_registration_info",
-    description="GET /api/v1/register/recaptcha\n\ngetAdminRegistrationInfo\n\nGet Registration Information",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/register/recaptcha\n\ngetAdminRegistrationInfo\n\nReturn the public CAPTCHA settings required for administrator registration. This public endpoint does not require authentication. Use the returned `flavor`, `required`, and `sitekey` values to render the correct CAPTCHA challenge before calling [Register New Admin](/#operations/registerNewAdmin).",
+    capability=Capability.READ,
 )
 async def mist_get_admin_registration_info(
     ctx: Context,
-    recaptcha_flavor: Annotated[Any | None, Field(description="query parameter 'recaptcha_flavor'")] = None,
+    recaptcha_flavor: Annotated[
+        Any | None, Field(description="Filter login settings by reCAPTCHA flavor. enum: `google`, `hcaptcha`")
+    ] = None,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -45,9 +46,8 @@ async def mist_get_admin_registration_info(
 
 @_mcp_tool(
     name="mist_register_new_admin",
-    description='POST /api/v1/register\n\nregisterNewAdmin\n\nRegister a new admin and his/her org\nAn email will also be sent to the user with a link to `/verify/register?token={token}`\n\n### reCAPTCHA\nGoogle reCAPTCHA is the choice to prevent bot registration\n\nIt needs this \n\n&lt;script src=\'https://www.google.com/recaptcha/api.js\' &gt;&lt;/script&gt;\n\nand this &lt;div&gt; in the desired place\n```html\n<div class="g-recaptcha" data_sitekey="6LdAewsTAAAAAE25XKQhPEQ2FiMTft-WrZXQ5NUd"></div>\n```\n\nUse GET /api/v1/register/recaptcha to read the current setting.\nResponse example:\n```json\n{    \n  "flavor": "google",\n  ...',
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/register\n\nregisterNewAdmin\n\nRegister a new administrator account and initial organization. This public endpoint does not require authentication. Mist sends a verification email containing a link such as `/verify/register?token={token}`; use [Verify Registration](/#operations/verifyRegistration) to complete registration with that token.\n\nUse [Get Registration Information](/#operations/getAdminRegistrationInfo) before submitting this request to determine whether CAPTCHA is required, which CAPTCHA provider to render, and which public site key to use. If CAPTCHA is required, includ...",
+    capability=Capability.WRITE,
 )
 async def mist_register_new_admin(
     ctx: Context,
@@ -65,9 +65,8 @@ async def mist_register_new_admin(
 
 @_mcp_tool(
     name="mist_verify_admin_invite",
-    description="POST /api/v1/invite/verify/{token}\n\nverifyAdminInvite\n\n**Note**: another call to ```GET /api/v1/self``` is required to see the new set of privileges",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/invite/verify/{token}\n\nverifyAdminInvite\n\nAccept an administrator invite using the invite verification token from the invite email. This public endpoint does not require authentication. After a successful verification, call [Get Self](/#operations/getSelf) to refresh the authenticated admin profile and retrieve the newly granted privileges.",
+    capability=Capability.WRITE,
 )
 async def mist_verify_admin_invite(
     ctx: Context,
@@ -85,9 +84,8 @@ async def mist_verify_admin_invite(
 
 @_mcp_tool(
     name="mist_verify_registration",
-    description="POST /api/v1/register/verify/{token}\n\nverifyRegistration\n\nVerify registration",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/register/verify/{token}\n\nverifyRegistration\n\nVerify a new administrator registration using the token from the registration email. This public endpoint does not require authentication. A successful verification creates a login session and may also apply a pending invitation; the response indicates whether an invitation could not be applied automatically.",
+    capability=Capability.WRITE,
 )
 async def mist_verify_registration(
     ctx: Context,

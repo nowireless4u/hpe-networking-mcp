@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,9 +16,9 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
@@ -26,8 +26,7 @@ from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 @_mcp_tool(
     name="mist_create_org_wlan",
     description="POST /api/v1/orgs/{org_id}/wlans\n\ncreateOrgWlan\n\nCreate Org Wlan",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_create_org_wlan(
     ctx: Context,
@@ -47,8 +46,7 @@ async def mist_create_org_wlan(
 @_mcp_tool(
     name="mist_delete_org_wlan",
     description="DELETE /api/v1/orgs/{org_id}/wlans/{wlan_id}\n\ndeleteOrgWlan\n\nDelete Org WLAN",
-    tags={"mist", "mist_write", "mist_write_delete"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True),
+    capability=Capability.WRITE_DELETE,
 )
 async def mist_delete_org_wlan(
     ctx: Context,
@@ -68,8 +66,7 @@ async def mist_delete_org_wlan(
 @_mcp_tool(
     name="mist_delete_org_wlan_portal_image",
     description="DELETE /api/v1/orgs/{org_id}/wlans/{wlan_id}/portal_image\n\ndeleteOrgWlanPortalImage\n\nDelete Org WLAN Portal Image",
-    tags={"mist", "mist_write", "mist_write_delete"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True),
+    capability=Capability.WRITE_DELETE,
 )
 async def mist_delete_org_wlan_portal_image(
     ctx: Context,
@@ -89,8 +86,7 @@ async def mist_delete_org_wlan_portal_image(
 @_mcp_tool(
     name="mist_get_org_wlan",
     description="GET /api/v1/orgs/{org_id}/wlans/{wlan_id}\n\ngetOrgWLAN\n\nGet Org Wlan Detail",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_org_wlan(
     ctx: Context,
@@ -110,14 +106,15 @@ async def mist_get_org_wlan(
 @_mcp_tool(
     name="mist_list_org_wlans",
     description="GET /api/v1/orgs/{org_id}/wlans\n\nlistOrgWlans\n\nGet List of Org Wlans",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_list_org_wlans(
     ctx: Context,
     org_id: Annotated[str, Field(description="path parameter 'org_id'")],
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
-    page: Annotated[int, Field(description="query parameter 'page'")] = 1,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
+    page: Annotated[
+        int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
+    ] = 1,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -132,8 +129,7 @@ async def mist_list_org_wlans(
 @_mcp_tool(
     name="mist_update_org_wlan",
     description="PUT /api/v1/orgs/{org_id}/wlans/{wlan_id}\n\nupdateOrgWlan\n\nUpdate Org Wlan",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_update_org_wlan(
     ctx: Context,
@@ -154,8 +150,7 @@ async def mist_update_org_wlan(
 @_mcp_tool(
     name="mist_update_org_wlan_portal_template",
     description="PUT /api/v1/orgs/{org_id}/wlans/{wlan_id}/portal_template\n\nupdateOrgWlanPortalTemplate\n\nUpdate a Portal Template\n\n#### Sponsor Email Template\nSponsor Email Template supports following template variables:\n\n| **Name** | **Description** |\n| --- | --- |\n| approve_url | Renders URL to approve the request; optionally &minutes=N query param can be appended to change the Authorization period of the guest, where N is a valid integer denoting number of minutes a guest remains authorized |\n| deny_url | Renders URL to reject the request |\n| guest_email | Renders Email ID of the guest |\n| guest_name | R...",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_update_org_wlan_portal_template(
     ctx: Context,
@@ -176,8 +171,7 @@ async def mist_update_org_wlan_portal_template(
 @_mcp_tool(
     name="mist_upload_org_wlan_portal_image",
     description="POST /api/v1/orgs/{org_id}/wlans/{wlan_id}/portal_image\n\nuploadOrgWlanPortalImage\n\nUpload Org WLAN Portal Image",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_upload_org_wlan_portal_image(
     ctx: Context,

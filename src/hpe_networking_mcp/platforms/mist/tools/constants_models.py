@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,24 +16,21 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
 
 @_mcp_tool(
     name="mist_get_gateway_default_config",
-    description="GET /api/v1/const/default_gateway_config\n\ngetGatewayDefaultConfig\n\nGenerate Default Gateway Config",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/const/default_gateway_config\n\ngetGatewayDefaultConfig\n\nGenerate the default gateway configuration for the requested model and HA mode.",
+    capability=Capability.READ,
 )
 async def mist_get_gateway_default_config(
     ctx: Context,
-    model: Annotated[
-        str, Field(description="Model the default gateway config is intended (as the default LAN/WAN port can differ)")
-    ],
+    model: Annotated[str, Field(description="Device model for which to generate the default gateway config.")],
     ha: Annotated[str | None, Field(description="Whether the config is intended for HA")] = None,
 ) -> Any:
     return await mist_request(
@@ -48,9 +45,8 @@ async def mist_get_gateway_default_config(
 
 @_mcp_tool(
     name="mist_list_device_models",
-    description="GET /api/v1/const/device_models\n\nlistDeviceModels\n\nGet list of AP device models for the Mist Site",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/const/device_models\n\nlistDeviceModels\n\nReturn AP, Switch and Gateway device models supported by Mist, including their features and capabilities.",
+    capability=Capability.READ,
 )
 async def mist_list_device_models(
     ctx: Context,
@@ -67,9 +63,8 @@ async def mist_list_device_models(
 
 @_mcp_tool(
     name="mist_list_mx_edge_models",
-    description="GET /api/v1/const/mxedge_models\n\nlistMxEdgeModels\n\nGet List of available Mx Edge models",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/const/mxedge_models\n\nlistMxEdgeModels\n\nReturn Mist Edge models supported by Mist, including their capabilities.",
+    capability=Capability.READ,
 )
 async def mist_list_mx_edge_models(
     ctx: Context,
@@ -86,9 +81,8 @@ async def mist_list_mx_edge_models(
 
 @_mcp_tool(
     name="mist_list_supported_other_device_models",
-    description="GET /api/v1/const/otherdevice_models\n\nlistSupportedOtherDeviceModels\n\nSupported OtherDevice Models",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/const/otherdevice_models\n\nlistSupportedOtherDeviceModels\n\nReturn supported models for other or third-party devices.",
+    capability=Capability.READ,
 )
 async def mist_list_supported_other_device_models(
     ctx: Context,

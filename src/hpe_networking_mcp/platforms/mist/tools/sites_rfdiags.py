@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,9 +16,9 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
@@ -26,8 +26,7 @@ from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 @_mcp_tool(
     name="mist_delete_site_rfdiag_recording",
     description="DELETE /api/v1/sites/{site_id}/rfdiags/{rfdiag_id}\n\ndeleteSiteRfdiagRecording\n\nDelete Recording",
-    tags={"mist", "mist_write", "mist_write_delete"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True),
+    capability=Capability.WRITE_DELETE,
 )
 async def mist_delete_site_rfdiag_recording(
     ctx: Context,
@@ -47,8 +46,7 @@ async def mist_delete_site_rfdiag_recording(
 @_mcp_tool(
     name="mist_download_site_rfdiag_recording",
     description="GET /api/v1/sites/{site_id}/rfdiags/{rfdiag_id}/download\n\ndownloadSiteRfdiagRecording\n\nDownload Recording\nDownload raw_events blob",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_download_site_rfdiag_recording(
     ctx: Context,
@@ -68,8 +66,7 @@ async def mist_download_site_rfdiag_recording(
 @_mcp_tool(
     name="mist_get_site_rfdiag_recording",
     description="GET /api/v1/sites/{site_id}/rfdiags/{rfdiag_id}\n\ngetSiteRfdiagRecording\n\nGet RF Diag Recording Details",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_rfdiag_recording(
     ctx: Context,
@@ -89,22 +86,30 @@ async def mist_get_site_rfdiag_recording(
 @_mcp_tool(
     name="mist_get_site_site_rfdiag_recording",
     description="GET /api/v1/sites/{site_id}/rfdiags\n\ngetSiteSiteRfdiagRecording\n\nList RF Glass Recording",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_site_rfdiag_recording(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
-    page: Annotated[int, Field(description="query parameter 'page'")] = 1,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
+    page: Annotated[
+        int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
+    ] = 1,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -119,8 +124,7 @@ async def mist_get_site_site_rfdiag_recording(
 @_mcp_tool(
     name="mist_start_site_recording",
     description="POST /api/v1/sites/{site_id}/rfdiags\n\nstartSiteRecording\n\nStart RF Glass Recording",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_start_site_recording(
     ctx: Context,
@@ -140,8 +144,7 @@ async def mist_start_site_recording(
 @_mcp_tool(
     name="mist_stop_site_rfdiag_recording",
     description="POST /api/v1/sites/{site_id}/rfdiags/{rfdiag_id}/stop\n\nstopSiteRfdiagRecording\n\nIf the recording session is active for the given rfdiag_id, it will finish the recording. duration and end_time will be updated to reflect the correct values.",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_stop_site_rfdiag_recording(
     ctx: Context,
@@ -161,8 +164,7 @@ async def mist_stop_site_rfdiag_recording(
 @_mcp_tool(
     name="mist_update_site_rfdiag_recording",
     description="PUT /api/v1/sites/{site_id}/rfdiags/{rfdiag_id}\n\nupdateSiteRfdiagRecording\n\nUpdate Recording",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_update_site_rfdiag_recording(
     ctx: Context,

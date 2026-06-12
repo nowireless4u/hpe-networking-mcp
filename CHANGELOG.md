@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.12.4] - 2026-06-11
+
+**Patch — Mist generator emits capability classification; full regen (8/8 — annotation migration COMPLETE).** Closes #368 (surface regenerated against the current vendored spec, 2604.1.5). Every platform's tools are now capability-classified; the universal confirmation gate PR is unblocked.
+
+### Changed
+- **`scripts/_mist_generator.py` emits `capability=`** derived from the HTTP method (GET → READ, DELETE → WRITE_DELETE, POST/PUT/PATCH → WRITE) instead of hand-built `ToolAnnotations` + governance tags; the platform/dynamic-managed tags come from the shared factory. POST defaulting to WRITE is deliberately fail-safe for `/utils/` diagnostics — refining specific probes to DIAGNOSTIC is a documented follow-up, and over-gating errs on the side of #436's complaint (under-gating).
+- **All 1037 Mist tools regenerated** with the new emission against the current vendored spec; `_request_body_schemas.json` refreshed. Mist `_registry.py` on the shared `make_tool_decorator` factory — **all 9 platform registries now use it; zero hand-written `ToolAnnotations` remain anywhere in `src/`**.
+- All 558 generated write tools now derive `requires_confirmation` — the #436 elicitation bypass closes when the universal gate lands (next PR).
+
+### Tests
+- Full suite **1802 passed**; ruff + format + mypy + bandit clean.
+
 ## [3.3.12.3] - 2026-06-11
 
 **Patch — Central capability migration (7/N): all 660 Central tools classified; #416 mis-annotations corrected.** The largest annotation migration; one platform remains (Mist, generator-side) before the universal confirmation gate.

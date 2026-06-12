@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,18 +16,17 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
 
 @_mcp_tool(
     name="mist_delete_org_nac_crl",
-    description="DELETE /api/v1/orgs/{org_id}/setting/mist_nac_crls/{naccrl_id}\n\ndeleteOrgNacCrl\n\nDelete NAC Org CRL file is a DELETE request to delete CRL file identified by its ID (ID assigned on file upload/creation)",
-    tags={"mist", "mist_write", "mist_write_delete"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True),
+    description="DELETE /api/v1/orgs/{org_id}/setting/mist_nac_crls/{naccrl_id}\n\ndeleteOrgNacCrl\n\nDelete an uploaded NAC CRL file identified by the file ID assigned when the CRL was uploaded.",
+    capability=Capability.WRITE_DELETE,
 )
 async def mist_delete_org_nac_crl(
     ctx: Context,
@@ -46,9 +45,8 @@ async def mist_delete_org_nac_crl(
 
 @_mcp_tool(
     name="mist_get_org_nac_crl",
-    description="GET /api/v1/orgs/{org_id}/setting/mist_nac_crls\n\ngetOrgNacCrl\n\nReturns all uploaded CRL file IDs with names for the orgI",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/setting/mist_nac_crls\n\ngetOrgNacCrl\n\nList uploaded NAC CRL files for the organization, including file IDs, issuer names, upload timestamps, and download URLs.",
+    capability=Capability.READ,
 )
 async def mist_get_org_nac_crl(
     ctx: Context,
@@ -66,9 +64,8 @@ async def mist_get_org_nac_crl(
 
 @_mcp_tool(
     name="mist_import_org_nac_crl",
-    description="POST /api/v1/orgs/{org_id}/setting/mist_nac_crls\n\nimportOrgNacCrl\n\nThe Import NAC Org CRL File endpoint allows users to manually upload a Certificate Revocation List (CRL) file in either PEM or DER format. This is a multipart POST request. We support one file upload per issuer, and re-uploads for the same issuer will overwrite the existing file.",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/orgs/{org_id}/setting/mist_nac_crls\n\nimportOrgNacCrl\n\nUpload a NAC Certificate Revocation List (CRL) file in PEM or DER format. This multipart request supports one CRL file per issuer; uploading another file for the same issuer replaces the existing file.",
+    capability=Capability.WRITE,
 )
 async def mist_import_org_nac_crl(
     ctx: Context,

@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,9 +16,9 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
@@ -26,14 +26,18 @@ from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 @_mcp_tool(
     name="mist_count_site_assets",
     description="GET /api/v1/sites/{site_id}/stats/assets/count\n\ncountSiteAssets\n\nCount by Distinct Attributes of Site Asset",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_count_site_assets(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
-    distinct: Annotated[Any | None, Field(description="query parameter 'distinct'")] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    distinct: Annotated[
+        Any | None,
+        Field(
+            description="Field used to group this count response. enum: `by`, `device_name`, `eddystone_uid_instance`, `eddystone_uid_namespace`, `eddystone_url`, `ibeacon_major`, `ibeacon_minor`, `ibeacon_uuid`, `mac`, `map_id`, `name`"
+        ),
+    ] = None,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -48,21 +52,27 @@ async def mist_count_site_assets(
 @_mcp_tool(
     name="mist_get_site_asset_stats",
     description="GET /api/v1/sites/{site_id}/stats/assets/{asset_id}\n\ngetSiteAssetStats\n\nGet Site Asset Details",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_asset_stats(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
     asset_id: Annotated[str, Field(description="path parameter 'asset_id'")],
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
 ) -> Any:
     return await mist_request(
         ctx,
@@ -77,22 +87,30 @@ async def mist_get_site_asset_stats(
 @_mcp_tool(
     name="mist_get_site_assets_of_interest",
     description="GET /api/v1/sites/{site_id}/stats/filtered_assets\n\ngetSiteAssetsOfInterest\n\nGet a list of BLE beacons that matches Asset or AssetFilter",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_assets_of_interest(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
-    page: Annotated[int, Field(description="query parameter 'page'")] = 1,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
+    page: Annotated[
+        int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
+    ] = 1,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -107,8 +125,7 @@ async def mist_get_site_assets_of_interest(
 @_mcp_tool(
     name="mist_get_site_discovered_asset_by_map",
     description="GET /api/v1/sites/{site_id}/stats/maps/{map_id}/discovered_assets\n\ngetSiteDiscoveredAssetByMap\n\nGet a list of BLE beacons that we discovered (whether they’ re defined as assets or not)",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_discovered_asset_by_map(
     ctx: Context,
@@ -127,23 +144,31 @@ async def mist_get_site_discovered_asset_by_map(
 
 @_mcp_tool(
     name="mist_list_site_assets_stats",
-    description="GET /api/v1/sites/{site_id}/stats/assets\n\nlistSiteAssetsStats\n\nGet List of Site Assets Stats",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/sites/{site_id}/stats/assets\n\nlistSiteAssetsStats\n\nList asset statistics for a site over the requested time range. Use [List Org Asset Stats](/#operations/listOrgAssetsStats) to retrieve asset statistics across the organization.",
+    capability=Capability.READ,
 )
 async def mist_list_site_assets_stats(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
-    page: Annotated[int, Field(description="query parameter 'page'")] = 1,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
+    page: Annotated[
+        int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
+    ] = 1,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -158,22 +183,30 @@ async def mist_list_site_assets_stats(
 @_mcp_tool(
     name="mist_list_site_discovered_assets",
     description="GET /api/v1/sites/{site_id}/stats/discovered_assets\n\nlistSiteDiscoveredAssets\n\nGet List of Site Discovered BLE Assets that doesn’t match any of the Asset / Assetfilters",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_list_site_discovered_assets(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
-    page: Annotated[int, Field(description="query parameter 'page'")] = 1,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
+    page: Annotated[
+        int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
+    ] = 1,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -187,38 +220,46 @@ async def mist_list_site_discovered_assets(
 
 @_mcp_tool(
     name="mist_search_site_assets",
-    description="GET /api/v1/sites/{site_id}/stats/assets/search\n\nsearchSiteAssets\n\nAssets Search",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/sites/{site_id}/stats/assets/search\n\nsearchSiteAssets\n\nSearch asset statistics for a site with filters for asset identifiers, device, map, beacon, AP, RSSI, and time range. Use [Search Org Assets](/#operations/searchOrgAssets) to search asset statistics across the organization.",
+    capability=Capability.READ,
 )
 async def mist_search_site_assets(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
-    mac: Annotated[str | None, Field(description="query parameter 'mac'")] = None,
-    map_id: Annotated[str | None, Field(description="query parameter 'map_id'")] = None,
-    ibeacon_uuid: Annotated[str | None, Field(description="query parameter 'ibeacon_uuid'")] = None,
-    ibeacon_major: Annotated[int | None, Field(description="query parameter 'ibeacon_major'")] = None,
-    ibeacon_minor: Annotated[int | None, Field(description="query parameter 'ibeacon_minor'")] = None,
+    mac: Annotated[str | None, Field(description="Filter results by MAC address")] = None,
+    map_id: Annotated[str | None, Field(description="Filter results by map identifier")] = None,
+    ibeacon_uuid: Annotated[str | None, Field(description="Filter asset results by iBeacon UUID")] = None,
+    ibeacon_major: Annotated[int | None, Field(description="Filter asset results by iBeacon major value")] = None,
+    ibeacon_minor: Annotated[int | None, Field(description="Filter asset results by iBeacon minor value")] = None,
     eddystone_uid_namespace: Annotated[
-        str | None, Field(description="query parameter 'eddystone_uid_namespace'")
+        str | None, Field(description="Filter asset results by Eddystone UID namespace")
     ] = None,
-    eddystone_uid_instance: Annotated[str | None, Field(description="query parameter 'eddystone_uid_instance'")] = None,
-    eddystone_url: Annotated[str | None, Field(description="query parameter 'eddystone_url'")] = None,
-    device_name: Annotated[str | None, Field(description="query parameter 'device_name'")] = None,
-    by: Annotated[str | None, Field(description="query parameter 'by'")] = None,
-    name: Annotated[str | None, Field(description="query parameter 'name'")] = None,
-    ap_mac: Annotated[str | None, Field(description="query parameter 'ap_mac'")] = None,
-    beam: Annotated[str | None, Field(description="query parameter 'beam'")] = None,
-    rssi: Annotated[str | None, Field(description="query parameter 'rssi'")] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    eddystone_uid_instance: Annotated[
+        str | None, Field(description="Filter asset results by Eddystone UID instance")
+    ] = None,
+    eddystone_url: Annotated[str | None, Field(description="Filter asset results by Eddystone URL")] = None,
+    device_name: Annotated[str | None, Field(description="Filter asset results by reporting device name")] = None,
+    by: Annotated[str | None, Field(description="Select how the value should be returned")] = None,
+    name: Annotated[str | None, Field(description="Filter results by name")] = None,
+    ap_mac: Annotated[str | None, Field(description="Filter asset results by reporting AP MAC address")] = None,
+    beam: Annotated[str | None, Field(description="Filter asset results by beam value")] = None,
+    rssi: Annotated[str | None, Field(description="Filter asset results by RSSI value")] = None,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     sort: Annotated[
         str, Field(description="On which field the list should be sorted, -prefix represents DESC order")
     ] = "timestamp",

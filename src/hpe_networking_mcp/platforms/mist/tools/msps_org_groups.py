@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,18 +16,17 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
 
 @_mcp_tool(
     name="mist_create_msp_org_group",
-    description="POST /api/v1/msps/{msp_id}/orggroups\n\ncreateMspOrgGroup\n\nCreate MSP Org Group",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/msps/{msp_id}/orggroups\n\ncreateMspOrgGroup\n\nCreate an organization group under this MSP with a display name and optional list of member organization IDs.",
+    capability=Capability.WRITE,
 )
 async def mist_create_msp_org_group(
     ctx: Context,
@@ -46,9 +45,8 @@ async def mist_create_msp_org_group(
 
 @_mcp_tool(
     name="mist_delete_msp_org_group",
-    description="DELETE /api/v1/msps/{msp_id}/orggroups/{orggroup_id}\n\ndeleteMspOrgGroup\n\nDelete MSP Org Group",
-    tags={"mist", "mist_write", "mist_write_delete"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True),
+    description="DELETE /api/v1/msps/{msp_id}/orggroups/{orggroup_id}\n\ndeleteMspOrgGroup\n\nDelete an MSP organization group. This removes the grouping object without deleting the organizations it referenced.",
+    capability=Capability.WRITE_DELETE,
 )
 async def mist_delete_msp_org_group(
     ctx: Context,
@@ -67,9 +65,8 @@ async def mist_delete_msp_org_group(
 
 @_mcp_tool(
     name="mist_get_msp_org_group",
-    description="GET /api/v1/msps/{msp_id}/orggroups/{orggroup_id}\n\ngetMspOrgGroup\n\nGet MSP Org Group Details",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/msps/{msp_id}/orggroups/{orggroup_id}\n\ngetMspOrgGroup\n\nReturn the organization group details, including its name and member organization IDs.",
+    capability=Capability.READ,
 )
 async def mist_get_msp_org_group(
     ctx: Context,
@@ -88,9 +85,8 @@ async def mist_get_msp_org_group(
 
 @_mcp_tool(
     name="mist_list_msp_org_groups",
-    description="GET /api/v1/msps/{msp_id}/orggroups\n\nlistMspOrgGroups\n\nGet List of MSP Org Groups",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/msps/{msp_id}/orggroups\n\nlistMspOrgGroups\n\nList organization groups defined under this MSP. Organization groups contain related organization IDs and can be used in MSP privilege assignments.",
+    capability=Capability.READ,
 )
 async def mist_list_msp_org_groups(
     ctx: Context,
@@ -108,9 +104,8 @@ async def mist_list_msp_org_groups(
 
 @_mcp_tool(
     name="mist_update_msp_org_group",
-    description="PUT /api/v1/msps/{msp_id}/orggroups/{orggroup_id}\n\nupdateMspOrgGroup\n\nUpdate MSP Org Group",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="PUT /api/v1/msps/{msp_id}/orggroups/{orggroup_id}\n\nupdateMspOrgGroup\n\nUpdate an MSP organization group's display name or member organization IDs.",
+    capability=Capability.WRITE,
 )
 async def mist_update_msp_org_group(
     ctx: Context,

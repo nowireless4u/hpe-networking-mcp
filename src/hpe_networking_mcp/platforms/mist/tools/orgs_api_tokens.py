@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,18 +16,17 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
 
 @_mcp_tool(
     name="mist_create_org_api_token",
-    description="POST /api/v1/orgs/{org_id}/apitokens\n\ncreateOrgApiToken\n\nCreate Org API Token\nNote that the token key is only available during creation time.",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/orgs/{org_id}/apitokens\n\ncreateOrgApiToken\n\nCreate an organization API token with a display name, scoped privileges, and optional source IP restrictions.\nNote that the full token key is only available at creation time.",
+    capability=Capability.WRITE,
 )
 async def mist_create_org_api_token(
     ctx: Context,
@@ -48,9 +47,8 @@ async def mist_create_org_api_token(
 
 @_mcp_tool(
     name="mist_delete_org_api_token",
-    description="DELETE /api/v1/orgs/{org_id}/apitokens/{apitoken_id}\n\ndeleteOrgApiToken\n\nDelete Org API Token",
-    tags={"mist", "mist_write", "mist_write_delete"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True),
+    description="DELETE /api/v1/orgs/{org_id}/apitokens/{apitoken_id}\n\ndeleteOrgApiToken\n\nDelete an organization API token so it can no longer authenticate API requests.",
+    capability=Capability.WRITE_DELETE,
 )
 async def mist_delete_org_api_token(
     ctx: Context,
@@ -69,9 +67,8 @@ async def mist_delete_org_api_token(
 
 @_mcp_tool(
     name="mist_get_org_api_token",
-    description="GET /api/v1/orgs/{org_id}/apitokens/{apitoken_id}\n\ngetOrgApiToken\n\nGet Org API Token",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/apitokens/{apitoken_id}\n\ngetOrgApiToken\n\nReturn metadata for one organization API token. The full token key is only available at creation time and may only be partially shown afterward.",
+    capability=Capability.READ,
 )
 async def mist_get_org_api_token(
     ctx: Context,
@@ -90,9 +87,8 @@ async def mist_get_org_api_token(
 
 @_mcp_tool(
     name="mist_list_org_api_tokens",
-    description="GET /api/v1/orgs/{org_id}/apitokens\n\nlistOrgApiTokens\n\nGet List of Org API Tokens",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/apitokens\n\nlistOrgApiTokens\n\nList organization API tokens, including display names, scoped privileges, allowed source IPs, creator, and last-use metadata.",
+    capability=Capability.READ,
 )
 async def mist_list_org_api_tokens(
     ctx: Context,
@@ -110,9 +106,8 @@ async def mist_list_org_api_tokens(
 
 @_mcp_tool(
     name="mist_update_org_api_token",
-    description="PUT /api/v1/orgs/{org_id}/apitokens/{apitoken_id}\n\nupdateOrgApiToken\n\nUpdate Org API Token",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="PUT /api/v1/orgs/{org_id}/apitokens/{apitoken_id}\n\nupdateOrgApiToken\n\nUpdate an organization API token's display name or scoped privileges. Source IP restrictions are defined when the token is created.",
+    capability=Capability.WRITE,
 )
 async def mist_update_org_api_token(
     ctx: Context,

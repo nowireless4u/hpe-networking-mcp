@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,18 +16,17 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
 
 @_mcp_tool(
     name="mist_delete_org_jse_integration",
-    description="DELETE /api/v1/orgs/{org_id}/setting/jse/setup\n\ndeleteOrgJseIntegration\n\nDelete JSE Integration",
-    tags={"mist", "mist_write", "mist_write_delete"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True),
+    description="DELETE /api/v1/orgs/{org_id}/setting/jse/setup\n\ndeleteOrgJseIntegration\n\nRemove the JSE integration configuration from the organization.",
+    capability=Capability.WRITE_DELETE,
 )
 async def mist_delete_org_jse_integration(
     ctx: Context,
@@ -45,9 +44,8 @@ async def mist_delete_org_jse_integration(
 
 @_mcp_tool(
     name="mist_get_org_jse_info",
-    description="GET /api/v1/orgs/{org_id}/setting/jse/info\n\ngetOrgJseInfo\n\nRetrieves the list of JSE orgs associated with the account.",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/setting/jse/info\n\ngetOrgJseInfo\n\nReturn the JSE organizations associated with the configured account. Use the returned organization names when selecting JSE provider options for secure edge tunnels.",
+    capability=Capability.READ,
 )
 async def mist_get_org_jse_info(
     ctx: Context,
@@ -65,9 +63,8 @@ async def mist_get_org_jse_info(
 
 @_mcp_tool(
     name="mist_get_org_jse_integration",
-    description="GET /api/v1/orgs/{org_id}/setting/jse/setup\n\ngetOrgJseIntegration\n\nGet Org JSE Integration",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/setting/jse/setup\n\ngetOrgJseIntegration\n\nReturn the JSE integration configuration, including the cloud hostname, integration username, and associated JSE organization names.",
+    capability=Capability.READ,
 )
 async def mist_get_org_jse_integration(
     ctx: Context,
@@ -85,9 +82,8 @@ async def mist_get_org_jse_integration(
 
 @_mcp_tool(
     name="mist_setup_org_jse_integration",
-    description="POST /api/v1/orgs/{org_id}/setting/jse/setup\n\nsetupOrgJseIntegration\n\nIn JSE UI: \n1. Create custom role with Read access to service_location and RW access to site and IPSec profile APIs. \n2. Create a user with the above custom role. - email: john@abc.com \n3. Activate the user in the JSE account. \n4. Create the service locations on the JSE account.",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/orgs/{org_id}/setting/jse/setup\n\nsetupOrgJseIntegration\n\nConfigure the JSE integration with the JSE cloud hostname and integration-user credentials. In JSE, use a custom role with read access to `service_location` and read-write access to site and IPsec profile APIs, then create and activate the integration user and service locations.",
+    capability=Capability.WRITE,
 )
 async def mist_setup_org_jse_integration(
     ctx: Context,

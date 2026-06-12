@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,9 +16,9 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
@@ -26,8 +26,7 @@ from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 @_mcp_tool(
     name="mist_get_site_insight_metrics",
     description="GET /api/v1/sites/{site_id}/insights\n\ngetSiteInsightMetrics\n\nGet Site Insight Metrics",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_insight_metrics(
     ctx: Context,
@@ -39,21 +38,30 @@ async def mist_get_site_insight_metrics(
         ),
     ],
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     interval: Annotated[
         str | None,
         Field(
             description="Aggregation works by giving a time range plus interval (e.g. 1d, 1h, 10m) where aggregation function would be applied to."
         ),
     ] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
-    page: Annotated[int, Field(description="query parameter 'page'")] = 1,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
+    page: Annotated[
+        int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
+    ] = 1,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -76,8 +84,7 @@ async def mist_get_site_insight_metrics(
 @_mcp_tool(
     name="mist_get_site_insight_metrics_for_ap",
     description="GET /api/v1/sites/{site_id}/insights/ap/{device_id}/stats\n\ngetSiteInsightMetricsForAP\n\nGet AP Insight Metrics",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_insight_metrics_for_ap(
     ctx: Context,
@@ -90,21 +97,30 @@ async def mist_get_site_insight_metrics_for_ap(
         ),
     ],
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     interval: Annotated[
         str | None,
         Field(
             description="Aggregation works by giving a time range plus interval (e.g. 1d, 1h, 10m) where aggregation function would be applied to."
         ),
     ] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
-    page: Annotated[int, Field(description="query parameter 'page'")] = 1,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
+    page: Annotated[
+        int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
+    ] = 1,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -127,8 +143,7 @@ async def mist_get_site_insight_metrics_for_ap(
 @_mcp_tool(
     name="mist_get_site_insight_metrics_for_client",
     description="GET /api/v1/sites/{site_id}/insights/client/{client_mac}\n\ngetSiteInsightMetricsForClient\n\nGet Client Insight Metrics",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_insight_metrics_for_client(
     ctx: Context,
@@ -141,21 +156,30 @@ async def mist_get_site_insight_metrics_for_client(
         ),
     ],
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     interval: Annotated[
         str | None,
         Field(
             description="Aggregation works by giving a time range plus interval (e.g. 1d, 1h, 10m) where aggregation function would be applied to."
         ),
     ] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
-    page: Annotated[int, Field(description="query parameter 'page'")] = 1,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
+    page: Annotated[
+        int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
+    ] = 1,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -178,8 +202,7 @@ async def mist_get_site_insight_metrics_for_client(
 @_mcp_tool(
     name="mist_get_site_insight_metrics_for_device",
     description="GET /api/v1/sites/{site_id}/insights/device/{device_mac}/{metric}\n\ngetSiteInsightMetricsForDevice\n\nGet AP Insight Metrics\nSee metrics possibilities at [List Insight Metrics](/#operations/listInsightMetrics)",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_insight_metrics_for_device(
     ctx: Context,
@@ -195,21 +218,30 @@ async def mist_get_site_insight_metrics_for_device(
         ),
     ] = None,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     interval: Annotated[
         str | None,
         Field(
             description="Aggregation works by giving a time range plus interval (e.g. 1d, 1h, 10m) where aggregation function would be applied to."
         ),
     ] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
-    page: Annotated[int, Field(description="query parameter 'page'")] = 1,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
+    page: Annotated[
+        int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
+    ] = 1,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -232,8 +264,7 @@ async def mist_get_site_insight_metrics_for_device(
 @_mcp_tool(
     name="mist_get_site_insight_metrics_for_gateway",
     description="GET /api/v1/sites/{site_id}/insights/gateway/{device_id}/stats\n\ngetSiteInsightMetricsForGateway\n\nGet Gateway Insight Metrics",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_insight_metrics_for_gateway(
     ctx: Context,
@@ -247,21 +278,30 @@ async def mist_get_site_insight_metrics_for_gateway(
     ],
     port_id: Annotated[str | None, Field(description="Port ID of the gateway device, e.g. `ge-0/0/1`")] = None,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     interval: Annotated[
         str | None,
         Field(
             description="Aggregation works by giving a time range plus interval (e.g. 1d, 1h, 10m) where aggregation function would be applied to."
         ),
     ] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
-    page: Annotated[int, Field(description="query parameter 'page'")] = 1,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
+    page: Annotated[
+        int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
+    ] = 1,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -285,8 +325,7 @@ async def mist_get_site_insight_metrics_for_gateway(
 @_mcp_tool(
     name="mist_get_site_insight_metrics_for_mx_edge",
     description="GET /api/v1/sites/{site_id}/insights/mxedge/{device_mac}/{metric}\n\ngetSiteInsightMetricsForMxEdge\n\nGet MxEdge Insight Metrics\nSee metrics possibilities at [List Insight Metrics](/#operations/listInsightMetrics)",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_insight_metrics_for_mx_edge(
     ctx: Context,
@@ -302,21 +341,30 @@ async def mist_get_site_insight_metrics_for_mx_edge(
         ),
     ] = None,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     interval: Annotated[
         str | None,
         Field(
             description="Aggregation works by giving a time range plus interval (e.g. 1d, 1h, 10m) where aggregation function would be applied to."
         ),
     ] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
-    page: Annotated[int, Field(description="query parameter 'page'")] = 1,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
+    page: Annotated[
+        int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
+    ] = 1,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -339,8 +387,7 @@ async def mist_get_site_insight_metrics_for_mx_edge(
 @_mcp_tool(
     name="mist_get_site_insight_metrics_for_switch",
     description="GET /api/v1/sites/{site_id}/insights/switch/{device_mac}/{metric}\n\ngetSiteInsightMetricsForSwitch\n\nGet Switch Insight Metrics\nSee metrics possibilities at [List Insight Metrics](/#operations/listInsightMetrics)",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_insight_metrics_for_switch(
     ctx: Context,
@@ -356,21 +403,30 @@ async def mist_get_site_insight_metrics_for_switch(
         ),
     ] = None,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     interval: Annotated[
         str | None,
         Field(
             description="Aggregation works by giving a time range plus interval (e.g. 1d, 1h, 10m) where aggregation function would be applied to."
         ),
     ] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
-    page: Annotated[int, Field(description="query parameter 'page'")] = 1,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
+    page: Annotated[
+        int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
+    ] = 1,
 ) -> Any:
     return await mist_request(
         ctx,

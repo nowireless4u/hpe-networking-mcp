@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,9 +16,9 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
@@ -26,8 +26,7 @@ from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 @_mcp_tool(
     name="mist_enable_site_device_zigbee_join",
     description='POST /api/v1/sites/{site_id}/devices/{device_id}/zigbee_join\n\nenableSiteDeviceZigbeeJoin\n\nAllow Zigbee end devices to join the network for a configurable duration. After the duration expires, new joins will be blocked (unless `allow_join`==`always` is configured on the device).\n\n#### Subscribe to Zigbee Join Events\n`WS /api-ws/v1/stream`\n\n```json\n{\n    "subscribe": "/sites/{site_id}/devices/{device_id}/zigbee_join"\n}\n```\n##### Example output from ws stream\n```json\n{\n    "event": "data",\n    "channel": "/sites/4ac1dcf4-9d8b-7211-65c4-057819f0862b/devices/00000000-0000-0000-1000-5c5b350e0060/...',
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_enable_site_device_zigbee_join(
     ctx: Context,
@@ -48,8 +47,7 @@ async def mist_enable_site_device_zigbee_join(
 @_mcp_tool(
     name="mist_get_site_device_iot_port",
     description="GET /api/v1/sites/{site_id}/devices/{device_id}/iot\n\ngetSiteDeviceIotPort\n\nReturns the current state of each enabled IoT pin configured as an output.",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_device_iot_port(
     ctx: Context,
@@ -69,8 +67,7 @@ async def mist_get_site_device_iot_port(
 @_mcp_tool(
     name="mist_list_site_device_radio_channels",
     description="GET /api/v1/sites/{site_id}/devices/ap_channels\n\nlistSiteDeviceRadioChannels\n\nGet a list of allowed channels (per channel width)",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_list_site_device_radio_channels(
     ctx: Context,
@@ -95,8 +92,7 @@ async def mist_list_site_device_radio_channels(
 @_mcp_tool(
     name="mist_set_site_device_iot_port",
     description="PUT /api/v1/sites/{site_id}/devices/{device_id}/iot\n\nsetSiteDeviceIotPort\n\n**Note**: For each IoT pin referenced:\n * The pin must be enabled using the Device `iot_config` API\n * The pin must support the output direction",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_set_site_device_iot_port(
     ctx: Context,

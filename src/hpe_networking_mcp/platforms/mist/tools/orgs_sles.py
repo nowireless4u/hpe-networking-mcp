@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,39 +16,47 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
 
 @_mcp_tool(
     name="mist_get_org_sites_sle",
-    description="GET /api/v1/orgs/{org_id}/insights/sites-sle\n\ngetOrgSitesSle\n\nGet Org Sites SLE",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/insights/sites-sle\n\ngetOrgSitesSle\n\nReturn per-site Service-Level Expectation (SLE) scores for Wi-Fi, wired, or WAN service over the requested time window.",
+    capability=Capability.READ,
 )
 async def mist_get_org_sites_sle(
     ctx: Context,
     org_id: Annotated[str, Field(description="path parameter 'org_id'")],
-    sle: Annotated[Any | None, Field(description="query parameter 'sle'")] = None,
+    sle: Annotated[Any | None, Field(description="Filter insights by SLE name. enum: `wan`, `wifi`, `wired`")] = None,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     interval: Annotated[
         str | None,
         Field(
             description="Aggregation works by giving a time range plus interval (e.g. 1d, 1h, 10m) where aggregation function would be applied to."
         ),
     ] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
-    page: Annotated[int, Field(description="query parameter 'page'")] = 1,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
+    page: Annotated[
+        int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
+    ] = 1,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -70,9 +78,8 @@ async def mist_get_org_sites_sle(
 
 @_mcp_tool(
     name="mist_get_org_sle",
-    description="GET /api/v1/orgs/{org_id}/insights/{metric}\n\ngetOrgSle\n\nGet Org SLEs (all/worst sites, Mx Edges, ...)",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/insights/{metric}\n\ngetOrgSle\n\nReturn organization-level insight data for the selected metric, such as all or worst sites, Mist Edge insights, or other supported insight metrics, over the requested time window.",
+    capability=Capability.READ,
 )
 async def mist_get_org_sle(
     ctx: Context,
@@ -83,7 +90,9 @@ async def mist_get_org_sle(
     sle: Annotated[
         str | None, Field(description="See [List Insight Metrics](/#operations/listInsightMetrics) for more details")
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     interval: Annotated[
         str | None,
         Field(
@@ -91,11 +100,16 @@ async def mist_get_org_sle(
         ),
     ] = None,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
 ) -> Any:
     return await mist_request(

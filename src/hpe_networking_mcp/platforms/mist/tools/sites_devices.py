@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,9 +16,9 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
@@ -26,8 +26,7 @@ from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 @_mcp_tool(
     name="mist_add_site_device_image",
     description="POST /api/v1/sites/{site_id}/devices/{device_id}/image/{image_number}\n\naddSiteDeviceImage\n\nAttach up to 3 images to a device",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_add_site_device_image(
     ctx: Context,
@@ -49,23 +48,29 @@ async def mist_add_site_device_image(
 @_mcp_tool(
     name="mist_count_site_device_config_history",
     description="GET /api/v1/sites/{site_id}/devices/config_history/count\n\ncountSiteDeviceConfigHistory\n\nCounts the number of entries in device config history for distinct field with given filters",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_count_site_device_config_history(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
-    distinct: Annotated[str | None, Field(description="query parameter 'distinct'")] = None,
-    mac: Annotated[str | None, Field(description="query parameter 'mac'")] = None,
+    distinct: Annotated[str | None, Field(description="Field used to group this count response")] = None,
+    mac: Annotated[str | None, Field(description="Filter results by MAC address")] = None,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -86,28 +91,37 @@ async def mist_count_site_device_config_history(
 
 @_mcp_tool(
     name="mist_count_site_device_events",
-    description="GET /api/v1/sites/{site_id}/devices/events/count\n\ncountSiteDeviceEvents\n\nCounts the number of entries in ap events history for distinct field with given filters",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/sites/{site_id}/devices/events/count\n\ncountSiteDeviceEvents\n\nCount device events for a site, optionally grouped by the `distinct` field and filtered by event attributes and time range. Use [Count Org Device Events](/#operations/countOrgDeviceEvents) to count device events across the organization.",
+    capability=Capability.READ,
 )
 async def mist_count_site_device_events(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
-    distinct: Annotated[Any | None, Field(description="query parameter 'distinct'")] = None,
-    model: Annotated[str | None, Field(description="query parameter 'model'")] = None,
+    distinct: Annotated[
+        Any | None,
+        Field(description="Field used to group this count response. enum: `mac`, `model`, `type`, `type_code`"),
+    ] = None,
+    model: Annotated[str | None, Field(description="Filter results by device model")] = None,
     type: Annotated[
         str | None, Field(description="See [List Device Events Definitions](/#operations/listDeviceEventsDefinitions)")
     ] = None,
-    type_code: Annotated[str | None, Field(description="query parameter 'type_code'")] = None,
+    type_code: Annotated[str | None, Field(description="Filter results by event type code")] = None,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -131,22 +145,31 @@ async def mist_count_site_device_events(
 @_mcp_tool(
     name="mist_count_site_device_last_config",
     description="GET /api/v1/sites/{site_id}/devices/last_config/count\n\ncountSiteDeviceLastConfig\n\nCounts the number of entries in device config history for distinct field with given filters",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_count_site_device_last_config(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
-    distinct: Annotated[Any | None, Field(description="query parameter 'distinct'")] = None,
+    distinct: Annotated[
+        Any | None,
+        Field(description="Field used to group this count response. enum: `mac`, `name`, `site_id`, `version`"),
+    ] = None,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -160,34 +183,45 @@ async def mist_count_site_device_last_config(
 
 @_mcp_tool(
     name="mist_count_site_devices",
-    description="GET /api/v1/sites/{site_id}/devices/count\n\ncountSiteDevices\n\nCounts the number of entries in ap events history for distinct field with given filters",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/sites/{site_id}/devices/count\n\ncountSiteDevices\n\nCount devices for a site, optionally grouped by the `distinct` field and filtered by device inventory attributes and time range. Use [Count Org Devices](/#operations/countOrgDevices) to count devices across the organization.",
+    capability=Capability.READ,
 )
 async def mist_count_site_devices(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
-    distinct: Annotated[Any | None, Field(description="query parameter 'distinct'")] = None,
-    hostname: Annotated[str | None, Field(description="query parameter 'hostname'")] = None,
-    model: Annotated[str | None, Field(description="query parameter 'model'")] = None,
-    mac: Annotated[str | None, Field(description="query parameter 'mac'")] = None,
-    version: Annotated[str | None, Field(description="query parameter 'version'")] = None,
-    mxtunnel_status: Annotated[str | None, Field(description="query parameter 'mxtunnel_status'")] = None,
-    mxedge_id: Annotated[str | None, Field(description="query parameter 'mxedge_id'")] = None,
-    lldp_system_name: Annotated[str | None, Field(description="query parameter 'lldp_system_name'")] = None,
-    lldp_system_desc: Annotated[str | None, Field(description="query parameter 'lldp_system_desc'")] = None,
-    lldp_port_id: Annotated[str | None, Field(description="query parameter 'lldp_port_id'")] = None,
-    lldp_mgmt_addr: Annotated[str | None, Field(description="query parameter 'lldp_mgmt_addr'")] = None,
-    map_id: Annotated[str | None, Field(description="query parameter 'map_id'")] = None,
+    distinct: Annotated[
+        Any | None,
+        Field(
+            description="Field used to group this count response. enum: `hostname`, `lldp_mgmt_addr`, `lldp_port_id`, `lldp_system_desc`, `lldp_system_name`, `map_id`, `model`, `mxedge_id`, `mxtunnel_status`, `version`"
+        ),
+    ] = None,
+    hostname: Annotated[str | None, Field(description="Filter results by hostname")] = None,
+    model: Annotated[str | None, Field(description="Filter results by device model")] = None,
+    mac: Annotated[str | None, Field(description="Filter results by MAC address")] = None,
+    version: Annotated[str | None, Field(description="Filter results by software version")] = None,
+    mxtunnel_status: Annotated[str | None, Field(description="Filter AP results by Mist Tunnel status")] = None,
+    mxedge_id: Annotated[str | None, Field(description="Filter results by Mist Edge identifier")] = None,
+    lldp_system_name: Annotated[str | None, Field(description="Filter AP results by LLDP system name")] = None,
+    lldp_system_desc: Annotated[str | None, Field(description="Filter AP results by LLDP system description")] = None,
+    lldp_port_id: Annotated[str | None, Field(description="Filter AP results by LLDP port identifier")] = None,
+    lldp_mgmt_addr: Annotated[str | None, Field(description="Filter AP results by LLDP management IP address")] = None,
+    map_id: Annotated[str | None, Field(description="Filter results by map identifier")] = None,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -219,8 +253,7 @@ async def mist_count_site_devices(
 @_mcp_tool(
     name="mist_delete_site_device_image",
     description="DELETE /api/v1/sites/{site_id}/devices/{device_id}/image/{image_number}\n\ndeleteSiteDeviceImage\n\nDelete image from a device",
-    tags={"mist", "mist_write", "mist_write_delete"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True),
+    capability=Capability.WRITE_DELETE,
 )
 async def mist_delete_site_device_image(
     ctx: Context,
@@ -241,8 +274,7 @@ async def mist_delete_site_device_image(
 @_mcp_tool(
     name="mist_export_site_devices",
     description="GET /api/v1/sites/{site_id}/devices/export\n\nexportSiteDevices\n\nTo download the exported device information",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_export_site_devices(
     ctx: Context,
@@ -261,8 +293,7 @@ async def mist_export_site_devices(
 @_mcp_tool(
     name="mist_get_site_device",
     description="GET /api/v1/sites/{site_id}/devices/{device_id}\n\ngetSiteDevice\n\nGet Device Configuration",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_device(
     ctx: Context,
@@ -282,8 +313,7 @@ async def mist_get_site_device(
 @_mcp_tool(
     name="mist_import_site_devices",
     description='POST /api/v1/sites/{site_id}/devices/import\n\nimportSiteDevices\n\nImport Information for Multiple Devices\n\nCSV format:\n```csv\nmac,name,map_id,x,y,height,orientation,labels,band_24.power,band_24.bandwidth,band_24.channel,band_24.disabled,band_5.power,band_5.bandwidth,band_5.channel,band_5.disabled,band_6.power,band_6.bandwidth,band_6.channel,band_6.disabled\n5c5b53010101,"AP 1",845a23bf-bed9-e43c-4c86-6fa474be7ae5,30,10,2.3,45,"guest, campus, vip",1,20,0,false,0,40,0,false,17,80,0,false\n```',
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_import_site_devices(
     ctx: Context,
@@ -305,17 +335,18 @@ async def mist_import_site_devices(
 
 @_mcp_tool(
     name="mist_list_site_devices",
-    description="GET /api/v1/sites/{site_id}/devices\n\nlistSiteDevices\n\nGet list of devices on the site.",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/sites/{site_id}/devices\n\nlistSiteDevices\n\nList devices in a site. Use [List Org Devices](/#operations/listOrgDevices) to retrieve devices across the organization, or [Search Org Devices](/#operations/searchOrgDevices) when filters are needed.",
+    capability=Capability.READ,
 )
 async def mist_list_site_devices(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
-    type: Annotated[Any | None, Field(description="query parameter 'type'")] = None,
-    name: Annotated[str | None, Field(description="query parameter 'name'")] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
-    page: Annotated[int, Field(description="query parameter 'page'")] = 1,
+    type: Annotated[Any | None, Field(description="Filter results by type")] = None,
+    name: Annotated[str | None, Field(description="Filter results by name")] = None,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
+    page: Annotated[
+        int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
+    ] = 1,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -330,23 +361,29 @@ async def mist_list_site_devices(
 @_mcp_tool(
     name="mist_search_site_device_config_history",
     description="GET /api/v1/sites/{site_id}/devices/config_history/search\n\nsearchSiteDeviceConfigHistory\n\nSearch for entries in device config history",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_search_site_device_config_history(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
-    type: Annotated[Any | None, Field(description="query parameter 'type'")] = None,
-    mac: Annotated[str | None, Field(description="Device MAC Address")] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    type: Annotated[Any | None, Field(description="Filter results by type. enum: `ap`, `gateway`, `switch`")] = None,
+    mac: Annotated[str | None, Field(description="Filter results by MAC address")] = None,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     sort: Annotated[
         str, Field(description="On which field the list should be sorted, -prefix represents DESC order")
     ] = "timestamp",
@@ -378,17 +415,15 @@ async def mist_search_site_device_config_history(
 
 @_mcp_tool(
     name="mist_search_site_device_events",
-    description="GET /api/v1/sites/{site_id}/devices/events/search\n\nsearchSiteDeviceEvents\n\nSearch Devices Events",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/sites/{site_id}/devices/events/search\n\nsearchSiteDeviceEvents\n\nSearch device events for a site with filters for MAC address, model, event type, message text, and time range. Use [Search Org Device Events](/#operations/searchOrgDeviceEvents) to search device events across the organization.",
+    capability=Capability.READ,
 )
 async def mist_search_site_device_events(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
-    mac: Annotated[str | None, Field(description="Device mac")] = None,
-    model: Annotated[str | None, Field(description="Device model")] = None,
-    text: Annotated[str | None, Field(description="Event message")] = None,
-    timestamp: Annotated[str | None, Field(description="Event time")] = None,
+    mac: Annotated[str | None, Field(description="Filter results by MAC address")] = None,
+    model: Annotated[str | None, Field(description="Filter results by device model")] = None,
+    text: Annotated[str | None, Field(description="Filter results by event message text")] = None,
     type: Annotated[
         str | None, Field(description="See [List Device Events Definitions](/#operations/listDeviceEventsDefinitions)")
     ] = None,
@@ -397,15 +432,22 @@ async def mist_search_site_device_events(
         str | None,
         Field(description="Keyword to include events from additional indices (e.g. ext_tunnel for prisma events)"),
     ] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     sort: Annotated[
         str, Field(description="On which field the list should be sorted, -prefix represents DESC order")
     ] = "timestamp",
@@ -425,7 +467,6 @@ async def mist_search_site_device_events(
             "mac": mac,
             "model": model,
             "text": text,
-            "timestamp": timestamp,
             "type": type,
             "last_by": last_by,
             "includes": includes,
@@ -442,9 +483,8 @@ async def mist_search_site_device_events(
 
 @_mcp_tool(
     name="mist_search_site_device_last_configs",
-    description="GET /api/v1/sites/{site_id}/devices/last_config/search\n\nsearchSiteDeviceLastConfigs\n\nSearch Device Last Configs",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/sites/{site_id}/devices/last_config/search\n\nsearchSiteDeviceLastConfigs\n\nSearch last known device configuration records for a site with filters for device type, MAC address, name, software version, certificate expiry, and time range. Use [Search Org Device Last Configs](/#operations/searchOrgDeviceLastConfigs) to search last known device configuration records across the organization.",
+    capability=Capability.READ,
 )
 async def mist_search_site_device_last_configs(
     ctx: Context,
@@ -452,19 +492,28 @@ async def mist_search_site_device_last_configs(
     cert_expiry_duration: Annotated[
         str | None, Field(description="Duration for expiring cert queries (format: 2d/3h/172800 seconds)")
     ] = None,
-    device_type: Annotated[Any | None, Field(description="query parameter 'device_type'")] = None,
-    mac: Annotated[str | None, Field(description="query parameter 'mac'")] = None,
-    version: Annotated[str | None, Field(description="query parameter 'version'")] = None,
-    name: Annotated[str | None, Field(description="query parameter 'name'")] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    device_type: Annotated[
+        Any | None, Field(description="Filter results by device type. enum: `ap`, `gateway`, `switch`, `mxedge`")
+    ] = None,
+    mac: Annotated[str | None, Field(description="Filter results by MAC address")] = None,
+    version: Annotated[str | None, Field(description="Filter results by software version")] = None,
+    name: Annotated[str | None, Field(description="Filter results by name")] = None,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     sort: Annotated[
         str, Field(description="On which field the list should be sorted, -prefix represents DESC order")
     ] = "timestamp",
@@ -499,9 +548,8 @@ async def mist_search_site_device_last_configs(
 
 @_mcp_tool(
     name="mist_search_site_devices",
-    description="GET /api/v1/sites/{site_id}/devices/search\n\nsearchSiteDevices\n\nSearch Device",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/sites/{site_id}/devices/search\n\nsearchSiteDevices\n\nSearch devices in a site with filters for device type, identifiers, model, software version, radio settings, LLDP details, and other inventory attributes. Use [Search Org Devices](/#operations/searchOrgDevices) to search devices across the organization.",
+    capability=Capability.READ,
 )
 async def mist_search_site_devices(
     ctx: Context,
@@ -533,14 +581,14 @@ async def mist_search_site_devices(
     ip: Annotated[
         str | None,
         Field(
-            description="Partial / full Device IP Address. Use `prefix*` for prefix search or `*substring*` for contains search (e.g. `10.100.10.*` and `*100.10.*` match `10.100.10.54`). Suffix-only wildcards (e.g. `*.54`) are not supported"
+            description="Partial / full Device IP address. Use `prefix*` for prefix search or `*substring*` for contains search (e.g. `10.100.10.*` and `*100.10.*` match `10.100.10.54`). Suffix-only wildcards (e.g. `*.54`) are not supported"
         ),
     ] = None,
     last_config_status: Annotated[
         str | None, Field(description="When `type`==`switch` or `type`==`gateway`, last configuration status")
     ] = None,
     last_hostname: Annotated[str | None, Field(description="Last hostname of the device.")] = None,
-    lldp_mgmt_addr: Annotated[str | None, Field(description="When `type`==`ap`, LLDP management ip address")] = None,
+    lldp_mgmt_addr: Annotated[str | None, Field(description="When `type`==`ap`, LLDP management IP address")] = None,
     lldp_port_id: Annotated[
         str | None,
         Field(
@@ -580,10 +628,13 @@ async def mist_search_site_devices(
             description="When `type`==`ap`, Comma separated list of Mist Edge id, if AP is connecting to a Mist Edge"
         ),
     ] = None,
-    mxtunnel_status: Annotated[Any | None, Field(description="When `type`==`ap`, MxTunnel status, up / down.")] = None,
+    mxtunnel_status: Annotated[
+        Any | None,
+        Field(description="When `type`==`ap`, Mist Tunnel status used to filter results. enum: `down`, `up`"),
+    ] = None,
     node: Annotated[Any | None, Field(description="When `type`==`gateway`. enum: `node0`, `node1`")] = None,
-    node0_mac: Annotated[str | None, Field(description="When `type`==`gateway`, node0 MAC Address")] = None,
-    node1_mac: Annotated[str | None, Field(description="When `type`==`gateway`, node1 MAC Address")] = None,
+    node0_mac: Annotated[str | None, Field(description="When `type`==`gateway`, node0 MAC address")] = None,
+    node1_mac: Annotated[str | None, Field(description="When `type`==`gateway`, node1 MAC address")] = None,
     power_constrained: Annotated[
         bool | None, Field(description="When `type`==`ap`, whether the AP is power constrained")
     ] = None,
@@ -597,19 +648,36 @@ async def mist_search_site_devices(
     t128agent_version: Annotated[
         str | None, Field(description="When `type`==`gateway` (SSR only), version of 128T agent")
     ] = None,
-    type: Annotated[Any | None, Field(description="Type of device. enum: `ap`, `gateway`, `switch`")] = None,
-    version: Annotated[str | None, Field(description="Version")] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    type: Annotated[
+        Any | None, Field(description="Device type used to filter results. enum: `ap`, `gateway`, `switch`")
+    ] = None,
+    version: Annotated[str | None, Field(description="Filter results by software version")] = None,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    sort: Annotated[Any | None, Field(description="Sort options")] = None,
-    desc_sort: Annotated[Any | None, Field(description="Sort options in reverse order")] = None,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    sort: Annotated[
+        Any | None,
+        Field(
+            description="Field used to sort results; a leading `-` indicates descending order. enum: `mac`, `model`, `sku`, `timestamp`"
+        ),
+    ] = None,
+    desc_sort: Annotated[
+        Any | None,
+        Field(description="Field used to sort results in descending order. enum: `mac`, `model`, `sku`, `timestamp`"),
+    ] = None,
     search_after: Annotated[
         str | None,
         Field(
@@ -673,8 +741,7 @@ async def mist_search_site_devices(
 @_mcp_tool(
     name="mist_set_site_devices_gbp_tag",
     description="POST /api/v1/sites/{site_id}/devices/gbp_tag\n\nsetSiteDevicesGbpTag\n\nSet GBP Tag for multiple devices",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_set_site_devices_gbp_tag(
     ctx: Context,
@@ -694,8 +761,7 @@ async def mist_set_site_devices_gbp_tag(
 @_mcp_tool(
     name="mist_update_site_device",
     description="PUT /api/v1/sites/{site_id}/devices/{device_id}\n\nupdateSiteDevice\n\nUpdate Device Configuration",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_update_site_device(
     ctx: Context,

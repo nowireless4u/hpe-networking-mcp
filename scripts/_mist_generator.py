@@ -320,9 +320,9 @@ from __future__ import annotations
 from typing import {typing_imports}
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
@@ -393,26 +393,25 @@ def _format_description(op: ResolvedOperation) -> str:
 def emit_operation_function(op: ResolvedOperation) -> str:
     """Emit the Python source for one tool function."""
     description = _format_description(op)
-    # Read-only vs write classification → tags + ToolAnnotations.
+    # Capability classification per docs/tool-annotation-rubric.md, derived
+    # from the HTTP method. POST/PUT/PATCH default to WRITE (gated +
+    # confirmation) — fail-safe for any /utils/ diagnostics, which can be
+    # refined to DIAGNOSTIC case-by-case later. The shared make_tool_decorator
+    # factory derives hints, the mist_write[_delete] enable tag, and the
+    # requires_confirmation gate tag from this one classification; the
+    # platform + dynamic-managed tags are added by the factory automatically.
     if op.method in ("GET",):
-        tags = '{"mist"}'
-        readonly = True
-        destructive = False
+        capability = "Capability.READ"
     elif op.method == "DELETE":
-        tags = '{"mist", "mist_write", "mist_write_delete"}'
-        readonly = False
-        destructive = True
+        capability = "Capability.WRITE_DELETE"
     else:  # POST / PUT / PATCH
-        tags = '{"mist", "mist_write"}'
-        readonly = False
-        destructive = False
+        capability = "Capability.WRITE"
 
     lines: list[str] = []
     lines.append("@_mcp_tool(")
     lines.append(f"    name={_py_string_literal(op.tool_name, max_len=200)},")
     lines.append(f"    description={description},")
-    lines.append(f"    tags={tags},")
-    lines.append(f"    annotations=ToolAnnotations(readOnlyHint={readonly}, destructiveHint={destructive}),")
+    lines.append(f"    capability={capability},")
     lines.append(")")
     lines.append(f"async def {op.tool_name}(")
     lines.append("    ctx: Context,")

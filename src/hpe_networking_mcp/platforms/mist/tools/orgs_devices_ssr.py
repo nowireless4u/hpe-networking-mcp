@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,18 +16,17 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
 
 @_mcp_tool(
     name="mist_export_org_ssr_id_tokens",
-    description="POST /api/v1/orgs/{org_id}/ssr/export_idtokens\n\nexportOrgSsrIdTokens\n\nExport IDTokens from Mist to import into Conductor to securely allow SSR devices during onboarding",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/orgs/{org_id}/ssr/export_idtokens\n\nexportOrgSsrIdTokens\n\nExport SSR ID tokens for the requested device MAC addresses so they can be imported into Conductor during SSR onboarding.",
+    capability=Capability.WRITE,
 )
 async def mist_export_org_ssr_id_tokens(
     ctx: Context,
@@ -47,8 +46,7 @@ async def mist_export_org_ssr_id_tokens(
 @_mcp_tool(
     name="mist_get_org128_t_registration_commands",
     description="GET /api/v1/orgs/{org_id}/128routers/register_cmd\n\ngetOrg128TRegistrationCommands\n\n128T devices can be managed/adopted by Mist.",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_org128_t_registration_commands(
     ctx: Context,
@@ -75,9 +73,8 @@ async def mist_get_org128_t_registration_commands(
 
 @_mcp_tool(
     name="mist_get_org_ssr_registration_commands",
-    description="GET /api/v1/orgs/{org_id}/ssr/register_cmd\n\ngetOrgSsrRegistrationCommands\n\nSSR devices can be managed/adopted by Mist.",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/ssr/register_cmd\n\ngetOrgSsrRegistrationCommands\n\nReturn the registration token and conductor or router commands used to register SSR routers with Mist. The optional TTL controls token validity, and asset IDs can restrict registration to specific assets.",
+    capability=Capability.READ,
 )
 async def mist_get_org_ssr_registration_commands(
     ctx: Context,

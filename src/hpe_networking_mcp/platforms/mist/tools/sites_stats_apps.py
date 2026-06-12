@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,9 +16,9 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
@@ -26,19 +26,21 @@ from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 @_mcp_tool(
     name="mist_count_site_apps",
     description="GET /api/v1/sites/{site_id}/stats/apps/count\n\ncountSiteApps\n\nCount by Distinct Attributes of Applications",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_count_site_apps(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
     distinct: Annotated[
-        Any | None, Field(description="Default for wireless devices is `ap`. Default for wired devices is `device_mac`")
+        Any | None,
+        Field(
+            description="Field used to group application statistics count results. enum: `ap`, `app`, `category`, `device_mac`, `port_id`, `service`, `src_ip`, `ssid`, `wcid`, `wlan_id`"
+        ),
     ] = None,
     device_mac: Annotated[str | None, Field(description="MAC of the device")] = None,
-    app: Annotated[str | None, Field(description="Application name")] = None,
+    app: Annotated[str | None, Field(description="Filter results by application name")] = None,
     wired: Annotated[str | None, Field(description="If a device is wired or wireless. Default is False.")] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
 ) -> Any:
     return await mist_request(
         ctx,

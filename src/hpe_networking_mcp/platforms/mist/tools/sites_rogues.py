@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,9 +16,9 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
@@ -26,32 +26,45 @@ from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 @_mcp_tool(
     name="mist_count_site_rogue_events",
     description="GET /api/v1/sites/{site_id}/rogues/events/count\n\ncountSiteRogueEvents\n\nCount by Distinct Attributes of Rogue Events",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_count_site_rogue_events(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
-    distinct: Annotated[Any | None, Field(description="query parameter 'distinct'")] = None,
-    type: Annotated[Any | None, Field(description="query parameter 'type'")] = None,
-    ssid: Annotated[str | None, Field(description="SSID of the network detected as threat")] = None,
-    bssid: Annotated[str | None, Field(description="BSSID of the network detected as threat")] = None,
+    distinct: Annotated[
+        Any | None, Field(description="Field used to group this count response. enum: `ap`, `bssid`, `ssid`, `type`")
+    ] = None,
+    type: Annotated[
+        Any | None,
+        Field(
+            description="Rogue classification used to filter the results. enum: `honeypot`, `lan`, `others`, `spoof`"
+        ),
+    ] = None,
+    ssid: Annotated[str | None, Field(description="Filter results by SSID")] = None,
+    bssid: Annotated[str | None, Field(description="Filter results by BSSID")] = None,
     ap_mac: Annotated[
         str | None, Field(description="MAC of the device that had strongest signal strength for ssid/bssid pair")
     ] = None,
-    channel: Annotated[str | None, Field(description="Channel over which ap_mac heard ssid/bssid pair")] = None,
+    channel: Annotated[str | None, Field(description="Filter results by channel")] = None,
     seen_on_lan: Annotated[
         bool | None, Field(description="Whether the reporting AP see a wireless client (on LAN) connecting to it")
     ] = None,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -78,8 +91,7 @@ async def mist_count_site_rogue_events(
 @_mcp_tool(
     name="mist_get_site_rogue_ap",
     description="GET /api/v1/sites/{site_id}/rogues/{rogue_bssid}\n\ngetSiteRogueAP\n\nGet Rogue AP Details",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_rogue_ap(
     ctx: Context,
@@ -99,22 +111,33 @@ async def mist_get_site_rogue_ap(
 @_mcp_tool(
     name="mist_list_site_rogue_a_ps",
     description="GET /api/v1/sites/{site_id}/insights/rogues\n\nlistSiteRogueAPs\n\nGet List of Site Rogue/Neighbor APs",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_list_site_rogue_a_ps(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
-    type: Annotated[Any | None, Field(description="query parameter 'type'")] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    type: Annotated[
+        Any | None,
+        Field(
+            description="Rogue classification used to filter the results. enum: `honeypot`, `lan`, `others`, `spoof`"
+        ),
+    ] = None,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     interval: Annotated[
         str | None,
         Field(
@@ -142,21 +165,27 @@ async def mist_list_site_rogue_a_ps(
 @_mcp_tool(
     name="mist_list_site_rogue_clients",
     description="GET /api/v1/sites/{site_id}/insights/rogues/clients\n\nlistSiteRogueClients\n\nGet List of Site Rogue Clients",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_list_site_rogue_clients(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     interval: Annotated[
         str | None,
         Field(
@@ -177,31 +206,42 @@ async def mist_list_site_rogue_clients(
 @_mcp_tool(
     name="mist_search_site_rogue_events",
     description="GET /api/v1/sites/{site_id}/rogues/events/search\n\nsearchSiteRogueEvents\n\nSearch Rogue Events",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_search_site_rogue_events(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
-    type: Annotated[Any | None, Field(description="query parameter 'type'")] = None,
-    ssid: Annotated[str | None, Field(description="SSID of the network detected as threat")] = None,
-    bssid: Annotated[str | None, Field(description="BSSID of the network detected as threat")] = None,
+    type: Annotated[
+        Any | None,
+        Field(
+            description="Rogue classification used to filter the results. enum: `honeypot`, `lan`, `others`, `spoof`"
+        ),
+    ] = None,
+    ssid: Annotated[str | None, Field(description="Filter results by SSID")] = None,
+    bssid: Annotated[str | None, Field(description="Filter results by BSSID")] = None,
     ap_mac: Annotated[
         str | None, Field(description="MAC of the device that had strongest signal strength for ssid/bssid pair")
     ] = None,
-    channel: Annotated[int | None, Field(description="Channel over which ap_mac heard ssid/bssid pair")] = None,
+    channel: Annotated[int | None, Field(description="Filter results by channel")] = None,
     seen_on_lan: Annotated[
         bool | None, Field(description="Whether the reporting AP see a wireless client (on LAN) connecting to it")
     ] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     sort: Annotated[
         str, Field(description="On which field the list should be sorted, -prefix represents DESC order")
     ] = "timestamp",
