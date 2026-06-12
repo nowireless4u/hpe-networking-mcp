@@ -15,7 +15,6 @@ from __future__ import annotations
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.axis._registry import tool
 from hpe_networking_mcp.platforms.axis.client import format_http_error, get_axis_client
@@ -38,15 +37,9 @@ async def axis_commit_changes(
     timeout for this call specifically.
 
     Args:
-        confirmed: Set true after user confirms; skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot
+            show a confirmation prompt (the universal gate prompts otherwise).
     """
-    decline = await confirm_write(
-        ctx,
-        "Axis: commit ALL pending staged changes for this tenant. This applies "
-        "every queued create/update/delete from prior axis_manage_* calls. Confirm?",
-    )
-    if decline:
-        return decline
     try:
         client = await get_axis_client()
         response = await client.request("POST", "/Commit", timeout=_COMMIT_TIMEOUT)

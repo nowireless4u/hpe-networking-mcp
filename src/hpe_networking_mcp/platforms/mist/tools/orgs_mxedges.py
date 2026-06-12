@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,18 +16,17 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
 
 @_mcp_tool(
     name="mist_add_org_mx_edge_image",
-    description="POST /api/v1/orgs/{org_id}/mxedges/{mxedge_id}/image/{image_number}\n\naddOrgMxEdgeImage\n\nAttach up to 3 images to a mxedge",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/orgs/{org_id}/mxedges/{mxedge_id}/image/{image_number}\n\naddOrgMxEdgeImage\n\nUpload and attach an image file to a Mist Edge appliance. A Mist Edge can have up to three image attachments.",
+    capability=Capability.WRITE,
 )
 async def mist_add_org_mx_edge_image(
     ctx: Context,
@@ -54,9 +53,8 @@ async def mist_add_org_mx_edge_image(
 
 @_mcp_tool(
     name="mist_assign_org_mx_edge_to_site",
-    description="POST /api/v1/orgs/{org_id}/mxedges/assign\n\nassignOrgMxEdgeToSite\n\nAssign Org MxEdge to Site",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/orgs/{org_id}/mxedges/assign\n\nassignOrgMxEdgeToSite\n\nAssign one or more Mist Edge appliances from the organization to a site by Mist Edge ID and site ID.",
+    capability=Capability.WRITE,
 )
 async def mist_assign_org_mx_edge_to_site(
     ctx: Context,
@@ -75,9 +73,8 @@ async def mist_assign_org_mx_edge_to_site(
 
 @_mcp_tool(
     name="mist_bounce_org_mx_edge_data_ports",
-    description="POST /api/v1/orgs/{org_id}/mxedges/{mxedge_id}/services/tunterm/bounce_port\n\nbounceOrgMxEdgeDataPorts\n\nBounce TunTerm Data Ports",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/orgs/{org_id}/mxedges/{mxedge_id}/services/tunterm/bounce_port\n\nbounceOrgMxEdgeDataPorts\n\nBounce one or more TunTerm data ports on a Mist Edge, optionally setting the hold time between port bounces.",
+    capability=Capability.WRITE,
 )
 async def mist_bounce_org_mx_edge_data_ports(
     ctx: Context,
@@ -103,9 +100,8 @@ async def mist_bounce_org_mx_edge_data_ports(
 
 @_mcp_tool(
     name="mist_claim_org_mx_edge",
-    description='POST /api/v1/orgs/{org_id}/mxedges/claim\n\nclaimOrgMxEdge\n\nFor a Mist Edge in default state, it will show a random claim code like `135-546-673` which you can "claim" it into your Org',
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/orgs/{org_id}/mxedges/claim\n\nclaimOrgMxEdge\n\nClaim one or more Mist Edge appliances into the organization using their claim codes.",
+    capability=Capability.WRITE,
 )
 async def mist_claim_org_mx_edge(
     ctx: Context,
@@ -124,9 +120,8 @@ async def mist_claim_org_mx_edge(
 
 @_mcp_tool(
     name="mist_control_org_mx_edge_services",
-    description="POST /api/v1/orgs/{org_id}/mxedges/{mxedge_id}/services/{name}/{action}\n\ncontrolOrgMxEdgeServices\n\nControl Services on a Mist Edge",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/orgs/{org_id}/mxedges/{mxedge_id}/services/{name}/{action}\n\ncontrolOrgMxEdgeServices\n\nStart, stop, or restart a named Mist Edge service such as `tunterm`, `mxagent`, or `radsecproxy`.",
+    capability=Capability.WRITE,
 )
 async def mist_control_org_mx_edge_services(
     ctx: Context,
@@ -149,33 +144,42 @@ async def mist_control_org_mx_edge_services(
 
 @_mcp_tool(
     name="mist_count_org_mx_edges",
-    description="GET /api/v1/orgs/{org_id}/mxedges/count\n\ncountOrgMxEdges\n\nCount by Distinct Attributes of Org Mist Edges",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/mxedges/count\n\ncountOrgMxEdges\n\nCount organization Mist Edge records, optionally grouped by `distinct` and filtered by Mist Edge, cluster, site, model, distro, tunnel termination version, and time range.",
+    capability=Capability.READ,
 )
 async def mist_count_org_mx_edges(
     ctx: Context,
     org_id: Annotated[str, Field(description="path parameter 'org_id'")],
-    distinct: Annotated[Any | None, Field(description="query parameter 'distinct'")] = None,
-    mxedge_id: Annotated[str | None, Field(description="Mist edge id")] = None,
+    distinct: Annotated[
+        Any | None,
+        Field(
+            description="Field used to group this count response. enum: `distro`, `model`, `mxcluster_id`, `site_id`, `tunterm_version`"
+        ),
+    ] = None,
+    mxedge_id: Annotated[str | None, Field(description="Filter results by Mist Edge identifier")] = None,
     site_id: Annotated[str | None, Field(description="Mist edge site id")] = None,
     mxcluster_id: Annotated[str | None, Field(description="Mist edge cluster id")] = None,
-    model: Annotated[str | None, Field(description="Model name")] = None,
+    model: Annotated[str | None, Field(description="Filter results by device model")] = None,
     distro: Annotated[str | None, Field(description="Debian code name (buster, bullseye)")] = None,
-    tunterm_version: Annotated[str | None, Field(description="tunterm version")] = None,
-    sort: Annotated[
-        str | None, Field(description="Sort options, -prefix represents DESC order, default is -last_seen")
-    ] = None,
+    tunterm_version: Annotated[str | None, Field(description="Filter results by tunnel termination version")] = None,
+    sort: Annotated[str | None, Field(description="Field used to sort results")] = None,
     stats: Annotated[bool | None, Field(description="Whether to return device stats, default is false")] = None,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -203,29 +207,40 @@ async def mist_count_org_mx_edges(
 
 @_mcp_tool(
     name="mist_count_org_site_mx_edge_events",
-    description="GET /api/v1/orgs/{org_id}/mxedges/events/count\n\ncountOrgSiteMxEdgeEvents\n\nCount by Distinct Attributes of Org Mist Edge Events",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/mxedges/events/count\n\ncountOrgSiteMxEdgeEvents\n\nCount Mist Edge event records across the organization, optionally grouped by `distinct` and filtered by Mist Edge, cluster, event type, service, and time range.",
+    capability=Capability.READ,
 )
 async def mist_count_org_site_mx_edge_events(
     ctx: Context,
     org_id: Annotated[str, Field(description="path parameter 'org_id'")],
-    distinct: Annotated[Any | None, Field(description="query parameter 'distinct'")] = None,
-    mxedge_id: Annotated[str | None, Field(description="Mist edge id")] = None,
+    distinct: Annotated[
+        Any | None,
+        Field(
+            description="Field used to group this count response. enum: `mxcluster_id`, `mxedge_id`, `package`, `type`"
+        ),
+    ] = None,
+    mxedge_id: Annotated[str | None, Field(description="Filter results by Mist Edge identifier")] = None,
     mxcluster_id: Annotated[str | None, Field(description="Mist edge cluster id")] = None,
     type: Annotated[
         str | None, Field(description="See [List Device Events Definitions](/#operations/listDeviceEventsDefinitions)")
     ] = None,
-    service: Annotated[str | None, Field(description="Service running on mist edge(mxagent, tunterm etc)")] = None,
+    service: Annotated[str | None, Field(description="Filter results by service name")] = None,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -249,9 +264,8 @@ async def mist_count_org_site_mx_edge_events(
 
 @_mcp_tool(
     name="mist_create_org_mx_edge",
-    description="POST /api/v1/orgs/{org_id}/mxedges\n\ncreateOrgMxEdge\n\nCreate MxEdge",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/orgs/{org_id}/mxedges\n\ncreateOrgMxEdge\n\nCreate a Mist Edge appliance configuration in the organization, including cluster assignment, management, services, and tunnel termination settings.",
+    capability=Capability.WRITE,
 )
 async def mist_create_org_mx_edge(
     ctx: Context,
@@ -270,9 +284,8 @@ async def mist_create_org_mx_edge(
 
 @_mcp_tool(
     name="mist_delete_org_mx_edge",
-    description="DELETE /api/v1/orgs/{org_id}/mxedges/{mxedge_id}\n\ndeleteOrgMxEdge\n\nDelete Org MxEdge",
-    tags={"mist", "mist_write", "mist_write_delete"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True),
+    description="DELETE /api/v1/orgs/{org_id}/mxedges/{mxedge_id}\n\ndeleteOrgMxEdge\n\nDelete a Mist Edge appliance record from the organization by Mist Edge ID.",
+    capability=Capability.WRITE_DELETE,
 )
 async def mist_delete_org_mx_edge(
     ctx: Context,
@@ -291,9 +304,8 @@ async def mist_delete_org_mx_edge(
 
 @_mcp_tool(
     name="mist_delete_org_mx_edge_image",
-    description="DELETE /api/v1/orgs/{org_id}/mxedges/{mxedge_id}/image/{image_number}\n\ndeleteOrgMxEdgeImage\n\nRemove MxEdge Image",
-    tags={"mist", "mist_write", "mist_write_delete"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True),
+    description="DELETE /api/v1/orgs/{org_id}/mxedges/{mxedge_id}/image/{image_number}\n\ndeleteOrgMxEdgeImage\n\nDelete a numbered image attachment from a Mist Edge appliance.",
+    capability=Capability.WRITE_DELETE,
 )
 async def mist_delete_org_mx_edge_image(
     ctx: Context,
@@ -313,9 +325,8 @@ async def mist_delete_org_mx_edge_image(
 
 @_mcp_tool(
     name="mist_disconnect_org_mx_edge_tunterm_aps",
-    description="POST /api/v1/orgs/{org_id}/mxedges/{mxedge_id}/services/tunterm/disconnect_aps\n\ndisconnectOrgMxEdgeTuntermAps\n\nDisconnect AP’s from TunTerm",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/orgs/{org_id}/mxedges/{mxedge_id}/services/tunterm/disconnect_aps\n\ndisconnectOrgMxEdgeTuntermAps\n\nDisconnect specific APs from the Mist Edge TunTerm service by AP MAC address.",
+    capability=Capability.WRITE,
 )
 async def mist_disconnect_org_mx_edge_tunterm_aps(
     ctx: Context,
@@ -341,9 +352,8 @@ async def mist_disconnect_org_mx_edge_tunterm_aps(
 
 @_mcp_tool(
     name="mist_get_org_mx_edge",
-    description="GET /api/v1/orgs/{org_id}/mxedges/{mxedge_id}\n\ngetOrgMxEdge\n\nGet Org MxEdge details",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/mxedges/{mxedge_id}\n\ngetOrgMxEdge\n\nRetrieve configuration and registration details for a specific Mist Edge appliance in the organization.",
+    capability=Capability.READ,
 )
 async def mist_get_org_mx_edge(
     ctx: Context,
@@ -362,17 +372,17 @@ async def mist_get_org_mx_edge(
 
 @_mcp_tool(
     name="mist_get_org_mx_edge_upgrade_info",
-    description="GET /api/v1/orgs/{org_id}/mxedges/versions\n\ngetOrgMxEdgeUpgradeInfo\n\nGet Mist Edge Upgrade Information",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/mxedges/versions\n\ngetOrgMxEdgeUpgradeInfo\n\nRetrieve available Mist Edge package versions by upgrade channel and distro.",
+    capability=Capability.READ,
 )
 async def mist_get_org_mx_edge_upgrade_info(
     ctx: Context,
     org_id: Annotated[str, Field(description="path parameter 'org_id'")],
     channel: Annotated[
-        Any | None, Field(description="Upgrade channel to follow, stable (default) / beta / alpha")
+        Any | None,
+        Field(description="Upgrade channel used to filter available versions. enum: `alpha`, `beta`, `stable`"),
     ] = None,
-    distro: Annotated[str | None, Field(description="Distro code name (e.g. `buster`, `bullseye`, ...)")] = None,
+    distro: Annotated[str | None, Field(description="Filter results by distro")] = None,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -386,9 +396,8 @@ async def mist_get_org_mx_edge_upgrade_info(
 
 @_mcp_tool(
     name="mist_get_org_mx_edge_vm_params",
-    description="GET /api/v1/orgs/{org_id}/mxedges/{mxedge_id}/vm_params\n\ngetOrgMxEdgeVmParams\n\nGet Mist Edge VM parameters",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/mxedges/{mxedge_id}/vm_params\n\ngetOrgMxEdgeVmParams\n\nRetrieve VM deployment parameters for a Mist Edge, including model, optional name, and base64 user data.",
+    capability=Capability.READ,
 )
 async def mist_get_org_mx_edge_vm_params(
     ctx: Context,
@@ -407,16 +416,19 @@ async def mist_get_org_mx_edge_vm_params(
 
 @_mcp_tool(
     name="mist_list_org_mx_edges",
-    description="GET /api/v1/orgs/{org_id}/mxedges\n\nlistOrgMxEdges\n\nGet List of Org MxEdges",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/mxedges\n\nlistOrgMxEdges\n\nList Mist Edge appliances in the organization, optionally filtering for org-level, site-level, or all Mist Edges with `for_site`.",
+    capability=Capability.READ,
 )
 async def mist_list_org_mx_edges(
     ctx: Context,
     org_id: Annotated[str, Field(description="path parameter 'org_id'")],
-    for_site: Annotated[Any | None, Field(description="Filter for org/site level mist edges")] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
-    page: Annotated[int, Field(description="query parameter 'page'")] = 1,
+    for_site: Annotated[
+        Any | None, Field(description="Filter for org/site level Mist Edges. enum: `any`, `false`, `true`")
+    ] = None,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
+    page: Annotated[
+        int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
+    ] = 1,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -430,9 +442,8 @@ async def mist_list_org_mx_edges(
 
 @_mcp_tool(
     name="mist_restart_org_mx_edge",
-    description="POST /api/v1/orgs/{org_id}/mxedges/{mxedge_id}/restart\n\nrestartOrgMxEdge\n\nIn the case where a Mist Edge is replaced, you would need to unregister it. Which disconnects the currently the connected Mist Edge and allow another to register.",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/orgs/{org_id}/mxedges/{mxedge_id}/restart\n\nrestartOrgMxEdge\n\nRestart the registration workflow for a Mist Edge replacement by disconnecting the currently registered appliance so another Mist Edge can register.",
+    capability=Capability.WRITE,
 )
 async def mist_restart_org_mx_edge(
     ctx: Context,
@@ -451,29 +462,35 @@ async def mist_restart_org_mx_edge(
 
 @_mcp_tool(
     name="mist_search_org_mist_edge_events",
-    description="GET /api/v1/orgs/{org_id}/mxedges/events/search\n\nsearchOrgMistEdgeEvents\n\nSearch Org Mist Edge Events",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/mxedges/events/search\n\nsearchOrgMistEdgeEvents\n\nSearch Mist Edge event records across the organization with filters for Mist Edge, cluster, event type, service, component, and time range.",
+    capability=Capability.READ,
 )
 async def mist_search_org_mist_edge_events(
     ctx: Context,
     org_id: Annotated[str, Field(description="path parameter 'org_id'")],
-    mxedge_id: Annotated[str | None, Field(description="Mist edge id")] = None,
+    mxedge_id: Annotated[str | None, Field(description="Filter results by Mist Edge identifier")] = None,
     mxcluster_id: Annotated[str | None, Field(description="Mist edge cluster id")] = None,
     type: Annotated[
         str | None, Field(description="See [List Device Events Definitions](/#operations/listDeviceEventsDefinitions)")
     ] = None,
-    service: Annotated[str | None, Field(description="Service running on mist edge(mxagent, tunterm etc)")] = None,
-    component: Annotated[str | None, Field(description="Component like PS1, PS2")] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    service: Annotated[str | None, Field(description="Filter results by service name")] = None,
+    component: Annotated[str | None, Field(description="Filter results by component name")] = None,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     sort: Annotated[
         str, Field(description="On which field the list should be sorted, -prefix represents DESC order")
     ] = "timestamp",
@@ -508,9 +525,8 @@ async def mist_search_org_mist_edge_events(
 
 @_mcp_tool(
     name="mist_search_org_mx_edges",
-    description="GET /api/v1/orgs/{org_id}/mxedges/search\n\nsearchOrgMxEdges\n\nSearch Org Mist Edges",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/mxedges/search\n\nsearchOrgMxEdges\n\nSearch organization Mist Edge records with filters for hostname, Mist Edge, cluster, site, model, distro, tunnel termination version, and time range.",
+    capability=Capability.READ,
 )
 async def mist_search_org_mx_edges(
     ctx: Context,
@@ -518,30 +534,42 @@ async def mist_search_org_mx_edges(
     hostname: Annotated[
         str | None,
         Field(
-            description="Partial / full Device hostname. Use `prefix*` for prefix search or `*substring*` for contains search (e.g. `my-london*` and `*london*` match `my-london-1`). Suffix-only wildcards (e.g. `*london-1`) are not supported"
+            description="Partial / full Device hostname. Use `prefix*` for prefix search or `*substring*` for contains search (e.g. `my-london*` and `*london*` match `my-london-1`). Suffix-only wildcards (e.g. `*london-1`) are not supported. Accepts multiple com..."
         ),
     ] = None,
-    mxedge_id: Annotated[str | None, Field(description="Mist edge id")] = None,
-    mxcluster_id: Annotated[str | None, Field(description="Mist edge cluster id")] = None,
+    mxedge_id: Annotated[
+        str | None,
+        Field(description="Filter results by Mist Edge identifier. Accepts multiple comma-separated values."),
+    ] = None,
+    mxcluster_id: Annotated[
+        str | None, Field(description="Mist edge cluster id. Accepts multiple comma-separated values.")
+    ] = None,
     model: Annotated[
         str | None,
         Field(
-            description="Partial / full Device model. Use `prefix*` for prefix search or `*substring*` for contains search (e.g. `AP4*` and `*P4*` match `AP43`). Suffix-only wildcards (e.g. `*43`) are not supported"
+            description="Partial / full Device model. Use `prefix*` for prefix search or `*substring*` for contains search (e.g. `AP4*` and `*P4*` match `AP43`). Suffix-only wildcards (e.g. `*43`) are not supported. Accepts multiple comma-separated values."
         ),
     ] = None,
     distro: Annotated[str | None, Field(description="Debian code name (buster, bullseye)")] = None,
-    tunterm_version: Annotated[str | None, Field(description="tunterm version")] = None,
+    tunterm_version: Annotated[str | None, Field(description="Filter results by tunnel termination version")] = None,
     site_id: Annotated[str | None, Field(description="Mist edge site id")] = None,
     stats: Annotated[bool | None, Field(description="Whether to return device stats, default is false")] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     sort: Annotated[
         str, Field(description="On which field the list should be sorted, -prefix represents DESC order")
     ] = "timestamp",
@@ -579,9 +607,8 @@ async def mist_search_org_mx_edges(
 
 @_mcp_tool(
     name="mist_unassign_org_mx_edge_from_site",
-    description="POST /api/v1/orgs/{org_id}/mxedges/unassign\n\nunassignOrgMxEdgeFromSite\n\nUnassign Org MxEdge from Site",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/orgs/{org_id}/mxedges/unassign\n\nunassignOrgMxEdgeFromSite\n\nUnassign one or more Mist Edge appliances from their current site while keeping them in the organization.",
+    capability=Capability.WRITE,
 )
 async def mist_unassign_org_mx_edge_from_site(
     ctx: Context,
@@ -600,9 +627,8 @@ async def mist_unassign_org_mx_edge_from_site(
 
 @_mcp_tool(
     name="mist_unregister_org_mx_edge",
-    description="POST /api/v1/orgs/{org_id}/mxedges/{mxedge_id}/unregister\n\nunregisterOrgMxEdge\n\nIn the case where a Mist Edge is replaced, you would need to unregister it. Which disconnects the currently the connected Mist Edge and allow another to register.",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/orgs/{org_id}/mxedges/{mxedge_id}/unregister\n\nunregisterOrgMxEdge\n\nUnregister a Mist Edge during a replacement workflow by disconnecting the currently registered appliance so another Mist Edge can register.",
+    capability=Capability.WRITE,
 )
 async def mist_unregister_org_mx_edge(
     ctx: Context,
@@ -621,9 +647,8 @@ async def mist_unregister_org_mx_edge(
 
 @_mcp_tool(
     name="mist_update_org_mx_edge",
-    description="PUT /api/v1/orgs/{org_id}/mxedges/{mxedge_id}\n\nupdateOrgMxEdge\n\nUpdate Org MxEdge",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="PUT /api/v1/orgs/{org_id}/mxedges/{mxedge_id}\n\nupdateOrgMxEdge\n\nUpdate a Mist Edge appliance configuration, including model, name, management IP, services, and tunnel termination settings.",
+    capability=Capability.WRITE,
 )
 async def mist_update_org_mx_edge(
     ctx: Context,
@@ -643,9 +668,8 @@ async def mist_update_org_mx_edge(
 
 @_mcp_tool(
     name="mist_upload_org_mx_edge_support_files",
-    description="POST /api/v1/orgs/{org_id}/mxedges/{mxedge_id}/support\n\nuploadOrgMxEdgeSupportFiles\n\nSupport / Upload Mist Edge support files",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/orgs/{org_id}/mxedges/{mxedge_id}/support\n\nuploadOrgMxEdgeSupportFiles\n\nTrigger upload of support files from a Mist Edge for troubleshooting.",
+    capability=Capability.WRITE,
 )
 async def mist_upload_org_mx_edge_support_files(
     ctx: Context,

@@ -630,6 +630,7 @@
                   ]
                 },
                 "fib-optimization-exclude-nexthop-ipv4": {
+                  "description": "Configures next-hops to be excluded from FIB (Forwarding Information Base) optimization.\nUser may want to prevent optimization of host routes which resolves to certain next hops.\nThis leaf-list configures such next hops.Any EVPN host route pointing to the configured next hops,\nwill not be optimized by the AIF feature.",
                   "items": {
                     "description": "Configures next-hops to be excluded from FIB (Forwarding Information Base) optimization.\nUser may want to prevent optimization of host routes which resolves to certain next hops.\nThis leaf-list configures such next hops.Any EVPN host route pointing to the configured next hops,\nwill not be optimized by the AIF feature.",
                     "format": "pattern",
@@ -694,6 +695,7 @@
             ]
           },
           "fib-optimization-exclude-nexthop-ipv4": {
+            "description": "Configures next-hops to be excluded from FIB (Forwarding Information Base) optimization.\nUser may want to prevent optimization of host routes which resolves to certain next hops.\nThis leaf-list configures such next hops.Any EVPN host route pointing to the configured next hops,\nwill not be optimized by the AIF feature.",
             "items": {
               "description": "Configures next-hops to be excluded from FIB (Forwarding Information Base) optimization.\nUser may want to prevent optimization of host routes which resolves to certain next hops.\nThis leaf-list configures such next hops.Any EVPN host route pointing to the configured next hops,\nwill not be optimized by the AIF feature.",
               "format": "pattern",
@@ -747,6 +749,7 @@
             ]
           },
           "fib-optimization-exclude-nexthop-ipv4": {
+            "description": "Configures next-hops to be excluded from FIB (Forwarding Information Base) optimization.\nUser may want to prevent optimization of host routes which resolves to certain next hops.\nThis leaf-list configures such next hops.Any EVPN host route pointing to the configured next hops,\nwill not be optimized by the AIF feature.",
             "items": {
               "description": "Configures next-hops to be excluded from FIB (Forwarding Information Base) optimization.\nUser may want to prevent optimization of host routes which resolves to certain next hops.\nThis leaf-list configures such next hops.Any EVPN host route pointing to the configured next hops,\nwill not be optimized by the AIF feature.",
               "format": "pattern",
@@ -2534,6 +2537,7 @@
             ]
           },
           "member-as": {
+            "description": "Remote autonomous systems that are to be treated\nas part of the local confederation.",
             "items": {
               "description": "Remote autonomous systems that are to be treated\nas part of the local confederation.",
               "format": "int64",
@@ -2564,6 +2568,7 @@
             ]
           },
           "member-as": {
+            "description": "Remote autonomous systems that are to be treated\nas part of the local confederation.",
             "items": {
               "description": "Remote autonomous systems that are to be treated\nas part of the local confederation.",
               "format": "int64",
@@ -2947,8 +2952,7 @@
                   "x-patternSources": "ipv4-prefix",
                   "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}/([0-9]|[12][0-9]|3[0-2])'",
                   "x-supportedDeviceType": [
-                    "Switch CX",
-                    "Gateway"
+                    "Switch CX"
                   ],
                   "x-typeDescription": "An IPv4 prefix represented in dotted quad notation followed by\na slash and a CIDR mask (0 <= mask <= 32)."
                 },
@@ -2961,6 +2965,18 @@
                     "Gateway",
                     "Switch CX"
                   ]
+                },
+                "aggregate-address-mask": {
+                  "description": "Aggregate IPv4 mask for GW.",
+                  "format": "pattern",
+                  "maxLength": 9999,
+                  "type": "string",
+                  "x-patternSources": "ipv4-address",
+                  "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ],
+                  "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
                 },
                 "aggregate-address-sources": {
                   "description": "Aggregate the routes sourced by different types of protocols.",
@@ -2978,6 +2994,31 @@
                     "Gateway"
                   ],
                   "x-typeDescription": "Type of source protocol to aggregate."
+                },
+                "aggregate-address-value": {
+                  "description": "Aggregate IPv4 address for GW.",
+                  "format": "pattern",
+                  "maxLength": 9999,
+                  "type": "string",
+                  "x-patternSources": "ipv4-address",
+                  "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ],
+                  "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
+                },
+                "aggregate-source-route-map": {
+                  "description": "Route-map for aggregate routes sourced by overlay.",
+                  "format": "pattern",
+                  "maxLength": 80,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-path": "/ac-routemap-config:route-maps/ac-routemap-config:route-map/ac-routemap-config:route-map-name",
+                  "x-patternSources": "route-map-name",
+                  "x-patterns": "'[^\\s]*'",
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ]
                 },
                 "as-set": {
                   "description": "Generate AS set path information",
@@ -3040,8 +3081,7 @@
                   "x-patternSources": "ipv4-prefix",
                   "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}/([0-9]|[12][0-9]|3[0-2])'",
                   "x-supportedDeviceType": [
-                    "Switch CX",
-                    "Gateway"
+                    "Switch CX"
                   ],
                   "x-typeDescription": "An IPv4 prefix represented in dotted quad notation followed by\na slash and a CIDR mask (0 <= mask <= 32)."
                 },
@@ -3054,6 +3094,18 @@
                     "Gateway",
                     "Switch CX"
                   ]
+                },
+                "aggregate-address-mask": {
+                  "description": "Aggregate IPv4 mask for GW.",
+                  "format": "pattern",
+                  "maxLength": 9999,
+                  "type": "string",
+                  "x-patternSources": "ipv4-address",
+                  "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ],
+                  "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
                 },
                 "aggregate-address-sources": {
                   "description": "Aggregate the routes sourced by different types of protocols.",
@@ -3071,6 +3123,31 @@
                     "Gateway"
                   ],
                   "x-typeDescription": "Type of source protocol to aggregate."
+                },
+                "aggregate-address-value": {
+                  "description": "Aggregate IPv4 address for GW.",
+                  "format": "pattern",
+                  "maxLength": 9999,
+                  "type": "string",
+                  "x-patternSources": "ipv4-address",
+                  "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ],
+                  "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
+                },
+                "aggregate-source-route-map": {
+                  "description": "Route-map for aggregate routes sourced by overlay.",
+                  "format": "pattern",
+                  "maxLength": 80,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-path": "/ac-routemap-config:route-maps/ac-routemap-config:route-map/ac-routemap-config:route-map-name",
+                  "x-patternSources": "route-map-name",
+                  "x-patterns": "'[^\\s]*'",
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ]
                 },
                 "as-set": {
                   "description": "Generate AS set path information",
@@ -3125,6 +3202,30 @@
             "description": "Specify a network to announce via BGP",
             "items": {
               "properties": {
+                "network-address": {
+                  "description": "IPv4 BGP network address for GW.",
+                  "format": "pattern",
+                  "maxLength": 9999,
+                  "type": "string",
+                  "x-patternSources": "ipv4-address",
+                  "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ],
+                  "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
+                },
+                "network-mask": {
+                  "description": "IPv4 BGP network mask for GW.",
+                  "format": "pattern",
+                  "maxLength": 9999,
+                  "type": "string",
+                  "x-patternSources": "ipv4-address",
+                  "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ],
+                  "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
+                },
                 "prefix": {
                   "description": "IPv4 BGP network address.",
                   "format": "pattern",
@@ -3134,8 +3235,7 @@
                   "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}/([0-9]|[12][0-9]|3[0-2])'",
                   "x-supportedDeviceType": [
                     "Switch CX",
-                    "Switch PVOS",
-                    "Gateway"
+                    "Switch PVOS"
                   ],
                   "x-typeDescription": "An IPv4 prefix represented in dotted quad notation followed by\na slash and a CIDR mask (0 <= mask <= 32)."
                 },
@@ -3170,6 +3270,30 @@
             "description": "Specify a network to announce via BGP",
             "items": {
               "properties": {
+                "network-address": {
+                  "description": "IPv4 BGP network address for GW.",
+                  "format": "pattern",
+                  "maxLength": 9999,
+                  "type": "string",
+                  "x-patternSources": "ipv4-address",
+                  "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ],
+                  "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
+                },
+                "network-mask": {
+                  "description": "IPv4 BGP network mask for GW.",
+                  "format": "pattern",
+                  "maxLength": 9999,
+                  "type": "string",
+                  "x-patternSources": "ipv4-address",
+                  "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ],
+                  "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
+                },
                 "prefix": {
                   "description": "IPv4 BGP network address.",
                   "format": "pattern",
@@ -3179,8 +3303,7 @@
                   "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}/([0-9]|[12][0-9]|3[0-2])'",
                   "x-supportedDeviceType": [
                     "Switch CX",
-                    "Switch PVOS",
-                    "Gateway"
+                    "Switch PVOS"
                   ],
                   "x-typeDescription": "An IPv4 prefix represented in dotted quad notation followed by\na slash and a CIDR mask (0 <= mask <= 32)."
                 },
@@ -3252,7 +3375,11 @@
                     "OSPFV3",
                     "CLOUD_OVERLAY",
                     "CRYPTO_CFGSET",
-                    "RAPNG_VPN"
+                    "RAPNG_VPN",
+                    "OSPF_INTRA_AREA",
+                    "OSPF_INTER_AREA",
+                    "OSPF_EXTERNAL_TYPE_1",
+                    "OSPF_EXTERNAL_TYPE_2"
                   ],
                   "format": "enum",
                   "type": "string",
@@ -3264,6 +3391,10 @@
                     "LOCAL_LOOPBACK": "Local routes on loopback interfaces",
                     "OSPF": "OSPF routes",
                     "OSPFV3": "OSPF routes",
+                    "OSPF_EXTERNAL_TYPE_1": "OSPF external type-1 routes",
+                    "OSPF_EXTERNAL_TYPE_2": "OSPF external type-2 routes",
+                    "OSPF_INTER_AREA": "OSPF inter-area routes",
+                    "OSPF_INTRA_AREA": "OSPF intra-area routes",
                     "RAPNG_VPN": "RAPNG-VPN(Remote Access Point Next Gen - Virtual Private Network) routes",
                     "RIP": "Routing Information Protocol routes",
                     "STATIC": "Static routes"
@@ -3329,7 +3460,11 @@
                     "OSPFV3",
                     "CLOUD_OVERLAY",
                     "CRYPTO_CFGSET",
-                    "RAPNG_VPN"
+                    "RAPNG_VPN",
+                    "OSPF_INTRA_AREA",
+                    "OSPF_INTER_AREA",
+                    "OSPF_EXTERNAL_TYPE_1",
+                    "OSPF_EXTERNAL_TYPE_2"
                   ],
                   "format": "enum",
                   "type": "string",
@@ -3341,6 +3476,10 @@
                     "LOCAL_LOOPBACK": "Local routes on loopback interfaces",
                     "OSPF": "OSPF routes",
                     "OSPFV3": "OSPF routes",
+                    "OSPF_EXTERNAL_TYPE_1": "OSPF external type-1 routes",
+                    "OSPF_EXTERNAL_TYPE_2": "OSPF external type-2 routes",
+                    "OSPF_INTER_AREA": "OSPF inter-area routes",
+                    "OSPF_INTRA_AREA": "OSPF intra-area routes",
                     "RAPNG_VPN": "RAPNG-VPN(Remote Access Point Next Gen - Virtual Private Network) routes",
                     "RIP": "Routing Information Protocol routes",
                     "STATIC": "Static routes"
@@ -3642,7 +3781,11 @@
                     "OSPFV3",
                     "CLOUD_OVERLAY",
                     "CRYPTO_CFGSET",
-                    "RAPNG_VPN"
+                    "RAPNG_VPN",
+                    "OSPF_INTRA_AREA",
+                    "OSPF_INTER_AREA",
+                    "OSPF_EXTERNAL_TYPE_1",
+                    "OSPF_EXTERNAL_TYPE_2"
                   ],
                   "format": "enum",
                   "type": "string",
@@ -3654,6 +3797,10 @@
                     "LOCAL_LOOPBACK": "Local routes on loopback interfaces",
                     "OSPF": "OSPF routes",
                     "OSPFV3": "OSPF routes",
+                    "OSPF_EXTERNAL_TYPE_1": "OSPF external type-1 routes",
+                    "OSPF_EXTERNAL_TYPE_2": "OSPF external type-2 routes",
+                    "OSPF_INTER_AREA": "OSPF inter-area routes",
+                    "OSPF_INTRA_AREA": "OSPF intra-area routes",
                     "RAPNG_VPN": "RAPNG-VPN(Remote Access Point Next Gen - Virtual Private Network) routes",
                     "RIP": "Routing Information Protocol routes",
                     "STATIC": "Static routes"
@@ -3723,7 +3870,11 @@
                     "OSPFV3",
                     "CLOUD_OVERLAY",
                     "CRYPTO_CFGSET",
-                    "RAPNG_VPN"
+                    "RAPNG_VPN",
+                    "OSPF_INTRA_AREA",
+                    "OSPF_INTER_AREA",
+                    "OSPF_EXTERNAL_TYPE_1",
+                    "OSPF_EXTERNAL_TYPE_2"
                   ],
                   "format": "enum",
                   "type": "string",
@@ -3735,6 +3886,10 @@
                     "LOCAL_LOOPBACK": "Local routes on loopback interfaces",
                     "OSPF": "OSPF routes",
                     "OSPFV3": "OSPF routes",
+                    "OSPF_EXTERNAL_TYPE_1": "OSPF external type-1 routes",
+                    "OSPF_EXTERNAL_TYPE_2": "OSPF external type-2 routes",
+                    "OSPF_INTER_AREA": "OSPF inter-area routes",
+                    "OSPF_INTRA_AREA": "OSPF intra-area routes",
                     "RAPNG_VPN": "RAPNG-VPN(Remote Access Point Next Gen - Virtual Private Network) routes",
                     "RIP": "Routing Information Protocol routes",
                     "STATIC": "Static routes"
@@ -4258,7 +4413,7 @@
                 "route-map"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 2,
             "type": "array",
             "x-key": [
               "direction"
@@ -4379,7 +4534,7 @@
                 "route-map"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 2,
             "type": "array",
             "x-key": [
               "direction"
@@ -4890,7 +5045,7 @@
                 "prefix-list"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 1,
             "type": "array",
             "x-key": [
               "direction"
@@ -4941,7 +5096,7 @@
                 "prefix-list"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 1,
             "type": "array",
             "x-key": [
               "direction"
@@ -4992,7 +5147,7 @@
                 "prefix-list"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 1,
             "type": "array",
             "x-key": [
               "direction"
@@ -5043,7 +5198,7 @@
                 "prefix-list"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 1,
             "type": "array",
             "x-key": [
               "direction"
@@ -5527,7 +5682,7 @@
                           }
                         }
                       },
-                      "maxItems": 2147483647,
+                      "maxItems": 1,
                       "type": "array",
                       "x-key": [
                         "ipRange"
@@ -5715,7 +5870,7 @@
                           }
                         }
                       },
-                      "maxItems": 2147483647,
+                      "maxItems": 1,
                       "type": "array",
                       "x-key": [
                         "ipRange"
@@ -7084,6 +7239,7 @@
                         ]
                       },
                       "community-standard": {
+                        "description": "List of standard community values. Includes BGP well-known communities (INTERNET, NO_EXPORT, NO_ADVERTISE, LOCAL_AS, GSHUT) and custom AS:NN format communities",
                         "items": {
                           "description": "List of standard community values. Includes BGP well-known communities (INTERNET, NO_EXPORT, NO_ADVERTISE, LOCAL_AS, GSHUT) and custom AS:NN format communities",
                           "oneOf": [
@@ -7126,6 +7282,7 @@
                           ]
                         },
                         "maxItems": 2147483647,
+                        "minItems": 1,
                         "type": "array"
                       },
                       "route-target-expanded": {
@@ -7142,6 +7299,7 @@
                         ]
                       },
                       "route-target-standard": {
+                        "description": "List of standard route target extended communities. Used in MPLS VPN environments for route target filtering in AS:NN format",
                         "items": {
                           "description": "List of standard route target extended communities. Used in MPLS VPN environments for route target filtering in AS:NN format",
                           "oneOf": [
@@ -7164,6 +7322,7 @@
                           ]
                         },
                         "maxItems": 2147483647,
+                        "minItems": 1,
                         "type": "array"
                       },
                       "seq-no-op-type": {
@@ -7243,6 +7402,7 @@
                   ]
                 },
                 "community-standard": {
+                  "description": "List of standard community values. Includes BGP well-known communities (INTERNET, NO_EXPORT, NO_ADVERTISE, LOCAL_AS, GSHUT) and custom AS:NN format communities",
                   "items": {
                     "description": "List of standard community values. Includes BGP well-known communities (INTERNET, NO_EXPORT, NO_ADVERTISE, LOCAL_AS, GSHUT) and custom AS:NN format communities",
                     "oneOf": [
@@ -7285,6 +7445,7 @@
                     ]
                   },
                   "maxItems": 2147483647,
+                  "minItems": 1,
                   "type": "array"
                 },
                 "route-target-expanded": {
@@ -7301,6 +7462,7 @@
                   ]
                 },
                 "route-target-standard": {
+                  "description": "List of standard route target extended communities. Used in MPLS VPN environments for route target filtering in AS:NN format",
                   "items": {
                     "description": "List of standard route target extended communities. Used in MPLS VPN environments for route target filtering in AS:NN format",
                     "oneOf": [
@@ -7323,6 +7485,7 @@
                     ]
                   },
                   "maxItems": 2147483647,
+                  "minItems": 1,
                   "type": "array"
                 },
                 "seq-no-op-type": {
@@ -7389,6 +7552,7 @@
                   ]
                 },
                 "community-standard": {
+                  "description": "List of standard community values. Includes BGP well-known communities (INTERNET, NO_EXPORT, NO_ADVERTISE, LOCAL_AS, GSHUT) and custom AS:NN format communities",
                   "items": {
                     "description": "List of standard community values. Includes BGP well-known communities (INTERNET, NO_EXPORT, NO_ADVERTISE, LOCAL_AS, GSHUT) and custom AS:NN format communities",
                     "oneOf": [
@@ -7431,6 +7595,7 @@
                     ]
                   },
                   "maxItems": 2147483647,
+                  "minItems": 1,
                   "type": "array"
                 },
                 "route-target-expanded": {
@@ -7447,6 +7612,7 @@
                   ]
                 },
                 "route-target-standard": {
+                  "description": "List of standard route target extended communities. Used in MPLS VPN environments for route target filtering in AS:NN format",
                   "items": {
                     "description": "List of standard route target extended communities. Used in MPLS VPN environments for route target filtering in AS:NN format",
                     "oneOf": [
@@ -7469,6 +7635,7 @@
                     ]
                   },
                   "maxItems": 2147483647,
+                  "minItems": 1,
                   "type": "array"
                 },
                 "seq-no-op-type": {
@@ -7521,6 +7688,7 @@
         "description": "EVPN Instance (EVI) specific grouping",
         "properties": {
           "export-route-targets": {
+            "description": "EVI Export Route Targets.",
             "items": {
               "description": "EVI Export Route Targets.",
               "oneOf": [
@@ -7548,10 +7716,11 @@
                 "Switch CX"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 32,
             "type": "array"
           },
           "import-route-targets": {
+            "description": "EVI Import Route Targets.",
             "items": {
               "description": "EVI Import Route Targets.",
               "oneOf": [
@@ -7579,7 +7748,7 @@
                 "Switch CX"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 32,
             "type": "array"
           },
           "redistribute-host-route": {
@@ -7608,6 +7777,7 @@
         "description": "EVPN Instance (EVI) specific grouping",
         "properties": {
           "export-route-targets": {
+            "description": "EVI Export Route Targets.",
             "items": {
               "description": "EVI Export Route Targets.",
               "oneOf": [
@@ -7635,10 +7805,11 @@
                 "Switch CX"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 32,
             "type": "array"
           },
           "import-route-targets": {
+            "description": "EVI Import Route Targets.",
             "items": {
               "description": "EVI Import Route Targets.",
               "oneOf": [
@@ -7666,7 +7837,7 @@
                 "Switch CX"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 32,
             "type": "array"
           },
           "redistribute-host-route": {
@@ -8551,6 +8722,7 @@
                   "description": "IP prefix priority parameters.",
                   "properties": {
                     "ip-prefix-priority": {
+                      "description": "Set IP prefix priority values for route selection. Values will be in descending order.",
                       "items": {
                         "description": "Set IP prefix priority values for route selection. Values will be in descending order.",
                         "format": "int32",
@@ -8565,6 +8737,7 @@
                       "type": "array"
                     },
                     "ipv6-prefix-priority": {
+                      "description": "Set IPv6 prefix priority values for route selection. Values will be in descending order.",
                       "items": {
                         "description": "Set IPv6 prefix priority values for route selection. Values will be in descending order.",
                         "format": "int32",
@@ -8703,6 +8876,7 @@
             "description": "IP prefix priority parameters.",
             "properties": {
               "ip-prefix-priority": {
+                "description": "Set IP prefix priority values for route selection. Values will be in descending order.",
                 "items": {
                   "description": "Set IP prefix priority values for route selection. Values will be in descending order.",
                   "format": "int32",
@@ -8717,6 +8891,7 @@
                 "type": "array"
               },
               "ipv6-prefix-priority": {
+                "description": "Set IPv6 prefix priority values for route selection. Values will be in descending order.",
                 "items": {
                   "description": "Set IPv6 prefix priority values for route selection. Values will be in descending order.",
                   "format": "int32",
@@ -8844,6 +9019,7 @@
             "description": "IP prefix priority parameters.",
             "properties": {
               "ip-prefix-priority": {
+                "description": "Set IP prefix priority values for route selection. Values will be in descending order.",
                 "items": {
                   "description": "Set IP prefix priority values for route selection. Values will be in descending order.",
                   "format": "int32",
@@ -8858,6 +9034,7 @@
                 "type": "array"
               },
               "ipv6-prefix-priority": {
+                "description": "Set IPv6 prefix priority values for route selection. Values will be in descending order.",
                 "items": {
                   "description": "Set IPv6 prefix priority values for route selection. Values will be in descending order.",
                   "format": "int32",
@@ -9878,7 +10055,7 @@
           "sa-filter-in": {
             "description": "Ingress ACL to filter processing of MSDP Source\nActive messages received from peer",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -9889,7 +10066,7 @@
           "sa-filter-out": {
             "description": "Egress ACL to filter MSDP Source Active messages\nsent to peer",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -10070,7 +10247,7 @@
           "sa-filter-in": {
             "description": "Ingress ACL to filter processing of MSDP Source\nActive messages received from peer",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -10081,7 +10258,7 @@
           "sa-filter-out": {
             "description": "Egress ACL to filter MSDP Source Active messages\nsent to peer",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -10490,6 +10667,7 @@
         "description": "Configure IPV4 multicast static route",
         "properties": {
           "outgoing-interfaces": {
+            "description": "The list of interfaces on which multicast traffic is\n          forwarded.",
             "items": {
               "description": "The list of interfaces on which multicast traffic is\n          forwarded.",
               "oneOf": [
@@ -10543,6 +10721,7 @@
         "description": "Configure IPV4 multicast static route",
         "properties": {
           "outgoing-interfaces": {
+            "description": "The list of interfaces on which multicast traffic is\n          forwarded.",
             "items": {
               "description": "The list of interfaces on which multicast traffic is\n          forwarded.",
               "oneOf": [
@@ -10596,6 +10775,7 @@
         "description": "Configure IPV6 multicast static route",
         "properties": {
           "outgoing-interfaces": {
+            "description": "The list of interfaces on which multicast traffic is\n          forwarded.",
             "items": {
               "description": "The list of interfaces on which multicast traffic is\n          forwarded.",
               "oneOf": [
@@ -10649,6 +10829,7 @@
         "description": "Configure IPV6 multicast static route",
         "properties": {
           "outgoing-interfaces": {
+            "description": "The list of interfaces on which multicast traffic is\n          forwarded.",
             "items": {
               "description": "The list of interfaces on which multicast traffic is\n          forwarded.",
               "oneOf": [
@@ -11309,6 +11490,7 @@
                             "type": "string"
                           },
                           "uplinks": {
+                            "description": "List of uplinks on Branch to be used for this Cloud Security tunnel nexthop.",
                             "items": {
                               "description": "List of uplinks on Branch to be used for this Cloud Security tunnel nexthop.",
                               "format": "const",
@@ -11504,6 +11686,7 @@
                             "x-patterns": "'[a-zA-Z0-9]*'"
                           },
                           "uplinks": {
+                            "description": "List of uplinks on Branch to be used for this VPNC tunnel nexthop.",
                             "items": {
                               "description": "List of uplinks on Branch to be used for this VPNC tunnel nexthop.",
                               "format": "const",
@@ -11539,7 +11722,7 @@
                       "type"
                     ]
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 16,
                   "type": "array",
                   "x-key": [
                     "index"
@@ -11549,7 +11732,7 @@
                   ]
                 },
                 "preemptive-failover": {
-                  "default": "false",
+                  "default": "true",
                   "description": "Enable preemptive failover.",
                   "type": "boolean",
                   "x-supportedDeviceType": [
@@ -11625,6 +11808,7 @@
                       "type": "string"
                     },
                     "uplinks": {
+                      "description": "List of uplinks on Branch to be used for this Cloud Security tunnel nexthop.",
                       "items": {
                         "description": "List of uplinks on Branch to be used for this Cloud Security tunnel nexthop.",
                         "format": "const",
@@ -11820,6 +12004,7 @@
                       "x-patterns": "'[a-zA-Z0-9]*'"
                     },
                     "uplinks": {
+                      "description": "List of uplinks on Branch to be used for this VPNC tunnel nexthop.",
                       "items": {
                         "description": "List of uplinks on Branch to be used for this VPNC tunnel nexthop.",
                         "format": "const",
@@ -11855,7 +12040,7 @@
                 "type"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 16,
             "type": "array",
             "x-key": [
               "index"
@@ -11865,7 +12050,7 @@
             ]
           },
           "preemptive-failover": {
-            "default": "false",
+            "default": "true",
             "description": "Enable preemptive failover.",
             "type": "boolean",
             "x-supportedDeviceType": [
@@ -11930,6 +12115,7 @@
                       "type": "string"
                     },
                     "uplinks": {
+                      "description": "List of uplinks on Branch to be used for this Cloud Security tunnel nexthop.",
                       "items": {
                         "description": "List of uplinks on Branch to be used for this Cloud Security tunnel nexthop.",
                         "format": "const",
@@ -12125,6 +12311,7 @@
                       "x-patterns": "'[a-zA-Z0-9]*'"
                     },
                     "uplinks": {
+                      "description": "List of uplinks on Branch to be used for this VPNC tunnel nexthop.",
                       "items": {
                         "description": "List of uplinks on Branch to be used for this VPNC tunnel nexthop.",
                         "format": "const",
@@ -12160,7 +12347,7 @@
                 "type"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 16,
             "type": "array",
             "x-key": [
               "index"
@@ -12170,7 +12357,7 @@
             ]
           },
           "preemptive-failover": {
-            "default": "false",
+            "default": "true",
             "description": "Enable preemptive failover.",
             "type": "boolean",
             "x-supportedDeviceType": [
@@ -12183,6 +12370,30 @@
       "ArubaOspfv2_AggregateRoute": {
         "description": "Summarizes the external routes with the matching address or masks.",
         "properties": {
+          "aggregate-mask": {
+            "description": "Mask for the aggregate route network.",
+            "format": "pattern",
+            "maxLength": 9999,
+            "type": "string",
+            "x-patternSources": "ipv4-address",
+            "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ],
+            "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
+          },
+          "aggregate-network": {
+            "description": "Network address for the aggregate route.",
+            "format": "pattern",
+            "maxLength": 9999,
+            "type": "string",
+            "x-patternSources": "ipv4-address",
+            "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ],
+            "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
+          },
           "cost": {
             "description": "cost for OSPFv2 aggregate-route.",
             "format": "int64",
@@ -12209,8 +12420,7 @@
             "x-patternSources": "ipv4-prefix",
             "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}/([0-9]|[12][0-9]|3[0-2])'",
             "x-supportedDeviceType": [
-              "Switch CX",
-              "Gateway"
+              "Switch CX"
             ],
             "x-typeDescription": "An IPv4 prefix represented in dotted quad notation followed by\na slash and a CIDR mask (0 <= mask <= 32)."
           },
@@ -12248,6 +12458,30 @@
       "ArubaOspfv2_AggregateRouteGet": {
         "description": "Summarizes the external routes with the matching address or masks.",
         "properties": {
+          "aggregate-mask": {
+            "description": "Mask for the aggregate route network.",
+            "format": "pattern",
+            "maxLength": 9999,
+            "type": "string",
+            "x-patternSources": "ipv4-address",
+            "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ],
+            "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
+          },
+          "aggregate-network": {
+            "description": "Network address for the aggregate route.",
+            "format": "pattern",
+            "maxLength": 9999,
+            "type": "string",
+            "x-patternSources": "ipv4-address",
+            "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+            "x-supportedDeviceType": [
+              "Gateway"
+            ],
+            "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
+          },
           "cost": {
             "description": "cost for OSPFv2 aggregate-route.",
             "format": "int64",
@@ -12274,8 +12508,7 @@
             "x-patternSources": "ipv4-prefix",
             "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}/([0-9]|[12][0-9]|3[0-2])'",
             "x-supportedDeviceType": [
-              "Switch CX",
-              "Gateway"
+              "Switch CX"
             ],
             "x-typeDescription": "An IPv4 prefix represented in dotted quad notation followed by\na slash and a CIDR mask (0 <= mask <= 32)."
           },
@@ -12338,7 +12571,8 @@
             ],
             "x-supportedDeviceType": [
               "Switch CX",
-              "Switch PVOS"
+              "Switch PVOS",
+              "Gateway"
             ]
           },
           "area-type": {
@@ -12379,7 +12613,8 @@
             "type": "integer",
             "x-supportedDeviceType": [
               "Switch CX",
-              "Switch PVOS"
+              "Switch PVOS",
+              "Gateway"
             ]
           },
           "metric-type": {
@@ -12486,7 +12721,8 @@
             ],
             "x-supportedDeviceType": [
               "Switch CX",
-              "Switch PVOS"
+              "Switch PVOS",
+              "Gateway"
             ]
           },
           "area-type": {
@@ -12527,7 +12763,8 @@
             "type": "integer",
             "x-supportedDeviceType": [
               "Switch CX",
-              "Switch PVOS"
+              "Switch PVOS",
+              "Gateway"
             ]
           },
           "metric-type": {
@@ -14245,7 +14482,7 @@
                             }
                           ]
                         },
-                        "maxItems": 2147483647,
+                        "maxItems": 3,
                         "type": "array",
                         "x-key": [
                           "routeType"
@@ -14311,6 +14548,18 @@
                         "x-supportedDeviceType": [
                           "Switch PVOS"
                         ]
+                      },
+                      "exclude-mask": {
+                        "description": "Mask for the network to be excluded for the OSPFv2 instance.",
+                        "format": "pattern",
+                        "maxLength": 9999,
+                        "type": "string",
+                        "x-patternSources": "ipv4-address",
+                        "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+                        "x-supportedDeviceType": [
+                          "Gateway"
+                        ],
+                        "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
                       },
                       "exclude-network": {
                         "description": "Network to be excluded for the OSPFv2 instance.",
@@ -14542,6 +14791,27 @@
                           "Switch CX"
                         ]
                       },
+                      "subnet-exclude": {
+                        "description": "Networks to be excluded for the OSPFv2 instance.",
+                        "items": {
+                          "properties": {
+                            "exclude-network-mask": {
+                              "description": "Key combination of exclude-network and exclude-mask separated by ~",
+                              "format": "const",
+                              "maxLength": 9999,
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "maxItems": 2147483647,
+                        "type": "array",
+                        "x-key": [
+                          "excludeNetworkMask"
+                        ],
+                        "x-supportedDeviceType": [
+                          "Gateway"
+                        ]
+                      },
                       "summary-address": {
                         "description": "Summarizes the external routes with the matching address or masks.\nWhen advertising this route, its, metric would be set to the lowest\ncost path from among the routes that were summarized.\nWith no-advertise flag enabled, Suppress routes that match the\nspecified prefix/mask pair.\nOnly works for ASBR(Autonomous System Boundary Router).",
                         "items": {
@@ -14608,7 +14878,8 @@
               "name"
             ],
             "x-supportedDeviceType": [
-              "Switch CX"
+              "Switch CX",
+              "Gateway"
             ]
           }
         },
@@ -14712,7 +14983,7 @@
                       }
                     ]
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 3,
                   "type": "array",
                   "x-key": [
                     "routeType"
@@ -14778,6 +15049,18 @@
                   "x-supportedDeviceType": [
                     "Switch PVOS"
                   ]
+                },
+                "exclude-mask": {
+                  "description": "Mask for the network to be excluded for the OSPFv2 instance.",
+                  "format": "pattern",
+                  "maxLength": 9999,
+                  "type": "string",
+                  "x-patternSources": "ipv4-address",
+                  "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ],
+                  "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
                 },
                 "exclude-network": {
                   "description": "Network to be excluded for the OSPFv2 instance.",
@@ -15009,6 +15292,27 @@
                     "Switch CX"
                   ]
                 },
+                "subnet-exclude": {
+                  "description": "Networks to be excluded for the OSPFv2 instance.",
+                  "items": {
+                    "properties": {
+                      "exclude-network-mask": {
+                        "description": "Key combination of exclude-network and exclude-mask separated by ~",
+                        "format": "const",
+                        "maxLength": 9999,
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "maxItems": 2147483647,
+                  "type": "array",
+                  "x-key": [
+                    "excludeNetworkMask"
+                  ],
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ]
+                },
                 "summary-address": {
                   "description": "Summarizes the external routes with the matching address or masks.\nWhen advertising this route, its, metric would be set to the lowest\ncost path from among the routes that were summarized.\nWith no-advertise flag enabled, Suppress routes that match the\nspecified prefix/mask pair.\nOnly works for ASBR(Autonomous System Boundary Router).",
                   "items": {
@@ -15163,7 +15467,7 @@
                       }
                     ]
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 3,
                   "type": "array",
                   "x-key": [
                     "routeType"
@@ -15229,6 +15533,18 @@
                   "x-supportedDeviceType": [
                     "Switch PVOS"
                   ]
+                },
+                "exclude-mask": {
+                  "description": "Mask for the network to be excluded for the OSPFv2 instance.",
+                  "format": "pattern",
+                  "maxLength": 9999,
+                  "type": "string",
+                  "x-patternSources": "ipv4-address",
+                  "x-patterns": "'([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\.([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])){3}'",
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ],
+                  "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
                 },
                 "exclude-network": {
                   "description": "Network to be excluded for the OSPFv2 instance.",
@@ -15460,6 +15776,27 @@
                     "Switch CX"
                   ]
                 },
+                "subnet-exclude": {
+                  "description": "Networks to be excluded for the OSPFv2 instance.",
+                  "items": {
+                    "properties": {
+                      "exclude-network-mask": {
+                        "description": "Key combination of exclude-network and exclude-mask separated by ~",
+                        "format": "const",
+                        "maxLength": 9999,
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "maxItems": 2147483647,
+                  "type": "array",
+                  "x-key": [
+                    "excludeNetworkMask"
+                  ],
+                  "x-supportedDeviceType": [
+                    "Gateway"
+                  ]
+                },
                 "summary-address": {
                   "description": "Summarizes the external routes with the matching address or masks.\nWhen advertising this route, its, metric would be set to the lowest\ncost path from among the routes that were summarized.\nWith no-advertise flag enabled, Suppress routes that match the\nspecified prefix/mask pair.\nOnly works for ASBR(Autonomous System Boundary Router).",
                   "items": {
@@ -15656,17 +15993,21 @@
               "RIP",
               "HOST_ROUTES",
               "OSPF",
-              "OVERLAY"
+              "OVERLAY",
+              "CRYPTO_CFGSET",
+              "RAPNG_VPN"
             ],
             "format": "enum",
             "type": "string",
             "x-enumDescriptions": {
               "BGP": "Border Gateway Protocol",
               "CONNECTED": "Connected routes",
+              "CRYPTO_CFGSET": "Crypto configuration set routes",
               "HOST_ROUTES": "Host route",
               "LOCAL_LOOPBACK": "loopback",
               "OSPF": "OSPFv2 route",
               "OVERLAY": "Overlay route",
+              "RAPNG_VPN": "RAPNG VPN routes",
               "RIP": "Routing Information Protocol",
               "STATIC": "static routes"
             },
@@ -15693,7 +16034,7 @@
             ]
           },
           "vlan-selection": {
-            "description": "Multi-instance VLAN selection for GW OSPF redistribution.\nOne list entry per operation type (SET / ADD / REMOVE).\nGenerates:\n  SET    -> router ospf redistribute vlan <vlans>\n  ADD    -> router ospf redistribute vlan add <vlans>\n  REMOVE -> router ospf redistribute vlan remove <vlans>\nMutually exclusive with route-map on GW.",
+            "description": "Multi-instance VLAN selection for GW OSPF redistribution.\nOne list entry per operation type (SET / ADD / REMOVE).\nGenerates:\n  SET    -> router ospf redistribute vlan <vlans>\n  ADD    -> router ospf redistribute vlan add <vlans>\n  REMOVE -> router ospf redistribute vlan remove <vlans>",
             "items": {
               "properties": {
                 "operation": {
@@ -15826,17 +16167,21 @@
               "RIP",
               "HOST_ROUTES",
               "OSPF",
-              "OVERLAY"
+              "OVERLAY",
+              "CRYPTO_CFGSET",
+              "RAPNG_VPN"
             ],
             "format": "enum",
             "type": "string",
             "x-enumDescriptions": {
               "BGP": "Border Gateway Protocol",
               "CONNECTED": "Connected routes",
+              "CRYPTO_CFGSET": "Crypto configuration set routes",
               "HOST_ROUTES": "Host route",
               "LOCAL_LOOPBACK": "loopback",
               "OSPF": "OSPFv2 route",
               "OVERLAY": "Overlay route",
+              "RAPNG_VPN": "RAPNG VPN routes",
               "RIP": "Routing Information Protocol",
               "STATIC": "static routes"
             },
@@ -15863,7 +16208,7 @@
             ]
           },
           "vlan-selection": {
-            "description": "Multi-instance VLAN selection for GW OSPF redistribution.\nOne list entry per operation type (SET / ADD / REMOVE).\nGenerates:\n  SET    -> router ospf redistribute vlan <vlans>\n  ADD    -> router ospf redistribute vlan add <vlans>\n  REMOVE -> router ospf redistribute vlan remove <vlans>\nMutually exclusive with route-map on GW.",
+            "description": "Multi-instance VLAN selection for GW OSPF redistribution.\nOne list entry per operation type (SET / ADD / REMOVE).\nGenerates:\n  SET    -> router ospf redistribute vlan <vlans>\n  ADD    -> router ospf redistribute vlan add <vlans>\n  REMOVE -> router ospf redistribute vlan remove <vlans>",
             "items": {
               "properties": {
                 "operation": {
@@ -18813,7 +19158,7 @@
                             }
                           ]
                         },
-                        "maxItems": 2147483647,
+                        "maxItems": 3,
                         "type": "array",
                         "x-key": [
                           "routeType"
@@ -19008,6 +19353,7 @@
                         ]
                       },
                       "restrict-routes": {
+                        "description": "Restrict redistribution of routes via OSPF.",
                         "items": {
                           "description": "Restrict redistribution of routes via OSPF.",
                           "format": "pattern",
@@ -19232,7 +19578,7 @@
                       }
                     ]
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 3,
                   "type": "array",
                   "x-key": [
                     "routeType"
@@ -19427,6 +19773,7 @@
                   ]
                 },
                 "restrict-routes": {
+                  "description": "Restrict redistribution of routes via OSPF.",
                   "items": {
                     "description": "Restrict redistribution of routes via OSPF.",
                     "format": "pattern",
@@ -19636,7 +19983,7 @@
                       }
                     ]
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 3,
                   "type": "array",
                   "x-key": [
                     "routeType"
@@ -19831,6 +20178,7 @@
                   ]
                 },
                 "restrict-routes": {
+                  "description": "Restrict redistribution of routes via OSPF.",
                   "items": {
                     "description": "Restrict redistribution of routes via OSPF.",
                     "format": "pattern",
@@ -21124,6 +21472,7 @@
             ]
           },
           "group-prefixes": {
+            "description": "Multicast Group prefix associated with Candidate-RP.",
             "items": {
               "description": "Multicast Group prefix associated with Candidate-RP.",
               "format": "pattern",
@@ -21265,6 +21614,7 @@
             ]
           },
           "group-prefixes": {
+            "description": "Multicast Group prefix associated with Candidate-RP.",
             "items": {
               "description": "Multicast Group prefix associated with Candidate-RP.",
               "format": "pattern",
@@ -21714,7 +22064,7 @@
           "group-policy": {
             "description": "Multicast group address policy associated with Static RP",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -21750,7 +22100,7 @@
           "group-policy": {
             "description": "Multicast group address policy associated with Static RP",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -22066,6 +22416,7 @@
             ]
           },
           "group-prefixes": {
+            "description": "Multicast Group prefix associated with Candidate-RP.",
             "items": {
               "description": "Multicast Group prefix associated with Candidate-RP.",
               "format": "pattern",
@@ -22207,6 +22558,7 @@
             ]
           },
           "group-prefixes": {
+            "description": "Multicast Group prefix associated with Candidate-RP.",
             "items": {
               "description": "Multicast Group prefix associated with Candidate-RP.",
               "format": "pattern",
@@ -22398,7 +22750,7 @@
           "register-policy": {
             "description": "Ingress ACL to filter processing of PIM register messages",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -22507,7 +22859,7 @@
                 "group-policy": {
                   "description": "Ingress ACL to filter PIM join and prune messages received from a RP addresss.",
                   "format": "const",
-                  "maxLength": 144,
+                  "maxLength": 145,
                   "minLength": 1,
                   "type": "string",
                   "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -22580,7 +22932,7 @@
           "ssm-range-policy": {
             "description": "ACL to indicate Source Specific Multicast range",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -22664,7 +23016,7 @@
           "register-policy": {
             "description": "Ingress ACL to filter processing of PIM register messages",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -22773,7 +23125,7 @@
                 "group-policy": {
                   "description": "Ingress ACL to filter PIM join and prune messages received from a RP addresss.",
                   "format": "const",
-                  "maxLength": 144,
+                  "maxLength": 145,
                   "minLength": 1,
                   "type": "string",
                   "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -22846,7 +23198,7 @@
           "ssm-range-policy": {
             "description": "ACL to indicate Source Specific Multicast range",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -23936,7 +24288,7 @@
           "static-rp-group-policy": {
             "description": "Multicast group address policy associated with Static RP",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -23984,7 +24336,7 @@
           "static-rp-group-policy": {
             "description": "Multicast group address policy associated with Static RP",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -25492,6 +25844,7 @@
                             ]
                           },
                           "restrict": {
+                            "description": "Prevent redistribution of routes via RIP.",
                             "items": {
                               "description": "Prevent redistribution of routes via RIP.",
                               "oneOf": [
@@ -25702,6 +26055,7 @@
                       ]
                     },
                     "restrict": {
+                      "description": "Prevent redistribution of routes via RIP.",
                       "items": {
                         "description": "Prevent redistribution of routes via RIP.",
                         "oneOf": [
@@ -25896,6 +26250,7 @@
                       ]
                     },
                     "restrict": {
+                      "description": "Prevent redistribution of routes via RIP.",
                       "items": {
                         "description": "Prevent redistribution of routes via RIP.",
                         "oneOf": [
@@ -26255,6 +26610,7 @@
             "x-typeDescription": "Metric type of the route."
           },
           "match-interface-vlans": {
+            "description": "Match interface vlans.",
             "items": {
               "description": "Match interface vlans.",
               "format": "int32",
@@ -26286,6 +26642,7 @@
                 "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
               },
               "ipv4-nexthop-addresses": {
+                "description": "Next hop IPv4 addresses.",
                 "items": {
                   "description": "Next hop IPv4 addresses.",
                   "format": "pattern",
@@ -26360,6 +26717,7 @@
                 "x-typeDescription": "An IPv6 address represented as either a full address; shortened\nor mixed-shortened formats, using the default zone."
               },
               "ipv6-nexthop-addresses": {
+                "description": "IPv6 next hop addresses.",
                 "items": {
                   "description": "IPv6 next hop addresses.",
                   "format": "pattern",
@@ -26553,6 +26911,7 @@
             ]
           },
           "match-tags": {
+            "description": "Tags to be matched. Please specify the configuration as space separated integers",
             "items": {
               "description": "Tags to be matched. Please specify the configuration as space separated integers",
               "format": "int64",
@@ -26776,6 +27135,7 @@
             "x-typeDescription": "Metric type of the route."
           },
           "match-interface-vlans": {
+            "description": "Match interface vlans.",
             "items": {
               "description": "Match interface vlans.",
               "format": "int32",
@@ -26807,6 +27167,7 @@
                 "x-typeDescription": "An IPv4 address in dotted quad notation using the default\nzone."
               },
               "ipv4-nexthop-addresses": {
+                "description": "Next hop IPv4 addresses.",
                 "items": {
                   "description": "Next hop IPv4 addresses.",
                   "format": "pattern",
@@ -26881,6 +27242,7 @@
                 "x-typeDescription": "An IPv6 address represented as either a full address; shortened\nor mixed-shortened formats, using the default zone."
               },
               "ipv6-nexthop-addresses": {
+                "description": "IPv6 next hop addresses.",
                 "items": {
                   "description": "IPv6 next hop addresses.",
                   "format": "pattern",
@@ -27074,6 +27436,7 @@
             ]
           },
           "match-tags": {
+            "description": "Tags to be matched. Please specify the configuration as space separated integers",
             "items": {
               "description": "Tags to be matched. Please specify the configuration as space separated integers",
               "format": "int64",
@@ -27198,6 +27561,7 @@
                 "x-typeDescription": "Community set type."
               },
               "community-value-all": {
+                "description": "Community attribute value.",
                 "items": {
                   "description": "Community attribute value.",
                   "oneOf": [
@@ -27366,6 +27730,7 @@
             "description": "Configurations related to setting IP extended communities.",
             "properties": {
               "route-target": {
+                "description": "Set route-target extended community.",
                 "items": {
                   "description": "Set route-target extended community.",
                   "oneOf": [
@@ -27596,6 +27961,7 @@
                 "x-typeDescription": "Community set type."
               },
               "community-value-all": {
+                "description": "Community attribute value.",
                 "items": {
                   "description": "Community attribute value.",
                   "oneOf": [
@@ -27764,6 +28130,7 @@
             "description": "Configurations related to setting IP extended communities.",
             "properties": {
               "route-target": {
+                "description": "Set route-target extended community.",
                 "items": {
                   "description": "Set route-target extended community.",
                   "oneOf": [
@@ -30588,7 +30955,7 @@
           "access-list": {
             "description": "ACL Policy for traffic applied to a Control Plane VRF.",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -30607,7 +30974,7 @@
           "access-list": {
             "description": "ACL Policy for traffic applied to a Control Plane VRF.",
             "format": "const",
-            "maxLength": 144,
+            "maxLength": 145,
             "minLength": 1,
             "type": "string",
             "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -30657,7 +31024,8 @@
                               "VPNV4": "VPNv4 unicast (AFI,SAFI = 3,1)"
                             },
                             "x-supportedDeviceType": [
-                              "Switch CX"
+                              "Switch CX",
+                              "Gateway"
                             ],
                             "x-typeDescription": "AFI (Address Family Identifier) and\nSAFI (Sub-Address Family Identifier) combinations"
                           },
@@ -30671,6 +31039,7 @@
                             ]
                           },
                           "export-route-targets": {
+                            "description": "VRF Export Route Targets.",
                             "items": {
                               "description": "VRF Export Route Targets.",
                               "format": "pattern",
@@ -30679,14 +31048,16 @@
                               "x-patternSources": "rd-rt-type",
                               "x-patterns": "'((6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0):(429496729[0-5]|42949672[0-8][0-9]|4294967[01][0-9]{2}|429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|4294[0-8][0-9]{5}|429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|[1-3][0-9]{9}|[1-9][0-9]{0,8}|0))|((429496729[0-5]|42949672[0-8][0-9]|4294967[01][0-9]{2}|429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|4294[0-8][0-9]{5}|429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|[1-3][0-9]{9}|[1-9][0-9]{0,8}|0):(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))|((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]):(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))'",
                               "x-supportedDeviceType": [
-                                "Switch CX"
+                                "Switch CX",
+                                "Gateway"
                               ],
                               "x-typeDescription": "Type definition for Route-distringuisher or route-target in ASN:NN or A.B.C.D:NN format."
                             },
-                            "maxItems": 2147483647,
+                            "maxItems": 256,
                             "type": "array"
                           },
                           "import-route-targets": {
+                            "description": "VRF Import Route Targets.",
                             "items": {
                               "description": "VRF Import Route Targets.",
                               "format": "pattern",
@@ -30695,11 +31066,12 @@
                               "x-patternSources": "rd-rt-type",
                               "x-patterns": "'((6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0):(429496729[0-5]|42949672[0-8][0-9]|4294967[01][0-9]{2}|429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|4294[0-8][0-9]{5}|429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|[1-3][0-9]{9}|[1-9][0-9]{0,8}|0))|((429496729[0-5]|42949672[0-8][0-9]|4294967[01][0-9]{2}|429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|4294[0-8][0-9]{5}|429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|[1-3][0-9]{9}|[1-9][0-9]{0,8}|0):(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))|((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]):(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))'",
                               "x-supportedDeviceType": [
-                                "Switch CX"
+                                "Switch CX",
+                                "Gateway"
                               ],
                               "x-typeDescription": "Type definition for Route-distringuisher or route-target in ASN:NN or A.B.C.D:NN format."
                             },
-                            "maxItems": 2147483647,
+                            "maxItems": 256,
                             "type": "array"
                           }
                         }
@@ -30710,7 +31082,15 @@
                         "addressFamily"
                       ],
                       "x-supportedDeviceType": [
-                        "Switch CX"
+                        "Switch CX",
+                        "Gateway"
+                      ]
+                    },
+                    "auto-generate-rd": {
+                      "description": "When auto-generate-rd is set to TRUE, route-distinguisher is auto-generated in the format of 1:<l3vni>, and l3vni must be set",
+                      "type": "boolean",
+                      "x-supportedDeviceType": [
+                        "Gateway"
                       ]
                     },
                     "description": {
@@ -30721,6 +31101,7 @@
                       "type": "string"
                     },
                     "evpn-export-route-targets": {
+                      "description": "EVPN VRF Export Route Targets.",
                       "items": {
                         "description": "EVPN VRF Export Route Targets.",
                         "format": "pattern",
@@ -30733,10 +31114,11 @@
                         ],
                         "x-typeDescription": "Type definition for Route-distringuisher or route-target in ASN:NN or A.B.C.D:NN format."
                       },
-                      "maxItems": 2147483647,
+                      "maxItems": 32,
                       "type": "array"
                     },
                     "evpn-import-route-targets": {
+                      "description": "EVPN VRF Import Route Targets.",
                       "items": {
                         "description": "EVPN VRF Import Route Targets.",
                         "format": "pattern",
@@ -30749,8 +31131,18 @@
                         ],
                         "x-typeDescription": "Type definition for Route-distringuisher or route-target in ASN:NN or A.B.C.D:NN format."
                       },
-                      "maxItems": 2147483647,
+                      "maxItems": 32,
                       "type": "array"
+                    },
+                    "l3vni": {
+                      "description": "L3-VNI for VRF instance",
+                      "format": "int64",
+                      "maximum": 16777215,
+                      "minimum": 1,
+                      "type": "integer",
+                      "x-supportedDeviceType": [
+                        "Gateway"
+                      ]
                     },
                     "l3vpn-only": {
                       "description": "Enable the VRF as l3vpn only",
@@ -30801,14 +31193,15 @@
                       "x-patternSources": "name-type",
                       "x-patterns": "'([^\\\\/ ]+)'",
                       "x-supportedDeviceType": [
-                        "Switch CX"
+                        "Switch CX",
+                        "Gateway"
                       ],
                       "x-typeDescription": "Type definition for 'name', should be alphanumeric. Special characters such as '\\', '/' and space are not allowed."
                     },
                     "policy-in": {
                       "description": "Policy for inbound (Ingress) traffic applied to Distributed Services Switches.\npolicy-in and policy-out are valid for dsf-enable policies only.",
                       "format": "const",
-                      "maxLength": 144,
+                      "maxLength": 145,
                       "minLength": 1,
                       "type": "string",
                       "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -30819,7 +31212,7 @@
                     "policy-out": {
                       "description": "Policy for outbound (Egress) traffic applied to Distributed Services Switches.\npolicy-in and policy-out are valid for dsf-enable policies only.",
                       "format": "const",
-                      "maxLength": 144,
+                      "maxLength": 145,
                       "minLength": 1,
                       "type": "string",
                       "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -30835,7 +31228,8 @@
                       "x-patternSources": "rd-rt-type",
                       "x-patterns": "'((6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0):(429496729[0-5]|42949672[0-8][0-9]|4294967[01][0-9]{2}|429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|4294[0-8][0-9]{5}|429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|[1-3][0-9]{9}|[1-9][0-9]{0,8}|0))|((429496729[0-5]|42949672[0-8][0-9]|4294967[01][0-9]{2}|429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|4294[0-8][0-9]{5}|429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|[1-3][0-9]{9}|[1-9][0-9]{0,8}|0):(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))|((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]):(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))'",
                       "x-supportedDeviceType": [
-                        "Switch CX"
+                        "Switch CX",
+                        "Gateway"
                       ],
                       "x-typeDescription": "Type definition for Route-distringuisher or route-target in ASN:NN or A.B.C.D:NN format."
                     }
@@ -30886,7 +31280,8 @@
                         "VPNV4": "VPNv4 unicast (AFI,SAFI = 3,1)"
                       },
                       "x-supportedDeviceType": [
-                        "Switch CX"
+                        "Switch CX",
+                        "Gateway"
                       ],
                       "x-typeDescription": "AFI (Address Family Identifier) and\nSAFI (Sub-Address Family Identifier) combinations"
                     },
@@ -30900,6 +31295,7 @@
                       ]
                     },
                     "export-route-targets": {
+                      "description": "VRF Export Route Targets.",
                       "items": {
                         "description": "VRF Export Route Targets.",
                         "format": "pattern",
@@ -30908,14 +31304,16 @@
                         "x-patternSources": "rd-rt-type",
                         "x-patterns": "'((6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0):(429496729[0-5]|42949672[0-8][0-9]|4294967[01][0-9]{2}|429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|4294[0-8][0-9]{5}|429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|[1-3][0-9]{9}|[1-9][0-9]{0,8}|0))|((429496729[0-5]|42949672[0-8][0-9]|4294967[01][0-9]{2}|429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|4294[0-8][0-9]{5}|429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|[1-3][0-9]{9}|[1-9][0-9]{0,8}|0):(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))|((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]):(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))'",
                         "x-supportedDeviceType": [
-                          "Switch CX"
+                          "Switch CX",
+                          "Gateway"
                         ],
                         "x-typeDescription": "Type definition for Route-distringuisher or route-target in ASN:NN or A.B.C.D:NN format."
                       },
-                      "maxItems": 2147483647,
+                      "maxItems": 256,
                       "type": "array"
                     },
                     "import-route-targets": {
+                      "description": "VRF Import Route Targets.",
                       "items": {
                         "description": "VRF Import Route Targets.",
                         "format": "pattern",
@@ -30924,11 +31322,12 @@
                         "x-patternSources": "rd-rt-type",
                         "x-patterns": "'((6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0):(429496729[0-5]|42949672[0-8][0-9]|4294967[01][0-9]{2}|429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|4294[0-8][0-9]{5}|429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|[1-3][0-9]{9}|[1-9][0-9]{0,8}|0))|((429496729[0-5]|42949672[0-8][0-9]|4294967[01][0-9]{2}|429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|4294[0-8][0-9]{5}|429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|[1-3][0-9]{9}|[1-9][0-9]{0,8}|0):(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))|((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]):(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))'",
                         "x-supportedDeviceType": [
-                          "Switch CX"
+                          "Switch CX",
+                          "Gateway"
                         ],
                         "x-typeDescription": "Type definition for Route-distringuisher or route-target in ASN:NN or A.B.C.D:NN format."
                       },
-                      "maxItems": 2147483647,
+                      "maxItems": 256,
                       "type": "array"
                     }
                   }
@@ -30939,7 +31338,15 @@
                   "addressFamily"
                 ],
                 "x-supportedDeviceType": [
-                  "Switch CX"
+                  "Switch CX",
+                  "Gateway"
+                ]
+              },
+              "auto-generate-rd": {
+                "description": "When auto-generate-rd is set to TRUE, route-distinguisher is auto-generated in the format of 1:<l3vni>, and l3vni must be set",
+                "type": "boolean",
+                "x-supportedDeviceType": [
+                  "Gateway"
                 ]
               },
               "description": {
@@ -30950,6 +31357,7 @@
                 "type": "string"
               },
               "evpn-export-route-targets": {
+                "description": "EVPN VRF Export Route Targets.",
                 "items": {
                   "description": "EVPN VRF Export Route Targets.",
                   "format": "pattern",
@@ -30962,10 +31370,11 @@
                   ],
                   "x-typeDescription": "Type definition for Route-distringuisher or route-target in ASN:NN or A.B.C.D:NN format."
                 },
-                "maxItems": 2147483647,
+                "maxItems": 32,
                 "type": "array"
               },
               "evpn-import-route-targets": {
+                "description": "EVPN VRF Import Route Targets.",
                 "items": {
                   "description": "EVPN VRF Import Route Targets.",
                   "format": "pattern",
@@ -30978,8 +31387,18 @@
                   ],
                   "x-typeDescription": "Type definition for Route-distringuisher or route-target in ASN:NN or A.B.C.D:NN format."
                 },
-                "maxItems": 2147483647,
+                "maxItems": 32,
                 "type": "array"
+              },
+              "l3vni": {
+                "description": "L3-VNI for VRF instance",
+                "format": "int64",
+                "maximum": 16777215,
+                "minimum": 1,
+                "type": "integer",
+                "x-supportedDeviceType": [
+                  "Gateway"
+                ]
               },
               "l3vpn-only": {
                 "description": "Enable the VRF as l3vpn only",
@@ -31030,14 +31449,15 @@
                 "x-patternSources": "name-type",
                 "x-patterns": "'([^\\\\/ ]+)'",
                 "x-supportedDeviceType": [
-                  "Switch CX"
+                  "Switch CX",
+                  "Gateway"
                 ],
                 "x-typeDescription": "Type definition for 'name', should be alphanumeric. Special characters such as '\\', '/' and space are not allowed."
               },
               "policy-in": {
                 "description": "Policy for inbound (Ingress) traffic applied to Distributed Services Switches.\npolicy-in and policy-out are valid for dsf-enable policies only.",
                 "format": "const",
-                "maxLength": 144,
+                "maxLength": 145,
                 "minLength": 1,
                 "type": "string",
                 "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -31048,7 +31468,7 @@
               "policy-out": {
                 "description": "Policy for outbound (Egress) traffic applied to Distributed Services Switches.\npolicy-in and policy-out are valid for dsf-enable policies only.",
                 "format": "const",
-                "maxLength": 144,
+                "maxLength": 145,
                 "minLength": 1,
                 "type": "string",
                 "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -31064,7 +31484,8 @@
                 "x-patternSources": "rd-rt-type",
                 "x-patterns": "'((6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0):(429496729[0-5]|42949672[0-8][0-9]|4294967[01][0-9]{2}|429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|4294[0-8][0-9]{5}|429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|[1-3][0-9]{9}|[1-9][0-9]{0,8}|0))|((429496729[0-5]|42949672[0-8][0-9]|4294967[01][0-9]{2}|429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|4294[0-8][0-9]{5}|429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|[1-3][0-9]{9}|[1-9][0-9]{0,8}|0):(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))|((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]):(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))'",
                 "x-supportedDeviceType": [
-                  "Switch CX"
+                  "Switch CX",
+                  "Gateway"
                 ],
                 "x-typeDescription": "Type definition for Route-distringuisher or route-target in ASN:NN or A.B.C.D:NN format."
               }
@@ -31104,7 +31525,8 @@
                         "VPNV4": "VPNv4 unicast (AFI,SAFI = 3,1)"
                       },
                       "x-supportedDeviceType": [
-                        "Switch CX"
+                        "Switch CX",
+                        "Gateway"
                       ],
                       "x-typeDescription": "AFI (Address Family Identifier) and\nSAFI (Sub-Address Family Identifier) combinations"
                     },
@@ -31118,6 +31540,7 @@
                       ]
                     },
                     "export-route-targets": {
+                      "description": "VRF Export Route Targets.",
                       "items": {
                         "description": "VRF Export Route Targets.",
                         "format": "pattern",
@@ -31126,14 +31549,16 @@
                         "x-patternSources": "rd-rt-type",
                         "x-patterns": "'((6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0):(429496729[0-5]|42949672[0-8][0-9]|4294967[01][0-9]{2}|429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|4294[0-8][0-9]{5}|429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|[1-3][0-9]{9}|[1-9][0-9]{0,8}|0))|((429496729[0-5]|42949672[0-8][0-9]|4294967[01][0-9]{2}|429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|4294[0-8][0-9]{5}|429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|[1-3][0-9]{9}|[1-9][0-9]{0,8}|0):(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))|((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]):(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))'",
                         "x-supportedDeviceType": [
-                          "Switch CX"
+                          "Switch CX",
+                          "Gateway"
                         ],
                         "x-typeDescription": "Type definition for Route-distringuisher or route-target in ASN:NN or A.B.C.D:NN format."
                       },
-                      "maxItems": 2147483647,
+                      "maxItems": 256,
                       "type": "array"
                     },
                     "import-route-targets": {
+                      "description": "VRF Import Route Targets.",
                       "items": {
                         "description": "VRF Import Route Targets.",
                         "format": "pattern",
@@ -31142,11 +31567,12 @@
                         "x-patternSources": "rd-rt-type",
                         "x-patterns": "'((6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0):(429496729[0-5]|42949672[0-8][0-9]|4294967[01][0-9]{2}|429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|4294[0-8][0-9]{5}|429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|[1-3][0-9]{9}|[1-9][0-9]{0,8}|0))|((429496729[0-5]|42949672[0-8][0-9]|4294967[01][0-9]{2}|429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|4294[0-8][0-9]{5}|429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|[1-3][0-9]{9}|[1-9][0-9]{0,8}|0):(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))|((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]):(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))'",
                         "x-supportedDeviceType": [
-                          "Switch CX"
+                          "Switch CX",
+                          "Gateway"
                         ],
                         "x-typeDescription": "Type definition for Route-distringuisher or route-target in ASN:NN or A.B.C.D:NN format."
                       },
-                      "maxItems": 2147483647,
+                      "maxItems": 256,
                       "type": "array"
                     }
                   }
@@ -31157,7 +31583,15 @@
                   "addressFamily"
                 ],
                 "x-supportedDeviceType": [
-                  "Switch CX"
+                  "Switch CX",
+                  "Gateway"
+                ]
+              },
+              "auto-generate-rd": {
+                "description": "When auto-generate-rd is set to TRUE, route-distinguisher is auto-generated in the format of 1:<l3vni>, and l3vni must be set",
+                "type": "boolean",
+                "x-supportedDeviceType": [
+                  "Gateway"
                 ]
               },
               "description": {
@@ -31168,6 +31602,7 @@
                 "type": "string"
               },
               "evpn-export-route-targets": {
+                "description": "EVPN VRF Export Route Targets.",
                 "items": {
                   "description": "EVPN VRF Export Route Targets.",
                   "format": "pattern",
@@ -31180,10 +31615,11 @@
                   ],
                   "x-typeDescription": "Type definition for Route-distringuisher or route-target in ASN:NN or A.B.C.D:NN format."
                 },
-                "maxItems": 2147483647,
+                "maxItems": 32,
                 "type": "array"
               },
               "evpn-import-route-targets": {
+                "description": "EVPN VRF Import Route Targets.",
                 "items": {
                   "description": "EVPN VRF Import Route Targets.",
                   "format": "pattern",
@@ -31196,8 +31632,18 @@
                   ],
                   "x-typeDescription": "Type definition for Route-distringuisher or route-target in ASN:NN or A.B.C.D:NN format."
                 },
-                "maxItems": 2147483647,
+                "maxItems": 32,
                 "type": "array"
+              },
+              "l3vni": {
+                "description": "L3-VNI for VRF instance",
+                "format": "int64",
+                "maximum": 16777215,
+                "minimum": 1,
+                "type": "integer",
+                "x-supportedDeviceType": [
+                  "Gateway"
+                ]
               },
               "l3vpn-only": {
                 "description": "Enable the VRF as l3vpn only",
@@ -31248,14 +31694,15 @@
                 "x-patternSources": "name-type",
                 "x-patterns": "'([^\\\\/ ]+)'",
                 "x-supportedDeviceType": [
-                  "Switch CX"
+                  "Switch CX",
+                  "Gateway"
                 ],
                 "x-typeDescription": "Type definition for 'name', should be alphanumeric. Special characters such as '\\', '/' and space are not allowed."
               },
               "policy-in": {
                 "description": "Policy for inbound (Ingress) traffic applied to Distributed Services Switches.\npolicy-in and policy-out are valid for dsf-enable policies only.",
                 "format": "const",
-                "maxLength": 144,
+                "maxLength": 145,
                 "minLength": 1,
                 "type": "string",
                 "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -31266,7 +31713,7 @@
               "policy-out": {
                 "description": "Policy for outbound (Egress) traffic applied to Distributed Services Switches.\npolicy-in and policy-out are valid for dsf-enable policies only.",
                 "format": "const",
-                "maxLength": 144,
+                "maxLength": 145,
                 "minLength": 1,
                 "type": "string",
                 "x-path": "/ac-policy:policies/ac-policy:policy/ac-policy:name",
@@ -31282,7 +31729,8 @@
                 "x-patternSources": "rd-rt-type",
                 "x-patterns": "'((6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0):(429496729[0-5]|42949672[0-8][0-9]|4294967[01][0-9]{2}|429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|4294[0-8][0-9]{5}|429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|[1-3][0-9]{9}|[1-9][0-9]{0,8}|0))|((429496729[0-5]|42949672[0-8][0-9]|4294967[01][0-9]{2}|429496[0-6][0-9]{3}|42949[0-5][0-9]{4}|4294[0-8][0-9]{5}|429[0-3][0-9]{6}|42[0-8][0-9]{7}|4[01][0-9]{8}|[1-3][0-9]{9}|[1-9][0-9]{0,8}|0):(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))|((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]):(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))'",
                 "x-supportedDeviceType": [
-                  "Switch CX"
+                  "Switch CX",
+                  "Gateway"
                 ],
                 "x-typeDescription": "Type definition for Route-distringuisher or route-target in ASN:NN or A.B.C.D:NN format."
               }
@@ -32197,6 +32645,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "All AIF profile configurations",
+        "operationId": "replaceAdvancedIntelligentForwardingProfileByID",
+        "parameters": [
+          {
+            "description": "AIF profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAdvancedIntelligentForwarding_AdvancedIntelligentForwardingprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "Advanced Intelligent Forwarding"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceAdvancedIntelligentForwardingProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceAdvancedIntelligentForwardingCmd",
+          "pathToPrint": "/advanced-intelligent-forwarding/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/aspath-lists": {
@@ -32654,6 +33185,89 @@
           "parentCommand": "createAspathListsCmd",
           "pathToPrint": "/aspath-lists/as-path-list/%s/",
           "summary": "Create operation for as-path-list",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "AS Path List definition with a unique name identifier. Each list contains a sequence of entries with permit or deny actions and regular expression patterns to match Autonomous System paths in BGP route advertisements. AS Path Lists are used in route-maps to control route acceptance, rejection, or modification based on the path characteristics, enabling sophisticated BGP routing policies and AS-based traffic engineering",
+        "operationId": "replaceAspathListsAsPathListByID",
+        "parameters": [
+          {
+            "description": "Unique name identifier for the AS Path List. This name is referenced in route-maps and BGP routing policies to apply AS Path-based filtering. The name is used as a configuration key to identify specific AS Path filtering rules across the routing policy domain",
+            "in": "path",
+            "name": "aspath-list-name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAspathList_AspathListsasPathListSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or update existing as-path-list with name {aspathListName}",
+        "tags": [
+          "Aspath List"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceAspathListsAsPathListCmd",
+          "commandUse": "as-path-list",
+          "paramKeys": [
+            {
+              "key": "aspath-list-name"
+            }
+          ],
+          "parentCommand": "replaceAspathListsCmd",
+          "pathToPrint": "/aspath-lists/as-path-list/%s/",
+          "summary": "Replace operation for as-path-list",
           "totParams": 1
         }
       }
@@ -33115,6 +33729,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "L2TP profiles.",
+        "operationId": "replaceBfdProfileByID",
+        "parameters": [
+          {
+            "description": "BFD profile name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaBfd_BfdprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "Bfd"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceBfdProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceBfdCmd",
+          "pathToPrint": "/bfd/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/bgp": {
@@ -33572,6 +34269,89 @@
           "parentCommand": "createBgpCmd",
           "pathToPrint": "/bgp/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "BGP routing profile containing a single router instance per\nAutonomous System. Each entity is identified by profile name.\nConfigure AS number, VRF instances, neighbors, route policies,\ntimers, and address families. Use these APIs to create, modify, or\ndelete a BGP profile.",
+        "operationId": "replaceBgpProfileByID",
+        "parameters": [
+          {
+            "description": "Name of the BGP Profile.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaBgp_BgpprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or modify BGP profile",
+        "tags": [
+          "Bgp"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceBgpProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceBgpCmd",
+          "pathToPrint": "/bgp/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -34033,6 +34813,89 @@
           "summary": "Create operation for community-list",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "BGP Community List definition with a unique name and type specification. Each list contains an ordered sequence of entries with permit or deny actions and community values in the format specified by the list type: Standard (specific numeric community values), Expanded (regular expression patterns), or Extended (extended community values and route targets for VPN and EVPN services)",
+        "operationId": "replaceCommunityListsCommunityListByID",
+        "parameters": [
+          {
+            "description": "Key combination of community-list-name and community-type separated by ~",
+            "in": "path",
+            "name": "community-list-name-community-type",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaCommunityList_CommunityListscommunityListSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace community-list by community-list-name-community-type",
+        "tags": [
+          "Community List"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceCommunityListsCommunityListCmd",
+          "commandUse": "community-list",
+          "paramKeys": [
+            {
+              "key": "community-list-name-community-type"
+            }
+          ],
+          "parentCommand": "replaceCommunityListsCmd",
+          "pathToPrint": "/community-lists/community-list/%s/",
+          "summary": "Replace operation for community-list",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/evpn": {
@@ -34490,6 +35353,89 @@
           "parentCommand": "createEvpnCmd",
           "pathToPrint": "/evpn/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "EVPN Profile configuration. EVPN is a single-instance profile - only one EVPN deployment instance is allowed per device. This profile manages Ethernet Virtual Private Network configurations for multi-site Layer 2/3 connectivity using VXLAN and MPLS",
+        "operationId": "replaceEvpnProfileByID",
+        "parameters": [
+          {
+            "description": "EVPN profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaEvpn_EvpnprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or update existing EVPN profile {name}",
+        "tags": [
+          "Evpn"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceEvpnProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceEvpnCmd",
+          "pathToPrint": "/evpn/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -34951,6 +35897,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "IP routing profile.",
+        "operationId": "replaceIpRoutingProfileByID",
+        "parameters": [
+          {
+            "description": "IP routing profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaIpRouting_IpRoutingprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "Ip Routing"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceIpRoutingProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceIpRoutingCmd",
+          "pathToPrint": "/ip-routing/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/l3-route": {
@@ -35408,6 +36437,89 @@
           "parentCommand": "createL3RouteCmd",
           "pathToPrint": "/l3-route/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "L3 route profiles.",
+        "operationId": "replaceL3RouteProfileByID",
+        "parameters": [
+          {
+            "description": "L3 route profile name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaL3Route_L3RouteprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "L3 Route"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceL3RouteProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceL3RouteCmd",
+          "pathToPrint": "/l3-route/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -35869,6 +36981,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "MPLS profile.",
+        "operationId": "replaceMplsProfileByID",
+        "parameters": [
+          {
+            "description": "MPLS profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaMpls_MplsprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "Mpls"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceMplsProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceMplsCmd",
+          "pathToPrint": "/mpls/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/msdp": {
@@ -36326,6 +37521,89 @@
           "parentCommand": "createMsdpCmd",
           "pathToPrint": "/msdp/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "MSDP profiles.",
+        "operationId": "replaceMsdpProfileByID",
+        "parameters": [
+          {
+            "description": "MSDP profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaMsdp_MsdpprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing MSDP profile configurations",
+        "tags": [
+          "Msdp"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceMsdpProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceMsdpCmd",
+          "pathToPrint": "/msdp/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -36787,6 +38065,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Multicast Profiles.",
+        "operationId": "replaceMulticastGlobalProfileByID",
+        "parameters": [
+          {
+            "description": "Multicast profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaMulticast_MulticastGlobalprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing Multicast profile configurations",
+        "tags": [
+          "Multicast"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceMulticastGlobalProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceMulticastGlobalCmd",
+          "pathToPrint": "/multicast-global/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/multicast-static-route": {
@@ -37244,6 +38605,89 @@
           "parentCommand": "createMulticastStaticRouteCmd",
           "pathToPrint": "/multicast-static-route/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Multicast Static Route profiles.",
+        "operationId": "replaceMulticastStaticRouteProfileByID",
+        "parameters": [
+          {
+            "description": "Multicast Static Route profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaMulticastStaticRoute_MulticastStaticRouteprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing Multicast Static Route profile configurations",
+        "tags": [
+          "Multicast Static Route"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceMulticastStaticRouteProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceMulticastStaticRouteCmd",
+          "pathToPrint": "/multicast-static-route/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -37705,6 +39149,89 @@
           "summary": "Create operation for group",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Nexthop group name.",
+        "operationId": "replaceNexthopGroupsGroupByID",
+        "parameters": [
+          {
+            "description": "Nexthop group name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaNexthopGroup_NexthopGroupsgroupSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Add or Update existing nexthop group",
+        "tags": [
+          "Nexthop Group"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceNexthopGroupsGroupCmd",
+          "commandUse": "group",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceNexthopGroupsCmd",
+          "pathToPrint": "/nexthop-groups/group/%s/",
+          "summary": "Replace operation for group",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/ospfv2": {
@@ -37792,7 +39319,7 @@
             "OAuth2": []
           }
         ],
-        "summary": "Read ospfv2",
+        "summary": "Read existing OSPFv2 configuration",
         "tags": [
           "Ospfv2"
         ],
@@ -37868,7 +39395,7 @@
             "OAuth2": []
           }
         ],
-        "summary": "Delete profile by name",
+        "summary": "Delete OSPFv2 profile configuration",
         "tags": [
           "Ospfv2"
         ],
@@ -37981,7 +39508,7 @@
             "OAuth2": []
           }
         ],
-        "summary": "Read profile by name",
+        "summary": "Read existing OSPFv2 profile configuration",
         "tags": [
           "Ospfv2"
         ],
@@ -38064,7 +39591,7 @@
             "OAuth2": []
           }
         ],
-        "summary": "Update profile by name",
+        "summary": "Modify OSPFv2 profile configuration",
         "tags": [
           "Ospfv2"
         ],
@@ -38147,7 +39674,7 @@
             "OAuth2": []
           }
         ],
-        "summary": "Create profile by name",
+        "summary": "Create new OSPFv2 profile configuration",
         "tags": [
           "Ospfv2"
         ],
@@ -38162,6 +39689,89 @@
           "parentCommand": "createOspfv2Cmd",
           "pathToPrint": "/ospfv2/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "OSPFv2 configuration profiles for organizing router instances.",
+        "operationId": "replaceOspfv2ProfileByID",
+        "parameters": [
+          {
+            "description": "Profile name for the OSPFv2 configuration group.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaOspfv2_Ospfv2profileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or modify OSPFv2 profile configuration",
+        "tags": [
+          "Ospfv2"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceOspfv2ProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceOspfv2Cmd",
+          "pathToPrint": "/ospfv2/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -38623,6 +40233,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "OSPFv3 configuration profiles for organizing router instances.",
+        "operationId": "replaceOspfv3ProfileByID",
+        "parameters": [
+          {
+            "description": "Profile name for the OSPFv3 configuration group.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaOspfv3_Ospfv3profileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "Ospfv3"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceOspfv3ProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceOspfv3Cmd",
+          "pathToPrint": "/ospfv3/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/pim-router": {
@@ -39080,6 +40773,89 @@
           "parentCommand": "createPimRouterCmd",
           "pathToPrint": "/pim-router/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "PIM Profiles.",
+        "operationId": "replacePimRouterProfileByID",
+        "parameters": [
+          {
+            "description": "PIM profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaPim_PimRouterprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing PIM profile configurations",
+        "tags": [
+          "Pim"
+        ],
+        "x-cliParam": {
+          "commandName": "replacePimRouterProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replacePimRouterCmd",
+          "pathToPrint": "/pim-router/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -39541,6 +41317,89 @@
           "summary": "Create operation for prefix-list",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "IPv4 or IPv6 prefix list for route filtering in routing\nprotocols. Each entity is identified by prefix-list-name\nand address-family combination. Configure ordered\npermit/deny entries with IP prefix matching and optional\nprefix length constraints (ge/le) for granular route\ncontrol.",
+        "operationId": "replacePrefixListsPrefixListByID",
+        "parameters": [
+          {
+            "description": "Composite key combining prefix-list-name and address-family separated by tilde (~). Uniquely identifies each prefix list configuration within the system. Format: prefix-list-name~address-family",
+            "in": "path",
+            "name": "prefix-list-name-address-family",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaPrefixList_PrefixListsprefixListSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or update existing prefix-list with name {prefixListName} under address-family {AddressFamily}",
+        "tags": [
+          "Prefix List"
+        ],
+        "x-cliParam": {
+          "commandName": "replacePrefixListsPrefixListCmd",
+          "commandUse": "prefix-list",
+          "paramKeys": [
+            {
+              "key": "prefix-list-name-address-family"
+            }
+          ],
+          "parentCommand": "replacePrefixListsCmd",
+          "pathToPrint": "/prefix-lists/prefix-list/%s/",
+          "summary": "Replace operation for prefix-list",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/rip": {
@@ -39998,6 +41857,89 @@
           "parentCommand": "createRipCmd",
           "pathToPrint": "/rip/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "RIP routing profile defining router instances, redistribution\nrules, timers, administrative distance, and interface\nconfigurations. Each entity is identified by profile name.\nUse these APIs to create, modify, or delete a RIP profile\ninstance.",
+        "operationId": "replaceRipProfileByID",
+        "parameters": [
+          {
+            "description": "RIP profile name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaRip_RipprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or modify RIP profile",
+        "tags": [
+          "Rip"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceRipProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceRipCmd",
+          "pathToPrint": "/rip/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -40459,6 +42401,89 @@
           "summary": "Create operation for route-map",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Route map defining policy-based route manipulation with\nordered sequences of match conditions and set actions.\nEach entity is identified by route map name. Configure\npermit/deny entries with match criteria (prefix-lists,\ncommunities, AS paths) and set actions (metric, next-hop,\nlocal-preference) for routing policy control.",
+        "operationId": "replaceRouteMapsRouteMapByID",
+        "parameters": [
+          {
+            "description": "Name of the route map.",
+            "in": "path",
+            "name": "route-map-name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaRoutemap_RouteMapsrouteMapSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or update existing route-map with name {name}",
+        "tags": [
+          "Routemap"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceRouteMapsRouteMapCmd",
+          "commandUse": "route-map",
+          "paramKeys": [
+            {
+              "key": "route-map-name"
+            }
+          ],
+          "parentCommand": "replaceRouteMapsCmd",
+          "pathToPrint": "/route-maps/route-map/%s/",
+          "summary": "Replace operation for route-map",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/static-route": {
@@ -40916,6 +42941,89 @@
           "parentCommand": "createStaticRouteCmd",
           "pathToPrint": "/static-route/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Static route profiles.",
+        "operationId": "replaceStaticRouteProfileByID",
+        "parameters": [
+          {
+            "description": "Static route profile name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaStaticRoute_StaticRouteprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "Static Route"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceStaticRouteProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceStaticRouteCmd",
+          "pathToPrint": "/static-route/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -41377,6 +43485,89 @@
           "summary": "Create operation for vrrp",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "List for VRRP Tracking object",
+        "operationId": "replaceTrackingObjectVrrpByID",
+        "parameters": [
+          {
+            "description": "Track object ID",
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaTrackObject_TrackingObjectvrrpSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace vrrp by identifier",
+        "tags": [
+          "Track Object"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceTrackingObjectVrrpCmd",
+          "commandUse": "vrrp",
+          "paramKeys": [
+            {
+              "key": "identifier"
+            }
+          ],
+          "parentCommand": "replaceTrackingObjectCmd",
+          "pathToPrint": "/tracking-object/vrrp/%s/",
+          "summary": "Replace operation for vrrp",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/vrfs": {
@@ -41834,6 +44025,89 @@
           "parentCommand": "createVrfsCmd",
           "pathToPrint": "/vrfs/vrf/%s/",
           "summary": "Create operation for vrf",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "List of named VRF instances. Each VRF maintains independent routing tables and policy enforcement domains. The 'default' VRF represents the global routing table. Each VRF can be associated with specific route targets for inter-VRF route leaking, enabling controlled route distribution across VRF boundaries for overlay and VPN deployments",
+        "operationId": "replaceVrfsVrfByID",
+        "parameters": [
+          {
+            "description": "VRF name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaVrf_VrfsvrfSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or update configuration for VRF {name}",
+        "tags": [
+          "Vrf"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceVrfsVrfCmd",
+          "commandUse": "vrf",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceVrfsCmd",
+          "pathToPrint": "/vrfs/vrf/%s/",
+          "summary": "Replace operation for vrf",
           "totParams": 1
         }
       }

@@ -1,16 +1,17 @@
-"""Aruba Central ``System`` config-model tools.
+"""Aruba Central ``system`` config-model tools.
 
 Initial import emitted by ``scripts/import_central_config_tools.py``
-from a snapshot of ``api-endpoints/central/config/``. The import is
+from a snapshot of ``vendor/central/config/``. The import is
 **one-shot**: this file is hand-curated going forward — edit freely,
 refine docstrings, add per-type schema knobs, split into smaller files
 as needed. Re-running the script will overwrite this file, so only do
 so before any hand edits or with care.
 
-Covers config objects in the ``System`` OpenAPI tag-group. Wrappers
-delegate to ``_get_resource`` / ``_manage_resource`` in
-``security_policy.py`` — the same shared helpers used by the
-hand-curated Roles & Policy tools.
+Covers config objects sourced from the ``system.json`` vendor
+spec file. Wrappers
+delegate to ``_get_resource`` / ``_manage_resource`` /
+``_operation_request`` in ``security_policy.py`` — the same shared
+helpers used by the hand-curated Roles & Policy tools.
 """
 
 # ruff: noqa: E501
@@ -18,11 +19,10 @@ hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
@@ -31,17 +31,10 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _manage_resource,
 )
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
 # ----- ap-system -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_system(
     ctx: Context,
     name: str | None = None,
@@ -56,7 +49,7 @@ async def central_get_ap_system(
     return await _get_resource(ctx, "ap-system", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_ap_system(
     ctx: Context,
     name: Annotated[str, Field(description="``ap-system`` identifier (OpenAPI path param: ``name``).")],
@@ -94,36 +87,38 @@ async def central_manage_ap_system(
     )
 
 
-# ----- container -----
+# ----- container-networks -----
 
 
-@tool(annotations=READ_ONLY)
-async def central_get_container(
+@tool(capability=Capability.READ)
+async def central_get_container_networks(
     ctx: Context,
-    name: str | None = None,
+    name_vrf: str | None = None,
 ) -> dict | list | str:
-    """Get ``container`` configurations from Central.
+    """Get ``container-networks`` configurations from Central.
 
-    Container configuration.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
-        name: Specific ``container`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name_vrf: Specific ``container-networks`` identifier (OpenAPI path param: ``name-vrf``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "containers", name)
+    return await _get_resource(ctx, "container-networks", name_vrf)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_container(
+@tool(capability=Capability.WRITE_DELETE)
+async def central_manage_container_networks(
     ctx: Context,
-    name: Annotated[str, Field(description="``container`` identifier (OpenAPI path param: ``name``).")],
+    name_vrf: Annotated[
+        str, Field(description="``container-networks`` identifier (OpenAPI path param: ``name-vrf``).")
+    ],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``container`` object. "
+                "Payload for the ``container-networks`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_container`` to "
+                "field set; use ``central_get_container_networks`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -133,15 +128,15 @@ async def central_manage_container(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``container`` configuration in Central.
+    """Create, update, or delete a ``container-networks`` configuration in Central.
 
-    Container configuration.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
-        "containers",
-        "container",
-        name,
+        "container-networks",
+        "container-networks",
+        name_vrf,
         action_type,
         payload,
         scope_id,
@@ -150,36 +145,36 @@ async def central_manage_container(
     )
 
 
-# ----- container-network -----
+# ----- containers -----
 
 
-@tool(annotations=READ_ONLY)
-async def central_get_container_network(
+@tool(capability=Capability.READ)
+async def central_get_containers(
     ctx: Context,
-    name_vrf: str | None = None,
+    name: str | None = None,
 ) -> dict | list | str:
-    """Get ``container-network`` configurations from Central.
+    """Get ``containers`` configurations from Central.
 
-    Container Network configuration.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
-        name_vrf: Specific ``container-network`` identifier (OpenAPI path param: ``name-vrf``). If omitted, returns all.
+        name: Specific ``containers`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "container-networks", name_vrf)
+    return await _get_resource(ctx, "containers", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_container_network(
+@tool(capability=Capability.WRITE_DELETE)
+async def central_manage_containers(
     ctx: Context,
-    name_vrf: Annotated[str, Field(description="``container-network`` identifier (OpenAPI path param: ``name-vrf``).")],
+    name: Annotated[str, Field(description="``containers`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``container-network`` object. "
+                "Payload for the ``containers`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_container_network`` to "
+                "field set; use ``central_get_containers`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -189,15 +184,15 @@ async def central_manage_container_network(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``container-network`` configuration in Central.
+    """Create, update, or delete a ``containers`` configuration in Central.
 
-    Container Network configuration.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
-        "container-networks",
-        "container-network",
-        name_vrf,
+        "containers",
+        "containers",
+        name,
         action_type,
         payload,
         scope_id,
@@ -209,14 +204,14 @@ async def central_manage_container_network(
 # ----- countermon -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_countermon(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``countermon`` configurations from Central.
 
-    The counter monitor is an ASIC counter monitoring mechanism designed to be less resource intensive which periodically collects a set of port error counters and updates the latest values into OVSDB.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
         name: Specific ``countermon`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -224,7 +219,7 @@ async def central_get_countermon(
     return await _get_resource(ctx, "countermon", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_countermon(
     ctx: Context,
     name: Annotated[str, Field(description="``countermon`` identifier (OpenAPI path param: ``name``).")],
@@ -247,7 +242,7 @@ async def central_manage_countermon(
 ) -> dict | str:
     """Create, update, or delete a ``countermon`` configuration in Central.
 
-    The counter monitor is an ASIC counter monitoring mechanism designed to be less resource intensive which periodically collects a set of port error counters and updates the latest values into OVSDB.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
@@ -265,13 +260,13 @@ async def central_manage_countermon(
 # ----- custom-get-api -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_custom_get_api(
     ctx: Context,
 ) -> dict | list | str:
     """Get the ``custom-get-api`` singleton configuration from Central.
 
-    Customized APIs.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _get_resource(ctx, "custom-get-api", None)
 
@@ -279,14 +274,14 @@ async def central_get_custom_get_api(
 # ----- db-observer -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_db_observer(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``db-observer`` configurations from Central.
 
-    Container for Database Observer entries.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
         name: Specific ``db-observer`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -294,7 +289,7 @@ async def central_get_db_observer(
     return await _get_resource(ctx, "db-observer", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_db_observer(
     ctx: Context,
     name: Annotated[str, Field(description="``db-observer`` identifier (OpenAPI path param: ``name``).")],
@@ -317,7 +312,7 @@ async def central_manage_db_observer(
 ) -> dict | str:
     """Create, update, or delete a ``db-observer`` configuration in Central.
 
-    Container for Database Observer entries.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
@@ -335,14 +330,14 @@ async def central_manage_db_observer(
 # ----- ddns -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ddns(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``ddns`` configurations from Central.
 
-    Dynamic DNS (DDNS) using IETF RFC 2136 protocol automatically updates DNS records when device IP addresses change through DHCP or uplink modifications. DDNS uses TSIG (Transaction Signature) authentication for secure zone updates to authoritative DNS servers. Configure DDNS update intervals, server lists with authentication keys (Gateway), and PTR record options (Access Point). Server IPs are IPv4 only. Use this API to retrieve the list of DDNS profiles.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
         name: Specific ``ddns`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -350,7 +345,7 @@ async def central_get_ddns(
     return await _get_resource(ctx, "ddns", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_ddns(
     ctx: Context,
     name: Annotated[str, Field(description="``ddns`` identifier (OpenAPI path param: ``name``).")],
@@ -373,7 +368,7 @@ async def central_manage_ddns(
 ) -> dict | str:
     """Create, update, or delete a ``ddns`` configuration in Central.
 
-    Dynamic DNS (DDNS) using IETF RFC 2136 protocol automatically updates DNS records when device IP addresses change through DHCP or uplink modifications. DDNS uses TSIG (Transaction Signature) authentication for secure zone updates to authoritative DNS servers. Configure DDNS update intervals, server lists with authentication keys (Gateway), and PTR record options (Access Point). Server IPs are IPv4 only. Use this API to retrieve the list of DDNS profiles.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
@@ -391,14 +386,14 @@ async def central_manage_ddns(
 # ----- dns -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_dns(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``dns`` configurations from Central.
 
-    DNS parameters for handling the domain name, DNS resolver, DNS redirect and DNS static host configuration.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
         name: Specific ``dns`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -406,7 +401,7 @@ async def central_get_dns(
     return await _get_resource(ctx, "dns", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_dns(
     ctx: Context,
     name: Annotated[str, Field(description="``dns`` identifier (OpenAPI path param: ``name``).")],
@@ -429,7 +424,7 @@ async def central_manage_dns(
 ) -> dict | str:
     """Create, update, or delete a ``dns`` configuration in Central.
 
-    DNS parameters for handling the domain name, DNS resolver, DNS redirect and DNS static host configuration.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
@@ -447,14 +442,14 @@ async def central_manage_dns(
 # ----- dump-server -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_dump_server(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``dump-server`` configurations from Central.
 
-    Configure TFTP and SCP dump server for storing core dump files. Trivial File Transfer Protocol (TFTP) is a simple way for exchanging files in clear text without authentication. SCP (Secure Copy Protocol) uses Secure Shell (SSH) mechanisms for data transfer and authentication to ensure the confidentiality of the data in transit.. This feature is only applicable for AP.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
         name: Specific ``dump-server`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -462,7 +457,7 @@ async def central_get_dump_server(
     return await _get_resource(ctx, "dump-server", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_dump_server(
     ctx: Context,
     name: Annotated[str, Field(description="``dump-server`` identifier (OpenAPI path param: ``name``).")],
@@ -485,68 +480,12 @@ async def central_manage_dump_server(
 ) -> dict | str:
     """Create, update, or delete a ``dump-server`` configuration in Central.
 
-    Configure TFTP and SCP dump server for storing core dump files. Trivial File Transfer Protocol (TFTP) is a simple way for exchanging files in clear text without authentication. SCP (Secure Copy Protocol) uses Secure Shell (SSH) mechanisms for data transfer and authentication to ensure the confidentiality of the data in transit.. This feature is only applicable for AP.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
         "dump-server",
         "dump-server",
-        name,
-        action_type,
-        payload,
-        scope_id,
-        device_function,
-        confirmed,
-    )
-
-
-# ----- feature-pack -----
-
-
-@tool(annotations=READ_ONLY)
-async def central_get_feature_pack(
-    ctx: Context,
-    name: str | None = None,
-) -> dict | list | str:
-    """Get ``feature-pack`` configurations from Central.
-
-    Feature Pack management server configuration.
-
-    Parameters:
-        name: Specific ``feature-pack`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
-    """
-    return await _get_resource(ctx, "management-server", name)
-
-
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_feature_pack(
-    ctx: Context,
-    name: Annotated[str, Field(description="``feature-pack`` identifier (OpenAPI path param: ``name``).")],
-    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
-    payload: Annotated[
-        dict,
-        Field(
-            description=(
-                "Payload for the ``feature-pack`` object. "
-                "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_feature_pack`` to "
-                "inspect an existing object for reference. "
-                "For ``delete``, ``payload`` is ignored."
-            )
-        ),
-    ],
-    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
-    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
-    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
-) -> dict | str:
-    """Create, update, or delete a ``feature-pack`` configuration in Central.
-
-    Feature Pack management server configuration.
-    """
-    return await _manage_resource(
-        ctx,
-        "management-server",
-        "feature-pack",
         name,
         action_type,
         payload,
@@ -559,14 +498,14 @@ async def central_manage_feature_pack(
 # ----- gw-system -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gw_system(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``gw-system`` configurations from Central.
 
-    The Gateway System profile defines device-level operational parameters including timezone configuration, LCD menu controls, system IP addressing (controller-ip), global firewall policies, AAA authentication timers, RADIUS/TACACS+ client settings, IPv6 proxy router advertisements, DNS query intervals, and SNMP location attributes. This profile relies on VLAN Interface and Loopback Interface configurations for network-facing parameters. Certain features like datapath energy efficiency, LCD menu, and GPS support are hardware-dependent and available only on specific Gateway models. Use this API to retrieve the list of Gateway System profiles.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
         name: Specific ``gw-system`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -574,7 +513,7 @@ async def central_get_gw_system(
     return await _get_resource(ctx, "gw-system", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_gw_system(
     ctx: Context,
     name: Annotated[str, Field(description="``gw-system`` identifier (OpenAPI path param: ``name``).")],
@@ -597,7 +536,7 @@ async def central_manage_gw_system(
 ) -> dict | str:
     """Create, update, or delete a ``gw-system`` configuration in Central.
 
-    The Gateway System profile defines device-level operational parameters including timezone configuration, LCD menu controls, system IP addressing (controller-ip), global firewall policies, AAA authentication timers, RADIUS/TACACS+ client settings, IPv6 proxy router advertisements, DNS query intervals, and SNMP location attributes. This profile relies on VLAN Interface and Loopback Interface configurations for network-facing parameters. Certain features like datapath energy efficiency, LCD menu, and GPS support are hardware-dependent and available only on specific Gateway models. Use this API to retrieve the list of Gateway System profiles.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
@@ -612,36 +551,36 @@ async def central_manage_gw_system(
     )
 
 
-# ----- hardware-module-profile -----
+# ----- hardware-modules -----
 
 
-@tool(annotations=READ_ONLY)
-async def central_get_hardware_module_profile(
+@tool(capability=Capability.READ)
+async def central_get_hardware_modules(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``hardware-module-profile`` configurations from Central.
+    """Get ``hardware-modules`` configurations from Central.
 
-    Configure and manage hardware module profiles. A hardware module profile allows certain device-specific configuration to be applied to a standalone switch, a chassis line-module or a VSF stack member. It is a mechanism intended to ease the process of configuring these devices with the same set of configurations. Instead of manually configuring each switch, line-module or VSF member one-by-one, the hardware module profile collects the common configuration settings and allows them to be applied to a specific device or a collection of devices. To apply a hardware module profile to a VSF member or group of VSF members, the hw-profile name here must be referenced from their respective 'hw-profile' endpoints in the 'switch-stack' API. See `aruba-switch-stack:stacks/stack/members/hw-profile`. Applicable to CX 6200, 6300, 6300L switches. To apply a hardware module profile to a specific line-module or group of line-modules, the profile name here must be referenced from their respective 'hw-profile' endpoint in the switch-chassis' API. See `aruba-switch-chassis:switch-chassis/chassis/line-modules/hw-profile` Applicable to CX 6400, 8400X switches. To apply a hardware module profile to a standalone switch, including devices that support VSF but are not configured in a stack, no reference from another API is required.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
-        name: Specific ``hardware-module-profile`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``hardware-modules`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "hardware-modules", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_hardware_module_profile(
+@tool(capability=Capability.WRITE_DELETE)
+async def central_manage_hardware_modules(
     ctx: Context,
-    name: Annotated[str, Field(description="``hardware-module-profile`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``hardware-modules`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``hardware-module-profile`` object. "
+                "Payload for the ``hardware-modules`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_hardware_module_profile`` to "
+                "field set; use ``central_get_hardware_modules`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -651,14 +590,14 @@ async def central_manage_hardware_module_profile(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``hardware-module-profile`` configuration in Central.
+    """Create, update, or delete a ``hardware-modules`` configuration in Central.
 
-    Configure and manage hardware module profiles. A hardware module profile allows certain device-specific configuration to be applied to a standalone switch, a chassis line-module or a VSF stack member. It is a mechanism intended to ease the process of configuring these devices with the same set of configurations. Instead of manually configuring each switch, line-module or VSF member one-by-one, the hardware module profile collects the common configuration settings and allows them to be applied to a specific device or a collection of devices. To apply a hardware module profile to a VSF member or group of VSF members, the hw-profile name here must be referenced from their respective 'hw-profile' endpoints in the 'switch-stack' API. See `aruba-switch-stack:stacks/stack/members/hw-profile`. Applicable to CX 6200, 6300, 6300L switches. To apply a hardware module profile to a specific line-module or group of line-modules, the profile name here must be referenced from their respective 'hw-profile' endpoint in the switch-chassis' API. See `aruba-switch-chassis:switch-chassis/chassis/line-modules/hw-profile` Applicable to CX 6400, 8400X switches. To apply a hardware module profile to a standalone switch, including devices that support VSF but are not configured in a stack, no reference from another API is required.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
         "hardware-modules",
-        "hardware-module-profile",
+        "hardware-modules",
         name,
         action_type,
         payload,
@@ -668,36 +607,36 @@ async def central_manage_hardware_module_profile(
     )
 
 
-# ----- http-proxy -----
+# ----- http-proxy-servers -----
 
 
-@tool(annotations=READ_ONLY)
-async def central_get_http_proxy(
+@tool(capability=Capability.READ)
+async def central_get_http_proxy_servers(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``http-proxy`` configurations from Central.
+    """Get ``http-proxy-servers`` configurations from Central.
 
-    Use this to configure HTTP proxy settings. On AP, HTTP Proxy settings is for downloading the image from the cloud server, or to route the web classification queries through the proxy server. On SW_CX and SW_PVOS, the HTTP Proxy configuration is utilized to connect to Activate server and HPE ANW Central. This feature is applicable for AP, SW_CX and SW_PVOS.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
-        name: Specific ``http-proxy`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``http-proxy-servers`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "http-proxy-servers", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_http_proxy(
+@tool(capability=Capability.WRITE_DELETE)
+async def central_manage_http_proxy_servers(
     ctx: Context,
-    name: Annotated[str, Field(description="``http-proxy`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``http-proxy-servers`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``http-proxy`` object. "
+                "Payload for the ``http-proxy-servers`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_http_proxy`` to "
+                "field set; use ``central_get_http_proxy_servers`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -707,14 +646,14 @@ async def central_manage_http_proxy(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``http-proxy`` configuration in Central.
+    """Create, update, or delete a ``http-proxy-servers`` configuration in Central.
 
-    Use this to configure HTTP proxy settings. On AP, HTTP Proxy settings is for downloading the image from the cloud server, or to route the web classification queries through the proxy server. On SW_CX and SW_PVOS, the HTTP Proxy configuration is utilized to connect to Activate server and HPE ANW Central. This feature is applicable for AP, SW_CX and SW_PVOS.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
         "http-proxy-servers",
-        "http-proxy",
+        "http-proxy-servers",
         name,
         action_type,
         payload,
@@ -724,36 +663,36 @@ async def central_manage_http_proxy(
     )
 
 
-# ----- ip-source-interface -----
+# ----- ip-source-interfaces -----
 
 
-@tool(annotations=READ_ONLY)
-async def central_get_ip_source_interface(
+@tool(capability=Capability.READ)
+async def central_get_ip_source_interfaces(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``ip-source-interface`` configurations from Central.
+    """Get ``ip-source-interfaces`` configurations from Central.
 
-    IPv4/IPv6 Source Interface Selection Configurations. The source interface selection supports selecting an IPv4/IPv6 address or interface name for all outgoing traffic generated by a specified software application on the switch.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
-        name: Specific ``ip-source-interface`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``ip-source-interfaces`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "ip-source-interfaces", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_ip_source_interface(
+@tool(capability=Capability.WRITE_DELETE)
+async def central_manage_ip_source_interfaces(
     ctx: Context,
-    name: Annotated[str, Field(description="``ip-source-interface`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``ip-source-interfaces`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``ip-source-interface`` object. "
+                "Payload for the ``ip-source-interfaces`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_ip_source_interface`` to "
+                "field set; use ``central_get_ip_source_interfaces`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -763,14 +702,14 @@ async def central_manage_ip_source_interface(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``ip-source-interface`` configuration in Central.
+    """Create, update, or delete a ``ip-source-interfaces`` configuration in Central.
 
-    IPv4/IPv6 Source Interface Selection Configurations. The source interface selection supports selecting an IPv4/IPv6 address or interface name for all outgoing traffic generated by a specified software application on the switch.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
         "ip-source-interfaces",
-        "ip-source-interface",
+        "ip-source-interfaces",
         name,
         action_type,
         payload,
@@ -783,14 +722,14 @@ async def central_manage_ip_source_interface(
 # ----- ipm -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ipm(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``ipm`` configurations from Central.
 
-    Configure Intelligent Power Monitoring (IPM) reduction steps and priorities. The reduction function with the highest priority is applied when the power budget threshold or when the threshold temperature is exceeded. This feature is only applicable for AP.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
         name: Specific ``ipm`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -798,7 +737,7 @@ async def central_get_ipm(
     return await _get_resource(ctx, "ipm", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_ipm(
     ctx: Context,
     name: Annotated[str, Field(description="``ipm`` identifier (OpenAPI path param: ``name``).")],
@@ -821,7 +760,7 @@ async def central_manage_ipm(
 ) -> dict | str:
     """Create, update, or delete a ``ipm`` configuration in Central.
 
-    Configure Intelligent Power Monitoring (IPM) reduction steps and priorities. The reduction function with the highest priority is applied when the power budget threshold or when the threshold temperature is exceeded. This feature is only applicable for AP.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
@@ -839,14 +778,14 @@ async def central_manage_ipm(
 # ----- job-scheduler -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_job_scheduler(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``job-scheduler`` configurations from Central.
 
-    The job scheduler feature facilitates us to schedule a job to be executed in the near future. Currently, only non-interactive enable and configuration commands are allowed to be configured as a job. Schedules can be configured to be triggered periodically or at a specific calendar date and time. They are categorized into periodic schedules, calendar schedules, and one-shot schedules. Periodic schedules are based on the fixed time interval between the two triggers. Calendar schedules are based on the specified days of the week and days of the month. Calendar schedules are therefore aware of the notion of months, days, weekdays, hours, and minutes. One-shot schedules are similar to the calendar schedule but they will automatically disable themselves after one trigger. This feature is useful to schedule a toggling port, check the system health status, clear the statistics or some clean-up activities, QoS policy changes, save the configurations, and other similar jobs. While updating trigger-type other parameter must set to null, which are not applicable.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
         name: Specific ``job-scheduler`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -854,7 +793,7 @@ async def central_get_job_scheduler(
     return await _get_resource(ctx, "job-scheduler", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_job_scheduler(
     ctx: Context,
     name: Annotated[str, Field(description="``job-scheduler`` identifier (OpenAPI path param: ``name``).")],
@@ -877,7 +816,7 @@ async def central_manage_job_scheduler(
 ) -> dict | str:
     """Create, update, or delete a ``job-scheduler`` configuration in Central.
 
-    The job scheduler feature facilitates us to schedule a job to be executed in the near future. Currently, only non-interactive enable and configuration commands are allowed to be configured as a job. Schedules can be configured to be triggered periodically or at a specific calendar date and time. They are categorized into periodic schedules, calendar schedules, and one-shot schedules. Periodic schedules are based on the fixed time interval between the two triggers. Calendar schedules are based on the specified days of the week and days of the month. Calendar schedules are therefore aware of the notion of months, days, weekdays, hours, and minutes. One-shot schedules are similar to the calendar schedule but they will automatically disable themselves after one trigger. This feature is useful to schedule a toggling port, check the system health status, clear the statistics or some clean-up activities, QoS policy changes, save the configurations, and other similar jobs. While updating trigger-type other parameter must set to null, which are not applicable.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
@@ -895,14 +834,14 @@ async def central_manage_job_scheduler(
 # ----- local-management -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_local_management(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``local-management`` configurations from Central.
 
-    Configure local management settings of network devices via SSH, Telnet, console, or UI. This ensures secure, controlled, and monitored access to the devices. Manage AAA (Authentication, Authorization, and Accounting) for device local management, and it ensures that only authorized users can access the device, perform specific actions, and that all activities are logged for auditing purposes. This feature is applicable for all devices.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
         name: Specific ``local-management`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -910,7 +849,7 @@ async def central_get_local_management(
     return await _get_resource(ctx, "local-management", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_local_management(
     ctx: Context,
     name: Annotated[str, Field(description="``local-management`` identifier (OpenAPI path param: ``name``).")],
@@ -933,7 +872,7 @@ async def central_manage_local_management(
 ) -> dict | str:
     """Create, update, or delete a ``local-management`` configuration in Central.
 
-    Configure local management settings of network devices via SSH, Telnet, console, or UI. This ensures secure, controlled, and monitored access to the devices. Manage AAA (Authentication, Authorization, and Accounting) for device local management, and it ensures that only authorized users can access the device, perform specific actions, and that all activities are logged for auditing purposes. This feature is applicable for all devices.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
@@ -951,14 +890,14 @@ async def central_manage_local_management(
 # ----- logging -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_logging(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``logging`` configurations from Central.
 
-    Manage logging profiles for Aruba devices, enabling centralized control of log message destinations, severity levels, and logging behavior. This API allows administrators to define and retrieve logging profiles, which can be referenced by other system or device profiles to standardize log management. Use this API to retrieve the list of Logging profiles.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
         name: Specific ``logging`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -966,7 +905,7 @@ async def central_get_logging(
     return await _get_resource(ctx, "logging", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_logging(
     ctx: Context,
     name: Annotated[str, Field(description="``logging`` identifier (OpenAPI path param: ``name``).")],
@@ -989,7 +928,7 @@ async def central_manage_logging(
 ) -> dict | str:
     """Create, update, or delete a ``logging`` configuration in Central.
 
-    Manage logging profiles for Aruba devices, enabling centralized control of log message destinations, severity levels, and logging behavior. This API allows administrators to define and retrieve logging profiles, which can be referenced by other system or device profiles to standardize log management. Use this API to retrieve the list of Logging profiles.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
@@ -1004,36 +943,36 @@ async def central_manage_logging(
     )
 
 
-# ----- management-user -----
+# ----- management-server -----
 
 
-@tool(annotations=READ_ONLY)
-async def central_get_management_user(
+@tool(capability=Capability.READ)
+async def central_get_management_server(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``management-user`` configurations from Central.
+    """Get ``management-server`` configurations from Central.
 
-    Configure management users with role and authorization. This feature is applicable for all devices. For AP, Users from higher-level configurations are automatically inherited and displayed at lower levels. When a lower-level user has the same role name as a higher-level user, the lower-level user takes precedence.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
-        name: Specific ``management-user`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``management-server`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "management-users", name)
+    return await _get_resource(ctx, "management-server", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_management_user(
+@tool(capability=Capability.WRITE_DELETE)
+async def central_manage_management_server(
     ctx: Context,
-    name: Annotated[str, Field(description="``management-user`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``management-server`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``management-user`` object. "
+                "Payload for the ``management-server`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_management_user`` to "
+                "field set; use ``central_get_management_server`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -1043,14 +982,14 @@ async def central_manage_management_user(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``management-user`` configuration in Central.
+    """Create, update, or delete a ``management-server`` configuration in Central.
 
-    Configure management users with role and authorization. This feature is applicable for all devices. For AP, Users from higher-level configurations are automatically inherited and displayed at lower levels. When a lower-level user has the same role name as a higher-level user, the lower-level user takes precedence.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
-        "management-users",
-        "management-user",
+        "management-server",
+        "management-server",
         name,
         action_type,
         payload,
@@ -1060,36 +999,36 @@ async def central_manage_management_user(
     )
 
 
-# ----- management-user-group -----
+# ----- management-user-groups -----
 
 
-@tool(annotations=READ_ONLY)
-async def central_get_management_user_group(
+@tool(capability=Capability.READ)
+async def central_get_management_user_groups(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``management-user-group`` configurations from Central.
+    """Get ``management-user-groups`` configurations from Central.
 
-    Management User group.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
-        name: Specific ``management-user-group`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``management-user-groups`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "management-user-groups", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_management_user_group(
+@tool(capability=Capability.WRITE_DELETE)
+async def central_manage_management_user_groups(
     ctx: Context,
-    name: Annotated[str, Field(description="``management-user-group`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``management-user-groups`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``management-user-group`` object. "
+                "Payload for the ``management-user-groups`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_management_user_group`` to "
+                "field set; use ``central_get_management_user_groups`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -1099,14 +1038,14 @@ async def central_manage_management_user_group(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``management-user-group`` configuration in Central.
+    """Create, update, or delete a ``management-user-groups`` configuration in Central.
 
-    Management User group.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
         "management-user-groups",
-        "management-user-group",
+        "management-user-groups",
         name,
         action_type,
         payload,
@@ -1116,36 +1055,36 @@ async def central_manage_management_user_group(
     )
 
 
-# ----- nae-agent -----
+# ----- management-users -----
 
 
-@tool(annotations=READ_ONLY)
-async def central_get_nae_agent(
+@tool(capability=Capability.READ)
+async def central_get_management_users(
     ctx: Context,
-    agent_name: str | None = None,
+    name: str | None = None,
 ) -> dict | list | str:
-    """Get ``nae-agent`` configurations from Central.
+    """Get ``management-users`` configurations from Central.
 
-    Configure and Manage Network Analytics Engine (NAE) agents. Network Analytics Engine (NAE) is a troubleshooting solution that monitors switch database resources and executes operations when monitor conditions are met. NAE Agent is a running instance of an NAE script that acts as a template for agent creation. When a new agent is created, all monitors specified in the script become active and alerts are generated when conditions are met. Each agent: - References an existing NAE script as its template - Can have custom parameter values specific to this agent instance - Monitors data every 5 seconds and generates alerts when conditions are satisfied - Can be temporarily disabled to stop monitoring without deleting the configuration - Operates independently, allowing multiple agents from the same script with different parameters Agents provide real-time network analytics and automated troubleshooting capabilities.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
-        agent_name: Specific ``nae-agent`` identifier (OpenAPI path param: ``agent-name``). If omitted, returns all.
+        name: Specific ``management-users`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "nae-agents", agent_name)
+    return await _get_resource(ctx, "management-users", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_nae_agent(
+@tool(capability=Capability.WRITE_DELETE)
+async def central_manage_management_users(
     ctx: Context,
-    agent_name: Annotated[str, Field(description="``nae-agent`` identifier (OpenAPI path param: ``agent-name``).")],
+    name: Annotated[str, Field(description="``management-users`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``nae-agent`` object. "
+                "Payload for the ``management-users`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_nae_agent`` to "
+                "field set; use ``central_get_management_users`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -1155,14 +1094,70 @@ async def central_manage_nae_agent(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``nae-agent`` configuration in Central.
+    """Create, update, or delete a ``management-users`` configuration in Central.
 
-    Configure and Manage Network Analytics Engine (NAE) agents. Network Analytics Engine (NAE) is a troubleshooting solution that monitors switch database resources and executes operations when monitor conditions are met. NAE Agent is a running instance of an NAE script that acts as a template for agent creation. When a new agent is created, all monitors specified in the script become active and alerts are generated when conditions are met. Each agent: - References an existing NAE script as its template - Can have custom parameter values specific to this agent instance - Monitors data every 5 seconds and generates alerts when conditions are satisfied - Can be temporarily disabled to stop monitoring without deleting the configuration - Operates independently, allowing multiple agents from the same script with different parameters Agents provide real-time network analytics and automated troubleshooting capabilities.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
+    """
+    return await _manage_resource(
+        ctx,
+        "management-users",
+        "management-users",
+        name,
+        action_type,
+        payload,
+        scope_id,
+        device_function,
+        confirmed,
+    )
+
+
+# ----- nae-agents -----
+
+
+@tool(capability=Capability.READ)
+async def central_get_nae_agents(
+    ctx: Context,
+    agent_name: str | None = None,
+) -> dict | list | str:
+    """Get ``nae-agents`` configurations from Central.
+
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
+
+    Parameters:
+        agent_name: Specific ``nae-agents`` identifier (OpenAPI path param: ``agent-name``). If omitted, returns all.
+    """
+    return await _get_resource(ctx, "nae-agents", agent_name)
+
+
+@tool(capability=Capability.WRITE_DELETE)
+async def central_manage_nae_agents(
+    ctx: Context,
+    agent_name: Annotated[str, Field(description="``nae-agents`` identifier (OpenAPI path param: ``agent-name``).")],
+    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
+    payload: Annotated[
+        dict,
+        Field(
+            description=(
+                "Payload for the ``nae-agents`` object. "
+                "Consult the Aruba Central config-model OpenAPI schema for the "
+                "field set; use ``central_get_nae_agents`` to "
+                "inspect an existing object for reference. "
+                "For ``delete``, ``payload`` is ignored."
+            )
+        ),
+    ],
+    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Create, update, or delete a ``nae-agents`` configuration in Central.
+
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
         "nae-agents",
-        "nae-agent",
+        "nae-agents",
         agent_name,
         action_type,
         payload,
@@ -1172,36 +1167,36 @@ async def central_manage_nae_agent(
     )
 
 
-# ----- nae-script -----
+# ----- nae-scripts -----
 
 
-@tool(annotations=READ_ONLY)
-async def central_get_nae_script(
+@tool(capability=Capability.READ)
+async def central_get_nae_scripts(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``nae-script`` configurations from Central.
+    """Get ``nae-scripts`` configurations from Central.
 
-    Configure and Manage Network Analytics Engine (NAE) Scripts. NAE Script is a Python-based monitoring script that defines resources to monitor (Monitors) via REST API and conditions on those resources (Conditions). When conditions are met, pre-defined actions such as syslog messages or CLI commands are triggered. The main components of an NAE Script are: - Manifest: Identifies the script with metadata (name, version, author, supported platforms, etc.) - ParameterDefinitions: Defines customizable parameters for agent creation - Agent constructor: Contains the monitoring and condition logic Each script serves as a template for creating one or more NAE agents. Once uploaded and validated, the script can be used to instantiate multiple agents with different parameter values.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
-        name: Specific ``nae-script`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``nae-scripts`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "nae-scripts", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_nae_script(
+@tool(capability=Capability.WRITE_DELETE)
+async def central_manage_nae_scripts(
     ctx: Context,
-    name: Annotated[str, Field(description="``nae-script`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``nae-scripts`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``nae-script`` object. "
+                "Payload for the ``nae-scripts`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_nae_script`` to "
+                "field set; use ``central_get_nae_scripts`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -1211,14 +1206,14 @@ async def central_manage_nae_script(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``nae-script`` configuration in Central.
+    """Create, update, or delete a ``nae-scripts`` configuration in Central.
 
-    Configure and Manage Network Analytics Engine (NAE) Scripts. NAE Script is a Python-based monitoring script that defines resources to monitor (Monitors) via REST API and conditions on those resources (Conditions). When conditions are met, pre-defined actions such as syslog messages or CLI commands are triggered. The main components of an NAE Script are: - Manifest: Identifies the script with metadata (name, version, author, supported platforms, etc.) - ParameterDefinitions: Defines customizable parameters for agent creation - Agent constructor: Contains the monitoring and condition logic Each script serves as a template for creating one or more NAE agents. Once uploaded and validated, the script can be used to instantiate multiple agents with different parameter values.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
         "nae-scripts",
-        "nae-script",
+        "nae-scripts",
         name,
         action_type,
         payload,
@@ -1231,14 +1226,14 @@ async def central_manage_nae_script(
 # ----- ntp -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ntp(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``ntp`` configurations from Central.
 
-    Network Time Protocol (NTP) synchronizes system clocks across network devices to ensure consistent timestamp accuracy for logs, authentication protocols, and distributed operations. This module supports NTPv3/v4 with IETF RFC 5905, configurable authentication via MD5/SHA keys, and flexible server management. Configure NTP servers, authentication profiles, conductor associations, and source interfaces for time synchronization. Device Limits: Gateway supports up to 15 NTP servers per profile. Use this API to retrieve the list of NTP profiles.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
         name: Specific ``ntp`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -1246,7 +1241,7 @@ async def central_get_ntp(
     return await _get_resource(ctx, "ntp", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_ntp(
     ctx: Context,
     name: Annotated[str, Field(description="``ntp`` identifier (OpenAPI path param: ``name``).")],
@@ -1269,7 +1264,7 @@ async def central_manage_ntp(
 ) -> dict | str:
     """Create, update, or delete a ``ntp`` configuration in Central.
 
-    Network Time Protocol (NTP) synchronizes system clocks across network devices to ensure consistent timestamp accuracy for logs, authentication protocols, and distributed operations. This module supports NTPv3/v4 with IETF RFC 5905, configurable authentication via MD5/SHA keys, and flexible server management. Configure NTP servers, authentication profiles, conductor associations, and source interfaces for time synchronization. Device Limits: Gateway supports up to 15 NTP servers per profile. Use this API to retrieve the list of NTP profiles.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
@@ -1287,14 +1282,14 @@ async def central_manage_ntp(
 # ----- packet-capture -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_packet_capture(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``packet-capture`` configurations from Central.
 
-    Configure packet capture profiles for network troubleshooting and analysis. Packet capture allows monitoring and recording network traffic on datapath and controlpath for diagnostic purposes.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
         name: Specific ``packet-capture`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -1302,7 +1297,7 @@ async def central_get_packet_capture(
     return await _get_resource(ctx, "packet-capture", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_packet_capture(
     ctx: Context,
     name: Annotated[str, Field(description="``packet-capture`` identifier (OpenAPI path param: ``name``).")],
@@ -1325,7 +1320,7 @@ async def central_manage_packet_capture(
 ) -> dict | str:
     """Create, update, or delete a ``packet-capture`` configuration in Central.
 
-    Configure packet capture profiles for network troubleshooting and analysis. Packet capture allows monitoring and recording network traffic on datapath and controlpath for diagnostic purposes.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
@@ -1343,14 +1338,14 @@ async def central_manage_packet_capture(
 # ----- remote-management -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_remote_management(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``remote-management`` configurations from Central.
 
-    Remote management enables centralized configuration, monitoring, and troubleshooting of Aruba devices from external management platforms. This feature allows administrators to securely connect to and control devices remotely, streamlining operations and support. Use this API to retrieve the list of remote management profiles.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
         name: Specific ``remote-management`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -1358,7 +1353,7 @@ async def central_get_remote_management(
     return await _get_resource(ctx, "remote-management", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_remote_management(
     ctx: Context,
     name: Annotated[str, Field(description="``remote-management`` identifier (OpenAPI path param: ``name``).")],
@@ -1381,7 +1376,7 @@ async def central_manage_remote_management(
 ) -> dict | str:
     """Create, update, or delete a ``remote-management`` configuration in Central.
 
-    Remote management enables centralized configuration, monitoring, and troubleshooting of Aruba devices from external management platforms. This feature allows administrators to securely connect to and control devices remotely, streamlining operations and support. Use this API to retrieve the list of remote management profiles.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
@@ -1396,36 +1391,36 @@ async def central_manage_remote_management(
     )
 
 
-# ----- rmon-alarm -----
+# ----- rmon-alarms -----
 
 
-@tool(annotations=READ_ONLY)
-async def central_get_rmon_alarm(
+@tool(capability=Capability.READ)
+async def central_get_rmon_alarms(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``rmon-alarm`` configurations from Central.
+    """Get ``rmon-alarms`` configurations from Central.
 
-    RMON alarm grouping.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
-        name: Specific ``rmon-alarm`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``rmon-alarms`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "rmon-alarms", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_rmon_alarm(
+@tool(capability=Capability.WRITE_DELETE)
+async def central_manage_rmon_alarms(
     ctx: Context,
-    name: Annotated[str, Field(description="``rmon-alarm`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``rmon-alarms`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``rmon-alarm`` object. "
+                "Payload for the ``rmon-alarms`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_rmon_alarm`` to "
+                "field set; use ``central_get_rmon_alarms`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -1435,14 +1430,14 @@ async def central_manage_rmon_alarm(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``rmon-alarm`` configuration in Central.
+    """Create, update, or delete a ``rmon-alarms`` configuration in Central.
 
-    RMON alarm grouping.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
         "rmon-alarms",
-        "rmon-alarm",
+        "rmon-alarms",
         name,
         action_type,
         payload,
@@ -1455,14 +1450,14 @@ async def central_manage_rmon_alarm(
 # ----- snmp -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_snmp(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``snmp`` configurations from Central.
 
-    Profile for SNMP configuration. SNMP user-table, trap receivers, community strings, notify groups, targets, etc. can be configured. Both Informs and Traps are supported. Handles configuration for SNMP v1, v2c, v3 versions.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
         name: Specific ``snmp`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -1470,7 +1465,7 @@ async def central_get_snmp(
     return await _get_resource(ctx, "snmp", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_snmp(
     ctx: Context,
     name: Annotated[str, Field(description="``snmp`` identifier (OpenAPI path param: ``name``).")],
@@ -1493,7 +1488,7 @@ async def central_manage_snmp(
 ) -> dict | str:
     """Create, update, or delete a ``snmp`` configuration in Central.
 
-    Profile for SNMP configuration. SNMP user-table, trap receivers, community strings, notify groups, targets, etc. can be configured. Both Informs and Traps are supported. Handles configuration for SNMP v1, v2c, v3 versions.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
@@ -1511,14 +1506,14 @@ async def central_manage_snmp(
 # ----- snmp-trap -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_snmp_trap(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``snmp-trap`` configurations from Central.
 
-    SNMP Trap profiles configuration. Using this profile SNMP traps can be enabled/disabled. Enabled traps will notify important events to the management station. This profile allows specification of traps,alarms.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
         name: Specific ``snmp-trap`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -1526,7 +1521,7 @@ async def central_get_snmp_trap(
     return await _get_resource(ctx, "snmp-trap", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_snmp_trap(
     ctx: Context,
     name: Annotated[str, Field(description="``snmp-trap`` identifier (OpenAPI path param: ``name``).")],
@@ -1549,7 +1544,7 @@ async def central_manage_snmp_trap(
 ) -> dict | str:
     """Create, update, or delete a ``snmp-trap`` configuration in Central.
 
-    SNMP Trap profiles configuration. Using this profile SNMP traps can be enabled/disabled. Enabled traps will notify important events to the management station. This profile allows specification of traps,alarms.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
@@ -1567,14 +1562,14 @@ async def central_manage_snmp_trap(
 # ----- speed-test -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_speed_test(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``speed-test`` configurations from Central.
 
-    Speed test profiles enable Aruba devices to measure network throughput, latency, and performance between endpoints. This feature helps administrators diagnose connectivity issues, validate service levels, and optimize network performance. Use this API to retrieve the list of speed test profiles.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
         name: Specific ``speed-test`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -1582,7 +1577,7 @@ async def central_get_speed_test(
     return await _get_resource(ctx, "speed-test", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_speed_test(
     ctx: Context,
     name: Annotated[str, Field(description="``speed-test`` identifier (OpenAPI path param: ``name``).")],
@@ -1605,7 +1600,7 @@ async def central_manage_speed_test(
 ) -> dict | str:
     """Create, update, or delete a ``speed-test`` configuration in Central.
 
-    Speed test profiles enable Aruba devices to measure network throughput, latency, and performance between endpoints. This feature helps administrators diagnose connectivity issues, validate service levels, and optimize network performance. Use this API to retrieve the list of speed test profiles.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
@@ -1623,14 +1618,14 @@ async def central_manage_speed_test(
 # ----- switch-chassis -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_switch_chassis(
     ctx: Context,
     chassis_name: str | None = None,
 ) -> dict | list | str:
     """Get ``switch-chassis`` configurations from Central.
 
-    Switch chassis configuration.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
         chassis_name: Specific ``switch-chassis`` identifier (OpenAPI path param: ``chassis-name``). If omitted, returns all.
@@ -1638,7 +1633,7 @@ async def central_get_switch_chassis(
     return await _get_resource(ctx, "switch-chassis", chassis_name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_switch_chassis(
     ctx: Context,
     chassis_name: Annotated[
@@ -1663,7 +1658,7 @@ async def central_manage_switch_chassis(
 ) -> dict | str:
     """Create, update, or delete a ``switch-chassis`` configuration in Central.
 
-    Switch chassis configuration.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
@@ -1681,14 +1676,14 @@ async def central_manage_switch_chassis(
 # ----- switch-profiles -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_switch_profiles(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``switch-profiles`` configurations from Central.
 
-    Configure and Manage Switch Profiles. System profiles set the overall capabilities and capacities of the switch, based on the selected profile used at boot time. System profiles set capacities such as that of the hardware forwarding table. System profiles provide you with the flexibility to configure switches based on their location in the network (for example, core, spine, leaf). When a switch boots without a profile specifically configured, it boots with the default profile. When a switch is configured with a non-default profile, the switch requires a reboot for the profile to be applied.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
         name: Specific ``switch-profiles`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -1696,7 +1691,7 @@ async def central_get_switch_profiles(
     return await _get_resource(ctx, "switch-profiles", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_switch_profiles(
     ctx: Context,
     name: Annotated[str, Field(description="``switch-profiles`` identifier (OpenAPI path param: ``name``).")],
@@ -1719,7 +1714,7 @@ async def central_manage_switch_profiles(
 ) -> dict | str:
     """Create, update, or delete a ``switch-profiles`` configuration in Central.
 
-    Configure and Manage Switch Profiles. System profiles set the overall capabilities and capacities of the switch, based on the selected profile used at boot time. System profiles set capacities such as that of the hardware forwarding table. System profiles provide you with the flexibility to configure switches based on their location in the network (for example, core, spine, leaf). When a switch boots without a profile specifically configured, it boots with the default profile. When a switch is configured with a non-default profile, the switch requires a reboot for the profile to be applied.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
@@ -1737,14 +1732,14 @@ async def central_manage_switch_profiles(
 # ----- switch-system -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_switch_system(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``switch-system`` configurations from Central.
 
-    System Configurations.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
         name: Specific ``switch-system`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -1752,7 +1747,7 @@ async def central_get_switch_system(
     return await _get_resource(ctx, "switch-system", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_switch_system(
     ctx: Context,
     name: Annotated[str, Field(description="``switch-system`` identifier (OpenAPI path param: ``name``).")],
@@ -1775,7 +1770,7 @@ async def central_manage_switch_system(
 ) -> dict | str:
     """Create, update, or delete a ``switch-system`` configuration in Central.
 
-    System Configurations.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
@@ -1793,14 +1788,14 @@ async def central_manage_switch_system(
 # ----- sysmon -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_sysmon(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``sysmon`` configurations from Central.
 
-    The System Resources Monitor daemon collects system parameters (i.e., CPU usage, memory usage, open FD’s) for the overall system and all running daemons, then writes it into the OVSDB during every poll interval (~10 sec is default and minimum). This captures the current value of these monitoring parameters, which is then displayed using CLI show commands.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
         name: Specific ``sysmon`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -1808,7 +1803,7 @@ async def central_get_sysmon(
     return await _get_resource(ctx, "sysmon", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_sysmon(
     ctx: Context,
     name: Annotated[str, Field(description="``sysmon`` identifier (OpenAPI path param: ``name``).")],
@@ -1831,7 +1826,7 @@ async def central_manage_sysmon(
 ) -> dict | str:
     """Create, update, or delete a ``sysmon`` configuration in Central.
 
-    The System Resources Monitor daemon collects system parameters (i.e., CPU usage, memory usage, open FD’s) for the overall system and all running daemons, then writes it into the OVSDB during every poll interval (~10 sec is default and minimum). This captures the current value of these monitoring parameters, which is then displayed using CLI show commands.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
@@ -1849,35 +1844,29 @@ async def central_manage_sysmon(
 # ----- system-info -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_system_info(
     ctx: Context,
-    name: str | None = None,
 ) -> dict | list | str:
-    """Get ``system-info`` configurations from Central.
+    """Get the ``system-info`` singleton configuration from Central.
 
-    System information provides key details about the Aruba device, including hardware model, software version, serial number, and operational status. This information is essential for inventory management, support, and troubleshooting. Use this API to retrieve the list of System Information profiles.
-
-    Parameters:
-        name: Specific ``system-info`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
-    return await _get_resource(ctx, "system-info", name)
+    return await _get_resource(ctx, "system-info", None)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_system_info(
     ctx: Context,
-    name: Annotated[str, Field(description="``system-info`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``system-info`` object. "
+                "Payload for the singleton ``system-info`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
                 "field set; use ``central_get_system_info`` to "
-                "inspect an existing object for reference. "
-                "For ``delete``, ``payload`` is ignored."
+                "inspect the current state. For ``delete``, ``payload`` is ignored."
             )
         ),
     ],
@@ -1885,15 +1874,15 @@ async def central_manage_system_info(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``system-info`` configuration in Central.
+    """Create, update, or delete the singleton ``system-info`` configuration in Central.
 
-    System information provides key details about the Aruba device, including hardware model, software version, serial number, and operational status. This information is essential for inventory management, support, and troubleshooting. Use this API to retrieve the list of System Information profiles.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
         "system-info",
         "system-info",
-        name,
+        None,
         action_type,
         payload,
         scope_id,
@@ -1905,14 +1894,14 @@ async def central_manage_system_info(
 # ----- telemetry -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_telemetry(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``telemetry`` configurations from Central.
 
-    Enables inline monitoring statistics for AP. The information is collected and forwarded to AirWave to debug client connectivity issues. This feature is only applicable for AP.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
         name: Specific ``telemetry`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -1920,7 +1909,7 @@ async def central_get_telemetry(
     return await _get_resource(ctx, "telemetry", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_telemetry(
     ctx: Context,
     name: Annotated[str, Field(description="``telemetry`` identifier (OpenAPI path param: ``name``).")],
@@ -1943,7 +1932,7 @@ async def central_manage_telemetry(
 ) -> dict | str:
     """Create, update, or delete a ``telemetry`` configuration in Central.
 
-    Enables inline monitoring statistics for AP. The information is collected and forwarded to AirWave to debug client connectivity issues. This feature is only applicable for AP.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
@@ -1958,36 +1947,36 @@ async def central_manage_telemetry(
     )
 
 
-# ----- timerange -----
+# ----- time-ranges -----
 
 
-@tool(annotations=READ_ONLY)
-async def central_get_timerange(
+@tool(capability=Capability.READ)
+async def central_get_time_ranges(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``timerange`` configurations from Central.
+    """Get ``time-ranges`` configurations from Central.
 
-    Configure time range profiles on device to enable or diable access to an SSID during a specific period of time. This feature is only applicable for AP.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
 
     Parameters:
-        name: Specific ``timerange`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``time-ranges`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "time-ranges", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_timerange(
+@tool(capability=Capability.WRITE_DELETE)
+async def central_manage_time_ranges(
     ctx: Context,
-    name: Annotated[str, Field(description="``timerange`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``time-ranges`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``timerange`` object. "
+                "Payload for the ``time-ranges`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_timerange`` to "
+                "field set; use ``central_get_time_ranges`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -1997,14 +1986,14 @@ async def central_manage_timerange(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``timerange`` configuration in Central.
+    """Create, update, or delete a ``time-ranges`` configuration in Central.
 
-    Configure time range profiles on device to enable or diable access to an SSID during a specific period of time. This feature is only applicable for AP.
+    Manage global system settings for Aruba Access Points, including time zone, location, cluster mode, LED control, and operational parameters. These configurations define device identity, network integration, security policies, and system-wide behaviors such as country code, virtual controller settings, and advanced features like CPU management and thermal controls. This profile references Alias profiles for reusable configuration templates. Use this API to retrieve the list of AP System profiles.
     """
     return await _manage_resource(
         ctx,
         "time-ranges",
-        "timerange",
+        "time-ranges",
         name,
         action_type,
         payload,

@@ -5,13 +5,13 @@ from __future__ import annotations
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_api_clients(
     ctx: Context,
     client_id: str | None = None,
@@ -34,20 +34,18 @@ async def clearpass_get_api_clients(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_identities import ApiIdentities
-
-        client = await get_clearpass_session(ApiIdentities)
+        client = await get_clearpass_client()
         if client_id:
-            return client.get_api_client_by_client_id(client_id=client_id)
+            return await client.request("get", f"/api-client/{client_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/api-client" + query)
+        return await clearpass_get(client, "/api-client" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching API clients: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_local_users(
     ctx: Context,
     local_user_id: str | None = None,
@@ -73,22 +71,20 @@ async def clearpass_get_local_users(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_identities import ApiIdentities
-
-        client = await get_clearpass_session(ApiIdentities)
+        client = await get_clearpass_client()
         if local_user_id:
-            return client.get_local_user_by_local_user_id(local_user_id=local_user_id)
+            return await client.request("get", f"/local-user/{local_user_id}")
         if user_id:
-            return client.get_local_user_user_id_by_user_id(user_id=user_id)
+            return await client.request("get", f"/local-user/user-id/{user_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/local-user" + query)
+        return await clearpass_get(client, "/local-user" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching local users: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_static_host_lists(
     ctx: Context,
     static_host_list_id: str | None = None,
@@ -113,24 +109,20 @@ async def clearpass_get_static_host_lists(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_identities import ApiIdentities
-
-        client = await get_clearpass_session(ApiIdentities)
+        client = await get_clearpass_client()
         if static_host_list_id:
-            return client.get_static_host_list_by_static_host_list_id(
-                static_host_list_id=static_host_list_id,
-            )
+            return await client.request("get", f"/static-host-list/{static_host_list_id}")
         if name:
-            return client.get_static_host_list_name_by_name(name=name)
+            return await client.request("get", f"/static-host-list/name/{name}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/static-host-list" + query)
+        return await clearpass_get(client, "/static-host-list" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching static host lists: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_devices(
     ctx: Context,
     device_id: str | None = None,
@@ -155,22 +147,20 @@ async def clearpass_get_devices(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_identities import ApiIdentities
-
-        client = await get_clearpass_session(ApiIdentities)
+        client = await get_clearpass_client()
         if device_id:
-            return client.get_device_by_device_id(device_id=device_id)
+            return await client.request("get", f"/device/{device_id}")
         if macaddr:
-            return client.get_device_mac_by_macaddr(macaddr=macaddr)
+            return await client.request("get", f"/device/mac/{macaddr}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/device" + query)
+        return await clearpass_get(client, "/device" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching devices: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_deny_listed_users(
     ctx: Context,
     deny_listed_users_id: str | None = None,
@@ -193,22 +183,18 @@ async def clearpass_get_deny_listed_users(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_identities import ApiIdentities
-
-        client = await get_clearpass_session(ApiIdentities)
+        client = await get_clearpass_client()
         if deny_listed_users_id:
-            return client.get_deny_listed_users_by_deny_listed_users_id(
-                deny_listed_users_id=deny_listed_users_id,
-            )
+            return await client.request("get", f"/deny-listed-users/{deny_listed_users_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/deny-listed-users" + query)
+        return await clearpass_get(client, "/deny-listed-users" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching deny-listed users: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_external_accounts(
     ctx: Context,
     external_account_id: str | None = None,
@@ -241,15 +227,13 @@ async def clearpass_get_external_accounts(
     See: https://developer.arubanetworks.com/cppm/reference (Identities → /external-account)
     """
     try:
-        from pyclearpass.api_identities import ApiIdentities
-
-        client = await get_clearpass_session(ApiIdentities)
+        client = await get_clearpass_client()
         if external_account_id:
-            return clearpass_get(client, f"/external-account/{external_account_id}")
+            return await clearpass_get(client, f"/external-account/{external_account_id}")
         if name:
-            return clearpass_get(client, f"/external-account/name/{name}")
+            return await clearpass_get(client, f"/external-account/name/{name}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/external-account" + query)
+        return await clearpass_get(client, "/external-account" + query)
     except ToolError:
         raise
     except Exception as e:

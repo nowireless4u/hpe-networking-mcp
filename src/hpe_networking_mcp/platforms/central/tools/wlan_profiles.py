@@ -9,23 +9,14 @@ from typing import Annotated
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from loguru import logger
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import elicitation_handler
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
-
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_wlan_profiles(
     ctx: Context,
     ssid: str | None = None,
@@ -46,11 +37,11 @@ async def central_get_wlan_profiles(
     Returns:
         Single profile dict if ssid specified, or list of all profiles.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     api_path = f"network-config/v1alpha1/wlan-ssids/{ssid}" if ssid else "network-config/v1alpha1/wlan-ssids"
 
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path=api_path,
@@ -58,7 +49,7 @@ async def central_get_wlan_profiles(
     return response.get("msg", {})
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_wlan_profile(
     ctx: Context,
     ssid: Annotated[
@@ -126,7 +117,10 @@ async def central_manage_wlan_profile(
     confirmed: Annotated[
         bool,
         Field(
-            description="Set to true when the user has confirmed the operation in chat.",
+            description=(
+                "Fallback confirmation flag — honored only when the client cannot "
+                "show a confirmation prompt (the universal gate prompts otherwise)."
+            ),
             default=False,
         ),
     ] = False,
@@ -193,7 +187,7 @@ async def central_manage_wlan_profile(
             )
 
     api_path = f"network-config/v1alpha1/wlan-ssids/{ssid}"
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     # Method selection: update defaults to PATCH (partial merge on the
     # server). replace_existing=True forces PUT (full replacement).
@@ -204,55 +198,13 @@ async def central_manage_wlan_profile(
     }
     api_method = method_map[action_type]
 
-    # Build the action summary for the elicitation prompt. For partial
-    # updates we try to diff the payload against the current profile so
-    # the user sees which fields will actually change; for full-replace
-    # updates we show a loud warning instead.
-    if action_type == "create":
-        action_wording = "create a new"
-        diff_lines: list[str] = []
-    elif action_type == "delete":
-        action_wording = "delete an existing"
-        diff_lines = []
-    elif replace_existing:
-        action_wording = "REPLACE THE ENTIRE"
-        diff_lines = [
-            "⚠️  replace_existing=True — any field not in the payload will be DROPPED.",
-            f"Payload top-level keys: {sorted(payload.keys())}",
-        ]
-    else:
-        action_wording = "patch (partial update of)"
-        diff_lines = _build_patch_diff(conn, api_path, payload)
-
-    # Confirm for update and delete only
-    if action_type != "create" and not confirmed:
-        diff_suffix = ("\n\nChanges:\n" + "\n".join(diff_lines)) if diff_lines else ""
-        elicitation_response = await elicitation_handler(
-            message=(f"The LLM wants to {action_wording} WLAN profile '{ssid}'.{diff_suffix}\n\nDo you accept?"),
-            ctx=ctx,
-        )
-        if elicitation_response.action == "decline":
-            if await ctx.get_state("elicitation_mode") == "chat_confirm":
-                return {
-                    "status": "confirmation_required",
-                    "message": (
-                        f"This operation will {action_wording} WLAN profile '{ssid}'."
-                        + diff_suffix
-                        + " Please confirm with the user before proceeding. "
-                        "Call this tool again with confirmed=true after the user confirms."
-                    ),
-                }
-            return {"message": "Action declined by user."}
-        elif elicitation_response.action == "cancel":
-            return {"message": "Action canceled by user."}
-
     api_data: dict = {}
     if action_type != "delete":
         api_data = payload
 
     logger.info("Central WLAN: {} '{}' — path: {}", api_method, ssid, api_path)
 
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method=api_method,
         api_path=api_path,
@@ -273,39 +225,3 @@ async def central_manage_wlan_profile(
         "code": code,
         "message": response.get("msg", "Unknown error"),
     }
-
-
-def _build_patch_diff(conn: object, api_path: str, payload: dict) -> list[str]:
-    """Compute a human-readable diff of what a PATCH will change.
-
-    Fetches the current profile and reports, per top-level key in the
-    payload, the before → after value. Failures are non-blocking — if
-    the GET fails, the caller falls back to a generic elicitation
-    message so the write isn't held up by a display-only helper.
-    """
-    try:
-        resp = retry_central_command(
-            central_conn=conn,
-            api_method="GET",
-            api_path=api_path,
-        )
-        current = resp.get("msg", {}) if isinstance(resp, dict) else {}
-        if not isinstance(current, dict):
-            current = {}
-    except Exception as e:
-        logger.warning("Central WLAN: diff lookup failed — {}", e)
-        return [f"(current profile lookup failed: {e} — patch will still apply)"]
-
-    lines: list[str] = []
-    for key, new_val in payload.items():
-        if key in current:
-            old_val = current[key]
-            if old_val == new_val:
-                lines.append(f"{key}: {old_val!r} (unchanged)")
-            else:
-                lines.append(f"{key}: {old_val!r} → {new_val!r}")
-        else:
-            lines.append(f"{key}: (new) → {new_val!r}")
-    if not lines:
-        lines.append("(empty payload — no changes)")
-    return lines

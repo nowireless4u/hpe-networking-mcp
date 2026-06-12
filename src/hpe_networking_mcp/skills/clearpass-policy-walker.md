@@ -334,23 +334,27 @@ Call shape:
 
 ```python
 detail = await call_tool("central_get_role_with_policy", {"name": "night-night"})
-# Returns: {name, role: {...}|None, policy: {...}|None, not_found: [...], errors: [...]}
+# Returns: {name, role: {...}|None, policies: [{...}, ...], not_found: [...], errors: [...]}
 ```
 
-Surface in your reply as an additional inspector block (mirror the
-role-mapping / enforcement section style). The ``policy.security-
-policy.policy-rule[]`` array has the firewall rules — each rule's
-``condition`` (rule-type, services with app-category / application,
-source/destination) and ``action`` (``ACTION_ALLOW`` /
-``ACTION_DENY``) are what determines what traffic the role can do.
+The tool reads the role's ``policies[]`` back-reference and fetches
+each bound security policy — ``policies`` is a **list** (a role can be
+bound to more than one). Surface in your reply as an additional
+inspector block (mirror the role-mapping / enforcement section style).
+For each policy in ``policies``, the ``security-policy.policy-rule[]``
+array has the firewall rules — each rule's ``condition`` (rule-type,
+services with app-category / application, source/destination) and
+``action`` (``ACTION_ALLOW`` / ``ACTION_DENY``) are what determines
+what traffic the role can do.
 
 Many roles are **skeletal** (just ``{name, description}``) — that's
-fine. Many roles **have no separate security policy** —
-``not_found: ["policy"]`` is informational, not an error. Say so:
-"*The night-night role is referenced as a source in the 'AP default'
-policy but has no policy named after itself.*"
+fine. Many roles **reference no security policy** at all, so
+``policies`` comes back ``[]`` — informational, not an error. Say so:
+"*The night-night role is skeletal and is bound to no security
+policy of its own.*" A referenced policy that resolves empty shows up
+as ``not_found: ["policy:<name>"]``.
 
-Prefetch is cheap (~2 GETs per role), but call only for roles the
+Prefetch is cheap (~1 GET for the role + 1 per bound policy), but call only for roles the
 operator actually asks about — don't blast Central for every profile
 referenced in a 15-rule enforcement chain.
 

@@ -4522,7 +4522,7 @@
     }
   },
   "info": {
-    "description": "APIs for managing network events and retrieving event information.",
+    "description": "API service to run troubleshooting tests on devices - Access Points (APs), CX Switches, AOS-S Switches, and Gateways (GWs).",
     "license": {
       "name": "HPE",
       "url": "https://www.hpe.com/us/en/software/licensing.html"
@@ -10360,7 +10360,7 @@
     "/network-troubleshooting/v1/event-extra-attributes": {
       "get": {
         "description": "This API endpoint retrieves extra attributes of the event. The response includes event attributes as key-value pairs.",
-        "operationId": "nbApiEventDetailsV1",
+        "operationId": "EventExtraAttributesV1",
         "parameters": [
           {
             "description": "Unique identifier of the event to retrieve details for.",
@@ -10431,7 +10431,7 @@
     "/network-troubleshooting/v1/event-filters": {
       "get": {
         "description": "This endpoint returns available filter options for network events, including categories, source types, and event names with their respective counts. Use this information to construct filters for the List Events API.",
-        "operationId": "nbApiEventFiltersV1",
+        "operationId": "EventFiltersV1",
         "parameters": [
           {
             "description": "Type of context (SITE, ACCESS_POINT, SWITCH, GATEWAY, WIRELESS_CLIENT, WIRED_CLIENT, BRIDGE).",
@@ -10530,7 +10530,7 @@
     "/network-troubleshooting/v1/events": {
       "get": {
         "description": "This API endpoint retrieves a list of Network Events, based on the query parameters provided. Each Event in the returned list includes details like event name, category, source type, severity, etc. The query parameters allow you to narrow down the results that meet specific criteria, ensuring you receive only the relevant data.",
-        "operationId": "nbApiEventListV1",
+        "operationId": "EventListV1",
         "parameters": [
           {
             "description": "Type of context (SITE, ACCESS_POINT, SWITCH, GATEWAY, WIRELESS_CLIENT, WIRED_CLIENT, BRIDGE).",

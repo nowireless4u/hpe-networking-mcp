@@ -446,6 +446,35 @@ def aos8_role_bwc_excl_filter_appcategory(value: Any) -> list[dict[str, str]] | 
     return out or None
 
 
+def aos8_server_group_members(value: Any) -> list[dict[str, Any]]:
+    """AOS 8 ``server_group_prof.auth_server[]`` → Central ``servers[]``.
+
+    Each member maps to ``{"server-name": <name>, "position": <1-based>}``,
+    preserving the AOS 8 ordering (auth precedence); entries without a name are
+    dropped. The referenced auth-servers must already exist in Central
+    (central:auth_server runs first).
+
+    NOTE: member ``_flags.inherited`` is NOT a drop signal — it merely reflects
+    that the whole group was authored at an ancestor scope (every member then
+    shows ``inherited`` at descendant scopes). Record-level inheritance
+    filtering is the consumer's job (skip inherited *groups* before emit), the
+    same convention as central:net_group / central:role.
+    """
+    if not isinstance(value, list):
+        return []
+    servers: list[dict[str, Any]] = []
+    position = 1
+    for member in value:
+        if not isinstance(member, dict):
+            continue
+        name = member.get("name")
+        if not name:
+            continue
+        servers.append({"server-name": str(name), "position": position})
+        position += 1
+    return servers
+
+
 _REGISTRY: dict[str, TransformFn] = {
     "direct": direct,
     "direct_str": direct_str,
@@ -466,4 +495,5 @@ _REGISTRY: dict[str, TransformFn] = {
     "aos8_role_bwc_web_filter_reputation": aos8_role_bwc_web_filter_reputation,
     "aos8_role_bwc_excl_filter_app": aos8_role_bwc_excl_filter_app,
     "aos8_role_bwc_excl_filter_appcategory": aos8_role_bwc_excl_filter_appcategory,
+    "aos8_server_group_members": aos8_server_group_members,
 }

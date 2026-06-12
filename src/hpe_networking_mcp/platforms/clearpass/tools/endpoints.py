@@ -5,13 +5,13 @@ from __future__ import annotations
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import clearpass_get
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_endpoints(
     ctx: Context,
     endpoint_id: str | None = None,
@@ -41,13 +41,11 @@ async def clearpass_get_endpoints(
             details (DHCP, HTTP user-agent, device category). Off by default.
     """
     try:
-        from pyclearpass.api_identities import ApiIdentities
-
-        client = await get_clearpass_session(ApiIdentities)
+        client = await get_clearpass_client()
         if endpoint_id:
-            return client.get_endpoint_by_endpoint_id(endpoint_id=endpoint_id)
+            return await client.request("get", f"/endpoint/{endpoint_id}")
         if mac_address:
-            return client.get_endpoint_mac_address_by_mac_address(mac_address=mac_address)
+            return await client.request("get", f"/endpoint/mac-address/{mac_address}")
         params = [
             f"filter={filter}" if filter else "",
             f"sort={sort}" if sort else "",
@@ -59,14 +57,14 @@ async def clearpass_get_endpoints(
             f"profile_details={'true' if profile_details else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
-        return clearpass_get(client, "/endpoint" + query)
+        return await clearpass_get(client, "/endpoint" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching endpoints: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_endpoint_profiler(
     ctx: Context,
     mac_or_ip: str,
@@ -80,10 +78,8 @@ async def clearpass_get_endpoint_profiler(
         mac_or_ip: MAC address or IP address of the endpoint to profile.
     """
     try:
-        from pyclearpass.api_endpointvisibility import ApiEndpointVisibility
-
-        client = await get_clearpass_session(ApiEndpointVisibility)
-        return client.get_device_profiler_device_fingerprint_by_mac_or_ip(mac_or_ip=mac_or_ip)
+        client = await get_clearpass_client()
+        return await client.request("get", f"/device-profiler/device-fingerprint/{mac_or_ip}")
     except ToolError:
         raise
     except Exception as e:

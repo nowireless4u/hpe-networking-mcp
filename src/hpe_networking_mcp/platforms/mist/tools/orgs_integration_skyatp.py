@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,18 +16,17 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
 
 @_mcp_tool(
     name="mist_delete_org_sky_atp_integration",
-    description="DELETE /api/v1/orgs/{org_id}/setting/skyatp/setup\n\ndeleteOrgSkyAtpIntegration\n\nDelete SkyATP Integration",
-    tags={"mist", "mist_write", "mist_write_delete"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True),
+    description="DELETE /api/v1/orgs/{org_id}/setting/skyatp/setup\n\ndeleteOrgSkyAtpIntegration\n\nRemove the Sky ATP integration configuration from the organization.",
+    capability=Capability.WRITE_DELETE,
 )
 async def mist_delete_org_sky_atp_integration(
     ctx: Context,
@@ -45,9 +44,8 @@ async def mist_delete_org_sky_atp_integration(
 
 @_mcp_tool(
     name="mist_get_org_sky_atp_integration",
-    description="GET /api/v1/orgs/{org_id}/setting/skyatp/setup\n\ngetOrgSkyAtpIntegration\n\nGet Org SkyATP Integration",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/setting/skyatp/setup\n\ngetOrgSkyAtpIntegration\n\nReturn the Sky ATP integration configuration, including linked realm information and generated SecIntel allowlist and blocklist URLs.",
+    capability=Capability.READ,
 )
 async def mist_get_org_sky_atp_integration(
     ctx: Context,
@@ -65,9 +63,8 @@ async def mist_get_org_sky_atp_integration(
 
 @_mcp_tool(
     name="mist_setup_org_atp_integration",
-    description="POST /api/v1/orgs/{org_id}/setting/skyatp/setup\n\nsetupOrgAtpIntegration\n\n1. Login to the Sky ATP realm through the Mist UI by providing the realm, username and password.\n2. Sky ATP API is invoked which creates the realm using above details.\n3. Sky ATP by default will provide functionality for Security-Intelligence and Advanced Anti Malware.\n4. SecIntel will provide configuration for CC, DNS Feeds, Infected Host, Blocklists and Allowlists.",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/orgs/{org_id}/setting/skyatp/setup\n\nsetupOrgAtpIntegration\n\nConfigure the Sky ATP integration by linking or creating the Sky ATP realm with the supplied cloud, realm, username, and password. The integration enables Security Intelligence and Advanced Anti-Malware features, with SecIntel configuration for command-and-control, DNS feeds, infected hosts, blocklists, and allowlists.",
+    capability=Capability.WRITE,
 )
 async def mist_setup_org_atp_integration(
     ctx: Context,
@@ -89,9 +86,8 @@ async def mist_setup_org_atp_integration(
 
 @_mcp_tool(
     name="mist_udpate_org_atp_allowed_list",
-    description="PUT /api/v1/orgs/{org_id}/setting/skyatp/secintel_allowlist\n\nudpateOrgAtpAllowedList\n\nUpdate Sky ATP Allowed List",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="PUT /api/v1/orgs/{org_id}/setting/skyatp/secintel_allowlist\n\nudpateOrgAtpAllowedList\n\nUpdate the Sky ATP SecIntel allowlist with domain and IP address entries for the organization.",
+    capability=Capability.WRITE,
 )
 async def mist_udpate_org_atp_allowed_list(
     ctx: Context,
@@ -113,9 +109,8 @@ async def mist_udpate_org_atp_allowed_list(
 
 @_mcp_tool(
     name="mist_udpate_org_atp_blocked_list",
-    description="PUT /api/v1/orgs/{org_id}/setting/skyatp/secintel_blocklist\n\nudpateOrgAtpBlockedList\n\nUpdate Sky ATP Blocked List",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="PUT /api/v1/orgs/{org_id}/setting/skyatp/secintel_blocklist\n\nudpateOrgAtpBlockedList\n\nUpdate the Sky ATP SecIntel blocklist with domain and IP address entries for the organization.",
+    capability=Capability.WRITE,
 )
 async def mist_udpate_org_atp_blocked_list(
     ctx: Context,
@@ -137,9 +132,8 @@ async def mist_udpate_org_atp_blocked_list(
 
 @_mcp_tool(
     name="mist_udpate_org_atp_integration",
-    description="PUT /api/v1/orgs/{org_id}/setting/skyatp/setup\n\nudpateOrgAtpIntegration\n\nUpdate Sky ATP config",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="PUT /api/v1/orgs/{org_id}/setting/skyatp/setup\n\nudpateOrgAtpIntegration\n\nUpdate Sky ATP SecIntel feed configuration, including the third-party threat feeds enabled for the organization.",
+    capability=Capability.WRITE,
 )
 async def mist_udpate_org_atp_integration(
     ctx: Context,

@@ -23,9 +23,9 @@ from typing import Annotated, Literal
 from fastmcp import Context
 from pydantic import BaseModel, Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
 class FirmwareRecommendation(BaseModel):
@@ -220,7 +220,7 @@ def _build_filter(
     return " and ".join(parts) if parts else None
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_recommend_firmware(
     ctx: Context,
     serial_number: Annotated[
@@ -291,7 +291,7 @@ async def central_recommend_firmware(
     in the fleet, SSR devices fall back to Central's recommendation with
     a note.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     filter_str = _build_filter(serial_number, device_type, site_id, site_name)
 
@@ -306,7 +306,7 @@ async def central_recommend_firmware(
         if next_cursor:
             params["next"] = next_cursor
 
-        resp = retry_central_command(
+        resp = await retry_central_command(
             central_conn=conn,
             api_method="GET",
             api_path="network-services/v1/firmware-details",

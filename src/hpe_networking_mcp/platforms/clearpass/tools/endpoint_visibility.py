@@ -12,13 +12,13 @@ from __future__ import annotations
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_onguard_activity(
     ctx: Context,
     activity_id: str | None = None,
@@ -46,22 +46,20 @@ async def clearpass_get_onguard_activity(
     See: https://developer.arubanetworks.com/cppm/reference (Endpoint Visibility → /onguard-activity)
     """
     try:
-        from pyclearpass.api_endpointvisibility import ApiEndpointVisibility
-
-        client = await get_clearpass_session(ApiEndpointVisibility)
+        client = await get_clearpass_client()
         if activity_id:
-            return clearpass_get(client, f"/onguard-activity/{activity_id}")
+            return await clearpass_get(client, f"/onguard-activity/{activity_id}")
         if mac:
-            return clearpass_get(client, f"/onguard-activity/mac/{mac}")
+            return await clearpass_get(client, f"/onguard-activity/mac/{mac}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/onguard-activity" + query)
+        return await clearpass_get(client, "/onguard-activity" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching OnGuard activity: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_fingerprint_dictionary(
     ctx: Context,
     fingerprint_id: str | None = None,
@@ -91,20 +89,18 @@ async def clearpass_get_fingerprint_dictionary(
     See: https://developer.arubanetworks.com/cppm/reference (Endpoint Visibility → /fingerprint-dictionary)
     """
     try:
-        from pyclearpass.api_endpointvisibility import ApiEndpointVisibility
-
-        client = await get_clearpass_session(ApiEndpointVisibility)
+        client = await get_clearpass_client()
         if fingerprint_id:
-            return clearpass_get(client, f"/fingerprint/{fingerprint_id}")
+            return await clearpass_get(client, f"/fingerprint/{fingerprint_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/fingerprint" + query)
+        return await clearpass_get(client, "/fingerprint" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching fingerprint dictionary: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_network_scan(
     ctx: Context,
     scan_id: str | None = None,
@@ -134,20 +130,18 @@ async def clearpass_get_network_scan(
     See: https://developer.arubanetworks.com/cppm/reference (Endpoint Visibility → /network-scan)
     """
     try:
-        from pyclearpass.api_endpointvisibility import ApiEndpointVisibility
-
-        client = await get_clearpass_session(ApiEndpointVisibility)
+        client = await get_clearpass_client()
         if scan_id:
-            return clearpass_get(client, f"/config/network-scan/{scan_id}")
+            return await clearpass_get(client, f"/config/network-scan/{scan_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/config/network-scan" + query)
+        return await clearpass_get(client, "/config/network-scan" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching network scans: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_onguard_settings(
     ctx: Context,
     global_settings: bool = False,
@@ -166,11 +160,9 @@ async def clearpass_get_onguard_settings(
     (Endpoint Visibility → /onguard/settings, /onguard/global-settings)
     """
     try:
-        from pyclearpass.api_endpointvisibility import ApiEndpointVisibility
-
-        client = await get_clearpass_session(ApiEndpointVisibility)
+        client = await get_clearpass_client()
         path = "/onguard/global-settings" if global_settings else "/onguard/settings"
-        return clearpass_get(client, path)
+        return await clearpass_get(client, path)
     except ToolError:
         raise
     except Exception as e:

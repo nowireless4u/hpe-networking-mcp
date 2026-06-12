@@ -2,20 +2,14 @@ from typing import Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
-from mcp.types import ToolAnnotations
-from pycentral.troubleshooting.troubleshooting import Troubleshooting
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
-
-OPERATIONAL = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=False,
-    idempotentHint=True,
-    openWorldHint=True,
-)
+from hpe_networking_mcp.platforms.central.utils import get_central_conn
 
 
-def _resolve_switch_id(conn, serial_number: str) -> str:
+async def _resolve_switch_id(conn, serial_number: str) -> str:
     """Resolve a switch serial to its stack ID if stacked.
 
     The Central troubleshooting API returns 404 for stacked switch
@@ -28,7 +22,7 @@ def _resolve_switch_id(conn, serial_number: str) -> str:
     )
 
     try:
-        resp = retry_central_command(
+        resp = await retry_central_command(
             central_conn=conn,
             api_method="GET",
             api_path=(f"network-monitoring/v1/switches/{serial_number}"),
@@ -45,7 +39,7 @@ def _resolve_switch_id(conn, serial_number: str) -> str:
 # ── Disconnect Tools ─────────────────────────────────────────────
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_disconnect_users_ssid(
     ctx: Context,
     serial_number: str,
@@ -63,11 +57,11 @@ async def central_disconnect_users_ssid(
         device_type: Switch type — "aos-s" or "cx" (required).
         ssid: SSID/WLAN name to disconnect users from (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
-    resolved_id = _resolve_switch_id(conn, serial_number)
+    conn = get_central_conn(ctx)
+    resolved_id = await _resolve_switch_id(conn, serial_number)
 
     try:
-        resp = Troubleshooting.disconnect_all_users_ssid(
+        resp = await monitoring_api.disconnect_all_users_ssid(
             central_conn=conn,
             device_type=device_type,
             serial_number=resolved_id,
@@ -81,7 +75,7 @@ async def central_disconnect_users_ssid(
     return resp
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_disconnect_users_ap(
     ctx: Context,
     serial_number: str,
@@ -96,11 +90,11 @@ async def central_disconnect_users_ap(
         serial_number: Switch serial number (required).
         device_type: Switch type — "aos-s" or "cx" (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
-    resolved_id = _resolve_switch_id(conn, serial_number)
+    conn = get_central_conn(ctx)
+    resolved_id = await _resolve_switch_id(conn, serial_number)
 
     try:
-        resp = Troubleshooting.disconnect_all_users(
+        resp = await monitoring_api.disconnect_all_users(
             central_conn=conn,
             device_type=device_type,
             serial_number=resolved_id,
@@ -113,7 +107,7 @@ async def central_disconnect_users_ap(
     return resp
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_disconnect_client_switch(
     ctx: Context,
     serial_number: str,
@@ -132,11 +126,11 @@ async def central_disconnect_client_switch(
         device_type: Switch type — "aos-s" or "cx" (required).
         mac_address: Client MAC address to disconnect (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
-    resolved_id = _resolve_switch_id(conn, serial_number)
+    conn = get_central_conn(ctx)
+    resolved_id = await _resolve_switch_id(conn, serial_number)
 
     try:
-        resp = Troubleshooting.disconnect_client_mac_addr(
+        resp = await monitoring_api.disconnect_client_mac_addr(
             central_conn=conn,
             device_type=device_type,
             serial_number=resolved_id,
@@ -150,7 +144,7 @@ async def central_disconnect_client_switch(
     return resp
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_disconnect_client_gateway(
     ctx: Context,
     serial_number: str,
@@ -166,10 +160,10 @@ async def central_disconnect_client_gateway(
         serial_number: Gateway serial number (required).
         mac_address: Client MAC address to disconnect (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     try:
-        resp = Troubleshooting.disconnect_user_mac_addr(
+        resp = await monitoring_api.disconnect_user_mac_addr(
             central_conn=conn,
             device_type="gateways",
             serial_number=serial_number,
@@ -183,7 +177,7 @@ async def central_disconnect_client_gateway(
     return resp
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_disconnect_clients_gateway(
     ctx: Context,
     serial_number: str,
@@ -196,10 +190,10 @@ async def central_disconnect_clients_gateway(
     Parameters:
         serial_number: Gateway serial number (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     try:
-        resp = Troubleshooting.disconnect_all_clients(
+        resp = await monitoring_api.disconnect_all_clients(
             central_conn=conn,
             device_type="gateways",
             serial_number=serial_number,
@@ -215,7 +209,7 @@ async def central_disconnect_clients_gateway(
 # ── Helpers ──────────────────────────────────────────────────────
 
 
-def _get_switch_total_poe(conn, serial_number: str) -> float:
+async def _get_switch_total_poe(conn, serial_number: str) -> float:
     """Get total PoE consumption for a switch via hardware-trends.
 
     Returns total watts consumed across all stack members.
@@ -226,7 +220,7 @@ def _get_switch_total_poe(conn, serial_number: str) -> float:
     )
 
     try:
-        resp = retry_central_command(
+        resp = await retry_central_command(
             central_conn=conn,
             api_method="GET",
             api_path=(f"network-monitoring/v1/switches/{serial_number}/hardware-trends"),
@@ -245,13 +239,13 @@ def _get_switch_total_poe(conn, serial_number: str) -> float:
         return 0.0
 
 
-def _get_switch_ports(conn, serial_number: str) -> dict:
+async def _get_switch_ports(conn, serial_number: str) -> dict:
     """Fetch port status for a switch. Returns {port_id: port_info}."""
     from hpe_networking_mcp.platforms.central.utils import (
         retry_central_command,
     )
 
-    resp = retry_central_command(
+    resp = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path=(f"network-monitoring/v1/switches/{serial_number}/interfaces"),
@@ -264,7 +258,7 @@ def _get_switch_ports(conn, serial_number: str) -> dict:
 # ── Port / PoE Bounce Tools ──────────────────────────────────────
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_port_bounce_switch(
     ctx: Context,
     serial_number: str,
@@ -281,12 +275,12 @@ async def central_port_bounce_switch(
         serial_number: CX switch serial number.
         ports: Comma-separated port list, e.g. "1/1/1,1/1/2".
     """
-    conn = ctx.lifespan_context["central_conn"]
-    resolved_id = _resolve_switch_id(conn, serial_number)
+    conn = get_central_conn(ctx)
+    resolved_id = await _resolve_switch_id(conn, serial_number)
     port_list = [p.strip() for p in ports.split(",")]
 
     try:
-        port_info = _get_switch_ports(conn, serial_number)
+        port_info = await _get_switch_ports(conn, serial_number)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error checking port status: {e}"}) from e
 
@@ -313,7 +307,7 @@ async def central_port_bounce_switch(
         }
 
     try:
-        resp = Troubleshooting.port_bounce_test(
+        resp = await monitoring_api.port_bounce_test(
             central_conn=conn,
             device_type="cx",
             serial_number=resolved_id,
@@ -329,7 +323,7 @@ async def central_port_bounce_switch(
     }
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_poe_bounce_switch(
     ctx: Context,
     serial_number: str,
@@ -346,13 +340,13 @@ async def central_poe_bounce_switch(
         serial_number: CX switch serial number.
         ports: Comma-separated port list, e.g. "1/1/1,1/1/2".
     """
-    conn = ctx.lifespan_context["central_conn"]
-    resolved_id = _resolve_switch_id(conn, serial_number)
+    conn = get_central_conn(ctx)
+    resolved_id = await _resolve_switch_id(conn, serial_number)
     port_list = [p.strip() for p in ports.split(",")]
 
     # Quick pre-check: if total switch PoE consumption is 0,
     # skip the entire switch without checking individual ports
-    total_poe = _get_switch_total_poe(conn, serial_number)
+    total_poe = await _get_switch_total_poe(conn, serial_number)
     if total_poe == 0:
         return {
             "bounced": [],
@@ -362,7 +356,7 @@ async def central_poe_bounce_switch(
         }
 
     try:
-        port_info = _get_switch_ports(conn, serial_number)
+        port_info = await _get_switch_ports(conn, serial_number)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error checking port status: {e}"}) from e
 
@@ -393,7 +387,7 @@ async def central_poe_bounce_switch(
         }
 
     try:
-        resp = Troubleshooting.poe_bounce_test(
+        resp = await monitoring_api.poe_bounce_test(
             central_conn=conn,
             device_type="cx",
             serial_number=resolved_id,
@@ -409,7 +403,7 @@ async def central_poe_bounce_switch(
     }
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_port_bounce_gateway(
     ctx: Context,
     serial_number: str,
@@ -427,11 +421,11 @@ async def central_port_bounce_gateway(
         serial_number: Gateway serial number.
         ports: Comma-separated port list.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     port_list = [p.strip() for p in ports.split(",")]
 
     try:
-        resp = Troubleshooting.port_bounce_test(
+        resp = await monitoring_api.port_bounce_test(
             central_conn=conn,
             device_type="gateways",
             serial_number=serial_number,
@@ -445,7 +439,7 @@ async def central_port_bounce_gateway(
     return resp
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_poe_bounce_gateway(
     ctx: Context,
     serial_number: str,
@@ -463,11 +457,11 @@ async def central_poe_bounce_gateway(
         serial_number: Gateway serial number (required).
         ports: Comma-separated port list (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     port_list = [p.strip() for p in ports.split(",")]
 
     try:
-        resp = Troubleshooting.poe_bounce_test(
+        resp = await monitoring_api.poe_bounce_test(
             central_conn=conn,
             device_type="gateways",
             serial_number=serial_number,

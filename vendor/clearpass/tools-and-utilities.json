@@ -1,0 +1,827 @@
+{
+  "components": {
+    "schemas": {
+      "Carrier": {
+        "description": "The visitor’s mobile carrier",
+        "enum": [
+          "",
+          "7-11 Speakout(GSM)",
+          "Airtel (Andhra Pradesh, India)",
+          "Airtel (Karnataka, India)",
+          "Airtel Wireless",
+          "Alaska Communications Systems",
+          "Alltel Wireless",
+          "aql",
+          "AT&T Wireless",
+          "AT&T Enterprise Paging",
+          "BigRedGiant Mobile Solutions",
+          "Bell Mobility & Solo Mobile",
+          "Boost Mobile",
+          "BPL Mobile",
+          "Cellular One (Dobson)",
+          "Cingular",
+          "Centennial Wireless",
+          "Cincinnati Bell",
+          "Claro (Brasil)",
+          "Claro (Nicaragua)",
+          "Comcel",
+          "Cricket",
+          "CTI",
+          "Emtel",
+          "eOcean",
+          "Esendex",
+          "Fido",
+          "General Communications Inc.",
+          "Globalstar (satellite)",
+          "Helio",
+          "Illinois Valley Cellular",
+          "Iridium (satellite)",
+          "i wireless",
+          "Koodo Mobile",
+          "Mediaburst",
+          "Meteor",
+          "Mero Mobile",
+          "MetroPCS",
+          "Movicom",
+          "Mobitel",
+          "Movistar",
+          "MTN",
+          "MTS",
+          "Nextel",
+          "Nextel (Mexico)",
+          "Nextel (Argentina)",
+          "Orange Polska",
+          "Personal",
+          "Plateau Wireless",
+          "Plus GSM",
+          "President's Choice",
+          "Qwest",
+          "Rogers",
+          "SL Interactive",
+          "Sasktel",
+          "Setar Mobile email (Aruba)",
+          "Sprint (PCS)",
+          "Sprint (Nextel)",
+          "Suncom",
+          "Sunrise",
+          "T-Mobile",
+          "T-Mobile Austria",
+          "T-Mobile UK",
+          "Telus Mobility",
+          "Thumb Cellular",
+          "Tigo (Formerly Ola)",
+          "Tracfone (prepaid)",
+          "Unicel",
+          "US Cellular",
+          "Verizon",
+          "Vivo",
+          "Virgin Mobile Canada",
+          "Virgin Mobile",
+          "Vodacom",
+          "YCC",
+          "MobiPCS",
+          "SMSLink.ro"
+        ],
+        "example": "",
+        "title": "Carrier",
+        "type": "string"
+      },
+      "EmailSend": {
+        "properties": {
+          "bcc_recipients": {
+            "description": "List of BCC recipients Email Address (e.g., [\"a@example.com\", \"b@example.com\"])",
+            "type": "object"
+          },
+          "cc_recipients": {
+            "description": "List of CC recipients Email Address (e.g., [\"a@example.com\", \"b@example.com\"])",
+            "type": "object"
+          },
+          "headers": {
+            "description": "Email headers (e.g., {\"Content-Type\":\"text/plain; charset=UTF-8\",\"Content-Transfer-Encoding\": \"8bit\"})",
+            "type": "object"
+          },
+          "message": {
+            "description": "Email Body",
+            "type": "string"
+          },
+          "subject": {
+            "description": "Email Subject",
+            "type": "string"
+          },
+          "to": {
+            "description": "List of Recipients Email Address (e.g., [\"a@example.com\", \"b@example.com\"])",
+            "type": "object"
+          }
+        },
+        "title": "EmailSend",
+        "type": "object"
+      },
+      "EmailSendCreate": {
+        "properties": {
+          "bcc_recipients": {
+            "description": "List of BCC recipients Email Address (e.g., [\"a@example.com\", \"b@example.com\"])",
+            "type": "object"
+          },
+          "cc_recipients": {
+            "description": "List of CC recipients Email Address (e.g., [\"a@example.com\", \"b@example.com\"])",
+            "type": "object"
+          },
+          "headers": {
+            "description": "Email headers (e.g., {\"Content-Type\":\"text/plain; charset=UTF-8\",\"Content-Transfer-Encoding\": \"8bit\"})",
+            "type": "object"
+          },
+          "message": {
+            "description": "Email Body",
+            "type": "string"
+          },
+          "subject": {
+            "description": "Email Subject",
+            "type": "string"
+          },
+          "to": {
+            "description": "List of Recipients Email Address (e.g., [\"a@example.com\", \"b@example.com\"])",
+            "type": "object"
+          }
+        },
+        "required": [
+          "to",
+          "message"
+        ],
+        "title": "EmailSendCreate",
+        "type": "object"
+      },
+      "EmailSendItems": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/EmailSendResult"
+            }
+          }
+        },
+        "title": "EmailSendItems",
+        "type": "object"
+      },
+      "EmailSendResult": {
+        "properties": {
+          "bcc_recipients": {
+            "description": "List of BCC recipients Email Address (e.g., [\"a@example.com\", \"b@example.com\"])",
+            "type": "object"
+          },
+          "cc_recipients": {
+            "description": "List of CC recipients Email Address (e.g., [\"a@example.com\", \"b@example.com\"])",
+            "type": "object"
+          },
+          "headers": {
+            "description": "Email headers (e.g., {\"Content-Type\":\"text/plain; charset=UTF-8\",\"Content-Transfer-Encoding\": \"8bit\"})",
+            "type": "object"
+          },
+          "message": {
+            "description": "Email Body",
+            "type": "string"
+          },
+          "subject": {
+            "description": "Email Subject",
+            "type": "string"
+          },
+          "to": {
+            "description": "List of Recipients Email Address (e.g., [\"a@example.com\", \"b@example.com\"])",
+            "type": "object"
+          }
+        },
+        "required": [
+          "to",
+          "message"
+        ],
+        "title": "EmailSendResult",
+        "type": "object"
+      },
+      "RandomMpskGenerator": {
+        "properties": {
+          "random_mpsk_length": {
+            "description": "The desired length of the MPSK.",
+            "type": "integer"
+          },
+          "random_mpsk_method": {
+            "description": "The random MPSK method.  See the documentation for the allowed values.",
+            "type": "string"
+          },
+          "random_mpsk_picture": {
+            "description": "The picture to be used for the ‘nwa_picture_password’ method.  See the documentation for the valid syntax.",
+            "type": "string"
+          }
+        },
+        "title": "RandomMpskGenerator",
+        "type": "object"
+      },
+      "RandomMpskGeneratorResponse": {
+        "properties": {
+          "mpsk": {
+            "description": "The random MPSK",
+            "type": "string"
+          }
+        },
+        "title": "RandomMpskGeneratorResponse",
+        "type": "object"
+      },
+      "RandomPasswordGenerator": {
+        "properties": {
+          "random_password_length": {
+            "description": "The desired length of the password.",
+            "type": "integer"
+          },
+          "random_password_method": {
+            "description": "The random password method.  See the documentation for the allowed values.",
+            "type": "string"
+          },
+          "random_password_picture": {
+            "description": "The picture to be used for the ‘nwa_picture_password’ method.  See the documentation for the valid syntax.",
+            "type": "string"
+          }
+        },
+        "title": "RandomPasswordGenerator",
+        "type": "object"
+      },
+      "RandomPasswordGeneratorResponse": {
+        "properties": {
+          "password": {
+            "description": "The random password",
+            "type": "string"
+          }
+        },
+        "title": "RandomPasswordGeneratorResponse",
+        "type": "object"
+      },
+      "SmsSend": {
+        "properties": {
+          "carrier": {
+            "$ref": "#/components/schemas/Carrier"
+          },
+          "handler": {
+            "description": "Select the service to use when sending the message",
+            "format": "int64",
+            "type": "integer"
+          },
+          "message": {
+            "description": "Enter the message to send (maximum 160 characters)",
+            "type": "string"
+          },
+          "recipient": {
+            "description": "Enter the mobile telephone number of the recipient in international format",
+            "type": "string"
+          }
+        },
+        "required": [
+          "recipient",
+          "message"
+        ],
+        "title": "SmsSend",
+        "type": "object"
+      },
+      "SmsSendResponse": {
+        "properties": {
+          "...": {
+            "description": "Additional properties may also be returned",
+            "type": "string"
+          },
+          "error": {
+            "description": "Message describing the error; not present if operation was successful",
+            "type": "string"
+          }
+        },
+        "title": "SmsSendResponse",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "contact": {},
+    "title": "Tools And Utilities",
+    "version": "6.12.7"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/email/send": {
+      "post": {
+        "deprecated": false,
+        "description": "Send an Email",
+        "operationId": "EmailSendSendPost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailSendCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailSendResult"
+                }
+              }
+            },
+            "description": "Created",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Send an Email",
+        "tags": [
+          "EmailSend"
+        ]
+      }
+    },
+    "/random-mpsk": {
+      "get": {
+        "deprecated": false,
+        "description": "",
+        "operationId": "RandomMpskGeneratorGet",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RandomMpskGeneratorResponse"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "GET_for_RandomMpskGenerator",
+        "tags": [
+          "RandomMpskGenerator"
+        ]
+      },
+      "post": {
+        "deprecated": false,
+        "description": "",
+        "operationId": "RandomMpskGeneratorPost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RandomMpskGenerator"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RandomMpskGeneratorResponse"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "POST_for_RandomMpskGenerator",
+        "tags": [
+          "RandomMpskGenerator"
+        ]
+      }
+    },
+    "/random-password": {
+      "get": {
+        "deprecated": false,
+        "description": "",
+        "operationId": "RandomPasswordGeneratorGet",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RandomPasswordGeneratorResponse"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "GET_for_RandomPasswordGenerator",
+        "tags": [
+          "RandomPasswordGenerator"
+        ]
+      },
+      "post": {
+        "deprecated": false,
+        "description": "",
+        "operationId": "RandomPasswordGeneratorPost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RandomPasswordGenerator"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RandomPasswordGeneratorResponse"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "POST_for_RandomPasswordGenerator",
+        "tags": [
+          "RandomPasswordGenerator"
+        ]
+      }
+    },
+    "/sms/send": {
+      "post": {
+        "deprecated": false,
+        "description": "Send an SMS message",
+        "operationId": "SmsSendSendPost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmsSend"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmsSendResponse"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Send an SMS message",
+        "tags": [
+          "SmsSend"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://clearpass-hostname/api"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Operations for Email Send",
+      "name": "EmailSend"
+    },
+    {
+      "description": "Generate a random MPSK",
+      "name": "RandomMpskGenerator"
+    },
+    {
+      "description": "Generate a random password",
+      "name": "RandomPasswordGenerator"
+    },
+    {
+      "description": "Send SMS using Configuration -> SMS Services -> Send SMS",
+      "name": "SmsSend"
+    }
+  ],
+  "x-explorer-enabled": false,
+  "x-headers": [
+    {
+      "key": "Authorization",
+      "value": "Bearer <TOKEN>"
+    }
+  ],
+  "x-readme": {
+    "proxy-enabled": true
+  }
+}

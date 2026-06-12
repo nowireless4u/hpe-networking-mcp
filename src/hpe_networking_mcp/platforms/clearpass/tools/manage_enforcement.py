@@ -8,31 +8,25 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import WRITE_DELETE
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
 
-async def _confirm_write(ctx: Context, action: str, identifier: str | None) -> dict | None:
-    """Thin wrapper over :func:`middleware.elicitation.confirm_write`.
-
-    Kept as a local helper so existing call sites don't change; the
-    shared elicitation/decline/cancel logic now lives in the middleware
-    (#148).
-    """
-    label = identifier or "unknown"
-    return await confirm_write(ctx, f"ClearPass: {action} '{label}'. Confirm?")
-
-
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_enforcement_policy(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
     payload: Annotated[dict, Field(description="Enforcement policy config payload. For delete: empty dict {}.")],
     policy_id: Annotated[str | None, Field(description="Policy ID (required for update/delete).")] = None,
     name: Annotated[str | None, Field(description="Policy name (alternative to ID for update/delete).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, or delete a ClearPass enforcement policy.
 
@@ -44,7 +38,8 @@ async def clearpass_manage_enforcement_policy(
         payload: JSON config body. Required for create/update. Empty dict for delete.
         policy_id: Numeric ID. Required for update/delete (or use name).
         name: Policy name. Alternative to policy_id for update/delete.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in ("create", "update", "delete"):
         raise ToolError(
@@ -54,42 +49,41 @@ async def clearpass_manage_enforcement_policy(
             }
         )
 
-    if action_type != "create" and not confirmed:
-        decline = await _confirm_write(ctx, f"{action_type} enforcement policy", policy_id or name)
-        if decline:
-            return decline
-
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
+        client = await get_clearpass_client()
 
         if action_type == "create":
-            return client._send_request("/enforcement-policy", "post", query=payload)
+            return await client.request("post", "/enforcement-policy", json_body=payload)
         if not policy_id and not name:
             raise ToolError({"status_code": 400, "message": "Either policy_id or name is required for update/delete."})
         if action_type == "update":
             if policy_id:
-                return client._send_request(f"/enforcement-policy/{policy_id}", "patch", query=payload)
-            return client._send_request(f"/enforcement-policy/name/{name}", "patch", query=payload)
+                return await client.request("patch", f"/enforcement-policy/{policy_id}", json_body=payload)
+            return await client.request("patch", f"/enforcement-policy/name/{name}", json_body=payload)
         # delete
         if policy_id:
-            return client.delete_enforcement_policy_by_enforcement_policy_id(enforcement_policy_id=policy_id)
-        return client.delete_enforcement_policy_name_by_name(name=name)
+            return await client.request("delete", f"/enforcement-policy/{policy_id}")
+        return await client.request("delete", f"/enforcement-policy/name/{name}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing enforcement policy: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_enforcement_profile(
     ctx: Context,
     action_type: Annotated[str, Field(description="Action: 'create', 'update', or 'delete'.")],
     payload: Annotated[dict, Field(description="Enforcement profile config payload. For delete: empty dict {}.")],
     profile_id: Annotated[str | None, Field(description="Profile ID (required for update/delete).")] = None,
     name: Annotated[str | None, Field(description="Profile name (alternative to ID for update/delete).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, or delete a ClearPass enforcement profile.
 
@@ -101,7 +95,8 @@ async def clearpass_manage_enforcement_profile(
         payload: JSON config body. Required for create/update. Empty dict for delete.
         profile_id: Numeric ID. Required for update/delete (or use name).
         name: Profile name. Alternative to profile_id for update/delete.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in ("create", "update", "delete"):
         raise ToolError(
@@ -111,28 +106,21 @@ async def clearpass_manage_enforcement_profile(
             }
         )
 
-    if action_type != "create" and not confirmed:
-        decline = await _confirm_write(ctx, f"{action_type} enforcement profile", profile_id or name)
-        if decline:
-            return decline
-
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
+        client = await get_clearpass_client()
 
         if action_type == "create":
-            return client._send_request("/enforcement-profile", "post", query=payload)
+            return await client.request("post", "/enforcement-profile", json_body=payload)
         if not profile_id and not name:
             raise ToolError({"status_code": 400, "message": "Either profile_id or name is required for update/delete."})
         if action_type == "update":
             if profile_id:
-                return client._send_request(f"/enforcement-profile/{profile_id}", "patch", query=payload)
-            return client._send_request(f"/enforcement-profile/name/{name}", "patch", query=payload)
+                return await client.request("patch", f"/enforcement-profile/{profile_id}", json_body=payload)
+            return await client.request("patch", f"/enforcement-profile/name/{name}", json_body=payload)
         # delete
         if profile_id:
-            return client.delete_enforcement_profile_by_enforcement_profile_id(enforcement_profile_id=profile_id)
-        return client.delete_enforcement_profile_name_by_name(name=name)
+            return await client.request("delete", f"/enforcement-profile/{profile_id}")
+        return await client.request("delete", f"/enforcement-profile/name/{name}")
     except ToolError:
         raise
     except Exception as e:

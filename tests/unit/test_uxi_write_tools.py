@@ -2,7 +2,6 @@
 
 Covers:
 - TestUXIWriteRegistry: 10 write tools registered in REGISTRIES["uxi"]
-- TestConfirmWrite:    confirm_write called BEFORE the mutation (D-02)
 - TestElicitationWiring: elicitation.py source contains enable_uxi_write_tools (D-03)
 - TestIDValidation:    _validate_id raises ToolError for path-traversal IDs (D-07)
 - TestToolErrorPropagation: ToolError re-raised from client (CR-02)
@@ -49,15 +48,13 @@ def uxi_write_registry_populated():
     clear_registry("uxi")
 
 
-def _make_uxi_ctx(*, elicitation_mode: str = "disabled") -> MagicMock:
-    """Build a MagicMock Context with ``ctx.get_state`` returning the chosen mode.
+def _make_uxi_ctx() -> MagicMock:
+    """Build a MagicMock Context for calling tool functions directly.
 
-    ``disabled`` mode causes ``confirm_write`` to auto-accept so tools proceed
-    straight to the mocked client call.
+    Confirmation is structural (the universal gate at ``uxi_invoke_tool``
+    dispatch), so direct calls proceed straight to the mocked client call.
     """
-    ctx = MagicMock()
-    ctx.get_state = AsyncMock(return_value=elicitation_mode)
-    return ctx
+    return MagicMock()
 
 
 @pytest.mark.unit
@@ -169,62 +166,6 @@ class TestToolErrorPropagation:
         ctx = _make_uxi_ctx()
         with patch.object(agents_mod, "get_uxi_client", AsyncMock(return_value=mock_client)), pytest.raises(ToolError):
             await agents_mod.uxi_delete_agent(ctx, agent_id="abc-123")
-
-
-@pytest.mark.unit
-class TestConfirmWrite:
-    """confirm_write must be called BEFORE the mutation (D-02)."""
-
-    async def test_confirm_write_called_before_mutation(self):
-        """confirm_write must be awaited BEFORE client.uxi_patch (call-order assertion)."""
-        from hpe_networking_mcp.platforms.uxi.tools.writes import sensors as sensors_mod
-
-        order: list[str] = []
-
-        async def fake_confirm(ctx, message, **kw):
-            order.append("confirm_write")
-            return None  # accept
-
-        mock_client = MagicMock()
-
-        async def fake_patch(*args, **kw):
-            order.append("uxi_patch")
-            return {"id": "abc-123"}
-
-        mock_client.uxi_patch = AsyncMock(side_effect=fake_patch)
-
-        ctx = _make_uxi_ctx(elicitation_mode="prompt")
-        with (
-            patch.object(sensors_mod, "confirm_write", side_effect=fake_confirm),
-            patch.object(sensors_mod, "get_uxi_client", AsyncMock(return_value=mock_client)),
-        ):
-            await sensors_mod.uxi_update_sensor(ctx, sensor_id="abc-123", name="x")
-
-        assert order == ["confirm_write", "uxi_patch"], (
-            f"confirm_write must be called before uxi_patch — got order={order}"
-        )
-
-    async def test_decline_skips_mutation(self):
-        """If confirm_write returns a decline dict, the mutation MUST NOT be called."""
-        from hpe_networking_mcp.platforms.uxi.tools.writes import sensors as sensors_mod
-
-        decline = {"status": "declined", "message": "user said no"}
-
-        async def fake_confirm(ctx, message, **kw):
-            return decline
-
-        mock_client = MagicMock()
-        mock_client.uxi_patch = AsyncMock(return_value={"id": "abc-123"})
-
-        ctx = _make_uxi_ctx(elicitation_mode="prompt")
-        with (
-            patch.object(sensors_mod, "confirm_write", side_effect=fake_confirm),
-            patch.object(sensors_mod, "get_uxi_client", AsyncMock(return_value=mock_client)),
-        ):
-            result = await sensors_mod.uxi_update_sensor(ctx, sensor_id="abc-123", name="x")
-
-        assert result == decline
-        mock_client.uxi_patch.assert_not_called()
 
 
 @pytest.mark.unit

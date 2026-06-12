@@ -1,0 +1,3686 @@
+{
+  "components": {
+    "requestBodies": {
+      "DigitalPassTemplate": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DigitalPassTemplate"
+            }
+          }
+        },
+        "required": true
+      },
+      "GuestAuthenticationConfiguration": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/GuestAuthenticationConfiguration"
+            }
+          }
+        },
+        "required": true
+      },
+      "GuestManager": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/GuestManager"
+            }
+          }
+        },
+        "required": true
+      },
+      "PrintTemplate": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PrintTemplate"
+            }
+          }
+        },
+        "required": true
+      },
+      "WebLogin": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/WebLogin"
+            }
+          }
+        },
+        "required": true
+      }
+    },
+    "schemas": {
+      "DigitalPassTemplate": {
+        "properties": {
+          "associated_apps": {
+            "type": "boolean"
+          },
+          "background_color": {
+            "type": "string"
+          },
+          "background_image": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "description": {
+            "type": "string"
+          },
+          "footer_image": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "foreground_color": {
+            "type": "string"
+          },
+          "icon_image": {
+            "type": "string"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "label_color": {
+            "type": "string"
+          },
+          "logo_image": {
+            "type": "string"
+          },
+          "logo_text_template": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "pass_apps": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "pass_fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "pass_locations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "pass_style": {
+            "type": "string"
+          },
+          "relevant_date": {
+            "type": "boolean"
+          },
+          "relevant_date_mode": {
+            "type": "string"
+          },
+          "relevant_date_rank": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "relevant_date_template": {
+            "type": "string"
+          },
+          "relevant_locations": {
+            "type": "boolean"
+          },
+          "reset": {
+            "type": "string"
+          },
+          "strip_image": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "strip_shine": {
+            "type": "string"
+          },
+          "summary_template": {
+            "type": "string"
+          },
+          "thumbnail_image": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "transit_type": {
+            "type": "string"
+          }
+        },
+        "title": "DigitalPassTemplate",
+        "type": "object"
+      },
+      "DigitalPassTemplateItems": {
+        "properties": {
+          "items": {
+            "description": "List of items matching the filter",
+            "items": {
+              "$ref": "#/components/schemas/DigitalPassTemplate"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "DigitalPassTemplateItems",
+        "type": "object"
+      },
+      "DigitalPassTemplateList": {
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/DigitalPassTemplateItems"
+          },
+          "_links": {
+            "$ref": "#/components/schemas/HalLinks"
+          },
+          "count": {
+            "description": "Total number of items matching the filter; returned if calculate_count is true",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "_embedded",
+          "_links"
+        ],
+        "title": "DigitalPassTemplateList",
+        "type": "object"
+      },
+      "GActionNotifyAccountExpireCopies": {
+        "description": "Specify when to send to the recipients in the Copies To list",
+        "enum": [
+          "never",
+          "always_cc",
+          "always_bcc"
+        ],
+        "example": "never",
+        "title": "GActionNotifyAccountExpireCopies",
+        "type": "string"
+      },
+      "GActionNotifyAccountExpireEmailUnknown": {
+        "description": "Specify where to send emails if the user’s account doesn’t have an email address recorded",
+        "enum": [
+          "none",
+          "fixed",
+          "domain"
+        ],
+        "example": "none",
+        "title": "GActionNotifyAccountExpireEmailUnknown",
+        "type": "string"
+      },
+      "GActionNotifyAccountExpireMessage": {
+        "description": "The plain text or HTML print template to use when generating an email message",
+        "enum": [
+          2,
+          13,
+          7,
+          12,
+          5,
+          6,
+          1,
+          3,
+          8,
+          9,
+          11,
+          10,
+          4
+        ],
+        "example": 2,
+        "title": "GActionNotifyAccountExpireMessage",
+        "type": "integer"
+      },
+      "GActionNotifyAccountExpireSkin": {
+        "description": "The format in which to send email receipts",
+        "enum": [
+          "",
+          "plaintext",
+          "html_embedded",
+          "receipt",
+          "default",
+          "Aruba Amigopod Skin",
+          "Blank Skin",
+          "ClearPass Guest Skin",
+          "Custom Skin 1",
+          "Custom Skin 2",
+          "Custom Skin 3",
+          "Custom Skin 4",
+          "Custom Skin 5",
+          "Custom Skin 6",
+          "Custom Skin 7",
+          "Custom Skin 8",
+          "Custom Skin 9",
+          "Custom Skin 10",
+          "Custom Skin 11",
+          "Custom Skin 12",
+          "Custom Skin 13",
+          "Custom Skin 14",
+          "Custom Skin 15",
+          "Custom Skin 16",
+          "Galleria Skin",
+          "Galleria Skin 2",
+          "Galleria Skin 3",
+          "Galleria Skin 4",
+          "Galleria Skin 5",
+          "Galleria Skin 6",
+          "Galleria Skin 7",
+          "Galleria Skin 8",
+          "Galleria Skin 9",
+          "Galleria Skin 10",
+          "Galleria Skin 11",
+          "Galleria Skin 12",
+          "Galleria Skin 13",
+          "Galleria Skin 14",
+          "Galleria Skin 15",
+          "Galleria Skin 16"
+        ],
+        "example": "",
+        "title": "GActionNotifyAccountExpireSkin",
+        "type": "string"
+      },
+      "GActionNotifyDeviceExpireCopies": {
+        "description": "Specify when to send to the recipients in the Copies To list",
+        "enum": [
+          "never",
+          "always_cc",
+          "always_bcc"
+        ],
+        "example": "never",
+        "title": "GActionNotifyDeviceExpireCopies",
+        "type": "string"
+      },
+      "GActionNotifyDeviceExpireEmailUnknown": {
+        "description": "Specify where to send emails if the user’s account doesn’t have an email or sponsor_email address recorded",
+        "enum": [
+          "none",
+          "fixed"
+        ],
+        "example": "none",
+        "title": "GActionNotifyDeviceExpireEmailUnknown",
+        "type": "string"
+      },
+      "GActionNotifyDeviceExpireMessage": {
+        "description": "The plain text or HTML print template to use when generating an email message",
+        "enum": [
+          2,
+          13,
+          7,
+          12,
+          5,
+          6,
+          1,
+          3,
+          8,
+          9,
+          11,
+          10,
+          4
+        ],
+        "example": 2,
+        "title": "GActionNotifyDeviceExpireMessage",
+        "type": "integer"
+      },
+      "GActionNotifyDeviceExpireSkin": {
+        "description": "The format in which to send email receipts",
+        "enum": [
+          "",
+          "plaintext",
+          "html_embedded",
+          "receipt",
+          "default",
+          "Aruba Amigopod Skin",
+          "Blank Skin",
+          "ClearPass Guest Skin",
+          "Custom Skin 1",
+          "Custom Skin 2",
+          "Custom Skin 3",
+          "Custom Skin 4",
+          "Custom Skin 5",
+          "Custom Skin 6",
+          "Custom Skin 7",
+          "Custom Skin 8",
+          "Custom Skin 9",
+          "Custom Skin 10",
+          "Custom Skin 11",
+          "Custom Skin 12",
+          "Custom Skin 13",
+          "Custom Skin 14",
+          "Custom Skin 15",
+          "Custom Skin 16",
+          "Galleria Skin",
+          "Galleria Skin 2",
+          "Galleria Skin 3",
+          "Galleria Skin 4",
+          "Galleria Skin 5",
+          "Galleria Skin 6",
+          "Galleria Skin 7",
+          "Galleria Skin 8",
+          "Galleria Skin 9",
+          "Galleria Skin 10",
+          "Galleria Skin 11",
+          "Galleria Skin 12",
+          "Galleria Skin 13",
+          "Galleria Skin 14",
+          "Galleria Skin 15",
+          "Galleria Skin 16"
+        ],
+        "example": "",
+        "title": "GActionNotifyDeviceExpireSkin",
+        "type": "string"
+      },
+      "GRadiusDefaultVendor": {
+        "description": "Select the default type for network access servers",
+        "enum": [
+          "other",
+          "rfc3576",
+          "coa_3576",
+          "appauth_3576",
+          "appauthz_3576",
+          "aerohive_3576",
+          "alu_3576",
+          "alu",
+          "arista_3576",
+          "arista_nr_3576",
+          "aruba_3576",
+          "aruba",
+          "bluesocket",
+          "chillispot_3576",
+          "cisco_3576",
+          "cisco",
+          "colubris",
+          "consentry",
+          "enterasys",
+          "dell_3576",
+          "dell",
+          "extreme",
+          "extricom",
+          "fortinet_3576",
+          "fortinet",
+          "hpe_3576",
+          "hpe_msm_3576",
+          "hpe_uww_3576",
+          "juniper",
+          "meraki",
+          "meraki_splash",
+          "meru",
+          "motorola_3576",
+          "ruckus_3576",
+          "ruckus",
+          "ruckus2_3576",
+          "ruckus2",
+          "saml",
+          "saml_authorize_only",
+          "saml_via",
+          "trapeze_3576",
+          "trendnet",
+          "xirrus"
+        ],
+        "example": "other",
+        "title": "GRadiusDefaultVendor",
+        "type": "string"
+      },
+      "GRadiusInternalAuthType": {
+        "description": "Controls the RADIUS authentication type used for internal RADIUS authentication requests",
+        "enum": [
+          "pap",
+          "chap",
+          "mschap"
+        ],
+        "example": "pap",
+        "title": "GRadiusInternalAuthType",
+        "type": "string"
+      },
+      "GuestAuthenticationConfiguration": {
+        "properties": {
+          "change_of_authorization": {
+            "description": "Global to automatically send disconnects when enabled/role values change.\nRequires a NAS Type supporting RFC-3576",
+            "type": "boolean"
+          },
+          "g_admin_access_guest_require_https": {
+            "description": "If checked, HTTP access by guests will be redirected to use HTTPS instead",
+            "type": "boolean"
+          },
+          "g_radius_default_vendor": {
+            "$ref": "#/components/schemas/GRadiusDefaultVendor"
+          },
+          "g_radius_internal_auth_type": {
+            "$ref": "#/components/schemas/GRadiusInternalAuthType"
+          },
+          "g_radius_server_bind_3576": {
+            "description": "Force a specific bind address for RFC-3576 requests.  This may be needed in an AirGroup environment.\nDefaults to '0.0.0.0' or '::' depending on your network",
+            "type": "string"
+          }
+        },
+        "required": [
+          "g_radius_internal_auth_type"
+        ],
+        "title": "GuestAuthenticationConfiguration",
+        "type": "object"
+      },
+      "GuestDoExpire": {
+        "description": "Default action to take when the expire_time is reached.\nNote that a logout can only occur if the NAS is RFC-3576 compliant",
+        "enum": [
+          4,
+          3,
+          2,
+          1
+        ],
+        "example": 4,
+        "title": "GuestDoExpire",
+        "type": "integer"
+      },
+      "GuestManager": {
+        "properties": {
+          "g_action_notify_account_expiration_duration": {
+            "description": "Account expiration emails are sent this many days before the account expires.\nEnter a value between 1 and 30",
+            "format": "int64",
+            "type": "integer"
+          },
+          "g_action_notify_account_expire_copies": {
+            "$ref": "#/components/schemas/GActionNotifyAccountExpireCopies"
+          },
+          "g_action_notify_account_expire_copies_to": {
+            "description": "An optional list of email addresses to which copies of expiry notifications will be sent",
+            "type": "string"
+          },
+          "g_action_notify_account_expire_email_unknown": {
+            "$ref": "#/components/schemas/GActionNotifyAccountExpireEmailUnknown"
+          },
+          "g_action_notify_account_expire_email_unknown_domain": {
+            "description": "Domain to append to the username to form an email address",
+            "type": "string"
+          },
+          "g_action_notify_account_expire_email_unknown_fixed": {
+            "description": "Address used when no email address is known for a user",
+            "type": "string"
+          },
+          "g_action_notify_account_expire_enabled": {
+            "description": "If checked, users will receive an email notification when their device’s network credentials are due to expire.\nAccounts must contain the ’expired_notify_status’ field with a value of ’1’.  Once a notification is sent, this field will show as ’0’",
+            "type": "boolean"
+          },
+          "g_action_notify_account_expire_message": {
+            "$ref": "#/components/schemas/GActionNotifyAccountExpireMessage"
+          },
+          "g_action_notify_account_expire_skin": {
+            "$ref": "#/components/schemas/GActionNotifyAccountExpireSkin"
+          },
+          "g_action_notify_account_expire_subject": {
+            "description": "Enter a subject for the notification email",
+            "type": "string"
+          },
+          "g_action_notify_device_expire_copies": {
+            "$ref": "#/components/schemas/GActionNotifyDeviceExpireCopies"
+          },
+          "g_action_notify_device_expire_copies_to": {
+            "description": "An optional list of email addresses to which copies of expiry notifications will be sent",
+            "type": "string"
+          },
+          "g_action_notify_device_expire_email_unknown": {
+            "$ref": "#/components/schemas/GActionNotifyDeviceExpireEmailUnknown"
+          },
+          "g_action_notify_device_expire_email_unknown_fixed": {
+            "description": "Address used when no email address is known for a device",
+            "type": "string"
+          },
+          "g_action_notify_device_expire_message": {
+            "$ref": "#/components/schemas/GActionNotifyDeviceExpireMessage"
+          },
+          "g_action_notify_device_expire_skin": {
+            "$ref": "#/components/schemas/GActionNotifyDeviceExpireSkin"
+          },
+          "g_action_notify_device_expire_subject": {
+            "description": "Enter a subject for the notification email",
+            "type": "string"
+          },
+          "guest_about_guest_network_access": {
+            "description": "Template code to display on the Guest Manager start page, under the\n“About Guest Network Access” heading.  Leave blank to use the default text,\nor enter a hyphen (“-”) to remove the default text and the heading",
+            "type": "string"
+          },
+          "guest_account_expiry_options": {
+            "description": "The available options to select from when choosing the expiration time of a guest account (expire_after).\nExpiration times are specified in hours",
+            "type": "object"
+          },
+          "guest_account_terms_of_use_url": {
+            "description": "The URL of a terms and conditions page.  The URL will appear in any terms checkbox with:\n{nwa_global name=guest_account_terms_of_use_url}\nIt is recommended to upload your terms in Content Manager, where the files will be referenced with the \"public/\" prefix.\nAlternatively, you can edit Terms and Conditions under Configuration > Pages > Web Pages.\nIf your site is hosted externally, be sure the proper access control lists (ACLs) are in place.\nIf terms are not required, it is recommended to edit the terms field on your forms to a UI type \"hidden\" and an Initial Value of 1",
+            "type": "string"
+          },
+          "guest_active_sessions": {
+            "description": "Enable limiting the number of active sessions a guest account may have.\nEnter 0 to allow an unlimited number of sessions",
+            "format": "int64",
+            "type": "integer"
+          },
+          "guest_do_expire": {
+            "$ref": "#/components/schemas/GuestDoExpire"
+          },
+          "guest_initial_sequence_options": {
+            "description": "Create multi next available sequence number.  These values will be used when multi_initial_sequence is set to -1",
+            "type": "object"
+          },
+          "guest_lifetime_options": {
+            "description": "The available options to select from when choosing the lifetime of a guest account (expire_postlogin).\nLifetime values are specified in minutes",
+            "type": "object"
+          },
+          "guest_modify_expire_time_options": {
+            "description": "The available options to select from when modifying an account's expiration (modify_expire_time).\nNote some items may be dynamically removed based on the state of the account",
+            "type": "object"
+          },
+          "guest_password_complexity": {
+            "$ref": "#/components/schemas/GuestPasswordComplexity"
+          },
+          "guest_password_disallowed": {
+            "description": "Characters which cannot appear in a user-generated password",
+            "type": "string"
+          },
+          "guest_password_disallowed_words": {
+            "description": "Comma separated list of words disallowed in the random words password generator",
+            "type": "string"
+          },
+          "guest_password_minimum": {
+            "description": "The minimum number of characters that a guest password must contain",
+            "format": "int64",
+            "type": "integer"
+          },
+          "guest_receipt_print_button": {
+            "description": "Guest receipts can print simply by selecting the template in the dropdown, or by clicking a link",
+            "type": "boolean"
+          },
+          "guest_view_account_password": {
+            "description": "If selected, guest and device Wi-Fi passwords may be displayed to an operator.\nThis is only possible if operators have the View Passwords privilege as well",
+            "type": "boolean"
+          },
+          "random_password_length": {
+            "description": "Number of characters to include in randomly-generated account passwords",
+            "format": "int64",
+            "type": "integer"
+          },
+          "random_password_method": {
+            "$ref": "#/components/schemas/RandomPasswordMethod"
+          },
+          "random_password_picture": {
+            "description": "Format picture (see below) describing the passwords that will be created for visitors.\n\n • Alphanumeric characters are passed through without modification.\n • ‘#’ is replaced with a random digit [0-9].\n • ‘$’ or ‘?’ is replaced with a random letter [A-Za-z]\n • ‘_’ is replaced with a random lowercase letter [a-z]\n • ‘^’ is replaced with a random uppercase letter [A-Z]\n • ‘*’ is replaced with a random letter or digit [A-Za-z0-9].\n • ‘!’ is replaced with a random punctuation symbol [excluding apostrophe, quotes]\n • ‘&’ is replaced with a random character (union of sets ! and *)\n • ‘@’ is replaced with a random letter or digit, excluding vowels\n • '%' is replaced with a random letter or digit, excluding vowels and anything that looks like another (il1, B8, O0, Z2)",
+            "type": "string"
+          },
+          "random_username_length": {
+            "description": "The length, in characters, of generated account usernames",
+            "format": "int64",
+            "type": "integer"
+          },
+          "random_username_method": {
+            "$ref": "#/components/schemas/RandomUsernameMethod"
+          },
+          "random_username_multi_prefix": {
+            "description": "Identifier string to prepend to usernames.\nDynamic entries based on a user attribute can be entered as '_' + attribute.  For example '_role_name'.\nThe username length will determine the length of the numeric sequence only.  Recommend 4",
+            "type": "string"
+          },
+          "random_username_picture": {
+            "description": "Format picture (see below) describing the usernames that will be created for visitors.\n\n • Alphanumeric characters are passed through without modification.\n • ‘#’ is replaced with a random digit [0-9].\n • ‘$’ or ‘?’ is replaced with a random letter [A-Za-z]\n • ‘_’ is replaced with a random lowercase letter [a-z]\n • ‘^’ is replaced with a random uppercase letter [A-Z]\n • ‘*’ is replaced with a random letter or digit [A-Za-z0-9].\n • ‘!’ is replaced with a random punctuation symbol [excluding apostrophe, quotes]\n • ‘&’ is replaced with a random character (union of sets ! and *)\n • ‘@’ is replaced with a random letter or digit, excluding vowels\n • '%' is replaced with a random letter or digit, excluding vowels and anything that looks like another (il1, B8, O0, Z2)",
+            "type": "string"
+          },
+          "site_ssid": {
+            "description": "The SSID of the wireless LAN, if applicable.  This will appear on guest account print receipts",
+            "type": "string"
+          },
+          "site_wpa_key": {
+            "description": "The WPA key for the wireless LAN, if applicable.  This will appear on guest account print receipts",
+            "type": "string"
+          }
+        },
+        "required": [
+          "random_username_method",
+          "random_username_length",
+          "random_password_method",
+          "random_password_length",
+          "guest_password_complexity",
+          "guest_password_minimum",
+          "guest_do_expire",
+          "guest_account_expiry_options",
+          "guest_modify_expire_time_options",
+          "guest_lifetime_options"
+        ],
+        "title": "GuestManager",
+        "type": "object"
+      },
+      "GuestPasswordComplexity": {
+        "description": "Password complexity to enforce for manually-entered guest passwords.\nRequires the random password type ‘A password matching the password complexity requirements’\nand the field validator ‘NwaIsValidPasswordComplexity’ for manual password entry",
+        "enum": [
+          "none",
+          "case",
+          "number",
+          "alphanumeric",
+          "casenumeric",
+          "punctuation",
+          "complex"
+        ],
+        "example": "none",
+        "title": "GuestPasswordComplexity",
+        "type": "string"
+      },
+      "HalLinks": {
+        "properties": {
+          "first": {
+            "description": "URL of first page of results",
+            "type": "string"
+          },
+          "last": {
+            "description": "URL of last page of results",
+            "type": "string"
+          },
+          "next": {
+            "description": "URL of next page of results",
+            "type": "string"
+          },
+          "prev": {
+            "description": "URL of previous page of results",
+            "type": "string"
+          },
+          "self": {
+            "description": "URL of result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "self",
+          "first"
+        ],
+        "title": "HalLinks",
+        "type": "object"
+      },
+      "PrintTemplate": {
+        "properties": {
+          "columns": {
+            "description": "Columns in a template.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "enabled": {
+            "description": "Flag indicating if the template is enabled",
+            "type": "boolean"
+          },
+          "footer": {
+            "description": "HTML template code used at the end of the document",
+            "type": "string"
+          },
+          "header": {
+            "description": "HTML template code used at the beginning of the document",
+            "type": "string"
+          },
+          "id": {
+            "description": "Numeric ID of the template",
+            "format": "int64",
+            "type": "integer"
+          },
+          "name": {
+            "description": "Name of the template",
+            "type": "string"
+          },
+          "per_account": {
+            "description": "HTML template code used to generate a single account receipt",
+            "type": "string"
+          },
+          "wizard_field_header": {
+            "description": "Field header for the details displayed on the template",
+            "type": "string"
+          },
+          "wizard_fields": {
+            "description": "Visitor account fields",
+            "type": "string"
+          },
+          "wizard_footer": {
+            "description": "Footer text to display on the template",
+            "type": "string"
+          },
+          "wizard_logo": {
+            "description": "Image to use on the template",
+            "type": "string"
+          },
+          "wizard_notes": {
+            "description": "Notes to display on the template",
+            "type": "string"
+          },
+          "wizard_subtitle": {
+            "description": "Subtitle to display on the template",
+            "type": "string"
+          },
+          "wizard_template": {
+            "description": "Style of print template to use",
+            "type": "string"
+          },
+          "wizard_title": {
+            "description": "Title which will be displayed on the template",
+            "type": "string"
+          }
+        },
+        "title": "PrintTemplate",
+        "type": "object"
+      },
+      "PrintTemplateItems": {
+        "properties": {
+          "items": {
+            "description": "List of items matching the filter",
+            "items": {
+              "$ref": "#/components/schemas/PrintTemplate"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "PrintTemplateItems",
+        "type": "object"
+      },
+      "PrintTemplateList": {
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/PrintTemplateItems"
+          },
+          "_links": {
+            "$ref": "#/components/schemas/HalLinks"
+          },
+          "count": {
+            "description": "Total number of items matching the filter; returned if calculate_count is true",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "_embedded",
+          "_links"
+        ],
+        "title": "PrintTemplateList",
+        "type": "object"
+      },
+      "RandomPasswordMethod": {
+        "description": "The method used to generate a random account password",
+        "enum": [
+          "nwa_digits_password",
+          "nwa_letters_password",
+          "nwa_novowels_password",
+          "nwa_lettersdigits_password",
+          "nwa_alnum_password",
+          "nwa_strong_password",
+          "nwa_complex_password",
+          "nwa_complexity_password",
+          "nwa_words_password",
+          "nwa_picture_password"
+        ],
+        "example": "nwa_digits_password",
+        "title": "RandomPasswordMethod",
+        "type": "string"
+      },
+      "RandomUsernameMethod": {
+        "description": "The method used to generate random account usernames",
+        "enum": [
+          "nwa_digits_password",
+          "nwa_letters_password",
+          "nwa_novowels_password",
+          "nwa_lettersdigits_password",
+          "nwa_picture_password",
+          "nwa_sequence"
+        ],
+        "example": "nwa_digits_password",
+        "title": "RandomUsernameMethod",
+        "type": "string"
+      },
+      "WebLogin": {
+        "properties": {
+          "access_allowlist": {
+            "description": "Enter the IP addresses and networks from which logins are permitted",
+            "type": "string"
+          },
+          "access_denylist": {
+            "description": "Enter the IP addresses and networks that are denied login access",
+            "type": "string"
+          },
+          "access_if_denied": {
+            "description": "Select the response of the system to a request that is not permitted",
+            "type": "string"
+          },
+          "bypass_cna": {
+            "description": "The Apple Captive Network Assistant (CNA) is the pop-up browser shown when joining a network that has a captive portal.\nNote that this option may not work with all vendors, depending on how the captive portal is implemented",
+            "type": "boolean"
+          },
+          "capport_venue_url": {
+            "description": "Enter an optional URL to send as the Venue Info URL for CAPPORT RFC-8908.\nhttps://www.rfc-editor.org/rfc/rfc8908.html",
+            "type": "string"
+          },
+          "certificate_auth": {
+            "description": "Choose whether other credentials must also be provided in addition to a certificate",
+            "type": "string"
+          },
+          "certificate_request": {
+            "description": "Choose whether the user should select a client certificate when authenticating",
+            "type": "string"
+          },
+          "default_url": {
+            "description": "Enter the default URL to redirect clients.\nPlease ensure you prepend \"http://\" for any external domain",
+            "type": "string"
+          },
+          "default_url_override": {
+            "description": "If selected, the client’s default destination will be overridden regardless of its value",
+            "type": "boolean"
+          },
+          "description": {
+            "description": "Comments or descriptive text about the web login",
+            "type": "string"
+          },
+          "dynamic_address": {
+            "description": "In multi-controller deployments, it is often required to post credentials to different addresses made available as part of the original redirection.\nThe address above will be used whenever the parameter is not available or fails the requirements below",
+            "type": "boolean"
+          },
+          "dynamic_allowlist": {
+            "description": "Enter the IP addresses and networks from which dynamic addresses are permitted",
+            "type": "string"
+          },
+          "dynamic_denylist": {
+            "description": "Enter the IP addresses and networks from which dynamic addresses are denied",
+            "type": "string"
+          },
+          "form_action": {
+            "description": "The URL of the NAS device’s login form",
+            "type": "string"
+          },
+          "form_extra": {
+            "description": "Specify any additional field names and values to send to the NAS device as name=value pairs, one per line",
+            "type": "string"
+          },
+          "form_method": {
+            "description": "Choose the method to use when submitting the login form to the NAS",
+            "type": "string"
+          },
+          "form_password": {
+            "description": "The name of the password field for the login form. This will be passed to the NAS device when the form is submitted",
+            "type": "string"
+          },
+          "form_password_encryption": {
+            "description": "Choose the type of password encryption to use when submitting the login form",
+            "type": "string"
+          },
+          "form_password_label": {
+            "description": "The form label for the password field.  \nLeave blank to use the default (Password:)",
+            "type": "string"
+          },
+          "form_username": {
+            "description": "The name of the username field for the login form. This will be passed to the NAS device when the form is submitted",
+            "type": "string"
+          },
+          "form_username_label": {
+            "description": "The form label for the username field.  \nLeave blank to use the default (Username:)",
+            "type": "string"
+          },
+          "form_username_suffix": {
+            "description": "The suffix is automatically appended to the username before submitting the login form to the NAS",
+            "type": "string"
+          },
+          "hash_secret": {
+            "description": "The redirection URL will be hashed using this shared secret",
+            "type": "string"
+          },
+          "hash_url": {
+            "description": "Select the level of checking to apply to URL parameters passed to the web login page.\nUse this option to detect when URL parameters have been modified by the user, for example their MAC address",
+            "type": "string"
+          },
+          "id": {
+            "description": "Unique ID of the web login",
+            "format": "int64",
+            "type": "integer"
+          },
+          "login_captcha": {
+            "description": "Select a CAPTCHA mode",
+            "type": "string"
+          },
+          "login_custom_form": {
+            "description": "If selected, you must supply your own HTML login form in the Header or Footer HTML areas",
+            "type": "boolean"
+          },
+          "login_delay": {
+            "description": "The time in seconds to delay while displaying the login message",
+            "format": "double",
+            "type": "number"
+          },
+          "login_footer": {
+            "description": "HTML template code displayed after the login form",
+            "type": "string"
+          },
+          "login_header": {
+            "description": "HTML template code displayed before the login form",
+            "type": "string"
+          },
+          "login_message": {
+            "description": "HTML template code displayed while the login attempt is in progress",
+            "type": "string"
+          },
+          "login_pre_auth_check": {
+            "description": "Select how the username and password should be checked before proceeding to the NAS authentication",
+            "type": "string"
+          },
+          "login_pre_auth_error": {
+            "description": "The text to display if the username and password lookup fails.  \nLeave blank to use the default (Invalid username or password)",
+            "type": "string"
+          },
+          "login_skin": {
+            "description": "Choose the skin to use when this web login page is displayed",
+            "type": "string"
+          },
+          "login_terms_error": {
+            "description": "The text to display if the terms are not accepted.  \nLeave blank to use the default (In order to log in, you must accept the terms and conditions.)",
+            "type": "string"
+          },
+          "login_terms_label": {
+            "description": "The form label for the terms checkbox.  \nLeave blank to use the default (Terms:)",
+            "type": "string"
+          },
+          "login_terms_layout": {
+            "description": "Select the layout for the terms and conditions text",
+            "type": "string"
+          },
+          "login_terms_require": {
+            "description": "If checked, the user will be forced to accept a Terms and Conditions checkbox",
+            "type": "boolean"
+          },
+          "login_terms_text": {
+            "description": "HTML code containing your Terms and Conditions.  \nLeave blank to use the default (I accept the <a href=\"{nwa_global name=guest_account_terms_of_use_url}\" target=\"_blank\" title=\"Open the terms of use URL.\">terms of use</a>)",
+            "type": "string"
+          },
+          "login_title": {
+            "description": "The title to display on the web login page.  \nLeave blank to use the default (Login)",
+            "type": "string"
+          },
+          "mfa_duo_host": {
+            "type": "string"
+          },
+          "mfa_duo_ikey": {
+            "type": "string"
+          },
+          "mfa_duo_skey": {
+            "type": "string"
+          },
+          "mfa_enabled": {
+            "type": "string"
+          },
+          "mfa_first": {
+            "description": "All options with credentials must pass the Pre-Auth Check whenever a new user authenticates a device",
+            "type": "string"
+          },
+          "mfa_fn_client_id": {
+            "type": "string"
+          },
+          "mfa_fn_client_secret": {
+            "type": "string"
+          },
+          "mfa_fn_email": {
+            "description": "If disabled, the user must scan the QR code",
+            "type": "boolean"
+          },
+          "mfa_fn_factors": {
+            "description": "Enter the number of factors to require",
+            "type": "string"
+          },
+          "mfa_footer_html": {
+            "description": "HTML template code displayed after the provider’s vendor-specific authentication area",
+            "type": "string"
+          },
+          "mfa_header_html": {
+            "description": "HTML template code displayed before the provider’s vendor-specific authentication area",
+            "type": "string"
+          },
+          "mfa_iws_app": {
+            "type": "string"
+          },
+          "mfa_iws_hostname": {
+            "description": "Enter the hostname of the ImageWare server",
+            "type": "string"
+          },
+          "mfa_iws_tenant": {
+            "type": "string"
+          },
+          "mfa_mc_acr_values": {
+            "description": "Authentication Context class reference. Values as specified by ISO/IEC 29115 Clause 6",
+            "type": "string"
+          },
+          "mfa_mc_binding_message": {
+            "description": "Plain text reference to interlock the consumption device and authorization device",
+            "type": "string"
+          },
+          "mfa_mc_client_id": {
+            "type": "string"
+          },
+          "mfa_mc_client_secret": {
+            "type": "string"
+          },
+          "mfa_mc_context": {
+            "description": "Message which will be displayed on the authorization device",
+            "type": "string"
+          },
+          "mfa_mc_discovery_service_endpoint": {
+            "description": "Provide the endpoint URL provided by Mobile Connect during configuration",
+            "type": "string"
+          },
+          "mfa_mc_display": {
+            "description": "User interface display for Authentication",
+            "type": "string"
+          },
+          "mfa_mc_login_hint": {
+            "description": "An indication to IDP on what ID to use for login",
+            "type": "string"
+          },
+          "mfa_mc_max_age": {
+            "description": "Maximum elapsed time in secs since last authenticaiton",
+            "format": "int64",
+            "type": "integer"
+          },
+          "mfa_mc_prompt": {
+            "description": "Value to specify to the Authorisation server about type of prompt",
+            "type": "string"
+          },
+          "mfa_mc_redirect_url": {
+            "description": "Mobile Connect Redirect URL provided during configuration",
+            "type": "string"
+          },
+          "mfa_mc_scope": {
+            "description": "OAuth 2.0 scope value. Only mc_authn is supported for this release",
+            "type": "string"
+          },
+          "mfa_mc_version": {
+            "type": "string"
+          },
+          "name": {
+            "description": "Enter a name for this web login page",
+            "type": "string"
+          },
+          "oauth_debug": {
+            "description": "Log debugging data",
+            "type": "boolean"
+          },
+          "oauth_enabled": {
+            "description": "Enable logins with cloud identity / social network credentials",
+            "type": "boolean"
+          },
+          "oauth_providers": {
+            "description": "Configuration for cloud identity authentication providers",
+            "type": "object"
+          },
+          "onguard_agents": {
+            "description": "Select the agent options for client scanning.\nNative agents are available for Microsoft Windows and Apple OS X.  All other OS will fall back to Java",
+            "type": "string"
+          },
+          "onguard_footer": {
+            "description": "HTML template code displayed after the health check text",
+            "type": "string"
+          },
+          "onguard_header": {
+            "description": "HTML template code displayed before the health check text",
+            "type": "string"
+          },
+          "onguard_healthcheck": {
+            "description": "If selected, the guest will be required to pass a health check prior to accessing the network",
+            "type": "boolean"
+          },
+          "page_name": {
+            "description": "Enter a page name for this web login.\nThe web login will be accessible from “/guest/page_name.php”",
+            "type": "string"
+          },
+          "register_policy_manager": {
+            "description": "If selected, the endpoint’s attributes will also be updated with other details from the user account",
+            "type": "boolean"
+          },
+          "register_policy_manager_adv": {
+            "description": "Customize attributes stored with the endpoint",
+            "type": "boolean"
+          },
+          "register_policy_manager_attrs": {
+            "description": "List of name|value pairs to pass along.\nuser_field | Endpoint Attribute",
+            "type": "string"
+          },
+          "require_https": {
+            "description": "Select a security option to apply to the web login process",
+            "type": "string"
+          },
+          "submit_label": {
+            "description": "The form label for the log in button.  \nLeave blank to use the default (Log In)",
+            "type": "string"
+          },
+          "uam_secret": {
+            "description": "Enter the shared secret between the NAS device and the web login form",
+            "type": "string"
+          },
+          "url": {
+            "description": "The name of the destination field required by the NAS",
+            "type": "string"
+          },
+          "username_auth": {
+            "description": "Select the authentication requirement.\nAccess Code requires a single code (username) to be entered.\nAnonymous allows a blank form requiring just the terms or a Log In button.  A pre-existing account is required.\nAuto is similar to anonymous but the page is automatically submitted.\nAccess Code and Anonymous require the account to have the Username Authentication field set",
+            "type": "string"
+          },
+          "username_auth_username": {
+            "description": "The account to use for anonymous authentication.\nThe password will be visible within the HTML.\nIt is recommended to increase the account Session Limit to the number of guests you wish to support",
+            "type": "string"
+          },
+          "vendor_ip": {
+            "description": "Enter the hostname (FQDN) of the vendor’s product here.\nWhen using Secure Login over HTTPS, this name should match the name of the HTTPS certificate installed on your device",
+            "type": "string"
+          },
+          "vendor_preset": {
+            "description": "Select a predefined group of settings suitable for standard network configurations",
+            "type": "string"
+          },
+          "webauth": {
+            "description": "Select how the user’s network login will be handled.\nServer-initiated logins require the user’s MAC address to be available, usually from the captive portal redirection process",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "vendor_preset",
+          "form_action",
+          "form_method",
+          "form_username",
+          "form_password",
+          "form_password_encryption",
+          "access_if_denied",
+          "login_delay",
+          "login_skin",
+          "login_pre_auth_check"
+        ],
+        "title": "WebLogin",
+        "type": "object"
+      },
+      "WebLoginItems": {
+        "properties": {
+          "items": {
+            "description": "List of items matching the filter",
+            "items": {
+              "$ref": "#/components/schemas/WebLogin"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "WebLoginItems",
+        "type": "object"
+      },
+      "WebLoginList": {
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/WebLoginItems"
+          },
+          "_links": {
+            "$ref": "#/components/schemas/HalLinks"
+          },
+          "count": {
+            "description": "Total number of items matching the filter; returned if calculate_count is true",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "_embedded",
+          "_links"
+        ],
+        "title": "WebLoginList",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "contact": {},
+    "title": "Guest Configuration",
+    "version": "6.12.7"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/guest/authentication": {
+      "get": {
+        "deprecated": false,
+        "description": "Return settings from Configuration -> Authentication",
+        "operationId": "GuestAuthenticationConfigurationAuthenticationGet",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuestAuthenticationConfiguration"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Return settings from Configuration -> Authentication",
+        "tags": [
+          "GuestAuthenticationConfiguration"
+        ]
+      },
+      "patch": {
+        "deprecated": false,
+        "description": "Modify settings at Configuration -> Authentication",
+        "operationId": "GuestAuthenticationConfigurationAuthenticationPatch",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/GuestAuthenticationConfiguration"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuestAuthenticationConfiguration"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Modify settings at Configuration -> Authentication",
+        "tags": [
+          "GuestAuthenticationConfiguration"
+        ]
+      },
+      "post": {
+        "deprecated": false,
+        "description": "Modify settings at Configuration -> Authentication",
+        "operationId": "GuestAuthenticationConfigurationAuthenticationPost",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/GuestAuthenticationConfiguration"
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuestAuthenticationConfiguration"
+                }
+              }
+            },
+            "description": "Created",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Modify settings at Configuration -> Authentication",
+        "tags": [
+          "GuestAuthenticationConfiguration"
+        ]
+      }
+    },
+    "/guestmanager": {
+      "get": {
+        "deprecated": false,
+        "description": "Return settings from Configuration -> Guest Manager",
+        "operationId": "GuestManagerGet",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuestManager"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Return settings from Configuration -> Guest Manager",
+        "tags": [
+          "GuestManager"
+        ]
+      },
+      "patch": {
+        "deprecated": false,
+        "description": "Modify settings at Configuration -> Guest Manager",
+        "operationId": "GuestManagerPatch",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/GuestManager"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuestManager"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Modify settings at Configuration -> Guest Manager",
+        "tags": [
+          "GuestManager"
+        ]
+      },
+      "post": {
+        "deprecated": false,
+        "description": "Modify settings at Configuration -> Guest Manager",
+        "operationId": "GuestManagerPost",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/GuestManager"
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuestManager"
+                }
+              }
+            },
+            "description": "Created",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Modify settings at Configuration -> Guest Manager",
+        "tags": [
+          "GuestManager"
+        ]
+      }
+    },
+    "/template/pass": {
+      "get": {
+        "deprecated": false,
+        "description": "Get a list of pass templates. ",
+        "operationId": "DigitalPassTemplatePassGet",
+        "parameters": [
+          {
+            "description": "JSON filter expression specifying the items to return",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "default": "{}",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort ordering for returned items (default -id)",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "-id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Zero based offset to start from",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": "0",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Maximum number of items to return (1 – 1000)",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": "25",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Whether to calculate the total item count",
+            "in": "query",
+            "name": "calculate_count",
+            "required": false,
+            "schema": {
+              "default": "false",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalPassTemplateList"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Get a list of pass templates",
+        "tags": [
+          "DigitalPassTemplate"
+        ]
+      },
+      "post": {
+        "deprecated": false,
+        "description": "Create a new pass template",
+        "operationId": "DigitalPassTemplatePassPost",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/DigitalPassTemplate"
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalPassTemplate"
+                }
+              }
+            },
+            "description": "Created",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Create a new pass template",
+        "tags": [
+          "DigitalPassTemplate"
+        ]
+      }
+    },
+    "/template/pass/{id}": {
+      "delete": {
+        "deprecated": false,
+        "description": "Delete a pass template",
+        "operationId": "DigitalPassTemplatePassByIdDelete",
+        "parameters": [
+          {
+            "description": "URL parameter id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Delete a pass template",
+        "tags": [
+          "DigitalPassTemplate"
+        ]
+      },
+      "get": {
+        "deprecated": false,
+        "description": "Get a pass template",
+        "operationId": "DigitalPassTemplatePassByIdGet",
+        "parameters": [
+          {
+            "description": "URL parameter id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalPassTemplate"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get a pass template",
+        "tags": [
+          "DigitalPassTemplate"
+        ]
+      },
+      "patch": {
+        "deprecated": false,
+        "description": "Update some fields of a pass template",
+        "operationId": "DigitalPassTemplatePassByIdPatch",
+        "parameters": [
+          {
+            "description": "URL parameter id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/DigitalPassTemplate"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalPassTemplate"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Update some fields of a pass template",
+        "tags": [
+          "DigitalPassTemplate"
+        ]
+      },
+      "put": {
+        "deprecated": false,
+        "description": "Replace a pass template",
+        "operationId": "DigitalPassTemplatePassByIdPut",
+        "parameters": [
+          {
+            "description": "URL parameter id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/DigitalPassTemplate"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigitalPassTemplate"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Replace a pass template",
+        "tags": [
+          "DigitalPassTemplate"
+        ]
+      }
+    },
+    "/template/print": {
+      "get": {
+        "deprecated": false,
+        "description": "Get a list of print templates. ",
+        "operationId": "PrintTemplatePrintGet",
+        "parameters": [
+          {
+            "description": "JSON filter expression specifying the items to return",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "default": "{}",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort ordering for returned items (default -id)",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "-id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Zero based offset to start from",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": "0",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Maximum number of items to return (1 – 1000)",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": "25",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Whether to calculate the total item count",
+            "in": "query",
+            "name": "calculate_count",
+            "required": false,
+            "schema": {
+              "default": "false",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrintTemplateList"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Get a list of print templates",
+        "tags": [
+          "PrintTemplate"
+        ]
+      },
+      "post": {
+        "deprecated": false,
+        "description": "Create a new print template",
+        "operationId": "PrintTemplatePrintPost",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/PrintTemplate"
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrintTemplate"
+                }
+              }
+            },
+            "description": "Created",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Create a new print template",
+        "tags": [
+          "PrintTemplate"
+        ]
+      }
+    },
+    "/template/print/{id}": {
+      "delete": {
+        "deprecated": false,
+        "description": "Delete a print template",
+        "operationId": "PrintTemplatePrintByIdDelete",
+        "parameters": [
+          {
+            "description": "URL parameter id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Delete a print template",
+        "tags": [
+          "PrintTemplate"
+        ]
+      },
+      "get": {
+        "deprecated": false,
+        "description": "Get a print template",
+        "operationId": "PrintTemplatePrintByIdGet",
+        "parameters": [
+          {
+            "description": "URL parameter id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrintTemplate"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get a print template",
+        "tags": [
+          "PrintTemplate"
+        ]
+      },
+      "patch": {
+        "deprecated": false,
+        "description": "Update some fields of a print template",
+        "operationId": "PrintTemplatePrintByIdPatch",
+        "parameters": [
+          {
+            "description": "URL parameter id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/PrintTemplate"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrintTemplate"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Update some fields of a print template",
+        "tags": [
+          "PrintTemplate"
+        ]
+      },
+      "put": {
+        "deprecated": false,
+        "description": "Replace a print template",
+        "operationId": "PrintTemplatePrintByIdPut",
+        "parameters": [
+          {
+            "description": "URL parameter id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/PrintTemplate"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrintTemplate"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Replace a print template",
+        "tags": [
+          "PrintTemplate"
+        ]
+      }
+    },
+    "/weblogin": {
+      "get": {
+        "deprecated": false,
+        "description": "Get a list of web login pages. ",
+        "operationId": "WebLoginGet",
+        "parameters": [
+          {
+            "description": "JSON filter expression specifying the items to return",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "default": "{}",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort ordering for returned items (default +name)",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "+name",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Zero based offset to start from",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": "0",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Maximum number of items to return (1 – 1000)",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": "25",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Whether to calculate the total item count",
+            "in": "query",
+            "name": "calculate_count",
+            "required": false,
+            "schema": {
+              "default": "false",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebLoginList"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Get a list of web login pages",
+        "tags": [
+          "WebLogin"
+        ]
+      },
+      "post": {
+        "deprecated": false,
+        "description": "Create a new web login page",
+        "operationId": "WebLoginPost",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/WebLogin"
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebLogin"
+                }
+              }
+            },
+            "description": "Created",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Create a new web login page",
+        "tags": [
+          "WebLogin"
+        ]
+      }
+    },
+    "/weblogin/page-name/{page-name}": {
+      "delete": {
+        "deprecated": false,
+        "description": "Delete a web login page by page-name",
+        "operationId": "WebLoginPage-nameByPage-nameDelete",
+        "parameters": [
+          {
+            "description": "Unique page name of the web login",
+            "in": "path",
+            "name": "page-name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Delete a web login page by page-name",
+        "tags": [
+          "WebLogin"
+        ]
+      },
+      "get": {
+        "deprecated": false,
+        "description": "Get a web login page by page-name",
+        "operationId": "WebLoginPage-nameByPage-nameGet",
+        "parameters": [
+          {
+            "description": "Unique page name of the web login",
+            "in": "path",
+            "name": "page-name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebLogin"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get a web login page by page-name",
+        "tags": [
+          "WebLogin"
+        ]
+      },
+      "patch": {
+        "deprecated": false,
+        "description": "Update some fields of a web login page by page-name",
+        "operationId": "WebLoginPage-nameByPage-namePatch",
+        "parameters": [
+          {
+            "description": "Unique page name of the web login",
+            "in": "path",
+            "name": "page-name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/WebLogin"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebLogin"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Update some fields of a web login page by page-name",
+        "tags": [
+          "WebLogin"
+        ]
+      },
+      "put": {
+        "deprecated": false,
+        "description": "Replace a web login page by page-name",
+        "operationId": "WebLoginPage-nameByPage-namePut",
+        "parameters": [
+          {
+            "description": "Unique page name of the web login",
+            "in": "path",
+            "name": "page-name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/WebLogin"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebLogin"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Replace a web login page by page-name",
+        "tags": [
+          "WebLogin"
+        ]
+      }
+    },
+    "/weblogin/{id}": {
+      "delete": {
+        "deprecated": false,
+        "description": "Delete a web login page",
+        "operationId": "WebLoginByIdDelete",
+        "parameters": [
+          {
+            "description": "URL parameter id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Delete a web login page",
+        "tags": [
+          "WebLogin"
+        ]
+      },
+      "get": {
+        "deprecated": false,
+        "description": "Get a web login page",
+        "operationId": "WebLoginByIdGet",
+        "parameters": [
+          {
+            "description": "URL parameter id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebLogin"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get a web login page",
+        "tags": [
+          "WebLogin"
+        ]
+      },
+      "patch": {
+        "deprecated": false,
+        "description": "Update some fields of a web login page",
+        "operationId": "WebLoginByIdPatch",
+        "parameters": [
+          {
+            "description": "URL parameter id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/WebLogin"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebLogin"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Update some fields of a web login page",
+        "tags": [
+          "WebLogin"
+        ]
+      },
+      "put": {
+        "deprecated": false,
+        "description": "Replace a web login page",
+        "operationId": "WebLoginByIdPut",
+        "parameters": [
+          {
+            "description": "URL parameter id",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/WebLogin"
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebLogin"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Replace a web login page",
+        "tags": [
+          "WebLogin"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://clearpass-hostname/api"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Manage pass templates",
+      "name": "DigitalPassTemplate"
+    },
+    {
+      "description": "Manage settings in Configuration -> Authentication",
+      "name": "GuestAuthenticationConfiguration"
+    },
+    {
+      "description": "Manage settings in Configuration -> Guest Manager",
+      "name": "GuestManager"
+    },
+    {
+      "description": "Manage print templates",
+      "name": "PrintTemplate"
+    },
+    {
+      "description": "Manage web logins",
+      "name": "WebLogin"
+    }
+  ],
+  "x-explorer-enabled": false,
+  "x-headers": [
+    {
+      "key": "Authorization",
+      "value": "Bearer <TOKEN>"
+    }
+  ],
+  "x-readme": {
+    "proxy-enabled": true
+  }
+}

@@ -1,13 +1,15 @@
 """Unit tests for the shared ClearPass utility helpers.
 
 Pins the contract for ``build_query_string`` (consolidated from 10 file-local
-copies in issue #125) and ``clearpass_get`` (the centralized wrapper around
-pyclearpass's private ``_send_request`` method, issue #126).
+copies in issue #125) and ``clearpass_get`` (the centralized GET wrapper —
+formerly around pyclearpass's ``_send_request``, now around
+``ClearPassClient.request``; the isolation from issue #126 made the SDK
+removal a one-function change).
 """
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -20,24 +22,25 @@ pytestmark = pytest.mark.unit
 
 
 class TestClearPassGet:
-    def test_delegates_to_send_request_with_get_method(self):
+    async def test_delegates_to_client_request_with_get_method(self):
         client = MagicMock()
-        client._send_request.return_value = {"items": []}
-        result = clearpass_get(client, "/network-device?offset=0&limit=25")
-        client._send_request.assert_called_once_with("/network-device?offset=0&limit=25", "get")
+        client.request = AsyncMock(return_value={"items": []})
+        result = await clearpass_get(client, "/network-device?offset=0&limit=25")
+        client.request.assert_awaited_once_with("get", "/network-device?offset=0&limit=25")
         assert result == {"items": []}
 
-    def test_passes_path_through_unchanged(self):
+    async def test_passes_path_through_unchanged(self):
         client = MagicMock()
-        clearpass_get(client, "/cert-trust-list/42")
+        client.request = AsyncMock(return_value={})
+        await clearpass_get(client, "/cert-trust-list/42")
         # Single-item lookups (no query string) work the same way.
-        client._send_request.assert_called_once_with("/cert-trust-list/42", "get")
+        client.request.assert_awaited_once_with("get", "/cert-trust-list/42")
 
-    def test_returns_whatever_the_sdk_returns(self):
+    async def test_returns_whatever_the_client_returns(self):
         client = MagicMock()
         sentinel = object()
-        client._send_request.return_value = sentinel
-        assert clearpass_get(client, "/anything") is sentinel
+        client.request = AsyncMock(return_value=sentinel)
+        assert await clearpass_get(client, "/anything") is sentinel
 
 
 class TestBuildQueryString:

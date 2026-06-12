@@ -5,12 +5,12 @@ from __future__ import annotations
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_access_controls(
     ctx: Context,
     server_uuid: str,
@@ -26,22 +26,17 @@ async def clearpass_get_access_controls(
         resource_name: Specific resource name for single-item lookup.
     """
     try:
-        from pyclearpass.api_localserverconfiguration import ApiLocalServerConfiguration
-
-        client = await get_clearpass_session(ApiLocalServerConfiguration)
+        client = await get_clearpass_client()
         if resource_name:
-            return client.get_server_access_control_by_server_uuid_resource_name(
-                server_uuid=server_uuid,
-                resource_name=resource_name,
-            )
-        return client.get_server_access_control_by_server_uuid(server_uuid=server_uuid)
+            return await client.request("get", f"/server/access-control/{server_uuid}/{resource_name}")
+        return await client.request("get", f"/server/access-control/{server_uuid}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching access controls: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_ad_domains(
     ctx: Context,
     server_uuid: str,
@@ -57,22 +52,17 @@ async def clearpass_get_ad_domains(
         netbios_name: NetBIOS name for single-domain lookup.
     """
     try:
-        from pyclearpass.api_localserverconfiguration import ApiLocalServerConfiguration
-
-        client = await get_clearpass_session(ApiLocalServerConfiguration)
+        client = await get_clearpass_client()
         if netbios_name:
-            return client.get_ad_domain_by_server_uuid_netbios_name_netbios_name(
-                server_uuid=server_uuid,
-                netbios_name=netbios_name,
-            )
-        return client.get_ad_domain_by_server_uuid(server_uuid=server_uuid)
+            return await client.request("get", f"/ad-domain/{server_uuid}/netbios-name/{netbios_name}")
+        return await client.request("get", f"/ad-domain/{server_uuid}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching AD domains: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_server_version(
     ctx: Context,
     uuid: str | None = None,
@@ -86,14 +76,12 @@ async def clearpass_get_server_version(
         uuid: Cluster member UUID for specific server lookup.
     """
     try:
-        from pyclearpass.api_localserverconfiguration import ApiLocalServerConfiguration
-
-        client = await get_clearpass_session(ApiLocalServerConfiguration)
+        client = await get_clearpass_client()
         if uuid:
-            return client.get_cluster_server_by_uuid(uuid=uuid)
+            return await client.request("get", f"/cluster/server/{uuid}")
         return {
-            "cppm_version": client.get_cppm_version(),
-            "server_version": client.get_server_version(),
+            "cppm_version": await client.request("get", "/cppm-version"),
+            "server_version": await client.request("get", "/server/version"),
         }
     except ToolError:
         raise
@@ -101,7 +89,7 @@ async def clearpass_get_server_version(
         raise ToolError({"status_code": 502, "message": f"Error fetching server version: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_fips_status(
     ctx: Context,
 ) -> dict | str:
@@ -110,17 +98,15 @@ async def clearpass_get_fips_status(
     Returns whether FIPS mode is enabled or disabled on the ClearPass server.
     """
     try:
-        from pyclearpass.api_localserverconfiguration import ApiLocalServerConfiguration
-
-        client = await get_clearpass_session(ApiLocalServerConfiguration)
-        return client.get_server_fips()
+        client = await get_clearpass_client()
+        return await client.request("get", "/server/fips")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching FIPS status: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_server_services(
     ctx: Context,
     server_uuid: str,
@@ -136,22 +122,17 @@ async def clearpass_get_server_services(
         service_name: Service name for single-service lookup.
     """
     try:
-        from pyclearpass.api_localserverconfiguration import ApiLocalServerConfiguration
-
-        client = await get_clearpass_session(ApiLocalServerConfiguration)
+        client = await get_clearpass_client()
         if service_name:
-            return client.get_server_service_by_server_uuid_service_name(
-                server_uuid=server_uuid,
-                service_name=service_name,
-            )
-        return client.get_server_service_by_server_uuid(server_uuid=server_uuid)
+            return await client.request("get", f"/server/service/{server_uuid}/{service_name}")
+        return await client.request("get", f"/server/service/{server_uuid}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching server services: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_server_snmp(
     ctx: Context,
     server_uuid: str,
@@ -165,17 +146,15 @@ async def clearpass_get_server_snmp(
         server_uuid: UUID of the ClearPass server node.
     """
     try:
-        from pyclearpass.api_localserverconfiguration import ApiLocalServerConfiguration
-
-        client = await get_clearpass_session(ApiLocalServerConfiguration)
-        return client.get_server_snmp_by_server_uuid(server_uuid=server_uuid)
+        client = await get_clearpass_client()
+        return await client.request("get", f"/server/snmp/{server_uuid}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching server SNMP config: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_cluster_servers(
     ctx: Context,
 ) -> dict | str:
@@ -196,10 +175,8 @@ async def clearpass_get_cluster_servers(
     See: https://developer.arubanetworks.com/cppm/reference (Local Server Configuration → /server)
     """
     try:
-        from pyclearpass.api_localserverconfiguration import ApiLocalServerConfiguration
-
-        client = await get_clearpass_session(ApiLocalServerConfiguration)
-        return client.get_cluster_server()
+        client = await get_clearpass_client()
+        return await client.request("get", "/cluster/server")
     except ToolError:
         raise
     except Exception as e:

@@ -3,12 +3,12 @@
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_switch_hardware_trends(
     ctx: Context,
     serial_number: str,
@@ -28,10 +28,10 @@ async def central_get_switch_hardware_trends(
     Parameters:
         serial_number: Switch serial number or stack ID.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     try:
-        resp = retry_central_command(
+        resp = await retry_central_command(
             central_conn=conn,
             api_method="GET",
             api_path=(f"network-monitoring/v1/switches/{serial_number}/hardware-trends"),
@@ -99,7 +99,7 @@ async def central_get_switch_hardware_trends(
     return result
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_switch_poe(
     ctx: Context,
     serial_number: str,
@@ -117,10 +117,10 @@ async def central_get_switch_poe(
         serial_number: Switch serial number (required).
         limit: Max ports to return (default 100).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     try:
-        resp = retry_central_command(
+        resp = await retry_central_command(
             central_conn=conn,
             api_method="GET",
             api_path=(f"network-monitoring/v1/switches/{serial_number}/interface-poe"),

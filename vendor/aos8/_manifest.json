@@ -1,0 +1,15 @@
+{
+  "definition_count": 1,
+  "definitions": [
+    {
+      "id": "61b9b2095b354f0038d37845",
+      "path_count": 168,
+      "slug": "arubaos-json-api-specification",
+      "title": "ArubaOS JSON API Specification",
+      "version": "1.0"
+    }
+  ],
+  "project": "aos8",
+  "source": "https://developer.arubanetworks.com/aos8/openapi/<apiSetting-id>",
+  "total_paths": 168
+}

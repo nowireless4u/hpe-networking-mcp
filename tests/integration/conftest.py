@@ -31,11 +31,16 @@ def _read_secret(name: str) -> str | None:
     return None
 
 
-@pytest.fixture(scope="session")
-def central_conn():
+@pytest.fixture
+async def central_conn():
     """Create a live Central connection from Docker secrets.
 
     Skips all tests if Central credentials are not available.
+
+    Function-scoped: ``CentralClient`` owns an ``httpx.AsyncClient`` bound to
+    the running event loop, and pytest-asyncio gives each test its own loop —
+    a session-scoped client would hit "Event loop is closed" on the second
+    test. The token fetch per test is the (acceptable) cost.
     """
     base_url = _read_secret("central_base_url")
     client_id = _read_secret("central_client_id")
@@ -44,21 +49,15 @@ def central_conn():
     if not all([base_url, client_id, client_secret]):
         pytest.skip("Central credentials not found — skipping live tests")
 
-    from pycentral import NewCentralBase
+    from hpe_networking_mcp.config import CentralSecrets
+    from hpe_networking_mcp.platforms.central.client import create_connection
 
-    conn = NewCentralBase(
-        token_info={
-            "new_central": {
-                "base_url": base_url,
-                "client_id": client_id,
-                "client_secret": client_secret,
-            }
-        }
-    )
-    return conn
+    conn = create_connection(CentralSecrets(base_url=base_url, client_id=client_id, client_secret=client_secret))
+    yield conn
+    await conn.aclose()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def live_ctx(central_conn):
     """Create a mock Context with a live Central connection.
 

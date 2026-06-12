@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,9 +16,9 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
@@ -26,8 +26,7 @@ from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 @_mcp_tool(
     name="mist_get_site_sle_classifier_details",
     description="GET /api/v1/sites/{site_id}/sle/{scope}/{scope_id}/metric/{metric}/classifier/{classifier}/summary\n\ngetSiteSleClassifierDetails\n\nGet SLE classifier details\n\n\nThis API Endpoint is deprecated and replaced by [Get Site SLE Classifier Summary Trend](/#operations/getSiteSleClassifierSummaryTrend)",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_sle_classifier_details(
     ctx: Context,
@@ -42,13 +41,20 @@ async def mist_get_site_sle_classifier_details(
     metric: Annotated[str, Field(description="Values from `listSiteSlesMetrics`")],
     classifier: Annotated[str, Field(description="path parameter 'classifier'")],
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
 ) -> Any:
     return await mist_request(
         ctx,
@@ -69,8 +75,7 @@ async def mist_get_site_sle_classifier_details(
 @_mcp_tool(
     name="mist_get_site_sle_classifier_summary_trend",
     description="GET /api/v1/sites/{site_id}/sle/{scope}/{scope_id}/metric/{metric}/classifier/{classifier}/summary-trend\n\ngetSiteSleClassifierSummaryTrend\n\nGet SLE classifier Summary Trend",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_sle_classifier_summary_trend(
     ctx: Context,
@@ -85,13 +90,20 @@ async def mist_get_site_sle_classifier_summary_trend(
     metric: Annotated[str, Field(description="Values from `listSiteSlesMetrics`")],
     classifier: Annotated[str, Field(description="path parameter 'classifier'")],
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
 ) -> Any:
     return await mist_request(
         ctx,
@@ -112,8 +124,7 @@ async def mist_get_site_sle_classifier_summary_trend(
 @_mcp_tool(
     name="mist_get_site_sle_histogram",
     description="GET /api/v1/sites/{site_id}/sle/{scope}/{scope_id}/metric/{metric}/histogram\n\ngetSiteSleHistogram\n\nGet the histogram for the SLE metric",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_sle_histogram(
     ctx: Context,
@@ -127,13 +138,20 @@ async def mist_get_site_sle_histogram(
     ],
     metric: Annotated[str, Field(description="Values from `listSiteSlesMetrics`")],
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
 ) -> Any:
     return await mist_request(
         ctx,
@@ -148,8 +166,7 @@ async def mist_get_site_sle_histogram(
 @_mcp_tool(
     name="mist_get_site_sle_impact_summary",
     description="GET /api/v1/sites/{site_id}/sle/{scope}/{scope_id}/metric/{metric}/impact-summary\n\ngetSiteSleImpactSummary\n\nGet impact summary counts optionally filtered by classifier and failure type\n \n* Wireless SLE Fields: `wlan`, `device_type`, `device_os` ,`band`, `ap`, `server`, `mxedge`\n* Wired SLE Fields: `switch`, `client`, `vlan`, `interface`, `chassis`\n* WAN SLE Fields: `gateway`, `client`, `interface`, `chassis`, `peer_path`, `gateway_zones`",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_sle_impact_summary(
     ctx: Context,
@@ -163,15 +180,27 @@ async def mist_get_site_sle_impact_summary(
     ],
     metric: Annotated[str, Field(description="Values from `listSiteSlesMetrics`")],
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    fields: Annotated[Any | None, Field(description="query parameter 'fields'")] = None,
-    classifier: Annotated[str | None, Field(description="query parameter 'classifier'")] = None,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    fields: Annotated[
+        Any | None,
+        Field(
+            description="Additional response fields to include, as a comma-separated list or `*` for all fields. enum: `ap`, `band`, `chassis`, `client`, `device_os`, `device_type`, `gateway`, `gateway_zones`, `interface`, `mxedge`, `peer_path`, `server`, `switc..."
+        ),
+    ] = None,
+    classifier: Annotated[str | None, Field(description="Filter SLE impact results by classifier")] = None,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -186,8 +215,7 @@ async def mist_get_site_sle_impact_summary(
 @_mcp_tool(
     name="mist_get_site_sle_summary",
     description="GET /api/v1/sites/{site_id}/sle/{scope}/{scope_id}/metric/{metric}/summary\n\ngetSiteSleSummary\n\nGet the summary for the SLE metric\n\n\nThis API Endpoint is deprecated and replaced by [Get Site SLE Summary Trend](/#operations/getSiteSleSummaryTrend)",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_sle_summary(
     ctx: Context,
@@ -201,13 +229,20 @@ async def mist_get_site_sle_summary(
     ],
     metric: Annotated[str, Field(description="Values from `listSiteSlesMetrics`")],
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
 ) -> Any:
     return await mist_request(
         ctx,
@@ -222,8 +257,7 @@ async def mist_get_site_sle_summary(
 @_mcp_tool(
     name="mist_get_site_sle_summary_trend",
     description="GET /api/v1/sites/{site_id}/sle/{scope}/{scope_id}/metric/{metric}/summary-trend\n\ngetSiteSleSummaryTrend\n\nGet the summary for the SLE metric trend",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_sle_summary_trend(
     ctx: Context,
@@ -237,13 +271,20 @@ async def mist_get_site_sle_summary_trend(
     ],
     metric: Annotated[str, Field(description="Values from `listSiteSlesMetrics`")],
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
 ) -> Any:
     return await mist_request(
         ctx,
@@ -258,8 +299,7 @@ async def mist_get_site_sle_summary_trend(
 @_mcp_tool(
     name="mist_get_site_sle_threshold",
     description="GET /api/v1/sites/{site_id}/sle/{scope}/{scope_id}/metric/{metric}/threshold\n\ngetSiteSleThreshold\n\nGet the SLE threshold",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_get_site_sle_threshold(
     ctx: Context,
@@ -286,8 +326,7 @@ async def mist_get_site_sle_threshold(
 @_mcp_tool(
     name="mist_list_site_sle_impacted_applications",
     description="GET /api/v1/sites/{site_id}/sle/{scope}/{scope_id}/metric/{metric}/impacted-applications\n\nlistSiteSleImpactedApplications\n\nFor WAN SLEs. List the impacted interfaces optionally filtered by classifier and failure type",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_list_site_sle_impacted_applications(
     ctx: Context,
@@ -296,14 +335,21 @@ async def mist_list_site_sle_impacted_applications(
     scope_id: Annotated[str, Field(description="path parameter 'scope_id'")],
     metric: Annotated[str, Field(description="Values from `listSiteSlesMetrics`")],
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    classifier: Annotated[str | None, Field(description="query parameter 'classifier'")] = None,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    classifier: Annotated[str | None, Field(description="Filter SLE impact results by classifier")] = None,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -318,8 +364,7 @@ async def mist_list_site_sle_impacted_applications(
 @_mcp_tool(
     name="mist_list_site_sle_impacted_aps",
     description="GET /api/v1/sites/{site_id}/sle/{scope}/{scope_id}/metric/{metric}/impacted-aps\n\nlistSiteSleImpactedAps\n\nFor Wireless SLEs. List the impacted APs optionally filtered by classifier and failure type",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_list_site_sle_impacted_aps(
     ctx: Context,
@@ -328,14 +373,21 @@ async def mist_list_site_sle_impacted_aps(
     scope_id: Annotated[str, Field(description="path parameter 'scope_id'")],
     metric: Annotated[str, Field(description="Values from `listSiteSlesMetrics`")],
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    classifier: Annotated[str | None, Field(description="query parameter 'classifier'")] = None,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    classifier: Annotated[str | None, Field(description="Filter SLE impact results by classifier")] = None,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -350,8 +402,7 @@ async def mist_list_site_sle_impacted_aps(
 @_mcp_tool(
     name="mist_list_site_sle_impacted_chassis",
     description="GET /api/v1/sites/{site_id}/sle/{scope}/{scope_id}/metric/{metric}/impacted-chassis\n\nlistSiteSleImpactedChassis\n\nFor Wired and WAN SLEs. List the impacted interfaces optionally filtered by classifier and failure type",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_list_site_sle_impacted_chassis(
     ctx: Context,
@@ -360,14 +411,21 @@ async def mist_list_site_sle_impacted_chassis(
     scope_id: Annotated[str, Field(description="path parameter 'scope_id'")],
     metric: Annotated[str, Field(description="Values from `listSiteSlesMetrics`")],
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    classifier: Annotated[str | None, Field(description="query parameter 'classifier'")] = None,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    classifier: Annotated[str | None, Field(description="Filter SLE impact results by classifier")] = None,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -382,8 +440,7 @@ async def mist_list_site_sle_impacted_chassis(
 @_mcp_tool(
     name="mist_list_site_sle_impacted_gateways",
     description="GET /api/v1/sites/{site_id}/sle/{scope}/{scope_id}/metric/{metric}/impacted-gateways\n\nlistSiteSleImpactedGateways\n\nFor WAN SLEs. List the impacted interfaces optionally filtered by classifier and failure type",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_list_site_sle_impacted_gateways(
     ctx: Context,
@@ -392,14 +449,21 @@ async def mist_list_site_sle_impacted_gateways(
     scope_id: Annotated[str, Field(description="path parameter 'scope_id'")],
     metric: Annotated[str, Field(description="Values from `listSiteSlesMetrics`")],
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    classifier: Annotated[str | None, Field(description="query parameter 'classifier'")] = None,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    classifier: Annotated[str | None, Field(description="Filter SLE impact results by classifier")] = None,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -414,8 +478,7 @@ async def mist_list_site_sle_impacted_gateways(
 @_mcp_tool(
     name="mist_list_site_sle_impacted_interfaces",
     description="GET /api/v1/sites/{site_id}/sle/{scope}/{scope_id}/metric/{metric}/impacted-interfaces\n\nlistSiteSleImpactedInterfaces\n\nFor Wired and WAN SLEs. List the impacted interfaces optionally filtered by classifier and failure type",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_list_site_sle_impacted_interfaces(
     ctx: Context,
@@ -424,14 +487,21 @@ async def mist_list_site_sle_impacted_interfaces(
     scope_id: Annotated[str, Field(description="path parameter 'scope_id'")],
     metric: Annotated[str, Field(description="Values from `listSiteSlesMetrics`")],
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    classifier: Annotated[str | None, Field(description="query parameter 'classifier'")] = None,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    classifier: Annotated[str | None, Field(description="Filter SLE impact results by classifier")] = None,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -446,8 +516,7 @@ async def mist_list_site_sle_impacted_interfaces(
 @_mcp_tool(
     name="mist_list_site_sle_impacted_switches",
     description="GET /api/v1/sites/{site_id}/sle/{scope}/{scope_id}/metric/{metric}/impacted-switches\n\nlistSiteSleImpactedSwitches\n\nFor Wired SLEs. List the impacted switches optionally filtered by classifier and failure type",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_list_site_sle_impacted_switches(
     ctx: Context,
@@ -456,14 +525,21 @@ async def mist_list_site_sle_impacted_switches(
     scope_id: Annotated[str, Field(description="path parameter 'scope_id'")],
     metric: Annotated[str, Field(description="Values from `listSiteSlesMetrics`")],
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    classifier: Annotated[str | None, Field(description="query parameter 'classifier'")] = None,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    classifier: Annotated[str | None, Field(description="Filter SLE impact results by classifier")] = None,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -478,8 +554,7 @@ async def mist_list_site_sle_impacted_switches(
 @_mcp_tool(
     name="mist_list_site_sle_impacted_wired_clients",
     description="GET /api/v1/sites/{site_id}/sle/{scope}/{scope_id}/metric/{metric}/impacted-clients\n\nlistSiteSleImpactedWiredClients\n\nFor Wired SLEs. List the impacted interfaces optionally filtered by classifier and failure type",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_list_site_sle_impacted_wired_clients(
     ctx: Context,
@@ -488,14 +563,21 @@ async def mist_list_site_sle_impacted_wired_clients(
     scope_id: Annotated[str, Field(description="path parameter 'scope_id'")],
     metric: Annotated[str, Field(description="Values from `listSiteSlesMetrics`")],
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    classifier: Annotated[str | None, Field(description="query parameter 'classifier'")] = None,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    classifier: Annotated[str | None, Field(description="Filter SLE impact results by classifier")] = None,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -510,8 +592,7 @@ async def mist_list_site_sle_impacted_wired_clients(
 @_mcp_tool(
     name="mist_list_site_sle_impacted_wireless_clients",
     description="GET /api/v1/sites/{site_id}/sle/{scope}/{scope_id}/metric/{metric}/impacted-users\n\nlistSiteSleImpactedWirelessClients\n\nFor Wireless SLEs. List the impacted wireless users optionally filtered by classifier and failure type",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_list_site_sle_impacted_wireless_clients(
     ctx: Context,
@@ -520,14 +601,21 @@ async def mist_list_site_sle_impacted_wireless_clients(
     scope_id: Annotated[str, Field(description="path parameter 'scope_id'")],
     metric: Annotated[str, Field(description="Values from `listSiteSlesMetrics`")],
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    classifier: Annotated[str | None, Field(description="query parameter 'classifier'")] = None,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    classifier: Annotated[str | None, Field(description="Filter SLE impact results by classifier")] = None,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -542,8 +630,7 @@ async def mist_list_site_sle_impacted_wireless_clients(
 @_mcp_tool(
     name="mist_list_site_sle_metric_classifiers",
     description="GET /api/v1/sites/{site_id}/sle/{scope}/{scope_id}/metric/{metric}/classifiers\n\nlistSiteSleMetricClassifiers\n\nList classifiers for a specific metric",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_list_site_sle_metric_classifiers(
     ctx: Context,
@@ -570,8 +657,7 @@ async def mist_list_site_sle_metric_classifiers(
 @_mcp_tool(
     name="mist_list_site_sles_metrics",
     description="GET /api/v1/sites/{site_id}/sle/{scope}/{scope_id}/metrics\n\nlistSiteSlesMetrics\n\nList the metrics for the given scope",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_list_site_sles_metrics(
     ctx: Context,
@@ -597,8 +683,7 @@ async def mist_list_site_sles_metrics(
 @_mcp_tool(
     name="mist_replace_site_sle_threshold",
     description="POST /api/v1/sites/{site_id}/sle/{scope}/{scope_id}/metric/{metric}/threshold\n\nreplaceSiteSleThreshold\n\nReplace the SLE threshold",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_replace_site_sle_threshold(
     ctx: Context,
@@ -632,8 +717,7 @@ async def mist_replace_site_sle_threshold(
 @_mcp_tool(
     name="mist_update_site_sle_threshold",
     description="PUT /api/v1/sites/{site_id}/sle/{scope}/{scope_id}/metric/{metric}/threshold\n\nupdateSiteSleThreshold\n\nUpdate the SLE threshold",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_update_site_sle_threshold(
     ctx: Context,

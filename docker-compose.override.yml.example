@@ -14,10 +14,16 @@
 #     compose file.
 #   • How to change the exposed port.
 #
-# The !reset tag tells Compose "remove this item from the merged config"
-# and requires Compose v2.24+. If you're on an older Compose, upgrade or
-# remove the whole override file and instead edit docker-compose.yml
-# directly.
+# Two Compose merge tags are used below (both require Compose v2.24+):
+#   • !override — REPLACE the base value instead of merging into it. Used on the
+#     service-level `secrets:` LIST so your shortened list replaces the base
+#     list wholesale (a plain merge would union them back to every platform;
+#     !reset on a list with items empties it, mounting nothing — see issue #452).
+#   • !reset — REMOVE this key from the merged config. Used on the top-level
+#     `secrets:` MAP entries you're dropping, so Compose won't resolve their
+#     file: paths.
+# If you're on an older Compose, upgrade or remove the whole override file and
+# instead edit docker-compose.yml directly.
 # ============================================================================
 
 services:
@@ -41,16 +47,18 @@ services:
       # Example: pin static-mode surface (v1.x behavior). Default is dynamic.
       # - MCP_TOOL_MODE=static
 
-    # Drop the secret references for platforms you aren't using. After !reset,
-    # list only the ones you keep. Without this, docker compose will try to
-    # bind-mount every secret file declared in the base compose file and fail
-    # if one is missing.
+    # Drop the secret references for platforms you aren't using. Use !override
+    # (NOT !reset) on this service-level list: !override replaces the base list
+    # with just the entries below, so list only the ones you keep. Without this,
+    # docker compose will try to bind-mount every secret file declared in the
+    # base compose file and fail if one is missing. (!reset here would empty the
+    # list and mount nothing — the failure in issue #452.)
     #
     # The example below is a Mist-only deployment. Adjust for your mix of
-    # platforms — keep the service-level secret names you use, and !reset the
-    # top-level secrets dict entries you don't. Do both halves: the service's
-    # `secrets:` list AND the top-level `secrets:` block.
-    secrets: !reset
+    # platforms, and do BOTH halves: list the service's `secrets:` you keep here
+    # (via !override), AND !reset the top-level `secrets:` entries you're dropping
+    # (below).
+    secrets: !override
       - mist_api_token
       - mist_host
 

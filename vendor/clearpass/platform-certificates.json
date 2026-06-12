@@ -1,0 +1,4031 @@
+{
+  "components": {
+    "schemas": {
+      "CertSignRequest": {
+        "properties": {
+          "cert_sign_request": {
+            "description": "PEM encoded Certificate Signing Request ",
+            "type": "string"
+          },
+          "digest_algorithm": {
+            "$ref": "#/components/schemas/DigestAlgorithm"
+          },
+          "private_key_password": {
+            "description": "Private Key Password",
+            "type": "string"
+          },
+          "private_key_type": {
+            "$ref": "#/components/schemas/PrivateKeyType"
+          },
+          "subject_C": {
+            "description": "Country (C)",
+            "type": "string"
+          },
+          "subject_CN": {
+            "description": "Common Name (CN)",
+            "type": "string"
+          },
+          "subject_L": {
+            "description": "Location (L)",
+            "type": "string"
+          },
+          "subject_O": {
+            "description": "Organization (O)",
+            "type": "string"
+          },
+          "subject_OU": {
+            "description": "Organizational Unit (OU)",
+            "type": "string"
+          },
+          "subject_SAN": {
+            "description": "Subject Alternate Name (SAN)",
+            "type": "string"
+          },
+          "subject_ST": {
+            "description": "State (ST)",
+            "type": "string"
+          }
+        },
+        "title": "CertSignRequest",
+        "type": "object"
+      },
+      "CertSignRequestCreate": {
+        "properties": {
+          "digest_algorithm": {
+            "$ref": "#/components/schemas/DigestAlgorithm"
+          },
+          "private_key_password": {
+            "description": "Private Key Password",
+            "type": "string"
+          },
+          "private_key_type": {
+            "$ref": "#/components/schemas/PrivateKeyType"
+          },
+          "subject_C": {
+            "description": "Country (C)",
+            "type": "string"
+          },
+          "subject_CN": {
+            "description": "Common Name (CN)",
+            "type": "string"
+          },
+          "subject_L": {
+            "description": "Location (L)",
+            "type": "string"
+          },
+          "subject_O": {
+            "description": "Organization (O)",
+            "type": "string"
+          },
+          "subject_OU": {
+            "description": "Organizational Unit (OU)",
+            "type": "string"
+          },
+          "subject_SAN": {
+            "description": "Subject Alternate Name (SAN)",
+            "type": "string"
+          },
+          "subject_ST": {
+            "description": "State (ST)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject_CN",
+          "private_key_password",
+          "private_key_type",
+          "digest_algorithm"
+        ],
+        "title": "CertSignRequestCreate",
+        "type": "object"
+      },
+      "CertSignRequestItems": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CertSignRequestResult"
+            }
+          }
+        },
+        "title": "CertSignRequestItems",
+        "type": "object"
+      },
+      "CertSignRequestResult": {
+        "properties": {
+          "cert_sign_request": {
+            "description": "PEM encoded Certificate Signing Request ",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cert_sign_request"
+        ],
+        "title": "CertSignRequestResult",
+        "type": "object"
+      },
+      "CertTrustList": {
+        "properties": {
+          "cert_file": {
+            "description": "Certificate trust list file",
+            "type": "string"
+          },
+          "cert_usage": {
+            "$ref": "#/components/schemas/CertUsage"
+          },
+          "enabled": {
+            "description": "Enable certificate trust list",
+            "type": "boolean"
+          },
+          "id": {
+            "description": "ID of the certificate trust list",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "title": "CertTrustList",
+        "type": "object"
+      },
+      "CertTrustListCreate": {
+        "properties": {
+          "cert_file": {
+            "description": "Certificate trust list file",
+            "type": "string"
+          },
+          "cert_usage": {
+            "$ref": "#/components/schemas/CertUsage"
+          },
+          "enabled": {
+            "description": "Enable certificate trust list",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "cert_file",
+          "cert_usage"
+        ],
+        "title": "CertTrustListCreate",
+        "type": "object"
+      },
+      "CertTrustListDetails": {
+        "properties": {
+          "cert_usage": {
+            "description": "Usage of the certificate",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "enabled": {
+            "description": "Enable certificate trust list",
+            "type": "boolean"
+          },
+          "expiry_date": {
+            "description": "Expiry Date of certificate trust list",
+            "type": "string"
+          },
+          "id": {
+            "description": "ID of the certificate trust list",
+            "format": "int64",
+            "type": "integer"
+          },
+          "issue_date": {
+            "description": "Issue Date of certificate trust list",
+            "type": "string"
+          },
+          "issuer_DN": {
+            "description": "Issuer DN of certificate trust list",
+            "type": "string"
+          },
+          "public_key_format": {
+            "description": "public key format of certificate trust list",
+            "type": "string"
+          },
+          "serial_number": {
+            "description": "Serial number of certificate trust list",
+            "type": "string"
+          },
+          "signature_algorithm": {
+            "description": "Signature algorithm of certificate trust list",
+            "type": "string"
+          },
+          "subject_DN": {
+            "description": "Subject DN of the certificate trust list",
+            "type": "string"
+          },
+          "valid": {
+            "description": "Valid status of certificate trust list",
+            "type": "string"
+          }
+        },
+        "title": "CertTrustListDetails",
+        "type": "object"
+      },
+      "CertTrustListDetailsItems": {
+        "properties": {
+          "items": {
+            "description": "List of items matching the filter",
+            "items": {
+              "$ref": "#/components/schemas/CertTrustListDetailsResult"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "CertTrustListDetailsItems",
+        "type": "object"
+      },
+      "CertTrustListDetailsList": {
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/CertTrustListDetailsItems"
+          },
+          "_links": {
+            "$ref": "#/components/schemas/HalLinks"
+          },
+          "count": {
+            "description": "Total number of items matching the filter; returned if calculate_count is true",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "_embedded",
+          "_links"
+        ],
+        "title": "CertTrustListDetailsList",
+        "type": "object"
+      },
+      "CertTrustListDetailsResult": {
+        "properties": {
+          "cert_usage": {
+            "description": "Usage of the certificate",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "enabled": {
+            "description": "Enable certificate trust list",
+            "type": "boolean"
+          },
+          "expiry_date": {
+            "description": "Expiry Date of certificate trust list",
+            "type": "string"
+          },
+          "id": {
+            "description": "ID of the certificate trust list",
+            "format": "int64",
+            "type": "integer"
+          },
+          "issue_date": {
+            "description": "Issue Date of certificate trust list",
+            "type": "string"
+          },
+          "issuer_DN": {
+            "description": "Issuer DN of certificate trust list",
+            "type": "string"
+          },
+          "public_key_format": {
+            "description": "public key format of certificate trust list",
+            "type": "string"
+          },
+          "serial_number": {
+            "description": "Serial number of certificate trust list",
+            "type": "string"
+          },
+          "signature_algorithm": {
+            "description": "Signature algorithm of certificate trust list",
+            "type": "string"
+          },
+          "subject_DN": {
+            "description": "Subject DN of the certificate trust list",
+            "type": "string"
+          },
+          "valid": {
+            "description": "Valid status of certificate trust list",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "subject_DN",
+          "issuer_DN",
+          "issue_date",
+          "expiry_date",
+          "enabled",
+          "valid",
+          "signature_algorithm",
+          "public_key_format",
+          "serial_number",
+          "cert_usage"
+        ],
+        "title": "CertTrustListDetailsResult",
+        "type": "object"
+      },
+      "CertTrustListItems": {
+        "properties": {
+          "items": {
+            "description": "List of items matching the filter",
+            "items": {
+              "$ref": "#/components/schemas/CertTrustListResult"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "CertTrustListItems",
+        "type": "object"
+      },
+      "CertTrustListList": {
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/CertTrustListItems"
+          },
+          "_links": {
+            "$ref": "#/components/schemas/HalLinks"
+          },
+          "count": {
+            "description": "Total number of items matching the filter; returned if calculate_count is true",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "_embedded",
+          "_links"
+        ],
+        "title": "CertTrustListList",
+        "type": "object"
+      },
+      "CertTrustListResult": {
+        "properties": {
+          "cert_file": {
+            "description": "Certificate trust list file",
+            "type": "string"
+          },
+          "cert_usage": {
+            "$ref": "#/components/schemas/CertUsage"
+          },
+          "enabled": {
+            "description": "Enable certificate trust list",
+            "type": "boolean"
+          },
+          "id": {
+            "description": "ID of the certificate trust list",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "cert_file",
+          "enabled",
+          "cert_usage"
+        ],
+        "title": "CertTrustListResult",
+        "type": "object"
+      },
+      "CertTrustListUpdate": {
+        "properties": {
+          "cert_file": {
+            "description": "Certificate trust list file",
+            "type": "string"
+          },
+          "cert_usage": {
+            "$ref": "#/components/schemas/CertUsage"
+          },
+          "enabled": {
+            "description": "Enable certificate trust list",
+            "type": "boolean"
+          }
+        },
+        "title": "CertTrustListUpdate",
+        "type": "object"
+      },
+      "CertUsage": {
+        "description": "Usage of the certificate",
+        "enum": [
+          "AD/LDAP Servers",
+          "Aruba Infrastructure",
+          "Aruba Services",
+          "Database",
+          "EAP",
+          "Endpoint Context Servers",
+          "RadSec",
+          "SAML",
+          "SMTP",
+          "EST",
+          "Others"
+        ],
+        "example": "AD/LDAP Servers",
+        "items": {},
+        "title": "CertUsage",
+        "type": "array"
+      },
+      "CertificateType": {
+        "description": "Certificate Type",
+        "enum": [
+          "SERVER",
+          "SERVICE"
+        ],
+        "example": "SERVER",
+        "title": "CertificateType",
+        "type": "string"
+      },
+      "ClientCert": {
+        "properties": {
+          "cert_file": {
+            "description": "Certificate File",
+            "type": "string"
+          },
+          "certificate_url": {
+            "description": "Certificate File URL",
+            "type": "string"
+          },
+          "expiry_date": {
+            "description": "Expiry date of the client certificate ",
+            "type": "string"
+          },
+          "id": {
+            "description": "Numeric ID of the client certificate ",
+            "format": "int64",
+            "type": "integer"
+          },
+          "intermediate_ca_cert": {
+            "description": "Intermediate CA Certificate",
+            "type": "object"
+          },
+          "issue_by": {
+            "description": "Client certificate issued by",
+            "type": "string"
+          },
+          "issue_date": {
+            "description": "Issue date of the client certificate",
+            "type": "string"
+          },
+          "pkcs12_file_url": {
+            "description": "PKCS12 File URL",
+            "type": "string"
+          },
+          "pkcs12_passphrase": {
+            "description": "PKCS12 passphrase",
+            "type": "string"
+          },
+          "root_ca_cert": {
+            "description": "Root CA Certificate",
+            "type": "object"
+          },
+          "subject": {
+            "description": "Subject of the client certificate ",
+            "type": "string"
+          },
+          "validity": {
+            "description": "Validity of the client certificate ",
+            "type": "string"
+          }
+        },
+        "title": "ClientCert",
+        "type": "object"
+      },
+      "ClientCertCreate": {
+        "properties": {
+          "certificate_url": {
+            "description": "Certificate File URL",
+            "type": "string"
+          },
+          "pkcs12_file_url": {
+            "description": "PKCS12 File URL",
+            "type": "string"
+          },
+          "pkcs12_passphrase": {
+            "description": "PKCS12 passphrase",
+            "type": "string"
+          }
+        },
+        "title": "ClientCertCreate",
+        "type": "object"
+      },
+      "ClientCertItems": {
+        "properties": {
+          "items": {
+            "description": "List of items matching the filter",
+            "items": {
+              "$ref": "#/components/schemas/ClientCertResult"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ClientCertItems",
+        "type": "object"
+      },
+      "ClientCertList": {
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/ClientCertItems"
+          },
+          "_links": {
+            "$ref": "#/components/schemas/HalLinks"
+          },
+          "count": {
+            "description": "Total number of items matching the filter; returned if calculate_count is true",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "_embedded",
+          "_links"
+        ],
+        "title": "ClientCertList",
+        "type": "object"
+      },
+      "ClientCertResult": {
+        "properties": {
+          "cert_file": {
+            "description": "Certificate File",
+            "type": "string"
+          },
+          "expiry_date": {
+            "description": "Expiry date of the client certificate ",
+            "type": "string"
+          },
+          "id": {
+            "description": "Numeric ID of the client certificate ",
+            "format": "int64",
+            "type": "integer"
+          },
+          "intermediate_ca_cert": {
+            "description": "Intermediate CA Certificate",
+            "type": "object"
+          },
+          "issue_by": {
+            "description": "Client certificate issued by",
+            "type": "string"
+          },
+          "issue_date": {
+            "description": "Issue date of the client certificate",
+            "type": "string"
+          },
+          "root_ca_cert": {
+            "description": "Root CA Certificate",
+            "type": "object"
+          },
+          "subject": {
+            "description": "Subject of the client certificate ",
+            "type": "string"
+          },
+          "validity": {
+            "description": "Validity of the client certificate ",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "subject",
+          "expiry_date",
+          "issue_date",
+          "issue_by",
+          "validity",
+          "root_ca_cert",
+          "intermediate_ca_cert",
+          "cert_file"
+        ],
+        "title": "ClientCertResult",
+        "type": "object"
+      },
+      "DigestAlgorithm": {
+        "description": "Digest Algorithm",
+        "enum": [
+          "SHA-1",
+          "SHA-224",
+          "SHA-256",
+          "SHA-384",
+          "SHA-512"
+        ],
+        "example": "SHA-1",
+        "title": "DigestAlgorithm",
+        "type": "string"
+      },
+      "HalLinks": {
+        "properties": {
+          "first": {
+            "description": "URL of first page of results",
+            "type": "string"
+          },
+          "last": {
+            "description": "URL of last page of results",
+            "type": "string"
+          },
+          "next": {
+            "description": "URL of next page of results",
+            "type": "string"
+          },
+          "prev": {
+            "description": "URL of previous page of results",
+            "type": "string"
+          },
+          "self": {
+            "description": "URL of result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "self",
+          "first"
+        ],
+        "title": "HalLinks",
+        "type": "object"
+      },
+      "PrivateKeyType": {
+        "description": "Private Key Type",
+        "enum": [
+          "2048-bit rsa",
+          "3072-bit rsa",
+          "4096-bit rsa",
+          "nist/secg curve over a 256 bit prime field",
+          "nist/secg curve over a 384 bit prime field",
+          "nist/secg curve over a 521 bit prime field"
+        ],
+        "example": "2048-bit rsa",
+        "title": "PrivateKeyType",
+        "type": "string"
+      },
+      "RevocationList": {
+        "properties": {
+          "bypass_proxy": {
+            "description": "Bypass Proxy status of the Certificate",
+            "type": "boolean"
+          },
+          "id": {
+            "description": "Numeric ID of the Certificate",
+            "format": "int64",
+            "type": "integer"
+          },
+          "last_update_status": {
+            "description": "Last updated status",
+            "type": "string"
+          },
+          "last_updated_time": {
+            "description": "Last updated time",
+            "type": "string"
+          },
+          "next_updated_time": {
+            "description": "Next update time",
+            "type": "string"
+          },
+          "periodic_update": {
+            "description": "Periodic Update status of the Certificate",
+            "type": "boolean"
+          },
+          "periodic_update_interval": {
+            "description": "Periodic update time of the Certificate",
+            "format": "int64",
+            "type": "integer"
+          },
+          "url": {
+            "description": "URL of the Certificate",
+            "type": "string"
+          }
+        },
+        "title": "RevocationList",
+        "type": "object"
+      },
+      "RevocationListCreate": {
+        "properties": {
+          "bypass_proxy": {
+            "description": "Bypass Proxy status of the Certificate",
+            "type": "boolean"
+          },
+          "last_update_status": {
+            "description": "Last updated status",
+            "type": "string"
+          },
+          "last_updated_time": {
+            "description": "Last updated time",
+            "type": "string"
+          },
+          "next_updated_time": {
+            "description": "Next update time",
+            "type": "string"
+          },
+          "periodic_update": {
+            "description": "Periodic Update status of the Certificate",
+            "type": "boolean"
+          },
+          "periodic_update_interval": {
+            "description": "Periodic update time of the Certificate",
+            "format": "int64",
+            "type": "integer"
+          },
+          "url": {
+            "description": "URL of the Certificate",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "RevocationListCreate",
+        "type": "object"
+      },
+      "RevocationListItems": {
+        "properties": {
+          "items": {
+            "description": "List of items matching the filter",
+            "items": {
+              "$ref": "#/components/schemas/RevocationListResult"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "RevocationListItems",
+        "type": "object"
+      },
+      "RevocationListList": {
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/RevocationListItems"
+          },
+          "_links": {
+            "$ref": "#/components/schemas/HalLinks"
+          },
+          "count": {
+            "description": "Total number of items matching the filter; returned if calculate_count is true",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "_embedded",
+          "_links"
+        ],
+        "title": "RevocationListList",
+        "type": "object"
+      },
+      "RevocationListResult": {
+        "properties": {
+          "bypass_proxy": {
+            "description": "Bypass Proxy status of the Certificate",
+            "type": "boolean"
+          },
+          "id": {
+            "description": "Numeric ID of the Certificate",
+            "format": "int64",
+            "type": "integer"
+          },
+          "last_update_status": {
+            "description": "Last updated status",
+            "type": "string"
+          },
+          "last_updated_time": {
+            "description": "Last updated time",
+            "type": "string"
+          },
+          "next_updated_time": {
+            "description": "Next update time",
+            "type": "string"
+          },
+          "periodic_update": {
+            "description": "Periodic Update status of the Certificate",
+            "type": "boolean"
+          },
+          "periodic_update_interval": {
+            "description": "Periodic update time of the Certificate",
+            "format": "int64",
+            "type": "integer"
+          },
+          "url": {
+            "description": "URL of the Certificate",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "bypass_proxy",
+          "periodic_update",
+          "periodic_update_interval",
+          "last_update_status",
+          "last_updated_time",
+          "next_updated_time"
+        ],
+        "title": "RevocationListResult",
+        "type": "object"
+      },
+      "RevocationListUpdate": {
+        "properties": {
+          "bypass_proxy": {
+            "description": "Bypass Proxy status of the Certificate",
+            "type": "boolean"
+          },
+          "last_update_status": {
+            "description": "Last updated status",
+            "type": "string"
+          },
+          "last_updated_time": {
+            "description": "Last updated time",
+            "type": "string"
+          },
+          "next_updated_time": {
+            "description": "Next update time",
+            "type": "string"
+          },
+          "periodic_update": {
+            "description": "Periodic Update status of the Certificate",
+            "type": "boolean"
+          },
+          "periodic_update_interval": {
+            "description": "Periodic update time of the Certificate",
+            "format": "int64",
+            "type": "integer"
+          },
+          "url": {
+            "description": "URL of the Certificate",
+            "type": "string"
+          }
+        },
+        "title": "RevocationListUpdate",
+        "type": "object"
+      },
+      "SelfSignedCert": {
+        "properties": {
+          "certificate_type": {
+            "$ref": "#/components/schemas/CertificateType"
+          },
+          "digest_algorithm": {
+            "$ref": "#/components/schemas/DigestAlgorithm"
+          },
+          "private_key_password": {
+            "description": "Private Key Password",
+            "type": "string"
+          },
+          "private_key_type": {
+            "$ref": "#/components/schemas/PrivateKeyType"
+          },
+          "server": {
+            "description": "Server hostname",
+            "type": "string"
+          },
+          "subject_C": {
+            "description": "Country (C)",
+            "type": "string"
+          },
+          "subject_CN": {
+            "description": "Common Name (CN)",
+            "type": "string"
+          },
+          "subject_L": {
+            "description": "Location (L)",
+            "type": "string"
+          },
+          "subject_O": {
+            "description": "Organization (O)",
+            "type": "string"
+          },
+          "subject_OU": {
+            "description": "Organizational Unit (OU)",
+            "type": "string"
+          },
+          "subject_SAN": {
+            "description": "Subject Alternate Name (SAN)",
+            "type": "string"
+          },
+          "subject_ST": {
+            "description": "State (ST)",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/Type"
+          }
+        },
+        "title": "SelfSignedCert",
+        "type": "object"
+      },
+      "SelfSignedCertCreate": {
+        "properties": {
+          "certificate_type": {
+            "$ref": "#/components/schemas/CertificateType"
+          },
+          "digest_algorithm": {
+            "$ref": "#/components/schemas/DigestAlgorithm"
+          },
+          "private_key_password": {
+            "description": "Private Key Password",
+            "type": "string"
+          },
+          "private_key_type": {
+            "$ref": "#/components/schemas/PrivateKeyType"
+          },
+          "server": {
+            "description": "Server hostname",
+            "type": "string"
+          },
+          "subject_C": {
+            "description": "Country (C)",
+            "type": "string"
+          },
+          "subject_CN": {
+            "description": "Common Name (CN)",
+            "type": "string"
+          },
+          "subject_L": {
+            "description": "Location (L)",
+            "type": "string"
+          },
+          "subject_O": {
+            "description": "Organization (O)",
+            "type": "string"
+          },
+          "subject_OU": {
+            "description": "Organizational Unit (OU)",
+            "type": "string"
+          },
+          "subject_SAN": {
+            "description": "Subject Alternate Name (SAN)",
+            "type": "string"
+          },
+          "subject_ST": {
+            "description": "State (ST)",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/Type"
+          }
+        },
+        "required": [
+          "certificate_type",
+          "server",
+          "type",
+          "subject_CN",
+          "private_key_password",
+          "private_key_type",
+          "digest_algorithm"
+        ],
+        "title": "SelfSignedCertCreate",
+        "type": "object"
+      },
+      "SelfSignedCertItems": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SelfSignedCertResult"
+            }
+          }
+        },
+        "title": "SelfSignedCertItems",
+        "type": "object"
+      },
+      "SelfSignedCertResult": {
+        "properties": {
+          "certificate_type": {
+            "$ref": "#/components/schemas/CertificateType"
+          },
+          "digest_algorithm": {
+            "$ref": "#/components/schemas/DigestAlgorithm"
+          },
+          "private_key_password": {
+            "description": "Private Key Password",
+            "type": "string"
+          },
+          "private_key_type": {
+            "$ref": "#/components/schemas/PrivateKeyType"
+          },
+          "server": {
+            "description": "Server hostname",
+            "type": "string"
+          },
+          "subject_C": {
+            "description": "Country (C)",
+            "type": "string"
+          },
+          "subject_CN": {
+            "description": "Common Name (CN)",
+            "type": "string"
+          },
+          "subject_L": {
+            "description": "Location (L)",
+            "type": "string"
+          },
+          "subject_O": {
+            "description": "Organization (O)",
+            "type": "string"
+          },
+          "subject_OU": {
+            "description": "Organizational Unit (OU)",
+            "type": "string"
+          },
+          "subject_SAN": {
+            "description": "Subject Alternate Name (SAN)",
+            "type": "string"
+          },
+          "subject_ST": {
+            "description": "State (ST)",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/Type"
+          }
+        },
+        "required": [
+          "certificate_type",
+          "server",
+          "type",
+          "subject_CN",
+          "private_key_password",
+          "private_key_type",
+          "digest_algorithm"
+        ],
+        "title": "SelfSignedCertResult",
+        "type": "object"
+      },
+      "ServerCert": {
+        "properties": {
+          "cert_file": {
+            "description": "Certificate File",
+            "type": "string"
+          },
+          "certificate_type": {
+            "description": "Type of the server certificate",
+            "type": "string"
+          },
+          "certificate_url": {
+            "description": "Certificate File URL",
+            "type": "string"
+          },
+          "enabled": {
+            "description": "Enabled State of the certificate.",
+            "type": "boolean"
+          },
+          "expiry_date": {
+            "description": "Expiry date of the server certificate ",
+            "type": "string"
+          },
+          "intermediate_ca_cert": {
+            "description": "Intermediate CA Certificate",
+            "items": {},
+            "type": "array"
+          },
+          "issue_by": {
+            "description": "server certificate issued by",
+            "type": "string"
+          },
+          "issue_date": {
+            "description": "Issue date of the server certificate",
+            "type": "string"
+          },
+          "pkcs12_file_url": {
+            "description": "PKCS12 File URL",
+            "type": "string"
+          },
+          "pkcs12_passphrase": {
+            "description": "PKCS12 passphrase",
+            "type": "string"
+          },
+          "public_key_algorithm": {
+            "description": "Public Key Algorithm of Certificate.",
+            "type": "string"
+          },
+          "root_ca_cert": {
+            "description": "Root CA Certificate",
+            "type": "object"
+          },
+          "service_id": {
+            "description": "Service ID of the server certificate(1-RADIUS server cert, 2-HTTPS(ECC) server cert, 7-HTTPS(RSA) server cert,21-RadSec server cert and 106-Database server cert)",
+            "format": "int64",
+            "type": "integer"
+          },
+          "service_name": {
+            "description": "Service Name of the server certificate(RADIUS, HTTPS(ECC), HTTPS(RSA), RadSec or Database)",
+            "type": "string"
+          },
+          "subject": {
+            "description": "Subject of the server certificate ",
+            "type": "string"
+          },
+          "validity": {
+            "description": "Validity of the server certificate ",
+            "type": "string"
+          }
+        },
+        "title": "ServerCert",
+        "type": "object"
+      },
+      "ServerCertItems": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ServerCertResult"
+            }
+          }
+        },
+        "title": "ServerCertItems",
+        "type": "object"
+      },
+      "ServerCertReplace": {
+        "properties": {
+          "certificate_url": {
+            "description": "Certificate File URL",
+            "type": "string"
+          },
+          "pkcs12_file_url": {
+            "description": "PKCS12 File URL",
+            "type": "string"
+          },
+          "pkcs12_passphrase": {
+            "description": "PKCS12 passphrase",
+            "type": "string"
+          }
+        },
+        "title": "ServerCertReplace",
+        "type": "object"
+      },
+      "ServerCertResult": {
+        "properties": {
+          "cert_file": {
+            "description": "Certificate File",
+            "type": "string"
+          },
+          "certificate_type": {
+            "description": "Type of the server certificate",
+            "type": "string"
+          },
+          "enabled": {
+            "description": "Enabled State of the certificate.",
+            "type": "boolean"
+          },
+          "expiry_date": {
+            "description": "Expiry date of the server certificate ",
+            "type": "string"
+          },
+          "intermediate_ca_cert": {
+            "description": "Intermediate CA Certificate",
+            "items": {},
+            "type": "array"
+          },
+          "issue_by": {
+            "description": "server certificate issued by",
+            "type": "string"
+          },
+          "issue_date": {
+            "description": "Issue date of the server certificate",
+            "type": "string"
+          },
+          "public_key_algorithm": {
+            "description": "Public Key Algorithm of Certificate.",
+            "type": "string"
+          },
+          "root_ca_cert": {
+            "description": "Root CA Certificate",
+            "type": "object"
+          },
+          "service_id": {
+            "description": "Service ID of the server certificate(1-RADIUS server cert, 2-HTTPS(ECC) server cert, 7-HTTPS(RSA) server cert,21-RadSec server cert and 106-Database server cert)",
+            "format": "int64",
+            "type": "integer"
+          },
+          "service_name": {
+            "description": "Service Name of the server certificate(RADIUS, HTTPS(ECC), HTTPS(RSA), RadSec or Database)",
+            "type": "string"
+          },
+          "subject": {
+            "description": "Subject of the server certificate ",
+            "type": "string"
+          },
+          "validity": {
+            "description": "Validity of the server certificate ",
+            "type": "string"
+          }
+        },
+        "required": [
+          "service_id",
+          "service_name",
+          "certificate_type",
+          "subject",
+          "expiry_date",
+          "issue_date",
+          "issue_by",
+          "validity",
+          "root_ca_cert",
+          "intermediate_ca_cert",
+          "cert_file"
+        ],
+        "title": "ServerCertResult",
+        "type": "object"
+      },
+      "ServerCertUpdate": {
+        "properties": {
+          "cert_file": {
+            "description": "Certificate File",
+            "type": "string"
+          },
+          "certificate_type": {
+            "description": "Type of the server certificate",
+            "type": "string"
+          },
+          "certificate_url": {
+            "description": "Certificate File URL",
+            "type": "string"
+          },
+          "enabled": {
+            "description": "Enabled State of the certificate.",
+            "type": "boolean"
+          },
+          "expiry_date": {
+            "description": "Expiry date of the server certificate ",
+            "type": "string"
+          },
+          "intermediate_ca_cert": {
+            "description": "Intermediate CA Certificate",
+            "items": {},
+            "type": "array"
+          },
+          "issue_by": {
+            "description": "server certificate issued by",
+            "type": "string"
+          },
+          "issue_date": {
+            "description": "Issue date of the server certificate",
+            "type": "string"
+          },
+          "pkcs12_file_url": {
+            "description": "PKCS12 File URL",
+            "type": "string"
+          },
+          "pkcs12_passphrase": {
+            "description": "PKCS12 passphrase",
+            "type": "string"
+          },
+          "public_key_algorithm": {
+            "description": "Public Key Algorithm of Certificate.",
+            "type": "string"
+          },
+          "root_ca_cert": {
+            "description": "Root CA Certificate",
+            "type": "object"
+          },
+          "service_id": {
+            "description": "Service ID of the server certificate(1-RADIUS server cert, 2-HTTPS(ECC) server cert, 7-HTTPS(RSA) server cert,21-RadSec server cert and 106-Database server cert)",
+            "format": "int64",
+            "type": "integer"
+          },
+          "service_name": {
+            "description": "Service Name of the server certificate(RADIUS, HTTPS(ECC), HTTPS(RSA), RadSec or Database)",
+            "type": "string"
+          },
+          "subject": {
+            "description": "Subject of the server certificate ",
+            "type": "string"
+          },
+          "validity": {
+            "description": "Validity of the server certificate ",
+            "type": "string"
+          }
+        },
+        "title": "ServerCertUpdate",
+        "type": "object"
+      },
+      "ServiceCert": {
+        "properties": {
+          "cert_file": {
+            "description": "Certificate File",
+            "type": "string"
+          },
+          "certificate_url": {
+            "description": "Certificate File URL",
+            "type": "string"
+          },
+          "expiry_date": {
+            "description": "Expiry date of the service certificate ",
+            "type": "string"
+          },
+          "id": {
+            "description": "Numeric ID of the service certificate ",
+            "format": "int64",
+            "type": "integer"
+          },
+          "intermediate_ca_cert": {
+            "description": "Intermediate CA Certificate",
+            "type": "object"
+          },
+          "issue_by": {
+            "description": "Service certificate issued by",
+            "type": "string"
+          },
+          "issue_date": {
+            "description": "Issue date of the service certificate",
+            "type": "string"
+          },
+          "pkcs12_file_url": {
+            "description": "PKCS12 File URL",
+            "type": "string"
+          },
+          "pkcs12_passphrase": {
+            "description": "PKCS12 passphrase",
+            "type": "string"
+          },
+          "root_ca_cert": {
+            "description": "Root CA Certificate",
+            "type": "object"
+          },
+          "subject": {
+            "description": "Subject of the service certificate ",
+            "type": "string"
+          },
+          "validity": {
+            "description": "Validity of the service certificate ",
+            "type": "string"
+          }
+        },
+        "title": "ServiceCert",
+        "type": "object"
+      },
+      "ServiceCertCreate": {
+        "properties": {
+          "certificate_url": {
+            "description": "Certificate File URL",
+            "type": "string"
+          },
+          "pkcs12_file_url": {
+            "description": "PKCS12 File URL",
+            "type": "string"
+          },
+          "pkcs12_passphrase": {
+            "description": "PKCS12 passphrase",
+            "type": "string"
+          }
+        },
+        "title": "ServiceCertCreate",
+        "type": "object"
+      },
+      "ServiceCertItems": {
+        "properties": {
+          "items": {
+            "description": "List of items matching the filter",
+            "items": {
+              "$ref": "#/components/schemas/ServiceCertResult"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ServiceCertItems",
+        "type": "object"
+      },
+      "ServiceCertList": {
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/ServiceCertItems"
+          },
+          "_links": {
+            "$ref": "#/components/schemas/HalLinks"
+          },
+          "count": {
+            "description": "Total number of items matching the filter; returned if calculate_count is true",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "_embedded",
+          "_links"
+        ],
+        "title": "ServiceCertList",
+        "type": "object"
+      },
+      "ServiceCertResult": {
+        "properties": {
+          "cert_file": {
+            "description": "Certificate File",
+            "type": "string"
+          },
+          "expiry_date": {
+            "description": "Expiry date of the service certificate ",
+            "type": "string"
+          },
+          "id": {
+            "description": "Numeric ID of the service certificate ",
+            "format": "int64",
+            "type": "integer"
+          },
+          "intermediate_ca_cert": {
+            "description": "Intermediate CA Certificate",
+            "type": "object"
+          },
+          "issue_by": {
+            "description": "Service certificate issued by",
+            "type": "string"
+          },
+          "issue_date": {
+            "description": "Issue date of the service certificate",
+            "type": "string"
+          },
+          "root_ca_cert": {
+            "description": "Root CA Certificate",
+            "type": "object"
+          },
+          "subject": {
+            "description": "Subject of the service certificate ",
+            "type": "string"
+          },
+          "validity": {
+            "description": "Validity of the service certificate ",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "subject",
+          "expiry_date",
+          "issue_date",
+          "issue_by",
+          "validity",
+          "root_ca_cert",
+          "intermediate_ca_cert",
+          "cert_file"
+        ],
+        "title": "ServiceCertResult",
+        "type": "object"
+      },
+      "Type": {
+        "description": "Service Type",
+        "enum": [
+          "RADIUS/EAP Server Certificate",
+          "HTTPS(ECC) Server Certificate",
+          "HTTPS(RSA) Server Certificate",
+          "RadSec Server Certificate",
+          "Database Server Certificate"
+        ],
+        "example": "RADIUS/EAP Server Certificate",
+        "title": "Type",
+        "type": "string"
+      }
+    }
+  },
+  "info": {
+    "contact": {},
+    "title": "Platform Certificates",
+    "version": "6.12.7"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/cert-sign-request": {
+      "post": {
+        "deprecated": false,
+        "description": "Post a certificate sign request",
+        "operationId": "CertSignRequestPost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertSignRequestCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertSignRequestResult"
+                }
+              }
+            },
+            "description": "Created",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Post a certificate sign request",
+        "tags": [
+          "CertSignRequest"
+        ]
+      }
+    },
+    "/cert-trust-list": {
+      "get": {
+        "deprecated": false,
+        "description": "Get a list of certificate trust list. ",
+        "operationId": "CertTrustListGet",
+        "parameters": [
+          {
+            "description": "JSON filter expression specifying the items to return",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "default": "{}",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort ordering for returned items (default +id)",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "+id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Zero based offset to start from",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": "0",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Maximum number of items to return (1 – 1000)",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": "25",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Whether to calculate the total item count",
+            "in": "query",
+            "name": "calculate_count",
+            "required": false,
+            "schema": {
+              "default": "false",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertTrustListResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Get a list of certificate trust list",
+        "tags": [
+          "CertTrustList"
+        ]
+      },
+      "post": {
+        "deprecated": false,
+        "description": "Add a new certificate trust list",
+        "operationId": "CertTrustListPost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertTrustListCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertTrustListResult"
+                }
+              }
+            },
+            "description": "Created",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Add a new certificate trust list",
+        "tags": [
+          "CertTrustList"
+        ]
+      }
+    },
+    "/cert-trust-list-details": {
+      "get": {
+        "deprecated": false,
+        "description": "Get a list of certificate trust list details. ",
+        "operationId": "CertTrustListDetailsGet",
+        "parameters": [
+          {
+            "description": "JSON filter expression specifying the items to return",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "default": "{}",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort ordering for returned items (default +id)",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "+id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Zero based offset to start from",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": "0",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Maximum number of items to return (1 – 1000)",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": "25",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Whether to calculate the total item count",
+            "in": "query",
+            "name": "calculate_count",
+            "required": false,
+            "schema": {
+              "default": "false",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertTrustListDetailsResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Get a list of certificate trust list details",
+        "tags": [
+          "CertTrustListDetails"
+        ]
+      }
+    },
+    "/cert-trust-list-details/{cert_trust_list_details_id}": {
+      "get": {
+        "deprecated": false,
+        "description": "Get a certificate trust list details",
+        "operationId": "CertTrustListDetailsByCert_trust_list_details_idGet",
+        "parameters": [
+          {
+            "description": "URL parameter cert_trust_list_details_id",
+            "in": "path",
+            "name": "cert_trust_list_details_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertTrustListDetailsResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get a certificate trust list details",
+        "tags": [
+          "CertTrustListDetails"
+        ]
+      }
+    },
+    "/cert-trust-list/{cert_trust_list_id}": {
+      "delete": {
+        "deprecated": false,
+        "description": "Delete a certificate trust list",
+        "operationId": "CertTrustListByCert_trust_list_idDelete",
+        "parameters": [
+          {
+            "description": "URL parameter cert_trust_list_id",
+            "in": "path",
+            "name": "cert_trust_list_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Delete a certificate trust list",
+        "tags": [
+          "CertTrustList"
+        ]
+      },
+      "get": {
+        "deprecated": false,
+        "description": "Get a certificate trust list",
+        "operationId": "CertTrustListByCert_trust_list_idGet",
+        "parameters": [
+          {
+            "description": "URL parameter cert_trust_list_id",
+            "in": "path",
+            "name": "cert_trust_list_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertTrustListResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get a certificate trust list",
+        "tags": [
+          "CertTrustList"
+        ]
+      },
+      "patch": {
+        "deprecated": false,
+        "description": "Enbale certificate trust list",
+        "operationId": "CertTrustListByCert_trust_list_idPatch",
+        "parameters": [
+          {
+            "description": "URL parameter cert_trust_list_id",
+            "in": "path",
+            "name": "cert_trust_list_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertTrustListUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertTrustListResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Enbale certificate trust list",
+        "tags": [
+          "CertTrustList"
+        ]
+      }
+    },
+    "/client-cert": {
+      "get": {
+        "deprecated": false,
+        "description": "Get a list of client certificates. ",
+        "operationId": "ClientCertGet",
+        "parameters": [
+          {
+            "description": "JSON filter expression specifying the items to return",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "default": "{}",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort ordering for returned items (default +id)",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "+id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Zero based offset to start from",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": "0",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Maximum number of items to return (1 – 1000)",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": "25",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Whether to calculate the total item count",
+            "in": "query",
+            "name": "calculate_count",
+            "required": false,
+            "schema": {
+              "default": "false",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientCertList"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Get a list of client certificates",
+        "tags": [
+          "ClientCert"
+        ]
+      },
+      "post": {
+        "deprecated": false,
+        "description": "Add a client certificate",
+        "operationId": "ClientCertPost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientCertCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientCertResult"
+                }
+              }
+            },
+            "description": "Created",
+            "headers": {}
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Add a client certificate",
+        "tags": [
+          "ClientCert"
+        ]
+      }
+    },
+    "/client-cert/{client_cert_id}": {
+      "delete": {
+        "deprecated": false,
+        "description": "Delete a client certificate",
+        "operationId": "ClientCertByClient_cert_idDelete",
+        "parameters": [
+          {
+            "description": "URL parameter client_cert_id",
+            "in": "path",
+            "name": "client_cert_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Delete a client certificate",
+        "tags": [
+          "ClientCert"
+        ]
+      },
+      "get": {
+        "deprecated": false,
+        "description": "Get a client certificate",
+        "operationId": "ClientCertByClient_cert_idGet",
+        "parameters": [
+          {
+            "description": "URL parameter client_cert_id",
+            "in": "path",
+            "name": "client_cert_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientCertResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get a client certificate",
+        "tags": [
+          "ClientCert"
+        ]
+      }
+    },
+    "/revocation-list": {
+      "get": {
+        "deprecated": false,
+        "description": "Get a list of revocation certificate list. ",
+        "operationId": "RevocationListGet",
+        "parameters": [
+          {
+            "description": "JSON filter expression specifying the items to return",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "default": "{}",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort ordering for returned items (default +id)",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "+id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Zero based offset to start from",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": "0",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Maximum number of items to return (1 – 1000)",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": "25",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Whether to calculate the total item count",
+            "in": "query",
+            "name": "calculate_count",
+            "required": false,
+            "schema": {
+              "default": "false",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevocationListResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Get a list of revocation certificate list",
+        "tags": [
+          "RevocationList"
+        ]
+      },
+      "post": {
+        "deprecated": false,
+        "description": "Add a new revocation certificate list",
+        "operationId": "RevocationListPost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevocationListCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevocationListResult"
+                }
+              }
+            },
+            "description": "Created",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Add a new revocation certificate list",
+        "tags": [
+          "RevocationList"
+        ]
+      }
+    },
+    "/revocation-list/{revocation_list_id}": {
+      "delete": {
+        "deprecated": false,
+        "description": "Delete a certificate list by id",
+        "operationId": "RevocationListByRevocation_list_idDelete",
+        "parameters": [
+          {
+            "description": "URL parameter revocation_list_id",
+            "in": "path",
+            "name": "revocation_list_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Delete a certificate list by id",
+        "tags": [
+          "RevocationList"
+        ]
+      },
+      "get": {
+        "deprecated": false,
+        "description": "Get a certificate by id",
+        "operationId": "RevocationListByRevocation_list_idGet",
+        "parameters": [
+          {
+            "description": "URL parameter revocation_list_id",
+            "in": "path",
+            "name": "revocation_list_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevocationListResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get a certificate by id",
+        "tags": [
+          "RevocationList"
+        ]
+      },
+      "patch": {
+        "deprecated": false,
+        "description": "Update a certificate",
+        "operationId": "RevocationListByRevocation_list_idPatch",
+        "parameters": [
+          {
+            "description": "URL parameter revocation_list_id",
+            "in": "path",
+            "name": "revocation_list_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevocationListUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevocationListResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Update a certificate",
+        "tags": [
+          "RevocationList"
+        ]
+      }
+    },
+    "/self-signed-cert": {
+      "post": {
+        "deprecated": false,
+        "description": "Create a Self-Signed Certificate",
+        "operationId": "SelfSignedCertPost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelfSignedCertCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SelfSignedCertResult"
+                }
+              }
+            },
+            "description": "Created",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Create a Self-Signed Certificate",
+        "tags": [
+          "SelfSignedCert"
+        ]
+      }
+    },
+    "/server-cert": {
+      "get": {
+        "deprecated": false,
+        "description": "Get a list of server certificates",
+        "operationId": "ServerCertGet",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerCertResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get a list of server certificates",
+        "tags": [
+          "ServerCert"
+        ]
+      }
+    },
+    "/server-cert/name/{server_uuid}/{service_name}": {
+      "get": {
+        "deprecated": false,
+        "description": "Get a server certificate",
+        "operationId": "ServerCertNameByServer_uuidByService_nameGet",
+        "parameters": [
+          {
+            "description": "UUID of the server",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Service name (RADIUS, HTTPS(RSA), HTTPS(ECC) or RadSec) ",
+            "in": "path",
+            "name": "service_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerCertResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get a server certificate",
+        "tags": [
+          "ServerCert"
+        ]
+      },
+      "put": {
+        "deprecated": false,
+        "description": "Add a server certificate",
+        "operationId": "ServerCertNameByServer_uuidByService_namePut",
+        "parameters": [
+          {
+            "description": "UUID of the server",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Service name (RADIUS, HTTPS(RSA), HTTPS(ECC) or RadSec) ",
+            "in": "path",
+            "name": "service_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServerCertReplace"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerCertResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Add a server certificate",
+        "tags": [
+          "ServerCert"
+        ]
+      }
+    },
+    "/server-cert/name/{server_uuid}/{service_name}/disable": {
+      "patch": {
+        "deprecated": false,
+        "description": "Update a server certificate",
+        "operationId": "ServerCertNameByServer_uuidByService_nameDisablePatch",
+        "parameters": [
+          {
+            "description": "UUID of the server",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Service name (HTTPS(RSA) or HTTPS(ECC)) ",
+            "in": "path",
+            "name": "service_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerCertResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Update a server certificate",
+        "tags": [
+          "ServerCert"
+        ]
+      }
+    },
+    "/server-cert/name/{server_uuid}/{service_name}/enable": {
+      "patch": {
+        "deprecated": false,
+        "description": "Update a server certificate",
+        "operationId": "ServerCertNameByServer_uuidByService_nameEnablePatch",
+        "parameters": [
+          {
+            "description": "UUID of the server",
+            "in": "path",
+            "name": "server_uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Service name (HTTPS(RSA) or HTTPS(ECC)) ",
+            "in": "path",
+            "name": "service_name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerCertResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Update a server certificate",
+        "tags": [
+          "ServerCert"
+        ]
+      }
+    },
+    "/server-cert/{service_id}": {
+      "get": {
+        "deprecated": false,
+        "description": "Get server certificate",
+        "operationId": "ServerCertByService_idGet",
+        "parameters": [
+          {
+            "description": "Unique ID for the service",
+            "in": "path",
+            "name": "service_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerCertResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get server certificate",
+        "tags": [
+          "ServerCert"
+        ]
+      },
+      "patch": {
+        "deprecated": false,
+        "description": "Update a server certificate",
+        "operationId": "ServerCertByService_idPatch",
+        "parameters": [
+          {
+            "description": "URL parameter service_id",
+            "in": "path",
+            "name": "service_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServerCertUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerCertResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Update a server certificate",
+        "tags": [
+          "ServerCert"
+        ]
+      }
+    },
+    "/service-cert": {
+      "get": {
+        "deprecated": false,
+        "description": "Get a list of service certificates. ",
+        "operationId": "ServiceCertGet",
+        "parameters": [
+          {
+            "description": "JSON filter expression specifying the items to return",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "default": "{}",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort ordering for returned items (default +id)",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "+id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Zero based offset to start from",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": "0",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Maximum number of items to return (1 – 1000)",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": "25",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Whether to calculate the total item count",
+            "in": "query",
+            "name": "calculate_count",
+            "required": false,
+            "schema": {
+              "default": "false",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceCertList"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Get a list of service certificates",
+        "tags": [
+          "ServiceCert"
+        ]
+      },
+      "post": {
+        "deprecated": false,
+        "description": "Add a service certificate",
+        "operationId": "ServiceCertPost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceCertCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceCertResult"
+                }
+              }
+            },
+            "description": "Created",
+            "headers": {}
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Add a service certificate",
+        "tags": [
+          "ServiceCert"
+        ]
+      }
+    },
+    "/service-cert/{service_cert_id}": {
+      "delete": {
+        "deprecated": false,
+        "description": "Delete a service certificate",
+        "operationId": "ServiceCertByService_cert_idDelete",
+        "parameters": [
+          {
+            "description": "URL parameter service_cert_id",
+            "in": "path",
+            "name": "service_cert_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Delete a service certificate",
+        "tags": [
+          "ServiceCert"
+        ]
+      },
+      "get": {
+        "deprecated": false,
+        "description": "Get a service certificate",
+        "operationId": "ServiceCertByService_cert_idGet",
+        "parameters": [
+          {
+            "description": "URL parameter service_cert_id",
+            "in": "path",
+            "name": "service_cert_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceCertResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get a service certificate",
+        "tags": [
+          "ServiceCert"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://clearpass-hostname/api"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Manage Certificate Signing Requests",
+      "name": "CertSignRequest"
+    },
+    {
+      "description": "Manage Certificate Trust List",
+      "name": "CertTrustList"
+    },
+    {
+      "description": "Manage Certificate Trust List details",
+      "name": "CertTrustListDetails"
+    },
+    {
+      "description": "Manage Client Certificates",
+      "name": "ClientCert"
+    },
+    {
+      "description": "Manage Revocation Certificate List",
+      "name": "RevocationList"
+    },
+    {
+      "description": "Manage Self-Signed Certificates",
+      "name": "SelfSignedCert"
+    },
+    {
+      "description": "Manage Server Certificates",
+      "name": "ServerCert"
+    },
+    {
+      "description": "Manage Service Certificates",
+      "name": "ServiceCert"
+    }
+  ],
+  "x-explorer-enabled": false,
+  "x-headers": [
+    {
+      "key": "Authorization",
+      "value": "Bearer <TOKEN>"
+    }
+  ],
+  "x-readme": {
+    "proxy-enabled": true
+  }
+}

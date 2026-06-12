@@ -8,10 +8,9 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import WRITE_DELETE
+from hpe_networking_mcp.platforms.clearpass.client import ClearPassClient, get_clearpass_client
 
 _VALID_ACTIONS = (
     "create",
@@ -25,11 +24,11 @@ _VALID_ACTIONS = (
 )
 
 
-async def _resolve_device_id(client, device_id: str | None, name: str | None) -> str | None:
+async def _resolve_device_id(client: ClearPassClient, device_id: str | None, name: str | None) -> str | None:
     """Resolve a network device ID from device_id or name.
 
     Args:
-        client: pyclearpass ApiPolicyElements instance.
+        client: ClearPass API client.
         device_id: Numeric device ID (returned as-is if provided).
         name: Device name to look up.
 
@@ -39,24 +38,13 @@ async def _resolve_device_id(client, device_id: str | None, name: str | None) ->
     if device_id:
         return device_id
     if name:
-        result = client.get_network_device_name_by_name(name=name)
+        result = await client.request("get", f"/network-device/name/{name}")
         if isinstance(result, dict) and "id" in result:
             return str(result["id"])
     return None
 
 
-async def _confirm_action(ctx: Context, action_type: str, device_id: str | None, name: str | None) -> dict | None:
-    """Thin wrapper over :func:`middleware.elicitation.confirm_write`.
-
-    Kept as a local helper so existing call sites don't change; the
-    shared elicitation/decline/cancel logic now lives in the middleware
-    (#148).
-    """
-    identifier = device_id or name or "unknown"
-    return await confirm_write(ctx, f"ClearPass: {action_type} network device '{identifier}'. Confirm?")
-
-
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_network_device(
     ctx: Context,
     action_type: Annotated[
@@ -70,7 +58,13 @@ async def clearpass_manage_network_device(
     device_id: Annotated[str | None, Field(description="Device ID (required for update/delete/configure).")] = None,
     name: Annotated[str | None, Field(description="Device name (alternative to ID for update/delete).")] = None,
     source_device_id: Annotated[str | None, Field(description="Source device ID (required for clone).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, delete, clone, or configure a ClearPass network device (RADIUS/TACACS+ client).
 
@@ -90,7 +84,8 @@ async def clearpass_manage_network_device(
         device_id: Numeric ID. Required for update/delete/configure (or use name).
         name: Name lookup. Alternative to device_id for update/delete.
         source_device_id: Source device ID for clone action.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in _VALID_ACTIONS:
         raise ToolError(
@@ -100,15 +95,8 @@ async def clearpass_manage_network_device(
             }
         )
 
-    if action_type != "create" and not confirmed:
-        decline = await _confirm_action(ctx, action_type, device_id, name)
-        if decline:
-            return decline
-
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
+        client = await get_clearpass_client()
         return await _execute_device_action(client, action_type, payload, device_id, name, source_device_id)
     except ToolError:
         raise
@@ -117,12 +105,17 @@ async def clearpass_manage_network_device(
 
 
 async def _execute_device_action(
-    client, action_type: str, payload: dict, device_id: str | None, name: str | None, source_device_id: str | None
+    client: ClearPassClient,
+    action_type: str,
+    payload: dict,
+    device_id: str | None,
+    name: str | None,
+    source_device_id: str | None,
 ) -> dict | str:
     """Execute the resolved network device action.
 
     Args:
-        client: pyclearpass ApiPolicyElements instance.
+        client: ClearPass API client.
         action_type: Operation to perform.
         payload: Configuration payload.
         device_id: Device ID for update/delete/configure.
@@ -133,28 +126,28 @@ async def _execute_device_action(
         API response dict or error string.
     """
     if action_type == "create":
-        return client._send_request("/network-device", "post", query=payload)
+        return await client.request("post", "/network-device", json_body=payload)
 
     if action_type == "clone":
         if not source_device_id:
             raise ToolError({"status_code": 400, "message": "source_device_id is required for clone action."})
-        source = client.get_network_device_by_network_device_id(network_device_id=source_device_id)
+        source = await client.request("get", f"/network-device/{source_device_id}")
         if not isinstance(source, dict):
             raise ToolError({"status_code": 404, "message": f"Failed to retrieve source device {source_device_id}."})
         source.pop("id", None)
         source.update(payload)
-        return client._send_request("/network-device", "post", query=source)
+        return await client.request("post", "/network-device", json_body=source)
 
     resolved_id = await _resolve_device_id(client, device_id, name)
     if not resolved_id and action_type == "delete" and name:
-        return client.delete_network_device_name_by_name(name=name)
+        return await client.request("delete", f"/network-device/name/{name}")
     if not resolved_id:
         raise ToolError({"status_code": 400, "message": "Either device_id or name is required for this action."})
 
     if action_type == "update":
-        return client._send_request(f"/network-device/{resolved_id}", "patch", query=payload)
+        return await client.request("patch", f"/network-device/{resolved_id}", json_body=payload)
     if action_type == "delete":
-        return client.delete_network_device_by_network_device_id(network_device_id=resolved_id)
+        return await client.request("delete", f"/network-device/{resolved_id}")
 
     # configure_snmp, configure_radsec, configure_cli, configure_onconnect
-    return client._send_request(f"/network-device/{resolved_id}", "patch", query=payload)
+    return await client.request("patch", f"/network-device/{resolved_id}", json_body=payload)

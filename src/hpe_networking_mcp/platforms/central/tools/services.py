@@ -1,16 +1,17 @@
-"""Aruba Central ``Services`` config-model tools.
+"""Aruba Central ``services`` config-model tools.
 
 Initial import emitted by ``scripts/import_central_config_tools.py``
-from a snapshot of ``api-endpoints/central/config/``. The import is
+from a snapshot of ``vendor/central/config/``. The import is
 **one-shot**: this file is hand-curated going forward — edit freely,
 refine docstrings, add per-type schema knobs, split into smaller files
 as needed. Re-running the script will overwrite this file, so only do
 so before any hand edits or with care.
 
-Covers config objects in the ``Services`` OpenAPI tag-group. Wrappers
-delegate to ``_get_resource`` / ``_manage_resource`` in
-``security_policy.py`` — the same shared helpers used by the
-hand-curated Roles & Policy tools.
+Covers config objects sourced from the ``services.json`` vendor
+spec file. Wrappers
+delegate to ``_get_resource`` / ``_manage_resource`` /
+``_operation_request`` in ``security_policy.py`` — the same shared
+helpers used by the hand-curated Roles & Policy tools.
 """
 
 # ruff: noqa: E501
@@ -18,11 +19,10 @@ hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
@@ -31,43 +31,36 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _manage_resource,
 )
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
-# ----- airgroup-policy -----
+# ----- airgroup-policies -----
 
 
-@tool(annotations=READ_ONLY)
-async def central_get_airgroup_policy(
+@tool(capability=Capability.READ)
+async def central_get_airgroup_policies(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``airgroup-policy`` configurations from Central.
+    """Get ``airgroup-policies`` configurations from Central.
 
     An Airgroup policy must have a service definition, whereas VLAN and roles are optional. In case of roles, both 'allowed-roles' and 'disallowed-roles' cannot be configured at the same time. One of them must be empty. A maximum of 20 roles can be configured. In case of VLANs, both 'allowed-vlans' and 'disallowed-vlans' cannot be configured at the same time. One of them must be empty. A maximum of 20 VLANs or VLAN ranges can be configured. This feature is applicable for AP.
 
     Parameters:
-        name: Specific ``airgroup-policy`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``airgroup-policies`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "airgroup-policies", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_airgroup_policy(
+@tool(capability=Capability.WRITE_DELETE)
+async def central_manage_airgroup_policies(
     ctx: Context,
-    name: Annotated[str, Field(description="``airgroup-policy`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``airgroup-policies`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``airgroup-policy`` object. "
+                "Payload for the ``airgroup-policies`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_airgroup_policy`` to "
+                "field set; use ``central_get_airgroup_policies`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -77,14 +70,14 @@ async def central_manage_airgroup_policy(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``airgroup-policy`` configuration in Central.
+    """Create, update, or delete a ``airgroup-policies`` configuration in Central.
 
     An Airgroup policy must have a service definition, whereas VLAN and roles are optional. In case of roles, both 'allowed-roles' and 'disallowed-roles' cannot be configured at the same time. One of them must be empty. A maximum of 20 roles can be configured. In case of VLANs, both 'allowed-vlans' and 'disallowed-vlans' cannot be configured at the same time. One of them must be empty. A maximum of 20 VLANs or VLAN ranges can be configured. This feature is applicable for AP.
     """
     return await _manage_resource(
         ctx,
         "airgroup-policies",
-        "airgroup-policy",
+        "airgroup-policies",
         name,
         action_type,
         payload,
@@ -97,14 +90,14 @@ async def central_manage_airgroup_policy(
 # ----- airgroup-servers -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_airgroup_servers(
     ctx: Context,
     mac_address: str | None = None,
 ) -> dict | list | str:
     """Get ``airgroup-servers`` configurations from Central.
 
-    Hosts that can act as Airgroup servers. The server can be restricted to specific role(s) and AP(s). In case of roles, both 'allowed-roles' and 'disallowed-roles' cannot be configured at the same time. One of them must be empty. Maximum 20 roles can be configured. In case of APs, a maximum of 50 APs can be configured.
+    An Airgroup policy must have a service definition, whereas VLAN and roles are optional. In case of roles, both 'allowed-roles' and 'disallowed-roles' cannot be configured at the same time. One of them must be empty. A maximum of 20 roles can be configured. In case of VLANs, both 'allowed-vlans' and 'disallowed-vlans' cannot be configured at the same time. One of them must be empty. A maximum of 20 VLANs or VLAN ranges can be configured. This feature is applicable for AP.
 
     Parameters:
         mac_address: Specific ``airgroup-servers`` identifier (OpenAPI path param: ``mac-address``). If omitted, returns all.
@@ -112,7 +105,7 @@ async def central_get_airgroup_servers(
     return await _get_resource(ctx, "airgroup-servers", mac_address)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_airgroup_servers(
     ctx: Context,
     mac_address: Annotated[
@@ -137,7 +130,7 @@ async def central_manage_airgroup_servers(
 ) -> dict | str:
     """Create, update, or delete a ``airgroup-servers`` configuration in Central.
 
-    Hosts that can act as Airgroup servers. The server can be restricted to specific role(s) and AP(s). In case of roles, both 'allowed-roles' and 'disallowed-roles' cannot be configured at the same time. One of them must be empty. Maximum 20 roles can be configured. In case of APs, a maximum of 50 APs can be configured.
+    An Airgroup policy must have a service definition, whereas VLAN and roles are optional. In case of roles, both 'allowed-roles' and 'disallowed-roles' cannot be configured at the same time. One of them must be empty. A maximum of 20 roles can be configured. In case of VLANs, both 'allowed-vlans' and 'disallowed-vlans' cannot be configured at the same time. One of them must be empty. A maximum of 20 VLANs or VLAN ranges can be configured. This feature is applicable for AP.
     """
     return await _manage_resource(
         ctx,
@@ -152,38 +145,38 @@ async def central_manage_airgroup_servers(
     )
 
 
-# ----- airgroup-service-definition -----
+# ----- airgroup-service-definitions -----
 
 
-@tool(annotations=READ_ONLY)
-async def central_get_airgroup_service_definition(
+@tool(capability=Capability.READ)
+async def central_get_airgroup_service_definitions(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``airgroup-service-definition`` configurations from Central.
+    """Get ``airgroup-service-definitions`` configurations from Central.
 
-    A Airgroup service definition is a group of service ID(s), which requires at least one custom service ID. A service ID can be of type mDNS or SSDP. A maximum of 100 service IDs are allowed across all the services. A maximum of 16 services are allowed and in each service 32 service IDs are allowed. There are pre-defined services with default service IDs. These are read-only and can be enabled or disabled. This feature is applicable for AP.
+    An Airgroup policy must have a service definition, whereas VLAN and roles are optional. In case of roles, both 'allowed-roles' and 'disallowed-roles' cannot be configured at the same time. One of them must be empty. A maximum of 20 roles can be configured. In case of VLANs, both 'allowed-vlans' and 'disallowed-vlans' cannot be configured at the same time. One of them must be empty. A maximum of 20 VLANs or VLAN ranges can be configured. This feature is applicable for AP.
 
     Parameters:
-        name: Specific ``airgroup-service-definition`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``airgroup-service-definitions`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
     return await _get_resource(ctx, "airgroup-service-definitions", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_airgroup_service_definition(
+@tool(capability=Capability.WRITE_DELETE)
+async def central_manage_airgroup_service_definitions(
     ctx: Context,
     name: Annotated[
-        str, Field(description="``airgroup-service-definition`` identifier (OpenAPI path param: ``name``).")
+        str, Field(description="``airgroup-service-definitions`` identifier (OpenAPI path param: ``name``).")
     ],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``airgroup-service-definition`` object. "
+                "Payload for the ``airgroup-service-definitions`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_airgroup_service_definition`` to "
+                "field set; use ``central_get_airgroup_service_definitions`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -193,14 +186,14 @@ async def central_manage_airgroup_service_definition(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``airgroup-service-definition`` configuration in Central.
+    """Create, update, or delete a ``airgroup-service-definitions`` configuration in Central.
 
-    A Airgroup service definition is a group of service ID(s), which requires at least one custom service ID. A service ID can be of type mDNS or SSDP. A maximum of 100 service IDs are allowed across all the services. A maximum of 16 services are allowed and in each service 32 service IDs are allowed. There are pre-defined services with default service IDs. These are read-only and can be enabled or disabled. This feature is applicable for AP.
+    An Airgroup policy must have a service definition, whereas VLAN and roles are optional. In case of roles, both 'allowed-roles' and 'disallowed-roles' cannot be configured at the same time. One of them must be empty. A maximum of 20 roles can be configured. In case of VLANs, both 'allowed-vlans' and 'disallowed-vlans' cannot be configured at the same time. One of them must be empty. A maximum of 20 VLANs or VLAN ranges can be configured. This feature is applicable for AP.
     """
     return await _manage_resource(
         ctx,
         "airgroup-service-definitions",
-        "airgroup-service-definition",
+        "airgroup-service-definitions",
         name,
         action_type,
         payload,
@@ -213,18 +206,18 @@ async def central_manage_airgroup_service_definition(
 # ----- airgroup-system -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_airgroup_system(
     ctx: Context,
 ) -> dict | list | str:
     """Get the ``airgroup-system`` singleton configuration from Central.
 
-    AirGroup is a unique service that uses zero-configuration networking and allows devices to communicate over complex access-network topologies. AirGroup supports Bonjour and DLNA services on supported devices. This feature is applicable for AP.
+    An Airgroup policy must have a service definition, whereas VLAN and roles are optional. In case of roles, both 'allowed-roles' and 'disallowed-roles' cannot be configured at the same time. One of them must be empty. A maximum of 20 roles can be configured. In case of VLANs, both 'allowed-vlans' and 'disallowed-vlans' cannot be configured at the same time. One of them must be empty. A maximum of 20 VLANs or VLAN ranges can be configured. This feature is applicable for AP.
     """
     return await _get_resource(ctx, "airgroup-system", None)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_airgroup_system(
     ctx: Context,
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
@@ -245,7 +238,7 @@ async def central_manage_airgroup_system(
 ) -> dict | str:
     """Create, update, or delete the singleton ``airgroup-system`` configuration in Central.
 
-    AirGroup is a unique service that uses zero-configuration networking and allows devices to communicate over complex access-network topologies. AirGroup supports Bonjour and DLNA services on supported devices. This feature is applicable for AP.
+    An Airgroup policy must have a service definition, whereas VLAN and roles are optional. In case of roles, both 'allowed-roles' and 'disallowed-roles' cannot be configured at the same time. One of them must be empty. A maximum of 20 roles can be configured. In case of VLANs, both 'allowed-vlans' and 'disallowed-vlans' cannot be configured at the same time. One of them must be empty. A maximum of 20 VLANs or VLAN ranges can be configured. This feature is applicable for AP.
     """
     return await _manage_resource(
         ctx,
@@ -263,14 +256,14 @@ async def central_manage_airgroup_system(
 # ----- location -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_location(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``location`` configurations from Central.
 
-    Location configuration. It supports three methods for locating: 1, Received Signal Strength Indication (RSSI): Calculate the pathloss of signal to locate a device. 2, Analytics and Location Engine (ALE): The ALE is designed to gather client information from the network, process it, and share it through a standard API. The client information gathered by ALE can be used for business purposes by analyzing a client’s Internet behavior such as shopping preferences. ALE includes a location engine that calculates the associated and unassociated device location every 30 seconds by default. 3, Real Time Location System (RTLS): AP supports the real-time tracking of devices when integrated with the Airwave server or a third-party RTLS server such as Aeroscout RTLS server. With the help of the RTLS, the devices can be monitored in real time or through history. This feature is only applicable for AP.
+    An Airgroup policy must have a service definition, whereas VLAN and roles are optional. In case of roles, both 'allowed-roles' and 'disallowed-roles' cannot be configured at the same time. One of them must be empty. A maximum of 20 roles can be configured. In case of VLANs, both 'allowed-vlans' and 'disallowed-vlans' cannot be configured at the same time. One of them must be empty. A maximum of 20 VLANs or VLAN ranges can be configured. This feature is applicable for AP.
 
     Parameters:
         name: Specific ``location`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -278,7 +271,7 @@ async def central_get_location(
     return await _get_resource(ctx, "location", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_location(
     ctx: Context,
     name: Annotated[str, Field(description="``location`` identifier (OpenAPI path param: ``name``).")],
@@ -301,7 +294,7 @@ async def central_manage_location(
 ) -> dict | str:
     """Create, update, or delete a ``location`` configuration in Central.
 
-    Location configuration. It supports three methods for locating: 1, Received Signal Strength Indication (RSSI): Calculate the pathloss of signal to locate a device. 2, Analytics and Location Engine (ALE): The ALE is designed to gather client information from the network, process it, and share it through a standard API. The client information gathered by ALE can be used for business purposes by analyzing a client’s Internet behavior such as shopping preferences. ALE includes a location engine that calculates the associated and unassociated device location every 30 seconds by default. 3, Real Time Location System (RTLS): AP supports the real-time tracking of devices when integrated with the Airwave server or a third-party RTLS server such as Aeroscout RTLS server. With the help of the RTLS, the devices can be monitored in real time or through history. This feature is only applicable for AP.
+    An Airgroup policy must have a service definition, whereas VLAN and roles are optional. In case of roles, both 'allowed-roles' and 'disallowed-roles' cannot be configured at the same time. One of them must be empty. A maximum of 20 roles can be configured. In case of VLANs, both 'allowed-vlans' and 'disallowed-vlans' cannot be configured at the same time. One of them must be empty. A maximum of 20 VLANs or VLAN ranges can be configured. This feature is applicable for AP.
     """
     return await _manage_resource(
         ctx,

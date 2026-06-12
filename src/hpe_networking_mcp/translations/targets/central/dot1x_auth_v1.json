@@ -1,0 +1,175 @@
+{
+  "version": 1,
+  "target_platform": "central",
+  "target_id": "dot1x_auth",
+  "preprocessing": "hpe_networking_mcp.translations.preprocessing.aos8_dot1x_auth.preprocess_dot1x_auth",
+  "target_emits": [
+    {
+      "step":     1,
+      "name":     "create_dot1x_auth",
+      "purpose":  "Create the 802.1X auth profile in the Library. v1 maps the confident core 802.1X fields; the nested machine-auth / dot1x-termination objects + advanced knobs are deferred (see unmapped_fields). Referenced by name from the gateway aaa-profile (authentication.dot1x-auth).",
+      "endpoint": "/network-config/v1alpha1/dot1xauth/{name}",
+      "method":   "POST",
+      "query_params": {},
+      "body": {
+        "name":                          "{name}",
+        "reauth-period":                 "{reauth_period}",
+        "max-reauth":                    "{max_reauth}",
+        "eapol-max-requests":            "{eapol_max_requests}",
+        "server-cert":                   "{server_cert}",
+        "ca-cert":                       "{ca_cert}",
+        "framed-mtu":                    "{framed_mtu}",
+        "quiet-period":                  "{quiet_period}",
+        "heldstate-bypass":              "{heldstate_bypass}",
+        "wep-key-size":                  "{wep_key_size}",
+        "wep-key-retries":               "{wep_key_retries}",
+        "tls-guest-role":                "{tls_guest_role}",
+        "unicast-key-rotation-period":   "{unicast_key_rotation_period}",
+        "multicast-key-rotation-period": "{multicast_key_rotation_period}",
+        "wpa-key-period":                "{wpa_key_period}",
+        "wpa2-key-delay":                "{wpa2_key_delay}",
+        "wpa-groupkey-delay":            "{wpa_groupkey_delay}",
+        "wpa-key-retries":               "{wpa_key_retries}",
+        "reauth-enable":                 "{reauth_enable}",
+        "tls-guest-access":              "{tls_guest_access}",
+        "enforce-suite-b-128":           "{suite_b_128}",
+        "enforce-suite-b-192":           "{suite_b_192}",
+        "validate-pmkid":                "{validate_pmkid}",
+        "eapol-logoff":                  "{eapol_logoff}",
+        "cert-cn-lookup":                "{cert_cn_lookup}",
+        "opp-key-caching":               "{opp_key_caching}",
+        "unicast-keyrotation":           "{unicast_keyrotation}",
+        "multicast-keyrotation":         "{multicast_keyrotation}",
+        "use-static-key":                "{use_static_key}",
+        "use-session-key":               "{use_session_key}",
+        "wpa-fast-handover":             "{wpa_fast_handover}"
+      },
+      "iteration": "once",
+      "iteration_notes": "One POST per source dot1x_auth_profile record.",
+      "depends_on": []
+    },
+    {
+      "step":     2,
+      "name":     "assign_dot1x_auth",
+      "purpose":  "Assign the 802.1X profile to the target scope. Multi-device-function array packed into a single POST.",
+      "endpoint": "/network-config/v1alpha1/config-assignments",
+      "method":   "POST",
+      "query_params": {},
+      "body_template": {
+        "config-assignment": [
+          "{one entry per device_function in target_meta.device_functions: { scope-id, device-function, profile-type='dot1xauth', profile-instance='{name}' }}"
+        ]
+      },
+      "iteration": "once",
+      "iteration_notes": "One POST; all device-functions share the array.",
+      "depends_on": [1]
+    }
+  ],
+  "target_meta": {
+    "device_functions": ["MOBILITY_GW"],
+    "device_function_filtering_rule": "802.1X profiles back gateway-terminated auth; AOS 8 -> Central migration targets MOBILITY_GW. Referenced by the aaa-profile's authentication.dot1x-auth."
+  },
+  "target_scope_id_resolution": {
+    "rule":   "Central scope_id is supplied by the consuming skill at runtime, derived from the AOS 8 dot1x_auth_profile record's binding scope.",
+    "input":  "Source binding scope (string path / identifier); skill-specific",
+    "output": "Central scope_id (string), supplied via runtime_values['central_scope_id']"
+  },
+  "required_runtime_values": ["central_scope_id"],
+  "derived": {},
+  "dependencies": [
+    {
+      "depends_on": "(none — foundational profile; tls-guest-role references a Central role if set)",
+      "depended_by": [
+        {
+          "target_id": "central:aaa_profile",
+          "field":     "authentication.dot1x-auth",
+          "relation":  "the gateway aaa-profile references the 802.1X profile by name",
+          "notes":     "AOS 8 aaa_prof.dot1x_auth_profile names a dot1x_auth_profile; the Central aaa-profile's authentication.dot1x-auth references it. Run dot1x_auth BEFORE aaa_profile."
+        }
+      ]
+    }
+  ],
+  "tokenize_kind_per_field": {},
+  "sources": {
+    "aos8": {
+      "kind":         "rest",
+      "mapping_kind": "simple",
+      "objects": [
+        {
+          "object":      "dot1x_auth_profile",
+          "object_path": "/v1/configuration/object/dot1x_auth_profile",
+          "role":        "dot1x_auth_profile",
+          "docs": {
+            "get":  "https://developer.arubanetworks.com/aos8/reference/get_object-dot1x_auth_profile",
+            "post": "https://developer.arubanetworks.com/aos8/reference/post_object-dot1x_auth_profile"
+          },
+          "live_shape_example": "[{\"profile-name\": \"corp-dot1x\", \"reauth_period\": {\"ra-period\": 86400}, \"reauthentication\": {}, \"max_requests\": {\"mx-requests\": 3}}]",
+          "notes": "REST schema 'dot1x_auth_profile' (CLI noun: aaa authentication dot1x). 53 fields, mostly advanced 802.1X tuning; one-level wrapped. v1 maps the confident core; nested machine-auth / termination + advanced knobs deferred. Largely default on the maintainer's tenant."
+        }
+      ],
+      "key_mappings": {
+        "name":                          { "from": "_name",                          "to": "Central dot1x-auth 'name'", "transform": "direct_str", "notes": "Required. profile-name -> name." },
+        "reauth_period":                 { "from": "_reauth_period",                 "to": "body 'reauth-period'", "transform": "direct_int", "optional": true, "notes": "reauth_period.ra-period." },
+        "max_reauth":                    { "from": "_max_reauth",                    "to": "body 'max-reauth'", "transform": "direct_int", "optional": true, "notes": "reauth_max_requests.ramx-requests." },
+        "eapol_max_requests":            { "from": "_eapol_max_requests",            "to": "body 'eapol-max-requests'", "transform": "direct_int", "optional": true, "notes": "max_requests.mx-requests." },
+        "server_cert":                   { "from": "_server_cert",                   "to": "body 'server-cert'", "transform": "direct_str", "optional": true, "notes": "server_cert.server-cert-name." },
+        "ca_cert":                       { "from": "_ca_cert",                       "to": "body 'ca-cert'", "transform": "direct_str", "optional": true, "notes": "ca_cert.ca-cert-name." },
+        "framed_mtu":                    { "from": "_framed_mtu",                    "to": "body 'framed-mtu'", "transform": "direct_int", "optional": true, "notes": "framed_mtu.fmtu." },
+        "quiet_period":                  { "from": "_quiet_period",                  "to": "body 'quiet-period'", "transform": "direct_int", "optional": true, "notes": "quiet_period.qt-period." },
+        "heldstate_bypass":              { "from": "_heldstate_bypass",              "to": "body 'heldstate-bypass'", "transform": "direct_int", "optional": true, "notes": "heldstate_bypass_counter.hs-counter." },
+        "wep_key_size":                  { "from": "_wep_key_size",                  "to": "body 'wep-key-size'", "transform": "direct_int", "optional": true, "notes": "wep_key_size.wk-size." },
+        "wep_key_retries":               { "from": "_wep_key_retries",               "to": "body 'wep-key-retries'", "transform": "direct_int", "optional": true, "notes": "wep_key_retries.wk-retries." },
+        "tls_guest_role":                { "from": "_tls_guest_role",                "to": "body 'tls-guest-role'", "transform": "direct_str", "optional": true, "notes": "tls_guest_role.tg-role (references a Central role)." },
+        "unicast_key_rotation_period":   { "from": "_unicast_key_rotation_period",   "to": "body 'unicast-key-rotation-period'", "transform": "direct_int", "optional": true, "notes": "ukey_period.ukr-period." },
+        "multicast_key_rotation_period": { "from": "_multicast_key_rotation_period", "to": "body 'multicast-key-rotation-period'", "transform": "direct_int", "optional": true, "notes": "mkey_period.mkr-period." },
+        "wpa_key_period":                { "from": "_wpa_key_period",                "to": "body 'wpa-key-period'", "transform": "direct_int", "optional": true, "notes": "wpakey_period_ms.wk-period." },
+        "wpa2_key_delay":                { "from": "_wpa2_key_delay",                "to": "body 'wpa2-key-delay'", "transform": "direct_int", "optional": true, "notes": "wpa2key_delay.wk-delay." },
+        "wpa_groupkey_delay":            { "from": "_wpa_groupkey_delay",            "to": "body 'wpa-groupkey-delay'", "transform": "direct_int", "optional": true, "notes": "wpagkey_delay.wgk-delay." },
+        "wpa_key_retries":               { "from": "_wpa_key_retries",               "to": "body 'wpa-key-retries'", "transform": "direct_int", "optional": true, "notes": "wpa_key_retries.wpak-retries." },
+        "reauth_enable":                 { "from": "_reauth_enable",                 "to": "body 'reauth-enable'", "transform": "direct", "optional": true, "notes": "flag (reauthentication)." },
+        "tls_guest_access":              { "from": "_tls_guest_access",              "to": "body 'tls-guest-access'", "transform": "direct", "optional": true, "notes": "flag." },
+        "suite_b_128":                   { "from": "_suite_b_128",                   "to": "body 'enforce-suite-b-128'", "transform": "direct", "optional": true, "notes": "flag." },
+        "suite_b_192":                   { "from": "_suite_b_192",                   "to": "body 'enforce-suite-b-192'", "transform": "direct", "optional": true, "notes": "flag." },
+        "validate_pmkid":                { "from": "_validate_pmkid",                "to": "body 'validate-pmkid'", "transform": "direct", "optional": true, "notes": "flag." },
+        "eapol_logoff":                  { "from": "_eapol_logoff",                  "to": "body 'eapol-logoff'", "transform": "direct", "optional": true, "notes": "flag." },
+        "cert_cn_lookup":                { "from": "_cert_cn_lookup",                "to": "body 'cert-cn-lookup'", "transform": "direct", "optional": true, "notes": "flag (dot1x_cert_cn_lookup)." },
+        "opp_key_caching":               { "from": "_opp_key_caching",               "to": "body 'opp-key-caching'", "transform": "direct", "optional": true, "notes": "flag." },
+        "unicast_keyrotation":           { "from": "_unicast_keyrotation",           "to": "body 'unicast-keyrotation'", "transform": "direct", "optional": true, "notes": "flag." },
+        "multicast_keyrotation":         { "from": "_multicast_keyrotation",         "to": "body 'multicast-keyrotation'", "transform": "direct", "optional": true, "notes": "flag." },
+        "use_static_key":                { "from": "_use_static_key",                "to": "body 'use-static-key'", "transform": "direct", "optional": true, "notes": "flag." },
+        "use_session_key":               { "from": "_use_session_key",               "to": "body 'use-session-key'", "transform": "direct", "optional": true, "notes": "flag." },
+        "wpa_fast_handover":             { "from": "_wpa_fast_handover",             "to": "body 'wpa-fast-handover'", "transform": "direct", "optional": true, "notes": "flag." }
+      },
+      "unmapped_fields": [
+        {
+          "from":          "machine_auth_* (machine_auth_def_role / machine_auth_user_def_role / machine_auth_enf_enable / machine_auth_cache_tmout / machine_auth_blklist)",
+          "reason":        "Central models machine-auth as a nested 'machine-auth' object on the dot1x profile. Deferred to v2 (build the nested sub-object like aaa-profile's authentication{}); flag so the gap is visible.",
+          "severity_rule": "non_empty_regression"
+        },
+        {
+          "from":          "termination_* (termination_mode / termination_eaptype / termination_innereaptype)",
+          "reason":        "Central models 802.1X termination as a nested 'dot1x-termination' object. Deferred to v2.",
+          "severity_rule": "non_empty_regression"
+        },
+        {
+          "from":          "token caching (enable_token_caching / token_caching_period), keycache (delete_keycache / keycache_tmout), idrequest_period, server_retry / serverretry_period, use_server_reauth_period / use_server_reauth_term_action, iesaa, ignore_eap_id_match, xSec_mtu, dot1x_auth_profile_clone, _flags",
+          "reason":        "Advanced / uncertain-mapping knobs. server_retry / serverretry_period likely map to Central max-retries / server-timeout but the pairing is unverified (no tuned dot1x profile on the tenant to preview-confirm); idrequest_period's Central counterpart (initial-auth-response-timeout vs eapol-timeout) is ambiguous. clone is a CLI convenience. Map per-field once a configured sample is available.",
+          "severity_rule": "always_operator_map"
+        }
+      ],
+      "ignored_variants": [
+        {
+          "form":   "dot1x_auth_profile with _flags.default=true (system / built-in, e.g. 'default')",
+          "reason": "Consumer filters _flags.default / _flags.system / _flags.inherited (at definition scope) BEFORE calling emit_calls, matching the rest of the AAA translations."
+        }
+      ]
+    }
+  },
+  "draft_notes": [
+    "v1 translation, Gateway-targeted. POST /dot1xauth/{name} then config-assignment to MOBILITY_GW. Maps the confident core 802.1X fields via the aos8_dot1x_auth normalizer; nested machine-auth / dot1x-termination + advanced knobs deferred to v2 (flagged).",
+    "DEPENDENCY: referenced by central:aaa_profile (authentication.dot1x-auth) — run dot1x_auth BEFORE aaa_profile.",
+    "FIELD-PAIRING CAVEAT: the maintainer's dot1x profiles are all-default, so non-default field VALUES couldn't be preview-confirmed live. The Central field NAMES come from the OAS schema (authoritative); the AOS-8→Central PAIRING for the mapped subset is by name-correspondence and should be spot-checked against a tenant with a tuned 802.1X profile.",
+    "NEEDS-PREVIEW: config-assignment profile-type ('dot1xauth'); the server_retry/serverretry_period and idrequest_period mappings (currently unmapped pending a tuned sample).",
+    "Idempotency: SHARED POST for an existing name returns HTTP 409; consumer handles 409 idempotently."
+  ]
+}

@@ -1,14 +1,15 @@
-from typing import Literal
+from typing import Any, Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
-from pycentral.troubleshooting.troubleshooting import Troubleshooting
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
+from hpe_networking_mcp.platforms.central.utils import get_central_conn
 
 
-def _resolve_if_switch(conn, serial_number: str, device_type: str) -> str:
+async def _resolve_if_switch(conn, serial_number: str, device_type: str) -> str:
     """Resolve stack ID for switches (aos-s, cx). Returns serial unchanged for other types."""
     if device_type not in ("cx", "aos-s"):
         return serial_number
@@ -16,10 +17,10 @@ def _resolve_if_switch(conn, serial_number: str, device_type: str) -> str:
         _resolve_switch_id,
     )
 
-    return _resolve_switch_id(conn, serial_number)
+    return await _resolve_switch_id(conn, serial_number)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_ping(
     ctx: Context,
     serial_number: str,
@@ -42,8 +43,8 @@ async def central_ping(
         count: Number of pings to send.
         packet_size: Ping packet size in bytes.
     """
-    conn = ctx.lifespan_context["central_conn"]
-    resolved_id = _resolve_if_switch(conn, serial_number, device_type)
+    conn = get_central_conn(ctx)
+    resolved_id = await _resolve_if_switch(conn, serial_number, device_type)
 
     kwargs: dict = {
         "central_conn": conn,
@@ -55,14 +56,14 @@ async def central_ping(
     if packet_size is not None:
         kwargs["packet_size"] = packet_size
 
-    method_map = {
-        "ap": Troubleshooting.ping_aps_test,
-        "cx": Troubleshooting.ping_cx_test,
-        "gateway": Troubleshooting.ping_gateways_test,
+    method_map: dict[str, Any] = {
+        "ap": monitoring_api.ping_aps_test,
+        "cx": monitoring_api.ping_cx_test,
+        "gateway": monitoring_api.ping_gateways_test,
     }
 
     try:
-        resp = method_map[device_type](**kwargs)
+        resp = await method_map[device_type](**kwargs)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error running ping test: {e}"}) from e
 
@@ -71,7 +72,7 @@ async def central_ping(
     return resp
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_traceroute(
     ctx: Context,
     serial_number: str,
@@ -89,17 +90,17 @@ async def central_traceroute(
         destination: IP address or hostname to traceroute (required).
         device_type: Type of device — "ap", "cx", or "gateway" (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
-    resolved_id = _resolve_if_switch(conn, serial_number, device_type)
+    conn = get_central_conn(ctx)
+    resolved_id = await _resolve_if_switch(conn, serial_number, device_type)
 
-    method_map = {
-        "ap": Troubleshooting.traceroute_aps_test,
-        "cx": Troubleshooting.traceroute_cx_test,
-        "gateway": Troubleshooting.traceroute_gateways_test,
+    method_map: dict[str, Any] = {
+        "ap": monitoring_api.traceroute_aps_test,
+        "cx": monitoring_api.traceroute_cx_test,
+        "gateway": monitoring_api.traceroute_gateways_test,
     }
 
     try:
-        resp = method_map[device_type](
+        resp = await method_map[device_type](
             central_conn=conn,
             serial_number=resolved_id,
             destination=destination,
@@ -112,7 +113,7 @@ async def central_traceroute(
     return resp
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_cable_test(
     ctx: Context,
     serial_number: str,
@@ -147,12 +148,12 @@ async def central_cable_test(
     if not 1 <= poll_interval <= 10:
         raise ToolError({"status_code": 400, "message": f"poll_interval must be 1-10, got {poll_interval}"})
 
-    conn = ctx.lifespan_context["central_conn"]
-    resolved_id = _resolve_if_switch(conn, serial_number, device_type)
+    conn = get_central_conn(ctx)
+    resolved_id = await _resolve_if_switch(conn, serial_number, device_type)
     port_list = [p.strip() for p in ports.split(",")]
 
     try:
-        resp = Troubleshooting.cable_test(
+        resp = await monitoring_api.cable_test(
             central_conn=conn,
             device_type=device_type,
             serial_number=resolved_id,
@@ -168,7 +169,7 @@ async def central_cable_test(
     return resp
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_show_commands(
     ctx: Context,
     serial_number: str,
@@ -188,12 +189,12 @@ async def central_show_commands(
         device_type: Device type — "aos-s", "aps", "cx", or "gateways" (required).
         commands: Comma-separated show commands, e.g. "show version,show interfaces" (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
-    resolved_id = _resolve_if_switch(conn, serial_number, device_type)
+    conn = get_central_conn(ctx)
+    resolved_id = await _resolve_if_switch(conn, serial_number, device_type)
     command_list = [c.strip() for c in commands.split(",")]
 
     try:
-        resp = Troubleshooting.run_show_commands(
+        resp = await monitoring_api.run_show_commands(
             central_conn=conn,
             device_type=device_type,
             serial_number=resolved_id,

@@ -580,6 +580,7 @@
             "x-typeDescription": "Persona type."
           },
           "device-id": {
+            "description": "Device serial number.",
             "items": {
               "description": "Device serial number.",
               "format": "pattern",
@@ -589,7 +590,8 @@
               "x-patternSources": "device-id",
               "x-patterns": "'[a-zA-Z0-9-]*'"
             },
-            "maxItems": 2147483647,
+            "maxItems": 50,
+            "minItems": 1,
             "type": "array"
           },
           "device-id-list-v2": {
@@ -623,7 +625,8 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 50,
+            "minItems": 1,
             "type": "array",
             "x-key": [
               "deviceIdV2"
@@ -662,6 +665,7 @@
                         "type": "string"
                       },
                       "sub-type": {
+                        "description": "Device sub type value.",
                         "items": {
                           "description": "Device sub type value.",
                           "format": "const",
@@ -724,6 +728,7 @@
                   "type": "string"
                 },
                 "sub-type": {
+                  "description": "Device sub type value.",
                   "items": {
                     "description": "Device sub type value.",
                     "format": "const",
@@ -1657,6 +1662,89 @@
           "parentCommand": "createConfigCheckpointCmd",
           "pathToPrint": "/config-checkpoint/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Configuration checkpoint profile",
+        "operationId": "replaceConfigCheckpointProfileByID",
+        "parameters": [
+          {
+            "description": "Configuration checkpoint profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaConfigCheckpoint_ConfigCheckpointprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "Config Checkpoint"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceConfigCheckpointProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceConfigCheckpointCmd",
+          "pathToPrint": "/config-checkpoint/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }

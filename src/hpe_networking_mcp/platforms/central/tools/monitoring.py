@@ -2,15 +2,15 @@ from typing import Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
-from pycentral.new_monitoring.aps import MonitoringAPs
-from pycentral.new_monitoring.gateways import MonitoringGateways
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import (
     FilterField,
     as_comma_separated,
     build_odata_filter,
+    get_central_conn,
     retry_central_command,
 )
 
@@ -30,7 +30,7 @@ _AP_FILTER_FIELDS: dict[str, FilterField] = {
 }
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_aps(
     ctx: Context,
     site_id: str | None = None,
@@ -62,7 +62,7 @@ async def central_get_aps(
         sort: Sort expression (e.g. 'deviceName asc'). Supported fields:
             siteId, serialNumber, deviceName, model, status, deployment.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     raw_pairs = [
         ("site_id", site_id),
@@ -86,14 +86,14 @@ async def central_get_aps(
             kwargs["filter_str"] = filter_str
         if sort:
             kwargs["sort"] = sort
-        aps = MonitoringAPs.get_all_aps(**kwargs)
+        aps = await monitoring_api.get_all_aps(**kwargs)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching access points: {e}"}) from e
 
     return aps or []
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_wlans(
     ctx: Context,
     serial_number: str,
@@ -110,9 +110,9 @@ async def central_get_ap_wlans(
         serial_number: AP serial number (required).
         wlan_name: Filter by exact WLAN name (SSID). Applied client-side.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
-        resp = MonitoringAPs.get_ap_wlans(
+        resp = await monitoring_api.get_ap_wlans(
             central_conn=conn,
             serial_number=serial_number,
         )
@@ -128,7 +128,7 @@ async def central_get_ap_wlans(
     return items
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_details(
     ctx: Context,
     serial_number: str,
@@ -144,9 +144,9 @@ async def central_get_ap_details(
     Parameters:
         serial_number: AP serial number (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
-        resp = MonitoringAPs.get_ap_details(
+        resp = await monitoring_api.get_ap_details(
             central_conn=conn,
             serial_number=serial_number,
         )
@@ -158,7 +158,7 @@ async def central_get_ap_details(
     return resp
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_switch_details(
     ctx: Context,
     serial_number: str,
@@ -174,9 +174,9 @@ async def central_get_switch_details(
     Parameters:
         serial_number: Switch serial number (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
-        resp = retry_central_command(
+        resp = await retry_central_command(
             central_conn=conn,
             api_method="GET",
             api_path=(f"network-monitoring/v1/switches/{serial_number}"),
@@ -195,7 +195,7 @@ async def central_get_switch_details(
     # Enrich with hardware-trends PoE data for all stack
     # members (switchTrends only shows the conductor)
     try:
-        hw_resp = retry_central_command(
+        hw_resp = await retry_central_command(
             central_conn=conn,
             api_method="GET",
             api_path=(f"network-monitoring/v1/switches/{serial_number}/hardware-trends"),
@@ -242,7 +242,7 @@ async def central_get_switch_details(
     return result
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_gateway_details(
     ctx: Context,
     serial_number: str,
@@ -258,9 +258,9 @@ async def central_get_gateway_details(
     Parameters:
         serial_number: Gateway serial number (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
-        resp = MonitoringGateways.get_gateway_details(
+        resp = await monitoring_api.get_gateway_details(
             central_conn=conn,
             serial_number=serial_number,
         )

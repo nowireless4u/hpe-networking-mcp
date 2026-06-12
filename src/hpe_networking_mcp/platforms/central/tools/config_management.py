@@ -1,16 +1,17 @@
-"""Aruba Central ``Config Management`` config-model tools.
+"""Aruba Central ``config-management`` config-model tools.
 
 Initial import emitted by ``scripts/import_central_config_tools.py``
-from a snapshot of ``api-endpoints/central/config/``. The import is
+from a snapshot of ``vendor/central/config/``. The import is
 **one-shot**: this file is hand-curated going forward — edit freely,
 refine docstrings, add per-type schema knobs, split into smaller files
 as needed. Re-running the script will overwrite this file, so only do
 so before any hand edits or with care.
 
-Covers config objects in the ``Config Management`` OpenAPI tag-group. Wrappers
-delegate to ``_get_resource`` / ``_manage_resource`` in
-``security_policy.py`` — the same shared helpers used by the
-hand-curated Roles & Policy tools.
+Covers config objects sourced from the ``config-management.json`` vendor
+spec file. Wrappers
+delegate to ``_get_resource`` / ``_manage_resource`` /
+``_operation_request`` in ``security_policy.py`` — the same shared
+helpers used by the hand-curated Roles & Policy tools.
 """
 
 # ruff: noqa: E501
@@ -18,11 +19,10 @@ hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
@@ -31,17 +31,10 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _manage_resource,
 )
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
 # ----- config-checkpoint -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_config_checkpoint(
     ctx: Context,
     name: str | None = None,
@@ -56,7 +49,7 @@ async def central_get_config_checkpoint(
     return await _get_resource(ctx, "config-checkpoint", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_config_checkpoint(
     ctx: Context,
     name: Annotated[str, Field(description="``config-checkpoint`` identifier (OpenAPI path param: ``name``).")],
@@ -94,10 +87,28 @@ async def central_manage_config_checkpoint(
     )
 
 
+# ----- device-persona-mapping -----
+
+
+@tool(capability=Capability.READ)
+async def central_get_device_persona_mapping(
+    ctx: Context,
+    device_type: str | None = None,
+) -> dict | list | str:
+    """Get ``device-persona-mapping`` configurations from Central.
+
+    Contains configuration elements for configuration checkpoints.
+
+    Parameters:
+        device_type: Specific ``device-persona-mapping`` identifier (OpenAPI path param: ``device-type``). If omitted, returns all.
+    """
+    return await _get_resource(ctx, "device-persona-mapping", device_type)
+
+
 # ----- persona-assignment -----
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_persona_assignment(
     ctx: Context,
     target_device_function: Annotated[
@@ -122,7 +133,7 @@ async def central_manage_persona_assignment(
 ) -> dict | str:
     """Create, update, or delete a ``persona-assignment`` configuration in Central.
 
-    Device list to device function mapping.
+    Contains configuration elements for configuration checkpoints.
     """
     return await _manage_resource(
         ctx,
@@ -135,21 +146,3 @@ async def central_manage_persona_assignment(
         device_function,
         confirmed,
     )
-
-
-# ----- persona-mapping -----
-
-
-@tool(annotations=READ_ONLY)
-async def central_get_persona_mapping(
-    ctx: Context,
-    device_type: str | None = None,
-) -> dict | list | str:
-    """Get ``persona-mapping`` configurations from Central.
-
-    Device type to device function mapping.
-
-    Parameters:
-        device_type: Specific ``persona-mapping`` identifier (OpenAPI path param: ``device-type``). If omitted, returns all.
-    """
-    return await _get_resource(ctx, "device-persona-mapping", device_type)

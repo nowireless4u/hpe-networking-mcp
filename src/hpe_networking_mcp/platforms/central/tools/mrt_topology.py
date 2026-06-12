@@ -9,23 +9,15 @@ write surface.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
-
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
-def _call(conn, method: str, path: str, params: dict | None = None, data: dict | None = None) -> dict | str:
-    response = retry_central_command(
+async def _call(conn, method: str, path: str, params: dict | None = None, data: dict | None = None) -> dict | str:
+    response = await retry_central_command(
         central_conn=conn,
         api_method=method,
         api_path=path,
@@ -38,47 +30,47 @@ def _call(conn, method: str, path: str, params: dict | None = None, data: dict |
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_topology(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
 ) -> dict | str:
     """Get the network topology graph for a site (nodes + edges)."""
-    conn = ctx.lifespan_context["central_conn"]
-    return _call(conn, "GET", f"network-monitoring/v1/topology/{site_id}")
+    conn = get_central_conn(ctx)
+    return await _call(conn, "GET", f"network-monitoring/v1/topology/{site_id}")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_neighbours(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Device serial number.")],
 ) -> dict | str:
     """Get LLDP / CDP neighbour records as seen by a specific device."""
-    conn = ctx.lifespan_context["central_conn"]
-    return _call(conn, "GET", f"network-monitoring/v1/neighbours/{serial_number}")
+    conn = get_central_conn(ctx)
+    return await _call(conn, "GET", f"network-monitoring/v1/neighbours/{serial_number}")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_unmanaged_device(
     ctx: Context,
     mac_address: Annotated[str, Field(description="MAC address of the unmanaged device.")],
 ) -> dict | str:
     """Get details on an unmanaged device (seen on the network but not under Central management)."""
-    conn = ctx.lifespan_context["central_conn"]
-    return _call(conn, "GET", f"network-monitoring/v1/unmanaged-device/{mac_address}")
+    conn = get_central_conn(ctx)
+    return await _call(conn, "GET", f"network-monitoring/v1/unmanaged-device/{mac_address}")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_isolated_devices(
     ctx: Context,
     site_id: Annotated[str, Field(description="Site identifier.")],
 ) -> dict | str:
     """List isolated devices at a site (managed devices that lost connectivity to peers)."""
-    conn = ctx.lifespan_context["central_conn"]
-    return _call(conn, "GET", f"network-monitoring/v1/isolated-devices/{site_id}")
+    conn = get_central_conn(ctx)
+    return await _call(conn, "GET", f"network-monitoring/v1/isolated-devices/{site_id}")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_device_inventory(
     ctx: Context,
     filter: str | None = None,
@@ -91,14 +83,14 @@ async def central_get_device_inventory(
     devices) — this includes lifecycle states the live-device view
     filters out.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
-    return _call(conn, "GET", "network-monitoring/v1/device-inventory", params=params)
+    return await _call(conn, "GET", "network-monitoring/v1/device-inventory", params=params)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_update_device(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Device serial number to update.")],
@@ -112,8 +104,8 @@ async def central_update_device(
     Requires ``ENABLE_CENTRAL_WRITE_TOOLS=true``. Typical use: rename a
     device, change its assigned site, update notes.
     """
-    conn = ctx.lifespan_context["central_conn"]
-    response = retry_central_command(
+    conn = get_central_conn(ctx)
+    response = await retry_central_command(
         central_conn=conn,
         api_method="PATCH",
         api_path=f"network-monitoring/v1/devices/{serial_number}",
@@ -125,7 +117,7 @@ async def central_update_device(
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_delete_device(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Device serial number to delete from the inventory.")],
@@ -137,8 +129,8 @@ async def central_delete_device(
     ``central_reboot_device`` or vendor tools to reset the hardware
     first if recommissioning.
     """
-    conn = ctx.lifespan_context["central_conn"]
-    response = retry_central_command(
+    conn = get_central_conn(ctx)
+    response = await retry_central_command(
         central_conn=conn,
         api_method="DELETE",
         api_path=f"network-monitoring/v1/devices/{serial_number}",

@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "target_platform": "central",
+  "target_id": "server_group",
+  "target_emits": [
+    {
+      "step":     1,
+      "name":     "create_server_group",
+      "purpose":  "Create the server-group in the Library. Members (auth_server[]) map to an ordered servers[] array of {server-name, position}; the referenced auth-servers must already exist (central:auth_server runs first).",
+      "endpoint": "/network-config/v1alpha1/server-groups/{name}",
+      "method":   "POST",
+      "query_params": {},
+      "body": {
+        "name":    "{name}",
+        "type":    "RADIUS",
+        "servers": "{servers}"
+      },
+      "iteration": "once",
+      "iteration_notes": "One POST per source server_group_prof record.",
+      "depends_on": []
+    },
+    {
+      "step":     2,
+      "name":     "assign_server_group",
+      "purpose":  "Assign the server-group to the target scope so the Mobility Gateway aaa-profile can reference it. Multi-device-function array packed into a single POST.",
+      "endpoint": "/network-config/v1alpha1/config-assignments",
+      "method":   "POST",
+      "query_params": {},
+      "body_template": {
+        "config-assignment": [
+          "{one entry per device_function in target_meta.device_functions: { scope-id, device-function, profile-type='server-groups', profile-instance='{name}' }}"
+        ]
+      },
+      "iteration": "once",
+      "iteration_notes": "One POST; all device-functions share the array.",
+      "depends_on": [1]
+    }
+  ],
+  "target_meta": {
+    "device_functions": ["MOBILITY_GW"],
+    "device_function_filtering_rule": "Server-groups are referenced by the gateway aaa-profile; the AOS 8 -> Central migration targets MOBILITY_GW. Operators with AP-direct (bridge) auth can override device_functions in runtime_values."
+  },
+  "target_scope_id_resolution": {
+    "rule":   "Central scope_id is supplied by the consuming skill at runtime, derived from the AOS 8 server_group_prof record's binding scope.",
+    "input":  "Source binding scope (string path / identifier); skill-specific",
+    "output": "Central scope_id (string), supplied via runtime_values['central_scope_id']"
+  },
+  "required_runtime_values": ["central_scope_id"],
+  "derived": {},
+  "dependencies": [
+    {
+      "depends_on": "central:auth_server — server-group members reference auth-servers by name (servers[].server-name). Each AOS 8 server_group_prof.auth_server[] member names an auth-server; the referenced auth-server must exist in Central before this server-group POST. Run central:auth_server FIRST.",
+      "depended_by": [
+        {
+          "target_id": "central:aaa_profile (not yet authored)",
+          "field":     "dot1xauth-server-group / macauth-server-group",
+          "relation":  "the gateway aaa-profile references server-groups by name",
+          "notes":     "AOS 8 aaa_prof.dot1x_server_group / mba_server_group / rad_acct_sg name a server_group_prof; the Central aaa-profile references the server-group by name. Run server-group BEFORE the aaa-profile translation."
+        }
+      ]
+    }
+  ],
+  "tokenize_kind_per_field": {},
+  "sources": {
+    "aos8": {
+      "kind":         "rest",
+      "mapping_kind": "simple",
+      "objects": [
+        {
+          "object":      "server_group_prof",
+          "object_path": "/v1/configuration/object/server_group_prof",
+          "role":        "aaa_server_group",
+          "docs": {
+            "get":  "https://developer.arubanetworks.com/aos8/reference/get_object-server_group_prof",
+            "post": "https://developer.arubanetworks.com/aos8/reference/post_object-server_group_prof"
+          },
+          "live_shape_example": "[{\"sg_name\": \"AG_CPPM\", \"auth_server\": [{\"name\": \"AG_CPPM_PUB\"}]}]",
+          "notes": "REST schema 'server_group_prof' (CLI noun: aaa server-group). 6 fields per the vendored AOS 8 OAS: sg_name (name), auth_server[] (ordered member list — each member: name + optional fqdn/all/operator), derivation_rules_vlan_role[] (server-derivation rules), fail_thru, load_balance, server_group_prof_clone. Live-verified across 9 groups in the maintainer's tenant (all single/multi RADIUS members)."
+        }
+      ],
+      "key_mappings": {
+        "name":    { "from": "sg_name",     "to": "Central server-group 'name' (path param step 1, profile-instance step 2, body 'name')", "transform": "direct_str", "notes": "Required. AOS 8 sg_name -> Central name." },
+        "servers": { "from": "auth_server", "to": "Central server-group body 'servers[]' ([{server-name, position}])", "transform": "aos8_server_group_members", "notes": "Maps the ordered AOS 8 auth_server[] member list to Central servers[] preserving order (1-based position = auth precedence). Members without a name dropped. Member _flags.inherited is NOT a drop signal (it just reflects the group being authored at an ancestor scope); record-level inheritance filtering is the consumer's job. Referenced auth-servers must pre-exist (dependency on central:auth_server)." }
+      },
+      "unmapped_fields": [
+        {
+          "from":          "derivation_rules_vlan_role[] (server-group server-derivation rules: attribute / operand / operator / prio)",
+          "reason":        "AOS 8 server-group VLAN/role derivation rules map to Central's server-group 'assignment-rules' (ArubaDynamicAssignment_AssignmentRulesConfig) — a richer structure (sequence-id / attribute / operator / assign-action) needing its own per-rule mapping. Deferred to a v2 once a configured sample is available; surface as OPERATOR-MAP so the gap is visible.",
+          "severity_rule": "non_empty_regression"
+        },
+        {
+          "from":          "fail_thru / load_balance (server-group fail-through + load-balancing flags), server_group_prof_clone",
+          "reason":        "fail_thru/load_balance have candidate Central counterparts but field names are unverified; clone is a CLI authoring convenience, not a profile attribute. Map per-field once verified.",
+          "severity_rule": "always_operator_map"
+        }
+      ],
+      "ignored_variants": [
+        {
+          "form":   "server_group_prof with _flags.default=true (system / built-in, e.g. 'default', 'internal')",
+          "reason": "AOS 8 ships built-in server-groups. Consumer filters _flags.default / _flags.system / _flags.inherited (at definition scope) BEFORE calling emit_calls, matching the central:auth_server / net_group / role convention."
+        }
+      ]
+    }
+  },
+  "draft_notes": [
+    "v1 translation, Gateway-targeted. POST /server-groups/{name} then config-assignment to MOBILITY_GW. Simple Paradigm-B: per-field key_mappings (name + servers), no preprocessing — the servers[] array map is a single 1-arg transform (aos8_server_group_members).",
+    "TYPE DEFAULT: body emits a literal type='RADIUS' — the dominant case for AOS 8 WLAN auth server-groups (live-verified: all 9 groups on the maintainer's tenant are RADIUS). TACACS / mixed-member groups need the type overridden; a v2 can derive it from the member auth-servers' types (cross-object, via runtime_values) the way central:auth_server correlates CoA. Surface as a caveat to the operator.",
+    "DEPENDENCY: members reference auth-servers by name (servers[].server-name). Run central:auth_server BEFORE this. In turn the gateway aaa-profile references server-groups by name (dot1xauth-server-group / macauth-server-group) — run server-group before the aaa-profile translation.",
+    "ORDERING: AOS 8 auth_server[] order is auth precedence; preserved as 1-based servers[].position. Inherited members filtered.",
+    "NEEDS-PREVIEW: config-assignment profile-type ('server-groups') and whether a server-group needs its own scope assignment (vs being referenced indirectly via the aaa-profile) are preview-confirm. assignment-rules (derivation) deferred to v2.",
+    "Idempotency: SHARED POST for an existing server-group name returns HTTP 409; consumer handles 409 idempotently."
+  ]
+}

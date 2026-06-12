@@ -16,8 +16,9 @@ from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.greenlake._registry import tool
-from hpe_networking_mcp.platforms.greenlake.client import GreenLakeHttpClient
+from hpe_networking_mcp.platforms.greenlake.client import get_greenlake_client
 
 
 def _coerce_int(value: Any, name: str) -> int:
@@ -52,13 +53,7 @@ def _coerce_int(value: Any, name: str) -> int:
         "updatedAt."
     ),
     tags={"greenlake", "subscriptions"},
-    annotations={
-        "title": "Get GreenLake subscriptions",
-        "readOnlyHint": True,
-        "destructiveHint": False,
-        "idempotentHint": True,
-        "openWorldHint": True,
-    },
+    capability=Capability.READ,
 )
 async def greenlake_get_subscriptions(
     ctx: Context,
@@ -135,11 +130,7 @@ async def greenlake_get_subscriptions(
     except ValueError as e:
         raise ToolError({"status_code": 400, "message": f"Invalid parameter: {e}"}) from e
 
-    token_manager = ctx.lifespan_context["greenlake_token_manager"]
-    config = ctx.lifespan_context["config"]
-    base_url = config.greenlake.api_base_url
-
-    async with GreenLakeHttpClient(token_manager=token_manager, base_url=base_url) as client:
+    async with get_greenlake_client(ctx) as client:
         return await client.get("/subscriptions/v1/subscriptions", params=params)
 
 
@@ -156,13 +147,7 @@ async def greenlake_get_subscriptions(
         "Rate limit: 20 requests/min per workspace."
     ),
     tags={"greenlake", "subscriptions"},
-    annotations={
-        "title": "Get GreenLake subscription details",
-        "readOnlyHint": True,
-        "destructiveHint": False,
-        "idempotentHint": True,
-        "openWorldHint": True,
-    },
+    capability=Capability.READ,
 )
 async def greenlake_get_subscription_details(
     ctx: Context,
@@ -177,9 +162,5 @@ async def greenlake_get_subscription_details(
     if not id or not id.strip():
         raise ToolError({"status_code": 400, "message": "id is required and cannot be empty"})
 
-    token_manager = ctx.lifespan_context["greenlake_token_manager"]
-    config = ctx.lifespan_context["config"]
-    base_url = config.greenlake.api_base_url
-
-    async with GreenLakeHttpClient(token_manager=token_manager, base_url=base_url) as client:
+    async with get_greenlake_client(ctx) as client:
         return await client.get(f"/subscriptions/v1/subscriptions/{id}")

@@ -3,16 +3,17 @@ from typing import Literal
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.models import (
     Event,
     EventFilters,
     PaginatedEvents,
 )
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import (
     clean_event_filters,
     compute_time_window,
+    get_central_conn,
     retry_central_command,
 )
 
@@ -52,7 +53,7 @@ def _resolve_time_window(
     return fmt(start_dt), fmt(end_dt)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_events(
     ctx: Context,
     context_type: CONTEXT_TYPE,
@@ -115,8 +116,8 @@ async def central_get_events(
         query_params["next"] = cursor
 
     try:
-        response = retry_central_command(
-            ctx.lifespan_context["central_conn"],
+        response = await retry_central_command(
+            get_central_conn(ctx),
             api_method="GET",
             api_path="network-troubleshooting/v1/events",
             api_params=query_params,
@@ -133,7 +134,7 @@ async def central_get_events(
     )
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_events_count(
     ctx: Context,
     context_type: CONTEXT_TYPE,
@@ -171,8 +172,8 @@ async def central_get_events_count(
     except ValueError as e:
         raise ToolError({"status_code": 502, "message": f"Error: {e}"}) from e
 
-    response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+    response = await retry_central_command(
+        get_central_conn(ctx),
         api_method="GET",
         api_path="network-troubleshooting/v1/event-filters",
         api_params={

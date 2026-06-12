@@ -14,22 +14,14 @@ from typing import Annotated, Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
-
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_webhooks(
     ctx: Context,
     limit: int = 100,
@@ -41,8 +33,8 @@ async def central_get_webhooks(
     enabled flag). Use ``central_get_webhook`` for a single webhook's
     full configuration.
     """
-    conn = ctx.lifespan_context["central_conn"]
-    response = retry_central_command(
+    conn = get_central_conn(ctx)
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path="network-services/v1/webhooks",
@@ -54,14 +46,14 @@ async def central_get_webhooks(
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_webhook(
     ctx: Context,
     webhook_id: Annotated[str, Field(description="Webhook identifier.")],
 ) -> dict:
     """Get one webhook's full configuration by ID."""
-    conn = ctx.lifespan_context["central_conn"]
-    response = retry_central_command(
+    conn = get_central_conn(ctx)
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path=f"network-services/v1/webhooks/{webhook_id}",
@@ -72,7 +64,7 @@ async def central_get_webhook(
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_webhook(
     ctx: Context,
     action_type: Annotated[
@@ -112,12 +104,12 @@ async def central_manage_webhook(
     PATCH semantics; pass ``replace_existing=True`` for PUT (wholesale
     replace).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     if action_type == "create":
         if not payload:
             raise ToolError({"status_code": 400, "message": "``payload`` is required for create."})
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method="POST",
             api_path="network-services/v1/webhooks",
@@ -129,7 +121,7 @@ async def central_manage_webhook(
         if not payload:
             raise ToolError({"status_code": 400, "message": "``payload`` is required for update."})
         method = "PUT" if replace_existing else "PATCH"
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method=method,
             api_path=f"network-services/v1/webhooks/{webhook_id}",
@@ -138,7 +130,7 @@ async def central_manage_webhook(
     elif action_type == "delete":
         if not webhook_id:
             raise ToolError({"status_code": 400, "message": "``webhook_id`` is required for delete."})
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method="DELETE",
             api_path=f"network-services/v1/webhooks/{webhook_id}",
@@ -152,7 +144,7 @@ async def central_manage_webhook(
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_rotate_webhook_hmac_key(
     ctx: Context,
     webhook_id: Annotated[str, Field(description="Webhook identifier to rotate.")],
@@ -163,8 +155,8 @@ async def central_rotate_webhook_hmac_key(
     Receivers must update to the new key from the response immediately.
     Requires ``ENABLE_CENTRAL_WRITE_TOOLS=true``.
     """
-    conn = ctx.lifespan_context["central_conn"]
-    response = retry_central_command(
+    conn = get_central_conn(ctx)
+    response = await retry_central_command(
         central_conn=conn,
         api_method="POST",
         api_path=f"network-services/v1/webhooks/{webhook_id}/rotate-hmac-key",

@@ -8,26 +8,14 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import WRITE_DELETE
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
 _VALID_TARGETS = ("session_id", "username", "mac", "ip", "bulk")
 
 
-async def _confirm_session_action(ctx: Context, action: str, target_type: str, target: str | None) -> dict | None:
-    """Thin wrapper over :func:`middleware.elicitation.confirm_write`.
-
-    Kept as a local helper so existing call sites don't change; the
-    shared elicitation/decline/cancel logic now lives in the middleware
-    (#148).
-    """
-    label = f"{target_type}={target}" if target else target_type
-    return await confirm_write(ctx, f"ClearPass: {action} session for {label}. Confirm?")
-
-
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.OPERATIONAL, enable_gated=True)
 async def clearpass_disconnect_session(
     ctx: Context,
     target_type: Annotated[str, Field(description="Target type: 'session_id', 'username', 'mac', 'ip', or 'bulk'.")],
@@ -39,7 +27,13 @@ async def clearpass_disconnect_session(
         dict | None,
         Field(description="Filter criteria for bulk disconnect (e.g. {'nasipaddress': '10.1.1.1'})."),
     ] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Disconnect an active ClearPass session (send RADIUS Disconnect-Request).
 
@@ -54,7 +48,8 @@ async def clearpass_disconnect_session(
         target_type: How to identify the session(s) to disconnect.
         target_value: The session ID, username, MAC, or IP. Not needed for bulk.
         filter: Filter dict for bulk operations. Used only when target_type is 'bulk'.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if target_type not in _VALID_TARGETS:
         raise ToolError(
@@ -70,31 +65,31 @@ async def clearpass_disconnect_session(
     if target_type == "bulk" and not filter:
         raise ToolError({"status_code": 400, "message": "filter is required when target_type is 'bulk'."})
 
-    if not confirmed:
-        decline = await _confirm_session_action(ctx, "disconnect", target_type, target_value)
-        if decline:
-            return decline
-
     try:
-        from pyclearpass.api_sessioncontrol import ApiSessionControl
+        client = await get_clearpass_client()
 
-        client = await get_clearpass_session(ApiSessionControl)
-
+        # Live-verified routes (#469): the old bulk/selector POSTs to
+        # /session/disconnect return HTTP 405; the API surface is
+        # /session-action/disconnect[/<selector>/{value}].
         if target_type == "session_id":
-            return client._send_request(f"/session/{target_value}/disconnect", "post", query={})
+            return await client.request(
+                "post",
+                f"/session/{target_value}/disconnect",
+                json_body={"id": target_value, "confirm_disconnect": True},
+            )
         if target_type == "bulk":
-            return client._send_request("/session/disconnect", "post", query=filter)
-        # username, mac, ip — use filtered disconnect
-        filter_map = {"username": "username", "mac": "mac_address", "ip": "framedipaddress"}
-        query = {filter_map[target_type]: target_value}
-        return client._send_request("/session/disconnect", "post", query=query)
+            return await client.request("post", "/session-action/disconnect", json_body={"filter": filter})
+        selector_map = {"username": "username", "mac": "mac", "ip": "ip"}
+        return await client.request(
+            "post", f"/session-action/disconnect/{selector_map[target_type]}/{target_value}", json_body={}
+        )
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error disconnecting session: {e}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.OPERATIONAL, enable_gated=True)
 async def clearpass_perform_coa(
     ctx: Context,
     target_type: Annotated[str, Field(description="Target type: 'session_id', 'username', 'mac', 'ip', or 'bulk'.")],
@@ -106,7 +101,26 @@ async def clearpass_perform_coa(
         dict | None,
         Field(description="Filter criteria for bulk CoA (e.g. {'nasipaddress': '10.1.1.1'})."),
     ] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    enforcement_profile: Annotated[
+        list[str] | None,
+        Field(
+            description=(
+                "Enforcement profile name(s) to apply. REQUIRED for username/mac/ip/bulk targets "
+                "(the /session-action/coa API mandates it). Not used for session_id."
+            ),
+        ),
+    ] = None,
+    reauthorize_profile: Annotated[
+        str | None,
+        Field(description="Optional reauthorization profile name (session_id target only)."),
+    ] = None,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Perform a Change of Authorization (CoA) on active ClearPass sessions.
 
@@ -124,7 +138,8 @@ async def clearpass_perform_coa(
         target_type: How to identify the session(s) for CoA.
         target_value: The session ID, username, MAC, or IP. Not needed for bulk.
         filter: Filter dict for bulk operations. Used only when target_type is 'bulk'.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if target_type not in _VALID_TARGETS:
         raise ToolError(
@@ -140,24 +155,43 @@ async def clearpass_perform_coa(
     if target_type == "bulk" and not filter:
         raise ToolError({"status_code": 400, "message": "filter is required when target_type is 'bulk'."})
 
-    if not confirmed:
-        decline = await _confirm_session_action(ctx, "CoA", target_type, target_value)
-        if decline:
-            return decline
+    if target_type != "session_id" and not enforcement_profile:
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": (
+                    "enforcement_profile is required for username/mac/ip/bulk CoA — the "
+                    "/session-action/coa API mandates the enforcement profile(s) to apply."
+                ),
+            }
+        )
 
     try:
-        from pyclearpass.api_sessioncontrol import ApiSessionControl
+        client = await get_clearpass_client()
 
-        client = await get_clearpass_session(ApiSessionControl)
-
+        # Live-verified routes (#469): the old GET /session/{id}/reauthorize
+        # returned reauth *templates* without performing anything, and the
+        # bulk POST /session/reauthorize returns HTTP 405. Performing a CoA is
+        # POST /session/{id}/reauthorize (confirm flag in the body) for a
+        # single session, or /session-action/coa[/<selector>/{value}] with
+        # the mandatory enforcement_profile otherwise.
         if target_type == "session_id":
-            return client.get_session_by_id_reauthorize(id=target_value)
+            body: dict = {"confirm_reauthorize": True}
+            if reauthorize_profile:
+                body["reauthorize_profile"] = reauthorize_profile
+            return await client.request("post", f"/session/{target_value}/reauthorize", json_body=body)
         if target_type == "bulk":
-            return client._send_request("/session/reauthorize", "post", query=filter)
-        # username, mac, ip — use filtered reauthorize
-        filter_map = {"username": "username", "mac": "mac_address", "ip": "framedipaddress"}
-        query = {filter_map[target_type]: target_value}
-        return client._send_request("/session/reauthorize", "post", query=query)
+            return await client.request(
+                "post",
+                "/session-action/coa",
+                json_body={"filter": filter, "enforcement_profile": enforcement_profile},
+            )
+        selector_map = {"username": "username", "mac": "mac", "ip": "ip"}
+        return await client.request(
+            "post",
+            f"/session-action/coa/{selector_map[target_type]}/{target_value}",
+            json_body={"enforcement_profile": enforcement_profile},
+        )
     except ToolError:
         raise
     except Exception as e:

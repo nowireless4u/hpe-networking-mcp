@@ -1,8 +1,8 @@
 """UXI assignment write tools (POST + DELETE).
 
 Tools in this module create and remove agent-group and sensor-group assignments.
-They are gated behind ``ENABLE_UXI_WRITE_TOOLS=true`` and require user
-confirmation via ``confirm_write`` elicitation before any HTTP mutation is issued.
+They are gated behind ``ENABLE_UXI_WRITE_TOOLS=true``; the universal confirmation
+gate at ``uxi_invoke_tool`` prompts the user before any HTTP mutation is issued.
 
 Note on remove tools: the DELETE endpoints take the **assignment record ID**
 returned by ``uxi_list_*_group_assignments`` items[].id — NOT the agent, sensor,
@@ -17,14 +17,13 @@ from typing import Any
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.uxi._registry import tool
 from hpe_networking_mcp.platforms.uxi.client import format_http_error, get_uxi_client
-from hpe_networking_mcp.platforms.uxi.tools import WRITE, WRITE_DELETE
 from hpe_networking_mcp.platforms.uxi.tools._validators import validate_id
 
 
-@tool(annotations=WRITE, tags={"uxi_write"})
+@tool(capability=Capability.WRITE)
 async def uxi_assign_agent_to_group(
     ctx: Context,
     agent_id: str,
@@ -42,10 +41,6 @@ async def uxi_assign_agent_to_group(
     validate_id(agent_id, "agent_id")
     validate_id(group_id, "group_id")
 
-    decision = await confirm_write(ctx, f"Assign agent {agent_id!r} to group {group_id!r}?")
-    if decision is not None:
-        return decision
-
     body = {"agentId": agent_id, "groupId": group_id}  # API fields are camelCase
 
     try:
@@ -58,7 +53,7 @@ async def uxi_assign_agent_to_group(
         return format_http_error(e)
 
 
-@tool(annotations=WRITE_DELETE, tags={"uxi_write", "uxi_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def uxi_remove_agent_from_group(
     ctx: Context,
     assignment_id: str,
@@ -75,10 +70,6 @@ async def uxi_remove_agent_from_group(
     """
     validate_id(assignment_id, "assignment_id")
 
-    decision = await confirm_write(ctx, f"Remove agent-group assignment {assignment_id!r}?")
-    if decision is not None:
-        return decision
-
     try:
         client = await get_uxi_client()
         result = await client.uxi_delete(f"/agent-group-assignments/{assignment_id}")
@@ -89,7 +80,7 @@ async def uxi_remove_agent_from_group(
         return format_http_error(e)
 
 
-@tool(annotations=WRITE, tags={"uxi_write"})
+@tool(capability=Capability.WRITE)
 async def uxi_assign_sensor_to_group(
     ctx: Context,
     sensor_id: str,
@@ -107,10 +98,6 @@ async def uxi_assign_sensor_to_group(
     validate_id(sensor_id, "sensor_id")
     validate_id(group_id, "group_id")
 
-    decision = await confirm_write(ctx, f"Assign sensor {sensor_id!r} to group {group_id!r}?")
-    if decision is not None:
-        return decision
-
     body = {"sensorId": sensor_id, "groupId": group_id}  # API fields are camelCase
 
     try:
@@ -123,7 +110,7 @@ async def uxi_assign_sensor_to_group(
         return format_http_error(e)
 
 
-@tool(annotations=WRITE_DELETE, tags={"uxi_write", "uxi_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def uxi_remove_sensor_from_group(
     ctx: Context,
     assignment_id: str,
@@ -139,10 +126,6 @@ async def uxi_remove_sensor_from_group(
             ``uxi_list_sensor_group_assignments`` items[].id).
     """
     validate_id(assignment_id, "assignment_id")
-
-    decision = await confirm_write(ctx, f"Remove sensor-group assignment {assignment_id!r}?")
-    if decision is not None:
-        return decision
 
     try:
         client = await get_uxi_client()

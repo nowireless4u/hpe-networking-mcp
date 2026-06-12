@@ -7,12 +7,12 @@ recommendation-style observations Central surfaces alongside hard alerts.
 
 from fastmcp import Context
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_insights(
     ctx: Context,
     filter: str | None = None,
@@ -31,11 +31,11 @@ async def central_get_insights(
         limit: Results per page (default 100).
         offset: Pagination offset (default 0).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     api_params: dict = {"limit": limit, "offset": offset}
     if filter:
         api_params["filter"] = filter
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path="network-notifications/v1/insights",

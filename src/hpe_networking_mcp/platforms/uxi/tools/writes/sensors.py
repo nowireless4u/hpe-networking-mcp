@@ -1,8 +1,8 @@
 """UXI sensor write tools (PATCH).
 
 Tools in this module mutate UXI sensor configuration. They are gated behind
-``ENABLE_UXI_WRITE_TOOLS=true`` and require user confirmation via
-``confirm_write`` elicitation before any HTTP mutation is issued.
+``ENABLE_UXI_WRITE_TOOLS=true``; the universal confirmation gate at
+``uxi_invoke_tool`` prompts the user before any HTTP mutation is issued.
 """
 
 from __future__ import annotations
@@ -12,16 +12,15 @@ from typing import Any
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.uxi._registry import tool
 from hpe_networking_mcp.platforms.uxi.client import format_http_error, get_uxi_client
-from hpe_networking_mcp.platforms.uxi.tools import WRITE
 from hpe_networking_mcp.platforms.uxi.tools._validators import validate_id
 
 _VALID_PCAP_MODES = {"light", "full", "off"}
 
 
-@tool(annotations=WRITE, tags={"uxi_write"})
+@tool(capability=Capability.WRITE)
 async def uxi_update_sensor(
     ctx: Context,
     sensor_id: str,
@@ -60,10 +59,6 @@ async def uxi_update_sensor(
 
     if not body:
         return {"status": "no_op", "message": "No fields provided — nothing to update."}
-
-    decision = await confirm_write(ctx, f"Update sensor {sensor_id!r} — fields: {', '.join(body.keys())}")
-    if decision is not None:
-        return decision
 
     try:
         client = await get_uxi_client()

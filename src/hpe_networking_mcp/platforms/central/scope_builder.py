@@ -174,7 +174,7 @@ def _build_tree(device_data: dict, maps_data: dict) -> Tree:
 # ---------------------------------------------------------------------------
 
 
-def build_scope_tree(conn: Any) -> Tree:
+async def build_scope_tree(conn: Any) -> Tree:
     """Fetch scope data and scope maps from Central, return a treelib Tree.
 
     Makes two API calls:
@@ -182,17 +182,17 @@ def build_scope_tree(conn: Any) -> Tree:
       2. GET network-config/v1alpha1/scope-maps
 
     Args:
-        conn: pycentral connection object.
+        conn: CentralClient instance.
 
     Returns:
         A treelib Tree representing the scope hierarchy.
     """
-    device_resp = retry_central_command(
+    device_resp = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path="cnxdevice/v1/debug/get_scope_data",
     )
-    maps_resp = retry_central_command(
+    maps_resp = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path="network-config/v1alpha1/scope-maps",

@@ -5,13 +5,13 @@ from __future__ import annotations
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import clearpass_get
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_guest_users(
     ctx: Context,
     guest_id: str | None = None,
@@ -36,13 +36,11 @@ async def clearpass_get_guest_users(
         limit: Max results per page (default 25). List mode only.
     """
     try:
-        from pyclearpass.api_identities import ApiIdentities
-
-        client = await get_clearpass_session(ApiIdentities)
+        client = await get_clearpass_client()
         if guest_id:
-            return client.get_guest_by_guest_id(guest_id=guest_id)
+            return await client.request("get", f"/guest/{guest_id}")
         if username:
-            return client.get_guest_username_by_username(username=username)
+            return await client.request("get", f"/guest/username/{username}")
         params = [
             f"filter={filter}" if filter else "",
             f"sort={sort}" if sort else "",
@@ -51,7 +49,7 @@ async def clearpass_get_guest_users(
             f"calculate_count={'true' if calculate_count else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
-        return clearpass_get(client, "/guest" + query)
+        return await clearpass_get(client, "/guest" + query)
     except ToolError:
         raise
     except Exception as e:

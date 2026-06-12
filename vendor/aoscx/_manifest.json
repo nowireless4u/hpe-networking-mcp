@@ -1,0 +1,15 @@
+{
+  "definition_count": 1,
+  "definitions": [
+    {
+      "id": "690bb6c1f9581fc223d97d3c",
+      "path_count": 675,
+      "slug": "aos-cx-rest-api",
+      "title": "AOS-CX REST API",
+      "version": "10.16"
+    }
+  ],
+  "project": "aoscx",
+  "source": "https://developer.arubanetworks.com/aoscx/openapi/<apiSetting-id>",
+  "total_paths": 675
+}

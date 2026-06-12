@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,9 +16,9 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
@@ -26,8 +26,7 @@ from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 @_mcp_tool(
     name="mist_ack_site_alarm",
     description="POST /api/v1/sites/{site_id}/alarms/{alarm_id}/ack\n\nackSiteAlarm\n\nAck Site Alarm",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_ack_site_alarm(
     ctx: Context,
@@ -48,8 +47,7 @@ async def mist_ack_site_alarm(
 @_mcp_tool(
     name="mist_ack_site_all_alarms",
     description="POST /api/v1/sites/{site_id}/alarms/ack_all\n\nackSiteAllAlarms\n\nAck all Site Alarms\n\n**N.B.**: Batch size for multiple alarm ack and unack has to be less or or equal to 1000.",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_ack_site_all_alarms(
     ctx: Context,
@@ -72,8 +70,7 @@ async def mist_ack_site_all_alarms(
 @_mcp_tool(
     name="mist_ack_site_multiple_alarms",
     description="POST /api/v1/sites/{site_id}/alarms/ack\n\nAckSiteMultipleAlarms\n\nAck multiple Site Alarms",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_ack_site_multiple_alarms(
     ctx: Context,
@@ -92,19 +89,23 @@ async def mist_ack_site_multiple_alarms(
 
 @_mcp_tool(
     name="mist_count_site_alarms",
-    description="GET /api/v1/sites/{site_id}/alarms/count\n\ncountSiteAlarms\n\nCount by Distinct Attributes of Site Alarms",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/sites/{site_id}/alarms/count\n\ncountSiteAlarms\n\nCount alarms for a site, optionally grouped by the `distinct` field and filtered by time range. Use [Count Org Alarms](/#operations/countOrgAlarms) to count alarms across the organization.",
+    capability=Capability.READ,
 )
 async def mist_count_site_alarms(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
-    distinct: Annotated[Any | None, Field(description="Group by and count the alarms by some distinct field")] = None,
+    distinct: Annotated[
+        Any | None,
+        Field(description="Field used to group this count response. enum: `acked`, `group`, `severity`, `type`"),
+    ] = None,
     ack_admin_name: Annotated[
         str | None,
         Field(description="Name of the admins who have acked the alarms; accepts multiple values separated by comma"),
     ] = None,
-    acked: Annotated[bool | None, Field(description="query parameter 'acked'")] = None,
+    acked: Annotated[
+        bool | None, Field(description="Filter alarm results by whether the alarm has been acknowledged")
+    ] = None,
     type: Annotated[
         str | None, Field(description="Key-name of the alarms; accepts multiple values separated by comma")
     ] = None,
@@ -115,14 +116,21 @@ async def mist_count_site_alarms(
         str | None, Field(description="Alarm group name; accepts multiple values separated by comma")
     ] = None,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -147,9 +155,8 @@ async def mist_count_site_alarms(
 
 @_mcp_tool(
     name="mist_search_site_alarms",
-    description="GET /api/v1/sites/{site_id}/alarms/search\n\nsearchSiteAlarms\n\nSearch Site Alarms",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/sites/{site_id}/alarms/search\n\nsearchSiteAlarms\n\nSearch alarms for a site with filters for alarm group, severity, type, acknowledgement state, acknowledgement admin, and time range. Use [Search Org Alarms](/#operations/searchOrgAlarms) to search alarms across the organization.",
+    capability=Capability.READ,
 )
 async def mist_search_site_alarms(
     ctx: Context,
@@ -157,32 +164,41 @@ async def mist_search_site_alarms(
     group: Annotated[
         Any | None,
         Field(
-            description="Alarm group. enum: `infrastructure`, `marvis`, `security`. \nThe `marvis` group is used to retrieve AI-driven network issue detections. \nKnown Marvis alarm types include: `bad_cable`, `bad_wan_uplink`, `dns_failure`, \n`arp_failure`, `auth..."
+            description="Alarm group used to filter alarm results. enum: `certificate_expiry`, `infrastructure`, `marvis`, `security`. The `marvis` group is used to retrieve AI-driven network issue detections. Known Marvis alarm types include: `bad_cable`, `bad_..."
         ),
     ] = None,
     severity: Annotated[
-        Any | None, Field(description="Severity of the alarm. enum: `critical`, `info`, `warn`")
+        Any | None, Field(description="Alarm severity used to filter results. enum: `critical`, `info`, `warn`")
     ] = None,
     type: Annotated[
         str | None,
         Field(
-            description="Type of the alarm. Accepts multiple values separated by comma. Use [List Alarm Definitions](/#operations/listAlarmDefinitions) to get the list of possible alarm types."
+            description="Filter alarms by alarm type. Accepts multiple values separated by comma. Use [List Alarm Definitions](/#operations/listAlarmDefinitions) to get the list of possible alarm types"
         ),
     ] = None,
     ack_admin_name: Annotated[
         str | None,
         Field(description="Name of the admins who have acked the alarms; accepts multiple values separated by comma"),
     ] = None,
-    acked: Annotated[bool | None, Field(description="query parameter 'acked'")] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    acked: Annotated[
+        bool | None, Field(description="Filter alarm results by whether the alarm has been acknowledged")
+    ] = None,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     sort: Annotated[
         str, Field(description="On which field the list should be sorted, -prefix represents DESC order")
     ] = "timestamp",
@@ -218,8 +234,7 @@ async def mist_search_site_alarms(
 @_mcp_tool(
     name="mist_subscribe_site_alarms",
     description="POST /api/v1/sites/{site_id}/subscriptions\n\nSubscribeSiteAlarms\n\nSubscribe to Site Alarms",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_subscribe_site_alarms(
     ctx: Context,
@@ -238,8 +253,7 @@ async def mist_subscribe_site_alarms(
 @_mcp_tool(
     name="mist_unack_site_alarm",
     description="POST /api/v1/sites/{site_id}/alarms/{alarm_id}/unack\n\nunackSiteAlarm\n\nUnack Site Alarm",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_unack_site_alarm(
     ctx: Context,
@@ -260,8 +274,7 @@ async def mist_unack_site_alarm(
 @_mcp_tool(
     name="mist_unack_site_all_alarms",
     description="POST /api/v1/sites/{site_id}/alarms/unack_all\n\nunackSiteAllAlarms\n\nUnack all Site Alarms\n\n**N.B.**: Batch size for multiple alarm ack and unack has to be less or or equal to 1000.",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_unack_site_all_alarms(
     ctx: Context,
@@ -281,8 +294,7 @@ async def mist_unack_site_all_alarms(
 @_mcp_tool(
     name="mist_unack_site_multiple_alarms",
     description="POST /api/v1/sites/{site_id}/alarms/unack\n\nunackSiteMultipleAlarms\n\nUnack multiple Site Alarms",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_unack_site_multiple_alarms(
     ctx: Context,
@@ -302,8 +314,7 @@ async def mist_unack_site_multiple_alarms(
 @_mcp_tool(
     name="mist_unsubscribe_site_alarms",
     description="DELETE /api/v1/sites/{site_id}/subscriptions\n\nUnsubscribeSiteAlarms\n\nUnsubscribe to Site Alarms",
-    tags={"mist", "mist_write", "mist_write_delete"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True),
+    capability=Capability.WRITE_DELETE,
 )
 async def mist_unsubscribe_site_alarms(
     ctx: Context,

@@ -21,6 +21,8 @@ from fastmcp import Context
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.aos8._registry import tool
+from hpe_networking_mcp.platforms.aos8.cli_parser import parse_aos8_cli
+from hpe_networking_mcp.platforms.aos8.client import get_aos8_client
 from hpe_networking_mcp.platforms.aos8.tools._helpers import (
     format_aos8_error,
     get_object,
@@ -30,6 +32,7 @@ from hpe_networking_mcp.platforms.aos8.tools._helpers import (
 __all__ = [
     "aos8_get_md_hierarchy",
     "aos8_get_effective_config",
+    "aos8_parse_config",
     "aos8_get_pending_changes",
     "aos8_get_rf_neighbors",
     "aos8_get_cluster_state",
@@ -56,7 +59,7 @@ async def aos8_get_md_hierarchy(ctx: Context) -> dict[str, Any] | str:
         Dict with the AOS8 ``Configuration node hierarchy`` table on success;
         error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, "show configuration node-hierarchy")
     except Exception as exc:  # noqa: BLE001
@@ -92,7 +95,7 @@ async def aos8_get_effective_config(
     Returns:
         Parsed JSON body on success; error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await get_object(
             client,
@@ -102,6 +105,51 @@ async def aos8_get_effective_config(
         )
     except Exception as exc:  # noqa: BLE001
         return format_aos8_error(exc, f"fetch effective config for {object_name}")
+
+
+# ---------------------------------------------------------------------------
+# DIFF-02b — Offline AOS 8 CLI → canonical translation records
+# ---------------------------------------------------------------------------
+
+
+@tool(name="aos8_parse_config", capability=Capability.READ)
+async def aos8_parse_config(ctx: Context, cli_text: str) -> dict[str, Any]:
+    """Parse pasted AOS 8 running-config CLI into canonical translation records.
+
+    This is the offline, paste-driven counterpart to
+    ``aos8_get_effective_config``. Where that tool pulls config records from a
+    live Conductor via the REST API, this one turns AOS 8 CLI **text** — the
+    kind an operator copies out of ``show running-config`` or a captured
+    config file — into the **same record shapes the translation engine
+    consumes**. It is a pure offline parse: it does **not** call the tenant or
+    use ``ctx`` at all, so it works with no AOS 8 connection configured.
+
+    It recognises ``netdestination`` / ``netdestination6``,
+    ``ip access-list session`` / ``ipv6 access-list session``, and
+    ``user-role`` stanzas, producing:
+
+    * ``netdst`` — netdestination records (feed ``central:net_group``)
+    * ``acl_sess`` — session-ACL records (feed ``central:policy``)
+    * ``role`` — user-role records (feed ``central:role``)
+    * ``_warnings`` — human-readable notes for clauses that weren't fully
+      modelled (nothing is silently dropped; unparseable rules are also
+      captured under an ``_unparsed`` marker on the record).
+
+    The result is interchangeable with the output of
+    ``aos8_get_effective_config``: hand it straight to the ``central:*``
+    translations exactly the same way, enabling the "paste your AOS 8 config
+    into the AI" migration flow without live controller access.
+
+    Args:
+        ctx: FastMCP request context (unused — this is an offline parse, but
+            kept for tool-signature consistency with the AOS 8 platform).
+        cli_text: AOS 8 running-config CLI text (``!``-delimited stanzas).
+
+    Returns:
+        ``{"netdst": [...], "acl_sess": [...], "role": [...],
+        "_warnings": [...]}`` — translation-ready records plus warnings.
+    """
+    return parse_aos8_cli(cli_text)
 
 
 # ---------------------------------------------------------------------------
@@ -119,7 +167,7 @@ async def aos8_get_pending_changes(ctx: Context) -> dict[str, Any] | str:
     Returns:
         Parsed JSON body on success; error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, "show configuration pending")
     except Exception as exc:  # noqa: BLE001
@@ -147,7 +195,7 @@ async def aos8_get_rf_neighbors(
     Returns:
         Parsed JSON body on success; error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(
             client,
@@ -173,7 +221,7 @@ async def aos8_get_cluster_state(ctx: Context) -> dict[str, Any] | str:
     Returns:
         Parsed JSON body on success; error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, "show lc-cluster group-membership")
     except Exception as exc:  # noqa: BLE001
@@ -195,7 +243,7 @@ async def aos8_get_air_monitors(ctx: Context) -> dict[str, Any] | str:
     Returns:
         Parsed JSON body on success; error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, "show ap monitor active-laser-beams")
     except Exception as exc:  # noqa: BLE001
@@ -221,7 +269,7 @@ async def aos8_get_ap_wired_ports(
     Returns:
         Parsed JSON body on success; error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, f"show ap port status ap-name {ap_name}")
     except Exception as exc:  # noqa: BLE001
@@ -243,7 +291,7 @@ async def aos8_get_ipsec_tunnels(ctx: Context) -> dict[str, Any] | str:
     Returns:
         Parsed JSON body on success; error string on failure.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         return await run_show(client, "show crypto ipsec sa")
     except Exception as exc:  # noqa: BLE001
@@ -276,7 +324,7 @@ async def aos8_get_md_health_check(
         Dict with keys ``config_path``, ``aps``, ``clients``, ``alarms``,
         ``firmware``. On full failure returns an error string.
     """
-    client = ctx.lifespan_context["aos8_client"]
+    client = get_aos8_client(ctx)
     try:
         results: Any = await asyncio.gather(
             run_show(client, "show ap active", config_path=config_path),

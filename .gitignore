@@ -103,3 +103,26 @@ docs/env_secrets_migration_plan.md
 AGENTS.md
 docker-compose.override.yml copy.example
 .rest
+
+# Copyrighted Aruba/HPE reference PDFs kept locally for authoring (e.g. the
+# ArubaOS CLI Reference Guide) — reference only, never redistributed in-repo.
+docs/*.pdf
+
+# Real operator-environment config captures used for translation authoring /
+# parser fixtures (live show-command output, hierarchy dumps). Internal only.
+docs/cli-output.txt
+docs/aos8-*.txt
+docs/central/
+# Customer MD / controller config captures (real IPs + secrets) — never commit.
+docs/*_MD_Config.txt
+docs/North_Cluster_MD_Config.txt
+
+# Copyrighted Aruba CLI reference content (markdown export of the CLI guide),
+# kept locally for translation authoring. Reference only, never redistributed.
+docs/AOS/
+
+# Local scratch (vendored-OAS working copies, etc.)
+docs/aox-cx/
+
+# Pre-regen backup of the Central tool surface (local safety copy, never committed)
+central-tools-backup/

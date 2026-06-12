@@ -5,13 +5,13 @@ from __future__ import annotations
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import clearpass_get
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_sessions(
     ctx: Context,
     session_id: str | None = None,
@@ -34,11 +34,9 @@ async def clearpass_get_sessions(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_sessioncontrol import ApiSessionControl
-
-        client = await get_clearpass_session(ApiSessionControl)
+        client = await get_clearpass_client()
         if session_id:
-            return client.get_session_by_id(id=session_id)
+            return await client.request("get", f"/session/{session_id}")
         params = [
             f"filter={filter}" if filter else "",
             f"sort={sort}" if sort else "",
@@ -47,14 +45,14 @@ async def clearpass_get_sessions(
             f"calculate_count={'true' if calculate_count else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
-        return clearpass_get(client, "/session" + query)
+        return await clearpass_get(client, "/session" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching sessions: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_session_action_status(
     ctx: Context,
     action_id: str,
@@ -68,17 +66,15 @@ async def clearpass_get_session_action_status(
         action_id: The action ID returned from a session action request.
     """
     try:
-        from pyclearpass.api_sessioncontrol import ApiSessionControl
-
-        client = await get_clearpass_session(ApiSessionControl)
-        return client.get_session_action_by_action_id(action_id=action_id)
+        client = await get_clearpass_client()
+        return await client.request("get", f"/session-action/{action_id}")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching session action status: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_reauth_profiles(
     ctx: Context,
     session_id: str,
@@ -92,10 +88,8 @@ async def clearpass_get_reauth_profiles(
         session_id: Session ID to retrieve reauthorization profiles for.
     """
     try:
-        from pyclearpass.api_sessioncontrol import ApiSessionControl
-
-        client = await get_clearpass_session(ApiSessionControl)
-        return client.get_session_by_id_reauthorize(id=session_id)
+        client = await get_clearpass_client()
+        return await client.request("get", f"/session/{session_id}/reauthorize")
     except ToolError:
         raise
     except Exception as e:

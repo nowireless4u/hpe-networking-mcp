@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,35 +16,49 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
 
 @_mcp_tool(
     name="mist_count_org_nac_client_events",
-    description="GET /api/v1/orgs/{org_id}/nac_clients/events/count\n\ncountOrgNacClientEvents\n\nCount by Distinct Attributes of NAC Client-Events",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/nac_clients/events/count\n\ncountOrgNacClientEvents\n\nCount NAC client events across the organization, optionally grouped by `distinct` and filtered by event type and time range.",
+    capability=Capability.READ,
 )
 async def mist_count_org_nac_client_events(
     ctx: Context,
     org_id: Annotated[str, Field(description="path parameter 'org_id'")],
-    distinct: Annotated[Any | None, Field(description="query parameter 'distinct'")] = None,
+    distinct: Annotated[
+        Any | None,
+        Field(
+            description="Field used to group this count response. enum: `ap`, `auth_type`, `dryrun_nacrule_id`, `mac`, `nacrule_id`, `nas_vendor`, `ssid`, `type`, `username`, `vlan`"
+        ),
+    ] = None,
     type: Annotated[
-        str | None, Field(description="See [List Device Events Definitions](/#operations/listNacEventsDefinitions)")
+        str | None,
+        Field(
+            description="See [List Device Events Definitions](/#operations/listNacEventsDefinitions). Accepts multiple comma-separated values."
+        ),
     ] = None,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -65,14 +79,18 @@ async def mist_count_org_nac_client_events(
 
 @_mcp_tool(
     name="mist_count_org_nac_clients",
-    description="GET /api/v1/orgs/{org_id}/nac_clients/count\n\ncountOrgNacClients\n\nCount by Distinct Attributes of NAC Clients",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/nac_clients/count\n\ncountOrgNacClients\n\nCount NAC clients across the organization, optionally grouped by `distinct` and filtered by authentication, identity, endpoint, network, site, and time attributes.",
+    capability=Capability.READ,
 )
 async def mist_count_org_nac_clients(
     ctx: Context,
     org_id: Annotated[str, Field(description="path parameter 'org_id'")],
-    distinct: Annotated[Any | None, Field(description="NAC Policy Rule ID, if matched")] = None,
+    distinct: Annotated[
+        Any | None,
+        Field(
+            description="Field used to group this count response. enum: `ap`, `auth_type`, `device_mac`, `edr_managed`, `edr_provider`, `edr_status`, `family`, `hostname`, `idp_id`, `mfg`, `mdm_compliance`, `mdm_managed`, `mdm_provider`, `model`, `mxedge_id`, `n..."
+        ),
+    ] = None,
     last_nacrule_id: Annotated[str | None, Field(description="NAC Policy Rule ID, if matched")] = None,
     nacrule_matched: Annotated[bool | None, Field(description="NAC Policy Rule Matched")] = None,
     auth_type: Annotated[
@@ -81,19 +99,21 @@ async def mist_count_org_nac_clients(
             description='Authentication type, e.g. "eap-tls", "eap-peap", "eap-ttls", "eap-teap", "mab", "psk", "device-auth"'
         ),
     ] = None,
-    last_vlan_id: Annotated[str | None, Field(description="Vlan ID")] = None,
+    last_vlan_id: Annotated[str | None, Field(description="Filter results by last VLAN ID")] = None,
     last_nas_vendor: Annotated[str | None, Field(description="Vendor of NAS device")] = None,
     idp_id: Annotated[str | None, Field(description="SSO ID, if present and used")] = None,
-    last_ssid: Annotated[str | None, Field(description="SSID")] = None,
+    last_ssid: Annotated[str | None, Field(description="Filter results by last SSID")] = None,
     last_username: Annotated[str | None, Field(description="Username presented by the client")] = None,
-    timestamp: Annotated[float | None, Field(description="Start time, in epoch")] = None,
-    site_id: Annotated[str | None, Field(description="Site id if assigned, null if not assigned")] = None,
+    site_id: Annotated[str | None, Field(description="Filter results by site identifier")] = None,
     last_ap: Annotated[str | None, Field(description="AP MAC connected to by client")] = None,
-    mac: Annotated[str | None, Field(description="MAC address")] = None,
+    mac: Annotated[str | None, Field(description="Filter results by MAC address")] = None,
     last_status: Annotated[
         str | None, Field(description='Connection status of client i.e "permitted", "denied, "session_ended"')
     ] = None,
-    type: Annotated[str | None, Field(description='Client type i.e. "wireless", "wired" etc.')] = None,
+    type: Annotated[
+        str | None,
+        Field(description='Client type i.e. "wireless", "wired" etc. Accepts multiple comma-separated values.'),
+    ] = None,
     mdm_compliance_status: Annotated[
         str | None, Field(description='MDM compliance of client i.e "compliant", "not compliant"')
     ] = None,
@@ -101,14 +121,21 @@ async def mist_count_org_nac_clients(
         str | None, Field(description='MDM provider of client’s organization eg "intune", "jamf"')
     ] = None,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -125,7 +152,6 @@ async def mist_count_org_nac_clients(
             "idp_id": idp_id,
             "last_ssid": last_ssid,
             "last_username": last_username,
-            "timestamp": timestamp,
             "site_id": site_id,
             "last_ap": last_ap,
             "mac": mac,
@@ -144,17 +170,21 @@ async def mist_count_org_nac_clients(
 
 @_mcp_tool(
     name="mist_search_org_nac_client_events",
-    description="GET /api/v1/orgs/{org_id}/nac_clients/events/search\n\nsearchOrgNacClientEvents\n\nSearch NAC Client Events",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/nac_clients/events/search\n\nsearchOrgNacClientEvents\n\nSearch NAC client authentication event records across the organization with filters for authentication, NAC rule, identity provider, RADIUS, network, endpoint, site, and time attributes.",
+    capability=Capability.READ,
 )
 async def mist_search_org_nac_client_events(
     ctx: Context,
     org_id: Annotated[str, Field(description="path parameter 'org_id'")],
     type: Annotated[
-        str | None, Field(description="See [List Device Events Definitions](/#operations/listNacEventsDefinitions)")
+        str | None,
+        Field(
+            description="See [List Device Events Definitions](/#operations/listNacEventsDefinitions). Accepts multiple comma-separated values."
+        ),
     ] = None,
-    nacrule_id: Annotated[str | None, Field(description="NAC Policy Rule ID, if matched")] = None,
+    nacrule_id: Annotated[
+        str | None, Field(description="NAC Policy Rule ID, if matched. Accepts multiple comma-separated values.")
+    ] = None,
     nacrule_matched: Annotated[bool | None, Field(description="NAC Policy Rule Matched")] = None,
     dryrun_nacrule_id: Annotated[
         str | None, Field(description="NAC Policy Dry Run Rule ID, if present and matched")
@@ -168,36 +198,63 @@ async def mist_search_org_nac_client_events(
     auth_type: Annotated[
         str | None,
         Field(
-            description='Authentication type, e.g. "eap-tls", "eap-peap", "eap-ttls", "eap-teap", "mab", "psk", "device-auth"'
+            description='Authentication type, e.g. "eap-tls", "eap-peap", "eap-ttls", "eap-teap", "mab", "psk", "device-auth". Accepts multiple comma-separated values.'
         ),
     ] = None,
-    vlan: Annotated[int | None, Field(description="Vlan name or ID assigned to the client")] = None,
+    vlan: Annotated[
+        int | None, Field(description="Filter results by VLAN ID. Accepts multiple comma-separated integer values.")
+    ] = None,
     nas_vendor: Annotated[str | None, Field(description="Vendor of NAS device")] = None,
-    bssid: Annotated[str | None, Field(description="BSSID")] = None,
+    bssid: Annotated[str | None, Field(description="Filter results by BSSID")] = None,
     idp_id: Annotated[str | None, Field(description="SSO ID, if present and used")] = None,
     idp_role: Annotated[str | None, Field(description="IDP returned roles/groups for the user")] = None,
     idp_username: Annotated[str | None, Field(description="Username presented to the Identity Provider")] = None,
-    resp_attrs: Annotated[Any | None, Field(description="Radius attributes returned by NAC to NAS derive")] = None,
-    ssid: Annotated[str | None, Field(description="SSID")] = None,
-    username: Annotated[str | None, Field(description="Username presented by the client")] = None,
-    site_id: Annotated[str | None, Field(description="Site id")] = None,
-    ap: Annotated[str | None, Field(description="AP MAC")] = None,
-    random_mac: Annotated[bool | None, Field(description="AP random macMAC")] = None,
-    mac: Annotated[str | None, Field(description="MAC address")] = None,
-    timestamp: Annotated[float | None, Field(description="Start time, in epoch")] = None,
+    resp_attrs: Annotated[Any | None, Field(description="RADIUS attributes returned by NAC to NAS derive")] = None,
+    ssid: Annotated[str | None, Field(description="Filter results by SSID")] = None,
+    username: Annotated[
+        str | None, Field(description="Filter results by username. Accepts multiple comma-separated values.")
+    ] = None,
+    site_id: Annotated[
+        str | None,
+        Field(
+            description="Filter results by one site identifier. Use a single value; comma-separated values are not supported"
+        ),
+    ] = None,
+    ap: Annotated[str | None, Field(description="Filter results by AP MAC address")] = None,
+    random_mac: Annotated[
+        bool | None,
+        Field(
+            description="Filter results by whether the client is using a randomized MAC address. Accepts multiple comma-separated boolean values."
+        ),
+    ] = None,
+    mac: Annotated[
+        str | None,
+        Field(
+            description="Filter results by one MAC address. Use a single value; comma-separated values are not supported"
+        ),
+    ] = None,
     usermac_label: Annotated[str | None, Field(description="Labels derived from usermac entry")] = None,
     text: Annotated[str | None, Field(description="Partial / full MAC address, username, device_mac or ap")] = None,
-    nas_ip: Annotated[str | None, Field(description="IP address of NAS device")] = None,
-    ingress_vlan: Annotated[str | None, Field(description="Vendor specific Vlan ID in radius requests")] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    nas_ip: Annotated[
+        str | None, Field(description="IP address of NAS device. Accepts multiple comma-separated values.")
+    ] = None,
+    ingress_vlan: Annotated[str | None, Field(description="Vendor specific VLAN ID in RADIUS requests")] = None,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     sort: Annotated[
         str, Field(description="On which field the list should be sorted, -prefix represents DESC order.")
     ] = "wxid",
@@ -233,7 +290,6 @@ async def mist_search_org_nac_client_events(
             "ap": ap,
             "random_mac": random_mac,
             "mac": mac,
-            "timestamp": timestamp,
             "usermac_label": usermac_label,
             "text": text,
             "nas_ip": nas_ip,
@@ -251,31 +307,37 @@ async def mist_search_org_nac_client_events(
 
 @_mcp_tool(
     name="mist_search_org_nac_clients",
-    description="GET /api/v1/orgs/{org_id}/nac_clients/search\n\nsearchOrgNacClients\n\nSearch Org NAC Clients",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/nac_clients/search\n\nsearchOrgNacClients\n\nSearch NAC client records across the organization with filters for authentication, endpoint posture, identity, network, NAC rule, site, and time attributes.",
+    capability=Capability.READ,
 )
 async def mist_search_org_nac_clients(
     ctx: Context,
     org_id: Annotated[str, Field(description="path parameter 'org_id'")],
-    ap: Annotated[str | None, Field(description="MAC Address of the AP the client is/was connected to")] = None,
+    ap: Annotated[str | None, Field(description="MAC address of the AP the client is/was connected to")] = None,
     auth_type: Annotated[
         str | None,
         Field(
-            description='Authentication type, e.g. "eap-tls", "eap-peap", "eap-ttls", "eap-teap", "mab", "psk", "device-auth"'
+            description='Authentication type, e.g. "eap-tls", "eap-peap", "eap-ttls", "eap-teap", "mab", "psk", "device-auth". Accepts multiple comma-separated values.'
         ),
     ] = None,
     cert_expiry_duration: Annotated[
         str | None,
         Field(
-            description='Filter by certificate expiry within a specific duration from now (e.g., "7d" for 7 days, "1m" for 1 month)'
+            description='Filter by certificate expiry within a specific duration from now (e.g., "7d" for 7 days, "1m" for 1 month). Accepts multiple comma-separated values.'
         ),
     ] = None,
     edr_managed: Annotated[
         bool | None, Field(description="Filters NAC clients that are integrated with EDR providers")
     ] = None,
-    edr_provider: Annotated[Any | None, Field(description="EDR provider of client's organization")] = None,
-    edr_status: Annotated[Any | None, Field(description="EDR Status of the NAC client")] = None,
+    edr_provider: Annotated[
+        Any | None, Field(description="EDR provider used to filter NAC clients. enum: `crowdstrike`, `sentinelone`")
+    ] = None,
+    edr_status: Annotated[
+        Any | None,
+        Field(
+            description="EDR status used to filter NAC clients. enum: `sentinelone_healthy`, `sentinelone_infected`, `crowdstrike_low`, `crowdstrike_medium`, `crowdstrike_high`, `crowdstrike_critical`, `crowdstrike_informational`"
+        ),
+    ] = None,
     family: Annotated[
         str | None,
         Field(
@@ -285,14 +347,14 @@ async def mist_search_org_nac_clients(
     hostname: Annotated[
         str | None,
         Field(
-            description="Partial / full Client hostname. Use `prefix*` for prefix search or `*substring*` for contains search (e.g. `everest*` and `*rest*` match `my-everest-client`). Suffix-only wildcards (e.g. `*everest`) are not supported"
+            description="Partial / full Client hostname. Use `prefix*` for prefix search or `*substring*` for contains search (e.g. `everest*` and `*rest*` match `my-everest-client`). Suffix-only wildcards (e.g. `*everest`) are not supported. Accepts multiple co..."
         ),
     ] = None,
     idp_id: Annotated[str | None, Field(description="SSO ID, if present and used")] = None,
     mac: Annotated[
         str | None,
         Field(
-            description="Partial / full Client MAC Address. Use `prefix*` for prefix search or `*substring*` for contains search (e.g. `aabbcc*` and `*bbcc*` match `aabbccddeeff`). Suffix-only wildcards (e.g. `*bccddeeff`) are not supported"
+            description="Partial / full Client MAC address. Use a single value; comma-separated values are not supported. Use `prefix*` for prefix search or `*substring*` for contains search (e.g. `aabbcc*` and `*bbcc*` match `aabbccddeeff`). Suffix-only wildcar..."
         ),
     ] = None,
     mdm_compliance: Annotated[
@@ -315,32 +377,50 @@ async def mist_search_org_nac_clients(
     nacrule_id: Annotated[str | None, Field(description="NAC Policy Rule ID, if matched")] = None,
     nacrule_matched: Annotated[bool | None, Field(description="NAC Policy Rule Matched")] = None,
     nas_vendor: Annotated[str | None, Field(description="Vendor of NAS device")] = None,
-    nas_ip: Annotated[str | None, Field(description="IP address of NAS device")] = None,
-    ingress_vlan: Annotated[str | None, Field(description="Vendor specific Vlan ID in radius requests")] = None,
+    nas_ip: Annotated[
+        str | None, Field(description="IP address of NAS device. Accepts multiple comma-separated values.")
+    ] = None,
+    ingress_vlan: Annotated[str | None, Field(description="Vendor specific VLAN ID in RADIUS requests")] = None,
     os: Annotated[str | None, Field(description='Client OS, e.g. "iOS 18.1", "Android", "Windows", "Linux"')] = None,
-    ssid: Annotated[str | None, Field(description="SSID")] = None,
+    ssid: Annotated[str | None, Field(description="Filter results by SSID")] = None,
     status: Annotated[
         Any | None,
-        Field(description='Connection status of client i.e "permitted", "denied, "session_started", "session_stopped"'),
+        Field(
+            description="Client connection status used to filter results. enum: `permitted`, `session_started`, `session_stopped`, `denied`"
+        ),
     ] = None,
     text: Annotated[
         str | None, Field(description="partial / full MAC address, last_username, device_mac, nas_ip or last_ap")
     ] = None,
-    timestamp: Annotated[float | None, Field(description="Start time, in epoch")] = None,
-    type: Annotated[str | None, Field(description='Client type i.e. "wireless", "wired" etc.')] = None,
+    type: Annotated[
+        str | None,
+        Field(description='Client type i.e. "wireless", "wired" etc. Accepts multiple comma-separated values.'),
+    ] = None,
     usermac_label: Annotated[Any | None, Field(description="Labels derived from usermac entry")] = None,
-    username: Annotated[str | None, Field(description="Username presented by the client")] = None,
-    vlan: Annotated[str | None, Field(description="Vlan name or ID assigned to the client")] = None,
-    site_id: Annotated[str | None, Field(description="Site id if assigned, null if not assigned")] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    username: Annotated[str | None, Field(description="Filter results by username")] = None,
+    vlan: Annotated[str | None, Field(description="Filter results by VLAN ID")] = None,
+    site_id: Annotated[
+        str | None,
+        Field(
+            description="Filter results by one site identifier. Use a single value; comma-separated values are not supported"
+        ),
+    ] = None,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     sort: Annotated[
         str, Field(description="On which field the list should be sorted, -prefix represents DESC order.")
     ] = "wxid",
@@ -382,7 +462,6 @@ async def mist_search_org_nac_clients(
             "ssid": ssid,
             "status": status,
             "text": text,
-            "timestamp": timestamp,
             "type": type,
             "usermac_label": usermac_label,
             "username": username,
@@ -402,8 +481,7 @@ async def mist_search_org_nac_clients(
 @_mcp_tool(
     name="mist_send_org_nac_client_co_a",
     description="POST /api/v1/orgs/{org_id}/nac_clients/{client_mac}/coa\n\nsendOrgNacClientCoA\n\nSends CoA (Change of Authorization) command to a NAC client.",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_send_org_nac_client_co_a(
     ctx: Context,

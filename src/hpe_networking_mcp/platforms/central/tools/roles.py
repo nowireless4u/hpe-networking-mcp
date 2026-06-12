@@ -1,84 +1,78 @@
-"""Aruba Central role configuration tools.
+"""Aruba Central role+policy combined read tool.
 
-Provides read and write access to Central's role system. Roles define
-network access for clients and can be assigned to WLAN profiles, switch
-ports, NAC policies, and firewall rules. Roles contain VLAN assignments,
-QoS settings, ACLs, bandwidth contracts, and classification rules.
+The CRUD tool surface for roles (``central_get_roles`` /
+``central_manage_roles``) is owned by the generated ``roles_policy.py``
+module. This file retains only the hand-curated
+``central_get_role_with_policy`` convenience read, which bundles a
+role's config with the security policies it is actually bound to in a
+single call.
 
-API: GET/POST/PATCH/DELETE /network-config/v1alpha1/roles
+API: GET /network-config/v1alpha1/roles/{name},
+     GET /network-config/v1alpha1/policies/{name}
 """
 
-from typing import Annotated
-
 from fastmcp import Context
-from fastmcp.exceptions import ToolError
-from loguru import logger
-from mcp.types import ToolAnnotations
-from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import elicitation_handler
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
-
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
-@tool(annotations=READ_ONLY)
-async def central_get_roles(
-    ctx: Context,
-    name: str | None = None,
-) -> dict | list | str:
-    """
-    Get role configurations from Aruba Central.
+def _extract_policy_names(role_body: dict) -> list[str]:
+    """Pull bound-policy names out of a role's ``policies[]`` back-reference.
 
-    Roles define network access for clients — VLAN assignments, QoS,
-    ACLs, bandwidth contracts, and classification rules. They are used
-    in WLAN profiles (default-role, pre-auth-role), switch port configs,
-    NAC policies, and firewall rules.
+    The role GET response carries a ``policies`` array enumerating the
+    security policies the role is bound to. Each entry is normally an
+    object with a ``name`` field, but tolerate bare strings too. Returns
+    a de-duplicated, order-preserving list of policy names.
 
-    Parameters:
-        name: Specific role name to retrieve. If omitted, returns all roles.
+    Args:
+        role_body: The decoded role object from
+            ``GET /roles/{name}``.
 
     Returns:
-        Single role dict if name specified, or list of all roles.
+        List of policy names referenced by the role (possibly empty).
     """
-    conn = ctx.lifespan_context["central_conn"]
-    api_path = f"network-config/v1alpha1/roles/{name}" if name else "network-config/v1alpha1/roles"
+    raw = role_body.get("policies")
+    if not isinstance(raw, list):
+        return []
 
-    response = retry_central_command(
-        central_conn=conn,
-        api_method="GET",
-        api_path=api_path,
-    )
-    return response.get("msg", {})
+    names: list[str] = []
+    seen: set[str] = set()
+    for entry in raw:
+        name: str | None = None
+        if isinstance(entry, dict):
+            candidate = entry.get("name")
+            if isinstance(candidate, str) and candidate:
+                name = candidate
+        elif isinstance(entry, str) and entry:
+            name = entry
+        if name and name not in seen:
+            seen.add(name)
+            names.append(name)
+    return names
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_role_with_policy(
     ctx: Context,
     name: str,
 ) -> dict | str:
     """
-    Get a Central role's config bundled with its access policy.
+    Get a Central role's config bundled with its bound access policies.
 
-    Pairs the two endpoints operators most often need together when
+    Resolves the two things operators most often need together when
     asking "what does this role actually do?":
 
     - ``GET /network-config/v1alpha1/roles/{name}`` — the role definition
-      (VLAN, session params, classification settings, etc.). Often
-      skeletal (just ``{name, description}``) when the role's only
-      purpose is to be referenced as a source in a security policy.
-    - ``GET /network-config/v1alpha1/policies/{name}`` — the security
-      policy named after the role. Contains the actual firewall rules
-      that fire when a client carries this role: per-rule
-      ``condition`` (rule-type, services, source/destination) and
-      ``action`` (ALLOW / DENY / log / etc.).
+      (VLAN, session params, classification settings, etc.). Its
+      ``policies[]`` array back-references the security policies the role
+      is bound to.
+    - For each referenced policy,
+      ``GET /network-config/v1alpha1/policies/{policy-name}`` — the
+      security policy that fires when a client carries this role:
+      per-rule ``condition`` (rule-type, services, source/destination)
+      and ``action`` (ALLOW / DENY / log / etc.).
 
     Use this from the ClearPass policy visualizer: when an enforcement
     profile pushes ``Aruba-User-Role: night-night``, call this with
@@ -94,196 +88,64 @@ async def central_get_role_with_policy(
         Dict with keys:
         - ``name`` — the queried role name.
         - ``role`` — the role config dict, or ``None`` if not found.
-        - ``policy`` — the security policy dict, or ``None`` if no
-          policy named after the role exists.
-        - ``not_found`` — list of which endpoints returned empty
-          (``["role"]``, ``["policy"]``, ``["role", "policy"]``, or
-          ``[]`` when both resolved).
-        - ``errors`` — list of error messages for endpoints that
-          errored (non-2xx, network failure). Empty on full success.
+        - ``policies`` — list of the security policy dicts the role is
+          bound to (in role ``policies[]`` order). Empty when the role
+          has no bound policies, or when the role itself was not found.
+        - ``not_found`` — list of which resources returned empty:
+          ``"role"`` when the role itself is absent, and
+          ``"policy:<name>"`` for each referenced policy that returned
+          empty. ``[]`` when everything resolved.
+        - ``errors`` — list of error messages for resources that errored
+          (non-2xx, network failure). Empty on full success.
 
-        Either resource being absent is NOT an error — many shared
-        roles are skeletal and many roles have no separate policy.
+        A resource being absent is NOT an error — many shared roles are
+        skeletal and a role may legitimately reference no policies.
         Surface ``not_found`` to the operator as informational.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     result: dict = {
         "name": name,
         "role": None,
-        "policy": None,
+        "policies": [],
         "not_found": [],
         "errors": [],
     }
 
-    for endpoint_label, api_path in (
-        ("role", f"network-config/v1alpha1/roles/{name}"),
-        ("policy", f"network-config/v1alpha1/policies/{name}"),
-    ):
+    # --- 1. Fetch the role ---
+    role_path = f"network-config/v1alpha1/roles/{name}"
+    role_body: dict = {}
+    try:
+        response = await retry_central_command(
+            central_conn=conn,
+            api_method="GET",
+            api_path=role_path,
+        )
+        body = response.get("msg")
+        # Central returns 200 + empty dict for "not present" on this endpoint.
+        if isinstance(body, dict) and body:
+            result["role"] = body
+            role_body = body
+        else:
+            result["not_found"].append("role")
+    except Exception as e:
+        result["errors"].append(f"role ({role_path}): {e}")
+
+    # --- 2. Resolve each policy the role is bound to ---
+    for policy_name in _extract_policy_names(role_body):
+        policy_path = f"network-config/v1alpha1/policies/{policy_name}"
         try:
-            response = retry_central_command(
+            response = await retry_central_command(
                 central_conn=conn,
                 api_method="GET",
-                api_path=api_path,
+                api_path=policy_path,
             )
             body = response.get("msg")
-            # Central returns 200 + empty dict for "not present" on these
-            # endpoints — treat that as not_found rather than a real result.
             if isinstance(body, dict) and body:
-                result[endpoint_label] = body
+                result["policies"].append(body)
             else:
-                result["not_found"].append(endpoint_label)
+                result["not_found"].append(f"policy:{policy_name}")
         except Exception as e:
-            result["errors"].append(f"{endpoint_label} ({api_path}): {e}")
+            result["errors"].append(f"policy:{policy_name} ({policy_path}): {e}")
 
     return result
-
-
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_role(
-    ctx: Context,
-    name: Annotated[
-        str,
-        Field(description="The role name. Used as the identifier in the API path."),
-    ],
-    action_type: Annotated[
-        str,
-        Field(description="Action to perform: 'create', 'update', or 'delete'."),
-    ],
-    payload: Annotated[
-        dict,
-        Field(
-            description=(
-                "Role configuration payload. For delete: pass empty dict {}. "
-                "For create/update, key fields include:\n"
-                "- vlan: VLAN assignment for the role (ID or name)\n"
-                "- access-list: ACL rules applied to this role\n"
-                "- bandwidth-contract: bandwidth limits\n"
-                "- qos: QoS settings\n"
-                "- captive-portal: captive portal profile\n"
-                "- session-timeout: session timeout in seconds\n"
-                "- description: role description (CX switches only)\n"
-                "Use central_get_roles to see existing role structures "
-                "as a reference for the payload format."
-            )
-        ),
-    ],
-    scope_id: Annotated[
-        str | None,
-        Field(
-            description=(
-                "Scope ID for scoped (LOCAL) roles. If provided, creates "
-                "a local role at this scope. If omitted, creates a shared "
-                "(SHARED/library) role. Get scope IDs from central_get_scope_tree."
-            ),
-            default=None,
-        ),
-    ],
-    device_function: Annotated[
-        str | None,
-        Field(
-            description=(
-                "Device function for scoped roles. Required when scope_id "
-                "is provided. Valid values: CAMPUS_AP, ACCESS_SWITCH, "
-                "BRANCH_GW, MOBILITY_GW, CORE_SWITCH, AGG_SWITCH, ALL."
-            ),
-            default=None,
-        ),
-    ],
-    confirmed: Annotated[
-        bool,
-        Field(
-            description="Set to true when the user has confirmed the operation in chat.",
-            default=False,
-        ),
-    ],
-) -> dict | str:
-    """
-    Create, update, or delete a role in Central.
-
-    Roles define network access for clients and are used across WLAN
-    profiles, switch ports, NAC policies, and firewall rules. The role
-    name is the identifier in the API path.
-
-    Roles can be shared (library-level, available everywhere) or local
-    (scoped to a specific site/collection/device). Use scope_id and
-    device_function to create local roles.
-
-    After creating a role, use central_manage_config_assignment to
-    assign it to a scope if needed.
-    """
-    if action_type not in ("create", "update", "delete"):
-        raise ToolError(
-            {
-                "status_code": 400,
-                "message": f"Invalid action_type: {action_type}. Must be 'create', 'update', or 'delete'.",
-            }
-        )
-
-    api_path = f"network-config/v1alpha1/roles/{name}"
-    method_map = {"create": "POST", "update": "PATCH", "delete": "DELETE"}
-    api_method = method_map[action_type]
-
-    action_wording = {
-        "create": "create a new",
-        "update": "update an existing",
-        "delete": "delete an existing",
-    }[action_type]
-
-    # Confirm for update and delete only
-    if action_type != "create" and not confirmed:
-        elicitation_response = await elicitation_handler(
-            message=f"The LLM wants to {action_wording} role '{name}'. Do you accept?",
-            ctx=ctx,
-        )
-        if elicitation_response.action == "decline":
-            if await ctx.get_state("elicitation_mode") == "chat_confirm":
-                return {
-                    "status": "confirmation_required",
-                    "message": (
-                        f"This operation will {action_wording} role '{name}'. "
-                        "Please confirm with the user before proceeding. "
-                        "Call this tool again with confirmed=true after the user confirms."
-                    ),
-                }
-            return {"message": "Action declined by user."}
-        elif elicitation_response.action == "cancel":
-            return {"message": "Action canceled by user."}
-
-    conn = ctx.lifespan_context["central_conn"]
-
-    # Build query params for scoped operations
-    api_params: dict = {}
-    if scope_id and device_function:
-        api_params["object-type"] = "LOCAL"
-        api_params["scope-id"] = scope_id
-        api_params["device-function"] = device_function
-
-    api_data: dict = {}
-    if action_type != "delete":
-        api_data = payload
-
-    logger.info("Central role: {} '{}' — path: {}", api_method, name, api_path)
-
-    response = retry_central_command(
-        central_conn=conn,
-        api_method=api_method,
-        api_path=api_path,
-        api_data=api_data if api_data else None,
-        api_params=api_params if api_params else None,
-    )
-
-    code = response.get("code", 0)
-    if 200 <= code < 300:
-        return {
-            "status": "success",
-            "action": action_type,
-            "name": name,
-            "data": response.get("msg", {}),
-        }
-
-    return {
-        "status": "error",
-        "code": code,
-        "message": response.get("msg", "Unknown error"),
-    }

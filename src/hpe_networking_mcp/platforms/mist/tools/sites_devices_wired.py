@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,9 +16,9 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
@@ -26,8 +26,7 @@ from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 @_mcp_tool(
     name="mist_delete_site_local_switch_port_config",
     description="DELETE /api/v1/sites/{site_id}/devices/{device_id}/local_port_config\n\ndeleteSiteLocalSwitchPortConfig\n\nAPI Calls delete all the existing port config local overrides, and reapply the configured planed at the device level \n(with site / template heritance).",
-    tags={"mist", "mist_write", "mist_write_delete"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True),
+    capability=Capability.WRITE_DELETE,
 )
 async def mist_delete_site_local_switch_port_config(
     ctx: Context,
@@ -47,8 +46,7 @@ async def mist_delete_site_local_switch_port_config(
 @_mcp_tool(
     name="mist_update_site_local_switch_port_config",
     description="PUT /api/v1/sites/{site_id}/devices/{device_id}/local_port_config\n\nupdateSiteLocalSwitchPortConfig\n\nAPI Calls to add port config local overrides. This can be used by Switch Port Operators or Helpdesk administrators\nto change a Switch Port configuration without having to change the switch configuration.\n\n\nThe local overrides configured for the switchports with `no_local_overwrite`==`true` won't be applied to the switch configuration. \n\n\n> NOTE:\n>\n> When using the API Call, it is required to put send all overrides in the PUT request Payload, even the existing once. \n>\n> The current overrides ...",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    capability=Capability.WRITE,
 )
 async def mist_update_site_local_switch_port_config(
     ctx: Context,

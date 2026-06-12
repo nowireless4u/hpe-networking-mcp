@@ -1,12 +1,12 @@
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import deprecation_notice, retry_central_command
+from hpe_networking_mcp.platforms.central.utils import deprecation_notice, get_central_conn, retry_central_command
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_audit_logs(
     ctx: Context,
     start_at: str,
@@ -34,7 +34,7 @@ async def central_get_audit_logs(
             etc. The API returns HTTP 500 for offset 0, so values < 1 are
             clamped to 1.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     # The audit API paginates by 1-based page number and returns a 500 for
     # offset 0, so clamp it; limit is capped at the documented max of 200.
@@ -53,7 +53,7 @@ async def central_get_audit_logs(
         query_params["sort"] = sort
 
     try:
-        resp = retry_central_command(
+        resp = await retry_central_command(
             conn,
             api_method="GET",
             api_path="network-services/v1/audits",
@@ -72,7 +72,7 @@ async def central_get_audit_logs(
     return body
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_audit_log_detail(
     ctx: Context,
     id: str,
@@ -87,10 +87,10 @@ async def central_get_audit_log_detail(
     Parameters:
         id: Audit log entry ID (required).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     try:
-        resp = retry_central_command(
+        resp = await retry_central_command(
             conn,
             api_method="GET",
             api_path=f"network-services/v1/audit/{id}",

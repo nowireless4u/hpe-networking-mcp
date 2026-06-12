@@ -1,16 +1,17 @@
-"""Aruba Central ``VLANs & Networks`` config-model tools.
+"""Aruba Central ``vlans-networks`` config-model tools.
 
 Initial import emitted by ``scripts/import_central_config_tools.py``
-from a snapshot of ``api-endpoints/central/config/``. The import is
+from a snapshot of ``vendor/central/config/``. The import is
 **one-shot**: this file is hand-curated going forward — edit freely,
 refine docstrings, add per-type schema knobs, split into smaller files
 as needed. Re-running the script will overwrite this file, so only do
 so before any hand edits or with care.
 
-Covers config objects in the ``VLANs & Networks`` OpenAPI tag-group. Wrappers
-delegate to ``_get_resource`` / ``_manage_resource`` in
-``security_policy.py`` — the same shared helpers used by the
-hand-curated Roles & Policy tools.
+Covers config objects sourced from the ``vlans-networks.json`` vendor
+spec file. Wrappers
+delegate to ``_get_resource`` / ``_manage_resource`` /
+``_operation_request`` in ``security_policy.py`` — the same shared
+helpers used by the hand-curated Roles & Policy tools.
 """
 
 # ruff: noqa: E501
@@ -18,11 +19,10 @@ hand-curated Roles & Policy tools.
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
@@ -31,17 +31,10 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _manage_resource,
 )
 
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
 # ----- erps -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_erps(
     ctx: Context,
     name: str | None = None,
@@ -56,7 +49,7 @@ async def central_get_erps(
     return await _get_resource(ctx, "erps", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_erps(
     ctx: Context,
     name: Annotated[str, Field(description="``erps`` identifier (OpenAPI path param: ``name``).")],
@@ -94,36 +87,36 @@ async def central_manage_erps(
     )
 
 
-# ----- gw-stp -----
+# ----- layer2-vlan -----
 
 
-@tool(annotations=READ_ONLY)
-async def central_get_gw_stp(
+@tool(capability=Capability.READ)
+async def central_get_layer2_vlan(
     ctx: Context,
-    name: str | None = None,
+    vlan: str | None = None,
 ) -> dict | list | str:
-    """Get ``gw-stp`` configurations from Central.
+    """Get ``layer2-vlan`` configurations from Central.
 
-    Spanning Tree Protocol (STP) prevents network loops and ensures redundant path management in Layer 2 switched networks per IEEE 802.1D/802.1w standards. This module configures RSTP (Rapid Spanning Tree Protocol) and RPVST (Rapid Per-VLAN Spanning Tree) for Gateway devices. Configure global STP parameters including bridge priority, timers (hello-time, forward-delay, max-age), and per-VLAN RPVST instances. Use this API to retrieve the list of Spanning Tree profiles.
+    Ethernet Ring Protection Switching (ERPS) is a protocol defined by the International Telecommunication Union - Telecommunication Standardization Sector (ITU-T) to eliminate loops at Layer 2.
 
     Parameters:
-        name: Specific ``gw-stp`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        vlan: Specific ``layer2-vlan`` identifier (OpenAPI path param: ``vlan``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "stp-gw", name)
+    return await _get_resource(ctx, "layer2-vlan", vlan)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_gw_stp(
+@tool(capability=Capability.WRITE_DELETE)
+async def central_manage_layer2_vlan(
     ctx: Context,
-    name: Annotated[str, Field(description="``gw-stp`` identifier (OpenAPI path param: ``name``).")],
+    vlan: Annotated[str, Field(description="``layer2-vlan`` identifier (OpenAPI path param: ``vlan``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``gw-stp`` object. "
+                "Payload for the ``layer2-vlan`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_gw_stp`` to "
+                "field set; use ``central_get_layer2_vlan`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -133,15 +126,54 @@ async def central_manage_gw_stp(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``gw-stp`` configuration in Central.
+    """Create, update, or delete a ``layer2-vlan`` configuration in Central.
 
-    Spanning Tree Protocol (STP) prevents network loops and ensures redundant path management in Layer 2 switched networks per IEEE 802.1D/802.1w standards. This module configures RSTP (Rapid Spanning Tree Protocol) and RPVST (Rapid Per-VLAN Spanning Tree) for Gateway devices. Configure global STP parameters including bridge priority, timers (hello-time, forward-delay, max-age), and per-VLAN RPVST instances. Use this API to retrieve the list of Spanning Tree profiles.
+    Ethernet Ring Protection Switching (ERPS) is a protocol defined by the International Telecommunication Union - Telecommunication Standardization Sector (ITU-T) to eliminate loops at Layer 2.
     """
     return await _manage_resource(
         ctx,
-        "stp-gw",
-        "gw-stp",
-        name,
+        "layer2-vlan",
+        "layer2-vlan",
+        vlan,
+        action_type,
+        payload,
+        scope_id,
+        device_function,
+        confirmed,
+    )
+
+
+# ----- layer2-vlan-range -----
+
+
+@tool(capability=Capability.WRITE_DELETE)
+async def central_manage_layer2_vlan_range(
+    ctx: Context,
+    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
+    payload: Annotated[
+        dict,
+        Field(
+            description=(
+                "Payload for the singleton ``layer2-vlan-range`` object. "
+                "Consult the Aruba Central config-model OpenAPI schema for the "
+                "field set; use ``central_get_layer2_vlan_range`` to "
+                "inspect the current state. For ``delete``, ``payload`` is ignored."
+            )
+        ),
+    ],
+    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Create, update, or delete the singleton ``layer2-vlan-range`` configuration in Central.
+
+    Ethernet Ring Protection Switching (ERPS) is a protocol defined by the International Telecommunication Union - Telecommunication Standardization Sector (ITU-T) to eliminate loops at Layer 2.
+    """
+    return await _manage_resource(
+        ctx,
+        "layer2-vlan-range",
+        "layer2-vlan-range",
+        None,
         action_type,
         payload,
         scope_id,
@@ -153,14 +185,14 @@ async def central_manage_gw_stp(
 # ----- loop-protect -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_loop_protect(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``loop-protect`` configurations from Central.
 
-    Loop protect is a layer 2 mechanism that detects and prevents network loops, primarily in scenarios where the spanning tree protocol (STP) might be ineffective, such as edge ports connected to unmanaged devices or client-authenticated ports. Loop-protect configuration through this API is deprecated. Use API from aruba-switch-system:switch-system/profile/loop-protect instead.
+    Ethernet Ring Protection Switching (ERPS) is a protocol defined by the International Telecommunication Union - Telecommunication Standardization Sector (ITU-T) to eliminate loops at Layer 2.
 
     Parameters:
         name: Specific ``loop-protect`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -168,7 +200,7 @@ async def central_get_loop_protect(
     return await _get_resource(ctx, "loop-protect", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_loop_protect(
     ctx: Context,
     name: Annotated[str, Field(description="``loop-protect`` identifier (OpenAPI path param: ``name``).")],
@@ -191,7 +223,7 @@ async def central_manage_loop_protect(
 ) -> dict | str:
     """Create, update, or delete a ``loop-protect`` configuration in Central.
 
-    Loop protect is a layer 2 mechanism that detects and prevents network loops, primarily in scenarios where the spanning tree protocol (STP) might be ineffective, such as edge ports connected to unmanaged devices or client-authenticated ports. Loop-protect configuration through this API is deprecated. Use API from aruba-switch-system:switch-system/profile/loop-protect instead.
+    Ethernet Ring Protection Switching (ERPS) is a protocol defined by the International Telecommunication Union - Telecommunication Standardization Sector (ITU-T) to eliminate loops at Layer 2.
     """
     return await _manage_resource(
         ctx,
@@ -209,14 +241,14 @@ async def central_manage_loop_protect(
 # ----- mvrp -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_mvrp(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``mvrp`` configurations from Central.
 
-    MVRP(Multiple VLAN Registration Protocol) configuration.MVRP provides a mechanism to dynamically share VLAN configuration information across layer 2 switches on a network. MVRP eliminates the need to manually configure VLANs on each switch.
+    Ethernet Ring Protection Switching (ERPS) is a protocol defined by the International Telecommunication Union - Telecommunication Standardization Sector (ITU-T) to eliminate loops at Layer 2.
 
     Parameters:
         name: Specific ``mvrp`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -224,7 +256,7 @@ async def central_get_mvrp(
     return await _get_resource(ctx, "mvrp", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_mvrp(
     ctx: Context,
     name: Annotated[str, Field(description="``mvrp`` identifier (OpenAPI path param: ``name``).")],
@@ -247,7 +279,7 @@ async def central_manage_mvrp(
 ) -> dict | str:
     """Create, update, or delete a ``mvrp`` configuration in Central.
 
-    MVRP(Multiple VLAN Registration Protocol) configuration.MVRP provides a mechanism to dynamically share VLAN configuration information across layer 2 switches on a network. MVRP eliminates the need to manually configure VLANs on each switch.
+    Ethernet Ring Protection Switching (ERPS) is a protocol defined by the International Telecommunication Union - Telecommunication Standardization Sector (ITU-T) to eliminate loops at Layer 2.
     """
     return await _manage_resource(
         ctx,
@@ -262,17 +294,73 @@ async def central_manage_mvrp(
     )
 
 
+# ----- named-vlan -----
+
+
+@tool(capability=Capability.READ)
+async def central_get_named_vlan(
+    ctx: Context,
+    name: str | None = None,
+) -> dict | list | str:
+    """Get ``named-vlan`` configurations from Central.
+
+    Ethernet Ring Protection Switching (ERPS) is a protocol defined by the International Telecommunication Union - Telecommunication Standardization Sector (ITU-T) to eliminate loops at Layer 2.
+
+    Parameters:
+        name: Specific ``named-vlan`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+    """
+    return await _get_resource(ctx, "named-vlan", name)
+
+
+@tool(capability=Capability.WRITE_DELETE)
+async def central_manage_named_vlan(
+    ctx: Context,
+    name: Annotated[str, Field(description="``named-vlan`` identifier (OpenAPI path param: ``name``).")],
+    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
+    payload: Annotated[
+        dict,
+        Field(
+            description=(
+                "Payload for the ``named-vlan`` object. "
+                "Consult the Aruba Central config-model OpenAPI schema for the "
+                "field set; use ``central_get_named_vlan`` to "
+                "inspect an existing object for reference. "
+                "For ``delete``, ``payload`` is ignored."
+            )
+        ),
+    ],
+    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
+    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
+) -> dict | str:
+    """Create, update, or delete a ``named-vlan`` configuration in Central.
+
+    Ethernet Ring Protection Switching (ERPS) is a protocol defined by the International Telecommunication Union - Telecommunication Standardization Sector (ITU-T) to eliminate loops at Layer 2.
+    """
+    return await _manage_resource(
+        ctx,
+        "named-vlan",
+        "named-vlan",
+        name,
+        action_type,
+        payload,
+        scope_id,
+        device_function,
+        confirmed,
+    )
+
+
 # ----- smartlink -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_smartlink(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``smartlink`` configurations from Central.
 
-    Smartlink configuration.Smartlink provides simple and fast-converging link redundancy in network topologies with dual uplink between different layers of the network. It requires an active (primary) and backup (secondary) link. The active link carries the traffic. If the active link fails, a switchover is triggered and the traffic is directed to the backup link.
+    Ethernet Ring Protection Switching (ERPS) is a protocol defined by the International Telecommunication Union - Telecommunication Standardization Sector (ITU-T) to eliminate loops at Layer 2.
 
     Parameters:
         name: Specific ``smartlink`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -280,7 +368,7 @@ async def central_get_smartlink(
     return await _get_resource(ctx, "smartlink", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_smartlink(
     ctx: Context,
     name: Annotated[str, Field(description="``smartlink`` identifier (OpenAPI path param: ``name``).")],
@@ -303,7 +391,7 @@ async def central_manage_smartlink(
 ) -> dict | str:
     """Create, update, or delete a ``smartlink`` configuration in Central.
 
-    Smartlink configuration.Smartlink provides simple and fast-converging link redundancy in network topologies with dual uplink between different layers of the network. It requires an active (primary) and backup (secondary) link. The active link carries the traffic. If the active link fails, a switchover is triggered and the traffic is directed to the backup link.
+    Ethernet Ring Protection Switching (ERPS) is a protocol defined by the International Telecommunication Union - Telecommunication Standardization Sector (ITU-T) to eliminate loops at Layer 2.
     """
     return await _manage_resource(
         ctx,
@@ -321,14 +409,14 @@ async def central_manage_smartlink(
 # ----- static-neighbor -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_static_neighbor(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``static-neighbor`` configurations from Central.
 
-    Static neighbor configuration.
+    Ethernet Ring Protection Switching (ERPS) is a protocol defined by the International Telecommunication Union - Telecommunication Standardization Sector (ITU-T) to eliminate loops at Layer 2.
 
     Parameters:
         name: Specific ``static-neighbor`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -336,7 +424,7 @@ async def central_get_static_neighbor(
     return await _get_resource(ctx, "static-neighbor", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_static_neighbor(
     ctx: Context,
     name: Annotated[str, Field(description="``static-neighbor`` identifier (OpenAPI path param: ``name``).")],
@@ -359,7 +447,7 @@ async def central_manage_static_neighbor(
 ) -> dict | str:
     """Create, update, or delete a ``static-neighbor`` configuration in Central.
 
-    Static neighbor configuration.
+    Ethernet Ring Protection Switching (ERPS) is a protocol defined by the International Telecommunication Union - Telecommunication Standardization Sector (ITU-T) to eliminate loops at Layer 2.
     """
     return await _manage_resource(
         ctx,
@@ -377,14 +465,14 @@ async def central_manage_static_neighbor(
 # ----- stp -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_stp(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``stp`` configurations from Central.
 
-    STP(Spanning tree protocol) configuration. STP is a network protocol that prevents layer 2 loops and broadcast storms in Ethernet networks.It does this by selectively blocking some ports and allowing others to forward traffic.
+    Ethernet Ring Protection Switching (ERPS) is a protocol defined by the International Telecommunication Union - Telecommunication Standardization Sector (ITU-T) to eliminate loops at Layer 2.
 
     Parameters:
         name: Specific ``stp`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
@@ -392,7 +480,7 @@ async def central_get_stp(
     return await _get_resource(ctx, "stp", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_stp(
     ctx: Context,
     name: Annotated[str, Field(description="``stp`` identifier (OpenAPI path param: ``name``).")],
@@ -415,7 +503,7 @@ async def central_manage_stp(
 ) -> dict | str:
     """Create, update, or delete a ``stp`` configuration in Central.
 
-    STP(Spanning tree protocol) configuration. STP is a network protocol that prevents layer 2 loops and broadcast storms in Ethernet networks.It does this by selectively blocking some ports and allowing others to forward traffic.
+    Ethernet Ring Protection Switching (ERPS) is a protocol defined by the International Telecommunication Union - Telecommunication Standardization Sector (ITU-T) to eliminate loops at Layer 2.
     """
     return await _manage_resource(
         ctx,
@@ -430,36 +518,36 @@ async def central_manage_stp(
     )
 
 
-# ----- vlan -----
+# ----- stp-gw -----
 
 
-@tool(annotations=READ_ONLY)
-async def central_get_vlan(
+@tool(capability=Capability.READ)
+async def central_get_stp_gw(
     ctx: Context,
-    vlan: str | None = None,
+    name: str | None = None,
 ) -> dict | list | str:
-    """Get ``vlan`` configurations from Central.
+    """Get ``stp-gw`` configurations from Central.
 
-    Configure and manage L2 VLAN profiles. Each VLAN profile maps to each layer2 VLAN ID. Using this profile features related to layer 2 VLAN can be configured like wired AAA profile for VLANs. VLANs are primarily used to provide network segmentation at layer 2. VLANs enable the grouping of users by logical function instead of physical location. VLANs are generally assigned on an organizational basis rather than on a physical basis. For example, a network administrator could assign all workstations and servers used by a particular workgroup to the same VLAN, regardless of their physical locations. Hosts in the same VLAN can directly communicate with one another. A router or a Layer 3 switch is required for hosts in different VLANs to communicate with one another. VLANs help reduce bandwidth waste, improve LAN security, and enable network administrators to address issues such as scalability and network management.
+    Ethernet Ring Protection Switching (ERPS) is a protocol defined by the International Telecommunication Union - Telecommunication Standardization Sector (ITU-T) to eliminate loops at Layer 2.
 
     Parameters:
-        vlan: Specific ``vlan`` identifier (OpenAPI path param: ``vlan``). If omitted, returns all.
+        name: Specific ``stp-gw`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "layer2-vlan", vlan)
+    return await _get_resource(ctx, "stp-gw", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_vlan(
+@tool(capability=Capability.WRITE_DELETE)
+async def central_manage_stp_gw(
     ctx: Context,
-    vlan: Annotated[str, Field(description="``vlan`` identifier (OpenAPI path param: ``vlan``).")],
+    name: Annotated[str, Field(description="``stp-gw`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``vlan`` object. "
+                "Payload for the ``stp-gw`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_vlan`` to "
+                "field set; use ``central_get_stp_gw`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -469,54 +557,15 @@ async def central_manage_vlan(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``vlan`` configuration in Central.
+    """Create, update, or delete a ``stp-gw`` configuration in Central.
 
-    Configure and manage L2 VLAN profiles. Each VLAN profile maps to each layer2 VLAN ID. Using this profile features related to layer 2 VLAN can be configured like wired AAA profile for VLANs. VLANs are primarily used to provide network segmentation at layer 2. VLANs enable the grouping of users by logical function instead of physical location. VLANs are generally assigned on an organizational basis rather than on a physical basis. For example, a network administrator could assign all workstations and servers used by a particular workgroup to the same VLAN, regardless of their physical locations. Hosts in the same VLAN can directly communicate with one another. A router or a Layer 3 switch is required for hosts in different VLANs to communicate with one another. VLANs help reduce bandwidth waste, improve LAN security, and enable network administrators to address issues such as scalability and network management.
+    Ethernet Ring Protection Switching (ERPS) is a protocol defined by the International Telecommunication Union - Telecommunication Standardization Sector (ITU-T) to eliminate loops at Layer 2.
     """
     return await _manage_resource(
         ctx,
-        "layer2-vlan",
-        "vlan",
-        vlan,
-        action_type,
-        payload,
-        scope_id,
-        device_function,
-        confirmed,
-    )
-
-
-# ----- vlan-range -----
-
-
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_vlan_range(
-    ctx: Context,
-    action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
-    payload: Annotated[
-        dict,
-        Field(
-            description=(
-                "Payload for the singleton ``vlan-range`` object. "
-                "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_vlan_range`` to "
-                "inspect the current state. For ``delete``, ``payload`` is ignored."
-            )
-        ),
-    ],
-    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
-    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
-    confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
-) -> dict | str:
-    """Create, update, or delete the singleton ``vlan-range`` configuration in Central.
-
-    aruba-vlan-range API generated from aruba-vlan-range.yang.
-    """
-    return await _manage_resource(
-        ctx,
-        "layer2-vlan-range",
-        "vlan-range",
-        None,
+        "stp-gw",
+        "stp-gw",
+        name,
         action_type,
         payload,
         scope_id,
@@ -528,22 +577,22 @@ async def central_manage_vlan_range(
 # ----- vrrp -----
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_vrrp(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
     """Get ``vrrp`` configurations from Central.
 
-    Virtual Router Redundancy Protocol (VRRP) Configurations. VRRP specifies an election protocol to provide the virtual router function described below. All protocol messaging is performed using IP multicast datagrams, thus the protocol can operate over a variety of multiaccess LAN technologies supporting IP multicast. The virtual router MAC address is used as the source in all periodic VRRP messages sent by the Active router to enable bridge learning in an extended LAN. A virtual router is defined by its virtual router identifier (VRID) and a set of IP addresses. A VRRP router may associate a virtual router with its real addresses on an interface, and may also be configured with additional virtual router mappings and priority for virtual routers it is willing to standby. A Standby router will not attempt to preempt the Active unless it has higher priority. This eliminates service disruption unless a more preferred path becomes available. It is also possible to administratively prohibit all preemption attempts. The only exception is that a VRRP router will always become Active of any virtual router associated with addresses it owns. If the Active becomes unavailable then the highest priority Standby will transition to Active after a short delay, providing a controlled transition of the virtual router responsibility with minimal service interruption. AOS-CX : VRRP can be configured on physical ports, VLAN interfaces and LAG interfaces. All such configurations work in the mentioned interfaces context. VRRP mandates the associated interface to be routing interface.
+    Ethernet Ring Protection Switching (ERPS) is a protocol defined by the International Telecommunication Union - Telecommunication Standardization Sector (ITU-T) to eliminate loops at Layer 2.
 
     Parameters:
         name: Specific ``vrrp`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "vrrp-global", name)
+    return await _get_resource(ctx, "vrrp", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_vrrp(
     ctx: Context,
     name: Annotated[str, Field(description="``vrrp`` identifier (OpenAPI path param: ``name``).")],
@@ -566,11 +615,11 @@ async def central_manage_vrrp(
 ) -> dict | str:
     """Create, update, or delete a ``vrrp`` configuration in Central.
 
-    Virtual Router Redundancy Protocol (VRRP) Configurations. VRRP specifies an election protocol to provide the virtual router function described below. All protocol messaging is performed using IP multicast datagrams, thus the protocol can operate over a variety of multiaccess LAN technologies supporting IP multicast. The virtual router MAC address is used as the source in all periodic VRRP messages sent by the Active router to enable bridge learning in an extended LAN. A virtual router is defined by its virtual router identifier (VRID) and a set of IP addresses. A VRRP router may associate a virtual router with its real addresses on an interface, and may also be configured with additional virtual router mappings and priority for virtual routers it is willing to standby. A Standby router will not attempt to preempt the Active unless it has higher priority. This eliminates service disruption unless a more preferred path becomes available. It is also possible to administratively prohibit all preemption attempts. The only exception is that a VRRP router will always become Active of any virtual router associated with addresses it owns. If the Active becomes unavailable then the highest priority Standby will transition to Active after a short delay, providing a controlled transition of the virtual router responsibility with minimal service interruption. AOS-CX : VRRP can be configured on physical ports, VLAN interfaces and LAG interfaces. All such configurations work in the mentioned interfaces context. VRRP mandates the associated interface to be routing interface.
+    Ethernet Ring Protection Switching (ERPS) is a protocol defined by the International Telecommunication Union - Telecommunication Standardization Sector (ITU-T) to eliminate loops at Layer 2.
     """
     return await _manage_resource(
         ctx,
-        "vrrp-global",
+        "vrrp",
         "vrrp",
         name,
         action_type,
@@ -581,36 +630,36 @@ async def central_manage_vrrp(
     )
 
 
-# ----- vrrp-interface -----
+# ----- vrrp-global -----
 
 
-@tool(annotations=READ_ONLY)
-async def central_get_vrrp_interface(
+@tool(capability=Capability.READ)
+async def central_get_vrrp_global(
     ctx: Context,
     name: str | None = None,
 ) -> dict | list | str:
-    """Get ``vrrp-interface`` configurations from Central.
+    """Get ``vrrp-global`` configurations from Central.
 
-    Virtual Router Redundancy Protocol (VRRP) Interface Configurations. Upon configuration, this profile is to be referenced from either a VLAN profile or a port profile. VRRP specifies an election protocol to provide the virtual router function described below. All protocol messaging is performed using IP multicast datagrams, thus the protocol can operate over a variety of multiaccess LAN technologies supporting IP multicast. The virtual router MAC address is used as the source in all periodic VRRP messages sent by the Active router to enable bridge learning in an extended LAN. A virtual router is defined by its virtual router identifier (VRID) and a set of IP addresses. A VRRP router may associate a virtual router with its real addresses on an interface, and may also be configured with additional virtual router mappings and priority for virtual routers it is willing to standby. A Standby router will not attempt to preempt the Active unless it has higher priority. This eliminates service disruption unless a more preferred path becomes available. It is also possible to administratively prohibit all preemption attempts. The only exception is that a VRRP router will always become Active of any virtual router associated with addresses it owns. If the Active becomes unavailable then the highest priority Standby will transition to Active after a short delay, providing a controlled transition of the virtual router responsibility with minimal service interruption. AOS-CX : VRRP can be configured on physical ports, VLAN interfaces and LAG interfaces. All such configurations work in the mentioned interfaces context. VRRP mandates the associated interface to be routing interface.
+    Ethernet Ring Protection Switching (ERPS) is a protocol defined by the International Telecommunication Union - Telecommunication Standardization Sector (ITU-T) to eliminate loops at Layer 2.
 
     Parameters:
-        name: Specific ``vrrp-interface`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
+        name: Specific ``vrrp-global`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "vrrp", name)
+    return await _get_resource(ctx, "vrrp-global", name)
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
-async def central_manage_vrrp_interface(
+@tool(capability=Capability.WRITE_DELETE)
+async def central_manage_vrrp_global(
     ctx: Context,
-    name: Annotated[str, Field(description="``vrrp-interface`` identifier (OpenAPI path param: ``name``).")],
+    name: Annotated[str, Field(description="``vrrp-global`` identifier (OpenAPI path param: ``name``).")],
     action_type: Annotated[str, Field(description="``'create'``, ``'update'``, or ``'delete'``.")],
     payload: Annotated[
         dict,
         Field(
             description=(
-                "Payload for the ``vrrp-interface`` object. "
+                "Payload for the ``vrrp-global`` object. "
                 "Consult the Aruba Central config-model OpenAPI schema for the "
-                "field set; use ``central_get_vrrp_interface`` to "
+                "field set; use ``central_get_vrrp_global`` to "
                 "inspect an existing object for reference. "
                 "For ``delete``, ``payload`` is ignored."
             )
@@ -620,14 +669,14 @@ async def central_manage_vrrp_interface(
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
 ) -> dict | str:
-    """Create, update, or delete a ``vrrp-interface`` configuration in Central.
+    """Create, update, or delete a ``vrrp-global`` configuration in Central.
 
-    Virtual Router Redundancy Protocol (VRRP) Interface Configurations. Upon configuration, this profile is to be referenced from either a VLAN profile or a port profile. VRRP specifies an election protocol to provide the virtual router function described below. All protocol messaging is performed using IP multicast datagrams, thus the protocol can operate over a variety of multiaccess LAN technologies supporting IP multicast. The virtual router MAC address is used as the source in all periodic VRRP messages sent by the Active router to enable bridge learning in an extended LAN. A virtual router is defined by its virtual router identifier (VRID) and a set of IP addresses. A VRRP router may associate a virtual router with its real addresses on an interface, and may also be configured with additional virtual router mappings and priority for virtual routers it is willing to standby. A Standby router will not attempt to preempt the Active unless it has higher priority. This eliminates service disruption unless a more preferred path becomes available. It is also possible to administratively prohibit all preemption attempts. The only exception is that a VRRP router will always become Active of any virtual router associated with addresses it owns. If the Active becomes unavailable then the highest priority Standby will transition to Active after a short delay, providing a controlled transition of the virtual router responsibility with minimal service interruption. AOS-CX : VRRP can be configured on physical ports, VLAN interfaces and LAG interfaces. All such configurations work in the mentioned interfaces context. VRRP mandates the associated interface to be routing interface.
+    Ethernet Ring Protection Switching (ERPS) is a protocol defined by the International Telecommunication Union - Telecommunication Standardization Sector (ITU-T) to eliminate loops at Layer 2.
     """
     return await _manage_resource(
         ctx,
-        "vrrp",
-        "vrrp-interface",
+        "vrrp-global",
+        "vrrp-global",
         name,
         action_type,
         payload,

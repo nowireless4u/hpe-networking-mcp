@@ -2,14 +2,14 @@ from typing import Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
-from pycentral.new_monitoring.aps import MonitoringAPs
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import resolve_time_window, retry_central_command
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, resolve_time_window, retry_central_command
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_wlans(
     ctx: Context,
     site_id: str | None = None,
@@ -33,7 +33,7 @@ async def central_get_wlans(
         sort: Sort expression (e.g., 'essid asc').
         limit: Maximum results to return (default 100).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
         kwargs: dict = {
             "central_conn": conn,
@@ -48,7 +48,7 @@ async def central_get_wlans(
         if sort is not None:
             kwargs["sort"] = sort
 
-        resp = MonitoringAPs.get_wlans(**kwargs)
+        resp = await monitoring_api.get_wlans(**kwargs)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching WLANs: {e}"}) from e
 
@@ -65,7 +65,7 @@ async def central_get_wlans(
 TIME_RANGE = Literal["last_1h", "last_6h", "last_24h", "last_7d", "last_30d", "today", "yesterday"]
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_wlan_stats(
     ctx: Context,
     wlan_name: str,
@@ -92,10 +92,10 @@ async def central_get_wlan_stats(
             Overrides time_range when combined with start_time.
     """
     start_at, end_at = resolve_time_window(time_range, start_time, end_time)
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     try:
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method="GET",
             api_path=f"network-monitoring/v1/wlans/{wlan_name}/throughput-trends",

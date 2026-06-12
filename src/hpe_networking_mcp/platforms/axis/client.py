@@ -15,7 +15,6 @@ at startup (log warning if <30 days) and at health-probe time.
 
 from __future__ import annotations
 
-import asyncio
 import base64
 import json
 import time
@@ -27,6 +26,7 @@ from fastmcp.server.dependencies import get_context
 from loguru import logger
 
 from hpe_networking_mcp.config import AxisSecrets
+from hpe_networking_mcp.platforms._common.auth import AsyncTokenManager, AuthError
 from hpe_networking_mcp.utils.logging import mask_secret
 
 _AXIS_BASE_URL = "https://admin-api.axissecurity.com/api/v1.0"
@@ -51,7 +51,7 @@ def _decode_jwt_exp(token: str) -> int | None:
         return None
 
 
-class AxisAuthError(RuntimeError):
+class AxisAuthError(AuthError):
     """Raised when the Axis API token is missing or rejected."""
 
 
@@ -64,14 +64,13 @@ class AxisClient:
 
     def __init__(self, config: AxisSecrets) -> None:
         self._config = config
-        self._token: str = config.api_token
-        self._lock = asyncio.Lock()
+        self._tokens = AsyncTokenManager.static(config.api_token, name="Axis")
         self._http = httpx.AsyncClient(
             base_url=_AXIS_BASE_URL,
             timeout=_REQUEST_TIMEOUT,
         )
-        self._token_expires_at: int | None = _decode_jwt_exp(self._token)
-        logger.info("Axis: client initialized (token: {})", mask_secret(self._token))
+        self._token_expires_at: int | None = _decode_jwt_exp(config.api_token)
+        logger.info("Axis: client initialized (token: {})", mask_secret(config.api_token))
         days = self.token_expires_in_days
         if days is None:
             logger.info("Axis: token format unrecognized — expiry tracking disabled")
@@ -108,7 +107,7 @@ class AxisClient:
 
     def _auth_headers(self) -> dict[str, str]:
         return {
-            "Authorization": f"Bearer {self._token}",
+            "Authorization": f"Bearer {self._tokens.token}",
             "Content-Type": "application/json",
             "Accept": "application/json",
         }

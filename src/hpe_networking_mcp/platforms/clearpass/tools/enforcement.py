@@ -5,13 +5,13 @@ from __future__ import annotations
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import clearpass_get
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_enforcement_policies(
     ctx: Context,
     policy_id: str | None = None,
@@ -39,13 +39,11 @@ async def clearpass_get_enforcement_policies(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-
-        client = await get_clearpass_session(ApiPolicyElements)
+        client = await get_clearpass_client()
         if policy_id:
-            return client.get_enforcement_policy_by_enforcement_policy_id(enforcement_policy_id=policy_id)
+            return await client.request("get", f"/enforcement-policy/{policy_id}")
         if name:
-            return client.get_enforcement_policy_name_by_name(name=name)
+            return await client.request("get", f"/enforcement-policy/name/{name}")
         params = [
             f"filter={filter}" if filter else "",
             f"sort={sort}" if sort else "",
@@ -54,14 +52,14 @@ async def clearpass_get_enforcement_policies(
             f"calculate_count={'true' if calculate_count else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
-        return clearpass_get(client, "/enforcement-policy" + query)
+        return await clearpass_get(client, "/enforcement-policy" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching enforcement policies: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_enforcement_profiles(
     ctx: Context,
     profile_id: str | None = None,
@@ -89,13 +87,11 @@ async def clearpass_get_enforcement_profiles(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_enforcementprofile import ApiEnforcementProfile
-
-        client = await get_clearpass_session(ApiEnforcementProfile)
+        client = await get_clearpass_client()
         if profile_id:
-            return client.get_enforcement_profile_by_enforcement_profile_id(enforcement_profile_id=profile_id)
+            return await client.request("get", f"/enforcement-profile/{profile_id}")
         if name:
-            return client.get_enforcement_profile_name_by_name(name=name)
+            return await client.request("get", f"/enforcement-profile/name/{name}")
         params = [
             f"filter={filter}" if filter else "",
             f"sort={sort}" if sort else "",
@@ -104,14 +100,14 @@ async def clearpass_get_enforcement_profiles(
             f"calculate_count={'true' if calculate_count else 'false'}",
         ]
         query = "?" + "&".join(p for p in params if p)
-        return clearpass_get(client, "/enforcement-profile" + query)
+        return await clearpass_get(client, "/enforcement-profile" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching enforcement profiles: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_profile_templates(
     ctx: Context,
 ) -> dict | str:

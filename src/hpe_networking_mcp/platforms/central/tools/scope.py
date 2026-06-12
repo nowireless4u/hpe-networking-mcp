@@ -20,6 +20,7 @@ from typing import Literal
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.scope_builder import (
     build_scope_tree,
@@ -31,10 +32,10 @@ from hpe_networking_mcp.platforms.central.scope_queries import (
     get_effective_resources_for_node,
     tree_to_mermaid,
 )
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
+from hpe_networking_mcp.platforms.central.utils import get_central_conn
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_scope_tree(
     ctx: Context,
     view: Literal["committed", "effective"] = "committed",
@@ -54,15 +55,15 @@ async def central_get_scope_tree(
         (resources), and children at each level. Device leaf nodes
         include device_info and persona fields.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
-        tree = build_scope_tree(conn)
+        tree = await build_scope_tree(conn)
         return tree_to_dict(tree, effective=(view == "effective"))
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error building scope tree: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_scope_resources(
     ctx: Context,
     scope_id: str,
@@ -85,9 +86,9 @@ async def central_get_scope_resources(
         Dict with scope_id, scope_name, type, and a personas list. Each
         persona has a name and list of resources with name and has_details.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
-        tree = build_scope_tree(conn)
+        tree = await build_scope_tree(conn)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error building scope tree: {e}"}) from e
 
@@ -129,7 +130,7 @@ async def central_get_scope_resources(
     }
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_committed_config(
     ctx: Context,
     scope_id: str,
@@ -168,9 +169,9 @@ async def central_get_committed_config(
         intermediate site-collection nodes that exist purely as
         organizational containers).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
-        tree = build_scope_tree(conn)
+        tree = await build_scope_tree(conn)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error building scope tree: {e}"}) from e
 
@@ -213,7 +214,7 @@ async def central_get_committed_config(
     }
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_effective_config(
     ctx: Context,
     scope_id: str,
@@ -238,9 +239,9 @@ async def central_get_effective_config(
         resource group has a name and list of instances showing
         origin_scope_id, origin_scope_name, persona, and has_details.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
-        tree = build_scope_tree(conn)
+        tree = await build_scope_tree(conn)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error building scope tree: {e}"}) from e
 
@@ -269,7 +270,7 @@ async def central_get_effective_config(
     }
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_devices_in_scope(
     ctx: Context,
     scope_id: str,
@@ -291,9 +292,9 @@ async def central_get_devices_in_scope(
         scope_name, category, persona, device_type, device_model,
         serial_number, mac_address, and part_number.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
-        tree = build_scope_tree(conn)
+        tree = await build_scope_tree(conn)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error building scope tree: {e}"}) from e
 
@@ -316,7 +317,7 @@ async def central_get_devices_in_scope(
     }
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_scope_diagram(
     ctx: Context,
     scope_id: str | None = None,
@@ -339,9 +340,9 @@ async def central_get_scope_diagram(
     Returns:
         Mermaid flowchart string ready for rendering.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     try:
-        tree = build_scope_tree(conn)
+        tree = await build_scope_tree(conn)
         return tree_to_mermaid(tree, scope_id, include_resources, include_devices)
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error generating scope diagram: {e}"}) from e

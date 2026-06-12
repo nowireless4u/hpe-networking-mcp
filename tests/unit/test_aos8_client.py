@@ -67,9 +67,9 @@ class TestAOS8ClientLogin:
             return httpx.Response(200, json=_LOGIN_OK)
 
         calls = _install_mock_transport(client, handler)
-        tok = await client._ensure_token()
+        tok = await client._tokens.get_token()
         assert tok == "tok-supersecret-12345"
-        await client._ensure_token()
+        await client._tokens.get_token()
         login_calls = [c for c in calls if c.url.path == "/v1/api/login"]
         assert len(login_calls) == 1
         await client._http.aclose()
@@ -85,7 +85,7 @@ class TestAOS8ClientLogin:
             return httpx.Response(200, json=_LOGIN_OK)
 
         _install_mock_transport(client, handler)
-        await asyncio.gather(client._ensure_token(), client._ensure_token(), client._ensure_token())
+        await asyncio.gather(client._tokens.get_token(), client._tokens.get_token(), client._tokens.get_token())
         assert login_count == 1
         await client._http.aclose()
 
@@ -102,7 +102,7 @@ class TestAOS8ClientLogin:
 
         _install_mock_transport(client, handler)
         with pytest.raises(AOS8AuthError, match="auth failed"):
-            await client._ensure_token()
+            await client._tokens.get_token()
         await client._http.aclose()
 
 
@@ -303,7 +303,7 @@ class TestAOS8ClientShutdown:
             return httpx.Response(200, json={"_global_result": {"status": "0"}, "ok": True})
 
         _install_mock_transport(client, handler)
-        await client._ensure_token()
+        await client._tokens.get_token()
         await client.aclose()
         assert "/v1/api/logout" in paths
 
@@ -318,6 +318,6 @@ class TestAOS8ClientShutdown:
             return httpx.Response(200, json={"_global_result": {"status": "0"}})
 
         _install_mock_transport(client, handler)
-        await client._ensure_token()
+        await client._tokens.get_token()
         await client.aclose()  # MUST NOT raise
         assert any("WARNING" in m and "logout" in m.lower() for m in loguru_capture)

@@ -28,19 +28,11 @@ from typing import Annotated, Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
-
-OPERATIONAL = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=False,
-    idempotentHint=True,
-    openWorldHint=True,
-)
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 DeviceFamilyAll = Literal["aos-s", "aps", "cx", "gateways"]
 DeviceFamilyApGwSw = Literal["aps", "cx", "gateways"]
@@ -49,9 +41,9 @@ DeviceFamilyApCx = Literal["aps", "cx"]
 DeviceFamilySwitchGw = Literal["aos-s", "cx", "gateways"]
 
 
-def _call(conn, method: str, path: str, params: dict | None = None, data: dict | None = None) -> dict | str:
+async def _call(conn, method: str, path: str, params: dict | None = None, data: dict | None = None) -> dict | str:
     try:
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method=method,
             api_path=path,
@@ -71,8 +63,8 @@ def _call(conn, method: str, path: str, params: dict | None = None, data: dict |
     raise ToolError({"status_code": code, "message": f"Central API error (HTTP {code}): {response.get('msg')}"})
 
 
-def _post_action(conn, family: str, serial: str, action: str, payload: dict | None) -> dict | str:
-    return _call(
+async def _post_action(conn, family: str, serial: str, action: str, payload: dict | None) -> dict | str:
+    return await _call(
         conn,
         "POST",
         f"network-troubleshooting/v1/{family}/{serial}/{action}",
@@ -85,7 +77,7 @@ def _post_action(conn, family: str, serial: str, action: str, payload: dict | No
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_troubleshooting_task_status(
     ctx: Context,
     device_family: Annotated[
@@ -113,15 +105,15 @@ async def central_get_troubleshooting_task_status(
     asynchronous. Pass that ``task_id`` back here along with the device
     family, serial, and action name to fetch the completed result.
     """
-    conn = ctx.lifespan_context["central_conn"]
-    return _call(
+    conn = get_central_conn(ctx)
+    return await _call(
         conn,
         "GET",
         f"network-troubleshooting/v1/{device_family}/{serial_number}/{action}/async-operations/{task_id}",
     )
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_list_troubleshooting_tasks(
     ctx: Context,
     device_family: Annotated[
@@ -131,15 +123,15 @@ async def central_list_troubleshooting_tasks(
     serial_number: Annotated[str, Field(description="Device serial number.")],
 ) -> dict | str:
     """List recent troubleshooting tasks queued / running / completed on a device."""
-    conn = ctx.lifespan_context["central_conn"]
-    return _call(
+    conn = get_central_conn(ctx)
+    return await _call(
         conn,
         "GET",
         f"network-troubleshooting/v1/{device_family}/{serial_number}/list-tasks",
     )
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_list_supported_show_commands(
     ctx: Context,
     device_family: Annotated[
@@ -154,8 +146,8 @@ async def central_list_supported_show_commands(
     This wraps ``GET /<family>/<serial>/show-commands`` (the catalogue
     of allowed commands).
     """
-    conn = ctx.lifespan_context["central_conn"]
-    return _call(
+    conn = get_central_conn(ctx)
+    return await _call(
         conn,
         "GET",
         f"network-troubleshooting/v1/{device_family}/{serial_number}/show-commands",
@@ -167,7 +159,7 @@ async def central_list_supported_show_commands(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_event_extra_attributes(
     ctx: Context,
     filter: str | None = None,
@@ -177,11 +169,11 @@ async def central_get_event_extra_attributes(
     Drives the ``filter`` parameter you can pass to ``central_get_events``
     — each entry describes the attribute name, type, and example values.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {}
     if filter:
         params["filter"] = filter
-    return _call(
+    return await _call(
         conn,
         "GET",
         "network-troubleshooting/v1/event-extra-attributes",
@@ -194,7 +186,7 @@ async def central_get_event_extra_attributes(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_probe_http(
     ctx: Context,
     device_family: Annotated[DeviceFamilyApGwSw, Field(description="``'aps'``, ``'cx'``, or ``'gateways'``.")],
@@ -208,10 +200,10 @@ async def central_probe_http(
 
     Returns a ``task_id`` to poll via ``central_get_troubleshooting_task_status``.
     """
-    return _post_action(ctx.lifespan_context["central_conn"], device_family, serial_number, "http", payload)
+    return await _post_action(get_central_conn(ctx), device_family, serial_number, "http", payload)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_probe_https(
     ctx: Context,
     device_family: Annotated[DeviceFamilyApGwSw, Field(description="``'aps'``, ``'cx'``, or ``'gateways'``.")],
@@ -225,10 +217,10 @@ async def central_probe_https(
 
     Returns a ``task_id`` to poll via ``central_get_troubleshooting_task_status``.
     """
-    return _post_action(ctx.lifespan_context["central_conn"], device_family, serial_number, "https", payload)
+    return await _post_action(get_central_conn(ctx), device_family, serial_number, "https", payload)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_probe_tcp(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number (TCP probe is only offered on APs).")],
@@ -238,10 +230,10 @@ async def central_probe_tcp(
     ],
 ) -> dict | str:
     """Initiate a TCP probe from an AP. Returns a ``task_id`` to poll."""
-    return _post_action(ctx.lifespan_context["central_conn"], "aps", serial_number, "tcp", payload)
+    return await _post_action(get_central_conn(ctx), "aps", serial_number, "tcp", payload)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_iperf_test(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number (iperf is only offered on gateways).")],
@@ -251,10 +243,10 @@ async def central_iperf_test(
     ],
 ) -> dict | str:
     """Initiate an iperf bandwidth test from a gateway. Returns a ``task_id`` to poll."""
-    return _post_action(ctx.lifespan_context["central_conn"], "gateways", serial_number, "iperf", payload)
+    return await _post_action(get_central_conn(ctx), "gateways", serial_number, "iperf", payload)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_speedtest(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number (speedtest is only offered on APs).")],
@@ -264,10 +256,10 @@ async def central_speedtest(
     ] = None,
 ) -> dict | str:
     """Initiate an Internet speed test from an AP. Returns a ``task_id`` to poll."""
-    return _post_action(ctx.lifespan_context["central_conn"], "aps", serial_number, "speedtest", payload)
+    return await _post_action(get_central_conn(ctx), "aps", serial_number, "speedtest", payload)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_nslookup(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number (nslookup is only offered on APs).")],
@@ -277,10 +269,10 @@ async def central_nslookup(
     ],
 ) -> dict | str:
     """Initiate an nslookup from an AP. Returns a ``task_id`` to poll."""
-    return _post_action(ctx.lifespan_context["central_conn"], "aps", serial_number, "nslookup", payload)
+    return await _post_action(get_central_conn(ctx), "aps", serial_number, "nslookup", payload)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_test_aaa(
     ctx: Context,
     device_family: Annotated[DeviceFamilyApCx, Field(description="``'aps'`` or ``'cx'``.")],
@@ -298,10 +290,10 @@ async def central_test_aaa(
     ],
 ) -> dict | str:
     """Initiate an AAA authentication test from an AP or CX switch. Returns a ``task_id`` to poll."""
-    return _post_action(ctx.lifespan_context["central_conn"], device_family, serial_number, "aaa", payload)
+    return await _post_action(get_central_conn(ctx), device_family, serial_number, "aaa", payload)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_arp_table(
     ctx: Context,
     device_family: Annotated[
@@ -319,8 +311,8 @@ async def central_get_arp_table(
     ] = None,
 ) -> dict | str:
     """Retrieve the device's ARP table. Returns a ``task_id`` to poll."""
-    return _post_action(
-        ctx.lifespan_context["central_conn"],
+    return await _post_action(
+        get_central_conn(ctx),
         device_family,
         serial_number,
         "getArpTable",
@@ -328,7 +320,7 @@ async def central_get_arp_table(
     )
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_ping_sweep(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number (pingSweep is only offered on gateways).")],
@@ -338,7 +330,7 @@ async def central_ping_sweep(
     ],
 ) -> dict | str:
     """Initiate a ping sweep across a subnet from a gateway. Returns a ``task_id`` to poll."""
-    return _post_action(ctx.lifespan_context["central_conn"], "gateways", serial_number, "pingSweep", payload)
+    return await _post_action(get_central_conn(ctx), "gateways", serial_number, "pingSweep", payload)
 
 
 # ---------------------------------------------------------------------------
@@ -346,7 +338,7 @@ async def central_ping_sweep(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_reboot_device(
     ctx: Context,
     device_family: Annotated[DeviceFamilyAll, Field(description="Device family.")],
@@ -357,8 +349,8 @@ async def central_reboot_device(
     ] = None,
 ) -> dict | str:
     """Reboot a device (operational — runs immediately, no confirmation). Returns a ``task_id`` to poll."""
-    return _post_action(
-        ctx.lifespan_context["central_conn"],
+    return await _post_action(
+        get_central_conn(ctx),
         device_family,
         serial_number,
         "reboot",
@@ -366,7 +358,7 @@ async def central_reboot_device(
     )
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_reboot_swarm(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Swarm conductor AP serial number.")],
@@ -376,10 +368,10 @@ async def central_reboot_swarm(
     ] = None,
 ) -> dict | str:
     """Reboot an entire IAP / Instant swarm (operational — runs immediately, no confirmation)."""
-    return _post_action(ctx.lifespan_context["central_conn"], "aps", serial_number, "rebootSwarm", payload)
+    return await _post_action(get_central_conn(ctx), "aps", serial_number, "rebootSwarm", payload)
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL, gated=False)
 async def central_locate_device(
     ctx: Context,
     device_family: Annotated[
@@ -393,8 +385,8 @@ async def central_locate_device(
     ] = None,
 ) -> dict | str:
     """Blink a device's locator LED (operational). Returns a ``task_id`` to poll."""
-    return _post_action(
-        ctx.lifespan_context["central_conn"],
+    return await _post_action(
+        get_central_conn(ctx),
         device_family,
         serial_number,
         "locate",
@@ -402,7 +394,7 @@ async def central_locate_device(
     )
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_halt_gateway(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
@@ -412,18 +404,18 @@ async def central_halt_gateway(
     ] = None,
 ) -> dict | str:
     """Halt (graceful shutdown) a gateway (operational — runs immediately, no confirmation)."""
-    return _post_action(ctx.lifespan_context["central_conn"], "gateways", serial_number, "halt", payload)
+    return await _post_action(get_central_conn(ctx), "gateways", serial_number, "halt", payload)
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_disconnect_user_by_network(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
     network_name: Annotated[str, Field(description="Network name (SSID) to disconnect users from.")],
 ) -> dict | str:
     """Disconnect users on a specific network/SSID on an AP (operational — runs immediately, no confirmation)."""
-    return _post_action(
-        ctx.lifespan_context["central_conn"],
+    return await _post_action(
+        get_central_conn(ctx),
         "aps",
         serial_number,
         "disconnectUserByNetwork",
@@ -431,15 +423,15 @@ async def central_disconnect_user_by_network(
     )
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_disconnect_user_by_mac_on_ap(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
     user_mac_address: Annotated[str, Field(description="MAC address of the user/client to disconnect.")],
 ) -> dict | str:
     """Disconnect a specific user/client by MAC address from an AP (operational — runs immediately, no confirmation)."""
-    return _post_action(
-        ctx.lifespan_context["central_conn"],
+    return await _post_action(
+        get_central_conn(ctx),
         "aps",
         serial_number,
         "disconnectUserByMacAddress",
@@ -447,7 +439,7 @@ async def central_disconnect_user_by_mac_on_ap(
     )
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_disconnect_user_all_on_ap(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
@@ -457,8 +449,8 @@ async def central_disconnect_user_all_on_ap(
     Service-affecting — every associated client gets bounced. Use only
     during planned maintenance windows.
     """
-    return _post_action(
-        ctx.lifespan_context["central_conn"],
+    return await _post_action(
+        get_central_conn(ctx),
         "aps",
         serial_number,
         "disconnectUserAll",
@@ -466,7 +458,7 @@ async def central_disconnect_user_all_on_ap(
     )
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_disconnect_client_all_on_gateway(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
@@ -476,8 +468,8 @@ async def central_disconnect_client_all_on_gateway(
     Service-affecting — every client connected through the gateway gets
     bounced. Use only during planned maintenance windows.
     """
-    return _post_action(
-        ctx.lifespan_context["central_conn"],
+    return await _post_action(
+        get_central_conn(ctx),
         "gateways",
         serial_number,
         "disconnectClientAll",
@@ -485,15 +477,15 @@ async def central_disconnect_client_all_on_gateway(
     )
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL)
 async def central_disconnect_client_by_mac_on_gateway(
     ctx: Context,
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
     client_mac_address: Annotated[str, Field(description="MAC address of the client to disconnect.")],
 ) -> dict | str:
     """Disconnect a specific client by MAC address from a gateway (operational — runs immediately, no confirmation)."""
-    return _post_action(
-        ctx.lifespan_context["central_conn"],
+    return await _post_action(
+        get_central_conn(ctx),
         "gateways",
         serial_number,
         "disconnectClientByMacAddress",

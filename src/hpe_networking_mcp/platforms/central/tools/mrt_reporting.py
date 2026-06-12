@@ -9,22 +9,14 @@ report has zero or more report-runs (one per generation cycle).
 from typing import Annotated
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
-
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_reports(
     ctx: Context,
     filter: str | None = None,
@@ -42,11 +34,11 @@ async def central_get_reports(
         limit: Results per page (default 100).
         offset: Pagination offset (default 0).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     api_params: dict = {"limit": limit, "offset": offset}
     if filter:
         api_params["filter"] = filter
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path="network-reporting/v1/reports",
@@ -58,7 +50,7 @@ async def central_get_reports(
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_report_runs(
     ctx: Context,
     report_id: Annotated[str, Field(description="Report identifier (from ``central_get_reports``).")],
@@ -76,9 +68,9 @@ async def central_get_report_runs(
         limit: Results per page (default 100).
         offset: Pagination offset (default 0).
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     api_params: dict = {"limit": limit, "offset": offset}
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path=f"network-reporting/v1/reports/{report_id}/report-runs",
@@ -90,7 +82,7 @@ async def central_get_report_runs(
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_update_report(
     ctx: Context,
     report_id: Annotated[str, Field(description="Report identifier to update.")],
@@ -113,8 +105,8 @@ async def central_update_report(
     definition. Fields omitted from the body are dropped from the report.
     Requires ``ENABLE_CENTRAL_WRITE_TOOLS=true`` and fires elicitation.
     """
-    conn = ctx.lifespan_context["central_conn"]
-    response = retry_central_command(
+    conn = get_central_conn(ctx)
+    response = await retry_central_command(
         central_conn=conn,
         api_method="PUT",
         api_path=f"network-reporting/v1/reports/{report_id}",

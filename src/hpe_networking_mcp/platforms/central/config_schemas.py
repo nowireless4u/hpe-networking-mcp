@@ -63,7 +63,7 @@ def lookup_payload_schema(tool_name: str) -> dict[str, Any] | None:
     given config object resolve to the same schema (they share the object body).
 
     Args:
-        tool_name: Fully-qualified tool name, e.g. ``"central_manage_named_condition"``.
+        tool_name: Fully-qualified tool name, e.g. ``"central_manage_named_conditions"``.
 
     Returns:
         A dict ``{"object": <stem>, "fields": {...}}`` describing the payload

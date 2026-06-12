@@ -204,9 +204,9 @@ async def _collect_central(ctx: Context, site_name: str, _window_hours: int) -> 
     summary = CentralSummary()
 
     try:
-        from pycentral.new_monitoring import MonitoringSites
+        from hpe_networking_mcp.platforms.central import monitoring_api
 
-        sites = await asyncio.to_thread(MonitoringSites.get_all_sites, central_conn=conn)
+        sites = await monitoring_api.get_all_sites(central_conn=conn)
         match = next((s for s in sites if s.get("siteName") == site_name), None)
         if not match:
             return summary
@@ -256,15 +256,15 @@ async def _collect_central(ctx: Context, site_name: str, _window_hours: int) -> 
     return summary
 
 
-def _extract_central_device_ips(ctx: Context, site_id: str) -> list[str]:
+async def _extract_central_device_ips(ctx: Context, site_id: str) -> list[str]:
     """Fetch devices at a Central site and return their management IPs."""
-    from pycentral.new_monitoring import MonitoringDevices
+    from hpe_networking_mcp.platforms.central import monitoring_api
 
     conn = ctx.lifespan_context.get("central_conn")
     if not conn:
         return []
     try:
-        devices = MonitoringDevices.get_all_device_inventory(
+        devices = await monitoring_api.get_all_device_inventory(
             central_conn=conn,
             filter_str=f"siteId eq '{site_id}'",
         )
@@ -386,21 +386,11 @@ async def _collect_clearpass(
 
     summary = ClearPassSummary(queried=True)
 
-    try:
-        from pyclearpass.api_policyelements import ApiPolicyElements
-        from pyclearpass.api_sessioncontrol import ApiSessionControl
-
-        from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-    except ImportError as e:
-        return ClearPassSummary(queried=False, error=f"pyclearpass not available: {e}")
+    from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 
     try:
-        nad_client = await get_clearpass_session(ApiPolicyElements)
-        nad_resp = await asyncio.to_thread(
-            nad_client._send_request,
-            "/network-device?limit=1000",
-            "get",
-        )
+        client = await get_clearpass_client()
+        nad_resp = await client.request("get", "/network-device?limit=1000")
         all_nads = nad_resp.get("_embedded", {}).get("items", []) if isinstance(nad_resp, dict) else []
     except Exception as e:
         logger.warning("site_health_check: ClearPass NAD fetch failed — {}", e)
@@ -436,13 +426,8 @@ async def _collect_clearpass(
     # device inventory.
     cutoff = int(time.time()) - window_hours * 3600
     try:
-        session_client = await get_clearpass_session(ApiSessionControl)
         sess_filter = json.dumps({"acctstarttime": {"$gt": cutoff}})
-        sess_resp = await asyncio.to_thread(
-            session_client._send_request,
-            f"/session?filter={sess_filter}&limit=500",
-            "get",
-        )
+        sess_resp = await client.request("get", f"/session?filter={sess_filter}&limit=500")
         items = sess_resp.get("_embedded", {}).get("items", []) if isinstance(sess_resp, dict) else []
         matched_count = sum(1 for s in items if _ip_in_any(s.get("nasipaddress", ""), site_nad_matchers))
         summary.active_sessions = matched_count
@@ -459,11 +444,7 @@ async def _collect_clearpass(
     # auth-failure counter over REST.
     try:
         event_filter = json.dumps({"timestamp_utc": {"$gt": cutoff}, "level": "ERROR"})
-        events_resp = await asyncio.to_thread(
-            session_client._send_request,
-            f"/system-event?filter={event_filter}&limit=500",
-            "get",
-        )
+        events_resp = await client.request("get", f"/system-event?filter={event_filter}&limit=500")
         event_items = events_resp.get("_embedded", {}).get("items", []) if isinstance(events_resp, dict) else []
         name_set = {n.lower() for n in site_nad_names}
         if name_set:
@@ -702,7 +683,7 @@ def register(mcp: Any, config: Any) -> None:
 
         device_ips: list[str] = []
         if central_summary and central_summary.found and central_summary.site_id:
-            device_ips.extend(await asyncio.to_thread(_extract_central_device_ips, ctx, central_summary.site_id))
+            device_ips.extend(await _extract_central_device_ips(ctx, central_summary.site_id))
         if mist_summary and mist_summary.found and mist_summary.site_id:
             device_ips.extend(await _extract_mist_device_ips(ctx, mist_summary.site_id))
         device_ips = list(dict.fromkeys(device_ips))  # de-dupe preserving order

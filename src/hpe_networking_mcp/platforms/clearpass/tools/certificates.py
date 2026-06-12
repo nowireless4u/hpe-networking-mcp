@@ -5,13 +5,13 @@ from __future__ import annotations
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import READ_ONLY
+from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_client
 from hpe_networking_mcp.platforms.clearpass.utils import build_query_string, clearpass_get
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_trust_list(
     ctx: Context,
     cert_trust_list_id: str | None = None,
@@ -37,26 +37,20 @@ async def clearpass_get_trust_list(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_platformcertificates import ApiPlatformCertificates
-
-        client = await get_clearpass_session(ApiPlatformCertificates)
+        client = await get_clearpass_client()
         if details_id:
-            return client.get_cert_trust_list_details_by_cert_trust_list_details_id(
-                cert_trust_list_details_id=details_id,
-            )
+            return await client.request("get", f"/cert-trust-list-details/{details_id}")
         if cert_trust_list_id:
-            return client.get_cert_trust_list_by_cert_trust_list_id(
-                cert_trust_list_id=cert_trust_list_id,
-            )
+            return await client.request("get", f"/cert-trust-list/{cert_trust_list_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/cert-trust-list" + query)
+        return await clearpass_get(client, "/cert-trust-list" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching trust list: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_client_certificates(
     ctx: Context,
     client_cert_id: str | None = None,
@@ -79,20 +73,18 @@ async def clearpass_get_client_certificates(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_platformcertificates import ApiPlatformCertificates
-
-        client = await get_clearpass_session(ApiPlatformCertificates)
+        client = await get_clearpass_client()
         if client_cert_id:
-            return client.get_client_cert_by_client_cert_id(client_cert_id=client_cert_id)
+            return await client.request("get", f"/client-cert/{client_cert_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/client-cert" + query)
+        return await clearpass_get(client, "/client-cert" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching client certificates: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_server_certificates(
     ctx: Context,
     service_id: str | None = None,
@@ -111,24 +103,19 @@ async def clearpass_get_server_certificates(
         service_name: Service name (required with server_uuid for lookup by name).
     """
     try:
-        from pyclearpass.api_platformcertificates import ApiPlatformCertificates
-
-        client = await get_clearpass_session(ApiPlatformCertificates)
+        client = await get_clearpass_client()
         if service_id:
-            return client.get_server_cert_by_service_id(service_id=service_id)
+            return await client.request("get", f"/server-cert/{service_id}")
         if server_uuid and service_name:
-            return client.get_server_cert_name_by_server_uuid_service_name(
-                server_uuid=server_uuid,
-                service_name=service_name,
-            )
-        return clearpass_get(client, "/server-cert")
+            return await client.request("get", f"/server-cert/name/{server_uuid}/{service_name}")
+        return await clearpass_get(client, "/server-cert")
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching server certificates: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_service_certificates(
     ctx: Context,
     service_cert_id: str | None = None,
@@ -151,20 +138,18 @@ async def clearpass_get_service_certificates(
         limit: Max results per page (default 25).
     """
     try:
-        from pyclearpass.api_platformcertificates import ApiPlatformCertificates
-
-        client = await get_clearpass_session(ApiPlatformCertificates)
+        client = await get_clearpass_client()
         if service_cert_id:
-            return client.get_service_cert_by_service_cert_id(service_cert_id=service_cert_id)
+            return await client.request("get", f"/service-cert/{service_cert_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/service-cert" + query)
+        return await clearpass_get(client, "/service-cert" + query)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching service certificates: {e}"}) from e
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def clearpass_get_revocation_list(
     ctx: Context,
     revocation_list_id: str | None = None,
@@ -193,13 +178,11 @@ async def clearpass_get_revocation_list(
     See: https://developer.arubanetworks.com/cppm/reference (Platform Certificates → /revocation-list)
     """
     try:
-        from pyclearpass.api_platformcertificates import ApiPlatformCertificates
-
-        client = await get_clearpass_session(ApiPlatformCertificates)
+        client = await get_clearpass_client()
         if revocation_list_id:
-            return clearpass_get(client, f"/revocation-list/{revocation_list_id}")
+            return await clearpass_get(client, f"/revocation-list/{revocation_list_id}")
         query = build_query_string(filter, sort, offset, limit, calculate_count)
-        return clearpass_get(client, "/revocation-list" + query)
+        return await clearpass_get(client, "/revocation-list" + query)
     except ToolError:
         raise
     except Exception as e:

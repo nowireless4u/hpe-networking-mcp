@@ -1,0 +1,163 @@
+{
+  "version": 1,
+  "target_platform": "central",
+  "target_id": "captive_portal",
+  "preprocessing": "hpe_networking_mcp.translations.preprocessing.aos8_captive_portal.preprocess_captive_portal",
+  "target_emits": [
+    {
+      "step":     1,
+      "name":     "create_captive_portal",
+      "purpose":  "Create the captive-portal profile in the Library. The preprocessing normalizer flattens the AOS 8 cp_auth_profile (one-level-wrapped scalars, empty-object presence flags, the inverted protocol-http -> use-https, the auth-protocol enum, and black/white-list arrays) into a common _<param> shape; key_mappings below map that onto the Central body per the HPE LLD captive-portal mapping. Optional fields the operator never set are dropped so Central applies its own defaults.",
+      "endpoint": "/network-config/v1alpha1/captive-portal/{name}",
+      "method":   "POST",
+      "query_params": {},
+      "body": {
+        "name":                          "{name}",
+        "default-guest-role":            "{default_guest_role}",
+        "default-role":                  "{default_role}",
+        "redirect-url":                  "{redirect_url}",
+        "ip-addr-in-redirection-url":    "{ip_addr_redir}",
+        "server-group":                  "{server_group}",
+        "url-hash-key-value":            "{url_hash_key}",
+        "welcome-page":                  "{welcome_page}",
+        "logon-wait-min-delay":          "{logon_min}",
+        "logon-wait-max-delay":          "{logon_max}",
+        "logon-wait-cpu-threshold":      "{logon_cpu}",
+        "max-authentication-failures":   "{max_auth_fail}",
+        "redirect-pause":                "{redirect_pause}",
+        "user-idle-timeout":             "{user_idle}",
+        "apple-cna-bypass":              "{apple_cna}",
+        "ap-mac-in-redirection-url":     "{ap_mac_redir}",
+        "guest-logon":                   "{guest_logon}",
+        "user-logon":                    "{user_logon}",
+        "enable-welcome-page":           "{enable_welcome}",
+        "logout-popup-window":           "{logout_popup}",
+        "show-acceptable-use-policy":    "{show_aup}",
+        "show-fqdn":                     "{show_fqdn}",
+        "single-session":                "{single_session}",
+        "switch-ip":                     "{switch_ip}",
+        "user-vlan-in-redirection-url":  "{user_vlan_redir}",
+        "deny-list":                     "{deny_list}",
+        "allow-list":                    "{allow_list}",
+        "use-https":                     "{use_https}",
+        "auth-protocol":                 "{auth_protocol}"
+      },
+      "iteration": "once",
+      "iteration_notes": "One POST per source cp_auth_profile record.",
+      "depends_on": []
+    },
+    {
+      "step":     2,
+      "name":     "assign_captive_portal",
+      "purpose":  "Assign the captive-portal profile to the target scope so the gateway aaa-profile / wlan-ssid can reference it. Multi-device-function array packed into a single POST.",
+      "endpoint": "/network-config/v1alpha1/config-assignments",
+      "method":   "POST",
+      "query_params": {},
+      "body_template": {
+        "config-assignment": [
+          "{one entry per device_function in target_meta.device_functions: { scope-id, device-function, profile-type='captive-portal', profile-instance='{name}' }}"
+        ]
+      },
+      "iteration": "once",
+      "iteration_notes": "One POST; all device-functions share the array.",
+      "depends_on": [1]
+    }
+  ],
+  "target_meta": {
+    "device_functions": ["MOBILITY_GW"],
+    "device_function_filtering_rule": "Captive-portal profiles back gateway-terminated guest WLAN auth; the AOS 8 -> Central migration targets MOBILITY_GW. Operators with AP-direct (bridge) captive portal can override device_functions in runtime_values."
+  },
+  "target_scope_id_resolution": {
+    "rule":   "Central scope_id is supplied by the consuming skill at runtime, derived from the AOS 8 cp_auth_profile record's binding scope.",
+    "input":  "Source binding scope (string path / identifier); skill-specific",
+    "output": "Central scope_id (string), supplied via runtime_values['central_scope_id']"
+  },
+  "required_runtime_values": ["central_scope_id"],
+  "derived": {},
+  "dependencies": [
+    {
+      "depends_on": "central:server_group (cp_server_group -> server-group reference) and central:role (default-role / default-guest-role references). Those referenced profiles should exist in Central before / alongside this captive-portal POST.",
+      "depended_by": [
+        {
+          "target_id": "central:aaa_profile (not yet authored) / central:wlan_ssid",
+          "field":     "captive-portal profile reference",
+          "relation":  "the gateway aaa-profile (and the wlan-ssid CaptivePortalConfig) reference a captive-portal profile by name",
+          "notes":     "AOS 8 aaa_prof.cp_auth_profile names a cp_auth_profile; the Central aaa-profile / wlan-ssid references the captive-portal profile by name. Run captive-portal BEFORE the aaa-profile / wlan-ssid translation."
+        }
+      ]
+    }
+  ],
+  "tokenize_kind_per_field": {},
+  "sources": {
+    "aos8": {
+      "kind":         "rest",
+      "mapping_kind": "simple",
+      "objects": [
+        {
+          "object":      "cp_auth_profile",
+          "object_path": "/v1/configuration/object/cp_auth_profile",
+          "role":        "captive_portal_auth_profile",
+          "docs": {
+            "get":  "https://developer.arubanetworks.com/aos8/reference/get_object-cp_auth_profile",
+            "post": "https://developer.arubanetworks.com/aos8/reference/post_object-cp_auth_profile"
+          },
+          "live_shape_example": "[{\"profile-name\": \"guest-cp\", \"cp_default_role\": {\"default-role\": \"guest\"}, \"cp_server_group\": {\"server-group\": \"guest-radius\"}, \"allow_guest\": {}}]",
+          "notes": "REST schema 'cp_auth_profile' (CLI noun: aaa authentication captive-portal). Mixes one-level-wrapped scalars (cp_redirect_url:{redirect-url}), empty-object presence flags (apple_cna_bypass:{}=enabled), and black/white-list arrays ([{black-list:<name>}] / [{white-list:<name>}]). authentication_method.captive_auth_t enum is ['PAP','MSCHAPv2','chap']. The normalizer flattens these per the HPE LLD captive-portal mapping."
+        }
+      ],
+      "key_mappings": {
+        "name":               { "from": "_name",               "to": "Central captive-portal 'name' (path param step 1, profile-instance step 2, body 'name')", "transform": "direct_str", "notes": "Required. cp_auth_profile profile-name -> Central name." },
+        "default_guest_role": { "from": "_default_guest_role", "to": "body 'default-guest-role'", "transform": "direct_str", "optional": true, "notes": "LLD: default-guest-role <role>. References a Central role (central:role)." },
+        "default_role":       { "from": "_default_role",       "to": "body 'default-role'", "transform": "direct_str", "optional": true, "notes": "LLD: default-role <role>. References a Central role." },
+        "redirect_url":       { "from": "_redirect_url",       "to": "body 'redirect-url'", "transform": "direct_str", "optional": true, "notes": "LLD: redirect-url <url>." },
+        "ip_addr_redir":      { "from": "_ip_addr_in_redir",   "to": "body 'ip-addr-in-redirection-url'", "transform": "direct_str", "optional": true, "notes": "LLD: ip-addr-in-redirection <ipaddr>." },
+        "server_group":       { "from": "_server_group",       "to": "body 'server-group'", "transform": "direct_str", "optional": true, "notes": "LLD: server-group <group-name>. References a Central server-group (central:server_group)." },
+        "url_hash_key":       { "from": "_url_hash_key",       "to": "body 'url-hash-key-value'", "transform": "direct_str", "optional": true, "notes": "LLD: url-hash-key <key>." },
+        "welcome_page":       { "from": "_welcome_page",       "to": "body 'welcome-page'", "transform": "direct_str", "optional": true, "notes": "LLD: welcome-page <url> (default /auth/welcome.html)." },
+        "logon_min":          { "from": "_logon_min",          "to": "body 'logon-wait-min-delay'", "transform": "direct_int", "optional": true, "notes": "LLD: logon-wait minimum-delay <seconds> (default 5)." },
+        "logon_max":          { "from": "_logon_max",          "to": "body 'logon-wait-max-delay'", "transform": "direct_int", "optional": true, "notes": "LLD: logon-wait maximum-delay <seconds> (default 10)." },
+        "logon_cpu":          { "from": "_logon_cpu",          "to": "body 'logon-wait-cpu-threshold'", "transform": "direct_int", "optional": true, "notes": "LLD: logon-wait cpu-threshold <percent> (default 60)." },
+        "max_auth_fail":      { "from": "_max_auth_fail",      "to": "body 'max-authentication-failures'", "transform": "direct_int", "optional": true, "notes": "LLD: max-authentication-failures <number> (default 0)." },
+        "redirect_pause":     { "from": "_redirect_pause",     "to": "body 'redirect-pause'", "transform": "direct_int", "optional": true, "notes": "LLD: redirect-pause <seconds> (default 10)." },
+        "user_idle":          { "from": "_user_idle",          "to": "body 'user-idle-timeout'", "transform": "direct_int", "optional": true, "notes": "LLD: user-idle-timeout <seconds>." },
+        "apple_cna":          { "from": "_apple_cna",          "to": "body 'apple-cna-bypass'", "transform": "direct", "optional": true, "notes": "LLD flag: apple-cna-bypass." },
+        "ap_mac_redir":       { "from": "_ap_mac_redir",       "to": "body 'ap-mac-in-redirection-url'", "transform": "direct", "optional": true, "notes": "LLD flag: ap-mac-in-redirection-url." },
+        "guest_logon":        { "from": "_guest_logon",        "to": "body 'guest-logon'", "transform": "direct", "optional": true, "notes": "LLD flag: guest-logon (AOS 8 allow_guest)." },
+        "user_logon":         { "from": "_user_logon",         "to": "body 'user-logon'", "transform": "direct", "optional": true, "notes": "LLD flag: user-logon (default True; AOS 8 allow_user)." },
+        "enable_welcome":     { "from": "_enable_welcome",     "to": "body 'enable-welcome-page'", "transform": "direct", "optional": true, "notes": "LLD flag: enable-welcome-page (default True)." },
+        "logout_popup":       { "from": "_logout_popup",       "to": "body 'logout-popup-window'", "transform": "direct", "optional": true, "notes": "LLD flag: logout-popup-window (default True)." },
+        "show_aup":           { "from": "_show_aup",           "to": "body 'show-acceptable-use-policy'", "transform": "direct", "optional": true, "notes": "LLD flag: show-acceptable-use-policy." },
+        "show_fqdn":          { "from": "_show_fqdn",          "to": "body 'show-fqdn'", "transform": "direct", "optional": true, "notes": "LLD flag: show-fqdn." },
+        "single_session":     { "from": "_single_session",     "to": "body 'single-session'", "transform": "direct", "optional": true, "notes": "LLD flag: single-session." },
+        "switch_ip":          { "from": "_switch_ip",          "to": "body 'switch-ip'", "transform": "direct", "optional": true, "notes": "LLD flag: switchip-in-redirection-url -> switch-ip." },
+        "user_vlan_redir":    { "from": "_user_vlan_redir",    "to": "body 'user-vlan-in-redirection-url'", "transform": "direct", "optional": true, "notes": "LLD flag: user-vlan-in-redirection-url." },
+        "deny_list":          { "from": "_deny_list",          "to": "body 'deny-list' (array)", "transform": "direct", "optional": true, "notes": "LLD: black-list/deny-list <name> (append_to_list). AOS 8 cp_black_list[].black-list names." },
+        "allow_list":         { "from": "_allow_list",         "to": "body 'allow-list' (array)", "transform": "direct", "optional": true, "notes": "LLD: white-list/allow-list <name> (append_to_list). AOS 8 cp_white_list[].white-list names." },
+        "use_https":          { "from": "_use_https",          "to": "body 'use-https'", "transform": "direct", "optional": true, "notes": "LLD INVERTED: AOS 8 protocol-http (present = plain HTTP) -> use-https=False. Normalizer sets False only when protocol-http is operator-set; omitted otherwise -> Central default use-https=True." },
+        "auth_protocol":      { "from": "_auth_protocol",      "to": "body 'auth-protocol' (PAP / MSCHAPv2 / CHAP)", "transform": "direct_str", "optional": true, "notes": "LLD enum_map: authentication_method.captive_auth_t (['PAP','MSCHAPv2','chap']) -> Central auth-protocol (PAP/MSCHAPv2/CHAP). Default PAP." }
+      },
+      "unmapped_fields": [
+        {
+          "from":          "proxy {address,port}, cp_login_location (login-page), cp_auth_profile_clone, _flags",
+          "reason":        "Per the HPE LLD: proxy has no CNX captive-portal equivalent; login-page exists in YANG but is hidden (ac-ext:hidden 'all') and not exposed in the CNX API; clone is an operational command, not a config property; _flags are AOS 8-internal metadata (consumer filters inherited/default records).",
+          "severity_rule": "always_operator_map"
+        }
+      ],
+      "ignored_variants": [
+        {
+          "form":   "cp_auth_profile with _flags.default=true (system / built-in, e.g. 'default')",
+          "reason": "AOS 8 ships a built-in default captive-portal profile. Consumer filters _flags.default / _flags.system / _flags.inherited (at definition scope) BEFORE calling emit_calls, matching the central:auth_server / server_group / net_group / role convention."
+        }
+      ]
+    }
+  },
+  "draft_notes": [
+    "v1 translation, Gateway-targeted. POST /captive-portal/{name} then config-assignment to MOBILITY_GW. Field/param correspondence + transforms + defaults taken field-by-field from the HPE LLD captive-portal mapping (aaa authentication captive-portal -> /captive-portal/{name}).",
+    "TEMPLATE COMPLIANCE: standard Paradigm-B (per-field key_mappings + structurally complete body). The presence-flag / inverted-flag / enum / array quirks are flattened by the normalizer (translations/preprocessing/aos8_captive_portal.py); the JSON stays thin and reviewable.",
+    "INVERTED FLAG: AOS 8 protocol-http <-> Central use-https are inverted. The normalizer emits use-https=False only when protocol-http is operator-set; otherwise it's omitted so Central's default (use-https=True) applies.",
+    "DEPENDENCY: references central:role (default-role / default-guest-role) and central:server_group (server-group). Run those first. In turn the gateway aaa-profile / wlan-ssid reference this captive-portal by name (aaa_prof.cp_auth_profile) -- run captive-portal before those.",
+    "PRESENCE-FLAG EDGE CASE: AOS 8 default-True flags (user-logon, enable-welcome-page, logout-popup-window) are emitted True when operator-set and omitted otherwise (-> Central default True). An explicit operator DISABLE of a default-True flag is not distinguishable from 'left default' in the empty-object REST shape; flag as a caveat for those three if a disabled sample surfaces.",
+    "NEEDS-PREVIEW: the config-assignment profile-type ('captive-portal') and the exact Central body field names (taken from the LLD, not yet all live-verified against a configured captive-portal) -- confirm via central_translation_preview against a tenant with captive-portal profiles configured.",
+    "Idempotency: SHARED POST for an existing captive-portal name returns HTTP 409; consumer handles 409 idempotently."
+  ]
+}

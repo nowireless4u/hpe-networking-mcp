@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,18 +16,17 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
 
 @_mcp_tool(
     name="mist_create_sdk_template",
-    description="POST /api/v1/orgs/{org_id}/sdktemplates\n\ncreateSdkTemplate\n\nCreate SDK Template",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/orgs/{org_id}/sdktemplates\n\ncreateSdkTemplate\n\nCreate an SDK template that defines visual customization for the mobile SDK experience, including branding images, colors, header text, and welcome messages.",
+    capability=Capability.WRITE,
 )
 async def mist_create_sdk_template(
     ctx: Context,
@@ -46,9 +45,8 @@ async def mist_create_sdk_template(
 
 @_mcp_tool(
     name="mist_delete_sdk_template",
-    description="DELETE /api/v1/orgs/{org_id}/sdktemplates/{sdktemplate_id}\n\ndeleteSdkTemplate\n\nDelete SDK Template",
-    tags={"mist", "mist_write", "mist_write_delete"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True),
+    description="DELETE /api/v1/orgs/{org_id}/sdktemplates/{sdktemplate_id}\n\ndeleteSdkTemplate\n\nDelete an SDK visual customization template from the organization.",
+    capability=Capability.WRITE_DELETE,
 )
 async def mist_delete_sdk_template(
     ctx: Context,
@@ -67,9 +65,8 @@ async def mist_delete_sdk_template(
 
 @_mcp_tool(
     name="mist_get_sdk_template",
-    description="GET /api/v1/orgs/{org_id}/sdktemplates/{sdktemplate_id}\n\ngetSdkTemplate\n\nGet SDK Template Details",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/sdktemplates/{sdktemplate_id}\n\ngetSdkTemplate\n\nReturn the visual customization settings for an SDK template, including branding text, image URLs, colors, default state, and site scope.",
+    capability=Capability.READ,
 )
 async def mist_get_sdk_template(
     ctx: Context,
@@ -88,9 +85,8 @@ async def mist_get_sdk_template(
 
 @_mcp_tool(
     name="mist_list_sdk_templates",
-    description="GET /api/v1/orgs/{org_id}/sdktemplates\n\nlistSdkTemplates\n\nGet List of Org SDK Templates",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/sdktemplates\n\nlistSdkTemplates\n\nList SDK templates configured for the organization. SDK templates define visual customization for the mobile SDK experience, including branding images, colors, header text, and welcome messages.",
+    capability=Capability.READ,
 )
 async def mist_list_sdk_templates(
     ctx: Context,
@@ -108,9 +104,8 @@ async def mist_list_sdk_templates(
 
 @_mcp_tool(
     name="mist_update_sdk_template",
-    description="PUT /api/v1/orgs/{org_id}/sdktemplates/{sdktemplate_id}\n\nupdateSdkTemplate\n\nUpdate SDK Template",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="PUT /api/v1/orgs/{org_id}/sdktemplates/{sdktemplate_id}\n\nupdateSdkTemplate\n\nUpdate an SDK template's visual customization settings, such as branding images, colors, header text, welcome message, default state, or site association.",
+    capability=Capability.WRITE,
 )
 async def mist_update_sdk_template(
     ctx: Context,

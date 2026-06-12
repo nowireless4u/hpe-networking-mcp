@@ -1,8 +1,8 @@
 """UXI group write tools (POST + PATCH + DELETE).
 
 Tools in this module create, update, and delete UXI group resources. They are
-gated behind ``ENABLE_UXI_WRITE_TOOLS=true`` and require user confirmation via
-``confirm_write`` elicitation before any HTTP mutation is issued.
+gated behind ``ENABLE_UXI_WRITE_TOOLS=true``; the universal confirmation gate
+at ``uxi_invoke_tool`` prompts the user before any HTTP mutation is issued.
 """
 
 from __future__ import annotations
@@ -12,14 +12,13 @@ from typing import Any
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.uxi._registry import tool
 from hpe_networking_mcp.platforms.uxi.client import format_http_error, get_uxi_client
-from hpe_networking_mcp.platforms.uxi.tools import WRITE, WRITE_DELETE
 from hpe_networking_mcp.platforms.uxi.tools._validators import validate_id
 
 
-@tool(annotations=WRITE, tags={"uxi_write"})
+@tool(capability=Capability.WRITE)
 async def uxi_create_group(
     ctx: Context,
     name: str,
@@ -39,10 +38,6 @@ async def uxi_create_group(
         validate_id(parent_id, "parent_id")
         body["parentId"] = parent_id  # API field is camelCase
 
-    decision = await confirm_write(ctx, f"Create group {name!r}")
-    if decision is not None:
-        return decision
-
     try:
         client = await get_uxi_client()
         result = await client.uxi_post("/groups", body)
@@ -53,7 +48,7 @@ async def uxi_create_group(
         return format_http_error(e)
 
 
-@tool(annotations=WRITE, tags={"uxi_write"})
+@tool(capability=Capability.WRITE)
 async def uxi_update_group(
     ctx: Context,
     group_id: str,
@@ -70,10 +65,6 @@ async def uxi_update_group(
     """
     validate_id(group_id, "group_id")
 
-    decision = await confirm_write(ctx, f"Update group {group_id!r} name to {name!r}")
-    if decision is not None:
-        return decision
-
     try:
         client = await get_uxi_client()
         result = await client.uxi_patch(f"/groups/{group_id}", {"name": name})
@@ -84,7 +75,7 @@ async def uxi_update_group(
         return format_http_error(e)
 
 
-@tool(annotations=WRITE_DELETE, tags={"uxi_write", "uxi_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def uxi_delete_group(
     ctx: Context,
     group_id: str,
@@ -98,10 +89,6 @@ async def uxi_delete_group(
         group_id: The group's UXI resource ID (from ``uxi_list_groups`` items[].id).
     """
     validate_id(group_id, "group_id")
-
-    decision = await confirm_write(ctx, f"Permanently delete group {group_id!r}?")
-    if decision is not None:
-        return decision
 
     try:
         client = await get_uxi_client()

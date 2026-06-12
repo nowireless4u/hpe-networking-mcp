@@ -1,16 +1,17 @@
-from typing import Literal
+from typing import Annotated, Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
-from mcp.types import ToolAnnotations
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.models import PaginatedAlerts
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.platforms.central.utils import (
     FilterField,
     build_odata_filter,
     clean_alert_data,
+    coerce_enum,
+    get_central_conn,
     retry_central_command,
 )
 
@@ -24,6 +25,7 @@ ALERT_FILTER_FIELDS: dict[str, FilterField] = {
     "site_id": FilterField("siteId"),
 }
 
+
 # Operational annotation for state-transition actions on alerts (clear,
 # defer, reactivate, set_priority). Mirrors the pattern in actions.py:
 # not read-only (changes alert state), not destructive (every transition
@@ -32,21 +34,23 @@ ALERT_FILTER_FIELDS: dict[str, FilterField] = {
 # `central_write_delete` — alert state transitions are operational
 # actions, not config changes, so they ride alongside reboot/AP-action
 # tools rather than gated behind ENABLE_CENTRAL_WRITE_TOOLS.
-OPERATIONAL = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=False,
-    idempotentHint=True,
-    openWorldHint=True,
-)
-
-
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_alerts(
     ctx: Context,
     site_id: str,
-    status: Literal["Active", "Cleared", "Deferred"] | None = "Active",
-    device_type: Literal["Access Point", "Gateway", "Switch", "Bridge"] | None = None,
-    category: Literal["Clients", "System", "LAN", "WLAN", "WAN", "Cluster", "Routing", "Security"] | None = None,
+    status: Annotated[
+        Literal["Active", "Cleared", "Deferred"] | None,
+        # "Open"/"open" is a common synonym for an unresolved alert → map to "Active".
+        coerce_enum(("Active", "Cleared", "Deferred"), {"open": "Active"}),
+    ] = "Active",
+    device_type: Annotated[
+        Literal["Access Point", "Gateway", "Switch", "Bridge"] | None,
+        coerce_enum(("Access Point", "Gateway", "Switch", "Bridge")),
+    ] = None,
+    category: Annotated[
+        Literal["Clients", "System", "LAN", "WLAN", "WAN", "Cluster", "Routing", "Security"] | None,
+        coerce_enum(("Clients", "System", "LAN", "WLAN", "WAN", "Cluster", "Routing", "Security")),
+    ] = None,
     sort: str = "severity desc",
     limit: int = 50,
     cursor: int | None = None,
@@ -69,7 +73,9 @@ async def central_get_alerts(
     Parameters:
         - site_id: Site identifier. Obtain by calling
           central_get_site_health(site_name="<name>") and reading site_id from the result.
-        - status: "Active" (default) for unresolved alerts, "Cleared" for resolved ones.
+        - status: "Active" (default) for unresolved/open alerts, "Cleared" for resolved
+          ones, "Deferred" for snoozed ones. Case-insensitive; "Open" is accepted as a
+          synonym for "Active".
         - device_type: Narrow to a device class — "Access Point", "Gateway", "Switch",
           or "Bridge".
         - category: Narrow to an alert domain — "Clients", "System", "LAN", "WLAN",
@@ -103,8 +109,8 @@ async def central_get_alerts(
     if cursor is not None:
         query_params["next"] = cursor
 
-    response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+    response = await retry_central_command(
+        get_central_conn(ctx),
         api_method="GET",
         api_path="network-notifications/v1/alerts",
         api_params=query_params,
@@ -125,7 +131,7 @@ async def central_get_alerts(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_alert_classification(
     ctx: Context,
     classify_by: Literal[
@@ -171,8 +177,8 @@ async def central_get_alert_classification(
     if search is not None:
         query_params["search"] = search
 
-    response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+    response = await retry_central_command(
+        get_central_conn(ctx),
         api_method="GET",
         api_path="network-notifications/v1/alerts/classification",
         api_params=query_params,
@@ -183,7 +189,7 @@ async def central_get_alert_classification(
     return msg
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_alert_action_status(
     ctx: Context,
     task_id: str,
@@ -203,8 +209,8 @@ async def central_get_alert_action_status(
 
     Returns the task status payload from Central.
     """
-    response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+    response = await retry_central_command(
+        get_central_conn(ctx),
         api_method="GET",
         api_path=f"network-notifications/v1/alerts/async-operations/{task_id}",
     )
@@ -224,7 +230,7 @@ async def central_get_alert_action_status(
 # central_get_alert_action_status to confirm completion.
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL, gated=False)
 async def central_clear_alerts(
     ctx: Context,
     keys: list[str],
@@ -263,8 +269,8 @@ async def central_clear_alerts(
     if notes is not None:
         body["notes"] = notes
 
-    response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+    response = await retry_central_command(
+        get_central_conn(ctx),
         api_method="POST",
         api_path="network-notifications/v1/alerts/clear",
         api_data=body,
@@ -273,7 +279,7 @@ async def central_clear_alerts(
     return msg or f"Clear request submitted for {len(keys)} alert(s); response was empty"
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL, gated=False)
 async def central_defer_alerts(
     ctx: Context,
     keys: list[str],
@@ -301,8 +307,8 @@ async def central_defer_alerts(
     """
     body = {"keys": keys, "deferUntil": defer_until}
 
-    response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+    response = await retry_central_command(
+        get_central_conn(ctx),
         api_method="POST",
         api_path="network-notifications/v1/alerts/defer",
         api_data=body,
@@ -311,7 +317,7 @@ async def central_defer_alerts(
     return msg or f"Defer request submitted for {len(keys)} alert(s); response was empty"
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL, gated=False)
 async def central_reactivate_alerts(
     ctx: Context,
     keys: list[str],
@@ -334,8 +340,8 @@ async def central_reactivate_alerts(
     """
     body = {"keys": keys}
 
-    response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+    response = await retry_central_command(
+        get_central_conn(ctx),
         api_method="POST",
         api_path="network-notifications/v1/alerts/active",
         api_data=body,
@@ -344,7 +350,7 @@ async def central_reactivate_alerts(
     return msg or f"Reactivate request submitted for {len(keys)} alert(s); response was empty"
 
 
-@tool(annotations=OPERATIONAL)
+@tool(capability=Capability.OPERATIONAL, gated=False)
 async def central_set_alert_priority(
     ctx: Context,
     keys: list[str],
@@ -370,8 +376,8 @@ async def central_set_alert_priority(
     """
     body = {"keys": keys, "priority": priority}
 
-    response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+    response = await retry_central_command(
+        get_central_conn(ctx),
         api_method="POST",
         api_path="network-notifications/v1/alerts/priority",
         api_data=body,

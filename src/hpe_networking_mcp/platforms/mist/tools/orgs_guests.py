@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,32 +16,40 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
 
 @_mcp_tool(
     name="mist_count_org_guest_authorizations",
-    description="GET /api/v1/orgs/{org_id}/guests/count\n\ncountOrgGuestAuthorizations\n\nCount by Distinct Attributes of Org Authorized Guest",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/guests/count\n\ncountOrgGuestAuthorizations\n\nCount organization guest authorization records, optionally grouped by `distinct` and filtered by time range.",
+    capability=Capability.READ,
 )
 async def mist_count_org_guest_authorizations(
     ctx: Context,
     org_id: Annotated[str, Field(description="path parameter 'org_id'")],
-    distinct: Annotated[Any | None, Field(description="query parameter 'distinct'")] = None,
+    distinct: Annotated[
+        Any | None, Field(description="Field used to group this count response. enum: `auth_method`, `company`, `ssid`")
+    ] = None,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -55,9 +63,8 @@ async def mist_count_org_guest_authorizations(
 
 @_mcp_tool(
     name="mist_delete_org_guest_authorization",
-    description="DELETE /api/v1/orgs/{org_id}/guests/{guest_mac}\n\ndeleteOrgGuestAuthorization\n\nDelete Guest Authorization",
-    tags={"mist", "mist_write", "mist_write_delete"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=True),
+    description="DELETE /api/v1/orgs/{org_id}/guests/{guest_mac}\n\ndeleteOrgGuestAuthorization\n\nDelete a guest authorization record by guest MAC address.",
+    capability=Capability.WRITE_DELETE,
 )
 async def mist_delete_org_guest_authorization(
     ctx: Context,
@@ -76,9 +83,8 @@ async def mist_delete_org_guest_authorization(
 
 @_mcp_tool(
     name="mist_get_org_guest_authorization",
-    description="GET /api/v1/orgs/{org_id}/guests/{guest_mac}\n\ngetOrgGuestAuthorization\n\nGet Guest Authorization",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/guests/{guest_mac}\n\ngetOrgGuestAuthorization\n\nRetrieve the guest authorization record associated with a guest MAC address.",
+    capability=Capability.READ,
 )
 async def mist_get_org_guest_authorization(
     ctx: Context,
@@ -97,9 +103,8 @@ async def mist_get_org_guest_authorization(
 
 @_mcp_tool(
     name="mist_list_org_guest_authorizations",
-    description="GET /api/v1/orgs/{org_id}/guests\n\nlistOrgGuestAuthorizations\n\nGet List of Org Guest Authorizations",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/guests\n\nlistOrgGuestAuthorizations\n\nList guest authorization records across the organization, including WLAN, SSID, authentication method, expiration, and guest identity details.",
+    capability=Capability.READ,
 )
 async def mist_list_org_guest_authorizations(
     ctx: Context,
@@ -117,25 +122,31 @@ async def mist_list_org_guest_authorizations(
 
 @_mcp_tool(
     name="mist_search_org_guest_authorization",
-    description="GET /api/v1/orgs/{org_id}/guests/search\n\nsearchOrgGuestAuthorization\n\nSearch Authorized Guest",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/guests/search\n\nsearchOrgGuestAuthorization\n\nSearch organization guest authorization records with filters for WLAN, SSID, authentication method, and time range.",
+    capability=Capability.READ,
 )
 async def mist_search_org_guest_authorization(
     ctx: Context,
     org_id: Annotated[str, Field(description="path parameter 'org_id'")],
-    wlan_id: Annotated[str | None, Field(description="WLAN ID")] = None,
-    auth_method: Annotated[str | None, Field(description="Authentication Method")] = None,
-    ssid: Annotated[str | None, Field(description="SSID")] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    wlan_id: Annotated[str | None, Field(description="Filter results by WLAN identifier")] = None,
+    auth_method: Annotated[str | None, Field(description="Filter results by authentication method")] = None,
+    ssid: Annotated[str | None, Field(description="Filter results by SSID")] = None,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
-    duration: Annotated[str, Field(description="Duration like 7d, 2w")] = "1d",
+    duration: Annotated[
+        str, Field(description="Time range duration for the query, using relative units such as `10m`, `7d`, or `2w`")
+    ] = "1d",
     sort: Annotated[
         str, Field(description="On which field the list should be sorted, -prefix represents DESC order")
     ] = "timestamp",
@@ -161,9 +172,8 @@ async def mist_search_org_guest_authorization(
 
 @_mcp_tool(
     name="mist_update_org_guest_authorization",
-    description="PUT /api/v1/orgs/{org_id}/guests/{guest_mac}\n\nupdateOrgGuestAuthorization\n\nUpdate Guest Authorization",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="PUT /api/v1/orgs/{org_id}/guests/{guest_mac}\n\nupdateOrgGuestAuthorization\n\nUpdate the organization guest authorization record for a guest MAC address, including authorization state, duration, WLAN, and guest identity fields.",
+    capability=Capability.WRITE,
 )
 async def mist_update_org_guest_authorization(
     ctx: Context,

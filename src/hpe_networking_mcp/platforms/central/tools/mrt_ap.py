@@ -12,13 +12,13 @@ from typing import Annotated, Literal
 from fastmcp import Context
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
+from hpe_networking_mcp.platforms.central.utils import coerce_enum, get_central_conn, retry_central_command
 
 
-def _get(conn, path: str, params: dict | None = None) -> dict | str:
-    response = retry_central_command(
+async def _get(conn, path: str, params: dict | None = None) -> dict | str:
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path=path,
@@ -47,7 +47,7 @@ def _time_params(start: str | None, end: str | None) -> dict:
 _ApTrendDimension = Literal["throughput", "cpu", "memory", "power"]
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_trend(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
@@ -60,14 +60,28 @@ async def central_get_ap_trend(
             ),
         ),
     ],
-    start: Annotated[str | None, Field(description="ISO-8601 start timestamp.")] = None,
-    end: Annotated[str | None, Field(description="ISO-8601 end timestamp.")] = None,
+    interface_type: Annotated[
+        Literal["WIRELESS", "WIRED", "LTE"] | None,
+        coerce_enum(("WIRELESS", "WIRED", "LTE")),
+        Field(
+            description=(
+                "Interface to aggregate throughput over — REQUIRED by the API for "
+                "``dimension='throughput'`` (defaults to ``'WIRELESS'`` if omitted). "
+                "Ignored for the cpu/memory/power dimensions."
+            ),
+        ),
+    ] = None,
+    start: Annotated[str | None, Field(description="ISO-8601 start timestamp (optional; defaults to last 3h).")] = None,
+    end: Annotated[str | None, Field(description="ISO-8601 end timestamp (optional; defaults to last 3h).")] = None,
 ) -> dict | str:
     """Get one of an AP's top-level time-series trends.
 
     Consolidates the four trend endpoints under
     ``/aps/:serial/<dim>-trends`` (throughput, cpu-utilization,
-    memory-utilization, power-consumption).
+    memory-utilization, power-consumption). Omit ``start`` / ``end`` for the
+    last-3-hours default. The ``throughput`` dimension additionally requires an
+    ``interface_type`` (WIRELESS / WIRED / LTE) — the API 400s without it; this tool
+    defaults it to ``WIRELESS`` so an AP throughput query works out of the box.
     """
     suffix_map = {
         "throughput": "throughput-trends",
@@ -75,11 +89,16 @@ async def central_get_ap_trend(
         "memory": "memory-utilization-trends",
         "power": "power-consumption-trends",
     }
-    conn = ctx.lifespan_context["central_conn"]
-    return _get(
+    conn = get_central_conn(ctx)
+    params = _time_params(start, end)
+    if dimension == "throughput":
+        # interface-type is a mandatory query param for throughput-trends (enum
+        # WIRELESS/WIRED/LTE); WIRELESS is the sensible default for an AP.
+        params["interface-type"] = interface_type or "WIRELESS"
+    return await _get(
         conn,
         f"network-monitoring/v1/aps/{serial_number}/{suffix_map[dimension]}",
-        _time_params(start, end),
+        params,
     )
 
 
@@ -88,20 +107,20 @@ async def central_get_ap_trend(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_radios(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
 ) -> dict | str:
     """List the radios on an AP (2.4, 5, 6 GHz typically)."""
-    conn = ctx.lifespan_context["central_conn"]
-    return _get(conn, f"network-monitoring/v1/aps/{serial_number}/radios")
+    conn = get_central_conn(ctx)
+    return await _get(conn, f"network-monitoring/v1/aps/{serial_number}/radios")
 
 
 _RadioTrendDimension = Literal["throughput", "channel-utilization", "channel-quality", "noise-floor", "frames"]
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_radio_trend(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
@@ -126,8 +145,8 @@ async def central_get_ap_radio_trend(
         "noise-floor": "noise-floor-trends",
         "frames": "frames-trends",
     }
-    conn = ctx.lifespan_context["central_conn"]
-    return _get(
+    conn = get_central_conn(ctx)
+    return await _get(
         conn,
         f"network-monitoring/v1/aps/{serial_number}/radios/{radio_number}/{suffix_map[dimension]}",
         _time_params(start, end),
@@ -139,20 +158,20 @@ async def central_get_ap_radio_trend(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_ports(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
 ) -> dict | str:
     """List the Ethernet ports on an AP."""
-    conn = ctx.lifespan_context["central_conn"]
-    return _get(conn, f"network-monitoring/v1/aps/{serial_number}/ports")
+    conn = get_central_conn(ctx)
+    return await _get(conn, f"network-monitoring/v1/aps/{serial_number}/ports")
 
 
 _PortTrendDimension = Literal["throughput", "frames", "crc", "collisions"]
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_port_trend(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
@@ -171,8 +190,8 @@ async def central_get_ap_port_trend(
         "crc": "crc-trends",
         "collisions": "collisions-trends",
     }
-    conn = ctx.lifespan_context["central_conn"]
-    return _get(
+    conn = get_central_conn(ctx)
+    return await _get(
         conn,
         f"network-monitoring/v1/aps/{serial_number}/ports/{port_index}/{suffix_map[dimension]}",
         _time_params(start, end),
@@ -184,31 +203,31 @@ async def central_get_ap_port_trend(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_tunnels(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
 ) -> dict | str:
     """List active tunnels on an AP."""
-    conn = ctx.lifespan_context["central_conn"]
-    return _get(conn, f"network-monitoring/v1/aps/{serial_number}/tunnels")
+    conn = get_central_conn(ctx)
+    return await _get(conn, f"network-monitoring/v1/aps/{serial_number}/tunnels")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_tunnel(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
     tunnel_id: Annotated[str, Field(description="Tunnel identifier.")],
 ) -> dict | str:
     """Get one tunnel's detail on an AP."""
-    conn = ctx.lifespan_context["central_conn"]
-    return _get(conn, f"network-monitoring/v1/aps/{serial_number}/tunnels/{tunnel_id}")
+    conn = get_central_conn(ctx)
+    return await _get(conn, f"network-monitoring/v1/aps/{serial_number}/tunnels/{tunnel_id}")
 
 
 _TunnelTrendDimension = Literal["throughput", "packet-loss", "mos", "jitter", "latency"]
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_tunnel_trend(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
@@ -233,8 +252,8 @@ async def central_get_ap_tunnel_trend(
         "jitter": "jitter-trends",
         "latency": "latency-trends",
     }
-    conn = ctx.lifespan_context["central_conn"]
-    return _get(
+    conn = get_central_conn(ctx)
+    return await _get(
         conn,
         f"network-monitoring/v1/aps/{serial_number}/tunnels/{tunnel_id}/{suffix_map[dimension]}",
         _time_params(start, end),
@@ -246,7 +265,7 @@ async def central_get_ap_tunnel_trend(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_wlans_monitoring(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
@@ -257,11 +276,11 @@ async def central_get_ap_wlans_monitoring(
     through a different code path; this hits the
     ``/aps/:serial/wlans`` endpoint directly.
     """
-    conn = ctx.lifespan_context["central_conn"]
-    return _get(conn, f"network-monitoring/v1/aps/{serial_number}/wlans")
+    conn = get_central_conn(ctx)
+    return await _get(conn, f"network-monitoring/v1/aps/{serial_number}/wlans")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_ap_wlan_throughput(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
@@ -270,8 +289,8 @@ async def central_get_ap_wlan_throughput(
     end: Annotated[str | None, Field(description="ISO-8601 end timestamp.")] = None,
 ) -> dict | str:
     """Get throughput trend for one WLAN as broadcast by one AP."""
-    conn = ctx.lifespan_context["central_conn"]
-    return _get(
+    conn = get_central_conn(ctx)
+    return await _get(
         conn,
         f"network-monitoring/v1/aps/{serial_number}/wlans/{wlan_name}/throughput-trends",
         _time_params(start, end),
@@ -286,23 +305,27 @@ async def central_get_ap_wlan_throughput(
 _UsageMetric = Literal["wireless", "wired", "usage"]
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_top_aps_by_usage(
     ctx: Context,
     metric: Annotated[
         _UsageMetric,
+        coerce_enum(("wireless", "wired", "usage"), {"combined": "usage"}),
         Field(
             description=(
                 "``'wireless'`` (top-aps-by-wireless-usage), ``'wired'`` "
-                "(top-aps-by-wired-usage), or ``'usage'`` (combined "
-                "top-aps-by-usage)."
+                "(top-aps-by-wired-usage), or ``'usage'`` — the combined "
+                "wired+wireless view (top-aps-by-usage). The synonym "
+                "``'combined'`` is accepted as an alias for ``'usage'``, "
+                "and values are matched case-insensitively."
             ),
         ),
     ],
     top_n: Annotated[int, Field(ge=1, le=100, description="Number of APs to return (default 10).")] = 10,
     filter: str | None = None,
 ) -> dict | str:
-    """Get top-N APs by usage (wireless / wired / combined).
+    """Get top-N APs by usage — metric ``'wireless'`` / ``'wired'`` / ``'usage'``
+    (``'usage'`` = combined wired+wireless; ``'combined'`` is accepted as an alias).
 
     Consolidates the three ``/top-aps-by-{wireless,wired,}usage`` endpoints.
     """
@@ -311,11 +334,11 @@ async def central_get_top_aps_by_usage(
         "wired": "top-aps-by-wired-usage",
         "usage": "top-aps-by-usage",
     }
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {"topN": top_n}
     if filter:
         params["filter"] = filter
-    return _get(conn, f"network-monitoring/v1/{suffix_map[metric]}", params)
+    return await _get(conn, f"network-monitoring/v1/{suffix_map[metric]}", params)
 
 
 # ---------------------------------------------------------------------------
@@ -323,7 +346,7 @@ async def central_get_top_aps_by_usage(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_radios(
     ctx: Context,
     filter: str | None = None,
@@ -331,14 +354,14 @@ async def central_get_radios(
     offset: int = 0,
 ) -> dict | str:
     """List all radios across the tenant (network-monitoring view)."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-monitoring/v1/radios", params)
+    return await _get(conn, "network-monitoring/v1/radios", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_bssids(
     ctx: Context,
     filter: str | None = None,
@@ -346,14 +369,14 @@ async def central_get_bssids(
     offset: int = 0,
 ) -> dict | str:
     """List all BSSIDs (per-radio-per-SSID broadcast records) across the tenant."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-monitoring/v1/bssids", params)
+    return await _get(conn, "network-monitoring/v1/bssids", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_wlans_monitoring(
     ctx: Context,
     filter: str | None = None,
@@ -366,24 +389,24 @@ async def central_get_wlans_monitoring(
     statistics-side view) and ``central_get_wlan_profiles`` (config-model
     view). This hits ``network-monitoring/v1/wlans``.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-monitoring/v1/wlans", params)
+    return await _get(conn, "network-monitoring/v1/wlans", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_wlan_monitoring_detail(
     ctx: Context,
     wlan_name: Annotated[str, Field(description="WLAN / SSID name.")],
 ) -> dict | str:
     """Get one WLAN's monitoring-side detail by name."""
-    conn = ctx.lifespan_context["central_conn"]
-    return _get(conn, f"network-monitoring/v1/wlans/{wlan_name}")
+    conn = get_central_conn(ctx)
+    return await _get(conn, f"network-monitoring/v1/wlans/{wlan_name}")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_swarms(
     ctx: Context,
     filter: str | None = None,
@@ -391,24 +414,24 @@ async def central_get_swarms(
     offset: int = 0,
 ) -> dict | str:
     """List IAP / Instant clusters (swarms) across the tenant."""
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-monitoring/v1/swarms", params)
+    return await _get(conn, "network-monitoring/v1/swarms", params)
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_swarm(
     ctx: Context,
     cluster_id: Annotated[str, Field(description="Swarm / cluster identifier.")],
 ) -> dict | str:
     """Get one swarm / IAP cluster's detail."""
-    conn = ctx.lifespan_context["central_conn"]
-    return _get(conn, f"network-monitoring/v1/swarms/{cluster_id}")
+    conn = get_central_conn(ctx)
+    return await _get(conn, f"network-monitoring/v1/swarms/{cluster_id}")
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_applications_v1(
     ctx: Context,
     filter: str | None = None,
@@ -420,8 +443,8 @@ async def central_get_applications_v1(
     Distinct from the existing ``central_get_applications`` which uses
     the ``v1alpha1`` path.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
     params: dict = {"limit": limit, "offset": offset}
     if filter:
         params["filter"] = filter
-    return _get(conn, "network-monitoring/v1/applications", params)
+    return await _get(conn, "network-monitoring/v1/applications", params)

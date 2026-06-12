@@ -337,7 +337,9 @@ def test_loads_shipped_policy_translation_cleanly() -> None:
     body = next(e.body for e in p.target_emits if e.step == 1)
     assert body is not None
     assert body["type"] == "POLICY_TYPE_SECURITY"
-    assert body["association"] == "ASSOCIATION_ROLE"
+    # association is now a placeholder fed by the preprocessing function's
+    # _association (ASSOCIATION_ROLE default; ASSOCIATION_INTERFACE for validuser).
+    assert body["association"] == "{association}"
     assert body["security-policy"]["type"] == "SECURITY_POLICY_TYPE_DEFAULT"
 
 

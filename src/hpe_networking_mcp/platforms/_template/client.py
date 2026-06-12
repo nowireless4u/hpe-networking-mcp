@@ -5,24 +5,28 @@ This is the minimal pattern most modern REST APIs need: bearer token in the
 ``request()`` shortcut that handles auth + 401 retry, and a
 ``health_check()`` that the cross-platform ``health`` probe calls.
 
-When copying this template, the auth flavor is the most common thing to change:
+Token acquisition, caching, and lock-serialized refresh run through the
+shared :class:`AsyncTokenManager` (``platforms/_common/auth.py``). When
+copying this template, the *fetch strategy* is the thing to change:
 
-- **Bearer token (this template)** — keep as-is; set ``self._token``
-  from config in ``__init__``.
-- **OAuth2 client_credentials** — replace ``_login_locked`` with a token
-  endpoint call; cache + auto-refresh on 401 + before expiry. See
-  ``platforms/greenlake/auth.py`` for the canonical implementation.
-- **Username/password login endpoint** — replace ``_login_locked`` with
-  a POST to the login endpoint that returns a session token. See
-  ``platforms/apstra/client.py``.
+- **Static token (this template)** — ``_fetch_token`` reads the token from
+  config; no refresh endpoint.
+- **OAuth2 client_credentials** — pass
+  ``oauth2_client_credentials(token_url, client_id, client_secret, name=...)``
+  as the manager's fetch instead of a method. See ``platforms/uxi/client.py``.
+- **Username/password login endpoint** — make ``_fetch_token`` POST to the
+  login endpoint and return ``TokenResult(token)`` (no expiry — the token
+  lives until a 401 forces re-login). See ``platforms/apstra/client.py``.
 - **Vendor SDK** — skip this file entirely; wrap the SDK in a thin
-  adapter that exposes ``.health_check()`` and your tool surface. See
-  ``platforms/mist/client.py``.
+  adapter that exposes ``.health_check()`` and your tool surface.
+
+How the credential is *attached* to requests stays here in the client —
+override ``_auth_headers`` for custom header names, or the request methods
+themselves for cookie / query-param auth (see ``platforms/aos8/client.py``).
 """
 
 from __future__ import annotations
 
-import asyncio
 import json
 from typing import Any
 
@@ -31,18 +35,22 @@ from fastmcp.exceptions import ToolError
 from fastmcp.server.dependencies import get_context
 from loguru import logger
 
+from hpe_networking_mcp.platforms._common.auth import AsyncTokenManager, AuthError, TokenResult
+
 # When copying this template, replace this import with your platform's secrets type.
 # from hpe_networking_mcp.config import MyplatformSecrets  # noqa: ERA001
 from hpe_networking_mcp.utils.logging import mask_secret
 
 _REQUEST_TIMEOUT = 30.0
-_AUTH_TIMEOUT = 10.0
+_AUTH_TIMEOUT = 10.0  # pass as `timeout=` to oauth2_client_credentials / login POSTs
 
 
-class TemplateAuthError(RuntimeError):
+class TemplateAuthError(AuthError):
     """Raised when the platform's auth handshake fails.
 
-    Rename to ``<Platform>AuthError`` when copying.
+    Rename to ``<Platform>AuthError`` when copying. Subclassing the shared
+    ``AuthError`` lets call sites catch either the platform flavor or the
+    base.
     """
 
 
@@ -62,8 +70,9 @@ class TemplateClient:
     def __init__(self, config: Any) -> None:
         # Replace ``Any`` with your ``<Platform>Secrets`` type.
         self._config = config
-        self._token: str | None = getattr(config, "api_token", None)
-        self._lock = asyncio.Lock()
+        # Static-token flavor: ``_fetch_token`` reads from config. For OAuth2,
+        # pass ``oauth2_client_credentials(...)`` as the fetch instead.
+        self._tokens = AsyncTokenManager(self._fetch_token, name="Template")
         # Replace with your real base URL — typically built from config fields.
         base_url = getattr(config, "base_url", "https://example.invalid")
         self._http = httpx.AsyncClient(
@@ -81,45 +90,21 @@ class TemplateClient:
         """Close the underlying httpx client. Called from ``server.py:lifespan``."""
         await self._http.aclose()
 
-    async def _ensure_token(self) -> str:
-        """Return the cached token, acquiring one under the lock if needed.
+    async def _fetch_token(self) -> TokenResult:
+        """Fetch strategy for :class:`AsyncTokenManager`.
 
-        For static-token auth (this template's default) the token comes
-        from config directly. For OAuth2 / login-endpoint flavors,
-        replace with a real acquisition routine.
-        """
-        if self._token is not None:
-            return self._token
-        async with self._lock:
-            if self._token is None:
-                await self._login_locked()
-            assert self._token is not None
-            return self._token
-
-    async def _refresh_token(self) -> str:
-        """Force-refresh the token under the lock.
-
-        For static-token auth this just re-reads the config (same token);
-        for refreshable auth it calls the token endpoint.
-        """
-        async with self._lock:
-            self._token = None
-            await self._login_locked()
-            assert self._token is not None
-            return self._token
-
-    async def _login_locked(self) -> None:
-        """Acquire a fresh token. Caller must hold ``self._lock``.
-
-        Default implementation: pull the token from config (static
-        bearer token, no refresh endpoint). Replace with a POST to your
-        login / token endpoint for OAuth2 / username-password flavors.
+        Default implementation: pull the token from config (static bearer
+        token, no refresh endpoint) — ``expires_in=None`` means it never
+        goes stale. For a username/password login endpoint, POST to it
+        here instead and return the session token (see Apstra). For
+        OAuth2, drop this method and pass ``oauth2_client_credentials``
+        to the manager (see UXI).
         """
         token = getattr(self._config, "api_token", None)
         if not token:
             raise TemplateAuthError("No api_token in config and no token endpoint configured.")
-        self._token = token
         logger.info("Template: token loaded {}", mask_secret(token))
+        return TokenResult(token)
 
     def _auth_headers(self, token: str) -> dict[str, str]:
         """Build the headers for an authenticated request.
@@ -143,7 +128,7 @@ class TemplateClient:
         timeout: float | None = None,
     ) -> httpx.Response:
         """Send an authenticated request, refreshing the token once on 401."""
-        token = await self._ensure_token()
+        token = await self._tokens.get_token()
         kwargs: dict[str, Any] = {"headers": self._auth_headers(token)}
         if json_body is not None:
             kwargs["json"] = json_body
@@ -155,7 +140,7 @@ class TemplateClient:
         response = await self._http.request(method, path, **kwargs)
         if response.status_code == 401:
             logger.info("Template: 401 on {} {} — refreshing token once", method, path)
-            token = await self._refresh_token()
+            token = await self._tokens.refresh()
             kwargs["headers"] = self._auth_headers(token)
             response = await self._http.request(method, path, **kwargs)
         response.raise_for_status()
@@ -172,7 +157,7 @@ class TemplateClient:
         Override with a real reachability check (e.g. GET /health) if
         your platform exposes one.
         """
-        await self._ensure_token()
+        await self._tokens.get_token()
         return True
 
 

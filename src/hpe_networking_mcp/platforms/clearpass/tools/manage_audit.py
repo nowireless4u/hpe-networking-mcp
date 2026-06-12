@@ -8,27 +8,15 @@ from fastmcp import Context
 from fastmcp.exceptions import ToolError
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.clearpass._registry import tool
-from hpe_networking_mcp.platforms.clearpass.client import get_clearpass_session
-from hpe_networking_mcp.platforms.clearpass.tools import WRITE_DELETE
+from hpe_networking_mcp.platforms.clearpass.client import ClearPassClient, get_clearpass_client
 
 _ALERT_ACTIONS = ("create", "update", "delete", "enable", "disable", "mute", "unmute")
 _REPORT_ACTIONS = ("create", "delete", "enable", "disable", "run")
 
 
-async def _confirm_write(ctx: Context, action: str, identifier: str | None) -> dict | None:
-    """Thin wrapper over :func:`middleware.elicitation.confirm_write`.
-
-    Kept as a local helper so existing call sites don't change; the
-    shared elicitation/decline/cancel logic now lives in the middleware
-    (#148).
-    """
-    label = identifier or "unknown"
-    return await confirm_write(ctx, f"ClearPass: {action} '{label}'. Confirm?")
-
-
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_insight_alert(
     ctx: Context,
     action_type: Annotated[
@@ -37,7 +25,13 @@ async def clearpass_manage_insight_alert(
     ],
     payload: Annotated[dict, Field(description="Alert config payload. For delete/enable/disable/mute/unmute: {}.")],
     alert_id: Annotated[str | None, Field(description="Alert ID (required for all actions except create).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, update, delete, enable, disable, mute, or unmute a ClearPass Insight alert.
 
@@ -48,7 +42,8 @@ async def clearpass_manage_insight_alert(
         action_type: Operation to perform on the alert.
         payload: JSON config body. Required for create/update. Empty dict for other actions.
         alert_id: Alert ID. Required for all actions except create.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in _ALERT_ACTIONS:
         raise ToolError(
@@ -58,27 +53,22 @@ async def clearpass_manage_insight_alert(
             }
         )
 
-    if action_type != "create" and not confirmed:
-        decline = await _confirm_write(ctx, f"{action_type} insight alert", alert_id)
-        if decline:
-            return decline
-
     try:
-        from pyclearpass.api_insight import ApiInsight
-
-        client = await get_clearpass_session(ApiInsight)
-        return _execute_alert_action(client, action_type, payload, alert_id)
+        client = await get_clearpass_client()
+        return await _execute_alert_action(client, action_type, payload, alert_id)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing insight alert: {e}"}) from e
 
 
-def _execute_alert_action(client, action_type: str, payload: dict, alert_id: str | None) -> dict | str:
+async def _execute_alert_action(
+    client: ClearPassClient, action_type: str, payload: dict, alert_id: str | None
+) -> dict | str:
     """Execute the resolved insight alert action.
 
     Args:
-        client: pyclearpass ApiInsight instance.
+        client: ClearPass API client.
         action_type: Alert operation to perform.
         payload: Configuration payload.
         alert_id: Alert ID for non-create actions.
@@ -87,25 +77,25 @@ def _execute_alert_action(client, action_type: str, payload: dict, alert_id: str
         API response dict or error string.
     """
     if action_type == "create":
-        return client._send_request("/alert", "post", query=payload)
+        return await client.request("post", "/alert", json_body=payload)
     if not alert_id:
         raise ToolError({"status_code": 400, "message": "alert_id is required for this action."})
     if action_type == "update":
-        return client._send_request(f"/alert/{alert_id}", "patch", query=payload)
+        return await client.request("patch", f"/alert/{alert_id}", json_body=payload)
     if action_type == "delete":
-        return client.delete_alert_by_id(id=alert_id)
+        return await client.request("delete", f"/alert/{alert_id}")
     if action_type == "enable":
-        return client.update_alert_by_id_enable(id=alert_id)
+        return await client.request("patch", f"/alert/{alert_id}/enable")
     if action_type == "disable":
-        return client.update_alert_by_id_disable(id=alert_id)
+        return await client.request("patch", f"/alert/{alert_id}/disable")
     if action_type == "mute":
-        return client._send_request(f"/alert/{alert_id}/mute", "patch", query={})
+        return await client.request("patch", f"/alert/{alert_id}/mute", json_body={})
     if action_type == "unmute":
-        return client._send_request(f"/alert/{alert_id}/unmute", "patch", query={})
+        return await client.request("patch", f"/alert/{alert_id}/unmute", json_body={})
     raise ToolError({"status_code": 500, "message": f"Unhandled action_type: {action_type}"})
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def clearpass_manage_insight_report(
     ctx: Context,
     action_type: Annotated[
@@ -114,7 +104,13 @@ async def clearpass_manage_insight_report(
     ],
     payload: Annotated[dict, Field(description="Report config payload. For delete/enable/disable/run: {}.")],
     report_id: Annotated[str | None, Field(description="Report ID (required for all actions except create).")] = None,
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create, delete, enable, disable, or run a ClearPass Insight report.
 
@@ -125,7 +121,8 @@ async def clearpass_manage_insight_report(
         action_type: Operation to perform on the report.
         payload: JSON config body. Required for create. Empty dict for other actions.
         report_id: Report ID. Required for all actions except create.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if action_type not in _REPORT_ACTIONS:
         raise ToolError(
@@ -135,27 +132,22 @@ async def clearpass_manage_insight_report(
             }
         )
 
-    if action_type != "create" and not confirmed:
-        decline = await _confirm_write(ctx, f"{action_type} insight report", report_id)
-        if decline:
-            return decline
-
     try:
-        from pyclearpass.api_insight import ApiInsight
-
-        client = await get_clearpass_session(ApiInsight)
-        return _execute_report_action(client, action_type, payload, report_id)
+        client = await get_clearpass_client()
+        return await _execute_report_action(client, action_type, payload, report_id)
     except ToolError:
         raise
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error managing insight report: {e}"}) from e
 
 
-def _execute_report_action(client, action_type: str, payload: dict, report_id: str | None) -> dict | str:
+async def _execute_report_action(
+    client: ClearPassClient, action_type: str, payload: dict, report_id: str | None
+) -> dict | str:
     """Execute the resolved insight report action.
 
     Args:
-        client: pyclearpass ApiInsight instance.
+        client: ClearPass API client.
         action_type: Report operation to perform.
         payload: Configuration payload.
         report_id: Report ID for non-create actions.
@@ -164,21 +156,21 @@ def _execute_report_action(client, action_type: str, payload: dict, report_id: s
         API response dict or error string.
     """
     if action_type == "create":
-        return client._send_request("/report", "post", query=payload)
+        return await client.request("post", "/report", json_body=payload)
     if not report_id:
         raise ToolError({"status_code": 400, "message": "report_id is required for this action."})
     if action_type == "delete":
-        return client.delete_report_by_id(id=report_id)
+        return await client.request("delete", f"/report/{report_id}")
     if action_type == "enable":
-        return client.update_report_by_id_enable(id=report_id)
+        return await client.request("patch", f"/report/{report_id}/enable")
     if action_type == "disable":
-        return client.update_report_by_id_disable(id=report_id)
+        return await client.request("patch", f"/report/{report_id}/disable")
     if action_type == "run":
-        return client.new_report_by_id_run(id=report_id)
+        return await client.request("post", f"/report/{report_id}/run")
     raise ToolError({"status_code": 500, "message": f"Unhandled action_type: {action_type}"})
 
 
-@tool(annotations=WRITE_DELETE, tags={"clearpass_write_delete"})
+@tool(capability=Capability.WRITE, tags={"clearpass_write_delete"})
 async def clearpass_create_system_event(
     ctx: Context,
     source: Annotated[str, Field(description="Event source (e.g. 'MCP Server', 'Admin').")],
@@ -186,7 +178,13 @@ async def clearpass_create_system_event(
     category: Annotated[str, Field(description="Event category (e.g. 'Configuration', 'Authentication').")],
     action: Annotated[str, Field(description="Event action description (e.g. 'Policy Updated').")],
     description: Annotated[str, Field(description="Detailed event description.")],
-    confirmed: Annotated[bool, Field(description="Set true after user confirms the operation.")] = False,
+    confirmed: Annotated[
+        bool,
+        Field(
+            description="Fallback confirmation flag — honored only when the client cannot show a "
+            "confirmation prompt (the universal gate prompts otherwise)."
+        ),
+    ] = False,
 ) -> dict | str:
     """Create a custom system event in ClearPass for audit logging.
 
@@ -199,22 +197,16 @@ async def clearpass_create_system_event(
         category: Event category for classification.
         action: Short action description.
         description: Detailed description of the event.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
     if level not in ("INFO", "WARN", "ERROR"):
         raise ToolError(
             {"status_code": 400, "message": f"Invalid level '{level}'. Must be 'INFO', 'WARN', or 'ERROR'."}
         )
 
-    if not confirmed:
-        decline = await _confirm_write(ctx, "create system event", f"{source}/{action}")
-        if decline:
-            return decline
-
     try:
-        from pyclearpass.api_logs import ApiLogs
-
-        client = await get_clearpass_session(ApiLogs)
+        client = await get_clearpass_client()
         payload = {
             "source": source,
             "level": level,
@@ -222,7 +214,7 @@ async def clearpass_create_system_event(
             "action": action,
             "description": description,
         }
-        return client._send_request("/system-event", "post", query=payload)
+        return await client.request("post", "/system-event", json_body=payload)
     except ToolError:
         raise
     except Exception as e:

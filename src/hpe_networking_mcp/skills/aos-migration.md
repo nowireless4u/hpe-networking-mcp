@@ -35,18 +35,26 @@ description: |
   checklist). Act II only fires after a non-BLOCKED verdict and
   explicit operator confirmation.
 
-  No operator interview. The skill detects AOS 8 reachability via
-  health-probe, walks the entire /md hierarchy for inventory, and
-  derives every other input (target SSID forwarding mode, cluster
-  topology, AirWave presence, L3 Mobility usage) from the collected
-  config. Operator drives changes interactively from the report.
+  One upfront question — the data SOURCE (Stage -2): (1) AOS 8 direct via
+  API, (2) configuration upload, or (3) pasted configuration snippet — a
+  delivery-mechanism choice. On the API path the skill then detects AOS 8
+  reachability via health-probe, walks the entire /md hierarchy for
+  inventory, and DETECTS the target-architecture signals (per-SSID
+  forward mode, SSID→cluster map, cluster topology, AirWave presence,
+  L3 Mobility usage) from the collected config. Those detections are
+  recommendations. After the readiness verdict, a target-architecture
+  questionnaire (Stage 6.5) presents them and the operator DECIDES the
+  per-SSID forward mode and gateway topology — the source says what is,
+  the operator says what they want (e.g. going controllerless). The
+  upload / paste paths parse an offline config via aos8_parse_config
+  (policy / role / net-destination subset — see Stage -2 coverage note).
 
   PoC — in-chat workflow for SE pre-engagement use; production
   migration cutovers follow the customer's standard change-management
   process and partner-tool guidance.
 platforms: [central, aos8]
 tags: [central, migration, aos8, aos10, readiness, audit, vsg, translation]
-tools: [health, central_get_scope_tree, central_get_devices, central_get_aps, central_get_sites, central_get_site_name_id_mapping, central_recommend_firmware, central_get_config_assignments, central_get_server_groups, central_get_wlan_profiles, central_get_roles, central_get_role_acls, central_get_net_groups, central_get_net_services, central_get_named_vlans, central_get_aliases, central_get_gateway_cluster_intent_profiles, central_get_gateway_clusters, central_translation_preview, central_manage_site, central_manage_site_collection, central_manage_device_group, central_manage_role, central_manage_role_acl, central_manage_net_group, central_manage_net_service, central_manage_wlan_profile, central_manage_config_assignment, central_manage_gateway_cluster_intent_profile, central_manage_gateway_cluster, clearpass_get_network_devices, clearpass_get_device_groups, clearpass_get_server_certificates, clearpass_get_local_users, greenlake_get_subscriptions, greenlake_get_workspace, greenlake_get_devices, aos8_get_md_hierarchy, aos8_get_effective_config, aos8_get_ap_database, aos8_get_cluster_state, aos8_show_command, aos8_get_clients, aos8_get_bss_table, aos8_get_active_aps, aos8_get_ap_wired_ports]
+tools: [health, central_get_scope_tree, central_get_devices, central_get_aps, central_get_sites, central_get_site_name_id_mapping, central_recommend_firmware, central_get_config_assignments, central_get_server_groups, central_get_wlan_profiles, central_get_roles, central_get_role_acls, central_get_net_groups, central_get_net_services, central_get_named_vlan, central_get_aliases, central_get_gw_cluster_intent_config, central_get_gateway_clusters, central_translation_preview, central_manage_site, central_manage_site_collection, central_manage_device_group, central_manage_roles, central_manage_role_acls, central_manage_net_groups, central_manage_net_services, central_manage_wlan_profile, central_manage_config_assignment, central_manage_gw_cluster_intent_config, central_manage_gateway_clusters, clearpass_get_network_devices, clearpass_get_device_groups, clearpass_get_server_certificates, clearpass_get_local_users, greenlake_get_subscriptions, greenlake_get_workspace, greenlake_get_devices, aos8_get_md_hierarchy, aos8_get_effective_config, aos8_get_ap_database, aos8_get_cluster_state, aos8_show_command, aos8_get_clients, aos8_get_bss_table, aos8_get_active_aps, aos8_get_ap_wired_ports, aos8_parse_config, file_manager, read_file]
 ---
 
 # AOS 8 → AOS 10 migration (PoC) — readiness + config translation plan
@@ -83,7 +91,7 @@ The skill is NOT:
 
 - A **filter for "in use" config.** The customer's running config is the source of truth. Whether something is currently assigned, referenced, or actively serving traffic is **metadata** (`usage_state` column on disposition rows), not a basis for excluding it from the migration plan. Orphaned AAA server groups, unassigned captive portal profiles, AP system profiles configured but not bound to an AP group — all map and get translated.
 - A **legacy controller-plumbing validator.** Rules around LMS-IP, Backup-LMS-IP, AP Fast Failover that flag *"this internal AOS 8 controller-AP wiring is non-ideal"* do NOT fire as REGRESSION. AP-to-controller plumbing dissolves at migration — APs go to Central via TCP 443. These values still get **inventoried** so they can inform target HA mode recommendations, but they don't gate the verdict.
-- An **operator interview.** No Stage-0 questions. The skill detects AOS 8 reachability (Stage -1), walks the hierarchy (Stage 1), and derives every input it needs from the collected config — target SSID forwarding mode is auto-recommended from the source pattern, cluster topology comes from `aos8_get_cluster_state`, AOS 10 cluster-mode (`CM_SITE` / `CM_MANUAL`) is derived from AP adoption + multizone signals (Stage 7 Step 4), AirWave presence comes from config grep, L3 Mobility usage comes from effective-config. The operator can override any auto-derived value when reviewing the report.
+- An **upfront configuration interview.** Act I (Stages -1 through 6) asks **no** config questions — it's a read-only audit. The one upfront question is the data *source* (Stage -2: API / upload / paste), a delivery-mechanism choice. The skill walks the hierarchy and **detects** every target-architecture signal from the source (per-SSID `forward-mode`, the SSID→cluster map, cluster-mode signals from AP-adoption + multizone, AirWave presence, L3 Mobility usage). Those detections become **recommendations**, not silent decisions: after the readiness verdict, the **target-architecture questionnaire (Stage 6.5)** presents them per SSID and the operator confirms or changes them (forward mode per SSID, gateway topology). The source says what *is*; the operator decides what they *want* (e.g. going controllerless) — so the architecture decisions are an explicit post-verdict questionnaire, never inferred-and-applied.
 - A **migration executor.** Never calls `central_manage_*` write tools. Plan only; Phase 3 (issue #240) is the execution capability.
 - A **rollback engine.** Rollback is captured as text in the cutover stage; not auto-generated as reversible API calls.
 - A **gap-filler for missing Central write tools.** Three known gaps (AAA RADIUS/TACACS server, AAA server-group, AP system profile) get `[Central API gap — manual UI action required]` placeholders. No invented tool names.
@@ -98,24 +106,65 @@ Live AOS 8 API collection means the skill receives effective-config and cluster 
 
 The skill's job is to prove the in-chat workflow produces credible readiness findings + a translation plan. Sanitization layers and Phase-3 execution are tracked separately.
 
-## Procedure — 10 stages across two acts
+## Procedure — 10 numbered stages across two acts (plus the Stage 6.5 questionnaire between the acts)
 
-**Act I (Stages -1 through 6) — readiness audit.** Always runs. Ends with a verdict + combined report.
+**Data-source gate (Stage -2) — ALWAYS FIRST.** Before any collection, ask the operator how to obtain the AOS 8 config — (1) API, (2) upload, (3) paste — and route accordingly. See Stage -2.
 
-**Gate — operator confirmation.** After Stage 6, the AI emits the verdict report THEN literally prints the prompt: *"Verdict: <V>. Proceed to AOS 10 translation plan? (yes / no / edit-context)"* and stops. No Act II execution without operator `yes`.
+**Act I (Stages -1 through 6) — readiness audit.** Runs in full on the **API path** (Stage -1 → Stage 1). On the **upload / paste paths** it runs in reduced form against the offline-parsed subset (Stage 1-ALT replaces Stage -1 + Stage 1; object classes the parser doesn't cover are marked `inconclusive — offline source`). Ends with a verdict + combined report.
+
+**Gate — operator confirmation.** After Stage 6, the AI emits the verdict report (stating whether the devices are Central-ready) THEN literally prints the prompt: *"Verdict: <V>. Proceed to AOS 10 translation plan? (yes / no / edit-context)"* and stops. No Act II execution without operator `yes`.
 
 - If verdict is **BLOCKED**, the gate does not appear. The report ends with *"Translation locked until REGRESSIONs are resolved. Re-run the audit after fixes."*
 - If verdict is **PARTIAL**, the gate appears but warns which translation rows will be marked `inconclusive` (any object class where Stage 1 collection failed).
 - If verdict is **GO**, the gate appears with no caveat.
+- If verdict is **EMPTY-SOURCE** (only AOS 8 defaults found), the gate appears with a no-customer-config caveat and, on `yes`, **skips Stage 6.5** (nothing to decide) — there are no SSIDs/clusters, so Act II runs on defaults only.
 
-**Act II (Stages 7 through 10) — translation plan.** Only fires on operator `yes` after a non-BLOCKED verdict. Reuses everything Act I already collected; no re-fetching, no second operator paste. Output is the **plan** (disposition matrix + ordered API call sequence + validation checklist), not executed `central_manage_*` writes.
+**Stage 6.5 — Target-architecture questionnaire.** On operator `yes`, BEFORE the translation plan, run the questionnaire (Stage 6.5): the per-SSID forward-mode decision + the gateway-topology decision, pre-filled from Act I detection. This is where the operator decides what they *want* (the source only told us what *is*). The answers populate the Act II `runtime_values`. See Stage 6.5.
+
+**Act II (Stages 7 through 10) — translation plan.** Fires after Stage 6.5. Reuses everything Act I already collected; no re-fetching, no second operator paste. Output is the **plan** (disposition matrix + ordered API call sequence + validation checklist), not executed `central_manage_*` writes.
 
 If the operator answers `no`, end the session with the Act I report unchanged.
-If the operator answers `edit-context` (e.g. "actually we're doing Bridge Mode not Tunnel"), update the corresponding Stage 0 / Stage 1 context fields, re-run Stage 3 + Stage 6 to re-verdict, and re-emit the gate prompt.
+If the operator answers `edit-context` (e.g. "actually our readiness inputs are wrong"), update the corresponding Stage 1 context fields, re-run Stage 3 + Stage 6 to re-verdict, and re-emit the gate prompt. (Forward-mode / topology *target* choices are made in Stage 6.5, not here — `edit-context` is for correcting detected source facts that change the verdict.)
 
 ---
 
+### Stage -2 — Data source selection (SOURCE-00) — ALWAYS FIRST
+
+This is the skill's only *upfront* question — it chooses the *delivery mechanism* for the AOS 8 config, not a config value. (The architecture decisions come later, in the Stage 6.5 questionnaire, after the readiness verdict.) Present exactly these three options and STOP for the operator's choice:
+
+```
+How should I pull the AOS 8 configuration?
+
+  1. AOS 8 direct via API  — I collect live from the controller across the full
+                             /md hierarchy. Highest fidelity: full two-act audit
+                             (cluster topology, AP / SSID / AAA inventory, live state)
+                             + translation plan.
+  2. Configuration upload  — you upload an AOS 8 running-config file; I parse it
+                             offline (policy / role / net-destination subset).
+  3. Pasted snippet        — you paste AOS 8 CLI config; I parse it offline
+                             (policy / role / net-destination subset).
+
+Reply 1, 2, or 3.
+```
+
+Route on the reply:
+
+- **1 (API)** → Stage -1 (reachability gate) → Stage 1 (live hierarchy collection) → Stage 2 → the full pipeline.
+- **2 (upload)** → Stage 1-ALT (offline parse, upload branch). Skip Stage -1 + Stage 1.
+- **3 (paste)** → Stage 1-ALT (offline parse, paste branch). Skip Stage -1 + Stage 1.
+
+**Coverage — state this to the operator when they pick 2 or 3.** The constraint is what the parser *models today*, NOT what offline can see — the operator can include any `show` output in the upload/paste:
+
+- `show running-config` already carries `wlan ssid-profile`, `wlan virtual-ap` (forward-mode), `aaa` profiles, `lc-cluster profile`, and `ap system-profile` as config stanzas; operational data lives in separate commands (`show ap database`, `show lc-cluster group-membership`, `show ap active`).
+- `aos8_parse_config` **currently models only** `netdestination` / `netdestination6`, `ip access-list session`, and `user-role` (the inputs to the Central `policy` / `role` / `net_group` translations). Everything else the operator includes surfaces in `_warnings` rather than being parsed — coverage grows as the parser gains handlers, it is not blocked by the offline path.
+
+For the richest offline result, ask the operator to bundle `show running-config` **plus** `show ap database`, `show lc-cluster group-membership`, and `show ap active` into the upload. Object classes the parser hasn't yet modeled are marked `inconclusive — not yet parsed (include the relevant show output / extend parser)`; readiness rules whose data is absent don't fire. The API path (option 1) is still the zero-parser-gap route.
+
+**Availability of option 2 (upload):** requires the server's MCP-Apps capability (`MCP_APP_ENABLE=true`) AND an MCP-Apps-capable client (Claude Desktop / ChatGPT) to render the upload widget. If `file_manager` is not present in the catalog, tell the operator option 2 is unavailable on this server and offer option 3 (paste) instead.
+
 ### Stage -1 — AOS 8 reachability gate (DETECT-01)
+
+Reached only on the **API path** (operator chose option 1 at Stage -2).
 
 Call `health()` once and inspect `aos8.status`.
 
@@ -133,15 +182,16 @@ AOS 8 not configured on this MCP server. This skill covers AOS 8 → AOS 10 migr
 
 No further stages run.
 
-### Stage 0 — (deleted)
+### Stage 0 — (deleted; no upfront config interview)
 
-There is no operator interview. Every input the skill needs is derived from collected config:
+Act I asks **no** config questions — the one upfront question (Stage -2) selects the data source, not config values. Act I **detects** the target-architecture signals from the source so the audit can run and so the **Stage 6.5 questionnaire** (after the readiness verdict) has informed defaults. Detection ≠ decision: the operator confirms or changes the architecture in Stage 6.5.
 
-- **Target SSID forwarding mode** — auto-recommended by Stage 3 from the source pattern (tunneled VAPs → recommend Tunnel; bridge VAPs → recommend Bridge; mixed → recommend Mixed). Operator can override when reviewing the report.
-- **Cluster topology** — pulled from `aos8_get_cluster_state` (Batch 3) plus cluster-profile config (Batch 1).
+- **Per-SSID forward mode (detected)** — Stage 2 reads each `virtual_ap.forward_mode` (`tunnel` / `bridge` / `split-tunnel` / `decrypt-tunnel`) and recommends a per-SSID AOS 10 target (`tunnel`+`decrypt-tunnel`→Tunnel, `bridge`→Bridge, `split-tunnel`→Hybrid). This is a **recommendation that pre-fills the Stage 6.5 per-SSID question** — the operator decides the actual target (and may go controllerless / change any SSID).
+- **SSID→cluster map (detected)** — which cluster each SSID's ap-group anchors to; same essid spanning clusters / same-ap-group-to-different-clusters flags a DMZ pattern. Feeds the Stage 6.5 gateway-topology question.
+- **Cluster topology** — `aos8_get_cluster_state` (Batch 3) + cluster-profile config (Batch 1). The cluster-mode recommendation derivation (AP-adoption + multizone; algorithm at Stage 7 Step 4) runs during Stage 2 detection and becomes the Stage 6.5 recommendation.
 - **AirWave presence** — detected from effective-config (`mgmt-server`, `ams-ip`, AMP profile entries).
 - **L3 Mobility usage** — detected from effective-config (`mobility l3-mobility` lines).
-- **HA mode mapping** — derived from cluster topology.
+- **HA mode mapping** — recommended from cluster topology; confirmed in Stage 6.5.
 
 ### Stage 1 — Live AOS 8 inventory across the full /md hierarchy (COLLECT-01..04)
 
@@ -299,9 +349,38 @@ SSIDs: <N> ssid profiles, <N> active in BSS table
 
 This summary is shown to the operator BEFORE Stage 2 runs so the operator can sanity-check that the hierarchy walk found what they expect. If the hierarchy walk missed something the operator knows is configured (e.g. customer says *"I have a cluster at /md/ACX but you didn't find it"*), they can intervene before rules fire on incomplete data.
 
-### Stage 2 — Parse the live-collected inventory + auto-derive interview-equivalent inputs
+### Stage 1-ALT — Offline config parse (PARSE-01) — upload / paste branches
 
-Stage 1 collected raw API responses across the full hierarchy. Stage 2 normalizes those responses into a structured inventory and derives the inputs the old skill used to ask the operator for. **No paste parsing — Stage 1 is API-only.**
+Runs **instead of** Stage -1 + Stage 1 when the operator chose option 2 or 3 at Stage -2. Produces the same canonical records the translation engine consumes, via `aos8_parse_config`.
+
+**Option 2 — Configuration upload:**
+
+1. Invoke `file_manager` to render the upload widget. Tell the operator: *"Drop or pick your AOS 8 running-config file (the output of `show running-config`, or any file containing `netdestination` / `ip access-list session` / `user-role` stanzas)."*
+2. After the operator uploads, the file is held in the server's session store. Parse it:
+   - **Preferred (context-clean):** `aos8_parse_config(filename="<uploaded filename>")` — the tool reads the file *inside the server* so the raw config never enters the model context.
+   - **Fallback** (if this server's `aos8_parse_config` does not accept `filename`): `read_file(name="<uploaded filename>")` to retrieve the text, then `aos8_parse_config(cli_text="<that text>")`.
+
+**Option 3 — Pasted snippet:**
+
+1. Ask the operator to paste the AOS 8 CLI config (the relevant `netdestination` / `ip access-list session` / `user-role` stanzas, or a full `show running-config`).
+2. `aos8_parse_config(cli_text="<pasted text>")`.
+
+All branches return `{netdst, acl_sess, role, _warnings}`. These keys feed the Central translations **directly** — `acl_sess` → `central:policy`, `role` → `central:role`, `netdst` (+ `netdst6`) → `central:net_group` — no inventory normalization required for those classes.
+
+Seed the Stage 2 `inventory` with what was parsed and mark everything else inconclusive:
+
+- `inventory["session_acls"]     = acl_sess`
+- `inventory["user_roles"]       = role`
+- `inventory["net_destinations"] = netdst (+ netdst6)`
+- `inventory["_offline_source"]  = True`
+- `inventory["_parse_warnings"]  = _warnings`  — surface as a coverage note; unmodelled clauses are visible, not silently dropped
+- every other inventory class (`ap_database`, `cluster_profiles`, `ssid_profiles`, `aaa_*`, live state) → `inconclusive — offline source`
+
+Then skip to **Stage 3**. Applicability gates there naturally suppress the rules whose data is missing — most feature-parity / orchestration rules will not fire on the offline subset. The Act II translation (Stages 7-10) runs for the parsed object classes (policy / role / net_group); rows for unparsed classes are marked `inconclusive — offline source / API or paste required`.
+
+### Stage 2 — Parse the live-collected inventory + detect target-architecture signals
+
+Stage 1 collected raw API responses across the full hierarchy. Stage 2 normalizes those responses into a structured inventory and derives the inputs the old skill used to ask the operator for. **API path only** — the upload / paste paths populate `inventory` from the offline parse in Stage 1-ALT instead and skip the normalization below.
 
 #### Normalize the inventory
 
@@ -341,21 +420,22 @@ inventory = {
 
 Each entry tagged with `source_scope` (which `/md/...` node defined it). The same logical object (e.g. an `ssid_prof` named "CorpNet") may appear at multiple scopes — preserve all instances; do not dedupe.
 
-#### Auto-derive inputs (replaces deleted Stage 0 interview)
+#### Detect target-architecture signals (feeds Stage 3 rules + pre-fills the Stage 6.5 questionnaire)
 
-The old skill asked the operator 7 questions before proceeding. With the live inventory in hand, derive every one of them:
+With the live inventory in hand, detect the signals the audit rules need and that the post-verdict questionnaire will present for operator decision. **These are recommendations, not applied decisions** — the operator confirms/changes them in Stage 6.5.
 
-| Input | Derive from |
+| Signal | Detect from |
 |---|---|
 | **Source platform** | Always `aos8` — the skill's only supported source |
-| **Target SSID forwarding mode** (`tunnel` / `bridge` / `mixed`) | Inspect `forward-mode` in `virtual_ap` rows. All `tunnel` → recommend Tunnel. All `bridge` → recommend Bridge. Mix → recommend Mixed. The recommendation appears in the report; operator can override at any time. |
-| **AirWave in path** | Look in `running_config` for `mgmt-server` / `ams-ip` / `mobility-manager` lines. Present → emit DRIFT finding. |
-| **Cluster topology** (L2 / L3 / standalone) | Inspect `cluster_prof` + `group_membership` rows. `controller-l2-only` flag → L2; cross-VLAN members → L3; no cluster profiles → standalone. **Default L2** when ambiguous (per project guidance: L3 is rare). |
-| **L3 Mobility usage** | Look in `running_config` for `mobility l3-mobility` lines. |
-| **HA mode mapping recommendation** | Cluster-topology-derived: L2 cluster → recommend Auto Group; L2 cluster + LMS pattern → recommend Auto Site; standalone → recommend Manual. |
-| **AP-group → forwarding-mode mapping** | Per `virtual_ap` row's `forward-mode`, grouped by `ap-group` reference. Drives mixed-mode finding granularity. |
+| **Per-SSID forward mode (recommendation)** | Read `forward_mode` on each `virtual_ap` (`tunnel` / `bridge` / `split-tunnel` / `decrypt-tunnel`; absent = `tunnel` default). Recommend the AOS 10 target per SSID: `tunnel`+`decrypt-tunnel`→Tunnel, `bridge`→Bridge, `split-tunnel`→Hybrid. **Pre-fills the Stage 6.5 per-SSID question.** |
+| **SSID → cluster map** | For each `virtual_ap`, the cluster its ap-group anchors to (via ap-system-profile / cluster membership). Same essid across clusters, or one ap-group's SSIDs anchoring to different clusters → **DMZ pattern** flag. Feeds the Stage 6.5 gateway-topology question. |
+| **Aggregate forward-mode mode** (`tunnel` / `bridge` / `mixed`) | All SSIDs tunnel → tunnel; all bridge → bridge; mix → mixed. Drives the Stage 3 per-target-mode rule gates (the rules still run on the *recommended* mode pre-questionnaire). |
+| **AirWave in path** | `running_config` `mgmt-server` / `ams-ip` / `mobility-manager` lines. Present → DRIFT finding. |
+| **Cluster topology** (L2 / L3 / standalone) | `cluster_prof` + `group_membership`. `controller-l2-only` → L2; cross-VLAN members → L3; none → standalone. **Default L2** when ambiguous. |
+| **L3 Mobility usage** | `running_config` `mobility l3-mobility` lines. |
+| **Cluster-strategy recommendation** | **Run the cluster-mode recommendation derivation here** (the algorithm is documented at Stage 7 Step 4 but executes during *this* detection pass — it reads only Stage 1 data, and its output is needed by Stage 6.5 which runs before Stage 7). From the SSID→cluster map + AP-adoption/multizone: no DMZ → `intent_site`@global; campus + DMZ → `intent_site`(campus) + `intent_manual`(DMZ); DMZ-only/few → `ha_only`. Pre-fills the Stage 6.5 gateway-topology question. |
 
-These derivations feed Stage 3 rules. The **report** explicitly shows the derived value and how it was derived (e.g. *"Target SSID forwarding mode: Tunnel (auto-recommended — 4 of 4 virtual_ap rows have forward-mode=tunnel)"*) so the operator can override with confidence.
+These detections feed Stage 3 rules (which run against the *recommended* target mode) and pre-fill Stage 6.5. The **report** shows each detected value + how it was derived (e.g. *"SSID `CORP`: tunnel today (forward-mode=tunnel) → recommend Tunnel"*) so the operator decides Stage 6.5 with full context.
 
 #### Cluster-offline tolerance
 
@@ -368,11 +448,14 @@ The audit MUST proceed in either case. Don't refuse to verdict.
 
 ### Stage 3 — Apply rules with applicability gates
 
-Rules fall into three buckets:
+Rules fall into four buckets:
 
 1. **INVENTORY** — record what's there; never fires as REGRESSION/DRIFT. Includes legacy AOS 8 controller plumbing (LMS-IP, Backup-LMS-IP, AP Fast Failover, cluster topology) that dissolves at migration but informs Act II translation. Drives the report's inventory section, not its findings list.
-2. **Feature-parity findings** — fire as REGRESSION/DRIFT/INFO when the source uses a feature AOS 10 doesn't support or handles differently. **Each rule has an applicability gate** — no rule fires on an empty source surface.
-3. **Orchestration prerequisites** — fire as REGRESSION when the operator can't successfully run the cutover (Central unreachable, GreenLake under-licensed, controllers below firmware floor).
+2. **Source-readiness findings (verdict-gating)** — target-architecture-INDEPENDENT feature-parity findings: the source uses something AOS 10 can't represent at all, regardless of forward mode. These compute the **pre-questionnaire verdict** (a REGRESSION here → BLOCKED). **Each rule has an applicability gate** — no rule fires on an empty source surface.
+3. **Orchestration prerequisites (verdict-gating)** — fire as REGRESSION when the operator can't run the cutover at all (Central unreachable, GreenLake under-licensed, controllers below firmware floor). Target-independent → contribute to the pre-questionnaire verdict.
+4. **Target-architecture-dependent findings (PROVISIONAL — do NOT gate the pre-questionnaire verdict)** — any rule whose applicability depends on the *target* architecture: those gated on `target_mode_recommended` (F3, F4, and the per-target-mode T\*/B\*/M\* blocks below) **and the Stage 4a orchestration checks A4 + A5** (A4 gated on `target_mode_recommended`; A5 on cluster presence, which is moot if the operator goes all-Bridged). These are scored against the *recommended* mode only as a preview. **They must NOT force a BLOCKED verdict before Stage 6.5**, because the operator may choose a different target mode (e.g. Bridged / controllerless) that makes them moot. They are re-evaluated against the operator's actual Stage 6.5 choices and surfaced in the Act II plan — see Stage 6.5's re-score step. The Stage 6 verdict is computed from buckets 2 + 3 only.
+
+> **INVARIANT (do not break in future edits):** Bucket-4 (target-architecture-dependent) findings must **never** be included in the pre-questionnaire verdict count. The Stage 6 verdict = buckets 2 + 3 only. Breaking this lets a target-mode finding BLOCK the gate and lock the operator out of Stage 6.5 — the exact dead-end this design removes.
 
 Each finding format: **Severity — Description (VSG §anchor when one exists; else literal `none`) (source: <inventory key>)**.
 
@@ -403,7 +486,7 @@ These describe the source's controller-AP plumbing. Post-migration APs go to Cen
 |---|---|---|
 | LMS-IP per `ap_sys_prof` | Record the value + which scope it was defined at + which `ap-group` it's bound to (or "unbound") | APs go to Central post-migration; LMS-IP is legacy controller plumbing |
 | Backup-LMS-IP per `ap_sys_prof` | Same | Same |
-| Cluster topology (L2 / L3 / standalone) per `cluster_prof` | Cluster name, scope, member list, VRRP VIP(s) | Drives target HA mode auto-recommendation |
+| Cluster topology (L2 / L3 / standalone) per `cluster_prof` | Cluster name, scope, member list, VRRP VIP(s) | Drives the target HA-mode recommendation (confirmed in Stage 6.5) |
 | AP Fast Failover config | Record presence/absence | No AOS 10 equivalent — APs reconnect to Central, not via Fast Failover |
 | VRRP VIPs configured | Record values + member controllers | Inputs to disposition matrix; drives hierarchy translation |
 
@@ -433,7 +516,9 @@ These describe the source's controller-AP plumbing. Post-migration APs go to Cen
 | O5 | **Backup procedure documented** for source-platform configuration | DRIFT if not documented | VSG §2435 |
 | O6 | **Rollback procedure documented** for each cutover stage | DRIFT if not documented | VSG §1624, §2590-§2591 |
 
-#### Per-target-mode findings (fire only when target_mode_recommended matches)
+#### Per-target-mode findings (PROVISIONAL — bucket 4; do NOT gate the pre-questionnaire verdict)
+
+These are scored against `target_mode_recommended` as a **preview only**. A REGRESSION here must **not** produce a BLOCKED verdict before Stage 6.5 — surface it in the report as *"provisional (recommended target = <mode>); re-scored after you choose in Stage 6.5"*. After the operator picks per-SSID modes in Stage 6.5, re-run these against the **chosen** modes and fold the results into the Act II plan (Stage 6.5 re-score step). An operator flipping every SSID to Bridged makes the Tunnel/Mixed-mode REGRESSIONs disappear — which is exactly why they can't pre-block the gate.
 
 ##### When target_mode_recommended = Tunnel (VSG §340-§357, §1102-§1110, §1213-§1227, §1930-§1953)
 
@@ -492,10 +577,12 @@ Stage 4 is **trimmed**. The previous version conflated three distinct concerns:
 | A1 | **Central reachability** | `health(platform="central")` | always | REGRESSION |
 | A2 | **GreenLake AOS subscription capacity** ≥ source AP count | `greenlake_get_workspace()` + `greenlake_get_subscriptions()` | always | REGRESSION if AP count > active AP-license count |
 | A3 | **AP onboarding gap** (source APs not yet in Central) | `central_get_aps()` + `aos8_get_ap_database()` | `ap_count > 0` | INFO — emit gap value as a single integer (no per-AP enumeration) |
-| A4 | **NAD list coverage for new AP subnets** | `clearpass_get_network_devices()` | `ap_count > 0` AND `target_mode_recommended in {bridge, mixed}` AND `is_clearpass_used` | REGRESSION if missing |
-| A5 | **NAD list coverage for cluster gateways/VRRP VIPs** | `clearpass_get_network_devices()` | `cluster_profile_present` AND `is_clearpass_used` | REGRESSION if any cluster VRRP VIP missing from NAD list |
+| A4 | **NAD list coverage for new AP subnets** | `clearpass_get_network_devices()` | `ap_count > 0` AND `target_mode_recommended in {bridge, mixed}` AND `is_clearpass_used` | **PROVISIONAL** REGRESSION (bucket 4 — see note) |
+| A5 | **NAD list coverage for cluster gateways/VRRP VIPs** | `clearpass_get_network_devices()` | `cluster_profile_present` AND `is_clearpass_used` | **PROVISIONAL** REGRESSION (bucket 4 — see note) |
 
 `is_clearpass_used` = the source's `server_group_prof` references at least one `rad_server` whose host matches a configured ClearPass instance OR the operator runs ClearPass per inventory. If false, A4 / A5 don't fire — the source uses non-ClearPass RADIUS or none at all.
+
+**A1–A3 are bucket 3: target-architecture-INDEPENDENT** (Central reachable, GreenLake capacity, AP-onboarding gap apply no matter what the operator chooses). A1 and A2 are REGRESSIONs → they compute into the pre-questionnaire verdict; **A3 is INFO-only** (the AP-onboarding gap is reported, never blocks). So the verdict-gating Stage 4a checks are **A1–A2**. **A4 and A5 are target-architecture-DEPENDENT → bucket 4 (PROVISIONAL):** A4 is gated on the *recommended* `target_mode`, and A5's gateway/VRRP NAD requirements evaporate if the operator chooses all-Bridged/controllerless in Stage 6.5. They must **NOT** force a BLOCKED verdict pre-questionnaire (same dead-end the bucket split removes), and are **re-scored after Stage 6.5** against the chosen `target_mode` / surviving gateway clusters — see the Stage 6.5 re-score step. Surface them pre-questionnaire as *"provisional (recommended target = X)"*, not as a verdict-gating REGRESSION.
 
 #### Stage 4b — Translation enrichment (feeds Act II disposition matrix)
 
@@ -505,7 +592,7 @@ Findings in this section are NOT used to compute the Stage 6 verdict. They popul
 |---|---|---|---|
 | E1 | Central WLAN-profile name collision check | `central_get_wlan_profiles()` | Tag `ssid_prof` rows where the AOS 8 ESSID already exists as a Central WLAN profile. |
 | E2 | Central role-name collision check | `central_get_roles()` | Tag `role` rows where the AOS 8 role name already exists in Central. |
-| E3 | Central named-VLAN ID collision check | `central_get_named_vlans()` | Tag VLAN rows where the AOS 8 VLAN ID already maps in Central under a different name. |
+| E3 | Central named-VLAN ID collision check | `central_get_named_vlan()` | Tag VLAN rows where the AOS 8 VLAN ID already maps in Central under a different name. |
 | E4 | Central server-group collision check | `central_get_server_groups()` | Tag `server_group_prof` rows where the same name already exists in Central. |
 | E5 | Per-AP-model AOS 10 firmware recommendation | `central_recommend_firmware()` | Append a "Recommended AOS 10 firmware" column to the inventory's AP-model summary. INFO only — never gates the verdict. |
 
@@ -554,17 +641,94 @@ This stage produces the Act I report. Once the report is emitted, fire the Act-I
 
 ## Act I → Act II gate
 
-After emitting the Stage 6 readiness report, decide:
+After emitting the Stage 6 readiness report, decide. **The verdict is computed from source-readiness + orchestration findings (Stage 3 buckets 2 + 3) ONLY** — target-architecture-dependent findings (bucket 4, gated on `target_mode_recommended`) are provisional and never produce BLOCKED here, so they can never lock the operator out of Stage 6.5. (If the source is genuinely un-migratable in any mode, that's a bucket-2 source-readiness REGRESSION and BLOCKED is correct.)
 
 - **Verdict = BLOCKED** — emit the literal sentence: *"Translation locked until REGRESSIONs are resolved. Re-run the audit after fixes."* Stop. Do NOT print the proceed prompt; do NOT run Stages 7-10.
 - **Verdict = GO** — emit the literal prompt: *"Verdict: GO. Proceed to AOS 10 translation plan? (yes / no / edit-context)"* and stop. Wait for the operator's reply.
 - **Verdict = PARTIAL** — emit the literal prompt: *"Verdict: PARTIAL — <N> Stage-1 collection items were inconclusive. Translation rows for those object classes will be marked `inconclusive — paste required`. Proceed to AOS 10 translation plan? (yes / no / edit-context)"* and stop. Wait for the operator's reply.
+- **Verdict = EMPTY-SOURCE** — the hierarchy held only AOS 8 system defaults (no customer-defined objects). Emit the literal prompt: *"Verdict: EMPTY-SOURCE — no customer-defined config found; there is nothing to translate beyond AOS 8 defaults. Proceed anyway to see the default-only plan? (yes / no)"* and stop. On `yes`, **skip Stage 6.5** (there are no SSIDs/clusters to decide) and run Stages 7-10 for whatever defaults exist; on `no`, end with the Act I report. (`edit-context` is not offered — there are no detected facts to correct.)
 
-On `yes` → proceed to Stage 7.
+On `yes` (GO / PARTIAL) → proceed to **Stage 6.5** (the target-architecture questionnaire), then Stage 7. On `yes` (EMPTY-SOURCE) → skip Stage 6.5, go straight to Stage 7.
 On `no` → end the session with the Act I report unchanged.
-On `edit-context` → operator names which Stage 0 / Stage 1 field(s) to update, the AI updates the audit context, re-runs Stage 3 + Stage 6, re-emits the Act I report, and re-emits the gate prompt. (This is how the operator changes target mode mid-session, for example.)
+On `edit-context` → operator names which detected Stage 1 source fact to correct (one that changes the verdict), the AI updates the audit context, re-runs Stage 3 + Stage 6, re-emits the Act I report, and re-emits the gate prompt. Target-architecture *choices* (forward mode, topology) are NOT made here — they're the Stage 6.5 questionnaire.
 
-Do NOT run Stages 7-10 silently or pre-emptively.
+Do NOT run Stage 6.5 or Stages 7-10 silently or pre-emptively.
+
+---
+
+### Stage 6.5 — Target-architecture questionnaire (DECIDE-01)
+
+Runs only after the operator answers `yes` at the gate (non-BLOCKED verdict). This is the skill's one configuration interview, and it is deliberately **after** the readiness verdict: the operator first learns whether the devices are Central-ready, then decides the target architecture. Stage 2 detection (including the cluster-mode recommendation derivation, which runs there — not deferred to Stage 7) supplies the **defaults**; the operator confirms or changes each. Ask via `elicit()` (the same mechanism as the Stage -2 data-source question). Keep it adaptive — only ask what's relevant.
+
+**Precondition — inventory coverage.** Stage 6.5 needs `virtual_ap` + `ssid_prof` (Q1) and `cluster_prof` (Q2). The **offline upload / paste path (Stage 1-ALT) does not collect those** — it parses only `netdst` / `acl_sess` / `role`. So if there are **no translatable VAPs** (offline source, or the API walk genuinely found none): **skip Stage 6.5 entirely** and proceed to Act II for the object classes that *were* collected (policy / role / net-group), emitting a Translation-gaps note — *"Stage 6.5 (SSID forward-mode + gateway-topology decisions) skipped: requires `virtual_ap` / `ssid_prof` / `cluster_prof` coverage, which the offline parser does not provide. Re-run on the API path (or paste a full `show configuration effective` covering WLAN) to drive the SSID/cluster translations."* Do not ask Q1/Q2 against an empty VAP set.
+
+**Question 1 — per-virtual-AP forward mode (always).** Ask once **per `virtual_ap` instance**, NOT per ESSID — multiple VAPs can broadcast the same ESSID at different scopes (e.g. one `CORP` VAP per region) and each is its own profile with its own forward mode. Key every decision by the **composite identity `<source_scope>/<vap-name>`** so same-named VAPs across scopes never collide. (`Bridged and Tunneled` is the distinct case where *one* VAP intentionally becomes two profiles sharing an essid alias — that's a single decision with a scope split, not two VAPs.) A VAP is **translatable** (and so gets a question) when it matches the Stage 9b 2g preview filter **exactly**: not `_flags.system`, not `_flags.default`, and its `virtual_ap.ssid_prof` reference resolves to an `ssid_prof` **at the VAP's OWN `_source_scope`** — the same scoped join 2g uses (`s._source_scope == vap._source_scope`), NOT merely "exists somewhere in the collected list" (a same-name profile at another scope that 2g won't use). Skip system/default VAPs and ones whose SSID profile is missing **at their scope** — do NOT ask the operator about records the preview loop will skip; note them under Translation gaps (e.g. *"VAP `<scope>/<name>` references ssid-profile `<x>` not present at that scope — not translatable"*). For each translatable VAP, present its detected current mode + the recommended AOS 10 target, and ask the operator to pick one of:
+
+| Option | Meaning | Drives `wlan_ssid` `target_mode` |
+|---|---|---|
+| **Bridged** | AP local breakout; no gateway | `bridged` |
+| **Tunneled** | gateway-terminated | `tunneled` |
+| **Bridged and Tunneled** | the same SSID in BOTH modes across locations (campus tunneled, branches bridged) → essid alias + two profiles | `bridged_and_tunneled` (also ask the bridge-vs-tunnel **scope split** — detected default, operator adjusts → collect each scope's **identity** `bridge_scope_name`+`bridge_scope_type` / `tunnel_scope_name`+`tunnel_scope_type` (+path when known), resolved to ids/`<TBD>` in 9b — a bare name isn't unique) |
+| **Hybrid** | split-tunnel (one SSID, corporate tunneled + Internet local) | `hybrid` |
+
+**Display label → engine value (do not confuse the two):** the left column is the operator-facing label; the **right column is the exact string that must go into `runtime_values["target_mode"]`** — `Bridged`→`bridged`, `Tunneled`→`tunneled`, `Bridged and Tunneled`→`bridged_and_tunneled`, `Hybrid`→`hybrid`. Store/pass the lowercase engine value, never the display label (the engine rejects unknown `target_mode` strings). Same for the Stage 3 re-score vocabulary mapping (`tunnel`/`bridge`/`mixed` blocks) at the re-score step.
+
+Pre-fill the recommendation from the detected `forward_mode` (`tunnel`/`decrypt-tunnel`→Tunneled, `bridge`→Bridged, `split-tunnel`→Hybrid). The operator may pick anything — e.g. flipping every SSID to **Bridged** to go controllerless. The source tells us what *is*; the operator decides what they *want*.
+
+**Question 2 — gateway topology (only if any SSID is Tunneled / Hybrid / Bridged-and-Tunneled).** Skip entirely if every SSID is Bridged (no gateways survive → no clustering). Otherwise present the detected topology (from Stage 2 detection — the SSID→cluster map + the cluster-mode recommendation derivation) and ask:
+
+| Option | `gateway_cluster` `cluster_strategy` | Scope |
+|---|---|---|
+| **Campus gateways, no DMZ clusters** | `intent_site` | global / site / site-collection |
+| **Campus gateways + DMZ clusters** | `intent_site` (campus) **and** `intent_manual` (DMZ) | site/site-collection + device-group |
+| **DMZ controllers only (few)** | `ha_only` | device-group |
+
+Default the selection to the detected pattern (same-ap-group-to-different-clusters → "campus + DMZ"; single regional cluster → "no DMZ"; few/DMZ-only → "DMZ only").
+
+**Strategy and placement are separate — collect both.** The topology option above fixes the `cluster_strategy`; it does NOT fix *where* the cluster lands. For each surviving cluster, also confirm the **intended Central scope identity** — collect the scope **name AND type** (`target_scope_type` ∈ `global` / `site` / `site_collection` / `device_group`), plus the **full path** (`target_scope_path`, e.g. `USW/West`) when the operator can give it. A bare scope *name* is **not** globally unique (a Site, Site-Collection, and Device-Group can share a name; the same name can recur under different parents), so name-only resolution can bind the wrong scope — always carry the type, and prefer the path. Collect the identity, **not** a numeric `scope_id` (the Central scope may not exist yet — Stage 7 maps/creates the hierarchy as the first cutover step), so resolution → `scope_id`/`<TBD:...>` happens later in Stage 9b. Record `cluster_strategy` + `target_scope_name` + `target_scope_type` (+ optional `target_scope_path`) in `decisions["per_cluster"]`, keyed by the composite **`<source_scope>/<cluster-name>`** (a bare cluster name would apply one cluster's decision to another scope's cluster). Stage 9b calls `resolve_scope_id(target_scope_name, target_scope_type, target_scope_path)` → `scope_id` / `<TBD:...>` / `<AMBIGUOUS:...>` (when name+type still match several — the operator must supply a path) and **never** defaults a *missing* scope to Global — a cluster with no chosen scope skips with a `skip_reason`.
+
+**Outputs → Act II `runtime_values`.** Record the answers and pass them into every Stage 9b `central_translation_preview` call:
+
+```
+decisions = {
+  # keyed by composite "<source_scope>/<vap-name>" — NOT bare vap-name / ESSID,
+  # so same-ESSID VAPs across scopes can't collide.
+  "per_vap": { "<source_scope>/<vap-name>": {"target_mode": "...",      # Q1
+                                             # cluster_refs holds the composite per_cluster keys this VAP
+                                             # tunnels to — for collision-safe LOOKUP only (NOT the engine
+                                             # payload). 2g resolves each via per_cluster into the Central
+                                             # overlay gw_cluster_list object shape before previewing.
+                                             "cluster_refs": ["<source_scope>/<cluster-name>", ...],
+                                             # dual-mode scope split: scope IDENTITY (name+type, +optional
+                                             # path) resolved to ids/<TBD> in 9b — like target_scope_*; a
+                                             # bare name isn't unique, so carry the type:
+                                             "bridge_scope_name": "...", "bridge_scope_type": "...",  # +bridge_scope_path? (dual only)
+                                             "tunnel_scope_name": "...", "tunnel_scope_type": "..."}, # +tunnel_scope_path? (dual only)
+               ... },
+  # keyed by composite "<source_scope>/<cluster-name>" — same collision-safety as per_vap.
+  # Scope IDENTITY (name + type, +optional path), resolved to scope_id/<TBD> in 9b — a bare
+  # name isn't unique across types/parents, so carry the type (and a path when known).
+  "per_cluster": { "<source_scope>/<cluster-name>": {"cluster_strategy": "...",
+                                                     "target_scope_name": "<scope-name>",
+                                                     "target_scope_type": "global|site|site_collection|device_group",
+                                                     "target_scope_path": "<optional/full/path>"} },  # Q2
+}
+```
+
+**Re-score the provisional findings (bucket 4) against the chosen architecture.** After the operator answers, re-evaluate **every** bucket-4 finding — the per-target-mode Tunnel / Bridge / Mixed blocks, F3 / F4, **and the Stage 4a NAD checks A4 / A5** — against each SSID's **chosen** `target_mode` (and, for A5, the surviving gateway clusters) — not the recommendation. The Stage 3 rule blocks use the vocabulary `tunnel` / `bridge` / `mixed`; the Stage 6.5 answers use `bridged` / `tunneled` / `hybrid` / `bridged_and_tunneled`. Normalize per SSID before re-scoring:
+
+| Stage 6.5 `target_mode` | Stage 3 block(s) to apply |
+|---|---|
+| `tunneled` | the **Tunnel** block (+ F3/F4 where their tunnel-target severity applies) |
+| `bridged` | the **Bridge** block (+ F3/F4 bridge-target severity) |
+| `hybrid` (split-tunnel) | the **Mixed** block + any split-tunnel-specific rules |
+| `bridged_and_tunneled` | **both** the Bridge block (at the bridge scope) **and** the Tunnel block (at the tunnel scope) — it's two real profiles |
+
+**F3 / F4 are deployment-level, not per-SSID** (L3 Mobility being load-bearing; VC-managed NAT'd WLANs depending on controller-side NAT/DHCP). Their original aggregate gate was `{bridge, mixed}` = "some traffic bridges locally." Post-questionnaire, re-trigger them as **REGRESSION if ANY SSID's chosen mode bridges traffic locally** — `bridged`, `hybrid` (split-tunnel keeps Internet local), or the bridge half of `bridged_and_tunneled`. If **every** SSID is pure `tunneled`, F3 downgrades to DRIFT and F4 does not apply (all client traffic terminates on the gateway). Evaluate F3/F4 once over the whole set of chosen modes, not per SSID.
+
+The old **aggregate** `mixed` (a whole-deployment "some SSIDs tunnel, some bridge" recommendation) only existed pre-questionnaire to gate the provisional preview; post-questionnaire there is no aggregate mode — per-target-mode block re-scoring is strictly **per SSID** by the table above, so a deployment with a mix of bridged + tunneled SSIDs is just each SSID scored under its own block (no SSID is "mixed" unless it's `hybrid`/split-tunnel). Findings whose mode the operator chose away from simply disappear; findings that still apply fold into the Act II disposition matrix / Translation gaps for the chosen design. This re-score does **not** re-open the Act I verdict (that gate already passed on source-readiness); it informs the *plan*. If it surfaces a hard REGRESSION for the architecture the operator just chose, state it plainly and offer to revisit Stage 6.5 (e.g. *"your chosen Tunnel mode for `CORP` still has REGRESSION X; pick a different mode for it, or proceed and handle X manually"*) — the operator decides, having been told.
+
+If verdict was EMPTY-SOURCE (no SSIDs/clusters), skip Stage 6.5 — there's nothing to decide — and proceed to Stage 7 for whatever defaults exist.
 
 ---
 
@@ -573,6 +737,8 @@ Do NOT run Stages 7-10 silently or pre-emptively.
 Promote the readiness-stage hierarchy mapping table (Stage 6 inventory section) into a translation stage with explicit rules. Reuse the Stage 1 COLLECT-01 effective-config or pasted `show configuration node-hierarchy` output already in context — do NOT re-fetch.
 
 **Resolving Stage 7 mapping rows to Central `scope_id`s:** when Stage 9's API call sequence needs a `scope_id` (e.g. for `central_manage_config_assignment`), use the `central-scope-walker` skill — paste the operator-confirmed Central name (`USE`, `dallas-hq`, etc.) into its snippet to get the `scope_id` plus parent path. Don't author tree-recursion in `execute()`; the walker is a one-shot primitive that handles exact name / path / scope_id / substring matches uniformly.
+
+**Stage 7 mapping contract (each row carries a full scope IDENTITY, not just a name).** Because a bare Central scope name is not unique (Sites / Site-Collections / Device-Groups can share a name; names recur under different parents — see Stage 9b's `resolve_scope_id`), every Stage 7 mapping row must retain enough to resolve unambiguously: the **Target name**, the **Target type** (the row's Site / Site-Collection / Device-Group classification), AND the **full Central path** derived from the confirmed hierarchy (e.g. `USW/West`). Stage 9b's `stage7_central_scope_for(<source_scope>)` returns that identity as `{"name", "type", "path"}` and resolves by path → name+type. Do NOT collapse a mapping row to a bare name — that's how the cross-scope-collision bug gets rebuilt.
 
 **Rules** (anchor: VSG §1529-§1535 *"Mapping AOS-8 Hierarchy to AOS-10 Configuration Model"* + §1834-§1835; Central scope semantics per the Aruba Central VSG *Configuration Model* section).
 
@@ -604,13 +770,15 @@ The Device Function travels with the device into Central; profiles assigned at a
 | `_Static` suffix in name | Device Group | medium | naming heuristic for config-pinned device groupings |
 | Children include APs (CAMPUS_AP or MICROBRANCH_AP) | Site (auto-clustering re-enabled in AOS 10) | high | AP-bearing scopes always become Sites |
 | Persona token in name (`VPNC`, `BGW`, `Microbranch`) AND children uniformly that persona | Device Group, with **Device Function** = the persona token (VPNC / BRANCH_GW / MICROBRANCH_AP) | medium | VPNC/BRANCH_GW never have APs; Device Function filters which device types receive profiles |
-| Children uniformly MOBILITY_GW (no APs — DMZ pattern) AND cluster_prof present at scope | derive cluster mode from AP-adoption + multizone signals (Step 4); CM_SITE → Site, CM_MANUAL → Device Group | medium | DMZ MGW cluster pattern |
+| Children uniformly MOBILITY_GW (no APs — DMZ pattern) AND cluster_prof present at scope | apply the Stage-6.5-confirmed cluster mode (recommended via the Step-4 derivation in Stage 2 detection); CM_SITE → Site, CM_MANUAL → Device Group | medium | DMZ MGW cluster pattern |
 | Geographic / cardinal noun (`East`, `West`, `Dallas`, three-letter region codes) at leaf or near-leaf | Site | high | naming heuristic for true sites |
 | No matching signal | Device Group (default fallback) | low | operator review required |
 
-**Step 4 — Cluster mode derivation (data-driven, no operator-confirm):**
+**Step 4 — Cluster-mode recommendation derivation (algorithm definition; RUNS in Stage 2 detection, APPLIED here in Stage 7):**
 
-AOS 8 has no `cluster-mode` knob. The AOS 10 cluster-mode (`CM_SITE` / `CM_MANUAL`) is derived from three Stage 1 signals already in `config_by_scope`:
+> **Ordering note (data dependency):** this derivation is the source of the Stage 6.5 Q2 *defaults*, and Stage 6.5 runs **before** Stage 7. So the algorithm below is **executed during Stage 2 detection** (it reads only Stage 1 data — `config_by_scope`, `ap_database`, `ap_multizone_prof` — all available then), producing the per-cluster `cluster-mode recommendation`. Stage 7 does **not** re-derive it: by the time Stage 7 runs, the operator has already confirmed/overridden the recommendation in Stage 6.5, and Stage 7 **applies that confirmed decision** to hierarchy placement. The algorithm is documented here only because Stage 7 is its conceptual home; nothing about it requires Stage 7 to have run.
+
+AOS 8 has no `cluster-mode` knob. The AOS 10 cluster-mode (`CM_SITE` / `CM_MANUAL`) is **derived** from three Stage 1 signals to produce the per-cluster *recommendation* that pre-fills the Stage 6.5 gateway-topology question — the operator confirms or overrides it there (CM_SITE primary-zone + CM_MANUAL DMZ-anchor together = the "campus + DMZ" topology option). Signals, all already in `config_by_scope`:
 
 1. `cluster_prof.cluster_controller[].ip` — cluster member IPs (from COLLECT-01). **Use the `ip` field, NOT `vrrp_ip`** — AP `Switch IP` / `Standby IP` is the per-controller management address (matches `cluster_controller[].ip`); `vrrp_ip` is the VRRP virtual address and never appears as an AP's adoption target. Live-verified against AOS 8.13 cluster_prof — see [issue #270](https://github.com/nowireless4u/hpe-networking-mcp/issues/270).
 2. `ap_database.Switch IP` and `ap_database.Standby IP` — each AP's adoption controller (from COLLECT-02)
@@ -759,16 +927,16 @@ The VSG **does not** contain per-object translation tables for most object types
 | **AAA server-group** (`server_group_prof`) | §2076-§2092 (worked example) | `transform` — group name + ordered server list. **Central API gap — no `central_manage_server_group` tool.** Target tool: `[Central API gap — manual UI: Network Services → Server Groups]`. |
 | **802.1X auth profile** (`dot1x_auth_profile`) | §1121-§1141 + §2159-§2208 (CorpNet 802.1X worked example) | `operator-driven` — folded into WLAN profile creation in Central; ESSID is in the WLAN SSID profile, allowed-bands and VLAN ID are in the VAP (collapsed into the WLAN profile in Central), key-management is in the SSID profile, primary/secondary RADIUS pointers are under authentication servers. No automatic field map; emit `OPERATOR-MAP`. Target tool: `central_manage_wlan_profile` (the auth profile is collapsed into it). |
 | **MAC-auth profile** (`mac_auth_profile`) | (none) | `operator-driven` — VSG silent. Emit `OPERATOR-MAP`. Target tool: `central_manage_wlan_profile` (mac-auth opmodes are flags inside it). |
-| **Captive portal profile** (`cp_auth_profile`) | (none, passing mention only) | `operator-driven` — assigned through a role's `captive-portal` field on `central_manage_role`. Emit `OPERATOR-MAP`. Target tool: `central_manage_role` (captive-portal field). |
-| **User role** (`role`) | §1173-§1176 (AOS 8 supported-features list) | `transform` — role name + VLAN + ACL + bandwidth-contract + qos + captive-portal + session-timeout map directly. Per-attribute mapping is operator-driven; VSG only confirms roles "are supported." Emit `OPERATOR-MAP` per role. Target tool: `central_manage_role`. |
-| **Session ACL** (`acl_sess`) | (none — implied via role) | `transform` — the `central:policy` translation (engine-driven) emits `/policies` POSTs with rule bodies that reference Central `net-group` and `net-service` aliases. `net-group` aliases ship via the `central:net_group` translation (see the row below — sourced from AOS 8 `netdst` / `netdst6`). `net-service` aliases (sourced from AOS 8 `netsvc`) are **deferred** pending live shape verification; `central:policy` rules that reference a `netsvc` name today will fail at Central with an unknown-service error unless the operator has pre-populated matching service names. Per-rule mapping is engine-handled; operator decisions only when LLD-skip reasons surface. (Note: `acl_eth` and `acl_mac` are intentionally out of scope — issue #298.) Target tool: `central_manage_policy`. |
-| **Network destination alias** (`netdst`, `netdst6`) | (none) | `transform` — the `central:net_group` translation emits one `POST /net-groups/{name}` + config-assignment per source record. Per-entry mapping is engine-handled (host / network / FQDN → Central `HOST` / `NETWORK` / `FQDN` items). Must run BEFORE `central:policy` because policy rule bodies reference these aliases by name. AOS 8 system defaults (`_flags.default=true` — e.g. `localip`, `controller`, `mswitch`) are filtered by preprocessing; inherited copies must be filtered by the consumer at definition scope. (Note: AOS 8 `netsvc` — service aliases — is deferred to a future release; see the `acl_sess` row.) Target tool: `central_manage_net_group` (when the wrapper tool lands — preview today via `central_translation_preview`). |
+| **Captive portal profile** (`cp_auth_profile`) | (none, passing mention only) | `operator-driven` — assigned through a role's `captive-portal` field on `central_manage_roles`. Emit `OPERATOR-MAP`. Target tool: `central_manage_roles` (captive-portal field). |
+| **User role** (`role`) | §1173-§1176 (AOS 8 supported-features list) | `transform` — role name + VLAN + ACL + bandwidth-contract + qos + captive-portal + session-timeout map directly. Per-attribute mapping is operator-driven; VSG only confirms roles "are supported." Emit `OPERATOR-MAP` per role. Target tool: `central_manage_roles`. |
+| **Session ACL** (`acl_sess`) | (none — implied via role) | `transform` — the `central:policy` translation (engine-driven) emits `/policies` POSTs with rule bodies that reference Central `net-group` and `net-service` aliases. `net-group` aliases ship via the `central:net_group` translation (see the row below — sourced from AOS 8 `netdst` / `netdst6`). `net-service` aliases (sourced from AOS 8 `netsvc`) are **deferred** pending live shape verification; `central:policy` rules that reference a `netsvc` name today will fail at Central with an unknown-service error unless the operator has pre-populated matching service names. Per-rule mapping is engine-handled; operator decisions only when LLD-skip reasons surface. (Note: `acl_eth` and `acl_mac` are intentionally out of scope — issue #298.) Target tool: `central_manage_policies`. |
+| **Network destination alias** (`netdst`, `netdst6`) | (none) | `transform` — the `central:net_group` translation emits one `POST /net-groups/{name}` + config-assignment per source record. Per-entry mapping is engine-handled (host / network / FQDN → Central `HOST` / `NETWORK` / `FQDN` items). Must run BEFORE `central:policy` because policy rule bodies reference these aliases by name. AOS 8 system defaults (`_flags.default=true` — e.g. `localip`, `controller`, `mswitch`) are filtered by preprocessing; inherited copies must be filtered by the consumer at definition scope. (Note: AOS 8 `netsvc` — service aliases — is deferred to a future release; see the `acl_sess` row.) Target tool: `central_manage_net_groups` (when the wrapper tool lands — preview today via `central_translation_preview`). |
 | **AP system profile** (`ap_sys_prof`) | §1651-§1657 (LMS prerequisite), §412-§415 (regulatory domain replaced) | Mixed: LMS-IP `transform` (must be VRRP VIP, not individual controller IP — already enforced as Act I REGRESSION rule); `reg_domain_prof` `deprecated`; `arm_prof` / `ht_radio_prof` `deprecated` (replaced by RF Profiles in AOS 10); syslog targets `operator-driven` (mapped to Central UI). **Central API gap — no `central_manage_ap_system_profile` tool today.** Target tool: `[Central API gap — manual UI]`. |
 | **WLAN SSID profile** (`ssid_prof`) | §2127-§2219 (CorpNet 802.1X), §2222-§2308 (OpsNet WPA3-Personal) | `direct-translate` — ESSID, opmode, VLAN, forwarding-mode, key-management, RADIUS pointers map to the `central_manage_wlan_profile` payload schema. The two VSG worked examples are the gold-standard reference for field-by-field mapping; emit per-WLAN-profile rows that cite them. Target tool: `central_manage_wlan_profile`. |
 | **VAP profile** (`virtual_ap`) | §2169-§2192 (Allowed bands "in the VAP", VLAN ID "in the VAP") | `transform` — AOS 8 VAP fields collapse INTO the WLAN profile in AOS 10; VAP is not a standalone object. Mark as `transform → folded into WLAN profile`. Target tool: `central_manage_wlan_profile` (collapsed). |
 | **MAC randomization handling** (per-SSID) | (none) | `operator-driven` — flag as a known AOS 10 behavioural difference. VSG does not address. Emit `OPERATOR-MAP`. |
 | **ARM / HT radio / Regulatory Domain profiles** (`arm_prof`, `ht_radio_prof`, `reg_domain_prof`) | §1163-§1166 | `deprecated` — ARM is replaced by **RF Profiles** in AOS 10 / Central. AirMatch already exists in AOS 8 and continues in Central — it is not the AOS 10 ARM replacement. The pre-AOS-8.4 band-split (`dot11a_radio_prof` / `dot11g_radio_prof`) was consolidated into `ht_radio_prof` upstream; the skill collects the single combined object. Already raised as DRIFT in Act I; emit one summary `drop` row per profile family in the matrix. |
-| **Cluster profile + group membership** (`cluster_prof`, `group_membership`) | (none — implied via cluster topology) | `transform` — cluster topology and member binding fold into Central GCIS (`gw-cluster-intent` profile + realized `gw-cluster`). The AOS 10 cluster-mode (`CM_SITE` / `CM_MANUAL`) is **derived** by Stage 7 from AP-adoption + multizone signals — see Stage 7 Step 4. Each cluster_prof becomes a `gw-cluster` profile in Central with its `cluster_controller[].ip` translating to `ipv4-gateways[].mac` (gateways added by MAC; resolve IP→MAC via Central inventory). VRRP / heartbeat / multicast-VLAN fields map directly. Target tools: `central_manage_gateway_cluster_intent_profile` (intent — sets cluster-mode at scope, persona, multicast VLAN, etc.) + `central_manage_gateway_cluster` (realized profile with explicit member MACs). For CM_SITE clusters, GCIS auto-creates the realized profile (`auto_*` naming); operators only need the intent. For CM_MANUAL clusters, both calls are needed. |
+| **Cluster profile + group membership** (`cluster_prof`, `group_membership`) | (none — implied via cluster topology) | `transform` — cluster topology and member binding fold into Central GCIS (`gw-cluster-intent` profile + realized `gw-cluster`). The AOS 10 cluster-mode (`CM_SITE` / `CM_MANUAL`) is **recommended** by the cluster-mode derivation during Stage 2 detection (algorithm at Stage 7 Step 4), **confirmed/overridden by the operator in Stage 6.5**, and **applied** here in Stage 7/8. Each cluster_prof becomes a `gw-cluster` profile in Central with its `cluster_controller[].ip` translating to `ipv4-gateways[].mac` (gateways added by MAC; resolve IP→MAC via Central inventory). VRRP / heartbeat / multicast-VLAN fields map directly. Target tools: `central_manage_gw_cluster_intent_config` (intent — sets cluster-mode at scope, persona, multicast VLAN, etc.) + `central_manage_gateway_clusters` (realized profile with explicit member MACs). For CM_SITE clusters, GCIS auto-creates the realized profile (`auto_*` naming); operators only need the intent. For CM_MANUAL clusters, both calls are needed. |
 | **ClientMatch tunables** | §416-§418, §1167-§1169 | `deprecated` — *"Settings cannot be tuned."* Already raised as DRIFT in Act I; emit one summary `drop` row in the matrix. |
 
 #### 8.2 — Output: the disposition matrix
@@ -819,9 +987,9 @@ If a Stage 1 batch failed and an object class can't be enumerated, emit ONE row 
 For every row of the Stage 8 disposition matrix where Disposition is `direct-translate` or `transform` AND Central tool is **not** a `[Central API gap]`, compute a topological order respecting these dependency rules:
 
 1. **Hierarchy first.** `central_manage_site_collection` → `central_manage_site` → `central_manage_device_group`. All three must exist before any scoped object.
-2. **Cluster intent before realized clusters.** For each cluster_prof from Stage 7: emit `central_manage_gateway_cluster_intent_profile` (sets cluster-mode, persona, multicast VLAN, heartbeat at the appropriate scope). For CM_SITE clusters this is sufficient — Central GCIS auto-creates the realized `auto_*` cluster profile. For CM_MANUAL clusters, follow with `central_manage_gateway_cluster` to create the realized profile and add member gateways by MAC. Both must precede any object scoped to the cluster's gateways.
-3. **ACL primitives before role-acls.** `central_manage_net_group` and `central_manage_net_service` BEFORE `central_manage_role_acl` (role ACLs reference net-group / net-service aliases).
-4. **Role-acls before roles.** `central_manage_role_acl` BEFORE `central_manage_role` (a role's `access-list` field references role-acls by name).
+2. **Cluster intent before realized clusters.** For each cluster_prof from Stage 7: emit `central_manage_gw_cluster_intent_config` (sets cluster-mode, persona, multicast VLAN, heartbeat at the appropriate scope). For CM_SITE clusters this is sufficient — Central GCIS auto-creates the realized `auto_*` cluster profile. For CM_MANUAL clusters, follow with `central_manage_gateway_clusters` to create the realized profile and add member gateways by MAC. Both must precede any object scoped to the cluster's gateways.
+3. **ACL primitives before role-acls.** `central_manage_net_groups` BEFORE `central_manage_role_acls` (role ACLs reference net-group aliases). **Net-services are DEFERRED** — `central:net_service` has not shipped (no Stage 8 source row; AOS 8 `netsvc` is not collected). Until it ships, custom service aliases are **operator-pre-populated in Central**; do NOT emit `central_manage_net_services` steps. Built-in `svc-*` services (svc-http/svc-https/…) work today and need no step.
+4. **Role-acls before roles.** `central_manage_role_acls` BEFORE `central_manage_roles` (a role's `access-list` field references role-acls by name).
 5. **Roles before WLAN profiles** when a WLAN profile references a default role.
 6. **WLAN profiles after roles + ACLs** but BEFORE `central_manage_config_assignment`.
 7. **`central_manage_config_assignment` last** — assigns the library objects to scopes (Site Collections / Sites / Device Groups). Without this step, objects exist in the Central library but aren't pushed to devices.
@@ -831,7 +999,7 @@ For every row of the Stage 8 disposition matrix where Disposition is `direct-tra
 
 - **Step #**
 - **Target object** (e.g. *"Role 'corp-employee'"*)
-- **Central tool** (e.g. `central_manage_role`)
+- **Central tool** (e.g. `central_manage_roles`)
 - **Payload sketch** (3-5 key fields; **NOT** a full JSON payload — operators don't need the AI to invent payload details, they need to know which fields matter): *"name='corp-employee', vlan_id=200, access_list_session=['employee-acl'], captive_portal=null"*.
 - **Depends on:** comma-separated list of prior step #s (or `none`).
 - **Notes** — one short clause per step (operator decisions, gotchas, links to VSG anchor for the disposition).
@@ -850,11 +1018,12 @@ For every row of the Stage 8 disposition matrix where Disposition is `direct-tra
 
 **Preconditions (soft — Stage 9b runs against partial inputs):**
 
-- Stage 1 has collected the AOS 8 inventory (effective-config dump). If the operator jumps straight to Stage 9b without Act I, run a **minimal Stage 1 collection** first — pull `role`, `acl_sess`, `vlan_id`, `vlan_name`, `vlan_name_id`, `netdst`, `netdst6` from the AOS 8 path the operator named (e.g. `/md/Campus/West`). Do NOT do the full Act I hierarchy walk — that's overkill for a preview.
+- Stage 1 has collected the AOS 8 inventory (effective-config dump). If the operator jumps straight to Stage 9b without Act I, run a **minimal Stage 1 collection** first — pull `role`, `acl_sess`, `vlan_id`, `vlan_name`, `vlan_name_id`, `netdst`, `netdst6` from the AOS 8 path the operator named (e.g. `/md/Campus/West`). Do NOT do the full Act I hierarchy walk — that's overkill for a preview. **Build the `stage1_<obj>_records` lists via Step 2's `_flatten` even on this path** (so the 2a–2e snippets' variable names resolve and records carry `_source_scope`); a single-scope minimal collection is just a one-entry `config_by_scope`.
+  - **This minimal path covers only 2a–2e** (VLANs / roles / policies / net-groups) — the bare-`record_id`, decision-free translations. **Sections 2f (gateway clusters) and 2g (WLAN SSIDs) do NOT run on the minimal path**: they additionally need `cluster_prof` / `virtual_ap` / `ssid_prof` collected **with `_source_scope` stamping across the hierarchy** (Step 2's `_flatten`) *and* the **Stage 6.5 decisions** (`per_vap` / `per_cluster`). Run 2f/2g only after a **full Act I walk + Stage 6.5**; on the minimal path, emit a note that the SSID/cluster previews require the full flow rather than producing empty/"no decision" output. **Section 2h (the AAA chain) also does NOT run on the minimal path** — it needs the AAA objects (`rad_server` / `tacacs_server` / `server_group_prof` / `dot1x_auth_profile` / `mac_auth_profile` / `cp_auth_profile` / `aaa_prof`) collected — but unlike 2f/2g it needs **no Stage 6.5 decision**; run it after a full Act I walk (or extend the minimal collection to pull those kinds).
 - Stage 7 has produced the operator-confirmed AOS 8 → Central hierarchy mapping. **If Stage 7 was not run, target Global as a fallback** with a clearly-marked placeholder note in the output (see Step 1 below). The preview is engine output regardless of where the operator plans to land it; making Stage 9b strict on Stage 7 would defeat its purpose.
 - The target Central hierarchy does NOT need to exist in Central yet. Stage 9 builds the hierarchy as the FIRST cutover step; Stage 9b previews the per-object work that follows. Walker may legitimately return no match for a Stage-7 Central scope name — in that case use a placeholder scope_id (see Step 1).
 
-**Translations shipped today (v3.0.1.14):**
+**Translations shipped today (v3.3.8.0):**
 
 | translation_id | AOS 8 source | Central target | Notes |
 |---|---|---|---|
@@ -863,10 +1032,22 @@ For every row of the Stage 8 disposition matrix where Disposition is `direct-tra
 | `central:role` | `role` (Gateway-targeted) | role profile + config-assignment | ~25 fields. Skip `_flags.default=true` system roles. |
 | `central:net_group` | `netdst` (IPv4) or `netdst6` (IPv6) | net-group profile + config-assignment | Address family inferred from source record. Per-entry host/network/FQDN mapped to Central HOST/NETWORK/FQDN items. Must run BEFORE `central:policy`. |
 | `central:policy` | `acl_sess` | /policies POST + config-assignment | Engine pre-processes via reverse-index lookup against role records (consumer pre-fetches once). References `net-group` aliases by name (created by `central:net_group`); `net-service` aliases pending. |
+| `central:gateway_cluster` | `cluster_prof` | `gateway-clusters` (HA) + `gw-cluster-intent-config` | **Preview wired in §2f.** `runtime_values["cluster_strategy"]` (`ha_only` / `intent_site` / `intent_manual`) from Stage 6.5 Q2; `central_scope_id` per cluster. Needs full Act I + Stage 6.5. |
+| `central:wlan_ssid` | `virtual_ap` ⨝ `ssid_prof` (by name) | `wlan-ssids` (+ `overlay-wlan` cluster binding) | **Preview wired in §2g.** `runtime_values["target_mode"]` (4 modes) from Stage 6.5 Q1 + `ssid_profiles` (the VAP's **own-scope** records only — never the full flat list; see §2g) + `gw_cluster_list`; dual mode adds `bridge_scope_id`/`tunnel_scope_id`. Needs full Act I + Stage 6.5. |
+| `central:auth_server` | `rad_server` + `tacacs_server` | auth-server profile + config-assignment | **Preview wired in §2h.** Per-record; `central_scope_id` only. Foundational — run FIRST (server-groups reference it by name). Shared-secret field (`rad_key`/`tacacs_key`) is PII; write path PII-gated. |
+| `central:server_group` | `server_group_prof` | server-group profile + config-assignment | **Preview wired in §2h.** Per-record; `central_scope_id` only. Depends on `central:auth_server` (members reference auth-servers by name). |
+| `central:dot1x_auth` | `dot1x_auth_profile` | dot1x-auth profile + config-assignment | **Preview wired in §2h.** Per-record; `central_scope_id` only. Foundational profile referenced by the aaa-profile. |
+| `central:mac_auth` | `mac_auth_profile` | mac-auth profile + config-assignment | **Preview wired in §2h.** Per-record; `central_scope_id` only. Foundational profile referenced by the aaa-profile. |
+| `central:captive_portal` | `cp_auth_profile` | captive-portal profile + config-assignment | **Preview wired in §2h.** Per-record; `central_scope_id` only. References a server-group + roles by name (run those first / alongside). |
+| `central:aaa_profile` | `aaa_prof` | aaa-profile + config-assignment | **Preview wired in §2h.** Per-record; `central_scope_id` only. Depends on auth-server, server-group, dot1x/mac/captive profiles, and roles — run the whole §2h chain in order. Gateway-terminated model. |
+
+All 13 `central:*` translations above ship and are wired into Stage 9b. The **AAA chain** (`central:auth_server` → `central:server_group` → `central:dot1x_auth` / `central:mac_auth` / `central:captive_portal` → `central:aaa_profile`) is driven directly (per-record, no Stage 6.5 decision) — see §2h.
 
 #### Step 1 — Scope resolution (walker-optional, fall back to placeholder)
 
 For each distinct Central scope name from the Stage 7 mapping (or each AOS 8 binding scope if Stage 7 wasn't run), try `central-scope-walker` to resolve it to a real Central scope_id. **If walker returns no match — the target scope doesn't exist in Central yet — use a placeholder scope_id of the form `<TBD:Central-name>` and continue.** Stage 9b is a preview; the engine substitutes whatever string is passed and the resulting body's `scope-id` field surfaces as `<TBD:...>`, which is exactly the right "this scope must be created before execution" signal.
+
+> **Scope-resolution principle (applies to every 2a–2g snippet):** pass the **resolved scope** for the object's binding, and a **`<TBD:...>`** placeholder when it can't be resolved — **never a silent `scope_lookup["Global"]` as if it were authoritative.** Resolve via `resolve_scope_id(name, type, path)`, which disambiguates because a **bare scope name is not unique** (Sites / Site-Collections / Device-Groups can share a name; the same name recurs under different parents): it matches by path when given, else name+type, and returns **`<AMBIGUOUS:...>`** rather than guessing when several scopes still match. The literal `scope_lookup["Global"]` shown in the 2a–2e examples is shorthand for "the resolved scope for this object"; on a real run substitute the object's resolved scope (2f/2g/dual resolve the operator-confirmed scope **identity** — name+type+path — from Stage 6.5; the SSID scope comes from the Stage-7 mapping's identity for the VAP's `_source_scope`). Global is correct only when Global is genuinely the chosen target.
 
 ```python
 # Inside execute(): one walker pass for the Central scopes you need.
@@ -891,17 +1072,52 @@ while stack:
     for child in (node.get("children") or []):
         stack.append((child, here))
 
-def resolve(central_scope_name: str) -> tuple[str, str]:
-    """Return (scope_id, status) — status is 'resolved' or 'placeholder'."""
-    ql = central_scope_name.lower()
-    matches = [n for n in all_nodes
-               if (n.get("scope_name") or "").lower() == ql or n["path"].lower() == ql]
-    if matches:
-        return matches[0]["scope_id"], "resolved"
-    return f"<TBD:{central_scope_name}>", "placeholder"
+def resolve(name: str, scope_type: str | None = None, scope_path: str | None = None) -> tuple[str, str]:
+    """Resolve a Central scope to (scope_id, status). status ∈ resolved / placeholder / ambiguous.
+
+    A bare display NAME is NOT unique — a Site, Site-Collection, and Device-Group can share
+    a name, and the same name can recur under different parents. So disambiguate by the most
+    specific identity available, and NEVER silently pick the first of several matches:
+      1. scope_path given  -> match by full path (unique).
+      2. else name (+ scope_type when given, normalized to the tree's type tokens).
+      3. exactly one match -> resolved; several -> <AMBIGUOUS:...> (operator must give path/type);
+         none -> <TBD:...> (scope not created yet).
+    """
+    if scope_path:
+        m = [n for n in all_nodes if n["path"].lower() == scope_path.lower()]
+        if m:
+            return m[0]["scope_id"], "resolved"
+        return f"<TBD:{scope_path}>", "placeholder"
+    ql = (name or "").lower()
+    m = [n for n in all_nodes if (n.get("scope_name") or "").lower() == ql or n["path"].lower() == ql]
+    if scope_type:
+        # Normalize the user-facing Stage 6.5 type to the actual central_get_scope_tree
+        # token before comparing. Live tree tokens (verified): GLOBAL / SITE_COLLECTION /
+        # SITE / DEVICE / DEVICE_COLLECTION. The mismatch that bites is "device_group"
+        # (operator/skill term) vs the tree's "DEVICE_COLLECTION".
+        TYPE_ALIASES = {
+            "global": "global",
+            "site": "site",
+            "site_collection": "site_collection", "site-collection": "site_collection",
+            "device_group": "device_collection", "device-group": "device_collection",
+            "device_collection": "device_collection",
+        }
+        wanted = TYPE_ALIASES.get(scope_type.lower(), scope_type.lower())
+        m = [n for n in m if (n.get("type") or "").lower() == wanted]
+    if len(m) == 1:
+        return m[0]["scope_id"], "resolved"
+    if len(m) > 1:
+        return f"<AMBIGUOUS:{name} ({scope_type or 'no type'})>", "ambiguous"
+    return f"<TBD:{name}>", "placeholder"
+
+def resolve_scope_id(name, scope_type=None, scope_path=None):
+    """Thin wrapper returning just the scope_id (or <TBD>/<AMBIGUOUS> placeholder)."""
+    return resolve(name, scope_type, scope_path)[0]
 
 # Build the lookup ONCE for every Stage-7 Central name you need; default to "Global"
-# if Stage 7 wasn't run.
+# if Stage 7 wasn't run. (For decisions that carry a type/path — clusters, dual SSID
+# split scopes — call resolve_scope_id(name, type, path) directly so same-name scopes
+# don't collide.)
 scope_lookup = {}
 scope_status = {}
 for name in {"Global"}:  # ← replace with the set of Stage-7-confirmed Central names
@@ -913,6 +1129,26 @@ When rendering the final report, surface `scope_status` so the operator sees whi
 #### Step 2 — Run the engine-driven preview per translation
 
 For each translation, invoke `central_translation_preview` with the relevant Stage 1 records + scope_id. The tool returns deterministic per-record `TargetCall` descriptors.
+
+**The `stage1_<obj>_records` flat lists are derived from `config_by_scope` by flattening — and each record MUST be stamped with its origin scope as `_source_scope`** so identity keys stay collision-safe:
+
+```python
+def _flatten(obj_type):
+    out = []
+    for scope, objs in config_by_scope.items():
+        resp = objs.get(obj_type)
+        rows = resp if isinstance(resp, list) else (resp or {}).get("_data", []) if isinstance(resp, dict) else []
+        for r in (rows or []):
+            if isinstance(r, dict):
+                out.append({**r, "_source_scope": scope})
+    return out
+
+stage1_virtual_ap_records  = _flatten("virtual_ap")
+stage1_cluster_prof_records = _flatten("cluster_prof")
+stage1_ssid_prof_records   = _flatten("ssid_prof")   # ... and likewise for vlan_id / role / acl_sess / netdst / etc.
+```
+
+Without the `_source_scope` stamp, the composite `<source_scope>/<vap-name>` and `<source_scope>/<cluster-name>` keys collapse to bare names and the cross-scope collisions return. (Translations keyed by bare `record_id` — VLANs / roles / policies / net-groups — don't need the stamp, but it's harmless.)
 
 ##### 2a — VLANs (`central:vlan_id`)
 
@@ -1156,16 +1392,295 @@ result
 
 **Note on `netsvc` (AOS 8 service aliases).** AOS 8 `acl_sess` rules may reference custom service aliases via `service-name` plus the AOS 8 `netsvc` schema. `central:net_service` is **deferred** to a future release pending live shape verification — Central rejects policy POSTs that reference unknown service aliases. If preview surfaces policy rules using non-`svc-*` service names (`svc-http` / `svc-https` / etc. come from Central's built-in catalog and work today), surface those in Translation gaps under "Service aliases pending translation" so the operator knows to pre-populate Central or wait for the translation to ship.
 
+##### 2f — Gateway clusters (`central:gateway_cluster`) — consumes Stage 6.5 Q2
+
+Only when at least one SSID is Tunneled / Hybrid / Bridged-and-Tunneled (otherwise skip — no gateways). For each source `cluster_prof`, look up the operator's decision by the composite `<source_scope>/<cluster-name>` key (same collision-safety as VAPs), then pass the chosen `cluster_strategy` and the scope **identity** (`target_scope_name` + `target_scope_type` + optional `target_scope_path`) resolved to a `scope_id`/`<TBD>` via `resolve_scope_id` (the scope may not exist yet, and a bare name isn't unique).
+
+```python
+cluster_records = [
+    c for c in stage1_cluster_prof_records
+    if not (c.get("_flags") or {}).get("system") and not (c.get("_flags") or {}).get("default")
+]
+cluster_previews = []
+for c in cluster_records:
+    # Composite key — the same cluster_prof name can exist at multiple AOS scopes,
+    # so a bare name would apply one cluster's decision to another's.
+    cluster_key = f"{c.get('_source_scope', '<scope>')}/{c['profile-name']}"
+    # Only clusters that survive into the chosen topology have a Stage 6.5 decision.
+    # If all SSIDs were Bridged (Q2 skipped) or this cluster is unused, there's no
+    # decision — skip with a clear reason instead of indexing a missing key.
+    dec = decisions.get("per_cluster", {}).get(cluster_key)
+    if not dec:
+        cluster_previews.append({
+            "source": cluster_key,
+            "skip_reason": "no Stage 6.5 gateway-cluster decision (not referenced by the chosen topology / no tunneled SSID binds it)",
+        })
+        continue
+    # Strategy and placement are SEPARATE decisions. Stage 6.5 collected the intended
+    # Central scope NAME (target_scope_name), not an id; resolve it to a scope_id here via
+    # the walker, falling back to <TBD:...> (the scope may not exist yet — Stage 9
+    # builds the hierarchy first). Do NOT default a MISSING scope to Global: if the
+    # operator never chose a scope, skip with a reason rather than silently mis-placing.
+    if not dec.get("target_scope_name"):
+        cluster_previews.append({
+            "source": cluster_key,
+            "skip_reason": "Stage 6.5 recorded a cluster_strategy but no target_scope_name — confirm the Central scope for this cluster before previewing",
+        })
+        continue
+    # Resolve by name+type (+path) — never bare name (ambiguous across types/parents).
+    cluster_scope_id = resolve_scope_id(dec["target_scope_name"], dec.get("target_scope_type"), dec.get("target_scope_path"))
+    response = await call_tool(
+        "central_translation_preview",
+        {
+            "translation_id": "central:gateway_cluster",
+            "source_records": [c],
+            "runtime_values": {
+                "central_scope_id": cluster_scope_id,
+                "cluster_strategy": dec["cluster_strategy"],   # ha_only / intent_site / intent_manual
+            },
+        },
+    )
+    cluster_previews.append(response.get("data", response))
+```
+
+##### 2g — WLAN SSIDs (`central:wlan_ssid`) — consumes Stage 6.5 Q1
+
+One source record = one `virtual_ap`; pass **only the VAP's own scope's** `ssid_prof` records via `runtime_values["ssid_profiles"]` (the engine joins by name, so a scope-filtered list prevents a same-name profile at another scope from binding — never pass the full flat list). Per **VAP instance**, look up the operator's decision by the composite `<source_scope>/<vap-name>` key (Q1), pass `target_mode`, and **resolve the decision's `cluster_refs` (composite per_cluster keys) into the engine's `gw_cluster_list` — the Central overlay object shape `[{cluster, cluster-type, tunnel-type, cluster-scope-id}]`**, not the raw key strings (the engine substitutes it whole into the overlay body). For `bridged_and_tunneled`, resolve the decision's `bridge_scope_name` / `tunnel_scope_name` → `bridge_scope_id` / `tunnel_scope_id` (walker, `<TBD:...>` fallback) before passing them.
+
+```python
+vap_records = [
+    v for v in stage1_virtual_ap_records
+    if not (v.get("_flags") or {}).get("system") and not (v.get("_flags") or {}).get("default")
+]
+ssid_previews = []
+for v in vap_records:
+    vap_key = f"{v.get('_source_scope', '<scope>')}/{v['profile-name']}"   # composite identity
+    # SCOPE-AWARE ssid_prof join: a VAP resolves its ssid_prof within its OWN scope
+    # (effective-config surfaces the inherited copy at that scope). Same-name ssid_prof
+    # objects at different scopes can differ, so pass the engine ONLY this VAP's scope's
+    # ssid_profiles — never the full flat list (a bare-name join over all scopes could
+    # bind the wrong profile). This is the same cross-scope collision guard used for
+    # the VAP/cluster decision keys.
+    scoped_ssid_profiles = [
+        s for s in stage1_ssid_prof_records if s.get("_source_scope") == v.get("_source_scope")
+    ]
+    scoped_ssid_names = {s.get("profile-name") for s in scoped_ssid_profiles}
+    # Match the Q1 "translatable" definition: a VAP whose ssid_prof reference doesn't
+    # resolve at its scope is not translatable — surface the specific missing-profile gap.
+    sp_ref = (v.get("ssid_prof") or {}).get("profile-name")
+    if sp_ref not in scoped_ssid_names:
+        ssid_previews.append({"source": vap_key, "skip_reason": f"references ssid-profile '{sp_ref}' not present at scope {v.get('_source_scope')} — not translatable"})
+        continue
+    dec = decisions.get("per_vap", {}).get(vap_key)                         # from Stage 6.5
+    if not dec:
+        ssid_previews.append({"source": vap_key, "skip_reason": "no Stage 6.5 forward-mode decision for this VAP"})
+        continue
+    # Resolve the AP broadcast scope from the VAP's source scope via the Stage 7
+    # AOS8->Central hierarchy mapping — do NOT default to Global (that would preview
+    # at the wrong scope after the operator confirmed placement in Stage 7). If the
+    # Stage 7 mapping / walker can't resolve it, use a <TBD:...> placeholder (Step 1
+    # convention) so the gap is visible rather than authoritative-looking.
+    # The Stage 7 mapping yields the AP's Central scope IDENTITY (name + type + path) for the
+    # VAP's source scope — resolve by it, not a bare name (a path from the mapping is unambiguous).
+    mapped = stage7_central_scope_for(v.get("_source_scope"))   # {"name":..., "type":..., "path":...}
+    ssid_scope_id = resolve_scope_id(mapped.get("name"), mapped.get("type"), mapped.get("path")) \
+        if mapped else f"<TBD:{v.get('_source_scope')}>"
+
+    # Resolve the VAP's cluster_refs (composite per_cluster KEYS — for lookup only)
+    # into the Central overlay payload shape the engine actually expects:
+    #   [{cluster, cluster-type, tunnel-type, cluster-redundancy-type, cluster-scope-id}]
+    # central:wlan_ssid substitutes gw_cluster_list WHOLE into the overlay body, so it
+    # must already be Central objects, NOT decision-key strings.
+    gw_cluster_list, cluster_gap = [], None
+    for idx, cref in enumerate(dec.get("cluster_refs", [])):
+        cdec = decisions.get("per_cluster", {}).get(cref)
+        if not cdec or not cdec.get("target_scope_name"):
+            cluster_gap = f"cluster {cref} has no confirmed Stage 6.5 decision/scope — can't build the overlay binding"
+            break
+        # resolve by name+type (+path) — never bare name (ambiguous across types/parents).
+        cluster_scope_id = resolve_scope_id(cdec["target_scope_name"], cdec.get("target_scope_type"), cdec.get("target_scope_path"))
+        gw_cluster_list.append({
+            "cluster": cref.split("/")[-1],            # Central gateway-cluster profile name
+            "cluster-type": "GATEWAY",
+            "tunnel-type": "L2",                       # tunnel binding; refine per design if L3
+            # cluster-redundancy-type is MANDATORY in the overlay schema (enum PRIMARY/BACKUP).
+            # The VAP's first/anchor cluster is PRIMARY; any additional (e.g. DMZ) clusters are
+            # BACKUP. cluster_refs order encodes this (anchor first); operator confirms for
+            # multi-cluster designs.
+            "cluster-redundancy-type": "PRIMARY" if idx == 0 else "BACKUP",
+            "cluster-scope-id": cluster_scope_id,
+        })
+    if cluster_gap:
+        ssid_previews.append({"source": vap_key, "skip_reason": cluster_gap})
+        continue
+
+    rt = {
+        "central_scope_id": ssid_scope_id,
+        "target_mode": dec["target_mode"],            # bridged / tunneled / hybrid / bridged_and_tunneled
+        "ssid_profiles": scoped_ssid_profiles,        # THIS VAP's scope only — engine joins by name within scope
+        "gw_cluster_list": gw_cluster_list,           # Central overlay objects (engine contract)
+    }
+    if dec["target_mode"] == "bridged_and_tunneled":
+        # Dual mode needs both scope NAMES (resolved to ids/<TBD> here, like every other
+        # scope — they may not exist yet). Guard on the names, don't index (a partial
+        # decision must surface as the promised gap, not a KeyError).
+        if not dec.get("bridge_scope_name") or not dec.get("tunnel_scope_name"):
+            ssid_previews.append({
+                "source": vap_key,
+                "skip_reason": "bridged_and_tunneled needs both bridge_scope_name and tunnel_scope_name — confirm the scope split in Stage 6.5",
+            })
+            continue
+        rt["bridge_scope_id"] = resolve_scope_id(dec["bridge_scope_name"], dec.get("bridge_scope_type"), dec.get("bridge_scope_path"))
+        rt["tunnel_scope_id"] = resolve_scope_id(dec["tunnel_scope_name"], dec.get("tunnel_scope_type"), dec.get("tunnel_scope_path"))
+    response = await call_tool(
+        "central_translation_preview",
+        {"translation_id": "central:wlan_ssid", "source_records": [v], "runtime_values": rt},
+    )
+    ssid_previews.append(response.get("data", response))
+```
+
+Surface each VAP's emitted calls (the wlan-ssids profile(s) + any overlay-wlan binding) in the consolidated report; a `skip_reason` here is a Stage 6.5 input gap (e.g. dual mode missing a scope) — surface it verbatim.
+
+##### 2h — AAA chain (`central:auth_server` → `server_group` → `dot1x_auth` / `mac_auth` / `captive_portal` → `aaa_profile`)
+
+These six translations ship and preview via `central_translation_preview`. Unlike 2f/2g they are **driven directly** — per-record, `central_scope_id` only, **no Stage 6.5 decision** — so they need the AAA objects from Stage 1 but **not** the questionnaire. They model the **gateway-terminated (tunnel / hybrid) AAA**: the gateway `aaa-profile` a tunnel-mode `wlan-ssid` binds to. For a fully **bridged / controllerless** design the AAA folds inline into the `wlan-ssid` instead (deferred — see §2g notes / the bridge-mode AAA backlog item); if **every** surviving SSID is Bridged, run §2h for completeness but mark it **informational** in the report (the gateway aaa-profile won't be referenced).
+
+**Where "every surviving SSID is Bridged" comes from:** read it off the **Stage 6.5 Q1 decisions** that §2g consumes — the gateway AAA is referenced only when at least one VAP's `target_mode` is `tunneled` / `hybrid` / `bridged_and_tunneled`. **Distinguish three states** (do NOT collapse the last two — "all Bridged" and "Stage 6.5 never ran" are different operator situations):
+
+```python
+per_vap = decisions.get("per_vap", {})
+gateway_modes = {"tunneled", "hybrid", "bridged_and_tunneled"}
+if not per_vap:
+    aaa_status = "data-gap"      # Stage 6.5 didn't run / no VAP decisions collected — we CANNOT
+                                 # conclude the AAA is unused; flag the precondition gap and still
+                                 # preview the chain, but do NOT label it 'informational'.
+elif any(d.get("target_mode") in gateway_modes for d in per_vap.values()):
+    aaa_status = "live"          # ≥1 gateway-terminated SSID — its aaa-profile is what the §2g
+                                 # overlay SSIDs authenticate against.
+else:
+    aaa_status = "informational" # decisions exist AND every one is Bridged — the gateway
+                                 # aaa-profile genuinely won't be referenced.
+```
+
+Tag the §2h result with `aaa_status` so the report says *why* (live vs intentionally-unused vs missing-data), rather than silently marking it informational when Stage 6.5 simply hasn't run.
+
+**Dependency order is also the preview order** (so the operator reads prerequisites first): `auth_server` → `server_group` → {`dot1x_auth`, `mac_auth`, `captive_portal`} → `aaa_profile`. Server-groups reference auth-servers by name; the aaa-profile references server-groups + the dot1x/mac/captive profiles + roles by name — each prerequisite must exist in Central before the object that references it.
+
+> **PII — MANDATORY redaction:** `central:auth_server` preview bodies carry the shared-secret field (`rad_key` / `tacacs_key`). Read-only does **not** mean safe to display — a shared secret rendered into an operator-facing report is an exposure regardless of whether the preview wrote anything. **You MUST redact the secret before rendering anything operator-facing:**
+> - In any sample TargetCall body for `central:auth_server` (Step 3), replace the `rad_key` / `tacacs_key` value with the literal `"<redacted: present>"` (or `"<redacted: absent>"` when the source field was empty) — never the actual value.
+> - In summaries, show **presence only** (e.g. `shared_secret: present`), never the value.
+> - The **write path stays PII-gated** — do not enable auth-server writes until the secret-tokenization prerequisite ships (see the spec `draft_notes`).
+> Treat this as a hard rule: when in doubt, redact.
+
+Use this helper to redact before rendering any `central:auth_server` sample body. It walks the body recursively and masks the RADIUS and TACACS shared-secret fields, handling both the bare-string form and the one-level wrapper form (where the secret sits under a nested key):
+
+```python
+import copy
+
+# Redact ONLY the two RADIUS/TACACS shared-secret fields, not every field whose
+# name ends in "key" — an unrelated nested "key" must not be masked. The secret
+# arrives either as a bare string or as a one-level wrapper, so mask the whole value
+# in both cases. Field names are composed from prefix+suffix (-> the RADIUS and
+# TACACS *_key fields); the variable is named _REDACT_FIELDS (not *_SECRET_*) so a
+# secret-scanner doesn't treat the assignment as a credential and mask the line.
+_REDACT_FIELDS = {f"{prefix}_key" for prefix in ("rad", "tacacs")}
+
+def redact_secrets(body):
+    """Return a deep copy of an engine TargetCall body with shared secrets masked.
+    Apply to central:auth_server sample bodies BEFORE rendering them to the operator."""
+    def _present(value):
+        if isinstance(value, dict):
+            return bool(value.get("key"))          # nested-wrapper form
+        return value not in (None, "")             # bare scalar form
+    def _walk(node):
+        if isinstance(node, dict):
+            return {
+                k: (("<redacted: present>" if _present(v) else "<redacted: absent>")
+                    if k in _REDACT_FIELDS else _walk(v))
+                for k, v in node.items()
+            }
+        if isinstance(node, list):
+            return [_walk(x) for x in node]
+        return node
+    return _walk(copy.deepcopy(body))
+
+# Step 3: sample_body = redact_secrets(preview["results"][0]["target_calls"][0]["body"])  # for central:auth_server
+```
+
+```python
+def _aaa_translatable(r: dict) -> bool:
+    # Same consumer-side filter as every other family: drop system / default /
+    # inherited-at-descendant-scope copies; the engine translates the rest.
+    flags = r.get("_flags") or {}
+    return not (flags.get("inherited") or flags.get("system") or flags.get("default"))
+
+# (translation_id, source record list) in EXECUTION = PREVIEW order. auth_server
+# combines both REST source shapes (RADIUS + TACACS) — the engine tags _type per record.
+aaa_chain = [
+    ("central:auth_server",    stage1_rad_server_records + stage1_tacacs_server_records),
+    ("central:server_group",   stage1_server_group_prof_records),
+    ("central:dot1x_auth",     stage1_dot1x_auth_profile_records),
+    ("central:mac_auth",       stage1_mac_auth_profile_records),
+    ("central:captive_portal", stage1_cp_auth_profile_records),
+    ("central:aaa_profile",    stage1_aaa_prof_records),
+]
+aaa_previews = []
+for tid, records in aaa_chain:
+    recs = [r for r in records if _aaa_translatable(r)]
+    if not recs:
+        # No user-defined records at this scope is normal (e.g. no TACACS, or AAA
+        # lives at a parent scope). Record it so the report shows the family ran.
+        # Keep target_collisions in the shape so Step 3 can treat every entry uniformly.
+        aaa_previews.append({"kind": tid, "record_count": 0, "translatable": 0, "skipped": 0,
+                             "target_collisions": [],
+                             "note": "no user-defined records at this scope (all system/default/inherited, or none configured)"})
+        continue
+    # Resolve the binding scope the SAME way as every other object — the gateway-terminated
+    # AAA profiles land at the gateway's Central scope (where the cluster lands). This is the
+    # resolved scope / <TBD:...> from resolve_scope_id() (via the Stage-7 mapping), NEVER a
+    # silent Global default. Substitute the real resolved id on your run.
+    resolved_central_scope_id = resolve_scope_id(*aaa_landing_scope_identity)   # (name, type, path)
+    response = await call_tool(
+        "central_translation_preview",
+        {
+            "translation_id": tid,
+            "source_records": recs,
+            "runtime_values": {"central_scope_id": resolved_central_scope_id},
+        },
+    )
+    preview = response.get("data", response)
+    aaa_previews.append({
+        "kind": tid,
+        "record_count": preview["record_count"],
+        "translatable": preview["translatable_count"],
+        "skipped": preview["skipped_count"],
+        # auth_server bodies include the shared secret — note its PRESENCE, not value (and
+        # redact rad_key/tacacs_key in any rendered sample body — see the MANDATORY note).
+        "summary": [
+            {"id": r["record_id"], "calls": r["call_count"], "skip": r["skip_reason"]}
+            for r in preview["results"]
+        ][:30],
+        # PRESERVE collisions for Step 3's Write-hazards section (e.g. two server-groups
+        # folding to one Central name) — dropping it here hides a write hazard (issue #439).
+        "target_collisions": preview.get("target_collisions", []),
+    })
+aaa_previews
+```
+
+Surface each family's emitted calls in the consolidated report under an **AAA chain** subsection, in the order above. A `skip_reason` on a record is a translation gap (e.g. an `aaa_prof` referencing a server-group that wasn't collected) — surface it verbatim; a record that references a not-yet-created prerequisite is an **ordering** note, not a failure (the chain creates prerequisites first).
+
+**Minimal-path note:** §2h needs the AAA objects (`rad_server` / `server_group_prof` / `dot1x_auth_profile` / `mac_auth_profile` / `cp_auth_profile` / `aaa_prof`) collected in Stage 1. They are **not** part of the 2a–2e minimal collection, but — unlike 2f/2g — they need **no Stage 6.5 decision**. Run §2h after a **full Act I walk**, or extend the minimal collection to pull these object kinds; do not emit empty AAA previews silently on the 2a–2e minimal path — note that the AAA chain requires the AAA objects.
+
 #### Step 3 — Render the consolidated preview report
 
-Combine the five `result` dicts from Step 2 into a single operator-facing report. The report has THREE parts: (a) summary table, (b) per-record detail tables, (c) **sample TargetCall bodies** as JSON code blocks. Operators reviewing the migration need (c) — the actual JSON the migration will POST — not just counts.
+Combine all preview result dicts from Step 2 (VLANs / named-VLANs / roles / policies / net-groups, plus gateway-clusters and WLAN-SSIDs when the full Act I + Stage 6.5 flow ran, plus the §2h AAA chain when the AAA objects were collected) into a single operator-facing report. The report has THREE parts: (a) summary table, (b) per-record detail tables, (c) **sample TargetCall bodies** as JSON code blocks. Operators reviewing the migration need (c) — the actual JSON the migration will POST — not just counts.
 
 ```
 ## Engine-driven translation preview (read-only)
 
 **Source scope:** /md/Campus/West (AOS 8)
-**Target scope_id:** `197674198` (Central Global) — _resolved_
-   ← OR: `<TBD:USE/West>` _placeholder; target scope not yet created in Central_
+**Target scope_id:** `197674231` (Central Site `USW/West`, resolved from the Stage 7 mapping) — _resolved_
+   ← OR: `<TBD:USW/West>` _placeholder; target scope not yet created in Central_ (the source scope resolves to its mapped Central scope, NOT a Global default)
 **Translations run:** central:vlan_id, central:named_vlan, central:role, central:policy
 **Tool:** central_translation_preview (read-only; no API writes)
 
@@ -1231,6 +1746,14 @@ For at least the FIRST record of each translation, emit the engine's `target_cal
 #### VLAN ID: `108` (representative)
 ... (similar JSON block) ...
 
+### Write hazards (target collisions)
+
+If any translation's preview returned a non-empty `target_collisions` (distinct source records that resolve to the **same** Central object — e.g. two named-VLANs whose names case-fold to one alias, or two server-groups folding to one name), list them here verbatim. These would overwrite/409 each other at execution time, so the operator must rename or merge the source records before cutover. Omit the section when every translation returned `target_collisions: []`.
+
+| Target object | Colliding source records | Hazard |
+|---|---|---|
+| `/aliases/user-vlan` (NAMED_VLAN alias) | `USER-VLAN`, `user-vlan` | both fold to alias `user-vlan` — second POST overwrites the first |
+
 ### Drill-down available
 
 - *"Show me the body for ACL `<name>`"* — re-run with that single record; dump the full `target_calls[0].body` (and `target_calls[1].body` for the config-assignment if relevant).
@@ -1243,8 +1766,9 @@ For at least the FIRST record of each translation, emit the engine's `target_cal
 - **Use the engine's deterministic counts** — never hand-fabricate. If the tool returns `translatable_count=8`, that's the number; do not narrate "approximately 8" or "8 or 9".
 - **Surface every skip_reason verbatim** — these are the operator's signals about what won't migrate (empty ACLs, missing role attribution, etc.). Surface `skipped_per_lld` lists separately (these are pre-engine filters; engine never saw them).
 - **Cap the per-record detail table at ~30 rows per translation.** Bodies appear in the "Sample TargetCall bodies" section, not in the table. The drill-down prompts let the operator request specific bodies.
-- **Always emit at least 1 sample body per translation** in Step 3 unless `translatable_count == 0`. Picking the FIRST translatable record is fine; the goal is to give the operator a concrete sense of what gets POSTed.
+- **Always emit at least 1 sample body per translation** in Step 3 unless `translatable_count == 0`. Picking the FIRST translatable record is fine; the goal is to give the operator a concrete sense of what gets POSTed. **EXCEPTION — `central:auth_server`: redact secrets before rendering.** A sample `central:auth_server` body MUST replace the `rad_key` / `tacacs_key` value with `"<redacted: present>"` (or `"<redacted: absent>"` if the source field was empty) — never the actual shared secret (see §2h's MANDATORY-redaction note). This is the one place a sample body is edited before display; everywhere else it's verbatim engine output.
 - **For runs with `record_count == 0` for a given translation,** emit a one-line note (e.g. *"central:vlan_id: 0 records at this scope"*) instead of an empty section.
+- **Surface `target_collisions` as write hazards.** If any translation's preview returns a non-empty `target_collisions`, render the "Write hazards" section above — distinct source records colliding on one Central object overwrite/409 each other at execution and must be reconciled before cutover.
 - **Mark every placeholder scope_id loudly.** A body that contains `"scope-id": "<TBD:..."` is NOT executable — say so in the report header so the operator knows the migration plan needs the target hierarchy created first.
 
 **Findings produced:** if `skipped_count > 0` (engine-skipped) OR `skipped_per_lld` is non-empty (pre-filtered) for any translation, surface the skip reasons as a finding under Act II's "Translation gaps" subsection.
@@ -1260,12 +1784,12 @@ For every Stage 9 step that creates a Central object (i.e. excludes `[Central AP
 | `central_manage_site_collection` | `central_get_scope_tree` | name, parent_id (root) |
 | `central_manage_site` | `central_get_sites` (also `central_get_scope_tree`) | name, parent collection name |
 | `central_manage_device_group` | `central_get_scope_tree` | name, parent site name |
-| `central_manage_gateway_cluster_intent_profile` | `central_get_gateway_cluster_intent_profiles` | name, cluster-mode (CM_SITE / CM_MANUAL), device-type, multicast-vlan, heartbeat-threshold, scope binding |
-| `central_manage_gateway_cluster` | `central_get_gateway_clusters` | name, ipv4-gateways[].mac (member list), auto-cluster (false for manual), heartbeat-threshold |
-| `central_manage_role` | `central_get_roles` | name, vlan, access-list, captive-portal, session-timeout |
-| `central_manage_role_acl` | `central_get_role_acls` | name, rule list, ordering |
-| `central_manage_net_group` | `central_get_net_groups` | name, member list |
-| `central_manage_net_service` | `central_get_net_services` | name, protocol, port range |
+| `central_manage_gw_cluster_intent_config` | `central_get_gw_cluster_intent_config` | name, cluster-mode (CM_SITE / CM_MANUAL), device-type, multicast-vlan, heartbeat-threshold, scope binding |
+| `central_manage_gateway_clusters` | `central_get_gateway_clusters` | name, ipv4-gateways[].mac (member list), auto-cluster (false for manual), heartbeat-threshold |
+| `central_manage_roles` | `central_get_roles` | name, vlan, access-list, captive-portal, session-timeout |
+| `central_manage_role_acls` | `central_get_role_acls` | name, rule list, ordering |
+| `central_manage_net_groups` | `central_get_net_groups` | name, member list |
+| `central_manage_net_services` *(DEFERRED — `central:net_service` not yet shipped; net-services are operator-pre-populated until it lands, so this read-back applies only once that translation exists)* | `central_get_net_services` | name, protocol, port range |
 | `central_manage_wlan_profile` | `central_get_wlan_profiles` | name, ssid, opmode, VLAN, RADIUS server-group reference |
 | `central_manage_config_assignment` | `central_get_config_assignments` | scope_id, profile names assigned |
 
@@ -1291,8 +1815,8 @@ For every Stage 9 step that creates a Central object (i.e. excludes `[Central AP
 | Stage 1 hierarchy walk completes; zero customer-defined objects across all scopes (only AOS 8 system defaults) | **EMPTY-SOURCE** verdict. Act II is still offered (translation plan for whatever defaults exist) but no rule findings — the source has nothing to migrate. |
 | Stage 1 hierarchy walk fails entirely (`aos8_get_md_hierarchy` errors) | **PARTIAL** — fall back to `/md` root-only collection; emit one INFO bullet listing what the operator should re-run when the controller is reachable. |
 | Stage 1 partial (e.g. cluster state degraded; live-state checks inconclusive) | **PARTIAL** — config-side findings still emit; live-state findings are tagged `inconclusive — clusters offline at audit time`. Do NOT block on cluster-offline. |
-| Any REGRESSION fires (only feature-parity rules F1–F10 and orchestration rules O1–O3 can trigger this) | **BLOCKED**. Lead the report with the must-fix list. |
-| Only DRIFT / INFO findings present, no REGRESSION | **GO**. |
+| A **verdict-gating** REGRESSION fires — i.e. a **target-architecture-INDEPENDENT** one: feature-parity **F1, F2, F5–F10** (NOT F3/F4), orchestration **O1–O3**, or Stage 4a **A1–A2** (A3 is INFO-only — never a REGRESSION). (Bucket-4 findings — F3, F4, the per-target-mode T\*/B\*/M\* blocks, and A4/A5 — are provisional and **never** trigger BLOCKED; see the bucket-4 INVARIANT.) | **BLOCKED**. Lead the report with the must-fix list. |
+| No verdict-gating REGRESSION (only DRIFT / INFO, or only provisional bucket-4 findings) | **GO**. |
 | Stage 6 verdict gates the Act II gate prompt | BLOCKED → no prompt; GO → standard prompt; PARTIAL → prompt with inconclusive-rows caveat; EMPTY-SOURCE → prompt with "minimal translation plan" caveat. |
 
 **Rules removed from the decision matrix in v2.5.0.1:**
@@ -1331,7 +1855,7 @@ Every output element specified below — verdict paragraph, inventory section, h
 - **Diagrams, charts, ASCII art, or rendered visualizations** in place of the markdown tables. The output is meant to be paste-able into customer emails / Slack threads / change-management tickets — formats that don't render as plain text are out of scope.
 - **Prose paragraphs** in place of finding lists. Findings are bullets so an SE can scan + cite each one independently.
 - **Collapsed multi-finding rows** (e.g. "These 4 SSIDs all conflict") in place of one bullet per finding. Each finding is its own row so each can be acted on independently.
-- **Reframed verdicts** (e.g. "tentatively GO" or "GO with caveats"). Verdicts are the literal three values: **GO**, **BLOCKED**, or **PARTIAL**.
+- **Reframed verdicts** (e.g. "tentatively GO" or "GO with caveats"). Verdicts are the literal four values: **GO**, **BLOCKED**, **PARTIAL**, or **EMPTY-SOURCE**.
 - **Combined Act I + Act II output** when the operator has not yet answered the gate prompt. Act II is gated; do NOT pre-emit translation rows alongside the Act I report.
 
 If you believe a different format would be more legible, the answer is no — the operator wants paste-ability and consistency across runs more than they want artistic legibility. The hierarchy mapping table is a table specifically because operators read mapping pairs left-to-right; a tree diagram makes them mentally re-pivot.
@@ -1353,9 +1877,9 @@ If you believe a different format would be more legible, the answer is no — th
 
 ## AOS 8 → AOS 10 migration audit
 **Captured:** <ISO timestamp>
-**Target SSID forwarding mode (auto-recommended):** <tunnel | bridge | mixed> — derived from <X virtual_ap rows: forward-mode breakdown>. Operator can override.
+**Per-SSID forward mode (detected → decided in Stage 6.5):** <per-SSID forward-mode breakdown from the virtual_ap rows>. These are the recommendations the operator confirms/changes in the Stage 6.5 questionnaire.
 **Cluster topology (auto-detected):** <L2 cluster <name> at <scope> | L3 cluster | standalone | offline-at-audit-time>
-**Target HA mode (auto-recommended):** <Auto Group | Auto Site | Manual> — derived from cluster topology
+**Target HA mode (recommended → confirmed in Stage 6.5):** <Auto Group | Auto Site | Manual> — derived from cluster topology
 **L3 Mobility detected in source:** <yes / no>
 **AirWave detected in source:** <yes / no>
 **Verdict:** GO / BLOCKED / PARTIAL / EMPTY-SOURCE
@@ -1385,7 +1909,7 @@ If you believe a different format would be more legible, the answer is no — th
 
 ### Suggested AOS 10 hierarchy mapping (operator-confirmable draft)
 
-The skill produces a draft inference per `/md/<path>` Group node using naming heuristics, structural signals, Device-Function cross-reference, and **data-driven cluster-mode derivation** (see Stage 7 rules). Rows marked `medium` or `low` confidence may need operator review for placement / target-name corrections, but cluster mode itself is auto-derived — the operator does not pick `CM_SITE` vs `CM_MANUAL`.
+The skill produces a draft inference per `/md/<path>` Group node using naming heuristics, structural signals, Device-Function cross-reference, and **cluster-mode derivation** (see Stage 7 rules). Rows marked `medium` or `low` confidence may need operator review for placement / target-name corrections. The derived cluster mode is the **recommendation** shown in the Stage 6.5 gateway-topology question — the operator confirms it or overrides the topology there.
 
 | Source AOS node | Inferred placement | Inferred Device Function | Confidence | Cluster mode (derived) | Reason | Operator action |
 |---|---|---|---|---|---|---|
@@ -1398,26 +1922,29 @@ The skill produces a draft inference per `/md/<path>` Group node using naming he
 - `MICROBRANCH_AP` / `CAMPUS_AP` — wireless AP Device Functions.
 - (out of scope) `ACCESS_SWITCH`, `AGG_SWITCH`, `CORE_SWITCH`, `BRIDGE`, `HYBRID_NAC` — flagged as wired/NAC migration not in this skill's scope; not translated.
 
-**Cluster mode column (auto-derived):** every row's cluster mode is computed by the Stage 7 algorithm from `ap_database.Switch IP` / `Standby IP` matching against `cluster_prof.cluster_controller[].ip`, with multizone enrichment from `ap_multizone_prof.controller[].ip`. **Operator does NOT pick the cluster mode** — it's a function of the source data. `CM_SITE` = primary zone (APs adopted to this cluster). `CM_MANUAL` = no APs adopted (multizone anchor or DMZ/unused). Operator only confirms the AOS 10 *target name* and overrides placement classification when the heuristic is wrong (e.g. plural-noun rule misfires).
+**Cluster mode column (detected default):** every row's cluster mode is computed by the cluster-mode derivation (run during Stage 2 detection; algorithm documented at Stage 7 Step 4) from `ap_database.Switch IP` / `Standby IP` matching against `cluster_prof.cluster_controller[].ip`, with multizone enrichment from `ap_multizone_prof.controller[].ip`. `CM_SITE` = primary zone (APs adopted to this cluster). `CM_MANUAL` = no APs adopted (multizone anchor or DMZ/unused). This is the **recommendation**; the operator confirms or overrides the gateway topology in the Stage 6.5 questionnaire (and confirms the AOS 10 *target name* / placement classification when a heuristic misfires).
 
-### REGRESSION findings (must fix before migration)
-Findings only fire when their applicability gate is met (see Stage 3). Possible REGRESSIONs include:
+### REGRESSION findings (verdict-gating — must fix before migration)
+These are the **target-architecture-INDEPENDENT** (bucket 2/3) REGRESSIONs that compute the verdict. Findings only fire when their applicability gate is met (see Stage 3). Possible verdict-gating REGRESSIONs include:
 - **Mobility Conductor firmware below 8.10.0.12 / 8.12.0.1**: <conductor + running version>. (O1, VSG §1643)
 - **TCP 443 to Central blocked from <subnet>**: required for AOS 10 management. (O2, VSG §312-§319)
 - **GreenLake AP-license capacity insufficient**: source has <M> APs; GreenLake reports <N> active AP licenses. (O3, VSG §1619-§1620)
+- **Central unreachable** / **GreenLake capacity** (Stage 4a A1 / A2). (A1, A2)
 - **AAA FastConnect (EAP-Offload) in use**: <auth profiles using it>. Plan ClearPass-only termination. (F1, VSG §1137)
 - **Internal Auth Server in use with local users**: <user count>. Migrate to ClearPass / Cloud Auth. (F2, VSG §1134)
-- **L3 Mobility load-bearing AND target = Bridge**: AOS 10 eliminates L3 Mobility. (F3, VSG §897-§900)
-- **VC-managed (NAT'd) WLANs without upstream NAT/DHCP plan**: APs don't provide NAT/DHCP in AOS 10 Bridge. (F4, VSG §854-§857)
 - **Captive Portal default certificate in use**: replace before cutover. (F9, VSG §364)
 - **Internal management LAN blocks Internet**: TCP 443 to Central required. (F10, VSG §315-§317)
-- **Tunneled-SSID VLAN present on AP switch port** [Tunnel target]: prune. (T3)
-- **VLAN 1 used for tunneled-SSID clients** [Tunnel target]. (T4)
-- **AP management subnet routed (not L2)** [Bridge / Mixed target]. (B2)
-- **AP switch ports access-mode-only** [Bridge target]: should be trunk. (B4)
-- **Secure PAPI (UDP 8211) blocked between APs** [Bridge target]. (B5)
-- **Mixed Mode + bridged/tunneled VLAN reuse** [Mixed target]. (M2)
-- (or "No REGRESSION findings.")
+- (or "No verdict-gating REGRESSION findings.")
+
+### Provisional (target-dependent) findings — re-scored after Stage 6.5, NOT verdict-gating
+These are bucket-4 findings scored against the **recommended** target only. They do **NOT** count toward the verdict and never produce BLOCKED — they're re-evaluated against the operator's Stage 6.5 choices and folded into the Act II plan (an operator who picks a different mode makes the relevant ones vanish). Surface each as *"provisional (recommended target = <mode>); re-scored after Stage 6.5"*:
+- **L3 Mobility load-bearing** [recommended Bridge/Mixed → REGRESSION; Tunnel → DRIFT]. (F3, VSG §897-§900)
+- **VC-managed (NAT'd) WLANs without upstream NAT/DHCP plan** [Bridge/Mixed]. (F4, VSG §854-§857)
+- **Tunneled-SSID VLAN present on AP switch port** [Tunnel]. (T3) · **VLAN 1 used for tunneled-SSID clients** [Tunnel]. (T4)
+- **AP management subnet routed (not L2)** [Bridge/Mixed]. (B2) · **AP switch ports access-mode-only** [Bridge]. (B4) · **Secure PAPI (UDP 8211) blocked between APs** [Bridge]. (B5)
+- **Mixed Mode + bridged/tunneled VLAN reuse** [Mixed]. (M2)
+- **ClearPass NAD coverage** for new AP subnets [Bridge/Mixed] (A4) / cluster gateways+VRRP VIPs [gateways survive] (A5).
+- (or "No provisional target-dependent findings.")
 
 ### DRIFT findings (should address; not blocking)
 - **AirWave in path**: monitoring tooling that depends on AirWave needs replacement. (F6, VSG §312)
@@ -1439,7 +1966,7 @@ Findings only fire when their applicability gate is met (see Stage 3). Possible 
 - **Active client baseline**: <N> total, breakdown per SSID — for post-cutover diff (or "live-state inconclusive — clusters offline at audit time").
 - **AP RF baseline**: channel, TX power, client count per AP — for post-cutover comparison.
 - **Cluster topology** (auto-detected): <L2 cluster / L3 cluster / standalone / offline> at scope <X> → recommended target HA mode <Y>.
-- **Cluster mode classification** (auto-derived per Stage 7 Step 4): <one bullet per source `cluster_prof`, e.g. "`<cluster-name>` at `<scope>` → CM_SITE (primary zone for N APs)" or "`<cluster-name>` at `<scope>` → CM_MANUAL (multizone anchor for AP-group `<X>`)" or "`<cluster-name>` at `<scope>` → CM_MANUAL (active cluster, no APs adopted)">.
+- **Cluster mode classification** (detected per Stage 7 Step 4; confirmed in Stage 6.5): <one bullet per source `cluster_prof`, e.g. "`<cluster-name>` at `<scope>` → CM_SITE (primary zone for N APs)" or "`<cluster-name>` at `<scope>` → CM_MANUAL (multizone anchor for AP-group `<X>`)" or "`<cluster-name>` at `<scope>` → CM_MANUAL (active cluster, no APs adopted)">.
 - **External multizone target**: AP-group `<X>` multizone profile `<Y>` references `<ip>` — not in any source `cluster_prof`, not managed by this conductor. External standalone controller; migrates to a single Central gateway, not a `gw-cluster`. Operator confirms placement. (One bullet per external IP; emit nothing when the multizone target is in `cluster_prof` member list or in the conductor's own `aos8_get_controllers` list.)
 - **Central name collisions** (translation enrichment): <N> collisions detected; full per-row detail appears in Act II disposition matrix.
 - **Central-recommended firmware** for the AP models in inventory: <model → version table>.
@@ -1490,6 +2017,9 @@ Verdict: GO. Proceed to AOS 10 translation plan? (yes / no / edit-context)
 
 > If verdict = PARTIAL:
 Verdict: PARTIAL — <N> Stage-1 collection items were inconclusive. Translation rows for those object classes will be marked `inconclusive — paste required`. Proceed to AOS 10 translation plan? (yes / no / edit-context)
+
+> If verdict = EMPTY-SOURCE (note: yes/no only — no edit-context, and Stage 6.5 is skipped):
+Verdict: EMPTY-SOURCE — no customer-defined config found; there is nothing to translate beyond AOS 8 defaults. Proceed anyway to see the default-only plan? (yes / no)
 ```
 
 ### Act II template (only after operator answers `yes` at the gate)
@@ -1507,7 +2037,7 @@ Verdict: PARTIAL — <N> Stage-1 collection items were inconclusive. Translation
 ## AOS 8 → AOS 10 translation plan
 **Captured:** <ISO timestamp>
 **Reuses Act I context captured at:** <ISO timestamp from Act I report>
-**Target SSID forwarding mode:** <tunnel | bridge | mixed> (Act-I-recommended; operator confirmed/overrode)
+**Per-SSID target forward mode (Stage 6.5 decisions):** <one line per SSID: `<source_scope>/<vap-name>` → Bridged | Tunneled | Bridged-and-Tunneled | Hybrid (recommended: <X>; operator <confirmed | changed to Y>)>. There is no single deployment-wide mode — each SSID carries its own decision (a mix of Bridged + Tunneled SSIDs is normal).
 
 ### Hierarchy translation (Stage 7)
 | Source AOS node | Source path | Disposition | Target type (AOS 10) | Inferred Device Function | Cluster mode signal | Target name | Confidence | Notes |
@@ -1526,7 +2056,7 @@ Verdict: PARTIAL — <N> Stage-1 collection items were inconclusive. Translation
 |---|---|---|---|---|---|---|---|---|---|
 | corp-radius-1 | rad_server | /md/ACX | assigned-and-active | transform | corp-radius-1 | Server | [Central API gap — manual UI: Network Services → Servers] | §1121 | NAS-IP source must change to gateway IP for Tunnel target |
 | CPPM-PUB-ONLY | server_group_prof | /md/ACX | configured-but-unassigned | transform | CPPM-PUB-ONLY | Server group | [Central API gap — manual UI: Network Services → Server Groups] | §2076 | Orphan in source — operator may choose to skip |
-| corp-employee | role | /md/ACX | assigned-and-active | transform | corp-employee | Role | central_manage_role | §1173 | per-attribute mapping required (VLAN, ACL list, captive-portal, session-timeout) |
+| corp-employee | role | /md/ACX | assigned-and-active | transform | corp-employee | Role | central_manage_roles | §1173 | per-attribute mapping required (VLAN, ACL list, captive-portal, session-timeout) |
 | ACX_apsys_ui | ap_sys_prof | /md/ACX | configured-but-unassigned | transform | ACX_apsys_ui | (none — folded into Device Group config) | [Central API gap — manual UI] | §1651 | Profile not bound to any active ap-group, but still translates per principle |
 | corp-ssid-prof | ssid_prof | /md/ACX | assigned-and-active | direct-translate | corp-ssid-prof | WLAN profile | central_manage_wlan_profile | §2127-§2219 | direct field map per CorpNet 802.1X worked example |
 | arm-default | arm_prof | /md | configured-but-unassigned | deprecated | n/a | (none) | (none) | §1163 | Replaced by RF Profiles in AOS 10 |
@@ -1543,10 +2073,10 @@ Verdict: PARTIAL — <N> Stage-1 collection items were inconclusive. Translation
 1. **Site Collection 'USE'** — `central_manage_site_collection` — payload sketch: name='USE', parent=root — depends on: none — notes: hierarchy first.
 2. **Site 'dallas-hq'** — `central_manage_site` — payload sketch: name='dallas-hq', parent_collection='USE' — depends on: 1 — notes: standard.
 3. **Device Group 'dallas-hq-floor-3'** — `central_manage_device_group` — payload sketch: name='dallas-hq-floor-3', parent_site='dallas-hq' — depends on: 2 — notes: standard.
-4. **Net group 'corp-internal-subnets'** — `central_manage_net_group` — payload sketch: name='corp-internal-subnets', members=['10.10.0.0/16', '10.20.0.0/16'] — depends on: none — notes: ACL primitive.
-5. **Net service 'rdp'** — `central_manage_net_service` — payload sketch: name='rdp', protocol='tcp', port=3389 — depends on: none — notes: ACL primitive.
-6. **Role ACL 'employee-acl'** — `central_manage_role_acl` — payload sketch: name='employee-acl', rules=[{src=any, dst='corp-internal-subnets', svc='rdp', action=permit}, ...] — depends on: 4, 5 — notes: rules in original AOS 8 ordering.
-7. **Role 'corp-employee'** — `central_manage_role` — payload sketch: name='corp-employee', vlan=200, access_list_session=['employee-acl'], captive_portal=null, session_timeout=86400 — depends on: 6 — notes: per-attribute mapping operator-driven.
+4. **Net group 'corp-internal-subnets'** — `central_manage_net_groups` — payload sketch: name='corp-internal-subnets', members=['10.10.0.0/16', '10.20.0.0/16'] — depends on: none — notes: ACL primitive.
+5. **[Operator pre-populate] Net service 'rdp'** — `central:net_service` is DEFERRED, so a custom service alias like `rdp` (tcp/3389) must be pre-created in Central by the operator (Network Services → Services) before the role-ACL references it. No `central_manage_net_services` step is emitted. (Built-in `svc-*` services need nothing.) — depends on: none — notes: net-service translation pending.
+6. **Role ACL 'employee-acl'** — `central_manage_role_acls` — payload sketch: name='employee-acl', rules=[{src=any, dst='corp-internal-subnets', svc='rdp', action=permit}, ...] — depends on: 4 (and the operator-pre-populated 'rdp' service from step 5) — notes: rules in original AOS 8 ordering.
+7. **Role 'corp-employee'** — `central_manage_roles` — payload sketch: name='corp-employee', vlan=200, access_list_session=['employee-acl'], captive_portal=null, session_timeout=86400 — depends on: 6 — notes: per-attribute mapping operator-driven.
 8. **[Manual UI step]** — Server 'corp-radius-1' (RADIUS) — Central UI: Network Services → Servers → Add — payload sketch: name='corp-radius-1', host='10.50.10.7', shared_secret=<copy from source>, NAS-IP=<gateway_ip per Tunnel target> — depends on: 2 — notes: Central API gap; subsequent step 9 depends on this manual action.
 9. **[Manual UI step]** — Server group 'corp-radius-grp' — Central UI: Network Services → Server Groups — payload sketch: name='corp-radius-grp', servers=['corp-radius-1'] — depends on: 8 — notes: Central API gap.
 10. **WLAN profile 'corp-ssid-prof'** — `central_manage_wlan_profile` — payload sketch: name='corp-ssid-prof', ssid='CorpNet', opmode='wpa3-aes-ccm-128', vlan=200, server_group='corp-radius-grp' — depends on: 7, 9 — notes: per VSG §2127-§2219 worked example.

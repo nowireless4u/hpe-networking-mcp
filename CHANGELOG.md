@@ -5,7 +5,379 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.2.3.12] - 2026-06-04
+## [3.3.13.1] - 2026-06-12
+
+**Patch — refactor: retire the legacy inline-confirmation layer.** The final cleanup step of the elicitation-gating effort. With the universal gate (`confirm_gated_invoke`, v3.3.13.0) handling all confirmation at the `<platform>_invoke_tool` chokepoint, the pre-gate per-tool confirmation machinery had zero remaining callers.
+
+### Removed
+- `middleware/elicitation.py`: the orphaned `confirm_write` (#148 consolidation helper), `elicitation_handler`, and `_resolve_elicitation_mode` (#413 code-mode fix) — a dead three-function chain nothing in production imported. The `elicitation_mode` session state they read is gone too: `ElicitationMiddleware.on_initialize` no longer sniffs client elicitation capability or stores a mode (the gate attempts a real `ctx.elicit()` per call regardless), keeping only the write-tool enablement and the `DISABLE_ELICITATION` warning.
+- `tests/unit/test_elicitation_mode_resolution.py` (11 tests for the removed functions; the behavior they pinned — code-mode confirmation without fabricated declines — is covered by `test_universal_confirmation_gate.py` + `test_gate_end_to_end.py`).
+- Vestigial `elicitation_mode` mock plumbing in the aos8/uxi test helpers, and `test_elicitation_disabled_state_auto_accepts` (aos8) — with the per-tool auto-accept mechanism gone it had become an exact duplicate of `test_tool_body_has_no_inline_confirmation`.
+
+### Fixed
+- Stale references to the removed pattern: `_template/README.md` no longer recommends vendor SDKs (pycentral/pyclearpass were removed in #468/#470) and now documents the universal gate instead of `confirm_write`; docstring mentions scrubbed from `_template/tools/example_write.py` and the uxi/central/axis test suites.
+
+## [3.3.13.0] - 2026-06-12
+
+**Minor — the universal confirmation gate. Closes #415, #416, #436.** Destructive-tool confirmation is now structural and non-bypassable: one gate at the `<platform>_invoke_tool` dispatch chokepoint (the path BOTH code mode and dynamic mode use) replaces ~75 hand-written per-tool confirmation blocks. The capstone of the elicitation-gating effort (#415/#416 design → capability rubric → 8 platform migrations → this).
+
+### Added
+- **`confirm_gated_invoke`** (`middleware/elicitation.py`) + its call in `_invoke_tool`: any tool carrying the `requires_confirmation` tag (derived automatically from its `capability=` classification) is confirmed BEFORE dispatch. **Fail-closed**: an unclassified tool is treated as gated.
+- The decision sequence: `DISABLE_ELICITATION=true` → auto-accept; otherwise a **real `ctx.elicit()` prompt is attempted first** — it round-trips transparently from the code-mode sandbox (verified live 2026-06-03; #414's contrary premise was false). **`confirmed=true` is ignored while a prompt is available** — the human's accept/decline/cancel always wins (this closes the #415 self-authorization hole). Only when the client cannot present a prompt (elicit raises) does `confirmed=true` carry authority as the confirm-in-chat fallback.
+- The ~20 formerly-ungated Central MRT/alert destructive tools (#416) and all 558 generated Mist write tools (#436) are now confirmed through the gate — no per-tool opt-in required, ever again.
+
+### Removed
+- All inline per-tool confirmation machinery: ~75 `confirm_write`/local-helper constructs across 34 files (ClearPass 56, plus Central scope/config/security/WLAN, Apstra, UXI, Axis, AOS8), their local `_confirm_*` helpers, and the dead `_build_patch_diff` elicitation-diff renderer. `confirmed` tool parameters REMAIN (the gate consumes them for the fallback path); their descriptions now state the fallback-only semantics.
+- `manage_wlan_profile` (direct-call static) verified mutation-free — it returns workflow guidance only and performs no writes, so it carries no confirmation (enable-gating retained).
+
+### Tests
+- `test_universal_confirmation_gate.py` (9 tests): decision sequence incl. the confirmed-ignored-while-prompt-available pin and fail-closed predicate.
+- `test_gate_end_to_end.py` (4 tests): a REAL in-memory MCP session with an elicitation handler driving `_invoke_tool` — prompt fires and dispatches on accept, decline blocks even with `confirmed=true`, reads never prompt, and a no-elicitation client gets `confirmation_required` then succeeds via the `confirmed=true` retry.
+- Obsolete inline-confirm tests updated/retired across aos8/uxi/central/clearpass suites. Full suite **1826 passed**; ruff + format + mypy + bandit clean.
+
+## [3.3.12.5] - 2026-06-11
+
+**Patch — all 14 broken ClearPass endpoints from #469 live-probed and fixed.** Closes #469. Every suspect path was confirmed broken against a live CPPM (HTTP 405 / page-404 / wrong-ID parse), every corrected route verified live with bogus identifiers before and after the fix, and regression tests now pin verb + path + load-bearing body fields.
+
+### Fixed
+- **Guest actions**: `clearpass_send_guest_credentials` → `POST /guest/{id}/sendreceipt/{sms|smtp}` with the required `confirm` flag; `clearpass_generate_guest_pass` → `GET /guest/{id}/pass|receipt/{template_id}` (rendering — reclassified READ, new required `template_id`); `clearpass_process_sponsor_action` → single `POST /guest/{id}/sponsor` with sponsor-link `token`/`register_token` (rejection travels as `register_reject`; new params).
+- **Session control**: bulk/selector disconnects → `/session-action/disconnect[/{mac|username|ip}/{value}]` (filter properly wrapped); single-session disconnect now sends the API's `confirm_disconnect` body. **`clearpass_perform_coa` actually performs the CoA now** — the old session-ID path issued a GET that returned reauthorization templates without doing anything; it's `POST /session/{id}/reauthorize` with `confirm_reauthorize` (optional `reauthorize_profile`), and username/mac/ip/bulk targets use `/session-action/coa[...]` with the API-mandated `enforcement_profile` (new required param for those targets).
+- **Server config**: admin-user by name → `/admin-user/user-id/{user_id}`; file-backup-server by name → `/host-address/{host_address}`; attribute by name → `/attribute/{entity_name}/name/{name}` (new `entity_name` param, validated); policy-manager-zone updates PATCH → PUT.
+- **Local config**: AD-domain join/leave/password-servers → action-prefix routes (`/ad-domain/join/{uuid}` etc., `netbios_name` moved into the body per the API); access-control updates PATCH → PUT; service parameters → `/service-parameter/{server_uuid}/{service_id}`.
+- **Integrations**: extension log → `/extension/instance/{id}/log`; syslog-target by name → `/host-address/{h}`; endpoint-context-server by name → `/server-name/{s}`.
+
+Several of these tools called pyclearpass methods that never existed (pre-rebuild `AttributeError`) or hand-written paths that 405'd — none of them ever worked against a live CPPM, so the signature additions (`template_id`, sponsor tokens, `enforcement_profile`, `entity_name`) break no working callers.
+
+### Tests
+- New `tests/unit/test_clearpass_endpoint_routes.py` (12 tests) pinning every corrected route. Full suite **1814 passed**; ruff + format + mypy + bandit clean. Live re-probe of all 19 fixed routes: zero broken.
+
+## [3.3.12.4] - 2026-06-11
+
+**Patch — Mist generator emits capability classification; full regen (8/8 — annotation migration COMPLETE).** Closes #368 (surface regenerated against the current vendored spec, 2604.1.5). Every platform's tools are now capability-classified; the universal confirmation gate PR is unblocked.
+
+### Changed
+- **`scripts/_mist_generator.py` emits `capability=`** derived from the HTTP method (GET → READ, DELETE → WRITE_DELETE, POST/PUT/PATCH → WRITE) instead of hand-built `ToolAnnotations` + governance tags; the platform/dynamic-managed tags come from the shared factory. POST defaulting to WRITE is deliberately fail-safe for `/utils/` diagnostics — refining specific probes to DIAGNOSTIC is a documented follow-up, and over-gating errs on the side of #436's complaint (under-gating).
+- **All 1037 Mist tools regenerated** with the new emission against the current vendored spec; `_request_body_schemas.json` refreshed. Mist `_registry.py` on the shared `make_tool_decorator` factory — **all 9 platform registries now use it; zero hand-written `ToolAnnotations` remain anywhere in `src/`**.
+- All 558 generated write tools now derive `requires_confirmation` — the #436 elicitation bypass closes when the universal gate lands (next PR).
+
+### Tests
+- Full suite **1802 passed**; ruff + format + mypy + bandit clean.
+
+## [3.3.12.3] - 2026-06-11
+
+**Patch — Central capability migration (7/N): all 660 Central tools classified; #416 mis-annotations corrected.** The largest annotation migration; one platform remains (Mist, generator-side) before the universal confirmation gate.
+
+### Changed
+- **All 660 Central tools migrated to `capability=`** (381 READ, ~250 WRITE_DELETE, 23 OPERATIONAL, plus the scope writes); registry on the shared `make_tool_decorator` factory; all per-file `ToolAnnotations` constants deleted. Visibility gating byte-equivalent. 8 of 9 platform registries on the factory.
+- **The formerly-ungated MRT/alert write surface (#416) now derives `requires_confirmation`** — OPERATIONAL's gated default and WRITE_DELETE classification cover the ~20 destructive tools that previously had no confirmation pathway; the tag activates when the universal gate lands.
+- Benign operational tools (`central_clear_alerts`, `central_defer_alerts`, `central_reactivate_alerts`, `central_set_alert_priority`, `central_locate_device`) classify `OPERATIONAL, gated=False` — no prompt, per the rubric.
+- Scope-membership writes keep an explicit `central_write_delete` tag on top of `Capability.WRITE` (Central's visibility transform only hides `_write_delete` — the documented footgun; gating preserved exactly).
+- NOTE for #429 (future auto-regen): the regenerated config tool files are source-of-truth since #423; any future generator must emit `capability=` in this form.
+
+### Fixed
+- **`central_start_ap_ranging_scan` reclassified WRITE_DELETE → DIAGNOSTIC** (#416's mis-annotation call-out): it triggers a calibration scan returning results with no persistent change; it no longer hides behind the write-enable flag.
+
+### Tests
+- Runtime tag-derivation verified (gated/ungated/diagnostic samples). Full suite **1802 passed**; ruff + format + mypy + bandit clean.
+
+## [3.3.12.2] - 2026-06-11
+
+**Patch — capability migrations 4–6/N (Apstra, UXI, GreenLake) + AOS8 client conformance.** Advances the annotation sequence toward the universal confirmation gate (#415/#416, tracked in #466). The `requires_confirmation` tag remains inert until the gate PR; all visibility gating is byte-equivalent.
+
+### Changed
+- **Apstra (19), UXI (21), GreenLake (10) tools migrated to `capability=`** per `docs/tool-annotation-rubric.md`; their registries moved onto the shared `make_tool_decorator` factory and the per-platform `ToolAnnotations` constants were deleted. Notable classifications: `apstra_deploy_blueprint` → OPERATIONAL + `enable_gated=True` (applies staged config — the axis-commit pattern); UXI delete tools drop the redundant `uxi_write` tag alongside `uxi_write_delete` (gating-neutral: the Visibility transform hides on either). 7 of 9 platform registries are now on the factory — only the generated Mist/Central surfaces remain.
+- **AOS8 client conformance** (#466): template-style `get_aos8_client(ctx)` accessor + `format_http_error()` added.
+
+### Fixed
+- **AOS8 tools crashed with an opaque `AttributeError` when AOS 8 was not configured** — 55 call sites dereferenced `lifespan_context["aos8_client"]` unguarded (the #443/#444 bug class, previously fixed for Central/GreenLake only). All routed through the new accessor, which raises a clear 503 ToolError instead.
+
+### Tests
+- Full suite **1802 passed** in Docker; ruff + format + mypy + bandit clean.
+
+## [3.3.12.1] - 2026-06-11
+
+**Patch — final shared-auth adoptions: GreenLake, AOS8, Mist, Axis. The auth migration is COMPLETE — all 8 platforms (+ `_template`) now run token lifecycle through `AsyncTokenManager`.** Pure refactor, no tool changes. This closes the release gate: this version is the tag candidate.
+
+### Changed
+- **GreenLake**: the 290-line sync `OAuth2Provider`/`TokenManager` module (`greenlake/auth.py`) is **deleted**, replaced by `make_token_manager()` — a configuration of the shared `oauth2_client_credentials` strategy (workspace-scoped token URL, form-body credentials, the old 300-second expiry buffer preserved). Token acquisition is natively async — the #440 `asyncio.to_thread` workaround and the eager blocking fetch at startup are gone. Health probe updated.
+- **AOS8**: login-session lifecycle (UIDARUBA) adopted onto `AsyncTokenManager` — `_login()` is the fetch strategy; the per-response SESSION-cookie rotation syncs via `manager.prime()`; cookie+query credential attachment stays in the client. `AOS8AuthError` now subclasses the shared `AuthError`.
+- **Mist + Axis**: static tokens routed through `AsyncTokenManager.static()` (validates non-emptiness at construction; uniform auth surface). `AxisAuthError` subclasses `AuthError`. Axis keeps its JWT expiry-days advisory.
+- Verified live: GreenLake token fetch (expiry tracked) and AOS8 controller login + version read through the manager-backed flow.
+
+### Tests
+- `test_greenlake_auth.py` (22 tests for the deleted module) replaced by `test_greenlake_token_manager.py` (wiring: lazy construction, 300 s buffer, workspace token URL + form credentials, header builder); AOS8/guard tests updated to the manager API. Full suite **1802 passed** in Docker; ruff + format + mypy + bandit clean.
+
+## [3.3.12.0] - 2026-06-11
+
+**Minor — ClearPass rebuilt on async httpx; pyclearpass SDK removed; full `capability=` migration.** Closes #441, #465. Step 3 of the platform-standardization effort (#466). No release/tag until the auth migration completes across all platforms.
+
+### Changed
+- **New `ClearPassClient`** (`platforms/clearpass/client.py`) replaces the pyclearpass SDK + `ClearPassTokenManager` + the `_send_request` monkey-patch. The response contract is pyclearpass-identical: decoded JSON with raw-text fallback, raw bytes for non-JSON accepts, and **error bodies returned, never raised**. Wire parity preserved down to pyclearpass's quirks: `""`-valued query params and top-level body keys are dropped, dict-valued params are compact-JSON encoded. Token lifecycle runs through the shared `AsyncTokenManager` (JSON `POST /oauth`, proactive 8-hour expiry tracking — the 403 storm after a token aged out structurally can't happen anymore); 401/403 auth-failure bodies trigger one refresh + replay, now first-class instead of monkey-patched.
+- **Every ClearPass call is now genuinely async** (closes #441): ~250 call sites across 36 files (35 tool modules + `site_health_check`) converted from sync SDK calls to `await client.request(...)`; the `clearpass_get` chokepoint (issue #126's isolation paid off) converted once for ~70 read sites; `asyncio.to_thread` band-aids removed.
+- **Full capability migration** (3/N of the annotation sequence): `_registry.py` on the shared `make_tool_decorator` factory; all 142 tools classified with `capability=` per the rubric (READ for reads, WRITE_DELETE for manage surfaces, OPERATIONAL+`enable_gated` for disruptive non-persistent actions like session disconnect/CoA, guest credential sends, and service start/stop). The derived `clearpass_write_delete` enable tag is byte-identical to the old hand-written tags — write gating is unchanged, and inline confirmation logic is untouched (the universal `requires_confirmation` gate lands in a later PR per the #415/#416 sequence).
+- `pyclearpass` removed from dependencies; permanent guard test (`TestNoPyclearpassAnywhere`) fails on any reappearing import. `server.py` lifespan now builds one lazy `clearpass_client` (replacing the `clearpass_config` + `clearpass_token_manager` pair); the health probe uses the client.
+
+### Fixed
+- **Several tools called pyclearpass methods that don't exist in the SDK** (e.g. `get_admin_user_by_admin_user_id`, `get_config_service_by_config_service_id`) — instant `AttributeError` on every invocation. Path-based calls fix them as a side effect.
+- Pre-existing hand-written endpoints that don't match the CPPM REST surface were **preserved verbatim** (behavior-preserving rebuild) and catalogued in #469 for live probing + fixes.
+
+### Tests
+- New `tests/unit/test_clearpass_client.py` (response contract incl. error-bodies-returned, auth-retry flow, token fetch, pyclearpass parity quirks) + updated health/visualizer/utils test fixtures to async mocks.
+- Full suite **1818 passed** in Docker; ruff + format + mypy + bandit clean. **Live-verified against a real CPPM**: token fetch, NAD/version reads (HAL envelope intact), and the 404-as-dict error contract.
+
+## [3.3.11.0] - 2026-06-11
+
+**Minor — Central rebuilt on async httpx; pycentral SDK removed entirely.** Closes #464. Step 2 of the platform-standardization effort (#466). No release/tag until the auth migration completes across all platforms.
+
+### Changed
+- **New `CentralClient`** (`platforms/central/client.py`) replaces `pycentral.NewCentralBase`. The `command()` return contract (`{code, msg, headers}`), header construction, None-param stripping, empty-body omission, and 401→refresh-once behavior are mirrored from pycentral 2.0a17 so the ~660 Central tools are unaffected at the response layer. Token acquisition runs through the shared `AsyncTokenManager` with a new `auth_style="basic"` mode on `oauth2_client_credentials` (pycentral used `client_secret_basic` at the HPE SSO endpoint; verified live).
+- **Every Central call is now genuinely async.** Previously each call blocked the event loop: `central_conn.command()` was synchronous on the main tool path, `retry_central_command` slept with `time.sleep`, `fetch_site_data_parallel` used a ThreadPoolExecutor, and `NewCentralBase.__init__` did a blocking token fetch inside the lifespan handler. All four are gone — `retry_central_command`/`paginated_fetch`/`fetch_site_data_parallel`/`build_scope_tree` are `async def`, retries use `asyncio.sleep`, parallel fetches use `asyncio.gather`, client construction is lazy/non-blocking, and the `asyncio.to_thread` band-aids in `site_health_check`/`site_rf_check` are removed. ~91 call sites across 35 files now await the chokepoint.
+- **New `platforms/central/monitoring_api.py`** — faithful async port of the pycentral monitoring/troubleshooting helper subset we used (`get_all_sites`/`get_all_aps`/`get_all_clients`/`get_all_device_inventory` pagination loops, AP/gateway stats + trend merging, ping/traceroute/cable-test/show-commands initiate-and-poll flows, disconnect actions). Exception message formats are byte-identical to the SDK (two call sites string-match them). Retry layering simplified: pycentral's hidden 3-attempt transport retry no longer multiplies under `retry_central_command`'s 5 attempts.
+- `pycentral` removed from dependencies (was pinned to alpha `2.0a17`). A permanent guard test (`TestNoPycentralAnywhere`) AST-scans `src/` and fails if any pycentral import reappears.
+
+### Fixed
+- **`central_get_ap_stats` / `central_get_gateway_stats` time windows were broken in production**: the tools passed `from_timestamp`/`to_timestamp` to SDK functions whose signatures only accept `start_time`/`end_time`, raising `TypeError` on every time-windowed call. Call sites now pass the correct kwargs (caught by the port's signature-fidelity check; covered by the live integration suite).
+- Generated MRT troubleshooting tools returned un-executed coroutines after the async flip (13 `_post_action` call sites) — caught by an AST audit for un-awaited async calls and fixed; the audit also validated the rest of the sweep.
+
+### Tests
+- New `tests/unit/test_central_client.py` (pycentral-compat contract: return shape, param stripping, body semantics, Bearer/Accept headers, 401-refresh-once, lazy construction, health probe) + `client_secret_basic` tests in `test_common_auth.py`.
+- Central test fixtures converted to async mocks; live integration fixtures are now function-scoped (an `httpx.AsyncClient` cannot outlive its event loop).
+- Full suite **1802 passed** in Docker including live integration tests against a real tenant (token fetch, reads, pagination, time-windowed stats); ruff + format + mypy + bandit clean.
+
+## [3.3.10.2] - 2026-06-11
+
+**Patch — shared async auth primitive (`platforms/_common/auth.py`); UXI + Apstra + `_template` adopt it.** First step of the platform-standardization effort (#466): one token lifecycle for all platforms instead of per-platform token managers. Pure refactor — no tool changes, no behavior changes.
+
+### Changed
+- **New `platforms/_common/auth.py`** — `AsyncTokenManager` (cached token + expiry buffer + `asyncio.Lock` with double-checked locking, `invalidate()` / `refresh()` / `prime()` / `static()`), `TokenResult`, the shared `AuthError` base, and the `oauth2_client_credentials(...)` fetch-strategy factory. Extracted verbatim-in-spirit from the two proven in-tree implementations rather than designed fresh:
+  - **UXI** donated the OAuth2 client-credentials flow (time-based expiry with 60-second buffer, lock-serialized refresh, token POST on a fresh no-base_url client). `UXIClient` now wires `oauth2_client_credentials` into an `AsyncTokenManager` and drops its inline `_ensure_token` / `_fetch_token_locked` / `_invalidate_token` machinery.
+  - **Apstra** donated the login-session flow (no expiry; 401 → forced re-login under the lock). `ApstraClient._login()` is now the manager's fetch strategy returning `TokenResult(token)`; `ApstraAuthError` subclasses the shared `AuthError`.
+- **`platforms/_template/client.py`** rewritten as the canonical consumer: static-token fetch strategy by default, with docstring pointers to the UXI (OAuth2) and Apstra (login-session) flavors. Credential *attachment* (header name, cookie/query-param injection) intentionally stays in the platform client — the manager owns acquisition, caching, and invalidation only.
+- Remaining platforms adopt in follow-ups per the #466 sequencing (GreenLake next — its 290-line sync OAuth2 provider collapses into the shared strategy; then AOS8; Central/ClearPass arrive via their httpx rebuilds #464/#465).
+
+### Tests
+- New `tests/unit/test_common_auth.py` (16 tests): lifecycle (cache/buffer/invalidate/refresh/concurrent single-fetch/empty-token guard) + OAuth2 fetcher (form encoding, default expiry, non-2xx propagation, missing `access_token`) + manager-with-fetcher end-to-end.
+- UXI/Apstra client tests updated to target the manager API; public client surfaces unchanged.
+
+## [3.3.10.1] - 2026-06-10
+
+**Patch — defensive hardening for unavailable/misconfigured platforms, an async-token fix, and a PII sweep gap.** A batch of bug fixes from a `bug`-label triage. No new tools or behavior changes for configured platforms.
+
+### Fixed
+- **Central tools returned an opaque `AttributeError` when Central was unavailable** (#443). Added a shared `get_central_conn(ctx)` helper that raises a clear `ToolError` (503) when `central_conn` is `None` (not configured / failed startup), and routed **every** Central tool's connection access through it. Hardened `retry_central_command` to (a) raise the same 503 up front when handed a `None` connection and (b) log transport errors through a safe logger that no longer dereferences `central_conn.logger` inside the `except` block (the original code raised a *second* `AttributeError` there).
+- **GreenLake tools crashed instead of returning 503 when GreenLake was not configured** (#444). Added `get_greenlake_client(ctx)` which validates both `config.greenlake` and the token manager before building a client, raising a clear 503 otherwise; applied across all GreenLake tools.
+- **GreenLake OAuth token acquisition blocked the async event loop** (#440). The token fetch/refresh is synchronous (`httpx.Client`); it now runs via `asyncio.to_thread` on the request path, and the startup `TokenManager` construction (which does a blocking initial fetch) is built off-loop in the lifespan handler. `TokenManager` refresh is guarded with double-checked locking so concurrent off-loop requests don't stampede the token endpoint when the cached token expires.
+- **Mist `getSelf` startup resolver crashed on an HTTP 200 with a non-JSON body** (#442). A proxy/WAF/login-page interstitial returning `200` with HTML no longer raises during org-id resolution — the JSON decode is guarded, a bounded body preview is logged, and the resolver fails closed to `None`.
+- **PII tokenization skipped raw show-command CLI output** (#411). The `output` blob from show-command tools (`central_show_commands` etc.) classified `SKIP`, so only the universal email/AWS-URL scan ran over it. It's now classified as a free-text field, so the full sweep (PEM cert/key blocks, emails, MAC normalization) runs over CLI dumps when `ENABLE_PII_TOKENIZATION=true`. (Field-name-keyed secrets like PSKs have no value-shape regex and remain undetectable inside an opaque CLI blob — a dedicated CLI-grammar sweep is out of scope.)
+
+New unit tests cover each guard (Central/GreenLake 503 paths, the safe transport logger, the GreenLake async header builder, the Mist non-JSON resolver, and the show-output PII sweep). Full suite green; ruff + format + mypy clean.
+
+## [3.3.10.0] - 2026-06-10
+
+**Minor — new bundled skill `central-ucc-quality`: trustworthy UCC (voice/video) call-quality on AOS-10 APs, with a Generative-UI dashboard.** Closes #400. Asking "check call quality on the garage AP" now runs a vetted correlation runbook instead of a naive single-command read.
+
+### Added
+- **`central-ucc-quality` skill** — correlates three live UCM tables from a single atomic `central_show_commands` snapshot to report *genuinely-live* calls (not stale records) with per-stream quality:
+  - `show ucm hashtable` → **client IP → MAC join** (identity only).
+  - `show datapath session ucc` → **liveness source of truth**: a stream is live only if its IP 5-tuple appears here with a populated `Codec:` field.
+  - `show ucm cdrs` → the metrics (delay / jitter / loss / **UCC Score**).
+  - Why a skill and not a tool: the CDR is a *log that persists after calls end* with no timestamp or active/ended flag, so a torn-down call is byte-for-byte indistinguishable from a live degraded one. A tool wrapping `show ucm cdrs` alone reports phantom "active calls" with stale metrics. The value is the **join + stale-vs-live discrimination**, which this runbook encodes (verified against live AOS-10 capture).
+  - Quality is gated on the **UCC Score** (≥80 good / 70–79 fair / <70 poor), deliberately **not** on the Delay field (which reads thousands of ms — it is not one-way latency, so the ITU-T G.114 150 ms threshold would flag nearly every record). Delay/jitter/loss are shown as context.
+  - Renders an interactive **Generative-UI dashboard** (`generate_prefab_ui`, KPI cards + worst-first data table + per-app/per-band charts) when the server runs with `MCP_APP_ENABLE=true`; falls back to an emoji-coded Markdown table otherwise. Works on AOS-10 APs and gateways. **Read-only.**
+
+This is a runbook-only change — no new tools, no code paths altered. Both skill-hygiene regression tests (sandbox-snippet compatibility + tool-reference resolution) pass.
+
+## [3.3.9.0] - 2026-06-10
+
+**Minor — Generative UI dashboards + a single `MCP_APP_ENABLE` switch for all MCP-Apps providers.** The model can now build a live, interactive dashboard from the data it gathered — "build me an MRT dashboard for site HOME" → it pulls the Central/ClearPass data, then calls `generate_prefab_ui` and a Prefab app (tabs, KPI cards, charts, searchable data tables) renders inline. Live-validated end to end.
+
+### ⚠️ BREAKING
+- **`MCP_ENABLE_FILE_UPLOAD` is removed; use `MCP_APP_ENABLE`.** A single switch now gates *all* MCP-Apps capabilities (the `FileUpload` provider **and** the new `GenerativeUI` provider) — both emit `ui://` MCP-Apps resources that render only in MCP-Apps hosts (Claude Desktop / ChatGPT / claude.ai). If you set `MCP_ENABLE_FILE_UPLOAD=true`, change it to `MCP_APP_ENABLE=true` (file upload silently disables otherwise).
+
+### Added
+- **`GenerativeUI` provider** (FastMCP 3.2.0+, behind `MCP_APP_ENABLE`): exposes `generate_prefab_ui` + `search_prefab_components`, re-exposed top-level in code mode. The tool description is augmented with networking-specific guidance steering dashboard/visualization requests to it, plus an explicit **data contract** (values passed via `data` become globals by key — not a `data` variable) that eliminates the `NameError: name 'data'` trap.
+- **Deno** is baked into the image (the Prefab sandbox shells out to it for server-side validation; it does not auto-install).
+
+### Fixed
+- **Response envelope pass-through for the prefab tools** — `generate_prefab_ui` / `search_prefab_components` carry `x-fastmcp-wrap-result` output schemas; the envelope was stripping their required `result` field (same class as #293/#302). Now bypassed.
+- **`central_get_applications` made forgiving** (surfaced during dashboard testing): `start_query_time`/`end_query_time` accept epoch ms (13-digit), epoch seconds (10-digit), **or ISO-8601** (the sandbox blocks `time.now()`, so an LLM naturally passes ISO) — all normalized to epoch ms; the `sort` param accepts OData (`usage desc`) **and** the `-field` shorthand (`-usage` → `usage desc`).
+- **`central_get_ap_trend` throughput** now sends the API-required `interface-type` query param (WIRELESS / WIRED / LTE; defaults WIRELESS) — it was 400ing on every call without it. cpu/memory/power dimensions are unaffected.
+
+New unit tests for the provider wiring (single-flag gating, envelope pass-through, description/data-contract), the applications time/sort normalization, and the ap_trend interface-type. Full suite green.
+
+## [3.3.8.2] - 2026-06-09
+
+**Patch — `central_get_applications` now validates the time window up front (#458).** The applications endpoint expects epoch **milliseconds**; an ISO-8601 string, a plain date, or a reversed window produced an opaque upstream `HTTP 400 BAD_REQUEST` ("Your request was incorrect or incomplete") wrapped as a 502, leaving the caller with no idea what was wrong.
+
+- The tool now validates `start_query_time` / `end_query_time` before calling Central and raises a clear `ToolError` (400) naming the offending value and the expected format (e.g. *"start_query_time must be an epoch timestamp in milliseconds (e.g. '1780876800000'), got '2026-06-08T00:00:00Z'"*).
+- Epoch **seconds** (10-digit) are accepted as a convenience and normalized to ms (the seconds-vs-ms mixup is the most common mistake; 10- vs 13-digit values don't overlap for present-day timestamps).
+- `start_query_time` must be before `end_query_time`, and `site_id` must be non-empty — both checked with clear messages.
+
+Live-verified: the endpoint + its `v1alpha1` path are correct (a valid site_id + epoch-ms window returns data); the 400 was purely a malformed-input passthrough. New unit tests cover the helper and the tool-level validation paths.
+
+## [3.3.8.1] - 2026-06-09
+
+**Patch — Central read-tool enum filters now fold case + known synonyms (#455, #456, #457).** Three MRT read tools rejected reasonable-but-non-canonical enum inputs with a hard validation error. A new shared `coerce_enum` helper (a Pydantic `BeforeValidator`) folds recognized case/alias variants onto the canonical `Literal` value while keeping the enum in the JSON schema (discoverability) and still rejecting genuinely invalid values.
+
+- **`central_get_top_aps_by_usage`** (#455) — the tool's description advertised a `combined` metric, but the enum value is `usage`; `metric="combined"` was rejected. Now `'combined'` is accepted as an alias for `'usage'`, the description/enum agree, and the metric is matched case-insensitively.
+- **`central_get_clients`** (#456) — `status="CONNECTED"` (valid value, wrong case) was rejected. The `status`, `connection_type`, and `tunnel_type` filters are now case-insensitive.
+- **`central_get_alerts`** (#457) — `status="Open"` (a common synonym) was rejected; the enum is `Active`/`Cleared`/`Deferred`. `status`, `device_type`, and `category` are now case-insensitive, and `Open` is accepted as a synonym for `Active`.
+
+Invalid values still fail with the standard `Input should be …` message listing the canonical values. New unit tests cover the folding, the synonym maps, schema-enum preservation, and rejection of unknown values. (The `central_get_applications` HTTP 400, #458, is tracked separately.)
+
+## [3.3.8.0] - 2026-06-08
+
+**Minor — aos-migration Stage 9b now wires the full AAA chain + surfaces target collisions (#437).** Closes the gap where Stage 9b's deterministic preview documented only five translation IDs while six more shipped specs (the AAA chain) were silently omitted — an operator could read the preview as complete when it skipped auth-servers, server-groups, and auth profiles entirely.
+
+- **New Stage 9b §2h — AAA chain.** Wires `central:auth_server` → `central:server_group` → `central:dot1x_auth` / `central:mac_auth` / `central:captive_portal` → `central:aaa_profile` into the engine-driven preview, in execution/dependency order (server-groups reference auth-servers by name; the aaa-profile references server-groups + the dot1x/mac/captive profiles + roles). Driven directly (per-record, `central_scope_id` only — no Stage 6.5 decision); models the gateway-terminated (tunnel/hybrid) AAA. Includes a **mandatory output-redaction rule** for the read-only preview — when a `central:auth_server` sample body is rendered, the AI masks the `rad_key`/`tacacs_key` *value* to `<redacted: present>` and shows secret *presence* only (a presentation-layer mask in the skill; it needs **no PII feature enabled** and works today). Separately, the auth-server **write path stays gated** until the PII-tokenization prerequisite ships — that's a future-write constraint, not a requirement for the preview. Also a minimal-path note (§2h needs the AAA objects collected but no questionnaire).
+- **All 13 shipped `central:*` translations now represented in Stage 9b** (added six AAA rows to the translation table). A new guard test (`test_skill_stage9b_translation_coverage.py`) fails when a newly-shipped `central:*` translation isn't wired into Stage 9b unless explicitly listed in `OUT_OF_SCOPE` with a reason — so the omission class #437 reported can't silently recur. It also asserts the AAA chain appears in dependency order.
+- **`target_collisions` surfaced in the consolidated report** (consumes the #439 preview output): a new "Write hazards (target collisions)" section + output rule lists distinct source records that resolve to the same Central object (case-folded aliases, name-folded groups) and would overwrite/409 each other at execution — the operator must reconcile them before cutover.
+
+Skill + test change (no tool/code changes); 1694 tests pass.
+
+## [3.3.7.2] - 2026-06-08
+
+**Patch — two translation-engine bugs caught by the automated reviewer (#438, #439).** Both surfaced in the `central:wlan_ssid` / `central_translation_preview` surface shipped in 3.3.6.0–3.3.7.1.
+
+- **`central:wlan_ssid` overlay modes now require a non-empty `gw_cluster_list` (#438).** A `tunneled` / `hybrid` / `bridged_and_tunneled` SSID emits an `overlay-wlan` binding to a gateway cluster — but with no `gw_cluster_list` supplied, the binding was null-stripped and the preview emitted a structurally-incomplete (yet valid-looking) overlay. The preprocessing now raises `ValueError` for any overlay mode missing a non-empty `gw_cluster_list`; `bridged` is the only mode that may omit it (local breakout, no cluster).
+- **`central_translation_preview` now reports cross-record target collisions (#439).** Two distinct source records can resolve to the **same** Central object — e.g. named-VLANs `USER-VLAN` + `user-vlan` both fold to the `user-vlan` alias — and would overwrite/409 each other at execution time. The preview now returns a **`target_collisions`** list keyed by target-object identity (path-addressed resources by URL; `/config-assignments` by `profile-type`+`profile-instance`, so distinct assignments don't false-positive). Collision uniqueness is tested by source-record **occurrence (index)**, not display `record_id`, so two distinct records that derive the same `record_id` and the same target object (e.g. duplicate same-named VLANs with different payloads) are still caught. Empty when none.
+
+Preview-only (read-only); no write path touched. 1689 tests pass.
+
+## [3.3.7.1] - 2026-06-08
+
+**Patch — aos-migration skill: two post-merge review fixes (scope identity + Q1/2g alignment).** Skill-only; caught by the automated reviewer after v3.3.7.0 merged.
+
+- **Central scope identity, not bare name.** Stage 6.5 cluster + dual-mode split scopes now record the scope **name + type** (+ optional path), not just a name — a bare Central scope name isn't unique (Sites / Site-Collections / Device-Groups can share a name; names recur under different parents). The Stage 9b resolver (`resolve_scope_id`) matches by path → name+type, and returns `<AMBIGUOUS:...>` rather than silently picking the first of several matches. Applied uniformly to the per-cluster scope, the dual bridge/tunnel split scopes, and the Stage-7-mapped SSID scope.
+- **Q1 "translatable" matches the 2g filter exactly.** Q1 now requires the `virtual_ap.ssid_prof` reference to resolve **at the VAP's own `_source_scope`** (the same scoped join 2g uses), not merely "exists somewhere in the collected list" — so the questionnaire never asks about a VAP that 2g will then skip.
+
+## [3.3.7.0] - 2026-06-07
+
+**Minor — aos-migration skill: target-architecture questionnaire (Stage 6.5).** Replaces the skill's "auto-derive everything, override later" model with an explicit post-verdict questionnaire, so the operator *decides* the target architecture rather than having it inferred-and-applied.
+
+- **New Stage 6.5 — Target-architecture questionnaire** (runs after the readiness verdict, on operator `yes`, before the translation plan): **Q1 per-SSID forward mode** (`Bridged` / `Tunneled` / `Bridged-and-Tunneled` / `Hybrid`) → `wlan_ssid` `target_mode`; **Q2 gateway topology** (only if any SSID survives on gateways) → `gateway_cluster` `cluster_strategy` (`intent_site` / `intent_site`+`intent_manual` / `ha_only`). Asked via `elicit()`, adaptive, pre-filled from Act I detection. The source says what *is*; the operator decides what they *want* (e.g. going controllerless).
+- **Detection stays as the recommendation engine.** Stage 2 now *detects* per-SSID `forward_mode` + the SSID→cluster map; Stage 7 Step 4's cluster-mode derivation becomes the Stage 6.5 default. Removed the "no configuration interview", "operator does not pick cluster mode", and "override when reviewing" framing throughout — those no longer reflect the flow.
+- **Verdict separation (so the questionnaire can't be locked out).** Stage 3 findings now split into source-readiness/orchestration (verdict-gating) vs **target-architecture-dependent (provisional)**. The pre-questionnaire BLOCKED verdict is computed from source-readiness only — a per-target-mode REGRESSION (scored against the *recommended* mode) never suppresses the gate, so an operator can still reach Stage 6.5 to pick e.g. Bridged/controllerless and make those findings moot (a documented INVARIANT guards this). Provisional findings are re-scored against the operator's chosen modes in Stage 6.5 and folded into the Act II plan. Decisions are keyed by composite `<source_scope>/<vap-name>` (not bare ESSID) so same-ESSID VAPs across scopes don't collide; Stage 9b loops guard missing decisions with a `skip_reason` instead of indexing.
+- **Cluster scope is a separate, explicitly-collected decision** — Stage 6.5 Q2 records the intended Central scope **name** (`target_scope_name`) per surviving cluster (strategy ≠ placement), resolved to a `scope_id`/`<TBD:...>` later in Stage 9b (the scope may not exist yet); Stage 9b never silently defaults a missing cluster scope to Global, it skips with a `skip_reason`. The **EMPTY-SOURCE** verdict now has explicit gate behavior (proceed-on-`yes` runs Act II on defaults, skipping Stage 6.5). Q1 defines "translatable VAP" to match the Stage 9b preview filter (skip system/default/missing-ssid-profile).
+- **Stage 9b wiring** — new preview subsections for `central:gateway_cluster` (2f) and `central:wlan_ssid` (2g) that consume the Stage 6.5 decisions (`target_mode`, `cluster_strategy`, `gw_cluster_list`, bridge/tunnel scopes) into `central_translation_preview` calls.
+
+Skill-only change (no tool/code changes); 1685 tests pass.
+
+## [3.3.6.0] - 2026-06-07
+
+**Minor — `central:wlan_ssid` dual-profile (`bridged_and_tunneled`) + essid alias.** Completes the per-SSID mode fork: the same SSID can now exist in **both** forward-modes at once across different locations (large campus tunneled, smaller sites bridged). Preview-only.
+
+- **`bridged_and_tunneled` target mode** — emits an **ESSID alias** (`/aliases`, `type: ALIAS_ESSID`, SHARED) plus **two `wlan-ssids` profiles** that reference it (`{name}-bridge` @ `bridge_scope_id` with `FORWARD_MODE_BRIDGE`, `{name}-tunnel` @ `tunnel_scope_id` with `FORWARD_MODE_L2`), plus the tunnel variant's `overlay-wlan` cluster binding (`use-essid-alias: true`). Requires `runtime_values` `bridge_scope_id` + `tunnel_scope_id` (the per-location split). Live-validated: one source SSID → 4 calls (alias + bridge + tunnel + overlay), both profiles sharing the `{use-alias: true, alias: <essid>}` reference.
+- The single-profile modes (`bridged` / `tunneled` / `hybrid`) are unchanged; the four `emit_when`-gated branches (single profile, single overlay, the dual set) keep each mode's output clean.
+
+## [3.3.5.0] - 2026-06-07
+
+**Minor — `central:wlan_ssid` (v1) — the SSID translation + cluster binding.** The piece that turns the AAA + cluster work into actual broadcast SSIDs. Preview-only via `central_translation_preview`.
+
+### New translation
+- **`central:wlan_ssid`** — AOS 8 `virtual_ap` (+ its `ssid_prof`, joined by name from `runtime_values["ssid_profiles"]`) → the flat Central **`wlan-ssids`** profile, plus a conditional **`overlay-wlan`** SSID→cluster binding. Maps essid, the `opmode` enum (AOS 8 `{mode: true}` → Central `opmode`, full table), forward-mode, and VLAN (named → `NAMED_VLAN`/`vlan-name`; numeric → `VLAN_RANGES`). The **target forward-mode is the operator's decision** (`runtime_values["target_mode"]`), not a copy of the source — detection only recommends it upstream in the skill. A three-way fork via the `emit_when` guard: `bridged` (FORWARD_MODE_BRIDGE, no overlay), `tunneled` (FORWARD_MODE_L2 + overlay), `hybrid` (FORWARD_MODE_MIXED + overlay). The `overlay-wlan` `gw-cluster-list[]` (supplied per SSID from detection/operator) lets one SSID bind to **multiple** clusters. Created LOCAL at the AP scope (`device-function=CAMPUS_AP`). Live-validated against the tenant `MJG-Dot1x` (tunnel/bridge/hybrid) and a North-config SSID (`wpa2-aes` → `WPA2_ENTERPRISE`).
+- **Deferred to v2** (flagged in `unmapped_fields`, not silent): the two-profile `bridged_and_tunneled` **essid-alias** case (v1 raises a clear error for it), inline **bridge-mode AAA** (the `aaa_prof` join), radio/QoS tuning, and the **PSK secret** (must route through PII tokenization before any write path).
+
+## [3.3.4.0] - 2026-06-06
+
+**Minor — gateway-cluster translation + engine conditional-emit (`emit_when`).** First step of the AOS 8 → Central wireless-forwarding migration: the gateway clustering that gates every tunneled SSID. Preview-only via `central_translation_preview`.
+
+### New translation
+- **`central:gateway_cluster`** — AOS 8 `cluster_prof` (lc-cluster group-profile) → Central's **dual-object** clustering model. Always emits the HA **`gateway-clusters`** profile (owns the explicit member gateways + their CoA-VRRP IPs, multicast-vlan, heartbeat), and conditionally emits the **`gw-cluster-intent-config`** intent. A required `runtime_values["cluster_strategy"]` drives a three-way fork: `ha_only` (HA profile alone — few/DMZ-only gateways), `intent_site` (+ intent `CM_SITE`, for campus auto-grouping at global/site/site-collection), `intent_manual` (+ intent `CM_MANUAL`, for explicit device-group membership / the DMZ path). Objects are created LOCAL at the target scope via query params (`object-type`/`scope-id`/`device-function=MOBILITY_GW`). Live-validated against the tenant `East` cluster (2-node, VRRP-150) and a 10-node reference cluster, all three strategies.
+
+### Engine
+- **`emit_when` conditional-emit guard** — an emit can now declare `emit_when` (`{"context_truthy": "<key>"}` or `{"context_equals": {"key","value"}}`); the engine emits zero calls for that step when the guard fails, *without* skipping the rest of the record. Enables strategy/mode forks (e.g. the cluster intent emit, and the upcoming `wlan_ssid` forward-mode fork). Loader-validated; unit-tested.
+
+## [3.3.3.0] - 2026-06-06
+
+**Minor — AAA translation chain: gateway aaa-profile + 802.1X / MAC-auth profiles.** Builds on the 3.3.2.0 foundation with the three translations that complete the gateway authentication object set, all available via `central_translation_preview`.
+
+### New translations
+- **`central:aaa_profile`** — AOS 8 `aaa_prof` → Central `/network-config/v1alpha1/aaa-profile/{name}`. The keystone gateway profile that ties the chain together: a normalizer flattens the top-level scalars/flags and assembles the nested `authentication{}` (dot1x-auth / dot1x-default-role / dot1xauth-server-group / mac-auth / mac-default-role / macauth-server-group) and `authorization{}` sub-objects. **CoA correlation (issue #322):** `rfc3576_client[]` entries become the `rfc3576-server-list`. Live-validated against the conductor (`MJG-Dot1x-80` previews correctly with acct-server-group, rfc3576-server-list, and the authentication block).
+- **`central:dot1x_auth`** — AOS 8 `dot1x_auth_profile` → Central `/network-config/v1alpha1/dot1xauth/{name}`. Maps the confident core of the 53-field 802.1X profile (reauth / key-rotation / cert / timer scalars + ~13 presence flags); the nested machine-auth / dot1x-termination objects and a handful of uncertain knobs are deferred to v2 and flagged in `unmapped_fields`.
+- **`central:mac_auth`** — AOS 8 `mac_auth_profile` → Central `/network-config/v1alpha1/macauth/{name}`. Small profile; reauth period / max-retries / MAC case + delimiter enums / reauth flags.
+
+All three are Gateway-targeted (config-assignment to `MOBILITY_GW`), reference the 3.3.2.0 foundation profiles by name (run order: auth-server / server-group / captive-portal / dot1x-auth / mac-auth → aaa-profile), and are unit-tested. **Preview-only** — write execution still awaits the auth-server-secret PII tokenization PR and the `central_manage_*` path. The maintainer's tenant 802.1X/MAC-auth profiles are all-default, so the mapped field *names* come from the Central OAS (authoritative) while non-default field *values* for dot1x carry a preview-confirm caveat (see `draft_notes`).
+
+### Fixed (validation-pass findings against the live conductor)
+- **`central:policy` emitted empty `policy-rule[]` for any inherited ACL (critical).** The rule-level preprocessing skipped every rule carrying `_flags.inherited`. Because effective-config marks *all* rules of an operator-authored ACL as inherited at any scope below its definition — the normal migration-preview case — this silently produced rule-less policies. Verified live: 87 authored ACLs at `/md/Campus/East` went from **0 → 174** translated rules after the fix. The transform now skips only genuinely `system` (built-in) rules, mirroring the 3.3.2.0 `server_group` member-inherited fix. Locked in with real-shape inherited-rule regression tests (the prior test had encoded the buggy "inherited rules are skipped" behavior).
+- **`central_translation_preview` reported `record_id: "<unknown>"` for net-groups.** The primary-key map was missing `central:net_group` (`dstname`); added it plus explicit entries for `central:aaa_profile` / `central:dot1x_auth` / `central:mac_auth`.
+
+Validation also re-previewed `central:net_group`, `central:vlan_id`, `central:named_vlan`, and `central:role` against the live tenant with no defects — entry classification (HOST/FQDN/NETWORK), VLAN-ID binding skips, alias chains, and role VLAN/bandwidth-contract mappings all confirmed faithful.
+
+## [3.3.2.0] - 2026-06-06
+
+**Minor — AAA translation foundation (auth-server / server-group / captive-portal) + vendored Aruba OAS.** Adds the first three AOS 8 → Central AAA-chain translations, available via `central_translation_preview`, and vendors the source/target OpenAPI specs that ground them.
+
+### New translations
+- **`central:auth_server`** — AOS 8 `rad_server` / `tacacs_server` → Central `/auth-servers/{name}`, one translation for both via a normalizer preprocessor. **Co-located RFC 3576 (CoA) servers fold in** (issue #322): pass `runtime_values["coa_servers"]` (the `aaa_prof.rfc3576_client[]` entries) and a peer matching the RADIUS server's IP flips it to `radius-server-mode: AUTH_AND_COA` + `dynamic-authorization-enable`. Field names live-verified against the tenant (`auth-port`/`acct-port`/`shared-secret-config`/`radius-server-mode`).
+- **`central:server_group`** — AOS 8 `server_group_prof` → Central `/server-groups/{name}` with an ordered `servers[]` member list (1-based position = auth precedence).
+- **`central:captive_portal`** — AOS 8 `cp_auth_profile` → Central `/captive-portal/{name}`, mapped field-by-field from the HPE LLD (incl. the inverted `protocol-http` → `use-https`, the `auth-protocol` enum, and black/white-list arrays).
+
+All three are Gateway-targeted (config-assignment to `MOBILITY_GW`), preview-validated against the live conductor, and unit-tested (preprocessing normalizers + the `aos8_server_group_members` transform). **Preview-only** — write execution awaits the auth-server-secret PII tokenization PR and the `central_manage_*` path.
+
+### Vendored OpenAPI specs (`vendor/`)
+- The devhub sync (`.github/scripts/fetch_aruba_oas.py` + `sync-new-central-oas.yml`) now also vendors **ArubaOS 8** (`vendor/aos8/`), **UXI**, **ClearPass**, and **AOS-CX** alongside New Central — the authoritative source/target field universe for translation mapping. Internal/copyrighted reference docs (CLI PDF, real-config captures, `docs/central/`) are gitignored.
+
+## [3.3.1.0] - 2026-06-06
+
+**Minor — file-upload data source + offline AOS 8 config ingestion.** Adds an optional in-chat file-upload path and substantially extends the offline AOS 8 parser so an operator can drive an AOS 8 → Central migration from a pasted *or uploaded* config, not just a live controller.
+
+### File upload (opt-in, `MCP_ENABLE_FILE_UPLOAD=true`)
+- Registers FastMCP's `FileUpload` provider and re-exposes its model-visible tools (`file_manager`, `list_files`, `read_file`) at the top level **in code mode** via the CodeMode `discovery_tools` passthrough, so the drag/pick upload UI renders while every other tool stays behind `execute`. Off by default — zero impact on the standard surface.
+- `ResponseEnvelopeMiddleware` now passes Prefab UI tool responses through untouched (detects the `$prefab` view-spec marker), so the upload widget renders instead of being buried in the response envelope.
+- Renders only in MCP-Apps hosts (Claude Desktop / ChatGPT); in other clients `file_manager` is a callable tool with no rendered UI.
+
+### `aos-migration` skill — data-source gate
+- New **Stage -2**: the skill now asks how to obtain the AOS 8 config — (1) AOS 8 direct via API, (2) configuration upload, or (3) pasted configuration snippet — and routes accordingly. Options 2/3 parse offline via `aos8_parse_config`. The skill's "no operator interview" language is reconciled (the data-source choice is a delivery-mechanism question, not a config interview).
+
+### Offline AOS 8 parser (`aos8_parse_config` / `cli_parser.py`)
+- **Provenance preprocessor:** transparently consumes `show configuration effective detail <scope>` output — strips `# inherited from [X]` / `# local [Y]` annotations, tags each record with `_source_scope` (feeds the Central scope mapping), drops system/Mobility-Manager defaults (`/`, `/mm`), and dedups objects repeated across concatenated per-leaf dumps. Plain `show running-config` is unchanged.
+- **Rule grammar made API-exact:** `web-cc-category` → `app_web_type=web_cat` / `webcccatgname`, `web-cc-reputation` → `web_cc_rep` / `web_rep2`, `send-deny-response` → `app-send-deny-response`, the bare `userrole <name>` token, and `app` / `app-category`. These previously fell through to warnings (and, for category, would have degraded downstream); the parser now emits the same field names the REST API returns.
+
+### New: AOS 8 `show`-table inventory parsers (`show_parser.py`)
+- `parse_ap_database` (AP inventory) and `parse_openflow_controllers` (controller/gateway inventory) — type-anchored parsers tolerant of the differing Mobility-Conductor vs older-controller column layouts. Surface AP / gateway serials, models, and counts for the GreenLake capacity (A2) and onboarding (A3) checks.
+
+## [3.3.0.3] - 2026-06-06
+
+**Patch — fix AOS 8 → Central policy translation silently dropping WebCC-category rules.** A `web-cc-category` session-ACL rule (e.g. `user any web-cc-category malware-sites deny`) was translated to a blanket `RULE_ANY` instead of `RULE_WEB_CATEGORY` — silently turning a category-specific deny into a **deny-everything** rule.
+
+- **Root cause:** AOS 8 REST emits `app_web_type == "web_cat"` for WebCC-category rules (live-verified on an 8.13 Mobility Conductor), but the policy preprocessing only recognised the `"web_cc_cat"` spelling, so category rules fell through `_build_services_block` (returning `None`) and were classified `RULE_ANY`. The reputation path (`web_cc_rep`) was unaffected.
+- **Fix:** `_build_services_block` now accepts both `web_cat` and `web_cc_cat`. Category rules emit `condition.services.web-category` → `RULE_WEB_CATEGORY`, mapped through the WebCC-category enum table (e.g. `keyloggers/monitoring` → `KEYLOGGERS-AND-MONITORING`).
+- Added `tests/unit/test_translations_preprocessing_aos8_policy.py` with real-record regression coverage; the broader `central:policy` surface (NAT / redirect / app / icmp / time-range / host / userrole / localip / web-reputation) was re-verified against a live conductor and is correct.
+
+## [3.3.0.2] - 2026-06-05
+
+**Patch — AOS 8 CLI config parser + `aos8_parse_config` tool.** Adds an offline parser that turns a pasted/uploaded AOS 8 running-config (CLI) into the same canonical records the translation engine already consumes from `aos8_get_effective_config` — enabling the "paste your AOS 8 config into the AI" migration flow without a live controller.
+
+- **`aos8_parse_config`** (read tool, AOS 8 platform): `cli_text` → `{netdst, acl_sess, role, _warnings}`. Parses `netdestination`/`netdestination6`, `ip access-list session`/`ipv6 access-list session`, and `user-role` stanzas; captures source/destination discriminators, services, protocol/port, actions (incl. `src-nat` / `dst-nat` / `dual-nat pool <name> <port>` / `redirect`), `log`, and `invert`. Tolerant — unmodelled clauses surface as warnings / `_unparsed` rather than being dropped.
+- The output is interchangeable with `aos8_get_effective_config`, so it feeds the `central:policy` / `central:net_group` / `central:role` translations unchanged.
+- AOS 8 platform tool count: 47 → 48 (total registered surface 1961 → 1962).
+
+## [3.3.0.1] - 2026-06-05
+
+**Patch — AOS 8 → Central policy/net-group translation drift fixes.** Corrects spec-confirmed mismatches in the AOS 8 `acl_sess` / `netdst` → Central CNX translation, validated against Central's live built-in policies.
+
+- **Netdestination references (Design A):** `ADDRESS_ALIAS` rules now emit a top-level `net-group: <name>` (the net-group namespace we actually create) instead of the wrong `host-address.host-address-alias` (an alias-namespace reference).
+- **Actions:** AOS 8 `captive` → `ACTION_CAPTIVE_PORTAL` (was silently `ACTION_ALLOW`); `mirror` → `ACTION_MIRROR`; `blacklist` → `secondary-actions.denylist`.
+- **`validuser`** (interface ACL) now emits `association: ASSOCIATION_INTERFACE` instead of `ASSOCIATION_ROLE`.
+- **RA-guard / ICMPv6** rules emit `RULE_PROTOCOL` + `ip-header.protocol: IPV6_ICMP` instead of an invalid `net-service: "icmpv6"`.
+- **NAT / redirect shapes:** destination-nat uses `port` / `ip-address`; dual-nat uses the required `nat-pool` / `port`; redirect uses the `destination` discriminator + `tunnel` / `tunnel-group`.
+- **Net-groups:** IPv6 prefixes are preserved (no more `/128` collapse); `invert` is now mapped (emit-when-true); a per-item `index` is added; the assignment `profile-type` is the plural `net-groups`.
+- **config-assignment** `VALID_DEVICE_FUNCTIONS` gains `EC_VPNC` / `EC_BRANCH_GW`.
+
+## [3.3.0.0] - 2026-06-05
+
+**Minor — Central config tool surface regenerated from the vendor OAS (BREAKING tool renames).** The Aruba Central config tool surface is now generated directly from the vendored Central OpenAPI specs (auto-synced from the developer hub into `vendor/`) rather than from the previous local snapshot. Net result: **660 Central tools** (up from 613), bringing the full registered surface to **1961 tools across 8 platforms** (1037 Mist + 660 Central + 10 GreenLake + 142 ClearPass + 19 Apstra + 25 Axis + 47 AOS8 + 21 UXI).
+
+- **BREAKING — config tool renames.** Every generated config tool is now named after its OAS path segment (e.g. the resource type as it appears in the spec) instead of the previous ad-hoc names. Clients that pinned the old generated tool names must update to the OAS-segment names. The hand-curated keep-set tools (custom scope, WLAN, health, and config-assignment tools) keep their tuned names and behavior.
+- **Generator reworked.** The Central config generator now emits multiple objects per source spec file, prefers `v1` over `v1alpha1` when both define the same resource, adds a dedicated operation emitter, and honors a keep-set so the custom scope / WLAN / health / config-assignment tools are never clobbered by regeneration.
+- **+47 net Central tools**, including new `cnac-*` (Central NAC) tools, device-collections, and sites reads, plus a config write surface for aliases, named-VLAN, and server-groups.
+- **Shared helpers raise `ToolError`.** The shared CRUD and operation helpers backing the generated tools now raise `ToolError` (structured payload) on any non-2xx upstream response, matching the project-wide error contract.
+- **`get_role_with_policy` back-reference resolution.** The role-with-policy read now resolves the `role.policies[]` back-reference so the returned role carries its associated policy bodies.
+- **Spec repoint.** The Central spec source moved from the old `api-endpoints/` snapshot to the vendored `vendor/` specs (auto-synced from devhub).
+
+
 
 **Patch — refactor: migrate AOS 8 to capability classification (PR 2 of N).** Second platform onto the `capability=` model from #417. AOS8's `_registry.py` shim is now the shared `make_tool_decorator` factory; its hand-written `READ_ONLY`/`WRITE`/`WRITE_DELETE` `ToolAnnotations` constants are removed. All AOS8 tools reclassified: reads → `READ`; the 9 `aos8_manage_*` → `WRITE_DELETE`; `aos8_disconnect_client` / `aos8_reboot_ap` / `aos8_write_memory` → `OPERATIONAL` (`enable_gated=True`, preserving their behind-the-write-flag gating); and `aos8_ping` / `aos8_traceroute` → `DIAGNOSTIC` (active probes that POST but make no persistent change — first use of the DIAGNOSTIC category). Behaviour-preserving: the derived `aos8_write_delete` enable tag keeps every write tool gated by `ENABLE_AOS8_WRITE_TOOLS`, and the existing `confirm_write` elicitation is unchanged; the `requires_confirmation` tag stays inert until the universal-gate PR. Note: write tools now carry only `aos8_write_delete` (the dual `aos8_write`+`aos8_write_delete` tagging is collapsed to the single derived enable tag). Covered by updated `tests/unit/test_aos8_write.py` (capability + enable-tag + confirmation assertions).
 

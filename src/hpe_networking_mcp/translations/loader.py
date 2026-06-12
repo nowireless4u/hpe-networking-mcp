@@ -74,6 +74,18 @@ class TargetEmit(BaseModel):
         default_factory=list,
         description="Step numbers that must complete before this one fires",
     )
+    emit_when: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "Optional guard. When set, the engine emits ZERO calls for this step "
+            "unless the condition holds against the substitution context — used for "
+            "strategy/mode forks where some steps are conditional (e.g. emit the "
+            "intent-config only for intent_* cluster strategies). Recognized keys: "
+            "'context_truthy': '<ctx_key>' (fire only if ctx[key] is truthy); "
+            "'context_equals': {'key': '<ctx_key>', 'value': <v>} (fire only if "
+            "ctx[key] == v). The whole record is NOT skipped — only this emit."
+        ),
+    )
 
 
 class TargetMeta(BaseModel):

@@ -1,0 +1,3000 @@
+{
+  "components": {
+    "schemas": {
+      "CaId": {
+        "description": "Numeric ID of the certificate authority",
+        "enum": [
+          1
+        ],
+        "example": 1,
+        "title": "CaId",
+        "type": "integer"
+      },
+      "CertType": {
+        "description": "Select the type of certificate to create from this signing request",
+        "enum": [
+          "tls-client",
+          "trusted",
+          "ca",
+          "code-signing",
+          "https"
+        ],
+        "example": "tls-client",
+        "title": "CertType",
+        "type": "string"
+      },
+      "Certificate": {
+        "properties": {
+          "action_notification_sent_at": {
+            "description": "Time of the last check for expiration actions",
+            "format": "date-time",
+            "type": "string"
+          },
+          "ca_id": {
+            "description": "Numeric ID of the Onboard certificate authority; null if not an Onboard-issued certificate",
+            "format": "int64",
+            "type": "integer"
+          },
+          "ca_name": {
+            "description": "Name of the Onboard certificate authority; null if not an Onboard-issued certificate",
+            "type": "string"
+          },
+          "certificate_pem": {
+            "description": "Text representation of the X509 certificate",
+            "type": "string"
+          },
+          "certificate_sub_type": {
+            "$ref": "#/components/schemas/CertificateSubType"
+          },
+          "certificate_type": {
+            "$ref": "#/components/schemas/CertificateType"
+          },
+          "certificate_version": {
+            "description": "Version number of the X509 certificate",
+            "format": "int64",
+            "type": "integer"
+          },
+          "csr_rejected_at": {
+            "description": "Time at which the certificate signing request was rejected; may be null",
+            "format": "date-time",
+            "type": "string"
+          },
+          "fingerprint_sha1": {
+            "description": "SHA-1 fingerprint of the certificate",
+            "type": "string"
+          },
+          "fingerprint_sha256": {
+            "description": "SHA-256 fingerprint of the certificate",
+            "type": "string"
+          },
+          "has_certificate": {
+            "description": "True if certificate is present, or false for certificate signing requests",
+            "type": "boolean"
+          },
+          "has_key": {
+            "description": "True if server holds the private key for the certificate",
+            "type": "boolean"
+          },
+          "id": {
+            "description": "Numeric ID of the certificate",
+            "format": "int64",
+            "type": "integer"
+          },
+          "is_valid": {
+            "description": "True if the certificate has not expired and has not been revoked",
+            "type": "boolean"
+          },
+          "issuer": {
+            "description": "Path representation of certificate issuer’s distinguished name; components separated with forward slash (/)",
+            "type": "string"
+          },
+          "issuer_common_name": {
+            "description": "Common name of the certificate issuer",
+            "type": "string"
+          },
+          "issuer_country": {
+            "description": "Country (C) of the certificate issuer",
+            "type": "string"
+          },
+          "issuer_dn": {
+            "$ref": "#/components/schemas/DistinguishedName"
+          },
+          "issuer_email_address": {
+            "description": "Email address of the certificate issuer",
+            "type": "string"
+          },
+          "issuer_locality": {
+            "description": "Locality (L) of the certificate issuer",
+            "type": "string"
+          },
+          "issuer_organization": {
+            "description": "Organization (O) of the certificate issuer",
+            "type": "string"
+          },
+          "issuer_organizational_unit": {
+            "description": "Organizational unit (OU) of the certificate issuer",
+            "type": "string"
+          },
+          "issuer_state": {
+            "description": "State or province name (ST) of the certificate issuer",
+            "type": "string"
+          },
+          "key_type": {
+            "$ref": "#/components/schemas/KeyType"
+          },
+          "key_usage": {
+            "description": "List of asserted key usage bits",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "key_usage_extended": {
+            "description": "List of object identifiers for extended key usage",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "mdps_custom_field": {
+            "description": "Custom field from certificate subject alternative name",
+            "type": "string"
+          },
+          "mdps_device_iccid": {
+            "description": "Device ICCID from certificate subject alternative name",
+            "type": "string"
+          },
+          "mdps_device_imei": {
+            "description": "Device IMEI from certificate subject alternative name",
+            "type": "string"
+          },
+          "mdps_device_name": {
+            "description": "Device name from certificate subject alternative name",
+            "type": "string"
+          },
+          "mdps_device_serial": {
+            "description": "Device serial from certificate subject alternative name",
+            "type": "string"
+          },
+          "mdps_device_type": {
+            "description": "Device type from certificate subject alternative name",
+            "type": "string"
+          },
+          "mdps_device_udid": {
+            "description": "Device UDID from certificate subject alternative name",
+            "type": "string"
+          },
+          "mdps_email_address": {
+            "description": "User email address from certificate subject alternative name",
+            "type": "string"
+          },
+          "mdps_mac_address": {
+            "description": "List of MAC addresses from certificate subject alternative name",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "mdps_product_name": {
+            "description": "Product name from certificate subject alternative name",
+            "type": "string"
+          },
+          "mdps_product_version": {
+            "description": "Product version from certificate subject alternative name",
+            "type": "string"
+          },
+          "mdps_user_name": {
+            "description": "Username from certificate subject alternative name",
+            "type": "string"
+          },
+          "revoked_at": {
+            "description": "Time at which the certificate was revoked; may be null",
+            "format": "date-time",
+            "type": "string"
+          },
+          "self_signed": {
+            "description": "True if the certificate is a self-signed CA certificate",
+            "type": "boolean"
+          },
+          "serial_number": {
+            "description": "Serial number of the certificate",
+            "type": "string"
+          },
+          "signature_algorithm": {
+            "description": "Algorithm used to digitally sign the certificate",
+            "type": "string"
+          },
+          "subject": {
+            "description": "Path representation of certificate subject’s distinguished name; components separated with forward slash (/)",
+            "type": "string"
+          },
+          "subject_alt_name_dn": {
+            "description": "String or object containing certificate’s alternative name properties; may be null",
+            "type": "string"
+          },
+          "subject_common_name": {
+            "description": "Common name (CN) from certificate subject",
+            "type": "string"
+          },
+          "subject_country": {
+            "description": "Country (C) from certificate subject",
+            "type": "string"
+          },
+          "subject_dn": {
+            "$ref": "#/components/schemas/DistinguishedName"
+          },
+          "subject_email_address": {
+            "description": "Email address from certificate subject",
+            "type": "string"
+          },
+          "subject_keyid": {
+            "description": "Unique identifier of the certificate’s public key",
+            "type": "string"
+          },
+          "subject_locality": {
+            "description": "Locality (L) from certificate subject",
+            "type": "string"
+          },
+          "subject_organization": {
+            "description": "Organization (O) from certificate subject",
+            "type": "string"
+          },
+          "subject_organizational_unit": {
+            "description": "Organizational unit (OU) from certificate subject",
+            "type": "string"
+          },
+          "subject_state": {
+            "description": "State or province name (ST) from certificate subject",
+            "type": "string"
+          },
+          "valid_from": {
+            "description": "Time at which the certificate will become valid",
+            "format": "date-time",
+            "type": "string"
+          },
+          "valid_to": {
+            "description": "Time at which the certificate will expire",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "title": "Certificate",
+        "type": "object"
+      },
+      "CertificateChain": {
+        "properties": {
+          "chain": {
+            "items": {
+              "$ref": "#/components/schemas/Certificate"
+            },
+            "type": "array"
+          },
+          "complete": {
+            "type": "boolean"
+          },
+          "error": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "error",
+          "chain",
+          "complete"
+        ],
+        "title": "CertificateChain",
+        "type": "object"
+      },
+      "CertificateExport": {
+        "properties": {
+          "export_format": {
+            "$ref": "#/components/schemas/ExportFormat"
+          },
+          "export_password": {
+            "description": "Passphrase to protect the PKCS#12 file",
+            "type": "string"
+          },
+          "export_password2": {
+            "description": "Re-enter the passphrase",
+            "type": "string"
+          },
+          "include_ca": {
+            "$ref": "#/components/schemas/IncludeCa"
+          },
+          "include_chain": {
+            "description": "Select this option to include the certificates for the CA and any intermediate certificate authorities",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "export_format"
+        ],
+        "title": "CertificateExport",
+        "type": "object"
+      },
+      "CertificateExportResponse": {
+        "properties": {
+          "HTTP:Content-Disposition": {
+            "default": "attachment",
+            "description": "attachment; The response is file data and does not contain JSON",
+            "type": "string"
+          }
+        },
+        "title": "CertificateExportResponse",
+        "type": "object"
+      },
+      "CertificateFileEncoding": {
+        "description": "Encoding used for 'certificate_file' parameter",
+        "enum": [
+          "base64",
+          "text"
+        ],
+        "example": "base64",
+        "title": "CertificateFileEncoding",
+        "type": "string"
+      },
+      "CertificateImport": {
+        "properties": {
+          "ca_id": {
+            "$ref": "#/components/schemas/CaId"
+          },
+          "certificate_file": {
+            "description": "Contents of certificate to import",
+            "type": "string"
+          },
+          "certificate_file_encoding": {
+            "$ref": "#/components/schemas/CertificateFileEncoding"
+          },
+          "key_file": {
+            "description": "Contents of private key to import",
+            "type": "string"
+          },
+          "key_file_encoding": {
+            "$ref": "#/components/schemas/KeyFileEncoding"
+          },
+          "key_passphrase": {
+            "description": "Enter the passphrase that was used to encrypt the private key. If the private key is not encrypted, leave this field blank",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/Type"
+          }
+        },
+        "required": [
+          "type",
+          "certificate_file",
+          "certificate_file_encoding"
+        ],
+        "title": "CertificateImport",
+        "type": "object"
+      },
+      "CertificateItems": {
+        "properties": {
+          "items": {
+            "description": "List of items matching the filter",
+            "items": {
+              "$ref": "#/components/schemas/Certificate"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "CertificateItems",
+        "type": "object"
+      },
+      "CertificateList": {
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/CertificateItems"
+          },
+          "_links": {
+            "$ref": "#/components/schemas/HalLinks"
+          },
+          "count": {
+            "description": "Total number of items matching the filter; returned if calculate_count is true",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "_embedded",
+          "_links"
+        ],
+        "title": "CertificateList",
+        "type": "object"
+      },
+      "CertificateNew": {
+        "properties": {
+          "ca_id": {
+            "$ref": "#/components/schemas/CaId"
+          },
+          "cert_type": {
+            "$ref": "#/components/schemas/CertType"
+          },
+          "common_name": {
+            "description": "Enter a name for the certificate. This is the ‘common name’ of the digital certificate",
+            "type": "string"
+          },
+          "country": {
+            "description": "Enter the 2-letter ISO country code of your country",
+            "type": "string"
+          },
+          "custom_field": {
+            "description": "Custom fields to store in certificate subject alternative name",
+            "type": "string"
+          },
+          "days": {
+            "description": "The number of days before the certificate will expire",
+            "type": "string"
+          },
+          "device_iccid": {
+            "description": "Device ICCID to store in certificate subject alternative name",
+            "type": "string"
+          },
+          "device_imei": {
+            "description": "Device IMEI to store in certificate subject alternative name",
+            "type": "string"
+          },
+          "device_name": {
+            "description": "Device name to store in certificate subject alternative name",
+            "type": "string"
+          },
+          "device_serial": {
+            "description": "Device serial to store in certificate subject alternative name",
+            "type": "string"
+          },
+          "device_type": {
+            "description": "Device type to store in certificate subject alternative name",
+            "type": "string"
+          },
+          "device_udid": {
+            "description": "Device UDID to store in certificate subject alternative name",
+            "type": "string"
+          },
+          "dns_name": {
+            "description": "Host names to include in the Subject Alt Name extension.\nMultiple values can be included, one per line",
+            "type": "string"
+          },
+          "email_address": {
+            "description": "Enter an email address",
+            "type": "string"
+          },
+          "issue_cert": {
+            "description": "Issue this certificate immediately",
+            "type": "boolean"
+          },
+          "key_type": {
+            "$ref": "#/components/schemas/KeyType"
+          },
+          "locality": {
+            "description": "Enter the name of your locality (town or city)",
+            "type": "string"
+          },
+          "mac_address": {
+            "description": "List of MAC addresses to store in certificate subject alternative name",
+            "type": "string"
+          },
+          "organization": {
+            "description": "Enter the name of your organization or company",
+            "type": "string"
+          },
+          "organizational_unit": {
+            "description": "Enter the name of your organizational unit (e.g. section or division of the company)",
+            "type": "string"
+          },
+          "product_name": {
+            "description": "Product name to store in certificate subject alternative name",
+            "type": "string"
+          },
+          "product_version": {
+            "description": "Product version to store in certificate subject alternative name",
+            "type": "string"
+          },
+          "state": {
+            "description": "Enter the full name of your state or province",
+            "type": "string"
+          },
+          "user_email_address": {
+            "description": "User’s email address to store in certificate subject alternative name",
+            "type": "string"
+          },
+          "user_name": {
+            "description": "Username to store in certificate subject alternative name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ca_id",
+          "cert_type",
+          "country",
+          "state",
+          "locality",
+          "organization",
+          "common_name",
+          "email_address",
+          "key_type"
+        ],
+        "title": "CertificateNew",
+        "type": "object"
+      },
+      "CertificateReject": {
+        "properties": {
+          "confirm_reject": {
+            "description": "Select this checkbox to confirm the rejection of this request",
+            "type": "boolean"
+          }
+        },
+        "title": "CertificateReject",
+        "type": "object"
+      },
+      "CertificateRequest": {
+        "properties": {
+          "ca_id": {
+            "$ref": "#/components/schemas/CaId"
+          },
+          "cert_type": {
+            "$ref": "#/components/schemas/CertType"
+          },
+          "days": {
+            "description": "The number of days before the certificate will expire",
+            "type": "string"
+          },
+          "file_csr": {
+            "description": "Choose a digital certificate signing request to upload. This should be a PEM encoded PKCS#10 certificate request file",
+            "type": "string"
+          },
+          "file_csr_encoding": {
+            "$ref": "#/components/schemas/FileCsrEncoding"
+          },
+          "issue_cert": {
+            "description": "To modify the subject of the certificate before signing, do not select this checkbox",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ca_id",
+          "file_csr",
+          "cert_type"
+        ],
+        "title": "CertificateRequest",
+        "type": "object"
+      },
+      "CertificateRevoke": {
+        "properties": {
+          "ca_id": {
+            "$ref": "#/components/schemas/CaId"
+          },
+          "confirm_revoke": {
+            "description": "Select this checkbox to confirm the certificate revocation",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ca_id",
+          "confirm_revoke"
+        ],
+        "title": "CertificateRevoke",
+        "type": "object"
+      },
+      "CertificateSignRequest": {
+        "properties": {
+          "ca_id": {
+            "$ref": "#/components/schemas/CaId"
+          },
+          "confirm_sign": {
+            "description": "Select this checkbox to sign the request and issue a certificate",
+            "type": "boolean"
+          },
+          "custom_subject": {
+            "description": "If specified, a list of field/value pairs for the subject of the issued certificate",
+            "items": {
+              "$ref": "#/components/schemas/SubjectField"
+            },
+            "type": "array"
+          },
+          "custom_subject_alt_name": {
+            "description": "If specified, a list of field/value pairs for the subjectAltName of the issued certificate",
+            "items": {
+              "$ref": "#/components/schemas/SubjectAltNameField"
+            },
+            "type": "array"
+          },
+          "days": {
+            "description": "The number of days before the certificate will expire",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ca_id",
+          "days",
+          "confirm_sign"
+        ],
+        "title": "CertificateSignRequest",
+        "type": "object"
+      },
+      "CertificateSubType": {
+        "description": "Subclassification of the type of certificate; may be null",
+        "enum": [
+          "profile-signing"
+        ],
+        "example": "profile-signing",
+        "title": "CertificateSubType",
+        "type": "string"
+      },
+      "CertificateType": {
+        "description": "Type of this certificate",
+        "enum": [
+          "ca",
+          "scep-client",
+          "tls-client",
+          "trusted",
+          "code-signing",
+          "scep-server",
+          "https"
+        ],
+        "example": "ca",
+        "title": "CertificateType",
+        "type": "string"
+      },
+      "DeviceType": {
+        "description": "Device type",
+        "enum": [
+          "Other",
+          "Android",
+          "iOS",
+          "OS X",
+          "Windows",
+          "Ubuntu",
+          "Chromebook",
+          "Web",
+          "External"
+        ],
+        "example": "Other",
+        "title": "DeviceType",
+        "type": "string"
+      },
+      "DistinguishedName": {
+        "properties": {
+          "C": {
+            "description": "ISO 3166 country code",
+            "type": "string"
+          },
+          "CN": {
+            "description": "Common name",
+            "type": "string"
+          },
+          "L": {
+            "description": "Locality name, e.g. city",
+            "type": "string"
+          },
+          "O": {
+            "description": "Organization name",
+            "type": "string"
+          },
+          "OU": {
+            "description": "Organizational unit name",
+            "type": "string"
+          },
+          "ST": {
+            "description": "State or province name",
+            "type": "string"
+          },
+          "emailAddress": {
+            "description": "Email address",
+            "type": "string"
+          }
+        },
+        "title": "DistinguishedName",
+        "type": "object"
+      },
+      "ExportFormat": {
+        "description": "Select the file format for the exported item",
+        "enum": [
+          "p7b",
+          "pem",
+          "crt",
+          "txt",
+          "p12"
+        ],
+        "example": "p7b",
+        "title": "ExportFormat",
+        "type": "string"
+      },
+      "Field": {
+        "description": "Field within the subject",
+        "enum": [
+          "C",
+          "ST",
+          "L",
+          "O",
+          "OU",
+          "CN",
+          "emailAddress",
+          "mdpsDeviceName",
+          "mdpsDeviceType",
+          "mdpsMacAddress",
+          "mdpsDeviceSerial",
+          "mdpsDeviceImei",
+          "mdpsDeviceIccid",
+          "mdpsDeviceUdid",
+          "mdpsProductName",
+          "mdpsProductVersion",
+          "mdpsUserName",
+          "mdpsEmailAddress",
+          "mdpsCustomField"
+        ],
+        "example": "C",
+        "title": "Field",
+        "type": "string"
+      },
+      "FileCsrEncoding": {
+        "description": "Encoding used for 'file_csr' parameter",
+        "enum": [
+          "base64",
+          "text"
+        ],
+        "example": "base64",
+        "title": "FileCsrEncoding",
+        "type": "string"
+      },
+      "HalLinks": {
+        "properties": {
+          "first": {
+            "description": "URL of first page of results",
+            "type": "string"
+          },
+          "last": {
+            "description": "URL of last page of results",
+            "type": "string"
+          },
+          "next": {
+            "description": "URL of next page of results",
+            "type": "string"
+          },
+          "prev": {
+            "description": "URL of previous page of results",
+            "type": "string"
+          },
+          "self": {
+            "description": "URL of result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "self",
+          "first"
+        ],
+        "title": "HalLinks",
+        "type": "object"
+      },
+      "IncludeCa": {
+        "description": "Select which certificate authorities to include.",
+        "enum": [
+          "all",
+          "intermediate"
+        ],
+        "example": "all",
+        "title": "IncludeCa",
+        "type": "string"
+      },
+      "KeyFileEncoding": {
+        "description": "Encoding used for 'key_file' parameter",
+        "enum": [
+          "base64",
+          "text"
+        ],
+        "example": "base64",
+        "title": "KeyFileEncoding",
+        "type": "string"
+      },
+      "KeyType": {
+        "description": "Type of private key; may be null",
+        "enum": [
+          "rsa_1024",
+          "rsa_2048",
+          "rsa_4096",
+          "ec_prime256v1",
+          "ec_secp384r1"
+        ],
+        "example": "rsa_1024",
+        "title": "KeyType",
+        "type": "string"
+      },
+      "OnboardDevice": {
+        "properties": {
+          "device_iccid": {
+            "description": "SIM card unique serial number, if available",
+            "type": "string"
+          },
+          "device_identifier": {
+            "description": "Unique identifier string ",
+            "type": "string"
+          },
+          "device_imei": {
+            "description": "International Mobile Station Equipment Identity, if available",
+            "type": "string"
+          },
+          "device_name": {
+            "description": "Device name",
+            "type": "string"
+          },
+          "device_serial": {
+            "description": "Serial number of the device, if available",
+            "type": "string"
+          },
+          "device_type": {
+            "$ref": "#/components/schemas/DeviceType"
+          },
+          "device_udid": {
+            "description": "Unique device identifier",
+            "type": "string"
+          },
+          "enrolled": {
+            "description": "Flag indicating device has been provisioned and currently has a valid certificate",
+            "type": "boolean"
+          },
+          "expanded_type": {
+            "description": "Marketing name for the product",
+            "type": "string"
+          },
+          "id": {
+            "description": "Numeric ID of the device",
+            "format": "int64",
+            "type": "integer"
+          },
+          "mac_address": {
+            "description": "List of MAC addresses associated with the device",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "mdm_managed": {
+            "description": "Mobile device management (MDM) vendor name, if an endpoint context server reports the device as managed",
+            "type": "string"
+          },
+          "product_name": {
+            "description": "Product name of the device, if available",
+            "type": "string"
+          },
+          "product_version": {
+            "description": "Product version string of the device, if available",
+            "type": "string"
+          },
+          "serial_number": {
+            "description": "Serial number of device certificate, if device type is \"External\"",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "usernames": {
+            "description": "Usernames that have enrolled this device",
+            "type": "string"
+          }
+        },
+        "title": "OnboardDevice",
+        "type": "object"
+      },
+      "OnboardDeviceItems": {
+        "properties": {
+          "items": {
+            "description": "List of items matching the filter",
+            "items": {
+              "$ref": "#/components/schemas/OnboardDevice"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "OnboardDeviceItems",
+        "type": "object"
+      },
+      "OnboardDeviceList": {
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/OnboardDeviceItems"
+          },
+          "_links": {
+            "$ref": "#/components/schemas/HalLinks"
+          },
+          "count": {
+            "description": "Total number of items matching the filter; returned if calculate_count is true",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "_embedded",
+          "_links"
+        ],
+        "title": "OnboardDeviceList",
+        "type": "object"
+      },
+      "OnboardUser": {
+        "properties": {
+          "device_count": {
+            "description": "Number of devices enrolled by this user"
+          },
+          "id": {
+            "description": "Numeric ID of the user",
+            "format": "int64",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "username": {
+            "description": "Username of the user",
+            "type": "string"
+          }
+        },
+        "title": "OnboardUser",
+        "type": "object"
+      },
+      "OnboardUserItems": {
+        "properties": {
+          "items": {
+            "description": "List of items matching the filter",
+            "items": {
+              "$ref": "#/components/schemas/OnboardUser"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "OnboardUserItems",
+        "type": "object"
+      },
+      "OnboardUserList": {
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/OnboardUserItems"
+          },
+          "_links": {
+            "$ref": "#/components/schemas/HalLinks"
+          },
+          "count": {
+            "description": "Total number of items matching the filter; returned if calculate_count is true",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "_embedded",
+          "_links"
+        ],
+        "title": "OnboardUserList",
+        "type": "object"
+      },
+      "Status": {
+        "description": "Determines whether the user can enroll devices",
+        "enum": [
+          "allowed",
+          "denied"
+        ],
+        "example": "allowed",
+        "title": "Status",
+        "type": "string"
+      },
+      "SubjectAltNameField": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/Field"
+          },
+          "value": {
+            "description": "Value of the field",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "value"
+        ],
+        "title": "SubjectAltNameField",
+        "type": "object"
+      },
+      "SubjectField": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/Field"
+          },
+          "value": {
+            "description": "Value of the field",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "value"
+        ],
+        "title": "SubjectField",
+        "type": "object"
+      },
+      "Type": {
+        "description": "Type of certificate to import",
+        "enum": [
+          "trusted",
+          "ca",
+          "code-signing"
+        ],
+        "example": "trusted",
+        "title": "Type",
+        "type": "string"
+      }
+    }
+  },
+  "info": {
+    "contact": {},
+    "title": "Certificate Authority",
+    "version": "6.12.7"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/certificate": {
+      "get": {
+        "deprecated": false,
+        "description": "Get a list of certificates. ",
+        "operationId": "CertificateGet",
+        "parameters": [
+          {
+            "description": "JSON filter expression specifying the items to return",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "default": "{}",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort ordering for returned items (default +id)",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "+id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Zero based offset to start from",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": "0",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Maximum number of items to return (1 – 1000)",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": "25",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Whether to calculate the total item count",
+            "in": "query",
+            "name": "calculate_count",
+            "required": false,
+            "schema": {
+              "default": "false",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateList"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Get a list of certificates",
+        "tags": [
+          "Certificate"
+        ]
+      }
+    },
+    "/certificate/import": {
+      "post": {
+        "deprecated": false,
+        "description": "Import a code-signing, trusted, or CA certificate",
+        "operationId": "CertificateImportImportPost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertificateImport"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Certificate"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Client Error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Import a code-signing, trusted, or CA certificate",
+        "tags": [
+          "CertificateImport"
+        ]
+      }
+    },
+    "/certificate/new": {
+      "post": {
+        "deprecated": false,
+        "description": "Create a new certificate signing request and private key",
+        "operationId": "CertificateNewNewPost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertificateNew"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Certificate"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Create a new certificate signing request and private key",
+        "tags": [
+          "CertificateNew"
+        ]
+      }
+    },
+    "/certificate/request": {
+      "post": {
+        "deprecated": false,
+        "description": "Import a certificate signing request",
+        "operationId": "CertificateRequestRequestPost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertificateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Certificate"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Import a certificate signing request",
+        "tags": [
+          "CertificateRequest"
+        ]
+      }
+    },
+    "/certificate/{cert_id}/chain": {
+      "get": {
+        "deprecated": false,
+        "description": "Get a certificate and its trust chain",
+        "operationId": "CertificateChainByCert_idChainGet",
+        "parameters": [
+          {
+            "description": "Numeric ID of the certificate",
+            "in": "path",
+            "name": "cert_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateChain"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Get a certificate and its trust chain",
+        "tags": [
+          "CertificateChain"
+        ]
+      }
+    },
+    "/certificate/{cert_id}/export": {
+      "post": {
+        "deprecated": false,
+        "description": "Export a certificate or certificate signing request",
+        "operationId": "CertificateExportByCert_idExportPost",
+        "parameters": [
+          {
+            "description": "Numeric ID of the certificate",
+            "in": "path",
+            "name": "cert_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertificateExport"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/pkcs10": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateExportResponse"
+                }
+              },
+              "application/x-pkcs12": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateExportResponse"
+                }
+              },
+              "application/x-pkcs7-certificates": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateExportResponse"
+                }
+              },
+              "application/x-x509-ca-cert": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateExportResponse"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateExportResponse"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/pkcs10": {
+                "schema": {}
+              },
+              "application/x-pkcs12": {
+                "schema": {}
+              },
+              "application/x-pkcs7-certificates": {
+                "schema": {}
+              },
+              "application/x-x509-ca-cert": {
+                "schema": {}
+              },
+              "text/plain": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/pkcs10": {
+                "schema": {}
+              },
+              "application/x-pkcs12": {
+                "schema": {}
+              },
+              "application/x-pkcs7-certificates": {
+                "schema": {}
+              },
+              "application/x-x509-ca-cert": {
+                "schema": {}
+              },
+              "text/plain": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/pkcs10": {
+                "schema": {}
+              },
+              "application/x-pkcs12": {
+                "schema": {}
+              },
+              "application/x-pkcs7-certificates": {
+                "schema": {}
+              },
+              "application/x-x509-ca-cert": {
+                "schema": {}
+              },
+              "text/plain": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/pkcs10": {
+                "schema": {}
+              },
+              "application/x-pkcs12": {
+                "schema": {}
+              },
+              "application/x-pkcs7-certificates": {
+                "schema": {}
+              },
+              "application/x-x509-ca-cert": {
+                "schema": {}
+              },
+              "text/plain": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/pkcs10": {
+                "schema": {}
+              },
+              "application/x-pkcs12": {
+                "schema": {}
+              },
+              "application/x-pkcs7-certificates": {
+                "schema": {}
+              },
+              "application/x-x509-ca-cert": {
+                "schema": {}
+              },
+              "text/plain": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/pkcs10": {
+                "schema": {}
+              },
+              "application/x-pkcs12": {
+                "schema": {}
+              },
+              "application/x-pkcs7-certificates": {
+                "schema": {}
+              },
+              "application/x-x509-ca-cert": {
+                "schema": {}
+              },
+              "text/plain": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Export a certificate or certificate signing request",
+        "tags": [
+          "CertificateExport"
+        ]
+      }
+    },
+    "/certificate/{cert_id}/reject": {
+      "post": {
+        "deprecated": false,
+        "description": "Reject a certificate signing request",
+        "operationId": "CertificateRejectByCert_idRejectPost",
+        "parameters": [
+          {
+            "description": "Numeric ID of the certificate signing request",
+            "in": "path",
+            "name": "cert_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertificateReject"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Certificate"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Reject a certificate signing request",
+        "tags": [
+          "CertificateReject"
+        ]
+      }
+    },
+    "/certificate/{cert_id}/revoke": {
+      "post": {
+        "deprecated": false,
+        "description": "Revoke a certificate",
+        "operationId": "CertificateRevokeByCert_idRevokePost",
+        "parameters": [
+          {
+            "description": "Numeric ID of the certificate",
+            "in": "path",
+            "name": "cert_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertificateRevoke"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Certificate"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Revoke a certificate",
+        "tags": [
+          "CertificateRevoke"
+        ]
+      }
+    },
+    "/certificate/{cert_id}/sign": {
+      "post": {
+        "deprecated": false,
+        "description": "Sign a certificate signing request",
+        "operationId": "CertificateSignRequestByCert_idSignPost",
+        "parameters": [
+          {
+            "description": "Numeric ID of the certificate signing request",
+            "in": "path",
+            "name": "cert_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertificateSignRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Certificate"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Sign a certificate signing request",
+        "tags": [
+          "CertificateSignRequest"
+        ]
+      }
+    },
+    "/certificate/{certificate_id}": {
+      "delete": {
+        "deprecated": false,
+        "description": "Delete a certificate or certificate signing request",
+        "operationId": "CertificateByCertificate_idDelete",
+        "parameters": [
+          {
+            "description": "Numeric ID of the certificate",
+            "in": "path",
+            "name": "certificate_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Delete a certificate or certificate signing request",
+        "tags": [
+          "Certificate"
+        ]
+      },
+      "get": {
+        "deprecated": false,
+        "description": "Get a certificate or certificate signing request",
+        "operationId": "CertificateByCertificate_idGet",
+        "parameters": [
+          {
+            "description": "Numeric ID of the certificate",
+            "in": "path",
+            "name": "certificate_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Certificate"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Get a certificate or certificate signing request",
+        "tags": [
+          "Certificate"
+        ]
+      }
+    },
+    "/onboard/device": {
+      "get": {
+        "deprecated": false,
+        "description": "Get a list of devices. ",
+        "operationId": "OnboardDeviceDeviceGet",
+        "parameters": [
+          {
+            "description": "JSON filter expression specifying the items to return",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "default": "{}",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort ordering for returned items (default +id)",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "+id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Zero based offset to start from",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": "0",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Maximum number of items to return (1 – 1000)",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": "25",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Whether to calculate the total item count",
+            "in": "query",
+            "name": "calculate_count",
+            "required": false,
+            "schema": {
+              "default": "false",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardDeviceList"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Get a list of devices",
+        "tags": [
+          "OnboardDevice"
+        ]
+      }
+    },
+    "/onboard/device/{id}": {
+      "delete": {
+        "deprecated": false,
+        "description": "Delete a device.\n<table>\n  <thead>\n    <tr>\n      <th>Details about this operation</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Certificates issued to the device by Onboard will be revoked.</td>\n    </tr>\n    <tr>\n      <td>The device will be disconnected from the network, if <span class=\"code\">disconnect_active_sessions</span> is true.</td>\n    </tr>\n    <tr>\n      <td>If this device has been provisioned with certificates signed by an external source, you must revoke these certificates manually.\nOtherwise the device will still be able to access the network until these certificates expire.</td>\n    </tr>\n    <tr>\n      <td>If this device has <strong>not</strong> been provisioned with certificates signed by an external source, the device will be blocked from accessing the network.</td>\n    </tr>\n    <tr>\n      <td>The device will be allowed to enroll with Onboard again.</td>\n    </tr>\n  </tbody>\n</table>\n",
+        "operationId": "OnboardDeviceDeviceByIdDelete",
+        "parameters": [
+          {
+            "description": "Numeric ID of the device",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "<b>true:</b> Disconnects the device from the network (default)<br/><b>false:</b> No action is taken",
+            "in": "query",
+            "name": "disconnect_active_sessions",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "\n<b>true:</b> Optional Disconnect — failure to disconnect will be ignored and the device will be forcibly deleted<br/>\n<b>false:</b> Require Disconnect (Recommended) — failure to disconnect will stop the device from being deleted (default)<br/>\nWhen false (‘Require Disconnect’), the device will only be deleted if all other sessions can be disconnected,\nwhich ensures that the device does not retain access to the network through a currently active session.\nYou should only select true (‘Optional Disconnect’) if necessary.<br/>\nThis parameter is ignored if <span class=\"code\">disconnect_active_sessions</span> is false.",
+            "in": "query",
+            "name": "ignore_disconnect_errors",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Delete a device",
+        "tags": [
+          "OnboardDevice"
+        ]
+      },
+      "get": {
+        "deprecated": false,
+        "description": "Get a device",
+        "operationId": "OnboardDeviceDeviceByIdGet",
+        "parameters": [
+          {
+            "description": "Numeric ID of the device",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardDevice"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Get a device",
+        "tags": [
+          "OnboardDevice"
+        ]
+      },
+      "patch": {
+        "deprecated": false,
+        "description": "Update settings for a device",
+        "operationId": "OnboardDeviceDeviceByIdPatch",
+        "parameters": [
+          {
+            "description": "Numeric ID of the device",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnboardDevice"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardDevice"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Update settings for a device",
+        "tags": [
+          "OnboardDevice"
+        ]
+      }
+    },
+    "/user": {
+      "get": {
+        "deprecated": false,
+        "description": "Get a list of users. ",
+        "operationId": "OnboardUserGet",
+        "parameters": [
+          {
+            "description": "JSON filter expression specifying the items to return",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "default": "{}",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort ordering for returned items (default +id)",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "+id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Zero based offset to start from",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": "0",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Maximum number of items to return (1 – 1000)",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": "25",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Whether to calculate the total item count",
+            "in": "query",
+            "name": "calculate_count",
+            "required": false,
+            "schema": {
+              "default": "false",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardUserList"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Get a list of users",
+        "tags": [
+          "OnboardUser"
+        ]
+      }
+    },
+    "/user/{id}": {
+      "delete": {
+        "deprecated": false,
+        "description": "Delete a user.\n<table>\n  <thead>\n    <tr>\n      <th>Details about this operation</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>This will delete all the data (user’s devices, TLS client certificates, etc.) associated with this user.</td>\n    </tr>\n    <tr>\n      <td>The device will still be able to reprovision after being deleted.</td>\n    </tr>\n    <tr>\n      <td>To deny a device access, set the ‘status’ property of the device to ‘denied’.</td>\n    </tr>\n  </tbody>\n</table>\n",
+        "operationId": "OnboardUserByIdDelete",
+        "parameters": [
+          {
+            "description": "Numeric ID of the user",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Delete a user",
+        "tags": [
+          "OnboardUser"
+        ]
+      },
+      "get": {
+        "deprecated": false,
+        "description": "Get a user",
+        "operationId": "OnboardUserByIdGet",
+        "parameters": [
+          {
+            "description": "Numeric ID of the user",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardUser"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Get a user",
+        "tags": [
+          "OnboardUser"
+        ]
+      },
+      "patch": {
+        "deprecated": false,
+        "description": "Update settings for a user",
+        "operationId": "OnboardUserByIdPatch",
+        "parameters": [
+          {
+            "description": "Numeric ID of the user",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnboardUser"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardUser"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "204": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "No Content"
+          },
+          "304": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Modified"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Update settings for a user",
+        "tags": [
+          "OnboardUser"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://clearpass-hostname/api"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Manage Onboard certificates",
+      "name": "Certificate"
+    },
+    {
+      "description": "Get a certificate and its trust chain",
+      "name": "CertificateChain"
+    },
+    {
+      "description": "Export a certificate or certificate signing request",
+      "name": "CertificateExport"
+    },
+    {
+      "description": "Import a code-signing, trusted, or CA certificate",
+      "name": "CertificateImport"
+    },
+    {
+      "description": "Create a new certificate signing request and private key",
+      "name": "CertificateNew"
+    },
+    {
+      "description": "Reject a certificate signing request",
+      "name": "CertificateReject"
+    },
+    {
+      "description": "Import a certificate signing request",
+      "name": "CertificateRequest"
+    },
+    {
+      "description": "Revoke a certificate",
+      "name": "CertificateRevoke"
+    },
+    {
+      "description": "Sign a certificate signing request",
+      "name": "CertificateSignRequest"
+    },
+    {
+      "description": "Manage Onboard devices",
+      "name": "OnboardDevice"
+    },
+    {
+      "description": "Manage Onboard users",
+      "name": "OnboardUser"
+    }
+  ],
+  "x-explorer-enabled": false,
+  "x-headers": [
+    {
+      "key": "Authorization",
+      "value": "Bearer <TOKEN>"
+    }
+  ],
+  "x-readme": {
+    "proxy-enabled": true
+  }
+}

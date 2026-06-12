@@ -6,9 +6,11 @@ Every Axis entity follows a uniform CRUD shape::
     PUT    /<Resource>/{id}    -> update
     DELETE /<Resource>/{id}    -> delete
 
-Rather than repeat the action-validation, elicitation, and dispatch logic
-in every tool file, this helper handles the common path. Each tool file
-just calls ``manage_entity(...)`` with its base path and a label.
+Rather than repeat the action-validation and dispatch logic in every tool
+file, this helper handles the common path. Each tool file just calls
+``manage_entity(...)`` with its base path and a label. Write confirmation
+happens at the universal gate in ``axis_invoke_tool`` dispatch
+(``confirm_gated_invoke``) before these tools run.
 
 Writes stage in Axis. To apply, the caller invokes ``axis_commit_changes``;
 every successful response from this helper carries a ``next_step`` hint
@@ -22,7 +24,6 @@ from typing import Any
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms.axis.client import format_http_error, get_axis_client
 
 _VALID_ACTIONS = ("create", "update", "delete")
@@ -42,18 +43,18 @@ async def manage_entity(
     """Generic create/update/delete dispatcher for Axis CRUD entities.
 
     Args:
-        ctx: FastMCP context (needed for elicitation).
+        ctx: FastMCP context.
         base_path: Resource path under ``/api/v1.0`` — e.g. ``"/Connectors"``.
-        label: Human-readable entity name for the elicitation prompt
+        label: Human-readable entity name for log/error messages
             (e.g. ``"connector"``, ``"SSL exclusion"``).
         action_type: One of ``"create"``, ``"update"``, ``"delete"``.
         payload: Request body for ``create``/``update``. Ignored for delete.
         entity_id: Resource ID — required for ``update`` and ``delete``.
-        confirmed: When true, skip the elicitation prompt.
+        confirmed: Pass-through of the tools' fallback confirmation flag;
+            confirmation itself happens at the universal gate.
 
     Returns:
-        Either a dict with the API response plus a ``next_step`` hint, or a
-        string error message.
+        A dict with the API response plus a ``next_step`` hint.
     """
     if action_type not in _VALID_ACTIONS:
         raise ToolError(
@@ -66,11 +67,6 @@ async def manage_entity(
         raise ToolError({"status_code": 400, "message": f"entity_id is required for action '{action_type}'."})
     if action_type in ("create", "update") and not payload:
         raise ToolError({"status_code": 400, "message": f"payload is required for action '{action_type}'."})
-
-    target = entity_id or "(new)"
-    decline = await confirm_write(ctx, f"Axis: {action_type} {label} '{target}'. Confirm?")
-    if decline:
-        return decline
 
     try:
         client = await get_axis_client()

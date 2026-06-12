@@ -47,6 +47,30 @@
         "schema": {
           "type": "string"
         }
+      },
+      "post_device_function": {
+        "description": "Device function for which the local object needs to be created. Mandatory if object_type = LOCAL. Should not be provided for object_type = SHARED.",
+        "in": "query",
+        "name": "device-function",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "post_object_type": {
+        "description": "LOCAL - To create local objects. SHARED - To create shared objects. Default - Defaults to SHARED if not provided",
+        "in": "query",
+        "name": "object-type",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "post_scope_id": {
+        "description": "Scope at which local object needs to be created. Mandatory if object-type = LOCAL. Should not be provided for object-type = SHARED.",
+        "in": "query",
+        "name": "scope-id",
+        "schema": {
+          "type": "string"
+        }
       }
     },
     "requestBodies": {
@@ -59,6 +83,16 @@
           }
         },
         "description": "config-assignmentsbody object"
+      },
+      "ArubaConfigAssignment_ConfigAssignmentsconfigAssignmentSchema": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ArubaConfigAssignment_ConfigAssignmentsconfigAssignmentSchema"
+            }
+          }
+        },
+        "description": "config-assignmentbody object"
       }
     },
     "responses": {
@@ -275,10 +309,10 @@
     },
     "schemas": {
       "ArubaConfigAssignment_ConfigAssignmentsSchema": {
-        "description": "Assign a configuration to a scope and device-function. Config profiles may be applied within a specific context, identified by a scope and a device function.\n\nA scope defines the subset of devices in the network infrastructure that the profile is to be applied to.\nThese are the type of scopes: Global, Site Collection, Site, Device Group, Device. Each scope is identified by an id and name.\nDevice function: Access Switch, Branch Gateway, Mobility Gateway, Campus AP, etc are a few examples. These are identified\nusing device function indentifiers like SWITCH, BRANCH_GW, MOBILITY_GW, CAMPUS_AP, etc respectively.\n\nFor example: A certain role can be assigned to a certain Site(a geographical location like a campus) or to a specific device for a Campus AP device function.",
+        "description": "Configuration assignments for a scope and device-function. Config profiles may be applied within a specific context, identified by a scope and a device function.\n\nA scope defines the subset of devices in the network infrastructure that the profile is applied to.\nThese are the type of scopes: Global, Site Collection, Site, Device Group, Device. Each scope is identified by an id and name.\nDevice function: Access Switch, Branch Gateway, Mobility Gateway, Campus AP, etc are a few examples. These are identified\nusing device function indentifiers like SWITCH, BRANCH_GW, MOBILITY_GW, CAMPUS_AP, etc respectively.\n\nFor example: A certain role can be associated with a certain Site(a geographical location like a campus) or with a specific device for a Campus AP device function.",
         "properties": {
           "config-assignment": {
-            "description": "List of configuration assignments.",
+            "description": "Delete a configuration assignment identified by scope, device function, profile type and profile instance.",
             "items": {
               "properties": {
                 "device-function": {
@@ -328,13 +362,13 @@
                   "x-typeDescription": "Persona type."
                 },
                 "profile-instance": {
-                  "description": "Profile instance that is to be assigned.\nExample: If a scope is to be assigned to a role called Role1, the profile instance would be Role1",
+                  "description": "Instance of the profile.\nExample: If a config is a role called Role1, the profile instance would be Role1",
                   "format": "const",
                   "maxLength": 9999,
                   "type": "string"
                 },
                 "profile-type": {
-                  "description": "Type of profile that is to be assigned.\nExample: If a scope is to be assigned to a role called Role1, the profile type would be roles. Similary for a policy,\nit would be policies",
+                  "description": "Type of the profile.\nExample: If a config is a role called Role1, the profile type would be roles. Similarly for a policy,\nit would be policies",
                   "format": "const",
                   "maxLength": 9999,
                   "type": "string"
@@ -359,10 +393,10 @@
         }
       },
       "ArubaConfigAssignment_ConfigAssignmentsSchemaGET": {
-        "description": "Assign a configuration to a scope and device-function. Config profiles may be applied within a specific context, identified by a scope and a device function.\n\nA scope defines the subset of devices in the network infrastructure that the profile is to be applied to.\nThese are the type of scopes: Global, Site Collection, Site, Device Group, Device. Each scope is identified by an id and name.\nDevice function: Access Switch, Branch Gateway, Mobility Gateway, Campus AP, etc are a few examples. These are identified\nusing device function indentifiers like SWITCH, BRANCH_GW, MOBILITY_GW, CAMPUS_AP, etc respectively.\n\nFor example: A certain role can be assigned to a certain Site(a geographical location like a campus) or to a specific device for a Campus AP device function.",
+        "description": "Configuration assignments for a scope and device-function. Config profiles may be applied within a specific context, identified by a scope and a device function.\n\nA scope defines the subset of devices in the network infrastructure that the profile is applied to.\nThese are the type of scopes: Global, Site Collection, Site, Device Group, Device. Each scope is identified by an id and name.\nDevice function: Access Switch, Branch Gateway, Mobility Gateway, Campus AP, etc are a few examples. These are identified\nusing device function indentifiers like SWITCH, BRANCH_GW, MOBILITY_GW, CAMPUS_AP, etc respectively.\n\nFor example: A certain role can be associated with a certain Site(a geographical location like a campus) or with a specific device for a Campus AP device function.",
         "properties": {
           "config-assignment": {
-            "description": "List of configuration assignments.",
+            "description": "Delete a configuration assignment identified by scope, device function, profile type and profile instance.",
             "items": {
               "properties": {
                 "device-function": {
@@ -412,13 +446,13 @@
                   "x-typeDescription": "Persona type."
                 },
                 "profile-instance": {
-                  "description": "Profile instance that is to be assigned.\nExample: If a scope is to be assigned to a role called Role1, the profile instance would be Role1",
+                  "description": "Instance of the profile.\nExample: If a config is a role called Role1, the profile instance would be Role1",
                   "format": "const",
                   "maxLength": 9999,
                   "type": "string"
                 },
                 "profile-type": {
-                  "description": "Type of profile that is to be assigned.\nExample: If a scope is to be assigned to a role called Role1, the profile type would be roles. Similary for a policy,\nit would be policies",
+                  "description": "Type of the profile.\nExample: If a config is a role called Role1, the profile type would be roles. Similarly for a policy,\nit would be policies",
                   "format": "const",
                   "maxLength": 9999,
                   "type": "string"
@@ -451,6 +485,74 @@
               "profileType",
               "profileInstance"
             ]
+          }
+        }
+      },
+      "ArubaConfigAssignment_ConfigAssignmentsconfigAssignmentSchema": {
+        "properties": {
+          "device-function": {
+            "description": "This is the device function identifier. For example: BRANCH_GW, ACCESS_SWITCH, CAMPUS_AP, etc.",
+            "enum": [
+              "MOBILITY_GW",
+              "BRANCH_GW",
+              "VPNC",
+              "CAMPUS_AP",
+              "MICROBRANCH_AP",
+              "ACCESS_SWITCH",
+              "ALL",
+              "SERVICE_PERSONA",
+              "BRIDGE",
+              "IOT",
+              "HYBRID_NAC",
+              "CORE_SWITCH",
+              "AGG_SWITCH",
+              "AOSS_ACCESS_SWITCH",
+              "AOSS_CORE_SWITCH",
+              "AOSS_AGG_SWITCH",
+              "EC_VPNC",
+              "EC_BRANCH_GW"
+            ],
+            "format": "enum",
+            "type": "string",
+            "x-enumDescriptions": {
+              "ACCESS_SWITCH": "Access Switch. This persona provides Access Switch functionality.",
+              "AGG_SWITCH": "Aggregation Switch. This persona provides Aggregation Switch functionality.",
+              "ALL": "ALL. This persona provides ALL devices functionality.",
+              "AOSS_ACCESS_SWITCH": "AOS-S Access Switch. This persona provides Access Switch functionality.",
+              "AOSS_AGG_SWITCH": "AOS-S Aggregation Switch. This persona provides Aggregation Switch functionality.",
+              "AOSS_CORE_SWITCH": "AOS-S Core Switch. This persona provides Core Switch functionality.",
+              "BRANCH_GW": "Branch gateway. This gateway persona provides Aruba InstantOS and SD-Branch (LAN + WAN) functionality",
+              "BRIDGE": "Bridge . This persona provides bridge functionality.",
+              "CAMPUS_AP": "Campus/Branch AP. This AP persona provides WLAN functionality.",
+              "CORE_SWITCH": "Core Switch. This persona provides Core Switch functionality.",
+              "EC_BRANCH_GW": "EdgeConnect Branch Gateway",
+              "EC_VPNC": "EdgeConnect VPNC",
+              "HYBRID_NAC": "Hybrid NAC Edge VM. This persona provides Hybrid NAC Edge VM functionality.",
+              "IOT": "IoT Edge VM. This persona provides IoT Edge VM functionality.",
+              "MICROBRANCH_AP": "Microbranch AP. This AP persona provides SD-WAN-lite functionality in addition to the functions of WLAN AP.",
+              "MOBILITY_GW": "Mobility Gateway. This gateway persona provides Overlay WLAN and (or) wired LAN functionalities.",
+              "SERVICE_PERSONA": "Service Persona. This persona provides service functionality.",
+              "VPNC": "VPN Concentrator."
+            },
+            "x-typeDescription": "Persona type."
+          },
+          "profile-instance": {
+            "description": "Instance of the profile.\nExample: If a config is a role called Role1, the profile instance would be Role1",
+            "format": "const",
+            "maxLength": 9999,
+            "type": "string"
+          },
+          "profile-type": {
+            "description": "Type of the profile.\nExample: If a config is a role called Role1, the profile type would be roles. Similarly for a policy,\nit would be policies",
+            "format": "const",
+            "maxLength": 9999,
+            "type": "string"
+          },
+          "scope-id": {
+            "description": "Scope id is an identifier for the scope",
+            "format": "const",
+            "maxLength": 9999,
+            "type": "string"
           }
         }
       },
@@ -906,7 +1008,7 @@
   "paths": {
     "/network-config/v1alpha1/config-assignments": {
       "get": {
-        "description": "Assign a configuration to a scope and device-function. Config profiles may be applied within a specific context, identified by a scope and a device function.\n\nA scope defines the subset of devices in the network infrastructure that the profile is to be applied to.\nThese are the type of scopes: Global, Site Collection, Site, Device Group, Device. Each scope is identified by an id and name.\nDevice function: Access Switch, Branch Gateway, Mobility Gateway, Campus AP, etc are a few examples. These are identified\nusing device function indentifiers like SWITCH, BRANCH_GW, MOBILITY_GW, CAMPUS_AP, etc respectively.\n\nFor example: A certain role can be assigned to a certain Site(a geographical location like a campus) or to a specific device for a Campus AP device function.",
+        "description": "Configuration assignments for a scope and device-function. Config profiles may be applied within a specific context, identified by a scope and a device function.\n\nA scope defines the subset of devices in the network infrastructure that the profile is applied to.\nThese are the type of scopes: Global, Site Collection, Site, Device Group, Device. Each scope is identified by an id and name.\nDevice function: Access Switch, Branch Gateway, Mobility Gateway, Campus AP, etc are a few examples. These are identified\nusing device function indentifiers like SWITCH, BRANCH_GW, MOBILITY_GW, CAMPUS_AP, etc respectively.\n\nFor example: A certain role can be associated with a certain Site(a geographical location like a campus) or with a specific device for a Campus AP device function.",
         "operationId": "readConfigAssignments",
         "parameters": [
           {
@@ -914,6 +1016,17 @@
           },
           {
             "$ref": "#/components/parameters/get_device_function"
+          },
+          {
+            "description": "Filter configuration specific to a profile type",
+            "in": "query",
+            "name": "profile-type",
+            "required": false,
+            "schema": {
+              "format": "",
+              "maxLength": 9999,
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -984,7 +1097,7 @@
         }
       },
       "post": {
-        "description": "Assign a configuration to a scope and device-function. Config profiles may be applied within a specific context, identified by a scope and a device function.\n\nA scope defines the subset of devices in the network infrastructure that the profile is to be applied to.\nThese are the type of scopes: Global, Site Collection, Site, Device Group, Device. Each scope is identified by an id and name.\nDevice function: Access Switch, Branch Gateway, Mobility Gateway, Campus AP, etc are a few examples. These are identified\nusing device function indentifiers like SWITCH, BRANCH_GW, MOBILITY_GW, CAMPUS_AP, etc respectively.\n\nFor example: A certain role can be assigned to a certain Site(a geographical location like a campus) or to a specific device for a Campus AP device function.",
+        "description": "Configuration assignments for a scope and device-function. Config profiles may be applied within a specific context, identified by a scope and a device function.\n\nA scope defines the subset of devices in the network infrastructure that the profile is applied to.\nThese are the type of scopes: Global, Site Collection, Site, Device Group, Device. Each scope is identified by an id and name.\nDevice function: Access Switch, Branch Gateway, Mobility Gateway, Campus AP, etc are a few examples. These are identified\nusing device function indentifiers like SWITCH, BRANCH_GW, MOBILITY_GW, CAMPUS_AP, etc respectively.\n\nFor example: A certain role can be associated with a certain Site(a geographical location like a campus) or with a specific device for a Campus AP device function.",
         "operationId": "createConfigAssignments",
         "requestBody": {
           "$ref": "#/components/requestBodies/ArubaConfigAssignment_ConfigAssignmentsSchema"
@@ -1041,7 +1154,7 @@
     },
     "/network-config/v1alpha1/config-assignments/{scope-id}/{device-function}/{profile-type}/{profile-instance}": {
       "delete": {
-        "description": "List of configuration assignments.",
+        "description": "Delete a configuration assignment identified by scope, device function, profile type and profile instance.",
         "operationId": "deleteConfigAssignmentsConfigAssignmentByID",
         "parameters": [
           {
@@ -1067,7 +1180,7 @@
             }
           },
           {
-            "description": "Type of profile that is to be assigned.\nExample: If a scope is to be assigned to a role called Role1, the profile type would be roles. Similary for a policy,\nit would be policies",
+            "description": "Type of the profile.\nExample: If a config is a role called Role1, the profile type would be roles. Similarly for a policy,\nit would be policies",
             "in": "path",
             "name": "profile-type",
             "required": true,
@@ -1078,7 +1191,7 @@
             }
           },
           {
-            "description": "Profile instance that is to be assigned.\nExample: If a scope is to be assigned to a role called Role1, the profile instance would be Role1",
+            "description": "Instance of the profile.\nExample: If a config is a role called Role1, the profile instance would be Role1",
             "in": "path",
             "name": "profile-instance",
             "required": true,
@@ -1150,6 +1263,131 @@
           "parentCommand": "deleteConfigAssignmentsCmd",
           "pathToPrint": "/config-assignments/config-assignment/%s/%s/%s/%s/",
           "summary": "Delete operation for config-assignment",
+          "totParams": 4
+        }
+      },
+      "put": {
+        "description": "Delete a configuration assignment identified by scope, device function, profile type and profile instance.",
+        "operationId": "replaceConfigAssignmentsConfigAssignmentByID",
+        "parameters": [
+          {
+            "description": "Scope id is an identifier for the scope",
+            "in": "path",
+            "name": "scope-id",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "description": "This is the device function identifier. For example: BRANCH_GW, ACCESS_SWITCH, CAMPUS_AP, etc.",
+            "in": "path",
+            "name": "device-function",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Type of the profile.\nExample: If a config is a role called Role1, the profile type would be roles. Similarly for a policy,\nit would be policies",
+            "in": "path",
+            "name": "profile-type",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Instance of the profile.\nExample: If a config is a role called Role1, the profile instance would be Role1",
+            "in": "path",
+            "name": "profile-instance",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaConfigAssignment_ConfigAssignmentsconfigAssignmentSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace config-assignment by scope-id, device-function, profile-type, profile-instance",
+        "tags": [
+          "Config Assignment"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceConfigAssignmentsConfigAssignmentCmd",
+          "commandUse": "config-assignment",
+          "paramKeys": [
+            {
+              "key": "scope-id"
+            },
+            {
+              "key": "device-function"
+            },
+            {
+              "key": "profile-type"
+            },
+            {
+              "key": "profile-instance"
+            }
+          ],
+          "parentCommand": "replaceConfigAssignmentsCmd",
+          "pathToPrint": "/config-assignments/config-assignment/%s/%s/%s/%s/",
+          "summary": "Replace operation for config-assignment",
           "totParams": 4
         }
       }

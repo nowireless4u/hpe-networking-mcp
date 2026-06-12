@@ -518,7 +518,7 @@ def test_role_step2_assigns_only_to_mobility_gw_by_default(role) -> None:
     items = (step2.body or {})["config-assignment"]
     assert len(items) == 1
     assert items[0]["device-function"] == "MOBILITY_GW"
-    assert items[0]["profile-type"] == "role"
+    assert items[0]["profile-type"] == "roles"
     assert items[0]["profile-instance"] == "demo"
 
 
@@ -1254,7 +1254,7 @@ def test_policy_icmp_echo_rule(policy) -> None:
 
 
 def test_policy_dst_nat_action(policy) -> None:
-    """action=dst-nat with dnatport=8080 → ACTION_DESTINATION_NAT + destination-nat.dest-port=8080."""
+    """action=dst-nat with dnatport=8080 → ACTION_DESTINATION_NAT + destination-nat.port=8080."""
     source = {
         "accname": "dst-nat-rule",
         "acl_sess__v4policy": [
@@ -1275,12 +1275,13 @@ def test_policy_dst_nat_action(policy) -> None:
     rule = body["security-policy"]["policy-rule"][0]
     assert rule["action"] == {
         "type": "ACTION_DESTINATION_NAT",
-        "destination-nat": {"dest-port": 8080},
+        "destination-nat": {"port": 8080},
     }
 
 
 def test_policy_redirect_tunnel_group(policy) -> None:
-    """action=redir_opt + re_dir=tunnel-group + tungrpname → ACTION_REDIRECT + redirect.tunnel-group."""
+    """action=redir_opt + re_dir=tunnel-group + tungrpname → ACTION_REDIRECT +
+    redirect={destination: REDIRECT_TUNNEL_GROUP, tunnel-group: <name>}."""
     source = {
         "accname": "redir-rule",
         "acl_sess__v4policy": [
@@ -1302,8 +1303,257 @@ def test_policy_redirect_tunnel_group(policy) -> None:
     rule = body["security-policy"]["policy-rule"][0]
     assert rule["action"] == {
         "type": "ACTION_REDIRECT",
-        "redirect": {"tunnel-group": "test"},
+        "redirect": {"destination": "REDIRECT_TUNNEL_GROUP", "tunnel-group": "test"},
     }
+
+
+def test_policy_redirect_tunnel_uses_destination_discriminator(policy) -> None:
+    """action=redir_opt + re_dir=tunnel + tunid → ACTION_REDIRECT +
+    redirect={destination: REDIRECT_TUNNEL, tunnel: <int>} (no bare tunnel-id)."""
+    source = {
+        "accname": "redir-t",
+        "acl_sess__v4policy": [
+            {
+                "suser": True,
+                "src": "suser",
+                "dany": True,
+                "dst": "dany",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "tunid": 7,
+                "re_dir": "tunnel",
+                "action": "redir_opt",
+            }
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
+    rule = body["security-policy"]["policy-rule"][0]
+    assert rule["action"] == {
+        "type": "ACTION_REDIRECT",
+        "redirect": {"destination": "REDIRECT_TUNNEL", "tunnel": 7},
+    }
+
+
+def test_policy_dst_nat_with_address_uses_ip_address_key(policy) -> None:
+    """dst-nat with dnataddr → destination-nat.ip-address (not dest-address)."""
+    source = {
+        "accname": "dnat-addr",
+        "acl_sess__v4policy": [
+            {
+                "suser": True,
+                "src": "suser",
+                "dany": True,
+                "dst": "dany",
+                "service-name": "svc-http",
+                "svc": "service-name",
+                "service_app": "service",
+                "dnatport": 8080,
+                "dnataddr": "10.2.2.2",
+                "action": "dst-nat",
+            }
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
+    rule = body["security-policy"]["policy-rule"][0]
+    assert rule["action"] == {
+        "type": "ACTION_DESTINATION_NAT",
+        "destination-nat": {"port": 8080, "ip-address": "10.2.2.2"},
+    }
+
+
+def test_policy_dual_nat_action_uses_nat_pool_and_port(policy) -> None:
+    """action=dual-nat with dualnatpool + dualnatport → ACTION_DUAL_NAT +
+    dual-nat={nat-pool, port} (nat-pool is x-mandatory)."""
+    source = {
+        "accname": "dual-nat",
+        "acl_sess__v4policy": [
+            {
+                "suser": True,
+                "src": "suser",
+                "dany": True,
+                "dst": "dany",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "dualnatpool": "pool-a",
+                "dualnatport": 9090,
+                "action": "dual-nat",
+            }
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
+    rule = body["security-policy"]["policy-rule"][0]
+    assert rule["action"] == {
+        "type": "ACTION_DUAL_NAT",
+        "dual-nat": {"nat-pool": "pool-a", "port": 9090},
+    }
+
+
+def test_policy_captive_action_maps_to_action_captive_portal(policy) -> None:
+    """action=captive → ACTION_CAPTIVE_PORTAL (not the ACTION_ALLOW fall-through)."""
+    source = {
+        "accname": "cap",
+        "acl_sess__v4policy": [
+            {
+                "suser": True,
+                "src": "suser",
+                "dany": True,
+                "dst": "dany",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "action": "captive",
+            }
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
+    rule = body["security-policy"]["policy-rule"][0]
+    assert rule["action"] == {"type": "ACTION_CAPTIVE_PORTAL"}
+
+
+def test_policy_mirror_action_maps_to_action_mirror(policy) -> None:
+    """action=mirror → ACTION_MIRROR."""
+    source = {
+        "accname": "mir",
+        "acl_sess__v4policy": [
+            {
+                "suser": True,
+                "src": "suser",
+                "dany": True,
+                "dst": "dany",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "action": "mirror",
+            }
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
+    rule = body["security-policy"]["policy-rule"][0]
+    assert rule["action"] == {"type": "ACTION_MIRROR"}
+
+
+def test_policy_blacklist_sets_secondary_action_denylist(policy) -> None:
+    """blacklist is NOT an action — it keeps the base action (permit/deny) and
+    layers secondary-actions.denylist=true on top."""
+    source = {
+        "accname": "bl",
+        "acl_sess__v4policy": [
+            {
+                "suser": True,
+                "src": "suser",
+                "dany": True,
+                "dst": "dany",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "blacklist": True,
+                "deny": True,
+                "action": "deny",
+            }
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
+    rule = body["security-policy"]["policy-rule"][0]
+    assert rule["action"] == {
+        "type": "ACTION_DENY",
+        "secondary-actions": {"denylist": True},
+    }
+
+
+def test_policy_salias_emits_net_group_reference(policy) -> None:
+    """dst=dalias + dstalias → ADDRESS_ALIAS with a top-level net-group (Design A),
+    NOT host-address.host-address-alias (issue #419)."""
+    source = {
+        "accname": "alias-rule",
+        "acl_sess__v4policy": [
+            {
+                "suser": True,
+                "src": "suser",
+                "dstalias": "cppm",
+                "dst": "dalias",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "permit": True,
+                "action": "permit",
+            }
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
+    rule = body["security-policy"]["policy-rule"][0]
+    assert rule["condition"]["destination"] == {"type": "ADDRESS_ALIAS", "net-group": "cppm"}
+
+
+def test_policy_validuser_acl_emits_association_interface(policy) -> None:
+    """The canonical interface ACL 'validuser' → body association ASSOCIATION_INTERFACE."""
+    source = {
+        "accname": "validuser",
+        "acl_sess__v4policy": [
+            {
+                "sany": True,
+                "src": "sany",
+                "dany": True,
+                "dst": "dany",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "permit": True,
+                "action": "permit",
+            }
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
+    assert body["association"] == "ASSOCIATION_INTERFACE"
+
+
+def test_policy_non_validuser_acl_stays_association_role(policy) -> None:
+    """Any non-interface ACL keeps association ASSOCIATION_ROLE."""
+    source = {
+        "accname": "regular-acl",
+        "acl_sess__v4policy": [
+            {
+                "suser": True,
+                "src": "suser",
+                "dany": True,
+                "dst": "dany",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "permit": True,
+                "action": "permit",
+            }
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
+    assert body["association"] == "ASSOCIATION_ROLE"
+
+
+def test_policy_icmpv6_ra_guard_emits_protocol_rule(policy) -> None:
+    """An ICMPv6 service-name (ra-guard) → RULE_PROTOCOL + ip-header.protocol=IPV6_ICMP,
+    NOT an invented RULE_NET_SERVICE net-service 'icmpv6' (issue #419)."""
+    source = {
+        "accname": "ra-guard",
+        "acl_sess__v6policy": [
+            {
+                "sany": True,
+                "src": "sany",
+                "dany": True,
+                "dst": "dany",
+                "service-name": "icmpv6",
+                "svc": "service-name",
+                "service_app": "service",
+                "deny": True,
+                "action": "deny",
+            }
+        ],
+    }
+    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
+    rule = body["security-policy"]["policy-rule"][0]
+    assert rule["condition"]["rule-type"] == "RULE_PROTOCOL"
+    assert rule["condition"]["ip-header"] == {"protocol": "IPV6_ICMP"}
+    assert "services" not in rule["condition"]
 
 
 def test_policy_time_range_reference_lands_in_condition(policy) -> None:
@@ -1384,40 +1634,55 @@ def test_policy_v6policy_tagged_address_family_ipv6(policy) -> None:
     assert rules[1]["condition"]["destination"]["type"] == "ADDRESS_ROLE"
 
 
-def test_policy_inherited_rules_skipped(policy) -> None:
-    """Defensive: rules with _flags.inherited=True are skipped by the transform."""
-    source = {
-        "accname": "with-inherited",
-        "acl_sess__v4policy": [
-            {
-                "sany": True,
-                "src": "sany",
-                "dany": True,
-                "dst": "dany",
-                "service-any": True,
-                "svc": "service-any",
-                "service_app": "service",
-                "permit": True,
-                "action": "permit",
-                "_flags": {"inherited": True},
-            },  # should be skipped
-            {
-                "suser": True,
-                "src": "suser",
-                "dany": True,
-                "dst": "dany",
-                "service-any": True,
-                "svc": "service-any",
-                "service_app": "service",
-                "permit": True,
-                "action": "permit",
-            },  # should land
-        ],
+def test_policy_inherited_rules_are_translated(policy) -> None:
+    """Inherited rules MUST translate — the ``_flags.inherited`` marker has no
+    filtering effect.
+
+    Effective-config returns an inherited ACL with ``_flags.inherited`` on every
+    rule at any scope below its definition. The transform previously skipped
+    those, emptying ``policy-rule[]`` for the normal migration case (preview at
+    the consuming scope). The inherited flag must now be a no-op; only genuinely
+    ``system`` rules are skipped. Mirrors the server_group member-inherited fix.
+    """
+    inherited_rule = {
+        "sany": True,
+        "src": "sany",
+        "dany": True,
+        "dst": "dany",
+        "service-any": True,
+        "svc": "service-any",
+        "service_app": "service",
+        "permit": True,
+        "action": "permit",
+        "_flags": {"inherited": True},
     }
-    body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
-    rules = body["security-policy"]["policy-rule"]
-    assert len(rules) == 1
-    assert rules[0]["condition"]["source"] == {"type": "ADDRESS_ROLE", "role-list": ["parent"]}
+    local_rule = {
+        "suser": True,
+        "src": "suser",
+        "dany": True,
+        "dst": "dany",
+        "service-any": True,
+        "svc": "service-any",
+        "service_app": "service",
+        "permit": True,
+        "action": "permit",
+    }
+    source = {"accname": "with-inherited", "acl_sess__v4policy": [inherited_rule, local_rule]}
+    # The same source with the inherited flag stripped must produce identical output.
+    source_local_only = {
+        "accname": "with-inherited",
+        "acl_sess__v4policy": [{k: v for k, v in inherited_rule.items() if k != "_flags"}, local_rule],
+    }
+
+    rules = (emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {})[
+        "security-policy"
+    ]["policy-rule"]
+    rules_local = (
+        emit_calls(policy, source_local_only, "aos8", runtime_values=_policy_runtime(source_local_only))[0].body or {}
+    )["security-policy"]["policy-rule"]
+
+    assert len(rules) >= 2, "inherited rule was dropped — policy emptied"
+    assert rules == rules_local, "the inherited flag must not change the translated output"
 
 
 def test_policy_step2_assigns_to_mobility_gw(policy) -> None:
@@ -1443,7 +1708,7 @@ def test_policy_step2_assigns_to_mobility_gw(policy) -> None:
     assert items[0] == {
         "scope-id": "SCOPE-X",
         "device-function": "MOBILITY_GW",
-        "profile-type": "policy",
+        "profile-type": "policies",
         "profile-instance": "demo",
     }
 
@@ -1507,12 +1772,13 @@ def test_policy_any_any_rule_replaces_source_with_role_attribution(policy) -> No
     assert rule["condition"]["destination"] == {"type": "ADDRESS_ANY"}
 
 
-def test_policy_any_specific_keeps_source_as_address_any(policy) -> None:
-    """sany source + DESTINATION-specific (host/network/role) → keep source ADDRESS_ANY.
+def test_policy_any_to_host_injects_role_as_source(policy) -> None:
+    """sany source + specific destination (host) in a role-bound ACL → inject
+    the attributed role as the source (issue #419, live-validated).
 
-    Per Reading A: only the literal 'any-any' pattern gets rewritten. Rules
-    where AOS 8 says 'any → specific-something' translate to Central
-    'any → specific-something' since Central does support that pattern.
+    AOS 8 'any' in a role-applied ACL means 'this role's users'. Central needs
+    ADDRESS_ROLE so the rule is role-scoped and the policy can bind to the role
+    — emitting ADDRESS_ANY drops the role binding and over-broadens the rule.
     """
     source = {
         "accname": "any-host",
@@ -1532,19 +1798,18 @@ def test_policy_any_specific_keeps_source_as_address_any(policy) -> None:
     }
     body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
     rule = body["security-policy"]["policy-rule"][0]
-    assert rule["condition"]["source"] == {"type": "ADDRESS_ANY"}
+    assert rule["condition"]["source"] == {"type": "ADDRESS_ROLE", "role-list": ["parent"]}
     assert rule["condition"]["destination"] == {
         "type": "ADDRESS_HOST",
         "host-address": {"host-ipv4-address": "10.1.1.1"},
     }
 
 
-def test_policy_any_to_network_keeps_source_as_address_any(policy) -> None:
-    """sany source + dst=dnetwork (specific destination network) → source stays ADDRESS_ANY.
-
-    Same Reading A logic: Central allows 'any → network' so no rewrite
-    needed. Companion to test_policy_any_specific_keeps_source_as_address_any
-    which exercises 'any → host'.
+def test_policy_any_to_network_injects_role_as_source(policy) -> None:
+    """sany source + dst=dnetwork in a role-bound ACL → inject the attributed
+    role as the source (issue #419, live-validated). Companion to
+    test_policy_any_to_host_injects_role_as_source; the network destination is
+    left as-is (inline ADDRESS_NETWORK, no alias/net-group).
     """
     source = {
         "accname": "any-network",
@@ -1566,12 +1831,161 @@ def test_policy_any_to_network_keeps_source_as_address_any(policy) -> None:
     }
     body = emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {}
     rule = body["security-policy"]["policy-rule"][0]
-    assert rule["condition"]["source"] == {"type": "ADDRESS_ANY"}
+    assert rule["condition"]["source"] == {"type": "ADDRESS_ROLE", "role-list": ["parent"]}
     assert rule["condition"]["destination"] == {
         "type": "ADDRESS_NETWORK",
         "network-address": {"network-ipv4-address": "10.0.0.0/8"},
     }
     assert rule["action"] == {"type": "ACTION_DENY"}
+
+
+def test_policy_network_to_any_injects_role_as_destination(policy) -> None:
+    """specific source + dst=any in a role-bound ACL → inject the role on the
+    DESTINATION side (issue #419). Symmetric to the any→specific source case."""
+    source = {
+        "accname": "net-any",
+        "acl_sess__v4policy": [
+            {
+                "snetaddr": "10.0.0.0",
+                "snetmask": "255.0.0.0",
+                "src": "snetwork",
+                "dany": True,
+                "dst": "dany",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "action": "permit",
+            }
+        ],
+    }
+    rule = (emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {})[
+        "security-policy"
+    ]["policy-rule"][0]
+    assert rule["condition"]["source"] == {
+        "type": "ADDRESS_NETWORK",
+        "network-address": {"network-ipv4-address": "10.0.0.0/8"},
+    }
+    assert rule["condition"]["destination"] == {"type": "ADDRESS_ROLE", "role-list": ["parent"]}
+
+
+def test_policy_both_specific_no_role_injection(policy) -> None:
+    """host source + network dest (no `any`, no role) → network-based rule;
+    the role is NOT injected anywhere (issue #419)."""
+    source = {
+        "accname": "h-n",
+        "acl_sess__v4policy": [
+            {
+                "sipaddr": "192.0.2.5",
+                "src": "shost",
+                "dnetaddr": "10.0.0.0",
+                "dnetmask": "255.0.0.0",
+                "dst": "dnetwork",
+                "service-any": True,
+                "svc": "service-any",
+                "service_app": "service",
+                "action": "permit",
+            }
+        ],
+    }
+    rule = (emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {})[
+        "security-policy"
+    ]["policy-rule"][0]
+    assert rule["condition"]["source"] == {"type": "ADDRESS_HOST", "host-address": {"host-ipv4-address": "192.0.2.5"}}
+    assert rule["condition"]["destination"] == {
+        "type": "ADDRESS_NETWORK",
+        "network-address": {"network-ipv4-address": "10.0.0.0/8"},
+    }
+
+
+def test_policy_any_network_tcp_port_full_operator_case(policy) -> None:
+    """The operator's exact failing shape `any network X tcp 22 deny log`,
+    live-validated end-to-end (issue #419): role-injected source, inline
+    network dest, RULE_TCP + COMPARISON_EQ single-port, ACTION_DENY + log."""
+    source = {
+        "accname": "secure-mgmt",
+        "acl_sess__v4policy": [
+            {
+                "sany": True,
+                "src": "sany",
+                "dnetaddr": "198.51.100.64",
+                "dnetmask": "255.255.255.240",
+                "dst": "dnetwork",
+                "svc": "tcp",
+                "proto": "tcp",
+                "port1": 22,
+                "service_app": "service",
+                "log": True,
+                "deny": True,
+                "action": "deny",
+            }
+        ],
+    }
+    rule = (emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {})[
+        "security-policy"
+    ]["policy-rule"][0]
+    c = rule["condition"]
+    assert c["rule-type"] == "RULE_TCP"
+    assert c["source"] == {"type": "ADDRESS_ROLE", "role-list": ["parent"]}
+    assert c["destination"] == {
+        "type": "ADDRESS_NETWORK",
+        "network-address": {"network-ipv4-address": "198.51.100.64/28"},
+    }
+    assert c["ip-header"] == {"protocol": "IP_TCP"}
+    assert c["transport-fields"] == {"destination-port": {"operator": "COMPARISON_EQ", "min": 22}}
+    assert rule["action"] == {"type": "ACTION_DENY", "secondary-actions": {"log": True}}
+
+
+def test_policy_tcp_port_range_uses_comparison_range(policy) -> None:
+    """A port range (port1 != port2) → COMPARISON_RANGE with min+max (issue #419)."""
+    source = {
+        "accname": "rng",
+        "acl_sess__v4policy": [
+            {
+                "suser": True,
+                "src": "suser",
+                "dany": True,
+                "dst": "dany",
+                "svc": "tcp",
+                "proto": "tcp",
+                "port1": 1000,
+                "port2": 2000,
+                "service_app": "service",
+                "action": "permit",
+            }
+        ],
+    }
+    rule = (emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {})[
+        "security-policy"
+    ]["policy-rule"][0]
+    assert rule["condition"]["transport-fields"] == {
+        "destination-port": {"operator": "COMPARISON_RANGE", "min": 1000, "max": 2000}
+    }
+
+
+def test_policy_numeric_proto_maps_to_tcp(policy) -> None:
+    """proto returned as a number (6) still maps to IP_TCP — not silently
+    dropped to RULE_ANY (issue #419)."""
+    source = {
+        "accname": "numproto",
+        "acl_sess__v4policy": [
+            {
+                "suser": True,
+                "src": "suser",
+                "dany": True,
+                "dst": "dany",
+                "svc": "tcp",
+                "proto": 6,
+                "port1": 443,
+                "service_app": "service",
+                "action": "permit",
+            }
+        ],
+    }
+    rule = (emit_calls(policy, source, "aos8", runtime_values=_policy_runtime(source))[0].body or {})[
+        "security-policy"
+    ]["policy-rule"][0]
+    assert rule["condition"]["rule-type"] == "RULE_TCP"
+    assert rule["condition"]["ip-header"] == {"protocol": "IP_TCP"}
 
 
 def test_policy_any_any_with_empty_role_attribution_falls_back_to_address_any(policy) -> None:
@@ -1641,7 +2055,7 @@ def test_net_group_host_only_record_emits_two_calls(net_group) -> None:
     assert step1.body == {
         "name": "cppm",
         "netdestination-type": "IPV4_ONLY",
-        "items": [{"type": "HOST", "address": "192.168.20.70"}],
+        "items": [{"type": "HOST", "address": "192.168.20.70", "index": 1}],
     }
 
 
@@ -1657,9 +2071,9 @@ def test_net_group_mixed_entries_render_in_source_order(net_group) -> None:
     }
     body = emit_calls(net_group, source, "aos8", runtime_values=_ng_runtime())[0].body or {}
     assert body["items"] == [
-        {"type": "HOST", "address": "192.168.20.70"},
-        {"type": "NETWORK", "prefix": "10.10.0.0/16"},
-        {"type": "FQDN", "fqdn": "cppm.example.com"},
+        {"type": "HOST", "address": "192.168.20.70", "index": 1},
+        {"type": "NETWORK", "prefix": "10.10.0.0/16", "index": 2},
+        {"type": "FQDN", "fqdn": "cppm.example.com", "index": 3},
     ]
 
 
@@ -1675,9 +2089,9 @@ def test_net_group_netmask_conversion_handles_common_prefixes(net_group) -> None
     }
     body = emit_calls(net_group, source, "aos8", runtime_values=_ng_runtime())[0].body or {}
     assert body["items"] == [
-        {"type": "NETWORK", "prefix": "10.0.0.0/8"},
-        {"type": "NETWORK", "prefix": "172.16.0.0/12"},
-        {"type": "NETWORK", "prefix": "192.168.1.0/24"},
+        {"type": "NETWORK", "prefix": "10.0.0.0/8", "index": 1},
+        {"type": "NETWORK", "prefix": "172.16.0.0/12", "index": 2},
+        {"type": "NETWORK", "prefix": "192.168.1.0/24", "index": 3},
     ]
 
 
@@ -1691,7 +2105,7 @@ def test_net_group_v6_record_sets_ipv6_only_family(net_group) -> None:
     }
     body = emit_calls(net_group, source, "aos8", runtime_values=_ng_runtime())[0].body or {}
     assert body["netdestination-type"] == "IPV6_ONLY"
-    assert body["items"] == [{"type": "NETWORK", "prefix": "2001:db8::/32"}]
+    assert body["items"] == [{"type": "NETWORK", "prefix": "2001:db8::/32", "index": 1}]
 
 
 def test_net_group_step2_assigns_to_mobility_gw_by_default(net_group) -> None:
@@ -1707,7 +2121,7 @@ def test_net_group_step2_assigns_to_mobility_gw_by_default(net_group) -> None:
     assert items[0] == {
         "scope-id": "SCOPE-X",
         "device-function": "MOBILITY_GW",
-        "profile-type": "net-group",
+        "profile-type": "net-groups",
         "profile-instance": "x",
     }
 
@@ -1726,7 +2140,7 @@ def test_net_group_runtime_device_functions_override(net_group) -> None:
     )
     items = (calls[1].body or {})["config-assignment"]
     assert {i["device-function"] for i in items} == {"MOBILITY_GW", "CAMPUS_AP"}
-    assert all(i["profile-type"] == "net-group" for i in items)
+    assert all(i["profile-type"] == "net-groups" for i in items)
     assert all(i["profile-instance"] == "x" for i in items)
 
 
@@ -1755,3 +2169,157 @@ def test_net_group_non_contiguous_netmask_raises(net_group) -> None:
     }
     with pytest.raises(EngineError, match="non-contiguous"):
         emit_calls(net_group, source, "aos8", runtime_values=_ng_runtime())
+
+
+def test_net_group_ipv6_supernet_preserves_prefix_length(net_group) -> None:
+    """fc00::/7 supplied with a separate prefix-length must NOT collapse to /128
+    (issue #419). The prefix is built from the entry's prefix-length field."""
+    source = {
+        "dstname": "ula",
+        "netdst6__entry": [
+            {"_objname": "netdst6__network", "address": "fc00::", "prefix_len": 7},
+        ],
+    }
+    body = emit_calls(net_group, source, "aos8", runtime_values=_ng_runtime())[0].body or {}
+    assert body["netdestination-type"] == "IPV6_ONLY"
+    assert body["items"] == [{"type": "NETWORK", "prefix": "fc00::/7", "index": 1}]
+
+
+def test_net_group_ipv6_network_without_prefix_length_passes_address_through(net_group) -> None:
+    """When no prefix-length field is present and the address carries no '/', the
+    address passes through UNCHANGED — never a hardcoded /128 (issue #419)."""
+    source = {
+        "dstname": "host6",
+        "netdst6__entry": [
+            {"_objname": "netdst6__network", "address": "2001:db8::1"},
+        ],
+    }
+    body = emit_calls(net_group, source, "aos8", runtime_values=_ng_runtime())[0].body or {}
+    assert body["items"] == [{"type": "NETWORK", "prefix": "2001:db8::1", "index": 1}]
+
+
+def test_net_group_invert_true_emits_invert_in_body(net_group) -> None:
+    """A netdst record with invert truthy → body carries invert=true."""
+    source = {
+        "dstname": "not-corp",
+        "invert": True,
+        "netdst__entry": [
+            {"_objname": "netdst__network", "address": "10.0.0.0", "netmask": "255.0.0.0"},
+        ],
+    }
+    body = emit_calls(net_group, source, "aos8", runtime_values=_ng_runtime())[0].body or {}
+    assert body["invert"] is True
+
+
+def test_net_group_invert_false_omits_invert_key(net_group) -> None:
+    """When invert is false/absent, the body omits the 'invert' key entirely
+    (Central built-in shape treats absent == false)."""
+    source = {
+        "dstname": "corp",
+        "netdst__entry": [
+            {"_objname": "netdst__host", "address": "10.0.0.1"},
+        ],
+    }
+    body = emit_calls(net_group, source, "aos8", runtime_values=_ng_runtime())[0].body or {}
+    assert "invert" not in body
+
+
+def test_net_group_items_carry_one_based_index_in_source_order(net_group) -> None:
+    """Every emitted items[] element carries a 1-based 'index' in source order
+    (the schema x-key)."""
+    source = {
+        "dstname": "many",
+        "netdst__entry": [
+            {"_objname": "netdst__host", "address": "10.0.0.1"},
+            {"_objname": "netdst__host", "address": "10.0.0.2"},
+            {"_objname": "netdst__name", "host_name": "x.example.com"},
+        ],
+    }
+    body = emit_calls(net_group, source, "aos8", runtime_values=_ng_runtime())[0].body or {}
+    assert [i["index"] for i in body["items"]] == [1, 2, 3]
+
+
+# --------------------------------------------------------------------------- #
+# emit_when — conditional-emit guard (strategy/mode forks)
+# --------------------------------------------------------------------------- #
+
+
+@pytest.fixture
+def gateway_cluster(translations: dict):
+    return translations["central:gateway_cluster"]
+
+
+def _cluster_source() -> dict:
+    return {
+        "profile-name": "East",
+        "cluster_controller": [
+            {"ip": "10.0.0.1", "vrrp_ip": "10.0.0.10", "prio": 128, "mcast_vlan": 0},
+            {"ip": "10.0.0.2", "vrrp_ip": "10.0.0.11", "prio": 128, "mcast_vlan": 0},
+        ],
+    }
+
+
+def test_emit_when_ha_only_suppresses_intent(gateway_cluster) -> None:
+    """ha_only → emit_intent absent → the gated intent emit fires zero calls."""
+    calls = emit_calls(
+        gateway_cluster,
+        _cluster_source(),
+        "aos8",
+        runtime_values={"central_scope_id": "S", "cluster_strategy": "ha_only"},
+    )
+    assert [c.step_name for c in calls] == ["create_gateway_cluster"]
+
+
+def test_emit_when_intent_site_fires_intent(gateway_cluster) -> None:
+    calls = emit_calls(
+        gateway_cluster,
+        _cluster_source(),
+        "aos8",
+        runtime_values={"central_scope_id": "S", "cluster_strategy": "intent_site"},
+    )
+    assert [c.step_name for c in calls] == ["create_gateway_cluster", "create_gw_cluster_intent"]
+    intent = calls[1].body or {}
+    assert intent["cluster-mode"] == "CM_SITE"
+
+
+def test_emit_when_intent_manual_fires_intent(gateway_cluster) -> None:
+    calls = emit_calls(
+        gateway_cluster,
+        _cluster_source(),
+        "aos8",
+        runtime_values={"central_scope_id": "S", "cluster_strategy": "intent_manual"},
+    )
+    assert calls[1].body["cluster-mode"] == "CM_MANUAL"
+
+
+def test_emit_guard_passes_helper() -> None:
+    """Direct coverage of the guard evaluator."""
+    from hpe_networking_mcp.translations.engine import _emit_guard_passes
+    from hpe_networking_mcp.translations.loader import TargetEmit
+
+    def _emit(emit_when):
+        return TargetEmit(
+            step=1,
+            name="x",
+            purpose="p",
+            endpoint="/e",
+            method="POST",
+            iteration="once",
+            emit_when=emit_when,
+        )
+
+    # no guard → always fires
+    assert _emit_guard_passes(_emit(None), {}) is True
+    # context_truthy
+    assert _emit_guard_passes(_emit({"context_truthy": "k"}), {"k": True}) is True
+    assert _emit_guard_passes(_emit({"context_truthy": "k"}), {"k": None}) is False
+    assert _emit_guard_passes(_emit({"context_truthy": "k"}), {}) is False
+    # context_equals
+    eq = {"context_equals": {"key": "mode", "value": "TUNNEL"}}
+    assert _emit_guard_passes(_emit(eq), {"mode": "TUNNEL"}) is True
+    assert _emit_guard_passes(_emit(eq), {"mode": "BRIDGE"}) is False
+    # malformed / unknown → EngineError
+    with pytest.raises(EngineError):
+        _emit_guard_passes(_emit({"context_equals": {"key": "m"}}), {})
+    with pytest.raises(EngineError):
+        _emit_guard_passes(_emit({"bogus": "x"}), {})

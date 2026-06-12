@@ -7,14 +7,13 @@ from typing import Any
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.apstra import guidelines
 from hpe_networking_mcp.platforms.apstra._registry import tool
 from hpe_networking_mcp.platforms.apstra.client import format_http_error, get_apstra_client
-from hpe_networking_mcp.platforms.apstra.tools import WRITE, WRITE_DELETE
 
 
-@tool(annotations=WRITE_DELETE, tags={"apstra_write_delete"})
+@tool(capability=Capability.OPERATIONAL, enable_gated=True)
 async def apstra_deploy(
     ctx: Context,
     blueprint_id: str,
@@ -28,17 +27,9 @@ async def apstra_deploy(
         blueprint_id: Blueprint UUID.
         description: Human-readable change description recorded in Apstra's history.
         staging_version: Staging version number to deploy (from ``apstra_get_diff_status``).
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
-    if not confirmed:
-        decline = await confirm_write(
-            ctx,
-            f"Apstra: deploy staging v{staging_version} to blueprint {blueprint_id}. "
-            f"This applies changes to live devices. Confirm?",
-        )
-        if decline:
-            return decline
-
     try:
         client = await get_apstra_client()
         response = await client.request(
@@ -55,7 +46,7 @@ async def apstra_deploy(
         raise ToolError({"status_code": 502, "message": f"Error deploying blueprint: {detail}"}) from e
 
 
-@tool(annotations=WRITE_DELETE, tags={"apstra_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def apstra_delete_blueprint(
     ctx: Context,
     blueprint_id: str,
@@ -65,16 +56,9 @@ async def apstra_delete_blueprint(
 
     Args:
         blueprint_id: Blueprint UUID to delete.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
-    if not confirmed:
-        decline = await confirm_write(
-            ctx,
-            f"Apstra: permanently DELETE blueprint {blueprint_id}. This cannot be undone. Confirm?",
-        )
-        if decline:
-            return decline
-
     try:
         client = await get_apstra_client()
         response = await client.request("DELETE", f"/api/blueprints/{blueprint_id}")
@@ -95,7 +79,7 @@ async def apstra_delete_blueprint(
         raise ToolError({"status_code": 502, "message": f"Error deleting blueprint: {detail}"}) from e
 
 
-@tool(annotations=WRITE, tags={"apstra_write"})
+@tool(capability=Capability.WRITE)
 async def apstra_create_datacenter_blueprint(
     ctx: Context,
     blueprint_name: str,
@@ -107,16 +91,9 @@ async def apstra_create_datacenter_blueprint(
     Args:
         blueprint_name: Human-readable label for the new blueprint.
         template_id: ID of the design template to instantiate (from ``apstra_get_templates``).
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
-    if not confirmed:
-        decline = await confirm_write(
-            ctx,
-            f"Apstra: create datacenter blueprint '{blueprint_name}' from template {template_id}. Confirm?",
-        )
-        if decline:
-            return decline
-
     try:
         client = await get_apstra_client()
         response = await client.request(
@@ -138,7 +115,7 @@ async def apstra_create_datacenter_blueprint(
         raise ToolError({"status_code": 502, "message": f"Error creating datacenter blueprint: {detail}"}) from e
 
 
-@tool(annotations=WRITE, tags={"apstra_write"})
+@tool(capability=Capability.WRITE)
 async def apstra_create_freeform_blueprint(
     ctx: Context,
     blueprint_name: str,
@@ -148,16 +125,9 @@ async def apstra_create_freeform_blueprint(
 
     Args:
         blueprint_name: Human-readable label for the new blueprint.
-        confirmed: Set true after user confirms. Skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot show a
+            confirmation prompt (the universal gate prompts otherwise).
     """
-    if not confirmed:
-        decline = await confirm_write(
-            ctx,
-            f"Apstra: create freeform blueprint '{blueprint_name}'. Confirm?",
-        )
-        if decline:
-            return decline
-
     try:
         client = await get_apstra_client()
         response = await client.request(

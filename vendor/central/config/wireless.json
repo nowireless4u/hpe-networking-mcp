@@ -581,6 +581,7 @@
             "description": "Configures 802.11a rates related settings.\nThis includes configuring basic rates, beacon rate, transmit rates.",
             "properties": {
               "basic-rates": {
+                "description": "Basic rates are the mandatory data rates that all devices must support to connect to the network.\nThese rates are used for essential network operations, such as management frames (beacons, probes) and control frames (ACKs, RTS/CTS).\nAllows you to define a set of modulation rates to use for the clients.\nRange: 6, 9, 12, 18, 24, 36, 48, 54 Mbps.",
                 "items": {
                   "description": "Basic rates are the mandatory data rates that all devices must support to connect to the network.\nThese rates are used for essential network operations, such as management frames (beacons, probes) and control frames (ACKs, RTS/CTS).\nAllows you to define a set of modulation rates to use for the clients.\nRange: 6, 9, 12, 18, 24, 36, 48, 54 Mbps.",
                   "enum": [
@@ -701,6 +702,7 @@
                 "x-typeDescription": "Data Rate types."
               },
               "tx-rates": {
+                "description": "Set of 802.11a rates at which the AP is allowed to send data. The actual transmit rate depends on what the client is able to handle,\nbased on information sent at the time of association and on the current error or loss rate of the client.",
                 "items": {
                   "description": "Set of 802.11a rates at which the AP is allowed to send data. The actual transmit rate depends on what the client is able to handle,\nbased on information sent at the time of association and on the current error or loss rate of the client.",
                   "enum": [
@@ -1065,6 +1067,7 @@
             "description": "Configures 802.11b/g rates related settings.\nThis includes configuring basic rates, beacon rate, transmit rates.",
             "properties": {
               "basic-rates": {
+                "description": "Basic rates are the mandatory data rates that all devices must support to connect to the network.\nThese rates are used for essential network operations, such as management frames (beacons, probes) and control frames (ACKs, RTS/CTS).\nAllows you to define a set of modulation rates to use for the clients.\nRange: 1, 2, 5, 6, 9, 11, 12, 18, 24, 36, 48, 54 Mbps.",
                 "items": {
                   "description": "Basic rates are the mandatory data rates that all devices must support to connect to the network.\nThese rates are used for essential network operations, such as management frames (beacons, probes) and control frames (ACKs, RTS/CTS).\nAllows you to define a set of modulation rates to use for the clients.\nRange: 1, 2, 5, 6, 9, 11, 12, 18, 24, 36, 48, 54 Mbps.",
                   "enum": [
@@ -1217,6 +1220,7 @@
                 "x-typeDescription": "Data Rate types."
               },
               "tx-rates": {
+                "description": "Set of 802.11b/g rates at which the AP is allowed to send data. The actual transmit rate depends on what the client is able to handle,\nbased on information sent at the time of association and on the current error or loss rate of the client.",
                 "items": {
                   "description": "Set of 802.11b/g rates at which the AP is allowed to send data. The actual transmit rate depends on what the client is able to handle,\nbased on information sent at the time of association and on the current error or loss rate of the client.",
                   "enum": [
@@ -1381,6 +1385,7 @@
                 ]
               },
               "supported-mcs-set": {
+                "description": "A list of Modulation Coding Scheme (MCS) values or ranges of values to be supported on this SSID.\nThe MCS you choose determines the channel width (20 MHz vs. 40 MHz) and the number of spatial streams used by the mesh node.\nTo specify a series of different values, separate each value with a comma.",
                 "items": {
                   "description": "A list of Modulation Coding Scheme (MCS) values or ranges of values to be supported on this SSID.\nThe MCS you choose determines the channel width (20 MHz vs. 40 MHz) and the number of spatial streams used by the mesh node.\nTo specify a series of different values, separate each value with a comma.",
                   "format": "int32",
@@ -1682,6 +1687,7 @@
                 ]
               },
               "background-dscp": {
+                "description": "DSCP mapping for the background traffic.",
                 "items": {
                   "description": "DSCP mapping for the background traffic.",
                   "format": "int32",
@@ -1692,10 +1698,11 @@
                     "Access Point"
                   ]
                 },
-                "maxItems": 2147483647,
+                "maxItems": 8,
                 "type": "array"
               },
               "best-effort-dscp": {
+                "description": "DSCP mapping for the best-effort traffic.",
                 "items": {
                   "description": "DSCP mapping for the best-effort traffic.",
                   "format": "int32",
@@ -1706,7 +1713,7 @@
                     "Access Point"
                   ]
                 },
-                "maxItems": 2147483647,
+                "maxItems": 8,
                 "type": "array"
               },
               "enable": {
@@ -1789,6 +1796,7 @@
                 ]
               },
               "video-dscp": {
+                "description": "DSCP mapping for the video traffic.",
                 "items": {
                   "description": "DSCP mapping for the video traffic.",
                   "format": "int32",
@@ -1799,10 +1807,11 @@
                     "Access Point"
                   ]
                 },
-                "maxItems": 2147483647,
+                "maxItems": 8,
                 "type": "array"
               },
               "voice-dscp": {
+                "description": "DSCP mapping for the voice traffic.",
                 "items": {
                   "description": "DSCP mapping for the voice traffic.",
                   "format": "int32",
@@ -1813,7 +1822,7 @@
                     "Access Point"
                   ]
                 },
-                "maxItems": 2147483647,
+                "maxItems": 8,
                 "type": "array"
               }
             }
@@ -1827,6 +1836,7 @@
             "description": "Configures 802.11a rates related settings.\nThis includes configuring basic rates, beacon rate, transmit rates.",
             "properties": {
               "basic-rates": {
+                "description": "Basic rates are the mandatory data rates that all devices must support to connect to the network.\nThese rates are used for essential network operations, such as management frames (beacons, probes) and control frames (ACKs, RTS/CTS).\nAllows you to define a set of modulation rates to use for the clients.\nRange: 6, 9, 12, 18, 24, 36, 48, 54 Mbps.",
                 "items": {
                   "description": "Basic rates are the mandatory data rates that all devices must support to connect to the network.\nThese rates are used for essential network operations, such as management frames (beacons, probes) and control frames (ACKs, RTS/CTS).\nAllows you to define a set of modulation rates to use for the clients.\nRange: 6, 9, 12, 18, 24, 36, 48, 54 Mbps.",
                   "enum": [
@@ -1947,6 +1957,7 @@
                 "x-typeDescription": "Data Rate types."
               },
               "tx-rates": {
+                "description": "Set of 802.11a rates at which the AP is allowed to send data. The actual transmit rate depends on what the client is able to handle,\nbased on information sent at the time of association and on the current error or loss rate of the client.",
                 "items": {
                   "description": "Set of 802.11a rates at which the AP is allowed to send data. The actual transmit rate depends on what the client is able to handle,\nbased on information sent at the time of association and on the current error or loss rate of the client.",
                   "enum": [
@@ -2311,6 +2322,7 @@
             "description": "Configures 802.11b/g rates related settings.\nThis includes configuring basic rates, beacon rate, transmit rates.",
             "properties": {
               "basic-rates": {
+                "description": "Basic rates are the mandatory data rates that all devices must support to connect to the network.\nThese rates are used for essential network operations, such as management frames (beacons, probes) and control frames (ACKs, RTS/CTS).\nAllows you to define a set of modulation rates to use for the clients.\nRange: 1, 2, 5, 6, 9, 11, 12, 18, 24, 36, 48, 54 Mbps.",
                 "items": {
                   "description": "Basic rates are the mandatory data rates that all devices must support to connect to the network.\nThese rates are used for essential network operations, such as management frames (beacons, probes) and control frames (ACKs, RTS/CTS).\nAllows you to define a set of modulation rates to use for the clients.\nRange: 1, 2, 5, 6, 9, 11, 12, 18, 24, 36, 48, 54 Mbps.",
                   "enum": [
@@ -2463,6 +2475,7 @@
                 "x-typeDescription": "Data Rate types."
               },
               "tx-rates": {
+                "description": "Set of 802.11b/g rates at which the AP is allowed to send data. The actual transmit rate depends on what the client is able to handle,\nbased on information sent at the time of association and on the current error or loss rate of the client.",
                 "items": {
                   "description": "Set of 802.11b/g rates at which the AP is allowed to send data. The actual transmit rate depends on what the client is able to handle,\nbased on information sent at the time of association and on the current error or loss rate of the client.",
                   "enum": [
@@ -2627,6 +2640,7 @@
                 ]
               },
               "supported-mcs-set": {
+                "description": "A list of Modulation Coding Scheme (MCS) values or ranges of values to be supported on this SSID.\nThe MCS you choose determines the channel width (20 MHz vs. 40 MHz) and the number of spatial streams used by the mesh node.\nTo specify a series of different values, separate each value with a comma.",
                 "items": {
                   "description": "A list of Modulation Coding Scheme (MCS) values or ranges of values to be supported on this SSID.\nThe MCS you choose determines the channel width (20 MHz vs. 40 MHz) and the number of spatial streams used by the mesh node.\nTo specify a series of different values, separate each value with a comma.",
                   "format": "int32",
@@ -2928,6 +2942,7 @@
                 ]
               },
               "background-dscp": {
+                "description": "DSCP mapping for the background traffic.",
                 "items": {
                   "description": "DSCP mapping for the background traffic.",
                   "format": "int32",
@@ -2938,10 +2953,11 @@
                     "Access Point"
                   ]
                 },
-                "maxItems": 2147483647,
+                "maxItems": 8,
                 "type": "array"
               },
               "best-effort-dscp": {
+                "description": "DSCP mapping for the best-effort traffic.",
                 "items": {
                   "description": "DSCP mapping for the best-effort traffic.",
                   "format": "int32",
@@ -2952,7 +2968,7 @@
                     "Access Point"
                   ]
                 },
-                "maxItems": 2147483647,
+                "maxItems": 8,
                 "type": "array"
               },
               "enable": {
@@ -3035,6 +3051,7 @@
                 ]
               },
               "video-dscp": {
+                "description": "DSCP mapping for the video traffic.",
                 "items": {
                   "description": "DSCP mapping for the video traffic.",
                   "format": "int32",
@@ -3045,10 +3062,11 @@
                     "Access Point"
                   ]
                 },
-                "maxItems": 2147483647,
+                "maxItems": 8,
                 "type": "array"
               },
               "voice-dscp": {
+                "description": "DSCP mapping for the voice traffic.",
                 "items": {
                   "description": "DSCP mapping for the voice traffic.",
                   "format": "int32",
@@ -3059,7 +3077,7 @@
                     "Access Point"
                   ]
                 },
-                "maxItems": 2147483647,
+                "maxItems": 8,
                 "type": "array"
               }
             }
@@ -4647,6 +4665,7 @@
                 ]
               },
               "client-detection": {
+                "description": "Specifies the policy for detecting wireless attacks on clients.\nEach of options contains several default levels that enable different sets of policies.\nAn administrator can customize enable or disable these options accordingly.",
                 "items": {
                   "default": "OFF",
                   "description": "Specifies the policy for detecting wireless attacks on clients.\nEach of options contains several default levels that enable different sets of policies.\nAn administrator can customize enable or disable these options accordingly.",
@@ -4671,19 +4690,21 @@
                     "SIGNATURE_AIRJACK",
                     "SIGNATURE_ASLEAP",
                     "WPA_FT_ATTACK",
-                    "GHOSTTUNNEL_CLIENT_ATTACK"
+                    "GHOSTTUNNEL_CLIENT_ATTACK",
+                    "CLIENT_ISOLATION_ATTACK"
                   ],
                   "format": "enum",
                   "type": "string",
                   "x-enumDescriptions": {
                     "BLOCK_ACK_ATTACK": "Detection of attempts to reset traffic receive windows using the forged Block ACK Add messages.",
                     "CHOPCHOP_ATTACK": "Detection of ChopChop attack. ChopChop is a plaintext recovery attack against WEP encrypted\nnetworks. It works by forcing the plaintext, one byte at a time, by truncating a captured frame\nand then trying all 256 possible values for the last byte with a corrected CRC. The correct guess\ncauses the AP to retransmit the frame. When that happens, the frame is truncated again.",
+                    "CLIENT_ISOLATION_ATTACK": "Detect client isolation attact. This attack is from the perspective of an insider attacker who has\ncredentials to access at least one of the SSIDs being attacked (or none if opensystem). Three main aspects:\n1. The group key can be abused by an insider to directly inject packets to victims, bypassing client\n   isolation at the AP, even in Passpoint deployments.\n2. Gateway bouncing: many vendors only enforce client isolation at Layer-2 (MAC and link), but do not carry it\n   over to Layer-3 (IP layer). Thus, an attacker can inject packets to a victim, by using the AP’s gateway MAC\n   address as the layer-2 destination, but the victim’s IP address as the layer-3 destination. These packets are\n   typically accepted by the AP and forwarded to the gateway. If the gateway does not enforce client isolation at\n   the IP layer, it will forward the datagram to its destination.\n3, Spoofing the victim’s MAC address while connecting to the same network (but possibly a different AP) as the victim,\n   enables the attacker to intercept downlink frames meant for the victim.",
                     "CUSTOM": "Customize client detection.",
                     "DISCONNECT_STA": "Detect station disconnection attack.",
                     "EAP_RATE_ANOMALY": "Use EAP handshake analysis to detect an abnormal number of authentication procedures\non a channel and generate an alarm when this condition is detected.",
                     "FATAJACK": "Detect of fatajack attacks. FATA-Jack is an 802.11 client DoS tool that tries to\ndisconnect targeted stations using spoofed authentication frames that contain an\ninvalid authentication algorithm number.",
                     "GHOSTTUNNEL_CLIENT_ATTACK": "Ghost tunnel client side attack detection. A ghost tunnel attack uses 802.11 probe request\npackets or beacon packets to communicate with the host and need not establish a Wi-Fi connection.\nFor the client-side ghost tunnel attack, the AP monitors the abnormal probe request packets in\nthe wireless environment. When a client is heard by the AP, it looks for abnormal probe request\npackets from the client.",
-                    "HIGH": "High client detection level, it enables:\nDetect EAP rate anomaly\nDetect rate anomaly\nDetect Chop Chop Attack\nDetect TKIP Replay Attack\nIDS signature—Air Jack\nIDS signature—ASLEAP\nDetect ghost tunnel client attack\nNOTE: Higher detection levels include the detection policies of the levels below them.\n",
+                    "HIGH": "High client detection level, it enables:\nDetect EAP rate anomaly\nDetect rate anomaly\nDetect Chop Chop Attack\nDetect TKIP Replay Attack\nIDS signature—Air Jack\nIDS signature—ASLEAP\nDetect ghost tunnel client attack\nDetect client isolation attack\nNOTE: Higher detection levels include the detection policies of the levels below them.\n",
                     "HOTSPOTTER_ATTACK": "Detection of hotspotter attacks. The Hotspotter attack is an evil-twin attack which\nattempts to lure a client to a malicious AP.",
                     "LOW": "Low client detection level, it enables:\nDetect valid client misassociation.\n",
                     "MEDIUM": "Medium client detection level, it enables:\nDetect Disconnect Station Attack\nDetect Omerta Attack\nDetect FATA-Jack Attack\nDetect Block ACK DOS\nDetect Hotspotter Attack\nDetect unencrypted valid client\nDetect Power Save DOS Attack.\n",
@@ -4707,6 +4728,7 @@
                 "type": "array"
               },
               "client-protection": {
+                "description": "Specifies the policy for protecting clients from wireless attacks.\nEach of these options contains several default levels that enable different sets of policies.\nAn administrator can customize enable or disable these options accordingly.",
                 "items": {
                   "default": "OFF",
                   "description": "Specifies the policy for protecting clients from wireless attacks.\nEach of these options contains several default levels that enable different sets of policies.\nAn administrator can customize enable or disable these options accordingly.",
@@ -4742,6 +4764,7 @@
                 "description": "Enable/disbale country code detection feature.\nConfigure interval value to raise a trap and log for each AP.\nConfigure list of country codes exempt from invalid 802.11d country code detection.",
                 "properties": {
                   "country-code-exclusion": {
+                    "description": "Country codes exempt from invalid country code detection.\nEach code must be an ISO 3166-1 alpha-2 two-letter uppercase code.",
                     "items": {
                       "description": "Country codes exempt from invalid country code detection.\nEach code must be an ISO 3166-1 alpha-2 two-letter uppercase code.",
                       "format": "pattern",
@@ -4753,7 +4776,7 @@
                         "Access Point"
                       ]
                     },
-                    "maxItems": 2147483647,
+                    "maxItems": 10,
                     "type": "array"
                   },
                   "enable": {
@@ -4776,6 +4799,14 @@
                     ]
                   }
                 }
+              },
+              "denylist-client": {
+                "default": "false",
+                "description": "Enable denylist to add the ids detection client to denylist table.",
+                "type": "boolean",
+                "x-supportedDeviceType": [
+                  "Access Point"
+                ]
               },
               "ghosttunnel-client": {
                 "description": "Ghost tunnel attack is a backdoor transmission method that can be used in an isolated\nenvironment. A ghost tunnel attack uses 802.11 probe request packets or beacon packets\nto communicate with the host without establishing a Wi-Fi connection.\n\nFor the client-side ghost tunnel attack, the AP monitors the abnormal probe request\npackets in the wireless environment. When a client is heard by the AP, it looks for\nabnormal probe request packets from the client. The system reports a ghost tunnel detection\nevent with the client's MAC address when the alert criteria is met. If only abnormal probe\nrequest packets are monitored and there is no matching client, then the reported event does\nnot contain the client's MAC address.",
@@ -4854,6 +4885,7 @@
                 }
               },
               "infrastructure-detection": {
+                "description": "Specifies the policy for detecting wireless attacks on access points.\nEach of these options contains several default levels that enable different sets of policies.\nAn administrator can customize enable or disable these options accordingly.",
                 "items": {
                   "default": "OFF",
                   "description": "Specifies the policy for detecting wireless attacks on access points.\nEach of these options contains several default levels that enable different sets of policies.\nAn administrator can customize enable or disable these options accordingly.",
@@ -4938,6 +4970,7 @@
                 "type": "array"
               },
               "infrastructure-protection": {
+                "description": "Specifies the policy for protecting access points from wireless attacks.\nEach of these options contains several default levels that enable different sets of policies.\nAn administrator can customize enable or disable these options accordingly.",
                 "items": {
                   "default": "OFF",
                   "description": "Specifies the policy for protecting access points from wireless attacks.\nEach of these options contains several default levels that enable different sets of policies.\nAn administrator can customize enable or disable these options accordingly.",
@@ -5067,7 +5100,7 @@
                     }
                   }
                 },
-                "maxItems": 2147483647,
+                "maxItems": 5,
                 "type": "array",
                 "x-key": [
                   "oui",
@@ -5207,6 +5240,7 @@
                 ]
               },
               "client-detection": {
+                "description": "Specifies the policy for detecting wireless attacks on clients.\nEach of options contains several default levels that enable different sets of policies.\nAn administrator can customize enable or disable these options accordingly.",
                 "items": {
                   "default": "OFF",
                   "description": "Specifies the policy for detecting wireless attacks on clients.\nEach of options contains several default levels that enable different sets of policies.\nAn administrator can customize enable or disable these options accordingly.",
@@ -5231,19 +5265,21 @@
                     "SIGNATURE_AIRJACK",
                     "SIGNATURE_ASLEAP",
                     "WPA_FT_ATTACK",
-                    "GHOSTTUNNEL_CLIENT_ATTACK"
+                    "GHOSTTUNNEL_CLIENT_ATTACK",
+                    "CLIENT_ISOLATION_ATTACK"
                   ],
                   "format": "enum",
                   "type": "string",
                   "x-enumDescriptions": {
                     "BLOCK_ACK_ATTACK": "Detection of attempts to reset traffic receive windows using the forged Block ACK Add messages.",
                     "CHOPCHOP_ATTACK": "Detection of ChopChop attack. ChopChop is a plaintext recovery attack against WEP encrypted\nnetworks. It works by forcing the plaintext, one byte at a time, by truncating a captured frame\nand then trying all 256 possible values for the last byte with a corrected CRC. The correct guess\ncauses the AP to retransmit the frame. When that happens, the frame is truncated again.",
+                    "CLIENT_ISOLATION_ATTACK": "Detect client isolation attact. This attack is from the perspective of an insider attacker who has\ncredentials to access at least one of the SSIDs being attacked (or none if opensystem). Three main aspects:\n1. The group key can be abused by an insider to directly inject packets to victims, bypassing client\n   isolation at the AP, even in Passpoint deployments.\n2. Gateway bouncing: many vendors only enforce client isolation at Layer-2 (MAC and link), but do not carry it\n   over to Layer-3 (IP layer). Thus, an attacker can inject packets to a victim, by using the AP’s gateway MAC\n   address as the layer-2 destination, but the victim’s IP address as the layer-3 destination. These packets are\n   typically accepted by the AP and forwarded to the gateway. If the gateway does not enforce client isolation at\n   the IP layer, it will forward the datagram to its destination.\n3, Spoofing the victim’s MAC address while connecting to the same network (but possibly a different AP) as the victim,\n   enables the attacker to intercept downlink frames meant for the victim.",
                     "CUSTOM": "Customize client detection.",
                     "DISCONNECT_STA": "Detect station disconnection attack.",
                     "EAP_RATE_ANOMALY": "Use EAP handshake analysis to detect an abnormal number of authentication procedures\non a channel and generate an alarm when this condition is detected.",
                     "FATAJACK": "Detect of fatajack attacks. FATA-Jack is an 802.11 client DoS tool that tries to\ndisconnect targeted stations using spoofed authentication frames that contain an\ninvalid authentication algorithm number.",
                     "GHOSTTUNNEL_CLIENT_ATTACK": "Ghost tunnel client side attack detection. A ghost tunnel attack uses 802.11 probe request\npackets or beacon packets to communicate with the host and need not establish a Wi-Fi connection.\nFor the client-side ghost tunnel attack, the AP monitors the abnormal probe request packets in\nthe wireless environment. When a client is heard by the AP, it looks for abnormal probe request\npackets from the client.",
-                    "HIGH": "High client detection level, it enables:\nDetect EAP rate anomaly\nDetect rate anomaly\nDetect Chop Chop Attack\nDetect TKIP Replay Attack\nIDS signature—Air Jack\nIDS signature—ASLEAP\nDetect ghost tunnel client attack\nNOTE: Higher detection levels include the detection policies of the levels below them.\n",
+                    "HIGH": "High client detection level, it enables:\nDetect EAP rate anomaly\nDetect rate anomaly\nDetect Chop Chop Attack\nDetect TKIP Replay Attack\nIDS signature—Air Jack\nIDS signature—ASLEAP\nDetect ghost tunnel client attack\nDetect client isolation attack\nNOTE: Higher detection levels include the detection policies of the levels below them.\n",
                     "HOTSPOTTER_ATTACK": "Detection of hotspotter attacks. The Hotspotter attack is an evil-twin attack which\nattempts to lure a client to a malicious AP.",
                     "LOW": "Low client detection level, it enables:\nDetect valid client misassociation.\n",
                     "MEDIUM": "Medium client detection level, it enables:\nDetect Disconnect Station Attack\nDetect Omerta Attack\nDetect FATA-Jack Attack\nDetect Block ACK DOS\nDetect Hotspotter Attack\nDetect unencrypted valid client\nDetect Power Save DOS Attack.\n",
@@ -5267,6 +5303,7 @@
                 "type": "array"
               },
               "client-protection": {
+                "description": "Specifies the policy for protecting clients from wireless attacks.\nEach of these options contains several default levels that enable different sets of policies.\nAn administrator can customize enable or disable these options accordingly.",
                 "items": {
                   "default": "OFF",
                   "description": "Specifies the policy for protecting clients from wireless attacks.\nEach of these options contains several default levels that enable different sets of policies.\nAn administrator can customize enable or disable these options accordingly.",
@@ -5302,6 +5339,7 @@
                 "description": "Enable/disbale country code detection feature.\nConfigure interval value to raise a trap and log for each AP.\nConfigure list of country codes exempt from invalid 802.11d country code detection.",
                 "properties": {
                   "country-code-exclusion": {
+                    "description": "Country codes exempt from invalid country code detection.\nEach code must be an ISO 3166-1 alpha-2 two-letter uppercase code.",
                     "items": {
                       "description": "Country codes exempt from invalid country code detection.\nEach code must be an ISO 3166-1 alpha-2 two-letter uppercase code.",
                       "format": "pattern",
@@ -5313,7 +5351,7 @@
                         "Access Point"
                       ]
                     },
-                    "maxItems": 2147483647,
+                    "maxItems": 10,
                     "type": "array"
                   },
                   "enable": {
@@ -5336,6 +5374,14 @@
                     ]
                   }
                 }
+              },
+              "denylist-client": {
+                "default": "false",
+                "description": "Enable denylist to add the ids detection client to denylist table.",
+                "type": "boolean",
+                "x-supportedDeviceType": [
+                  "Access Point"
+                ]
               },
               "ghosttunnel-client": {
                 "description": "Ghost tunnel attack is a backdoor transmission method that can be used in an isolated\nenvironment. A ghost tunnel attack uses 802.11 probe request packets or beacon packets\nto communicate with the host without establishing a Wi-Fi connection.\n\nFor the client-side ghost tunnel attack, the AP monitors the abnormal probe request\npackets in the wireless environment. When a client is heard by the AP, it looks for\nabnormal probe request packets from the client. The system reports a ghost tunnel detection\nevent with the client's MAC address when the alert criteria is met. If only abnormal probe\nrequest packets are monitored and there is no matching client, then the reported event does\nnot contain the client's MAC address.",
@@ -5414,6 +5460,7 @@
                 }
               },
               "infrastructure-detection": {
+                "description": "Specifies the policy for detecting wireless attacks on access points.\nEach of these options contains several default levels that enable different sets of policies.\nAn administrator can customize enable or disable these options accordingly.",
                 "items": {
                   "default": "OFF",
                   "description": "Specifies the policy for detecting wireless attacks on access points.\nEach of these options contains several default levels that enable different sets of policies.\nAn administrator can customize enable or disable these options accordingly.",
@@ -5498,6 +5545,7 @@
                 "type": "array"
               },
               "infrastructure-protection": {
+                "description": "Specifies the policy for protecting access points from wireless attacks.\nEach of these options contains several default levels that enable different sets of policies.\nAn administrator can customize enable or disable these options accordingly.",
                 "items": {
                   "default": "OFF",
                   "description": "Specifies the policy for protecting access points from wireless attacks.\nEach of these options contains several default levels that enable different sets of policies.\nAn administrator can customize enable or disable these options accordingly.",
@@ -5627,7 +5675,7 @@
                     }
                   }
                 },
-                "maxItems": 2147483647,
+                "maxItems": 5,
                 "type": "array",
                 "x-key": [
                   "oui",
@@ -5900,10 +5948,10 @@
         }
       },
       "ArubaMesh_MeshSchemaGET": {
-        "description": "Configuration data for Mesh network topology.",
+        "description": "Configure and retrieve Mesh profiles for Aruba Access Points, enabling wireless backhaul\nconnectivity between mesh portals and mesh points. These profiles define mesh cluster\nsettings, band selection, topology behavior, role selection, and recovery parameters used\nto build and maintain the mesh network. Use this API to retrieve the list of Mesh profiles.",
         "properties": {
           "profile": {
-            "description": "Mesh profile.",
+            "description": "Defines a single Mesh profile for Aruba AP mesh network behavior. Each profile is\nidentified by name. Use these APIs to create, modify, or delete an instance.",
             "items": {
               "properties": {
                 "band": {
@@ -5982,7 +6030,7 @@
                       }
                     }
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 15,
                   "type": "array",
                   "x-key": [
                     "mcName"
@@ -6143,7 +6191,7 @@
                   ]
                 },
                 "name": {
-                  "description": "Mesh profile name.",
+                  "description": "The name of the Mesh profile.",
                   "format": "const",
                   "maxLength": 256,
                   "minLength": 1,
@@ -6378,7 +6426,7 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 15,
             "type": "array",
             "x-key": [
               "mcName"
@@ -6539,7 +6587,7 @@
             ]
           },
           "name": {
-            "description": "Mesh profile name.",
+            "description": "The name of the Mesh profile.",
             "format": "const",
             "maxLength": 256,
             "minLength": 1,
@@ -6760,7 +6808,7 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 15,
             "type": "array",
             "x-key": [
               "mcName"
@@ -6921,7 +6969,7 @@
             ]
           },
           "name": {
-            "description": "Mesh profile name.",
+            "description": "The name of the Mesh profile.",
             "format": "const",
             "maxLength": 256,
             "minLength": 1,
@@ -7108,11 +7156,20 @@
                         "format": "const",
                         "maxLength": 9999,
                         "type": "string",
-                        "x-mandatory": true,
                         "x-supportedDeviceType": [
                           "Access Point"
                         ],
                         "x-typeDescription": "A custom derived type for special use cases. This type takes a plaintext password and uses\nVault's 3rd party API to encrypt the password. The intended use case is to encrypt and store\ncustomer credentials which will be used later to login to 3rd party services."
+                      },
+                      "passphrase-alias": {
+                        "description": "Alias for MPSK passphrase.",
+                        "format": "pattern",
+                        "maxLength": 256,
+                        "minLength": 1,
+                        "type": "string",
+                        "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                        "x-patternSources": "name",
+                        "x-patterns": "'[a-zA-Z0-9-_ ]+'"
                       },
                       "role": {
                         "description": "MPSK Role.",
@@ -7127,11 +7184,10 @@
                       }
                     },
                     "required": [
-                      "passname",
-                      "passphrase"
+                      "passname"
                     ]
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 24,
                   "type": "array",
                   "x-key": [
                     "passname"
@@ -7139,7 +7195,7 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 16,
             "type": "array",
             "x-key": [
               "name"
@@ -7189,11 +7245,20 @@
                   "format": "const",
                   "maxLength": 9999,
                   "type": "string",
-                  "x-mandatory": true,
                   "x-supportedDeviceType": [
                     "Access Point"
                   ],
                   "x-typeDescription": "A custom derived type for special use cases. This type takes a plaintext password and uses\nVault's 3rd party API to encrypt the password. The intended use case is to encrypt and store\ncustomer credentials which will be used later to login to 3rd party services."
+                },
+                "passphrase-alias": {
+                  "description": "Alias for MPSK passphrase.",
+                  "format": "pattern",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                  "x-patternSources": "name",
+                  "x-patterns": "'[a-zA-Z0-9-_ ]+'"
                 },
                 "role": {
                   "description": "MPSK Role.",
@@ -7208,11 +7273,10 @@
                 }
               },
               "required": [
-                "passname",
-                "passphrase"
+                "passname"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 24,
             "type": "array",
             "x-key": [
               "passname"
@@ -7259,11 +7323,20 @@
                   "format": "const",
                   "maxLength": 9999,
                   "type": "string",
-                  "x-mandatory": true,
                   "x-supportedDeviceType": [
                     "Access Point"
                   ],
                   "x-typeDescription": "A custom derived type for special use cases. This type takes a plaintext password and uses\nVault's 3rd party API to encrypt the password. The intended use case is to encrypt and store\ncustomer credentials which will be used later to login to 3rd party services."
+                },
+                "passphrase-alias": {
+                  "description": "Alias for MPSK passphrase.",
+                  "format": "pattern",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                  "x-patternSources": "name",
+                  "x-patterns": "'[a-zA-Z0-9-_ ]+'"
                 },
                 "role": {
                   "description": "MPSK Role.",
@@ -7278,11 +7351,10 @@
                 }
               },
               "required": [
-                "passname",
-                "passphrase"
+                "passname"
               ]
             },
-            "maxItems": 2147483647,
+            "maxItems": 24,
             "type": "array",
             "x-key": [
               "passname"
@@ -7507,7 +7579,7 @@
                       }
                     }
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 6,
                   "type": "array",
                   "x-key": [
                     "nwkAuthProfileName"
@@ -7890,7 +7962,7 @@
                       }
                     }
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 4,
                   "type": "array",
                   "x-key": [
                     "connCapProfileName"
@@ -7934,7 +8006,7 @@
                       }
                     }
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 10,
                   "type": "array",
                   "x-key": [
                     "operClassProfileName"
@@ -8116,7 +8188,7 @@
                       }
                     }
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 6,
                   "type": "array",
                   "x-key": [
                     "wanMetricsProfileName"
@@ -8138,6 +8210,7 @@
                   "x-typeDescription": "The mac-address type represents an IEEE 802 MAC address.\nThe canonical representation uses lowercase characters.\n\nIn the value set and its semantics, this type is equivalent\nto the MacAddress textual convention of the SMIv2."
                 },
                 "identity-profile": {
+                  "description": "Associates identity profile with the passpoint profile.",
                   "items": {
                     "description": "Associates identity profile with the passpoint profile.",
                     "format": "const",
@@ -8295,7 +8368,7 @@
                       }
                     }
                   },
-                  "maxItems": 2147483647,
+                  "maxItems": 3,
                   "type": "array",
                   "x-key": [
                     "oiValue"
@@ -8685,7 +8758,7 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 6,
             "type": "array",
             "x-key": [
               "nwkAuthProfileName"
@@ -9068,7 +9141,7 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 4,
             "type": "array",
             "x-key": [
               "connCapProfileName"
@@ -9112,7 +9185,7 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 10,
             "type": "array",
             "x-key": [
               "operClassProfileName"
@@ -9294,7 +9367,7 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 6,
             "type": "array",
             "x-key": [
               "wanMetricsProfileName"
@@ -9316,6 +9389,7 @@
             "x-typeDescription": "The mac-address type represents an IEEE 802 MAC address.\nThe canonical representation uses lowercase characters.\n\nIn the value set and its semantics, this type is equivalent\nto the MacAddress textual convention of the SMIv2."
           },
           "identity-profile": {
+            "description": "Associates identity profile with the passpoint profile.",
             "items": {
               "description": "Associates identity profile with the passpoint profile.",
               "format": "const",
@@ -9473,7 +9547,7 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 3,
             "type": "array",
             "x-key": [
               "oiValue"
@@ -9852,7 +9926,7 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 6,
             "type": "array",
             "x-key": [
               "nwkAuthProfileName"
@@ -10235,7 +10309,7 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 4,
             "type": "array",
             "x-key": [
               "connCapProfileName"
@@ -10279,7 +10353,7 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 10,
             "type": "array",
             "x-key": [
               "operClassProfileName"
@@ -10461,7 +10535,7 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 6,
             "type": "array",
             "x-key": [
               "wanMetricsProfileName"
@@ -10483,6 +10557,7 @@
             "x-typeDescription": "The mac-address type represents an IEEE 802 MAC address.\nThe canonical representation uses lowercase characters.\n\nIn the value set and its semantics, this type is equivalent\nto the MacAddress textual convention of the SMIv2."
           },
           "identity-profile": {
+            "description": "Associates identity profile with the passpoint profile.",
             "items": {
               "description": "Associates identity profile with the passpoint profile.",
               "format": "const",
@@ -10640,7 +10715,7 @@
                 }
               }
             },
-            "maxItems": 2147483647,
+            "maxItems": 3,
             "type": "array",
             "x-key": [
               "oiValue"
@@ -11070,6 +11145,16 @@
                     "Access Point"
                   ]
                 },
+                "antenna-pol-alias": {
+                  "description": "Alias reference for the antenna polarization. Applicable only when antenna-pol is not explicitly configured.\nThe alias resolves to the corresponding polarization value defined in the alias profile.",
+                  "format": "pattern",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                  "x-patternSources": "name",
+                  "x-patterns": "'[a-zA-Z0-9-_ ]+'"
+                },
                 "channel-for-2dot4GHz": {
                   "default": "ZERO_CHAN_FOR_24GHZ",
                   "description": "Configures the valid channels for the radio. The valid channels for a band are determined by the AP regulatory domain.",
@@ -11153,6 +11238,16 @@
                   "x-supportedDeviceType": [
                     "Access Point"
                   ]
+                },
+                "channel-for-2dot4GHz-alias": {
+                  "description": "Alias reference for the 2.4GHz static channel. Applicable only when channel-for-2dot4GHz is not explicitly configured.\nThe alias resolves to the corresponding channel value defined in the alias profile.",
+                  "format": "pattern",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                  "x-patternSources": "name",
+                  "x-patterns": "'[a-zA-Z0-9-_ ]+'"
                 },
                 "channel-for-2nd-5GHz": {
                   "default": "ZERO_CHAN_FOR_5GHZ",
@@ -11355,6 +11450,16 @@
                     "Access Point"
                   ]
                 },
+                "channel-for-2nd-5GHz-alias": {
+                  "description": "Alias reference for the secondary 5GHz static channel. Applicable only when channel-for-2nd-5GHz is not explicitly configured.\nThe alias resolves to the corresponding channel value defined in the alias profile.",
+                  "format": "pattern",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                  "x-patternSources": "name",
+                  "x-patterns": "'[a-zA-Z0-9-_ ]+'"
+                },
                 "channel-for-2nd-6GHz": {
                   "default": "ZERO_CHAN_FOR_6GHZ",
                   "description": "Configures the valid channels for the radio. The valid channels for a band are determined by the AP regulatory domain.",
@@ -11542,6 +11647,16 @@
                   "x-supportedDeviceType": [
                     "Access Point"
                   ]
+                },
+                "channel-for-2nd-6GHz-alias": {
+                  "description": "Alias reference for the secondary 6GHz static channel. Applicable only when channel-for-2nd-6GHz is not explicitly configured.\nThe alias resolves to the corresponding channel value defined in the alias profile.",
+                  "format": "pattern",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                  "x-patternSources": "name",
+                  "x-patterns": "'[a-zA-Z0-9-_ ]+'"
                 },
                 "channel-for-5GHz": {
                   "default": "ZERO_CHAN_FOR_5GHZ",
@@ -11744,6 +11859,16 @@
                     "Access Point"
                   ]
                 },
+                "channel-for-5GHz-alias": {
+                  "description": "Alias reference for the 5GHz static channel. Applicable only when channel-for-5GHz is not explicitly configured.\nThe alias resolves to the corresponding channel value defined in the alias profile.",
+                  "format": "pattern",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                  "x-patternSources": "name",
+                  "x-patterns": "'[a-zA-Z0-9-_ ]+'"
+                },
                 "channel-for-6GHz": {
                   "default": "ZERO_CHAN_FOR_6GHZ",
                   "description": "Configures the valid channels for the radio. The valid channels for a band are determined by the AP regulatory domain.",
@@ -11932,6 +12057,16 @@
                     "Access Point"
                   ]
                 },
+                "channel-for-6GHz-alias": {
+                  "description": "Alias reference for the 6GHz static channel. Applicable only when channel-for-6GHz is not explicitly configured.\nThe alias resolves to the corresponding channel value defined in the alias profile.",
+                  "format": "pattern",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                  "x-patternSources": "name",
+                  "x-patterns": "'[a-zA-Z0-9-_ ]+'"
+                },
                 "effective-gain": {
                   "default": "0",
                   "description": "Configure external antenna connectors for an AP.\nIf your AP has external antenna connectors, you need to configure the transmit power of the system.\nThe configuration must ensure that the system's EIRP is in compliance with the limit specified\n by the regulatory authority of the country in which the AP is deployed.\nYou can also measure or calculate additional attenuation between the device and antenna before configuring the antenna gain.",
@@ -11941,6 +12076,16 @@
                     "Access Point"
                   ]
                 },
+                "effective-gain-alias": {
+                  "description": "Alias reference for the effective antenna gain. Applicable only when effective-gain is not explicitly configured.\nThe alias resolves to the corresponding gain value defined in the alias profile.",
+                  "format": "pattern",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                  "x-patternSources": "name",
+                  "x-patterns": "'[a-zA-Z0-9-_ ]+'"
+                },
                 "power": {
                   "default": "-127",
                   "description": "Configures the specified transmission power values. It also supports 0.1 dBm and negative values.",
@@ -11949,6 +12094,16 @@
                   "x-supportedDeviceType": [
                     "Access Point"
                   ]
+                },
+                "power-alias": {
+                  "description": "Alias reference for the static transmit power. Applicable only when power is not explicitly configured.\nThe alias resolves to the corresponding power value defined in the alias profile.",
+                  "format": "pattern",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                  "x-patternSources": "name",
+                  "x-patterns": "'[a-zA-Z0-9-_ ]+'"
                 },
                 "radio-type": {
                   "description": "Device radio type: 2.4GHz/5GHz/secondary 5GHz/6GHz.",
@@ -12237,6 +12392,16 @@
                     "Access Point"
                   ]
                 },
+                "antenna-pol-alias": {
+                  "description": "Alias reference for the antenna polarization. Applicable only when antenna-pol is not explicitly configured.\nThe alias resolves to the corresponding polarization value defined in the alias profile.",
+                  "format": "pattern",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                  "x-patternSources": "name",
+                  "x-patterns": "'[a-zA-Z0-9-_ ]+'"
+                },
                 "channel-for-2dot4GHz": {
                   "default": "ZERO_CHAN_FOR_24GHZ",
                   "description": "Configures the valid channels for the radio. The valid channels for a band are determined by the AP regulatory domain.",
@@ -12320,6 +12485,16 @@
                   "x-supportedDeviceType": [
                     "Access Point"
                   ]
+                },
+                "channel-for-2dot4GHz-alias": {
+                  "description": "Alias reference for the 2.4GHz static channel. Applicable only when channel-for-2dot4GHz is not explicitly configured.\nThe alias resolves to the corresponding channel value defined in the alias profile.",
+                  "format": "pattern",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                  "x-patternSources": "name",
+                  "x-patterns": "'[a-zA-Z0-9-_ ]+'"
                 },
                 "channel-for-2nd-5GHz": {
                   "default": "ZERO_CHAN_FOR_5GHZ",
@@ -12522,6 +12697,16 @@
                     "Access Point"
                   ]
                 },
+                "channel-for-2nd-5GHz-alias": {
+                  "description": "Alias reference for the secondary 5GHz static channel. Applicable only when channel-for-2nd-5GHz is not explicitly configured.\nThe alias resolves to the corresponding channel value defined in the alias profile.",
+                  "format": "pattern",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                  "x-patternSources": "name",
+                  "x-patterns": "'[a-zA-Z0-9-_ ]+'"
+                },
                 "channel-for-2nd-6GHz": {
                   "default": "ZERO_CHAN_FOR_6GHZ",
                   "description": "Configures the valid channels for the radio. The valid channels for a band are determined by the AP regulatory domain.",
@@ -12709,6 +12894,16 @@
                   "x-supportedDeviceType": [
                     "Access Point"
                   ]
+                },
+                "channel-for-2nd-6GHz-alias": {
+                  "description": "Alias reference for the secondary 6GHz static channel. Applicable only when channel-for-2nd-6GHz is not explicitly configured.\nThe alias resolves to the corresponding channel value defined in the alias profile.",
+                  "format": "pattern",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                  "x-patternSources": "name",
+                  "x-patterns": "'[a-zA-Z0-9-_ ]+'"
                 },
                 "channel-for-5GHz": {
                   "default": "ZERO_CHAN_FOR_5GHZ",
@@ -12911,6 +13106,16 @@
                     "Access Point"
                   ]
                 },
+                "channel-for-5GHz-alias": {
+                  "description": "Alias reference for the 5GHz static channel. Applicable only when channel-for-5GHz is not explicitly configured.\nThe alias resolves to the corresponding channel value defined in the alias profile.",
+                  "format": "pattern",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                  "x-patternSources": "name",
+                  "x-patterns": "'[a-zA-Z0-9-_ ]+'"
+                },
                 "channel-for-6GHz": {
                   "default": "ZERO_CHAN_FOR_6GHZ",
                   "description": "Configures the valid channels for the radio. The valid channels for a band are determined by the AP regulatory domain.",
@@ -13099,6 +13304,16 @@
                     "Access Point"
                   ]
                 },
+                "channel-for-6GHz-alias": {
+                  "description": "Alias reference for the 6GHz static channel. Applicable only when channel-for-6GHz is not explicitly configured.\nThe alias resolves to the corresponding channel value defined in the alias profile.",
+                  "format": "pattern",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                  "x-patternSources": "name",
+                  "x-patterns": "'[a-zA-Z0-9-_ ]+'"
+                },
                 "effective-gain": {
                   "default": "0",
                   "description": "Configure external antenna connectors for an AP.\nIf your AP has external antenna connectors, you need to configure the transmit power of the system.\nThe configuration must ensure that the system's EIRP is in compliance with the limit specified\n by the regulatory authority of the country in which the AP is deployed.\nYou can also measure or calculate additional attenuation between the device and antenna before configuring the antenna gain.",
@@ -13108,6 +13323,16 @@
                     "Access Point"
                   ]
                 },
+                "effective-gain-alias": {
+                  "description": "Alias reference for the effective antenna gain. Applicable only when effective-gain is not explicitly configured.\nThe alias resolves to the corresponding gain value defined in the alias profile.",
+                  "format": "pattern",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                  "x-patternSources": "name",
+                  "x-patterns": "'[a-zA-Z0-9-_ ]+'"
+                },
                 "power": {
                   "default": "-127",
                   "description": "Configures the specified transmission power values. It also supports 0.1 dBm and negative values.",
@@ -13116,6 +13341,16 @@
                   "x-supportedDeviceType": [
                     "Access Point"
                   ]
+                },
+                "power-alias": {
+                  "description": "Alias reference for the static transmit power. Applicable only when power is not explicitly configured.\nThe alias resolves to the corresponding power value defined in the alias profile.",
+                  "format": "pattern",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string",
+                  "x-path": "/ac-alias:aliases/ac-alias:alias/ac-alias:name",
+                  "x-patternSources": "name",
+                  "x-patterns": "'[a-zA-Z0-9-_ ]+'"
                 },
                 "radio-type": {
                   "description": "Device radio type: 2.4GHz/5GHz/secondary 5GHz/6GHz.",
@@ -13728,6 +13963,7 @@
                                 ]
                               },
                               "channels-for-2dot4GHz": {
+                                "description": "Operating channel of this radio. This configures 20MHz channels for 2.4GHz.\nRange: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14",
                                 "items": {
                                   "description": "Operating channel of this radio. This configures 20MHz channels for 2.4GHz.\nRange: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14",
                                   "enum": [
@@ -13773,6 +14009,7 @@
                                 "type": "array"
                               },
                               "channels-for-5GHz": {
+                                "description": "Operating channel of this radio. This configures 20MHz channels for 5GHz.\nRange: 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 149, 153, 157, 161, 165, 169, 173, 177",
                                 "items": {
                                   "description": "Operating channel of this radio. This configures 20MHz channels for 5GHz.\nRange: 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 149, 153, 157, 161, 165, 169, 173, 177",
                                   "enum": [
@@ -13846,6 +14083,7 @@
                                 "type": "array"
                               },
                               "channels-for-6GHz": {
+                                "description": "Operating channel of this radio. This configures 20MHz channels for 6GHz.\nRange: 1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 59, 53, 57, 61, 65, 69, 73, 77, 81, 85, 89, 93, 97,\n 101, 105, 109, 113, 117, 121, 125, 129, 133, 137, 141, 145, 149, 153, 157, 161, 165, 169, 173, 177, 181,\n 185, 189, 193, 197, 201, 205, 209, 213, 217, 221, 225, 229, 233",
                                 "items": {
                                   "description": "Operating channel of this radio. This configures 20MHz channels for 6GHz.\nRange: 1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 59, 53, 57, 61, 65, 69, 73, 77, 81, 85, 89, 93, 97,\n 101, 105, 109, 113, 117, 121, 125, 129, 133, 137, 141, 145, 149, 153, 157, 161, 165, 169, 173, 177, 181,\n 185, 189, 193, 197, 201, 205, 209, 213, 217, 221, 225, 229, 233",
                                   "enum": [
@@ -14211,6 +14449,7 @@
                             ]
                           },
                           "basic-rates": {
+                            "description": "Basic rates are the mandatory data rates that all devices must support to connect to the network.\nThese rates are used for essential network operations, such as management frames (beacons, probes) and control frames (ACKs, RTS/CTS).\nAllows you to define a set of modulation rates to use for the clients on the 6GHz radio band.\nRange: 6, 9, 12, 18, 24, 36, 48, 54 Mbps.\nThis is applicable for 6GHz band only. For this feature under 2.4GHz/5GHz, it needs to be configured under the WLAN SSID profile.",
                             "items": {
                               "description": "Basic rates are the mandatory data rates that all devices must support to connect to the network.\nThese rates are used for essential network operations, such as management frames (beacons, probes) and control frames (ACKs, RTS/CTS).\nAllows you to define a set of modulation rates to use for the clients on the 6GHz radio band.\nRange: 6, 9, 12, 18, 24, 36, 48, 54 Mbps.\nThis is applicable for 6GHz band only. For this feature under 2.4GHz/5GHz, it needs to be configured under the WLAN SSID profile.",
                               "enum": [
@@ -14652,6 +14891,7 @@
                             ]
                           },
                           "tx-rates": {
+                            "description": "Configures the transmit rates at which the AP sends data to clients connected to the 6GHz radio.\nDefault: 6, 9, 12, 18, 24, 36, 48, 54 Mbps.\nThis is applicable for 6GHz band only. For this feature under 2.4GHz/5GHz, it needs to be configured under the WLAN SSID profile.",
                             "items": {
                               "description": "Configures the transmit rates at which the AP sends data to clients connected to the 6GHz radio.\nDefault: 6, 9, 12, 18, 24, 36, 48, 54 Mbps.\nThis is applicable for 6GHz band only. For this feature under 2.4GHz/5GHz, it needs to be configured under the WLAN SSID profile.",
                               "enum": [
@@ -14926,6 +15166,7 @@
                           ]
                         },
                         "channels-for-2dot4GHz": {
+                          "description": "Operating channel of this radio. This configures 20MHz channels for 2.4GHz.\nRange: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14",
                           "items": {
                             "description": "Operating channel of this radio. This configures 20MHz channels for 2.4GHz.\nRange: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14",
                             "enum": [
@@ -14971,6 +15212,7 @@
                           "type": "array"
                         },
                         "channels-for-5GHz": {
+                          "description": "Operating channel of this radio. This configures 20MHz channels for 5GHz.\nRange: 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 149, 153, 157, 161, 165, 169, 173, 177",
                           "items": {
                             "description": "Operating channel of this radio. This configures 20MHz channels for 5GHz.\nRange: 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 149, 153, 157, 161, 165, 169, 173, 177",
                             "enum": [
@@ -15044,6 +15286,7 @@
                           "type": "array"
                         },
                         "channels-for-6GHz": {
+                          "description": "Operating channel of this radio. This configures 20MHz channels for 6GHz.\nRange: 1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 59, 53, 57, 61, 65, 69, 73, 77, 81, 85, 89, 93, 97,\n 101, 105, 109, 113, 117, 121, 125, 129, 133, 137, 141, 145, 149, 153, 157, 161, 165, 169, 173, 177, 181,\n 185, 189, 193, 197, 201, 205, 209, 213, 217, 221, 225, 229, 233",
                           "items": {
                             "description": "Operating channel of this radio. This configures 20MHz channels for 6GHz.\nRange: 1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 59, 53, 57, 61, 65, 69, 73, 77, 81, 85, 89, 93, 97,\n 101, 105, 109, 113, 117, 121, 125, 129, 133, 137, 141, 145, 149, 153, 157, 161, 165, 169, 173, 177, 181,\n 185, 189, 193, 197, 201, 205, 209, 213, 217, 221, 225, 229, 233",
                             "enum": [
@@ -15409,6 +15652,7 @@
                       ]
                     },
                     "basic-rates": {
+                      "description": "Basic rates are the mandatory data rates that all devices must support to connect to the network.\nThese rates are used for essential network operations, such as management frames (beacons, probes) and control frames (ACKs, RTS/CTS).\nAllows you to define a set of modulation rates to use for the clients on the 6GHz radio band.\nRange: 6, 9, 12, 18, 24, 36, 48, 54 Mbps.\nThis is applicable for 6GHz band only. For this feature under 2.4GHz/5GHz, it needs to be configured under the WLAN SSID profile.",
                       "items": {
                         "description": "Basic rates are the mandatory data rates that all devices must support to connect to the network.\nThese rates are used for essential network operations, such as management frames (beacons, probes) and control frames (ACKs, RTS/CTS).\nAllows you to define a set of modulation rates to use for the clients on the 6GHz radio band.\nRange: 6, 9, 12, 18, 24, 36, 48, 54 Mbps.\nThis is applicable for 6GHz band only. For this feature under 2.4GHz/5GHz, it needs to be configured under the WLAN SSID profile.",
                         "enum": [
@@ -15850,6 +16094,7 @@
                       ]
                     },
                     "tx-rates": {
+                      "description": "Configures the transmit rates at which the AP sends data to clients connected to the 6GHz radio.\nDefault: 6, 9, 12, 18, 24, 36, 48, 54 Mbps.\nThis is applicable for 6GHz band only. For this feature under 2.4GHz/5GHz, it needs to be configured under the WLAN SSID profile.",
                       "items": {
                         "description": "Configures the transmit rates at which the AP sends data to clients connected to the 6GHz radio.\nDefault: 6, 9, 12, 18, 24, 36, 48, 54 Mbps.\nThis is applicable for 6GHz band only. For this feature under 2.4GHz/5GHz, it needs to be configured under the WLAN SSID profile.",
                         "enum": [
@@ -16110,6 +16355,7 @@
                           ]
                         },
                         "channels-for-2dot4GHz": {
+                          "description": "Operating channel of this radio. This configures 20MHz channels for 2.4GHz.\nRange: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14",
                           "items": {
                             "description": "Operating channel of this radio. This configures 20MHz channels for 2.4GHz.\nRange: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14",
                             "enum": [
@@ -16155,6 +16401,7 @@
                           "type": "array"
                         },
                         "channels-for-5GHz": {
+                          "description": "Operating channel of this radio. This configures 20MHz channels for 5GHz.\nRange: 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 149, 153, 157, 161, 165, 169, 173, 177",
                           "items": {
                             "description": "Operating channel of this radio. This configures 20MHz channels for 5GHz.\nRange: 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 149, 153, 157, 161, 165, 169, 173, 177",
                             "enum": [
@@ -16228,6 +16475,7 @@
                           "type": "array"
                         },
                         "channels-for-6GHz": {
+                          "description": "Operating channel of this radio. This configures 20MHz channels for 6GHz.\nRange: 1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 59, 53, 57, 61, 65, 69, 73, 77, 81, 85, 89, 93, 97,\n 101, 105, 109, 113, 117, 121, 125, 129, 133, 137, 141, 145, 149, 153, 157, 161, 165, 169, 173, 177, 181,\n 185, 189, 193, 197, 201, 205, 209, 213, 217, 221, 225, 229, 233",
                           "items": {
                             "description": "Operating channel of this radio. This configures 20MHz channels for 6GHz.\nRange: 1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 59, 53, 57, 61, 65, 69, 73, 77, 81, 85, 89, 93, 97,\n 101, 105, 109, 113, 117, 121, 125, 129, 133, 137, 141, 145, 149, 153, 157, 161, 165, 169, 173, 177, 181,\n 185, 189, 193, 197, 201, 205, 209, 213, 217, 221, 225, 229, 233",
                             "enum": [
@@ -16593,6 +16841,7 @@
                       ]
                     },
                     "basic-rates": {
+                      "description": "Basic rates are the mandatory data rates that all devices must support to connect to the network.\nThese rates are used for essential network operations, such as management frames (beacons, probes) and control frames (ACKs, RTS/CTS).\nAllows you to define a set of modulation rates to use for the clients on the 6GHz radio band.\nRange: 6, 9, 12, 18, 24, 36, 48, 54 Mbps.\nThis is applicable for 6GHz band only. For this feature under 2.4GHz/5GHz, it needs to be configured under the WLAN SSID profile.",
                       "items": {
                         "description": "Basic rates are the mandatory data rates that all devices must support to connect to the network.\nThese rates are used for essential network operations, such as management frames (beacons, probes) and control frames (ACKs, RTS/CTS).\nAllows you to define a set of modulation rates to use for the clients on the 6GHz radio band.\nRange: 6, 9, 12, 18, 24, 36, 48, 54 Mbps.\nThis is applicable for 6GHz band only. For this feature under 2.4GHz/5GHz, it needs to be configured under the WLAN SSID profile.",
                         "enum": [
@@ -17034,6 +17283,7 @@
                       ]
                     },
                     "tx-rates": {
+                      "description": "Configures the transmit rates at which the AP sends data to clients connected to the 6GHz radio.\nDefault: 6, 9, 12, 18, 24, 36, 48, 54 Mbps.\nThis is applicable for 6GHz band only. For this feature under 2.4GHz/5GHz, it needs to be configured under the WLAN SSID profile.",
                       "items": {
                         "description": "Configures the transmit rates at which the AP sends data to clients connected to the 6GHz radio.\nDefault: 6, 9, 12, 18, 24, 36, 48, 54 Mbps.\nThis is applicable for 6GHz band only. For this feature under 2.4GHz/5GHz, it needs to be configured under the WLAN SSID profile.",
                         "enum": [
@@ -17456,6 +17706,7 @@
             "x-typeDescription": "Captive Portal Server type."
           },
           "exclude-uplink": {
+            "description": "For Captive Portal Server, customer can disable redirection to the captive portal based on the type of current uplink.",
             "items": {
               "description": "For Captive Portal Server, customer can disable redirection to the captive portal based on the type of current uplink.",
               "enum": [
@@ -17513,6 +17764,7 @@
             "x-typeDescription": "Captive Portal Server type."
           },
           "exclude-uplink": {
+            "description": "For Captive Portal Server, customer can disable redirection to the captive portal based on the type of current uplink.",
             "items": {
               "description": "For Captive Portal Server, customer can disable redirection to the captive portal based on the type of current uplink.",
               "enum": [
@@ -17989,6 +18241,14 @@
         ],
         "description": "Wireless and wired common parameters for security.",
         "properties": {
+          "auto-default-role": {
+            "description": "The leaf references a role that has the same name as the SSID/AP port profile name. When default-role is not set, this role will be used as the default role.",
+            "format": "const",
+            "maxLength": 63,
+            "minLength": 1,
+            "type": "string",
+            "x-path": "/ac-role:roles/ac-role:role/ac-role:name"
+          },
           "download-role": {
             "default": "false",
             "description": "A user is assigned a role by ClearPass Policy Manager. If the role is not defined on the Instant AP, the role attributes can also be downloaded automatically.",
@@ -18087,6 +18347,14 @@
         ],
         "description": "Wireless and wired common parameters for security.",
         "properties": {
+          "auto-default-role": {
+            "description": "The leaf references a role that has the same name as the SSID/AP port profile name. When default-role is not set, this role will be used as the default role.",
+            "format": "const",
+            "maxLength": 63,
+            "minLength": 1,
+            "type": "string",
+            "x-path": "/ac-role:roles/ac-role:role/ac-role:name"
+          },
           "download-role": {
             "default": "false",
             "description": "A user is assigned a role by ClearPass Policy Manager. If the role is not defined on the Instant AP, the role attributes can also be downloaded automatically.",
@@ -19016,8 +19284,23 @@
                   "properties": {
                     "L3-radproxy-at-cluster": {
                       "default": "false",
-                      "description": "Enable cluster as radproxy for Microbranch L3 SSID.\nThis can only be set to true when forward-mode is FORWARD_MODE_MB_L3.",
+                      "description": "Enable cluster as radproxy for Microbranch L3 SSID.\nThis can only be set to true when forward-mode is FORWARD_MODE_L3 and ap-mode is MICROBRANCH_AP.",
                       "type": "boolean"
+                    },
+                    "ap-mode": {
+                      "default": "CAMPUS_AP",
+                      "description": "AP deployment mode where this SSID is used. Campus-AP mode or Microbranch Mode.",
+                      "enum": [
+                        "CAMPUS_AP",
+                        "MICROBRANCH_AP"
+                      ],
+                      "format": "enum",
+                      "type": "string",
+                      "x-enumDescriptions": {
+                        "CAMPUS_AP": "Campus AP deployment type",
+                        "MICROBRANCH_AP": "Microbranch AP deployment type"
+                      },
+                      "x-typeDescription": "AP deployment type"
                     },
                     "bandwidth-limit": {
                       "description": "Bandwidth limit in kbps",
@@ -19059,10 +19342,7 @@
                         "FORWARD_MODE_BRIDGE",
                         "FORWARD_MODE_L2",
                         "FORWARD_MODE_L3",
-                        "FORWARD_MODE_MIXED",
-                        "FORWARD_MODE_MB_L2",
-                        "FORWARD_MODE_MB_L3",
-                        "FORWARD_MODE_MB_MIXED"
+                        "FORWARD_MODE_MIXED"
                       ],
                       "format": "enum",
                       "type": "string",
@@ -19070,9 +19350,6 @@
                         "FORWARD_MODE_BRIDGE": "Bridge mode SSID",
                         "FORWARD_MODE_L2": "L2 tunnel mode SSID",
                         "FORWARD_MODE_L3": "L3 Routed/NATed mode SSID",
-                        "FORWARD_MODE_MB_L2": "L2 tunnel mode SSID for Microbranch",
-                        "FORWARD_MODE_MB_L3": "L3 Routed/NATed mode SSID for Microbranch",
-                        "FORWARD_MODE_MB_MIXED": "Mixed mode SSID for Microbranch",
                         "FORWARD_MODE_MIXED": "Mixed mode SSID"
                       },
                       "x-supportedDeviceType": [
@@ -19121,6 +19398,7 @@
                           "type": "boolean"
                         },
                         "name": {
+                          "description": "Reference to named time range.",
                           "items": {
                             "description": "Reference to named time range.",
                             "format": "const",
@@ -19138,6 +19416,7 @@
                       }
                     },
                     "zone": {
+                      "description": "Specify the zone names for the SSID profile.\nWhen the zone is defined in SSID profile and if the same zone is defined on an AP,\nthe SSID is created on that AP.",
                       "items": {
                         "description": "Specify the zone names for the SSID profile.\nWhen the zone is defined in SSID profile and if the same zone is defined on an AP,\nthe SSID is created on that AP.",
                         "format": "pattern",
@@ -19150,7 +19429,7 @@
                           "Access Point"
                         ]
                       },
-                      "maxItems": 2147483647,
+                      "maxItems": 32,
                       "type": "array"
                     }
                   }
@@ -19189,8 +19468,23 @@
             "properties": {
               "L3-radproxy-at-cluster": {
                 "default": "false",
-                "description": "Enable cluster as radproxy for Microbranch L3 SSID.\nThis can only be set to true when forward-mode is FORWARD_MODE_MB_L3.",
+                "description": "Enable cluster as radproxy for Microbranch L3 SSID.\nThis can only be set to true when forward-mode is FORWARD_MODE_L3 and ap-mode is MICROBRANCH_AP.",
                 "type": "boolean"
+              },
+              "ap-mode": {
+                "default": "CAMPUS_AP",
+                "description": "AP deployment mode where this SSID is used. Campus-AP mode or Microbranch Mode.",
+                "enum": [
+                  "CAMPUS_AP",
+                  "MICROBRANCH_AP"
+                ],
+                "format": "enum",
+                "type": "string",
+                "x-enumDescriptions": {
+                  "CAMPUS_AP": "Campus AP deployment type",
+                  "MICROBRANCH_AP": "Microbranch AP deployment type"
+                },
+                "x-typeDescription": "AP deployment type"
               },
               "bandwidth-limit": {
                 "description": "Bandwidth limit in kbps",
@@ -19232,10 +19526,7 @@
                   "FORWARD_MODE_BRIDGE",
                   "FORWARD_MODE_L2",
                   "FORWARD_MODE_L3",
-                  "FORWARD_MODE_MIXED",
-                  "FORWARD_MODE_MB_L2",
-                  "FORWARD_MODE_MB_L3",
-                  "FORWARD_MODE_MB_MIXED"
+                  "FORWARD_MODE_MIXED"
                 ],
                 "format": "enum",
                 "type": "string",
@@ -19243,9 +19534,6 @@
                   "FORWARD_MODE_BRIDGE": "Bridge mode SSID",
                   "FORWARD_MODE_L2": "L2 tunnel mode SSID",
                   "FORWARD_MODE_L3": "L3 Routed/NATed mode SSID",
-                  "FORWARD_MODE_MB_L2": "L2 tunnel mode SSID for Microbranch",
-                  "FORWARD_MODE_MB_L3": "L3 Routed/NATed mode SSID for Microbranch",
-                  "FORWARD_MODE_MB_MIXED": "Mixed mode SSID for Microbranch",
                   "FORWARD_MODE_MIXED": "Mixed mode SSID"
                 },
                 "x-supportedDeviceType": [
@@ -19294,6 +19582,7 @@
                     "type": "boolean"
                   },
                   "name": {
+                    "description": "Reference to named time range.",
                     "items": {
                       "description": "Reference to named time range.",
                       "format": "const",
@@ -19311,6 +19600,7 @@
                 }
               },
               "zone": {
+                "description": "Specify the zone names for the SSID profile.\nWhen the zone is defined in SSID profile and if the same zone is defined on an AP,\nthe SSID is created on that AP.",
                 "items": {
                   "description": "Specify the zone names for the SSID profile.\nWhen the zone is defined in SSID profile and if the same zone is defined on an AP,\nthe SSID is created on that AP.",
                   "format": "pattern",
@@ -19323,7 +19613,7 @@
                     "Access Point"
                   ]
                 },
-                "maxItems": 2147483647,
+                "maxItems": 32,
                 "type": "array"
               }
             }
@@ -19351,8 +19641,23 @@
             "properties": {
               "L3-radproxy-at-cluster": {
                 "default": "false",
-                "description": "Enable cluster as radproxy for Microbranch L3 SSID.\nThis can only be set to true when forward-mode is FORWARD_MODE_MB_L3.",
+                "description": "Enable cluster as radproxy for Microbranch L3 SSID.\nThis can only be set to true when forward-mode is FORWARD_MODE_L3 and ap-mode is MICROBRANCH_AP.",
                 "type": "boolean"
+              },
+              "ap-mode": {
+                "default": "CAMPUS_AP",
+                "description": "AP deployment mode where this SSID is used. Campus-AP mode or Microbranch Mode.",
+                "enum": [
+                  "CAMPUS_AP",
+                  "MICROBRANCH_AP"
+                ],
+                "format": "enum",
+                "type": "string",
+                "x-enumDescriptions": {
+                  "CAMPUS_AP": "Campus AP deployment type",
+                  "MICROBRANCH_AP": "Microbranch AP deployment type"
+                },
+                "x-typeDescription": "AP deployment type"
               },
               "bandwidth-limit": {
                 "description": "Bandwidth limit in kbps",
@@ -19394,10 +19699,7 @@
                   "FORWARD_MODE_BRIDGE",
                   "FORWARD_MODE_L2",
                   "FORWARD_MODE_L3",
-                  "FORWARD_MODE_MIXED",
-                  "FORWARD_MODE_MB_L2",
-                  "FORWARD_MODE_MB_L3",
-                  "FORWARD_MODE_MB_MIXED"
+                  "FORWARD_MODE_MIXED"
                 ],
                 "format": "enum",
                 "type": "string",
@@ -19405,9 +19707,6 @@
                   "FORWARD_MODE_BRIDGE": "Bridge mode SSID",
                   "FORWARD_MODE_L2": "L2 tunnel mode SSID",
                   "FORWARD_MODE_L3": "L3 Routed/NATed mode SSID",
-                  "FORWARD_MODE_MB_L2": "L2 tunnel mode SSID for Microbranch",
-                  "FORWARD_MODE_MB_L3": "L3 Routed/NATed mode SSID for Microbranch",
-                  "FORWARD_MODE_MB_MIXED": "Mixed mode SSID for Microbranch",
                   "FORWARD_MODE_MIXED": "Mixed mode SSID"
                 },
                 "x-supportedDeviceType": [
@@ -19456,6 +19755,7 @@
                     "type": "boolean"
                   },
                   "name": {
+                    "description": "Reference to named time range.",
                     "items": {
                       "description": "Reference to named time range.",
                       "format": "const",
@@ -19473,6 +19773,7 @@
                 }
               },
               "zone": {
+                "description": "Specify the zone names for the SSID profile.\nWhen the zone is defined in SSID profile and if the same zone is defined on an AP,\nthe SSID is created on that AP.",
                 "items": {
                   "description": "Specify the zone names for the SSID profile.\nWhen the zone is defined in SSID profile and if the same zone is defined on an AP,\nthe SSID is created on that AP.",
                   "format": "pattern",
@@ -19485,7 +19786,7 @@
                     "Access Point"
                   ]
                 },
-                "maxItems": 2147483647,
+                "maxItems": 32,
                 "type": "array"
               }
             }
@@ -19496,6 +19797,7 @@
         "description": "VLAN configuration for an SSID",
         "properties": {
           "vlan-id-range": {
+            "description": "List of VLANs or VLAN ranges to map to this SSID",
             "items": {
               "description": "List of VLANs or VLAN ranges to map to this SSID",
               "format": "pattern",
@@ -19542,6 +19844,7 @@
         "description": "VLAN configuration for an SSID",
         "properties": {
           "vlan-id-range": {
+            "description": "List of VLANs or VLAN ranges to map to this SSID",
             "items": {
               "description": "List of VLANs or VLAN ranges to map to this SSID",
               "format": "pattern",
@@ -20491,6 +20794,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Global profile for ALG parameters",
+        "operationId": "replaceAlgProfileByID",
+        "parameters": [
+          {
+            "description": "ALG profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaAlg_AlgprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "Alg"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceAlgProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceAlgCmd",
+          "pathToPrint": "/alg/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/ids": {
@@ -20950,11 +21336,94 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Intrusion Detection System (IDS) monitors the network for the presence of unauthorized APs\nand clients, and detect rogue APs, interfering APs, and other devices that can potentially\ndisrupt network operations. It also logs information about the unauthorized APs and clients,\nand generates reports based on the logged information.\nIntrusion Protection System (IPS) protects networks according to planned policies when the\nspecfic attacks happen.\n\nThis feature is only applicable on AP.\n",
+        "operationId": "replaceIdsProfileByID",
+        "parameters": [
+          {
+            "description": "Profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaIds_IdsprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "Ids"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceIdsProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceIdsCmd",
+          "pathToPrint": "/ids/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/mesh": {
       "get": {
-        "description": "Configuration data for Mesh network topology.",
+        "description": "Configure and retrieve Mesh profiles for Aruba Access Points, enabling wireless backhaul\nconnectivity between mesh portals and mesh points. These profiles define mesh cluster\nsettings, band selection, topology behavior, role selection, and recovery parameters used\nto build and maintain the mesh network. Use this API to retrieve the list of Mesh profiles.",
         "operationId": "readMesh",
         "parameters": [
           {
@@ -21052,11 +21521,11 @@
     },
     "/network-config/v1alpha1/mesh/{name}": {
       "delete": {
-        "description": "Mesh profile.",
+        "description": "Defines a single Mesh profile for Aruba AP mesh network behavior. Each profile is\nidentified by name. Use these APIs to create, modify, or delete an instance.",
         "operationId": "deleteMeshProfileByID",
         "parameters": [
           {
-            "description": "Mesh profile name.",
+            "description": "The name of the Mesh profile.",
             "in": "path",
             "name": "name",
             "required": true,
@@ -21132,11 +21601,11 @@
         }
       },
       "get": {
-        "description": "Mesh profile.",
+        "description": "Defines a single Mesh profile for Aruba AP mesh network behavior. Each profile is\nidentified by name. Use these APIs to create, modify, or delete an instance.",
         "operationId": "readMeshProfileByID",
         "parameters": [
           {
-            "description": "Mesh profile name.",
+            "description": "The name of the Mesh profile.",
             "in": "path",
             "name": "name",
             "required": true,
@@ -21245,11 +21714,11 @@
         }
       },
       "patch": {
-        "description": "Mesh profile.",
+        "description": "Defines a single Mesh profile for Aruba AP mesh network behavior. Each profile is\nidentified by name. Use these APIs to create, modify, or delete an instance.",
         "operationId": "updateMeshProfileByID",
         "parameters": [
           {
-            "description": "Mesh profile name.",
+            "description": "The name of the Mesh profile.",
             "in": "path",
             "name": "name",
             "required": true,
@@ -21328,11 +21797,11 @@
         }
       },
       "post": {
-        "description": "Mesh profile.",
+        "description": "Defines a single Mesh profile for Aruba AP mesh network behavior. Each profile is\nidentified by name. Use these APIs to create, modify, or delete an instance.",
         "operationId": "createMeshProfileByID",
         "parameters": [
           {
-            "description": "Mesh profile name.",
+            "description": "The name of the Mesh profile.",
             "in": "path",
             "name": "name",
             "required": true,
@@ -21407,6 +21876,89 @@
           "parentCommand": "createMeshCmd",
           "pathToPrint": "/mesh/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "Defines a single Mesh profile for Aruba AP mesh network behavior. Each profile is\nidentified by name. Use these APIs to create, modify, or delete an instance.",
+        "operationId": "replaceMeshProfileByID",
+        "parameters": [
+          {
+            "description": "The name of the Mesh profile.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaMesh_MeshprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "Mesh"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceMeshProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceMeshCmd",
+          "pathToPrint": "/mesh/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -21868,6 +22420,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "Configure the parameters of MPSK Local Profile. You can configure paramaters such as password, role-name, etc.",
+        "operationId": "replaceMpskLocalProfileByID",
+        "parameters": [
+          {
+            "description": "Profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaMpskLocal_MpskLocalprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing MPSK LOCAL profile configuration",
+        "tags": [
+          "Mpsk Local"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceMpskLocalProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceMpskLocalCmd",
+          "pathToPrint": "/mpsk-local/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/passpoint": {
@@ -22327,6 +22962,89 @@
           "summary": "Create operation for profile",
           "totParams": 1
         }
+      },
+      "put": {
+        "description": "List of passpoint profile 802.11u public access service providers.",
+        "operationId": "replacePasspointProfileByID",
+        "parameters": [
+          {
+            "description": "Passpoint profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaPasspoint_PasspointprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Replace profile by name",
+        "tags": [
+          "Passpoint"
+        ],
+        "x-cliParam": {
+          "commandName": "replacePasspointProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replacePasspointCmd",
+          "pathToPrint": "/passpoint/profile/%s/",
+          "summary": "Replace operation for profile",
+          "totParams": 1
+        }
       }
     },
     "/network-config/v1alpha1/radios": {
@@ -22686,7 +23404,7 @@
             "OAuth2": []
           }
         ],
-        "summary": "Update profile by name",
+        "summary": "Update existing radio profile.",
         "tags": [
           "Radio"
         ],
@@ -22784,6 +23502,89 @@
           "parentCommand": "createRadiosCmd",
           "pathToPrint": "/radios/profile/%s/",
           "summary": "Create operation for profile",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "List of radio profiles.",
+        "operationId": "replaceRadiosProfileByID",
+        "parameters": [
+          {
+            "description": "Radio profile name.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaRadio_RadiosprofileSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or update radio profile.",
+        "tags": [
+          "Radio"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceRadiosProfileCmd",
+          "commandUse": "profile",
+          "paramKeys": [
+            {
+              "key": "name"
+            }
+          ],
+          "parentCommand": "replaceRadiosCmd",
+          "pathToPrint": "/radios/profile/%s/",
+          "summary": "Replace operation for profile",
           "totParams": 1
         }
       }
@@ -23243,6 +24044,89 @@
           "parentCommand": "createWlanSsidsCmd",
           "pathToPrint": "/wlan-ssids/wlan-ssid/%s/",
           "summary": "Create operation for wlan-ssid",
+          "totParams": 1
+        }
+      },
+      "put": {
+        "description": "WLAN SSID profile.",
+        "operationId": "replaceWlanSsidsWlanSsidByID",
+        "parameters": [
+          {
+            "description": "WLAN SSID profile name",
+            "in": "path",
+            "name": "ssid",
+            "required": true,
+            "schema": {
+              "format": "const",
+              "maxLength": 9999,
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/post_object_type"
+          },
+          {
+            "$ref": "#/components/parameters/post_scope_id"
+          },
+          {
+            "$ref": "#/components/parameters/post_device_function"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ArubaWlan_WlanSsidswlanSsidSchema"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/200"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "406": {
+            "$ref": "#/components/responses/406"
+          },
+          "408": {
+            "$ref": "#/components/responses/408"
+          },
+          "412": {
+            "$ref": "#/components/responses/412"
+          },
+          "429": {
+            "$ref": "#/components/responses/429"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create or Update existing WLAN SSID profile configuration",
+        "tags": [
+          "Wlan"
+        ],
+        "x-cliParam": {
+          "commandName": "replaceWlanSsidsWlanSsidCmd",
+          "commandUse": "wlan-ssid",
+          "paramKeys": [
+            {
+              "key": "ssid"
+            }
+          ],
+          "parentCommand": "replaceWlanSsidsCmd",
+          "pathToPrint": "/wlan-ssids/wlan-ssid/%s/",
+          "summary": "Replace operation for wlan-ssid",
           "totParams": 1
         }
       }

@@ -1,7 +1,9 @@
 """Unit tests for the Central scope write tools (membership + bulk delete).
 
-Covers the seven mutation tools added to ``sites.py``. Mocks ``confirm_write``
-(the elicitation guard) and ``retry_central_command`` at their import sites.
+Covers the seven mutation tools added to ``sites.py``. Mocks
+``retry_central_command`` at its import site (confirmation is structural —
+the universal gate at ``central_invoke_tool`` dispatch — so direct calls
+need no confirm mocking).
 Also asserts every tool carries the ``central_write_delete`` gating tag — the
 ONLY tag Central's write gate (server-side ``Visibility`` transform +
 ``_WRITE_TAG_BY_PLATFORM``) acts on. A bare ``central_write`` tag would ship
@@ -11,7 +13,7 @@ ungated.
 from __future__ import annotations
 
 import importlib
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastmcp.exceptions import ToolError
@@ -31,7 +33,6 @@ def central_registry():
     return REGISTRIES["central"]
 
 
-_CONFIRM = "hpe_networking_mcp.platforms.central.tools.sites.confirm_write"
 _CMD = "hpe_networking_mcp.platforms.central.tools.sites.retry_central_command"
 
 WRITE_TOOLS = [
@@ -62,8 +63,7 @@ class TestGatingTag:
 
 class TestMembershipWrites:
     @patch(_CMD)
-    @patch(_CONFIRM, new_callable=AsyncMock)
-    async def test_add_devices_to_device_group_confirmed(self, mock_confirm, mock_cmd):
+    async def test_add_devices_to_device_group_confirmed(self, mock_cmd):
         from hpe_networking_mcp.platforms.central.tools.sites import central_add_devices_to_device_group
 
         mock_cmd.return_value = {"code": 200, "msg": {"ok": True}}
@@ -71,7 +71,6 @@ class TestMembershipWrites:
             _ctx(), dest_scope_id="55", devices=["S1", "S2"], confirmed=True
         )
 
-        mock_confirm.assert_not_called()  # confirmed=True skips elicitation
         kwargs = mock_cmd.call_args.kwargs
         assert kwargs["api_method"] == "POST"
         assert kwargs["api_path"] == "network-config/v1/device-groups-add-devices"
@@ -79,22 +78,22 @@ class TestMembershipWrites:
         assert result == {"ok": True}
 
     @patch(_CMD)
-    @patch(_CONFIRM, new_callable=AsyncMock)
-    async def test_unconfirmed_returns_guard_and_skips_call(self, mock_confirm, mock_cmd):
+    async def test_unconfirmed_direct_call_dispatches(self, mock_cmd):
+        """Inline guards are gone — confirmation is enforced by the universal
+        gate at central_invoke_tool dispatch (see test_gate_end_to_end). The
+        tool body itself dispatches regardless of confirmed."""
         from hpe_networking_mcp.platforms.central.tools.sites import central_add_devices_to_site
 
-        mock_confirm.return_value = {"status": "confirmation_required", "message": "confirm please"}
+        mock_cmd.return_value = {"code": 200, "msg": {"ok": True}}
         result = await central_add_devices_to_site(_ctx(), dest_scope_id="7", devices=["S1"])
 
-        assert result == {"status": "confirmation_required", "message": "confirm please"}
-        mock_cmd.assert_not_called()  # guard short-circuits before the API call
+        assert result == {"ok": True}
+        mock_cmd.assert_called_once()
 
     @patch(_CMD)
-    @patch(_CONFIRM, new_callable=AsyncMock)
-    async def test_create_group_omits_description_when_none(self, mock_confirm, mock_cmd):
+    async def test_create_group_omits_description_when_none(self, mock_cmd):
         from hpe_networking_mcp.platforms.central.tools.sites import central_create_device_group_with_devices
 
-        mock_confirm.return_value = None  # accepted
         mock_cmd.return_value = {"code": 200, "msg": {}}
         await central_create_device_group_with_devices(_ctx(), scope_name="DG1", devices=["S1"])
         assert mock_cmd.call_args.kwargs["api_data"] == {"scopeName": "DG1", "devices": ["S1"]}
@@ -103,11 +102,9 @@ class TestMembershipWrites:
         assert mock_cmd.call_args.kwargs["api_data"] == {"scopeName": "DG1", "devices": ["S1"], "description": "d"}
 
     @patch(_CMD)
-    @patch(_CONFIRM, new_callable=AsyncMock)
-    async def test_non_2xx_raises_toolerror(self, mock_confirm, mock_cmd):
+    async def test_non_2xx_raises_toolerror(self, mock_cmd):
         from hpe_networking_mcp.platforms.central.tools.sites import central_remove_devices_from_device_group
 
-        mock_confirm.return_value = None
         mock_cmd.return_value = {"code": 422, "msg": "bad serials"}
         with pytest.raises(ToolError) as exc:
             await central_remove_devices_from_device_group(_ctx(), devices=["BAD"], confirmed=True)
@@ -116,8 +113,7 @@ class TestMembershipWrites:
 
 class TestBulkDeletes:
     @patch(_CMD)
-    @patch(_CONFIRM, new_callable=AsyncMock)
-    async def test_bulk_delete_sites_uses_delete_and_items_body(self, mock_confirm, mock_cmd):
+    async def test_bulk_delete_sites_uses_delete_and_items_body(self, mock_cmd):
         from hpe_networking_mcp.platforms.central.tools.sites import central_bulk_delete_sites
 
         mock_cmd.return_value = {"code": 200, "msg": {"deleted": 2}}

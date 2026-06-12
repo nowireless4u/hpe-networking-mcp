@@ -14,9 +14,6 @@ services:
       # Dev-only generator / import scripts (Mist regen + Central import).
       # Read-write so the scripts can write generated tool files back into
       # ./src under their own mount. Never copied into the production image
-      # by the Dockerfile (only ./src is COPYed).
+      # by the Dockerfile (only ./src is COPYed). Both the Mist and Central
+      # distill/import scripts read their OpenAPI specs from ./vendor (above).
       - ./scripts:/app/scripts
-      # Local-only Central OpenAPI snapshot (gitignored) — the Central
-      # import script reads from here. Read-only mount; never copied into
-      # the production image. Refresh this directory manually on the host.
-      - ./api-endpoints:/app/api-endpoints:ro

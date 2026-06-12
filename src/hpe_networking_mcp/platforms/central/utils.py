@@ -1,11 +1,11 @@
-import time
-from concurrent.futures import ThreadPoolExecutor
+import asyncio
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from fastmcp.exceptions import ToolError
 from loguru import logger
+from pydantic import BeforeValidator
 
 from hpe_networking_mcp.platforms.central.models import (
     Alert,
@@ -29,6 +29,44 @@ _RETRY_BACKOFF_CAP_SECS = 5.0
 def _retry_backoff_secs(attempt: int) -> float:
     """Seconds to wait before the next retry (1-indexed attempt). Capped exponential."""
     return min(_RETRY_BACKOFF_BASE_SECS * (2 ** (attempt - 1)), _RETRY_BACKOFF_CAP_SECS)
+
+
+def coerce_enum(canonical: tuple[str, ...], aliases: dict[str, str] | None = None) -> BeforeValidator:
+    """Build a Pydantic ``BeforeValidator`` that folds case-insensitive and known
+    alias inputs onto a canonical enum value, leaving the enclosing ``Literal`` intact.
+
+    Attach it to a ``Literal`` tool parameter so callers (and LLMs) can pass a value in
+    any case, or a documented synonym, without a hard validation rejection::
+
+        status: Annotated[
+            Literal["Connected", "Failed"] | None,
+            coerce_enum(("Connected", "Failed")),
+        ] = None
+
+    The ``Literal`` still surfaces as an ``enum`` in the generated JSON schema (so the
+    canonical values stay discoverable), and genuinely invalid values still fail with
+    the standard ``Input should be 'Connected' or 'Failed'`` message — this validator
+    only rewrites recognized case / alias variants and passes everything else through
+    unchanged. ``None`` and non-string inputs are returned untouched.
+
+    Args:
+        canonical: The canonical enum values, in the exact case declared in the Literal.
+        aliases: Optional ``{synonym: canonical}`` map (e.g. ``{"combined": "usage"}``);
+            synonym keys are matched case-insensitively.
+
+    Returns:
+        A ``BeforeValidator`` suitable for use inside ``Annotated[...]``.
+    """
+    lookup = {value.lower(): value for value in canonical}
+    if aliases:
+        lookup.update({alias.lower(): target for alias, target in aliases.items()})
+
+    def _coerce(value: Any) -> Any:
+        if isinstance(value, str):
+            return lookup.get(value.lower(), value)
+        return value
+
+    return BeforeValidator(_coerce)
 
 
 def normalize_site_name_filter(value: str | list[str] | None) -> list[str] | None:
@@ -106,7 +144,7 @@ def build_odata_filter(
 SITE_LIMIT = 100
 
 
-def fetch_site_data_parallel(
+async def fetch_site_data_parallel(
     central_conn: Any,
 ) -> dict[str, SiteData]:
     """
@@ -127,12 +165,9 @@ def fetch_site_data_parallel(
     # These endpoints are offset-paginated per the Aruba dev portal — they
     # accept ``limit`` + ``offset`` only. Default cursor pagination here
     # silently breaks for tenants with > SITE_LIMIT sites.
-    with ThreadPoolExecutor(max_workers=3) as executor:
-        futures = [
-            executor.submit(paginated_fetch, central_conn, endpoint, SITE_LIMIT, use_cursor=False)
-            for endpoint in endpoints
-        ]
-        results = [future.result() for future in futures]
+    results = await asyncio.gather(
+        *(paginated_fetch(central_conn, endpoint, SITE_LIMIT, use_cursor=False) for endpoint in endpoints)
+    )
 
     return process_site_health_data(*results)
 
@@ -171,7 +206,7 @@ def process_site_health_data(
     return processed_sites
 
 
-def paginated_fetch(
+async def paginated_fetch(
     central_conn: Any,
     api_path: str,
     limit: int,
@@ -210,7 +245,7 @@ def paginated_fetch(
                 "limit": limit,
                 "next": next_cursor,
             }
-            response = retry_central_command(
+            response = await retry_central_command(
                 central_conn,
                 api_method="GET",
                 api_path=api_path,
@@ -232,7 +267,7 @@ def paginated_fetch(
                 "limit": limit,
                 "offset": offset,
             }
-            response = retry_central_command(
+            response = await retry_central_command(
                 central_conn,
                 api_method="GET",
                 api_path=api_path,
@@ -275,7 +310,42 @@ def deprecation_notice(resp: dict[str, Any]) -> dict[str, Any] | None:
     return {"deprecated": True, "sunset": sunset, "message": message}
 
 
-def retry_central_command(
+def get_central_conn(ctx: Any) -> Any:
+    """Return the Central connection, or raise a clear 503 ToolError.
+
+    Central is optional: when its Docker secrets are absent or startup failed,
+    ``server.py`` stores ``central_conn = None``. Tools that pass that straight
+    into ``central_conn.command(...)`` crash with an opaque ``AttributeError``
+    (``None.command``), and the exception handler then crashes again on
+    ``None.logger`` (issue #443). This helper checks up front and raises an
+    actionable ``ToolError`` so a disabled/failed integration produces a
+    recoverable "not configured" response instead of an internal error.
+
+    Args:
+        ctx: The FastMCP request context.
+
+    Returns:
+        The ``CentralClient`` instance.
+
+    Raises:
+        ToolError: 503 when Central is not configured or failed to start.
+    """
+    conn = ctx.lifespan_context.get("central_conn")
+    if conn is None:
+        raise ToolError(
+            {
+                "status_code": 503,
+                "message": (
+                    "Central is not configured or failed to initialize. Provide the Central "
+                    "Docker secrets (central_base_url, central_client_id, central_client_secret) "
+                    "and restart the server."
+                ),
+            }
+        )
+    return conn
+
+
+async def retry_central_command(
     central_conn: Any,
     api_method: str,
     api_path: str,
@@ -286,7 +356,7 @@ def retry_central_command(
     """Call central_conn.command and retry up to max_retries on transient errors.
 
     Args:
-        central_conn: pycentral connection object.
+        central_conn: ``CentralClient`` instance (from ``get_central_conn``).
         api_method: HTTP method (GET, POST, PUT, DELETE).
         api_path: API endpoint path.
         api_params: URL query parameters.
@@ -300,29 +370,36 @@ def retry_central_command(
             masking (a bare ``Exception`` here gets reduced to "Error calling
             tool …" and the AI can't self-correct).
     """
+    if central_conn is None:
+        raise ToolError(
+            {
+                "status_code": 503,
+                "message": (
+                    "Central is not configured or failed to initialize. Provide the Central "
+                    "Docker secrets (central_base_url, central_client_id, central_client_secret) "
+                    "and restart the server."
+                ),
+            }
+        )
     api_params = api_params or {}
     api_data = api_data or {}
     last_response: dict | None = None
     for attempt in range(1, max_retries + 1):
         try:
-            resp = central_conn.command(
+            resp = await central_conn.command(
                 api_method=api_method,
                 api_path=api_path,
                 api_params=api_params,
                 api_data=api_data,
             )
         except Exception as exc:
-            central_conn.logger.error(
-                "Central transport error attempt %d/%d %s %s: %s",
-                attempt,
-                max_retries,
-                api_method,
-                api_path,
-                exc,
+            logger.error(
+                "{}",
+                f"Central transport error attempt {attempt}/{max_retries} {api_method} {api_path}: {exc}",
             )
             last_response = {"code": 0, "msg": str(exc)}
             if attempt < max_retries:
-                time.sleep(_retry_backoff_secs(attempt))
+                await asyncio.sleep(_retry_backoff_secs(attempt))
             continue
 
         code = resp.get("code", 0)
@@ -340,8 +417,8 @@ def retry_central_command(
 
         # retry on server errors or rate limiting
         if code == 429 or 500 <= code < 600:
-            central_conn.logger.warning(
-                "Central transient response code=%s for %s %s (attempt %d/%d)",
+            logger.warning(
+                "Central transient response code={} for {} {} (attempt {}/{})",
                 code,
                 api_method,
                 api_path,
@@ -350,7 +427,7 @@ def retry_central_command(
             )
             last_response = resp
             if attempt < max_retries:
-                time.sleep(_retry_backoff_secs(attempt))
+                await asyncio.sleep(_retry_backoff_secs(attempt))
             continue
 
         # client errors -> raise immediately

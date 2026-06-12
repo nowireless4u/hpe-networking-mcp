@@ -66,17 +66,11 @@ async def lifespan(server: FastMCP):
     # --- Central ---
     if config.central:
         try:
-            from pycentral import NewCentralBase
+            from hpe_networking_mcp.platforms.central.client import create_connection
 
-            context["central_conn"] = NewCentralBase(
-                token_info={
-                    "new_central": {
-                        "base_url": config.central.base_url,
-                        "client_id": config.central.client_id,
-                        "client_secret": config.central.client_secret,
-                    }
-                }
-            )
+            # Construction is non-blocking: the first API call triggers the
+            # initial OAuth2 token fetch via the shared AsyncTokenManager.
+            context["central_conn"] = create_connection(config.central)
         except Exception as e:
             logger.warning("Central: failed to initialize — {}", e)
             context["central_conn"] = None
@@ -86,14 +80,12 @@ async def lifespan(server: FastMCP):
     # --- GreenLake ---
     if config.greenlake:
         try:
-            from hpe_networking_mcp.platforms.greenlake.auth import TokenManager
+            from hpe_networking_mcp.platforms.greenlake.client import make_token_manager
 
-            context["greenlake_token_manager"] = TokenManager(
-                api_base_url=config.greenlake.api_base_url,
-                client_id=config.greenlake.client_id,
-                client_secret=config.greenlake.client_secret,
-                workspace_id=config.greenlake.workspace_id,
-            )
+            # Construction is non-blocking: the first API call triggers the
+            # initial token fetch via the shared AsyncTokenManager (the #440
+            # to_thread workaround is no longer needed).
+            context["greenlake_token_manager"] = make_token_manager(config.greenlake)
         except Exception as e:
             logger.warning("GreenLake: failed to initialize — {}", e)
             context["greenlake_token_manager"] = None
@@ -103,17 +95,16 @@ async def lifespan(server: FastMCP):
     # --- ClearPass ---
     if config.clearpass:
         try:
-            from hpe_networking_mcp.platforms.clearpass.client import ClearPassTokenManager
+            from hpe_networking_mcp.platforms.clearpass.client import create_client
 
-            context["clearpass_token_manager"] = ClearPassTokenManager(config.clearpass)
-            context["clearpass_config"] = config.clearpass
+            # Construction is non-blocking: the first API call triggers the
+            # initial OAuth2 token fetch via the shared AsyncTokenManager.
+            context["clearpass_client"] = create_client(config.clearpass)
         except Exception as e:
             logger.warning("ClearPass: failed to initialize — {}", e)
-            context["clearpass_config"] = None
-            context["clearpass_token_manager"] = None
+            context["clearpass_client"] = None
     else:
-        context["clearpass_config"] = None
-        context["clearpass_token_manager"] = None
+        context["clearpass_client"] = None
 
     # --- Apstra ---
     if config.apstra:
@@ -208,6 +199,18 @@ async def lifespan(server: FastMCP):
         gl_tm = context.get("greenlake_token_manager")
         if gl_tm and hasattr(gl_tm, "close"):
             await gl_tm.close()
+        central = context.get("central_conn")
+        if central is not None:
+            try:
+                await central.aclose()
+            except Exception as e:  # noqa: BLE001 — shutdown must not raise
+                logger.warning("Central: aclose failed during shutdown — {}", e)
+        clearpass = context.get("clearpass_client")
+        if clearpass is not None:
+            try:
+                await clearpass.aclose()
+            except Exception as e:  # noqa: BLE001 — shutdown must not raise
+                logger.warning("ClearPass: aclose failed during shutdown — {}", e)
         mist_client_cleanup: Any = context.get("mist_client")
         if mist_client_cleanup is not None:
             try:
@@ -233,6 +236,45 @@ async def lifespan(server: FastMCP):
             except Exception as e:  # noqa: BLE001
                 logger.warning("UXI: aclose failed during shutdown — {}", e)
         logger.info("Server shutdown complete")
+
+
+def _mcp_apps_enabled() -> bool:
+    """Whether the MCP-Apps providers are enabled (env-gated by ``MCP_APP_ENABLE``).
+
+    A single switch for every MCP-Apps capability — the ``FileUpload`` provider and
+    the ``GenerativeUI`` provider — since both emit ``ui://`` MCP-Apps resources that
+    only render in MCP-Apps hosts. Off by default.
+    """
+    import os
+
+    return os.environ.get("MCP_APP_ENABLE", "").strip().lower() in ("1", "true", "yes")
+
+
+# Prepended to the GenerativeUI tool's own description. Tool descriptions are part
+# of the function-calling contract a client uses to PICK a tool — unlike
+# INSTRUCTIONS.md, which MCP clients treat as untrusted server content and largely
+# ignore (see the project_mcp_memory_arch_finding note). Putting the steer HERE is
+# what actually makes the model reach for generate_prefab_ui instead of hand-writing
+# HTML for a dashboard request.
+_GENERATIVE_UI_GUIDANCE = (
+    "USE THIS TOOL FIRST for any request to build, render, draw, show, or visualize "
+    "a dashboard, report, chart, graph, table, scorecard, status board, or any "
+    "graphical / interactive view of network data (Juniper Mist, Aruba Central + MRT, "
+    "HPE GreenLake, ClearPass, Apstra, Axis, AOS 8, UXI). Workflow: gather the data "
+    "first (platform read tools / an `execute` block), then pass it here and compose "
+    "the view from Prefab components (metric cards, bar/line/area/pie charts, data "
+    "tables, badges) with reactive state for in-window filtering. Do NOT hand-write "
+    "raw HTML as a text response for visualization requests — render it through this "
+    "tool so the client shows a live, interactive widget instead of a static blob.\n\n"
+    "DATA CONTRACT (avoids the #1 error): pass the values you gathered as the `data` "
+    "argument, which MUST be a dict. Each TOP-LEVEL KEY of that dict becomes a global "
+    "variable of that same name inside your `code` — reference those names directly. "
+    "Example: data={'devices': [...], 'top_aps': [...]} -> in code use `devices` and "
+    "`top_aps`. There is NO variable named `data` in the sandbox; writing `data[...]` "
+    "or `data.get(...)` raises `NameError: name 'data' is not defined`. Embed the real "
+    "values you collected (do not invent placeholders).\n\n"
+    "---\n\n"
+)
 
 
 def create_server(config: ServerConfig) -> FastMCP:
@@ -313,6 +355,46 @@ def create_server(config: ServerConfig) -> FastMCP:
         _register_aos8_tools(mcp, config)
     if config.uxi:
         _register_uxi_tools(mcp, config)
+
+    # --- MCP-Apps providers (experimental, env-gated by MCP_APP_ENABLE) ---
+    # One switch enables every MCP-Apps capability. Both providers emit `ui://`
+    # MCP-Apps resources that render only in MCP-Apps hosts (Claude Desktop /
+    # ChatGPT / claude.ai); they're no-op visuals in Claude Code.
+    #
+    # FileUpload: exposes a `file_manager` drag/pick upload tool (carrying MCP-Apps
+    # `ui` render metadata) plus `list_files` / `read_file`. In code mode the
+    # CodeMode transform would hide them, so _register_code_mode() re-exposes them
+    # top-level via discovery_tools (their `ui` metadata rides through intact).
+    #
+    # GenerativeUI: exposes `generate_prefab_ui` — the model writes Prefab Python
+    # that renders as a live dashboard from data it collected (e.g. AP health across
+    # sites) — a `search_prefab_components` discovery tool, and a `ui://` streaming
+    # renderer resource. Server-side validation uses Deno (baked into the image).
+    if _mcp_apps_enabled():
+        import asyncio
+
+        from fastmcp.apps.file_upload import FileUpload
+        from fastmcp.apps.generative import GenerativeUI
+
+        mcp.add_provider(FileUpload())
+        logger.info("MCP Apps: FileUpload provider registered (MCP_APP_ENABLE=true)")
+
+        mcp.add_provider(GenerativeUI())
+        logger.info("MCP Apps: GenerativeUI provider registered (MCP_APP_ENABLE=true)")
+
+        # Steer dashboard/visualization requests to this tool by prepending
+        # networking-specific guidance to its description (preserving the upstream
+        # Prefab authoring instructions). get_tool returns the live instance and the
+        # change persists to list_tools, so this covers BOTH code and dynamic mode.
+        # create_server runs before the event loop, so a one-shot asyncio.run is safe
+        # (same justification as the code-mode re-expose below).
+        try:
+            _gen_tool = asyncio.run(mcp.get_tool("generate_prefab_ui"))
+            if _gen_tool is not None:
+                _gen_tool.description = _GENERATIVE_UI_GUIDANCE + (_gen_tool.description or "")
+                logger.info("Generative UI: generate_prefab_ui description augmented with dashboard guidance")
+        except Exception as e:  # pragma: no cover - defensive
+            logger.warning("Generative UI: could not augment generate_prefab_ui description: {}", e)
 
     # --- Cross-platform aggregators ---
     # These are workarounds for dynamic mode's "AI picks one platform and stops"
@@ -564,16 +646,51 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
     skill_registry = SkillRegistry.from_directory()
     logger.info("Skills: registered {} skill(s) (code mode discovery layer)", len(skill_registry.all()))
 
+    # Heterogeneous discovery-tool factories (the _Hpe* subclasses, the Skills
+    # factories, and the file_manager passthrough lambda) — annotate as Any so
+    # appending the lambda below doesn't collapse the inferred type to object.
+    discovery_tools: list[Any] = [
+        _HpeGetTags(default_detail="brief"),
+        _HpeSearch(default_detail="brief"),
+        _HpeGetSchemas(default_detail="detailed"),
+        SkillsListDiscoveryTool(skill_registry),
+        SkillsLoadDiscoveryTool(skill_registry),
+    ]
+
+    # If the MCP-Apps providers are registered (MCP_APP_ENABLE), re-expose their
+    # model-visible tools top-level so CodeMode doesn't bury them behind `execute`:
+    #   FileUpload  — file_manager (renders the upload UI; carries MCP-Apps `ui`
+    #                 meta) + list_files / read_file (the aos-migration upload
+    #                 branch's read_file fallback path). store_files is app-only
+    #                 (UI-internal) and intentionally NOT re-exposed.
+    #   GenerativeUI — generate_prefab_ui (carries the streaming-renderer `ui`
+    #                 meta) + search_prefab_components.
+    # A discovery factory is `(get_catalog) -> Tool`; ours ignores the catalog and
+    # returns the already-registered Tool unchanged, so the `ui` render metadata
+    # survives the transform. The `ui://` renderer resources are not tools, so the
+    # CodeMode tool transform leaves them untouched. create_server() runs before the
+    # event loop starts, so a one-shot asyncio.run to fetch each tool is safe.
+    if _mcp_apps_enabled():
+        import asyncio
+
+        for app_tool_name in (
+            "file_manager",
+            "list_files",
+            "read_file",
+            "generate_prefab_ui",
+            "search_prefab_components",
+        ):
+            try:
+                app_tool = asyncio.run(mcp.get_tool(app_tool_name))
+                discovery_tools.append(lambda get_catalog, _t=app_tool: _t)
+                logger.info("MCP Apps: {} re-exposed top-level in code mode", app_tool_name)
+            except Exception as e:  # pragma: no cover - defensive
+                logger.warning("MCP Apps: could not expose {} top-level: {}", app_tool_name, e)
+
     mcp.add_transform(
         CodeMode(
             sandbox_provider=MontySandboxProvider(limits=limits),
-            discovery_tools=[
-                _HpeGetTags(default_detail="brief"),
-                _HpeSearch(default_detail="brief"),
-                _HpeGetSchemas(default_detail="detailed"),
-                SkillsListDiscoveryTool(skill_registry),
-                SkillsLoadDiscoveryTool(skill_registry),
-            ],
+            discovery_tools=discovery_tools,
             execute_description=execute_description,
         )
     )

@@ -12,7 +12,6 @@ from typing import Any
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
-from hpe_networking_mcp.middleware.elicitation import confirm_write
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.axis._registry import tool
 from hpe_networking_mcp.platforms.axis.client import format_http_error, get_axis_client
@@ -64,7 +63,8 @@ async def axis_manage_connector(
         action_type: One of ``'create'``, ``'update'``, ``'delete'``.
         payload: Body for create/update. Ignored for delete.
         connector_id: GUID — required for update/delete.
-        confirmed: Set true after user confirms; skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot
+            show a confirmation prompt (the universal gate prompts otherwise).
     """
     return await manage_entity(
         ctx,
@@ -94,15 +94,9 @@ async def axis_regenerate_connector(
 
     Args:
         connector_id: GUID of the connector to regenerate.
-        confirmed: Set true after user confirms; skips re-prompting.
+        confirmed: Fallback confirmation flag — honored only when the client cannot
+            show a confirmation prompt (the universal gate prompts otherwise).
     """
-    decline = await confirm_write(
-        ctx,
-        f"Axis: regenerate install command for connector {connector_id}. "
-        "This invalidates the prior install command. Confirm?",
-    )
-    if decline:
-        return decline
     try:
         client = await get_axis_client()
         return await client.post_json(f"/Connectors/{connector_id}/regenerate", json_body={})

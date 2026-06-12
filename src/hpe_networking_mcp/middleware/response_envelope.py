@@ -65,6 +65,17 @@ _NO_ENVELOPE_TOOLS: frozenset[str] = frozenset(
         "get_schema",
         "skills_list",
         "skills_load",
+        # GenerativeUI provider (MCP_APP_ENABLE). Both tools carry an
+        # ``x-fastmcp-wrap-result`` output schema requiring a top-level ``result``
+        # key; wrapping them in the envelope strips ``result`` and the tool's own
+        # output validation fails with "'result' is a required property" — the same
+        # failure mode as the discovery tools above (#293/#302). ``generate_prefab_ui``
+        # also returns a ``$prefab`` UI view (caught by the marker bypass below), but
+        # naming it here covers its non-UI/error returns too. Names are the
+        # GenerativeUI defaults — keep in sync if the provider is constructed with
+        # custom tool_name / components_tool_name.
+        "generate_prefab_ui",
+        "search_prefab_components",
     }
 )
 
@@ -202,6 +213,18 @@ class ResponseEnvelopeMiddleware(Middleware):
 
         # Determine the raw structured payload, if any.
         raw = getattr(result, "structured_content", None)
+
+        # MCP-Apps / Prefab UI tools (FastMCP ``FileUpload`` provider's
+        # ``file_manager`` / ``store_files``, etc.) return a UI *view spec*
+        # under a top-level ``$prefab`` key in ``structured_content``. The
+        # host's renderer reads ``structured_content`` directly to draw the
+        # interface; wrapping it in the envelope buries ``$prefab`` under
+        # ``data`` and the renderer hangs on "waiting for content". Detect the
+        # marker (not a hardcoded tool name) so any Prefab tool passes through
+        # untouched.
+        if isinstance(raw, dict) and "$prefab" in raw:
+            logger.debug("response_envelope: {} is a Prefab UI tool, pass-through", tool_name)
+            return result  # type: ignore[return-value]
 
         # FastMCP only populates ``structured_content`` for dict-shaped
         # returns from ``-> Any`` tools; a bare JSON array (every

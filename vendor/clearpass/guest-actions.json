@@ -1,0 +1,659 @@
+{
+  "components": {
+    "schemas": {
+      "GenerateGuestDigitalPass": {
+        "properties": {},
+        "title": "GenerateGuestDigitalPass",
+        "type": "object"
+      },
+      "GenerateGuestReceipt": {
+        "properties": {
+          "guest_id": {
+            "description": "Numeric ID of the guest account",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Numeric ID of the guest print template",
+            "type": "integer"
+          }
+        },
+        "title": "GenerateGuestReceipt",
+        "type": "object"
+      },
+      "GenerateGuestReceiptResponse": {
+        "properties": {
+          "guest_receipt": {
+            "description": "Object containing guest receipt",
+            "type": "object"
+          }
+        },
+        "title": "GenerateGuestReceiptResponse",
+        "type": "object"
+      },
+      "GuestDigitalReceipt": {
+        "properties": {
+          "guest_id": {
+            "description": "Numeric ID of the guest account",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Numeric ID of the digital pass template",
+            "type": "integer"
+          }
+        },
+        "title": "GuestDigitalReceipt",
+        "type": "object"
+      },
+      "GuestDigitalReceiptResponse": {
+        "properties": {
+          "digital_pass": {
+            "description": "Object containing guest digital pass in application/vnd.apple.pkpass format",
+            "type": "object"
+          }
+        },
+        "title": "GuestDigitalReceiptResponse",
+        "type": "object"
+      },
+      "SendSmsReceipt": {
+        "properties": {
+          "confirm": {
+            "description": "Flag to confirm sending guest receipt via SMS",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "confirm"
+        ],
+        "title": "SendSmsReceipt",
+        "type": "object"
+      },
+      "SendSmtpReceipt": {
+        "properties": {
+          "confirm": {
+            "description": "Flag to confirm sending guest receipt via SMTP",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "confirm"
+        ],
+        "title": "SendSmtpReceipt",
+        "type": "object"
+      },
+      "SmsReceiptResponse": {
+        "properties": {
+          "...": {
+            "description": "Additional properties may also be returned",
+            "type": "string"
+          },
+          "error": {
+            "description": "Message describing the error; not present if operation was successful",
+            "type": "string"
+          }
+        },
+        "title": "SmsReceiptResponse",
+        "type": "object"
+      },
+      "SmtpReceiptResponse": {
+        "properties": {
+          "...": {
+            "description": "Additional properties may also be returned",
+            "type": "string"
+          },
+          "error": {
+            "description": "Message describing the error; not present if operation was successful",
+            "type": "string"
+          }
+        },
+        "title": "SmtpReceiptResponse",
+        "type": "object"
+      },
+      "SponsorshipApproval": {
+        "properties": {
+          "confirm_expire_time": {
+            "description": "Timestamp for new expiration time; used if modify_expire_time is \"expire_time\"",
+            "type": "string"
+          },
+          "modify_expire_time": {
+            "description": "Override the guest expiration time",
+            "type": "string"
+          },
+          "register_reject": {
+            "description": "Set to true to reject the sponsorship request",
+            "type": "boolean"
+          },
+          "register_token": {
+            "description": "Registration token",
+            "type": "string"
+          },
+          "role_id": {
+            "description": "Override the guest role",
+            "type": "integer"
+          },
+          "token": {
+            "description": "Registration token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "register_token"
+        ],
+        "title": "SponsorshipApproval",
+        "type": "object"
+      },
+      "SponsorshipApprovalResponse": {
+        "properties": {
+          "...": {
+            "description": "Additional properties from the receipt may also be returned",
+            "type": "string"
+          },
+          "_confirm_reject": {
+            "description": "Flag indicating the account was deleted",
+            "type": "boolean"
+          },
+          "_confirm_success": {
+            "description": "Flag indicating the operation was successful",
+            "type": "boolean"
+          },
+          "guest_receipt": {
+            "description": "Object containing guest receipt details",
+            "type": "object"
+          },
+          "message": {
+            "description": "A message describing any actions taken",
+            "type": "string"
+          },
+          "user": {
+            "description": "Object containing guest account details",
+            "type": "object"
+          }
+        },
+        "title": "SponsorshipApprovalResponse",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "contact": {},
+    "title": "Guest Actions",
+    "version": "6.12.7"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/guest/{guest_id}/pass/{id}": {
+      "get": {
+        "deprecated": false,
+        "description": "",
+        "operationId": "GenerateGuestDigitalPassByGuest_idPassByIdGet",
+        "parameters": [
+          {
+            "description": "Numeric ID of the guest account",
+            "in": "path",
+            "name": "guest_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Numeric ID of the digital pass template",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/vnd.apple.pkpass": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuestDigitalReceiptResponse"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "400": {
+            "content": {
+              "application/vnd.apple.pkpass": {
+                "schema": {}
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/vnd.apple.pkpass": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/vnd.apple.pkpass": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/vnd.apple.pkpass": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/vnd.apple.pkpass": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Generate digital pass for guest account based on template specified by ID",
+        "tags": [
+          "GenerateGuestDigitalPass"
+        ]
+      }
+    },
+    "/guest/{guest_id}/receipt/{id}": {
+      "get": {
+        "deprecated": false,
+        "description": "",
+        "operationId": "GenerateGuestReceiptByGuest_idReceiptByIdGet",
+        "parameters": [
+          {
+            "description": "Numeric ID of the guest account",
+            "in": "path",
+            "name": "guest_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Numeric ID of the print template",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateGuestReceiptResponse"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Bad Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Generate print template for guest account, using specified template ID",
+        "tags": [
+          "GenerateGuestReceipt"
+        ]
+      }
+    },
+    "/guest/{guest_id}/sendreceipt/sms": {
+      "post": {
+        "deprecated": false,
+        "description": "Resend guest receipt for guest account, via SMS",
+        "operationId": "SendSmsReceiptByGuest_idSendreceiptSmsPost",
+        "parameters": [
+          {
+            "description": "Numeric ID of the guest account",
+            "in": "path",
+            "name": "guest_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendSmsReceipt"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmsReceiptResponse"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Resend guest receipt for guest account, via SMS",
+        "tags": [
+          "SendSmsReceipt"
+        ]
+      }
+    },
+    "/guest/{guest_id}/sendreceipt/smtp": {
+      "post": {
+        "deprecated": false,
+        "description": "Resend guest receipt for guest account,  via SMTP",
+        "operationId": "SendSmtpReceiptByGuest_idSendreceiptSmtpPost",
+        "parameters": [
+          {
+            "description": "URL parameter guest_id",
+            "in": "path",
+            "name": "guest_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendSmtpReceipt"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmtpReceiptResponse"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Resend guest receipt for guest account,  via SMTP",
+        "tags": [
+          "SendSmtpReceipt"
+        ]
+      }
+    },
+    "/guest/{guest_id}/sponsor": {
+      "post": {
+        "deprecated": false,
+        "description": "<p>Accept or reject a guest account that is waiting for a sponsor’s approval.</p>\n<p>Requires a guest self-registration page that has been configured for sponsor confirmation.</p>\n<p>A common <tt>filter</tt> for <tt>/guest</tt> to query accounts needing sponsorship is: <tt>{\"register_token\":{\"$ne\":\"\"},\"register_token_confirmed\":0}</tt></p>\n<p>If <tt>guest_register</tt> is not the sponsor-enabled self-registration, pass the registration page name as <tt>gsr_id</tt>.</p>",
+        "operationId": "SponsorshipApprovalByGuest_idSponsorPost",
+        "parameters": [
+          {
+            "description": "Numeric ID of the guest account",
+            "in": "path",
+            "name": "guest_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional name of the self-registration with the sponsor confirmation configuration.",
+            "in": "query",
+            "name": "gsr_id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SponsorshipApproval"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SponsorshipApprovalResponse"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Accept or reject a guest sponsorship request",
+        "tags": [
+          "SponsorshipApproval"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://clearpass-hostname/api"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Operations for GenerateGuestDigitalPass",
+      "name": "GenerateGuestDigitalPass"
+    },
+    {
+      "description": "Generate a guest account receipt",
+      "name": "GenerateGuestReceipt"
+    },
+    {
+      "description": "Operations for SendSmsReceipt",
+      "name": "SendSmsReceipt"
+    },
+    {
+      "description": "Operations for SendSmtpReceipt",
+      "name": "SendSmtpReceipt"
+    },
+    {
+      "description": "Sponsor confirmation for guest accounts",
+      "name": "SponsorshipApproval"
+    }
+  ],
+  "x-explorer-enabled": false,
+  "x-headers": [
+    {
+      "key": "Authorization",
+      "value": "Bearer <TOKEN>"
+    }
+  ],
+  "x-readme": {
+    "proxy-enabled": true
+  }
+}

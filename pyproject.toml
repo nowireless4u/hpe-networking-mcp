@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hpe-networking-mcp"
-version = "3.2.3.12"
+version = "3.3.13.1"
 description = "Unofficial, community-driven MCP server for Juniper Mist, Aruba Central, HPE GreenLake, and ClearPass. Not affiliated with HPE, Aruba, or Juniper."
 readme = "README.md"
 license = "MIT"
@@ -16,13 +16,11 @@ dependencies = [
     # MCP framework — code-mode is the default tool mode since v3.0.0.0
     # (was opt-in via the fastmcp[code-mode] extra in v2.x); the extra is
     # now a hard requirement.
-    "fastmcp[code-mode]>=3.1.1",
+    "fastmcp[code-mode,apps]>=3.4.0",
     # MCP protocol — GreenLake requires >=1.20.0
     "mcp[cli]>=1.20.0",
-    # HPE Aruba Central API client
-    "pycentral==2.0a17",
-    # Async HTTP client — used by Mist (v3.1.0.0 spec-driven, replaced mistapi),
-    # GreenLake, Apstra, Axis, AOS 8
+    # Async HTTP client — used by all platforms (Central since v3.3.11.0,
+    # replacing pycentral; Mist since v3.1.0.0, replacing mistapi)
     "httpx>=0.28.0",
     # Data validation — GreenLake explicit, others via FastMCP
     "pydantic>=2.12.0",
@@ -33,8 +31,6 @@ dependencies = [
     "loguru>=0.7.3",
     # Tree data structure for Central scope hierarchy
     "treelib>=1.7.0",
-    # Aruba ClearPass API client
-    "pyclearpass>=1.0.0",
 ]
 
 [project.scripts]
@@ -84,6 +80,9 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]
 "src/hpe_networking_mcp/platforms/mist/tools/*.py" = ["E501"]
 # Central models ported from upstream — naming conventions preserved
 "src/hpe_networking_mcp/platforms/central/models.py" = ["N815"]
+# AOS 8 show-table test fixtures replicate real fixed-width tables verbatim;
+# the rows are legitimately wider than 120 chars and must not be reflowed.
+"tests/unit/test_aos8_show_parser.py" = ["E501"]
 
 # Mypy configuration
 [tool.mypy]
@@ -94,8 +93,6 @@ disallow_untyped_defs = false
 
 [[tool.mypy.overrides]]
 module = [
-    "pycentral.*",
-    "pyclearpass.*",
     "fastmcp.tools.*",
 ]
 ignore_missing_imports = true

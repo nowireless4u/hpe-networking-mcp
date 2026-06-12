@@ -1,22 +1,18 @@
 """Aruba UXI REST API client with async httpx and OAuth2 token management.
 
 Authenticates via POST to the GreenLake SSO endpoint using client-credentials
-grant. Tokens have a 7199-second TTL; a 60-second buffer triggers proactive
-refresh. An asyncio.Lock serializes concurrent refresh under load.
+grant, through the shared :class:`AsyncTokenManager` primitive
+(``platforms/_common/auth.py`` — extracted from this client). Tokens have a
+7199-second TTL; a 60-second buffer triggers proactive refresh, and the
+manager's lock serializes concurrent refresh under load.
 
 Base URL: ``https://api.capenetworks.com/networking-uxi/v1alpha1``
 Token URL: ``https://sso.common.cloud.hpe.com/as/token.oauth2``
-
-IMPORTANT: The token POST uses a separate httpx.AsyncClient with NO base_url.
-Never reuse self._http for the token request — it is bound to api.capenetworks.com
-and would resolve the SSO hostname incorrectly (Pitfall 5).
 """
 
 from __future__ import annotations
 
-import asyncio
 import json
-import time
 from typing import Any
 
 import httpx
@@ -25,7 +21,7 @@ from fastmcp.server.dependencies import get_context
 from loguru import logger
 
 from hpe_networking_mcp.config import UXISecrets
-from hpe_networking_mcp.utils.logging import mask_secret
+from hpe_networking_mcp.platforms._common.auth import AsyncTokenManager, oauth2_client_credentials
 
 _TOKEN_URL = "https://sso.common.cloud.hpe.com/as/token.oauth2"  # nosec B105
 _UXI_BASE_URL = "https://api.capenetworks.com/networking-uxi/v1alpha1"
@@ -46,9 +42,22 @@ class UXIClient:
 
     def __init__(self, config: UXISecrets) -> None:
         self._config = config
-        self._token: str | None = None
-        self._expires_at: float = 0.0  # Unix timestamp; 0 = always expired (D-01)
-        self._lock = asyncio.Lock()  # serializes concurrent refresh (D-02)
+        # 60-second buffer triggers proactive refresh (D-04); the manager's
+        # lock serializes concurrent refresh (D-02). The token POST runs on a
+        # fresh httpx.AsyncClient with NO base_url so the SSO hostname always
+        # resolves correctly (Pitfall 5) — never reuse self._http for it.
+        self._tokens = AsyncTokenManager(
+            oauth2_client_credentials(
+                _TOKEN_URL,
+                config.client_id,
+                config.client_secret,
+                name="UXI",
+                timeout=_AUTH_TIMEOUT,
+                default_expires_in=7199.0,
+            ),
+            name="UXI",
+            expiry_buffer=_TOKEN_BUFFER_SECS,
+        )
         self._http = httpx.AsyncClient(
             base_url=_UXI_BASE_URL,
             timeout=_REQUEST_TIMEOUT,
@@ -58,58 +67,16 @@ class UXIClient:
         """Close the underlying httpx client. Called from server.py lifespan."""
         await self._http.aclose()
 
-    async def _ensure_token(self) -> str:
-        """Return cached token, acquiring one under the lock if needed or expired."""
-        if self._token and time.time() + _TOKEN_BUFFER_SECS < self._expires_at:
-            return self._token
-        async with self._lock:
-            # Re-check inside lock — another coroutine may have refreshed
-            if self._token and time.time() + _TOKEN_BUFFER_SECS < self._expires_at:
-                return self._token
-            await self._fetch_token_locked()
-        if self._token is None:  # guard: assert is stripped under python -O
-            raise RuntimeError("UXI token fetch succeeded but self._token is still None")
-        return self._token
-
-    def _invalidate_token(self) -> None:
-        """Force token re-fetch on the next request (e.g. after a 401)."""
-        self._token = None
-        self._expires_at = 0.0
-
-    async def _fetch_token_locked(self) -> None:
-        """POST to GreenLake SSO to acquire a new access token.
-
-        Caller must hold self._lock. Uses a separate httpx.AsyncClient with NO
-        base_url so the SSO hostname resolves correctly (Pitfall 5 prevention).
-        """
-        logger.info("UXI: requesting new access token (client_id: {})", mask_secret(self._config.client_id))
-        async with httpx.AsyncClient(timeout=_AUTH_TIMEOUT) as auth_http:
-            resp = await auth_http.post(
-                _TOKEN_URL,
-                data={
-                    "grant_type": "client_credentials",
-                    "client_id": self._config.client_id,
-                    "client_secret": self._config.client_secret,
-                },
-                headers={"Content-Type": "application/x-www-form-urlencoded"},
-            )
-        resp.raise_for_status()
-        body = resp.json()
-        self._token = body["access_token"]
-        expires_in = body.get("expires_in", 7199)
-        self._expires_at = time.time() + expires_in
-        logger.info("UXI: token acquired (expires_in={}s)", expires_in)
-
     async def _get_json(self, path: str, *, params: dict[str, Any] | None = None) -> Any:
         """Issue an authenticated GET request and return parsed JSON."""
-        token = await self._ensure_token()
+        token = await self._tokens.get_token()
         headers = {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
         }
         response = await self._http.request("GET", path, headers=headers, params=params)
         if response.status_code == 401:
-            self._invalidate_token()
+            self._tokens.invalidate()
         response.raise_for_status()
         return response.json()
 
@@ -149,40 +116,40 @@ class UXIClient:
 
     async def uxi_post(self, path: str, json_body: Any) -> Any:
         """POST a JSON body to the UXI API and return parsed JSON."""
-        token = await self._ensure_token()
+        token = await self._tokens.get_token()
         headers = {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
         }
         response = await self._http.request("POST", path, headers=headers, json=json_body)
         if response.status_code == 401:
-            self._invalidate_token()
+            self._tokens.invalidate()
         response.raise_for_status()
         return response.json()
 
     async def uxi_patch(self, path: str, json_body: Any) -> Any:
         """PATCH a resource on the UXI API and return parsed JSON."""
-        token = await self._ensure_token()
+        token = await self._tokens.get_token()
         headers = {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
         }
         response = await self._http.request("PATCH", path, headers=headers, json=json_body)
         if response.status_code == 401:
-            self._invalidate_token()
+            self._tokens.invalidate()
         response.raise_for_status()
         return response.json()
 
     async def uxi_delete(self, path: str) -> dict[str, Any]:
         """DELETE a resource on the UXI API."""
-        token = await self._ensure_token()
+        token = await self._tokens.get_token()
         headers = {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
         }
         response = await self._http.request("DELETE", path, headers=headers)
         if response.status_code == 401:
-            self._invalidate_token()
+            self._tokens.invalidate()
         response.raise_for_status()
         if response.status_code == 204 or not response.content:
             return {"status_code": response.status_code}

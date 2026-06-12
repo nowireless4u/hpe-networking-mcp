@@ -155,9 +155,9 @@ These patterns are uniform across every existing platform — change them in the
 These vary legitimately and are left as comments / extension points in `client.py`:
 
 - **Auth flavor** — bearer token (default), OAuth2 client_credentials, username/password. The template ships with bearer; comments show where to swap.
-- **HTTP layer** — direct `httpx` (template default) or a vendor SDK wrapper. If the platform has a maintained SDK (e.g. mistapi, pycentral, pyclearpass), prefer that over hand-rolled httpx.
+- **HTTP layer** — direct `httpx` wrapping the shared `AsyncTokenManager` from `platforms/_common/auth.py`. Vendor SDKs are NOT used (pycentral and pyclearpass were removed in #468/#470 — sync-only SDKs cost more than they save; see #466).
 - **Pagination** — RFC 5988 `Link` headers, OData `$top`/`$skip`, opaque cursors. Different APIs do this differently.
-- **Elicitation pattern** — write tools call `confirm_write(ctx, ...)` from `middleware/elicitation.py`. Pattern shown in `tools/example_write.py`.
+- **Confirmation** — write tools do NOT implement their own confirmation. The universal gate at the `<platform>_invoke_tool` chokepoint (`confirm_gated_invoke` in `middleware/elicitation.py`) prompts for every tool whose `capability=` derives `requires_confirmation`. Pattern shown in `tools/example_write.py`.
 
 ## Validation
 

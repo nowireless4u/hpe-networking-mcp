@@ -32,18 +32,10 @@ profiles.
 from typing import Literal
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
-
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 ScopeType = Literal["GLOBAL", "SITE", "DEVICE"]
 
@@ -63,7 +55,7 @@ def _typed_scope_query_params(type_id: str, scope_id: str, scope_type: ScopeType
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_alert_configs(
     ctx: Context,
     scope_id: str,
@@ -98,8 +90,8 @@ async def central_get_alert_configs(
         `rule_number`, `rule.duration`, `rule.condition[].severity`,
         `rule.condition[].expression.operator`, etc.).
     """
-    response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+    response = await retry_central_command(
+        get_central_conn(ctx),
         api_method="GET",
         api_path="network-notifications/v1/alert-config",
         api_params=_scope_query_params(scope_id, scope_type),
@@ -113,7 +105,7 @@ async def central_get_alert_configs(
 # ---------------------------------------------------------------------------
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_create_alert_config(
     ctx: Context,
     type_id: str,
@@ -177,8 +169,8 @@ async def central_create_alert_config(
     if rules is not None:
         body["rules"] = rules
 
-    response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+    response = await retry_central_command(
+        get_central_conn(ctx),
         api_method="POST",
         api_path="network-notifications/v1/alert-config/create",
         api_params=_typed_scope_query_params(type_id, scope_id, scope_type),
@@ -188,7 +180,7 @@ async def central_create_alert_config(
     return msg if msg else f"Alert config create submitted for typeId={type_id}; response was empty"
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_update_alert_config(
     ctx: Context,
     type_id: str,
@@ -230,8 +222,8 @@ async def central_update_alert_config(
     if not body:
         return "No fields to update — pass at least one of `enabled`, `clear_timeout`, or `rules`."
 
-    response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+    response = await retry_central_command(
+        get_central_conn(ctx),
         api_method="PUT",
         api_path="network-notifications/v1/alert-config/update",
         api_params=_typed_scope_query_params(type_id, scope_id, scope_type),
@@ -241,7 +233,7 @@ async def central_update_alert_config(
     return msg if msg else f"Alert config update submitted for typeId={type_id}; response was empty"
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_reset_alert_config(
     ctx: Context,
     type_id: str,
@@ -264,8 +256,8 @@ async def central_reset_alert_config(
     Returns: A mutation response. Note: this endpoint typically does NOT
     return `name` in the response (per the Central spec).
     """
-    response = retry_central_command(
-        ctx.lifespan_context["central_conn"],
+    response = await retry_central_command(
+        get_central_conn(ctx),
         api_method="DELETE",
         api_path="network-notifications/v1/alert-config/delete",
         api_params=_typed_scope_query_params(type_id, scope_id, scope_type),

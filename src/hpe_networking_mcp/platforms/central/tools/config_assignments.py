@@ -16,17 +16,9 @@ from fastmcp.exceptions import ToolError
 from loguru import logger
 from pydantic import Field
 
-from hpe_networking_mcp.middleware.elicitation import elicitation_handler
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
-from hpe_networking_mcp.platforms.central.utils import retry_central_command
-
-WRITE_DELETE = {
-    "readOnlyHint": False,
-    "destructiveHint": True,
-    "idempotentHint": False,
-    "openWorldHint": True,
-}
+from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 # Valid device-function values from the API schema
 VALID_DEVICE_FUNCTIONS = {
@@ -41,6 +33,8 @@ VALID_DEVICE_FUNCTIONS = {
     "BRANCH_GW",
     "MOBILITY_GW",
     "VPNC",
+    "EC_VPNC",
+    "EC_BRANCH_GW",
     "ALL",
     "SERVICE_PERSONA",
     "BRIDGE",
@@ -49,7 +43,7 @@ VALID_DEVICE_FUNCTIONS = {
 }
 
 
-@tool(annotations=READ_ONLY)
+@tool(capability=Capability.READ)
 async def central_get_config_assignments(
     ctx: Context,
     scope_id: Annotated[
@@ -89,7 +83,7 @@ async def central_get_config_assignments(
         List of config-assignment entries with scope-id, device-function,
         profile-type, profile-instance, scope-name, and scope-type.
     """
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     api_params: dict = {}
     if scope_id:
@@ -97,7 +91,7 @@ async def central_get_config_assignments(
     if device_function:
         api_params["device-function"] = device_function
 
-    response = retry_central_command(
+    response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path="network-config/v1alpha1/config-assignments",
@@ -106,7 +100,7 @@ async def central_get_config_assignments(
     return response.get("msg", {})
 
 
-@tool(annotations=WRITE_DELETE, tags={"central_write_delete"})
+@tool(capability=Capability.WRITE_DELETE)
 async def central_manage_config_assignment(
     ctx: Context,
     action_type: Annotated[
@@ -161,7 +155,10 @@ async def central_manage_config_assignment(
     confirmed: Annotated[
         bool,
         Field(
-            description="Set to true when the user has confirmed the operation.",
+            description=(
+                "Fallback confirmation flag — honored only when the client cannot "
+                "show a confirmation prompt (the universal gate prompts otherwise)."
+            ),
             default=False,
         ),
     ],
@@ -196,30 +193,9 @@ async def central_manage_config_assignment(
             }
         )
 
-    conn = ctx.lifespan_context["central_conn"]
+    conn = get_central_conn(ctx)
 
     if action_type == "assign":
-        action_wording = f"assign profile '{profile_instance}' ({profile_type}) to scope '{scope_id}'"
-
-        if not confirmed:
-            elicitation_response = await elicitation_handler(
-                message=f"The LLM wants to {action_wording}. Do you accept?",
-                ctx=ctx,
-            )
-            if elicitation_response.action == "decline":
-                if await ctx.get_state("elicitation_mode") == "chat_confirm":
-                    return {
-                        "status": "confirmation_required",
-                        "message": (
-                            f"This operation will {action_wording}. "
-                            "Please confirm with the user before proceeding. "
-                            "Call this tool again with confirmed=true after the user confirms."
-                        ),
-                    }
-                return {"message": "Action declined by user."}
-            elif elicitation_response.action == "cancel":
-                return {"message": "Action canceled by user."}
-
         payload = {
             "config-assignment": [
                 {
@@ -239,7 +215,7 @@ async def central_manage_config_assignment(
             device_function,
         )
 
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method="POST",
             api_path="network-config/v1alpha1/config-assignments",
@@ -247,27 +223,6 @@ async def central_manage_config_assignment(
         )
 
     else:  # remove
-        action_wording = f"remove profile '{profile_instance}' ({profile_type}) from scope '{scope_id}'"
-
-        if not confirmed:
-            elicitation_response = await elicitation_handler(
-                message=f"The LLM wants to {action_wording}. Do you accept?",
-                ctx=ctx,
-            )
-            if elicitation_response.action == "decline":
-                if await ctx.get_state("elicitation_mode") == "chat_confirm":
-                    return {
-                        "status": "confirmation_required",
-                        "message": (
-                            f"This operation will {action_wording}. "
-                            "Please confirm with the user before proceeding. "
-                            "Call this tool again with confirmed=true after the user confirms."
-                        ),
-                    }
-                return {"message": "Action declined by user."}
-            elif elicitation_response.action == "cancel":
-                return {"message": "Action canceled by user."}
-
         base = "network-config/v1alpha1/config-assignments"
         api_path = f"{base}/{scope_id}/{device_function}/{profile_type}/{profile_instance}"
 
@@ -279,7 +234,7 @@ async def central_manage_config_assignment(
             device_function,
         )
 
-        response = retry_central_command(
+        response = await retry_central_command(
             central_conn=conn,
             api_method="DELETE",
             api_path=api_path,

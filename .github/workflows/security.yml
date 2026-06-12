@@ -24,11 +24,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
-      - run: uv sync --frozen 2>/dev/null || uv sync
-      - name: Run pip-audit
-        run: uv run pip-audit || true
-        # pip-audit may report upstream vulnerabilities we can't control
-        # Failures are logged but don't block the pipeline
+      - name: Run pip-audit against the locked environment
+        run: uv run --frozen pip-audit --ignore-vuln CVE-2026-25645
+        # CVE-2026-25645 is in requests 2.32.5, which is pinned by pycentral==2.0a17.
+        # Standard requests usage is not affected; only direct calls to
+        # requests.utils.extract_zipped_paths() are impacted. Keep this explicit
+        # ignore until pycentral allows requests>=2.33.0, then remove it.
 
   gitleaks:
     name: Secret Detection

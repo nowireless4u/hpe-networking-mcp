@@ -9,18 +9,18 @@ Tools are namespaced by platform: `mist_*` (Juniper Mist), `central_*` (Aruba Ce
 
 The server ships with `MCP_TOOL_MODE=code` by default since v3.0.0.0. At session start the AI sees **6 tools**:
 
-- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 1934 underlying tools
+- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 1962 underlying tools
 - **`tags(detail="brief")`** — browse the catalog by platform / module
 - **`search(query, tags=[...], detail)`** — BM25 search the catalog
 - **`get_schema(tools=[...], detail)`** — fetch parameter shape for named tools
 - **`skills_list(filter=...)`** — list bundled multi-step runbooks (since v2.3.0.0)
 - **`skills_load(name=...)`** — load a runbook to execute
 
-All 1934 per-platform tools documented below still exist and are reachable via `await call_tool(name, params)` inside `execute()`. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the discovery tools (`tags`, `search`, `get_schema`).
+All 1962 per-platform tools documented below still exist and are reachable via `await call_tool(name, params)` inside `execute()`. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the discovery tools (`tags`, `search`, `get_schema`).
 
 **Why code mode is the default since v3.0.0.0**: smallest initial token cost, single-round-trip multi-step orchestration, and validated against small local LLMs (Qwen3 4B Q4_K_M; see [#246](https://github.com/nowireless4u/hpe-networking-mcp/issues/246) reassessment).
 
-Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface (per-platform discovery — see next section). The `static` mode was REMOVED in v3.0.0.0 — at 1934 tools / ~64K tokens it was no longer practical.
+Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface (per-platform discovery — see next section). The `static` mode was REMOVED in v3.0.0.0 — at 1962 tools / ~64K tokens it was no longer practical.
 
 ## Dynamic mode (opt-in since v3.0.0.0; was the v2.x default)
 
@@ -31,7 +31,7 @@ With `MCP_TOOL_MODE=dynamic` the AI sees **24 tools**:
   - `site_health_check(site_name=...)`
   - `site_rf_check(site_name=...)`
   - `manage_wlan_profile(...)`
-- **3 meta-tools per platform** (× 7 platforms = 21)
+- **3 meta-tools per platform** (× 8 platforms = 24)
   - `<platform>_list_tools(filter=...)` — list candidates
   - `<platform>_get_tool_schema(name=...)` — fetch parameter schema
   - `<platform>_invoke_tool(name=..., arguments={...})` — invoke by name
@@ -39,7 +39,7 @@ With `MCP_TOOL_MODE=dynamic` the AI sees **24 tools**:
   - `skills_list(filter=...)` — list bundled multi-step runbooks
   - `skills_load(name=...)` — load a runbook to execute
 
-The 1934 per-platform tools are reachable via `<platform>_invoke_tool(name=..., arguments={...})`. Best when an orchestrator wants explicit per-tool dispatch rather than the sandboxed Python composition that code mode provides.
+The 1962 per-platform tools are reachable via `<platform>_invoke_tool(name=..., arguments={...})`. Best when an orchestrator wants explicit per-tool dispatch rather than the sandboxed Python composition that code mode provides.
 
 ## Code mode details (the default — see above for surface summary)
 
@@ -96,7 +96,7 @@ If you do try to dispatch to a discovery tool by mistake, `SandboxErrorCatchMidd
 - **`code` (default since v3.0.0.0)** — best for orchestrators driving small / local LLMs, multi-step aggregations, cross-platform joins, filter/map/reduce workflows. Smallest initial token cost. Validated against Qwen3 4B Q4_K_M via OpenClaw (see #246 reassessment).
 - **`dynamic` (opt-in since v3.0.0.0; was the v2.x default)** — best when the orchestrator wants explicit per-tool dispatch via `<platform>_invoke_tool` rather than sandboxed Python composition. Stable, production-tested for lookup-style questions.
 
-The `static` mode was REMOVED in v3.0.0.0 — at 1934 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` raises ValueError at startup.
+The `static` mode was REMOVED in v3.0.0.0 — at 1962 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` raises ValueError at startup.
 
 ## Overview
 
@@ -211,11 +211,12 @@ skills register in every mode without violating the code-mode design.
 | `change-post-check` | Post-change verification + diff against the pre-check baseline (CLEAN / IMPACT-OBSERVED / REGRESSION) | v2.3.0.1 |
 | `central-scope-audit` | Aruba Central VSG-anchored scope audit — walks ~25 profile categories with per-setting checks, judges each finding against VSG-recommended scope | v2.3.0.5 |
 | `mist-scope-audit` | Juniper Mist comprehensive scope audit — WLAN templates, RF templates, switch templates, port profiles, virtual chassis, firmware policy, PSK strategy | v2.3.0.5 |
-| `aos-migration` | **AOS 8 → AOS 10 migration (PoC)** — two-act workflow with no operator interview. Act I = readiness audit: full /md hierarchy walk via live AOS 8 API, applicability-gated feature-parity rules (REGRESSION/DRIFT/INFO), GO / BLOCKED / PARTIAL / EMPTY-SOURCE verdict. Cluster-offline tolerant — degraded source data doesn't block the audit. Act II = per-object disposition matrix (every configured object regardless of usage state, with `usage_state` metadata), ordered Central API call sequence, post-translation validation checklist. AOS 6 and Instant AP are out of scope (different migration paths). Renamed from `aos-migration-readiness` in v2.5.0.0; tightened in v2.5.0.1 (delete operator interview; drop AOS 6/IAP support; convert controller-plumbing rules from REGRESSION to inventory; add hierarchy walk + EMPTY-SOURCE + cluster-offline tolerance + applicability gates + usage_state column + auto-recommend target mode). | v2.3.0.6 / v2.5.0.1 |
+| `aos-migration` | **AOS 8 → AOS 10 migration (PoC)** — two-act workflow. **Stage -2 asks the data source** — (1) AOS 8 direct via API, (2) configuration upload, or (3) pasted config snippet; options 2/3 parse offline via `aos8_parse_config` (incl. `show configuration effective detail` with scope provenance). That one delivery-mechanism question aside, Act I asks no config questions. Act I = readiness audit: full /md hierarchy walk via live AOS 8 API (or the offline-parsed subset for upload/paste), applicability-gated feature-parity rules (REGRESSION/DRIFT/INFO), GO / BLOCKED / PARTIAL / EMPTY-SOURCE verdict. Cluster-offline tolerant — degraded source data doesn't block the audit. **Stage 6.5 — target-architecture questionnaire** (after the verdict, on operator `yes`): per-SSID forward mode (Bridged / Tunneled / Bridged-and-Tunneled / Hybrid) + gateway topology, pre-filled from Act I detection — the operator decides the target (detection only recommends). Act II = per-object disposition matrix (every configured object regardless of usage state, with `usage_state` metadata), ordered Central API call sequence (incl. engine-driven `central_translation_preview` for VLANs / roles / policies / net-groups / gateway clusters / WLAN SSIDs), post-translation validation checklist. AOS 6 and Instant AP are out of scope (different migration paths). Renamed from `aos-migration-readiness` in v2.5.0.0; tightened in v2.5.0.1; v3.3.7.0 added the Stage 6.5 questionnaire (operator decides per-SSID forward mode + gateway topology, replacing the auto-derive-and-apply model). | v2.3.0.6 / v3.3.7.0 |
 | `morning-coffee-report` | Daily ops digest covering the last 24h: who's been in (audit logs), what's broken (active alerts), top talkers (clients/APs by load), AI insights (Mist SLE). Day-over-day delta deferred to phase 2 | v2.3.1.8 |
 | `central-scope-walker` | Aruba Central scope-tree walker — resolves a scope name / path / scope_id to its Central `scope_id` plus parent path, type, and metadata. Tiny utility skill (one paste-ready `execute` snippet) referenced by `central-scope-audit`, `change-pre-check`, `change-post-check`, `aos-migration`. Authored in response to small-local-model failures at authoring tree-recursion in the sandbox (Qwen3 4B / OpenClaw test report 2026-05-07) | v3.0.1.5 |
 | `cross-platform-rf-check` | Cross-platform site RF / channel-planning check — code-mode runbook equivalent of the `site_rf_check` tool (which is registered in `dynamic` mode only). Resolves a site on Mist + Central, pulls per-AP per-band radio state (channel, power, utilization, noise floor), aggregates channel distribution, and flags co-channel clusters / airtime pressure / elevated noise. Authored after operators hit "AI can't find site_rf_check" in code mode | v3.1.0.6 |
 | `uxi-cross-platform-diagnostics` | Correlate UXI sensor / service-test failures to root causes in Aruba Central, Mist, or AOS 8 with a GO / DEGRADED / CRITICAL verdict engine. Platform-aware: probes reachability before running correlation queries; unreachable platforms emit INFO findings rather than false-positive CRITICALs. Supports paste-mode when the UXI platform itself is unreachable. | v3.2.0.0 |
+| `central-ucc-quality` | UCC (Unified Communications) call-quality check on AOS-10 APs / gateways. Correlates three live UCM tables in one atomic `central_show_commands` snapshot — `show ucm hashtable` (IP→MAC join), `show datapath session ucc` (liveness source of truth — a populated `Codec:` proves a flow is live), and `show ucm cdrs` (delay/jitter/loss/UCC-Score) — to separate genuinely-live calls from stale Call Detail Records (the CDR persists after calls end with no timestamp/state flag, so a torn-down call is otherwise indistinguishable from a live degraded one). Joins each stream to a client MAC and gates quality on the **UCC Score** (≥80 good / 70–79 fair / <70 poor) — deliberately NOT on the Delay field, which reads thousands of ms and is not one-way latency. Renders an interactive Generative-UI dashboard via `generate_prefab_ui` when `MCP_APP_ENABLE=true`, with a Markdown fallback otherwise. Read-only. Closes #400. | v3.3.10.0 |
 | `central-qos-policy` | End-to-end runbook for switch QoS in Aruba Central, covering both halves: **ingress / marking** — traffic classes (`named-condition`) → marker policy (`policy` with `type: POLICY_QOS`, `association: ASSOCIATION_INTERFACE`) → VLAN-interface bind; and **egress / system-wide** — queue-profile → schedule-profile → atomic apply + DSCP-map (`qos-global`) → scope assignment. Carries exact live-verified payload shapes — the `ADDRESS_SUBNET_MASK` discriminator + dotted-mask format, the undocumented `condition.named-condition.condition-reference`, `ACTION_QOS` + `local-queue-priority`/`dscp`, `access-group-vlan-in` routed-in bind, the `WEIGHTED` algorithm collapse of DWRR/WFQ, the `"DEFAULT"` enum literal for factory-default refs, and `qos-global` PATCH semantics (field-preserve + array-upsert-by-key). Section G is an automated update-applied-profile block. **New in v3.2.3.4: Path picker — POLICY_QOS comes in two flavors.** `ASSOCIATION_INTERFACE` is SVI-bindable (what the skill assumes). `ASSOCIATION_ROLE` renders as `port-access policy sys_policy_pap_<role>` device-side and **only enforces on authenticated port-access sessions — never on SVI transit**, regardless of how you bind it. Documents the five live-captured error patterns (HTTP 400 `Cannot find in library`, HTTP 400 `Role-based Policies cannot be mapped to ScopeTypes.DEVICE`/`DEVICE_COLLECTION`, HTTP 500 `Cannot find object … of module aruba-policy`, HTTP 400 `Policies … still part of Policy Group`) and the silent-skip-with-success-indication trap when the bind is attempted at SITE scope. Includes a wrong-primitive runbook (paste-ready code block that diagnoses the policy's `association` and pivots) and mandates device-side `central_show_commands` verification — `config-health` alone reports `SYNCHRONIZED` even when the role-based-policy bind silently no-ops on the device. CX vs AOS-S (PVOS) aware. | v3.2.2.0 / v3.2.3.1 / v3.2.3.3 / v3.2.3.4 |
 
 The `TEMPLATE.md` file in the skills directory is a starting point if you
@@ -717,7 +718,7 @@ logged and skipped; the rest of the catalog still loads. See
 
 ---
 
-## Aruba Central (633 tools + 12 prompts)
+## Aruba Central (660 tools + 12 prompts)
 
 > **v3.1.1.0**: bulk-imported 197 net-new config-model object types (389 net-new tools across 19 new modules) from the gitignored local snapshot at `api-endpoints/central/config/`. See the **Config-Model Tools** section at the end of the Central section for the new module inventory and the `central_get_<type>` / `central_manage_<type>` naming convention. The 15 hand-curated tool pairs documented in detail below (sites, devices, alerts, security_policy, wlan_profiles, gateway_clusters, named_vlans, aliases, server_groups, config_assignments, scope, gateway_cluster_intent) keep their tuned docstrings and edge-case handling.
 
@@ -1342,7 +1343,7 @@ to translate between Central's named/aliased config and Mist's inline config.
 |-----------|------|----------|-------------|
 | name | str | No | Specific server group name. If omitted, returns all groups. |
 
-#### `central_get_named_vlans`
+#### `central_get_named_vlan`
 
 > Get named VLAN configurations. Resolve a named VLAN (from a WLAN profile's vlan-name field) to its actual VLAN ID.
 
@@ -1478,7 +1479,7 @@ Six read-only tools for inspecting the Central scope hierarchy (Global → Site 
 |-----------|------|----------|-------------|
 | name | str | No | Specific role name. If omitted, returns all roles. |
 
-#### `central_manage_role`
+#### `central_manage_roles`
 
 > Create, update, or delete a role. Requires `ENABLE_CENTRAL_WRITE_TOOLS=true`. Roles can be shared (library) or local (scoped to a site/collection).
 
@@ -1497,45 +1498,45 @@ All tools below follow the same CRUD pattern. Read tools accept an optional `nam
 resource or omit for all. Write tools accept `name`, `action_type` (create/update/delete), `payload`,
 and optional `scope_id` + `device_function` for local (scoped) objects.
 
-#### `central_get_net_groups` / `central_manage_net_group`
+#### `central_get_net_groups` / `central_manage_net_groups`
 
 > Network groups (netdestinations) — reusable named objects defining hosts, FQDNs, subnets, IP ranges, VLANs, ports for use in ACLs and policies.
 
-#### `central_get_net_services` / `central_manage_net_service`
+#### `central_get_net_services` / `central_manage_net_services`
 
 > Network service definitions — protocol and port combinations (TCP/443, UDP/53, etc.) for identifying traffic types in policies.
 
-#### `central_get_object_groups` / `central_manage_object_group`
+#### `central_get_object_groups` / `central_manage_object_groups`
 
 > Object groups — named collections of addresses, services, or other objects for ACL references.
 
-#### `central_get_role_acls` / `central_manage_role_acl`
+#### `central_get_role_acls` / `central_manage_role_acls`
 
 > Role ACLs — access control lists with ordered permit/deny rules referencing net-groups and net-services.
 
-#### `central_get_policies` / `central_manage_policy`
+#### `central_get_policies` / `central_manage_policies`
 
 > Firewall policies — ordered rule sets that match traffic and apply actions (permit, deny, NAT, redirect, policy-based routing).
 
-#### `central_get_policy_groups` / `central_manage_policy_group`
+#### `central_get_policy_groups` / `central_manage_policy_groups`
 
-> Policy groups — define the evaluation sequence for all firewall policies. Collection-level: `central_manage_policy_group` replaces the entire evaluation order wholesale. API: `network-config/v1alpha1/policy-groups`.
+> Policy groups — define the evaluation sequence for all firewall policies. Collection-level: `central_manage_policy_groups` replaces the entire evaluation order wholesale. API: `network-config/v1alpha1/policy-groups`.
 
-#### `central_get_policy_group_entry` / `central_manage_policy_group_entry`
+#### `central_get_policy_group_list` / `central_manage_policy_group_list`
 
 > Per-entry counterparts to the collection tools above — get or create/update/delete a single policy-group-list entry by name without rewriting the whole list. Manage tool gated by `ENABLE_CENTRAL_WRITE_TOOLS=true`. API: `network-config/v1alpha1/policy-groups/policy-group/policy-group-list/{name}`.
 
-#### `central_get_role_gpids` / `central_manage_role_gpid`
+#### `central_get_role_gpids` / `central_manage_role_gpids`
 
 > Role GPIDs — map roles to policy group IDs. Controls which policy group is assigned to each role.
 
 ### Gateway Clustering (since v2.5.2.0)
 
-#### `central_get_gateway_cluster_intent_profiles` / `central_manage_gateway_cluster_intent_profile`
+#### `central_get_gw_cluster_intent_config` / `central_manage_gw_cluster_intent_config`
 
 > Read or manage Gateway Cluster Intent (GCIS) profiles — the policy/intent layer for AOS 10 gateway clusters. An intent profile bound at a scope (Global / Site Collection / Site) declares cluster behavior and Central auto-forms realized cluster profiles per the intent. Key field: `cluster-mode` (`CM_SITE` for auto-clustering at Site level, or `CM_MANUAL` to disable auto-formation). Other fields: `device-type` (persona — MOBILITY_GW, BRANCH_GW, VPNC, CAMPUS_AP, MICROBRANCH_AP, etc.), `multicast-vlan`, `heartbeat-threshold`, `coa-vrrp`, `default-gateway-mode` (1:1 redundancy), `uplink-tracking`, `uplink-sharing`, `ipv6-enable`. The realized cluster profiles for CM_SITE intents are auto-created with `auto_*` naming. Manage tool gated by `ENABLE_CENTRAL_WRITE_TOOLS=true`. API: `network-config/v1alpha1/gw-cluster-intent-config`.
 
-#### `central_get_gateway_clusters` / `central_manage_gateway_cluster`
+#### `central_get_gateway_clusters` / `central_manage_gateway_clusters`
 
 > Read or manage realized gateway cluster profiles. Each profile contains the actual member gateways (keyed by MAC, not IP — up to 12 per profile, fewer on some platforms) and runtime configuration (heartbeat, multicast VLAN, CoA-VRRP, redundancy mode). For GCIS-managed CM_SITE clusters, Central creates and maintains realized profiles automatically (`auto_*` naming). For manual (CM_MANUAL) clusters, operators create them directly here with explicit member MACs. Key field: `auto-cluster` (false for manual clusters; true is reserved for GCIS-managed). Manual cluster names cannot start with `auto_` or contain spaces. `ipv6-enable` is set-once at creation. Manage tool gated by `ENABLE_CENTRAL_WRITE_TOOLS=true`. API: `network-config/v1alpha1/gateway-clusters`.
 
@@ -1870,7 +1871,7 @@ All 10 GreenLake tools are read-only today. Write tools would follow the same ga
 
 ## Aruba ClearPass (142 tools)
 
-ClearPass tools use the `pyclearpass` SDK with OAuth2 client credentials. Write tools require
+ClearPass tools use an async httpx client with OAuth2 client credentials. Write tools require
 `ENABLE_CLEARPASS_WRITE_TOOLS=true`. Update/delete operations require user confirmation.
 
 ### Network Devices (4 read + 1 write)
@@ -1890,8 +1891,8 @@ ClearPass tools use the `pyclearpass` SDK with OAuth2 client credentials. Write 
 | `clearpass_get_guest_users` | List or get guest users by ID or username |
 | `clearpass_manage_guest_user` | Create, update, delete guest users |
 | `clearpass_send_guest_credentials` | Send credentials via SMS or email (`delivery_method`: sms/email) |
-| `clearpass_generate_guest_pass` | Generate digital pass or receipt (`pass_type`: digital/receipt) |
-| `clearpass_process_sponsor_action` | Approve or reject guest sponsorship requests |
+| `clearpass_generate_guest_pass` | Render digital pass or receipt (`pass_type`: digital/receipt; requires `template_id`) |
+| `clearpass_process_sponsor_action` | Approve or reject guest sponsorship (requires `token` + `register_token` from the sponsor link; optional `gsr_id`) |
 
 ### Guest Configuration (5 read + 4 write)
 
@@ -1941,7 +1942,7 @@ ClearPass tools use the `pyclearpass` SDK with OAuth2 client credentials. Write 
 | `clearpass_get_session_action_status` | Check status of disconnect/CoA action |
 | `clearpass_get_reauth_profiles` | Get reauthorization profiles for a session |
 | `clearpass_disconnect_session` | Disconnect session(s) — `target_type`: session_id/username/mac/ip/bulk |
-| `clearpass_perform_coa` | Change of Authorization — `target_type`: session_id/username/mac/ip/bulk |
+| `clearpass_perform_coa` | Change of Authorization — `target_type`: session_id/username/mac/ip/bulk; `enforcement_profile` required for non-session targets |
 
 ### Roles & Role Mappings (2 read + 2 write)
 
@@ -2066,7 +2067,7 @@ Backed by an internal engine that compiles a ClearPass service's full decision c
 | `clearpass_manage_license` | Create, delete, activate_online, activate_offline |
 | `clearpass_manage_cluster_params` | Update cluster parameters |
 | `clearpass_manage_password_policy` | Update admin or local user password policies |
-| `clearpass_manage_attribute` | Create, update, delete attributes |
+| `clearpass_manage_attribute` | Create, update, delete attributes (`entity_name` required when selecting by name) |
 | `clearpass_manage_data_filter` | Create, update, delete data filters |
 | `clearpass_manage_file_backup_server` | Create, update, delete backup servers |
 | `clearpass_manage_messaging_setup` | Create, update, delete messaging config |
@@ -2296,7 +2297,7 @@ in `platforms/axis/__init__.py` if Axis ever flips them on.
 | `axis_get_ip_feed_categories` | `GET /api/v1.0/IpCategoriesFeed` |
 | `axis_manage_ip_feed_category` | `POST/PUT/DELETE /api/v1.0/IpCategoriesFeed` |
 
-## Aruba OS 8 / Mobility Conductor (47 tools + 9 prompts)
+## Aruba OS 8 / Mobility Conductor (48 tools + 9 prompts)
 
 Tools are reachable via `await call_tool("aos8_<tool>", {...})` inside `execute()` in code mode (default since v3.0.0.0), or via the per-platform meta-tools (`aos8_list_tools`, `aos8_get_tool_schema`, `aos8_invoke_tool`) in dynamic mode. Write tools require `ENABLE_AOS8_WRITE_TOOLS=true`.
 

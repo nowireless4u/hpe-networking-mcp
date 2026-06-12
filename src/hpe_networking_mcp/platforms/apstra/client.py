@@ -2,15 +2,16 @@
 
 Apstra authenticates via POST /api/user/login (username/password) which returns
 a bearer token used in the ``AuthToken`` header. There is no refresh endpoint;
-on 401 the only recourse is re-login. An asyncio.Lock serializes token
-acquisition across concurrent callers.
+on 401 the only recourse is re-login. Token caching and lock-serialized
+acquisition run through the shared :class:`AsyncTokenManager` primitive
+(``platforms/_common/auth.py`` — its login-session flow was extracted from
+this client); the login request itself stays here as the fetch strategy.
 
 SSL verification is honored from config (source used verify=False unconditionally).
 """
 
 from __future__ import annotations
 
-import asyncio
 import json
 from typing import Any
 
@@ -20,13 +21,14 @@ from fastmcp.server.dependencies import get_context
 from loguru import logger
 
 from hpe_networking_mcp.config import ApstraSecrets
+from hpe_networking_mcp.platforms._common.auth import AsyncTokenManager, AuthError, TokenResult
 from hpe_networking_mcp.utils.logging import mask_secret
 
 _REQUEST_TIMEOUT = 30.0
 _AUTH_TIMEOUT = 10.0
 
 
-class ApstraAuthError(RuntimeError):
+class ApstraAuthError(AuthError):
     """Raised when Apstra login fails."""
 
 
@@ -42,8 +44,7 @@ class ApstraClient:
 
     def __init__(self, config: ApstraSecrets) -> None:
         self._config = config
-        self._token: str | None = None
-        self._lock = asyncio.Lock()
+        self._tokens = AsyncTokenManager(self._login, name="Apstra")
         base_url = f"https://{config.server}:{config.port}"
         self._http = httpx.AsyncClient(
             base_url=base_url,
@@ -60,26 +61,12 @@ class ApstraClient:
         """Close the underlying httpx client."""
         await self._http.aclose()
 
-    async def _ensure_token(self) -> str:
-        """Return the cached token, acquiring one under the lock if needed."""
-        if self._token is not None:
-            return self._token
-        async with self._lock:
-            if self._token is None:
-                await self._login_locked()
-            assert self._token is not None
-            return self._token
+    async def _login(self) -> TokenResult:
+        """Fetch strategy for :class:`AsyncTokenManager` — one login request.
 
-    async def _refresh_token(self) -> str:
-        """Force-refresh the token under the lock."""
-        async with self._lock:
-            self._token = None
-            await self._login_locked()
-            assert self._token is not None
-            return self._token
-
-    async def _login_locked(self) -> None:
-        """Perform the login request. Caller must hold ``self._lock``."""
+        Returns a session token with no expiry: Apstra tokens live until a
+        401 forces re-login.
+        """
         payload = {"username": self._config.username, "password": self._config.password}
         logger.info("Apstra: requesting new AuthToken from {}", self._config.server)
         try:
@@ -105,8 +92,8 @@ class ApstraClient:
         if not token:
             raise ApstraAuthError(f"Apstra login response missing 'token' field: {body}")
 
-        self._token = token
         logger.info("Apstra: obtained AuthToken {}", mask_secret(token))
+        return TokenResult(token)
 
     def _auth_headers(self, token: str) -> dict[str, str]:
         return {
@@ -141,7 +128,7 @@ class ApstraClient:
             httpx.HTTPStatusError: On 4xx/5xx other than 401-retry.
             httpx.HTTPError: On transport errors.
         """
-        token = await self._ensure_token()
+        token = await self._tokens.get_token()
         kwargs: dict[str, Any] = {"headers": self._auth_headers(token)}
         if json_body is not None:
             kwargs["json"] = json_body
@@ -153,7 +140,7 @@ class ApstraClient:
         response = await self._http.request(method, path, **kwargs)
         if response.status_code == 401:
             logger.info("Apstra: 401 on {} {} — refreshing token once", method, path)
-            token = await self._refresh_token()
+            token = await self._tokens.refresh()
             kwargs["headers"] = self._auth_headers(token)
             response = await self._http.request(method, path, **kwargs)
         response.raise_for_status()
@@ -166,7 +153,7 @@ class ApstraClient:
 
     async def health_check(self) -> bool:
         """Probe credentials by acquiring a token. Returns True if login succeeds."""
-        await self._ensure_token()
+        await self._tokens.get_token()
         return True
 
 

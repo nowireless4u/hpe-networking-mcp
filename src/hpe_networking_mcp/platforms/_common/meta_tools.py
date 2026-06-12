@@ -25,6 +25,7 @@ from mcp.types import ToolAnnotations
 from pydantic import ConfigDict, ValidationError, create_model
 from pydantic.fields import FieldInfo
 
+from hpe_networking_mcp.middleware.elicitation import confirm_gated_invoke
 from hpe_networking_mcp.platforms._common.tool_registry import (
     REGISTRIES,
     ToolSpec,
@@ -448,6 +449,22 @@ def build_meta_tools(
             }
 
         safe_params = params or {}
+
+        # Universal confirmation gate (#415/#416/#436): confirm-before-dispatch
+        # for any tool carrying the requires_confirmation tag. Fail-closed: a
+        # registered tool with no capability classification is treated as
+        # gated — an unclassified tool must never skip confirmation by
+        # omission.
+        needs_confirmation = "requires_confirmation" in spec.tags or spec.capability is None
+        if needs_confirmation:
+            gate = await confirm_gated_invoke(
+                ctx,
+                f"{platform} tool '{name}' ({_tool_summary(spec, max_len=120)})",
+                safe_params,
+            )
+            if gate is not None:
+                return gate
+
         logger.info(
             "{}_invoke_tool: dispatching {} with {} param(s)",
             platform,

@@ -32,12 +32,14 @@ elicitation gating, per #240.
 from __future__ import annotations
 
 import dataclasses
+import json
+from collections import defaultdict
 from typing import Any
 
 from fastmcp import Context
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.tools import READ_ONLY
 from hpe_networking_mcp.translations import (
     EngineError,
     LoaderError,
@@ -78,11 +80,30 @@ def _record_id(record: dict[str, Any], translation_id: str) -> str:
         "central:role": "rname",
         "central:vlan_id": "id",
         "central:named_vlan": "name",
+        "central:net_group": "dstname",
+        "central:server_group": "sg_name",
+        "central:captive_portal": "profile-name",
+        "central:aaa_profile": "profile-name",
+        "central:dot1x_auth": "profile-name",
+        "central:mac_auth": "profile-name",
+        "central:gateway_cluster": "profile-name",
+        "central:wlan_ssid": "profile-name",
     }
     field = primary_key_by_translation.get(translation_id)
     if field is None:
-        # Best-effort: try a few common identifier fields.
-        for guess in ("id", "name", "rname", "accname"):
+        # Best-effort: try a few common identifier fields. central:auth_server
+        # has two source shapes (rad_server_name / tacacs_server_name), so it
+        # relies on these guesses rather than a single dict entry.
+        for guess in (
+            "id",
+            "name",
+            "rname",
+            "accname",
+            "rad_server_name",
+            "tacacs_server_name",
+            "sg_name",
+            "profile-name",
+        ):
             if guess in record:
                 return str(record[guess])
         return "<unknown>"
@@ -96,7 +117,29 @@ def _serialize_call(call: TargetCall) -> dict[str, Any]:
     return dataclasses.asdict(call)
 
 
-@tool(annotations=READ_ONLY)
+def _target_object_keys(call: dict[str, Any]) -> list[tuple]:
+    """The Central object identit(ies) a target call writes — for collision detection.
+
+    Path-addressed resources (``/aliases/{name}``, ``/layer2-vlan/{id}``, …) are
+    identified by ``(method, endpoint, query)`` — the object lives in the URL (the
+    query carries the scope/device-function for LOCAL overrides), so two records on
+    the same path collide regardless of body. The shared ``/config-assignments``
+    collection is different: the object is each ``config-assignment`` entry's
+    ``(profile-type, profile-instance, scope-id, device-function)`` in the BODY, so
+    distinct profiles posted there are NOT a collision.
+    """
+    endpoint = call["endpoint"]
+    if endpoint.endswith("/config-assignments"):
+        body = call.get("body") or {}
+        return [
+            ("assign", a.get("profile-type"), a.get("profile-instance"), a.get("scope-id"), a.get("device-function"))
+            for a in (body.get("config-assignment") or [])
+            if isinstance(a, dict)
+        ]
+    return [(call["method"], endpoint, json.dumps(call.get("query_params") or {}, sort_keys=True))]
+
+
+@tool(capability=Capability.READ)
 async def central_translation_preview(
     ctx: Context,
     translation_id: str,
@@ -115,17 +158,25 @@ async def central_translation_preview(
     elicitation; this tool is the read-only preview path used by
     aos-migration Stage 9b.
 
-    Available shipped translations (as of v3.0.1.6):
+    Available shipped translations:
 
     * ``central:vlan_id`` — AOS 8 ``vlan_id`` → Central layer2-vlan
     * ``central:named_vlan`` — AOS 8 composite (vlan_name + vlan_name_id) → Central named-VLAN with alias chain
     * ``central:role`` — AOS 8 ``role`` → Central role profile (Gateway-targeted)
     * ``central:policy`` — AOS 8 ``acl_sess`` → Central /policies POST
+    * ``central:auth_server`` — AOS 8 ``rad_server`` / ``tacacs_server`` → Central auth-server
+      (one translation; RADIUS + TACACS; co-located RFC 3576 CoA folds in as AUTH_AND_COA)
+    * ``central:server_group`` — AOS 8 ``server_group_prof`` → Central server-group (ordered members)
+    * ``central:captive_portal`` — AOS 8 ``cp_auth_profile`` → Central /captive-portal POST
 
     Required ``runtime_values`` per translation:
 
-    * ``central:vlan_id`` / ``central:named_vlan`` / ``central:role`` —
+    * ``central:vlan_id`` / ``central:named_vlan`` / ``central:role`` /
+      ``central:server_group`` / ``central:captive_portal`` —
       ``central_scope_id`` (string).
+    * ``central:auth_server`` — ``central_scope_id`` (string); OPTIONAL
+      ``coa_servers`` (list of ``aaa_prof.rfc3576_client[]`` entries) to
+      correlate co-located CoA servers by IP into AUTH_AND_COA mode.
     * ``central:policy`` — ``central_scope_id`` (string) PLUS
       ``role_records`` (list of full AOS 8 role records, used by the
       engine's preprocessing step to compute role_attribution per ACL
@@ -162,6 +213,13 @@ async def central_translation_preview(
         * ``results`` — list of per-record dicts with
           ``record_id`` / ``target_calls`` / ``call_count`` /
           ``skip_reason`` (None on success).
+        * ``target_collisions`` — list of cross-record write hazards: distinct
+          source records (by occurrence/index, not display ``record_id``) that
+          target the same Central object and would overwrite/409 each other on
+          execution (e.g. case-folded alias names, or duplicate same-named
+          records with different payloads). Each entry carries the
+          ``target_object`` identity, the colliding ``records``, and the
+          per-occurrence ``calls``. Empty when none. Surface verbatim.
 
         On a fatal error (unknown translation_id, loader failure, etc.)
         returns ``{"ok": false, "error": "..."}`` instead of the normal
@@ -228,6 +286,48 @@ async def central_translation_preview(
         )
         translatable += 1
 
+    # Cross-record target-collision detection (issue #439). Records are translated
+    # independently, so two DIFFERENT source records can target the SAME Central object
+    # (e.g. named-VLAN aliases `USER-VLAN` and `user-vlan` both lowercase to the alias
+    # `user-vlan`). On execution the second overwrites/409s the first. We key by TARGET
+    # OBJECT IDENTITY, not the raw call, so that:
+    #   * path-addressed resources (/aliases/{name}, /layer2-vlan/{id}, ...) collide when
+    #     the path (+ scope query for LOCAL overrides) matches — even if bodies differ;
+    #   * the shared /config-assignments collection (object identity is the body's
+    #     profile-type + profile-instance, not the URL) does NOT false-positive — two
+    #     records assigning different profiles to that endpoint aren't colliding.
+    # Uniqueness is keyed by source-record OCCURRENCE (its index in source_records),
+    # NOT the display `record_id` — two distinct records can derive the SAME record_id
+    # (e.g. duplicate named-VLANs both named `user` with different payloads) and still
+    # overwrite each other on the same target object; a record_id set would collapse
+    # them and miss the hazard (issue #439 follow-up). `results` is 1:1 with
+    # `source_records` in order, so enumerate(results) yields the source index.
+    collision_indices: dict[tuple, set[int]] = defaultdict(set)
+    collision_calls: dict[tuple, list[dict[str, Any]]] = defaultdict(list)
+    for idx, r in enumerate(results):
+        for c in r["target_calls"]:
+            for okey in _target_object_keys(c):
+                collision_indices[okey].add(idx)
+                collision_calls[okey].append(
+                    {
+                        "record_index": idx,
+                        "record_id": r["record_id"],
+                        "step": c["step_name"],
+                        "endpoint": c["endpoint"],
+                    }
+                )
+    target_collisions = [
+        {
+            "target_object": list(k),
+            # One entry per colliding occurrence (preserves duplicate display IDs so a
+            # same-record_id collision is still visible), ordered by source index.
+            "records": [results[i]["record_id"] for i in sorted(collision_indices[k])],
+            "calls": collision_calls[k],
+        }
+        for k in collision_indices
+        if len(collision_indices[k]) > 1
+    ]
+
     return {
         "translation_id": translation_id,
         "source_platform": source_platform,
@@ -235,4 +335,7 @@ async def central_translation_preview(
         "translatable_count": translatable,
         "skipped_count": skipped,
         "results": results,
+        # Non-empty when distinct records collide on the same target object — surface
+        # these to the operator verbatim; they're write-time overwrite/409 hazards.
+        "target_collisions": target_collisions,
     }

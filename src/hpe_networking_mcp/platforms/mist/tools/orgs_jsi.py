@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,18 +16,17 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
 
 @_mcp_tool(
     name="mist_adopt_org_jsi_device",
-    description="GET /api/v1/orgs/{org_id}/jsi/devices/outbound_ssh_cmd\n\nadoptOrgJsiDevice\n\nAdopt JSI devices",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/jsi/devices/outbound_ssh_cmd\n\nadoptOrgJsiDevice\n\nReturn the outbound SSH registration command used to onboard Junos devices to Juniper Support Insights (JSI).",
+    capability=Capability.READ,
 )
 async def mist_adopt_org_jsi_device(
     ctx: Context,
@@ -46,14 +45,18 @@ async def mist_adopt_org_jsi_device(
 @_mcp_tool(
     name="mist_count_org_jsi_assets_and_contracts",
     description="GET /api/v1/orgs/{org_id}/jsi/inventory/count\n\ncountOrgJsiAssetsAndContracts\n\nCount devices purchased from the accounts associated with the Org",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_count_org_jsi_assets_and_contracts(
     ctx: Context,
     org_id: Annotated[str, Field(description="path parameter 'org_id'")],
-    distinct: Annotated[Any | None, Field(description="Distinct attributes to count")] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    distinct: Annotated[
+        Any | None,
+        Field(
+            description="Field used to group this count response. enum: `account_id`, `claimed`, `has_support`, `eol_time`, `eos_time`, `version_time`, `model`, `sku`, `status`, `type`, `version`, `warranty_type`"
+        ),
+    ] = None,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -68,8 +71,7 @@ async def mist_count_org_jsi_assets_and_contracts(
 @_mcp_tool(
     name="mist_count_org_jsi_pbn",
     description="GET /api/v1/orgs/{org_id}/jsi/pbn/count\n\ncountOrgJsiPbn\n\nGet count of PBN advisories grouped by specified field",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_count_org_jsi_pbn(
     ctx: Context,
@@ -77,13 +79,18 @@ async def mist_count_org_jsi_pbn(
     distinct: Annotated[
         Any, Field(description="Field to group by enum: `versions`, `models`, `customer_risk`, `bug_type`")
     ],
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
 ) -> Any:
     return await mist_request(
@@ -99,8 +106,7 @@ async def mist_count_org_jsi_pbn(
 @_mcp_tool(
     name="mist_count_org_jsi_sirt",
     description="GET /api/v1/orgs/{org_id}/jsi/sirt/count\n\ncountOrgJsiSirt\n\nGet count of SIRT advisories grouped by specified field",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_count_org_jsi_sirt(
     ctx: Context,
@@ -108,13 +114,18 @@ async def mist_count_org_jsi_sirt(
     distinct: Annotated[
         Any, Field(description="Field to group by. enum: `jsa_updated_date`, `models`, `severity`, `versions`")
     ],
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
 ) -> Any:
     return await mist_request(
@@ -129,9 +140,8 @@ async def mist_count_org_jsi_sirt(
 
 @_mcp_tool(
     name="mist_create_org_jsi_device_shell_session",
-    description="POST /api/v1/orgs/{org_id}/jsi/devices/{device_mac}/shell\n\ncreateOrgJsiDeviceShellSession\n\nCreate Shell Session",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/orgs/{org_id}/jsi/devices/{device_mac}/shell\n\ncreateOrgJsiDeviceShellSession\n\nCreate a WebSocket-backed shell session for a JSI-connected device identified by MAC address.",
+    capability=Capability.WRITE,
 )
 async def mist_create_org_jsi_device_shell_session(
     ctx: Context,
@@ -150,18 +160,19 @@ async def mist_create_org_jsi_device_shell_session(
 
 @_mcp_tool(
     name="mist_list_org_jsi_devices",
-    description="GET /api/v1/orgs/{org_id}/jsi/devices\n\nlistOrgJsiDevices\n\nGet List of Org devices that connected to JSI",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/orgs/{org_id}/jsi/devices\n\nlistOrgJsiDevices\n\nList organization devices connected to Juniper Support Insights (JSI), optionally filtered by model, serial number, or MAC address.",
+    capability=Capability.READ,
 )
 async def mist_list_org_jsi_devices(
     ctx: Context,
     org_id: Annotated[str, Field(description="path parameter 'org_id'")],
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
-    page: Annotated[int, Field(description="query parameter 'page'")] = 1,
-    model: Annotated[str | None, Field(description="Device model")] = None,
-    serial: Annotated[str | None, Field(description="Device serial")] = None,
-    mac: Annotated[str | None, Field(description="Device MAC Address")] = None,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
+    page: Annotated[
+        int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
+    ] = 1,
+    model: Annotated[str | None, Field(description="Filter results by device model")] = None,
+    serial: Annotated[str | None, Field(description="Filter results by device serial number")] = None,
+    mac: Annotated[str | None, Field(description="Filter results by MAC address")] = None,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -176,16 +187,19 @@ async def mist_list_org_jsi_devices(
 @_mcp_tool(
     name="mist_list_org_jsi_past_purchases",
     description="GET /api/v1/orgs/{org_id}/jsi/inventory\n\nlistOrgJsiPastPurchases\n\nThis gets all devices purchased from the accounts associated with the Org \n  * Fetch Install base devices for all linked accounts and associated account of the linked accounts. \n  * The primary and the associated account ids will be queries from SFDC by passing the linked account \n  * Returns only the device centric details of the Install base device. No customer specific information will be returned.",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_list_org_jsi_past_purchases(
     ctx: Context,
     org_id: Annotated[str, Field(description="path parameter 'org_id'")],
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
-    page: Annotated[int, Field(description="query parameter 'page'")] = 1,
-    model: Annotated[str | None, Field(description="query parameter 'model'")] = None,
-    serial: Annotated[str | None, Field(description="query parameter 'serial'")] = None,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
+    page: Annotated[
+        int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
+    ] = 1,
+    model: Annotated[
+        str | None, Field(description="Filter results by one or more device models. Supports comma-separated values")
+    ] = None,
+    serial: Annotated[str | None, Field(description="Filter results by device serial number")] = None,
 ) -> Any:
     return await mist_request(
         ctx,
@@ -200,20 +214,34 @@ async def mist_list_org_jsi_past_purchases(
 @_mcp_tool(
     name="mist_search_org_jsi_assets_and_contracts",
     description="GET /api/v1/orgs/{org_id}/jsi/inventory/search\n\nsearchOrgJsiAssetsAndContracts\n\nThis gets all devices purchased from the accounts associated with the Org \n  * Fetch Install base devices for all linked accounts and associated account of the linked accounts. \n  * The primary and the associated account ids will be queries from SFDC by passing the linked account \n  * Returns only the device centric details of the Install base device. No customer specific information will be returned.",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_search_org_jsi_assets_and_contracts(
     ctx: Context,
     org_id: Annotated[str, Field(description="path parameter 'org_id'")],
     claimed: Annotated[
-        bool | None, Field(description="Device claim status, `true` for claimed devices, `false` for all devices")
+        bool | None,
+        Field(
+            description="Device claim status, `true` for claimed devices, `false` for all devices. Accepts multiple comma-separated boolean values."
+        ),
     ] = None,
-    model: Annotated[str | None, Field(description="Device model")] = None,
-    serial: Annotated[str | None, Field(description="Device serial")] = None,
-    sku: Annotated[str | None, Field(description="SKU name of the device")] = None,
-    status: Annotated[Any | None, Field(description="Device status")] = None,
-    warranty_type: Annotated[Any | None, Field(description="Device warranty type")] = None,
+    model: Annotated[
+        str | None, Field(description="Filter results by device model. Accepts multiple comma-separated values.")
+    ] = None,
+    serial: Annotated[
+        str | None,
+        Field(description="Filter results by device serial number. Accepts multiple comma-separated values."),
+    ] = None,
+    sku: Annotated[
+        str | None, Field(description="Filter results by SKU. Accepts multiple comma-separated values.")
+    ] = None,
+    status: Annotated[Any | None, Field(description="Device status. enum: `all`, `connected`, `disconnected`")] = None,
+    warranty_type: Annotated[
+        Any | None,
+        Field(
+            description="Device warranty type used to filter Juniper Support Insight inventory. enum: `Standard Hardware Warranty`, `Enhanced Hardware Warranty`, `Dead On Arrival Warranty`, `Limited Lifetime Warranty`, `Software Warranty`, `Limited Lifetime Warr..."
+        ),
+    ] = None,
     eol_after: Annotated[str | None, Field(description="Filter devices with End Of Life date after this date")] = None,
     eol_before: Annotated[
         str | None, Field(description="Filter devices with End Of Life date before this date")
@@ -231,7 +259,10 @@ async def mist_search_org_jsi_assets_and_contracts(
         str | None, Field(description="Filter devices with OS Version End Of Support date before this date")
     ] = None,
     has_support: Annotated[
-        bool | None, Field(description="Indicates if the device is covered under active support contract")
+        bool | None,
+        Field(
+            description="Indicates if the device is covered under active support contract. Accepts multiple comma-separated boolean values."
+        ),
     ] = None,
     sirt_id: Annotated[
         str | None, Field(description="To get the onboarded devices that are affected by the SIRT ID")
@@ -240,7 +271,7 @@ async def mist_search_org_jsi_assets_and_contracts(
         str | None, Field(description="To get the onboarded devices that are affected by the PBN ID")
     ] = None,
     text: Annotated[str | None, Field(description="Wildcards for `serial`, `model`, `account_id`")] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
     sort: Annotated[
         str, Field(description="On which field the list should be sorted, -prefix represents DESC order")
     ] = "timestamp",
@@ -284,8 +315,7 @@ async def mist_search_org_jsi_assets_and_contracts(
 @_mcp_tool(
     name="mist_search_org_jsi_pbn",
     description="GET /api/v1/orgs/{org_id}/jsi/pbn/search\n\nsearchOrgJsiPbn\n\nText search for PBN (Problem Bug Notification) advisories. Search can be done on versions, models, customer_risk, id, and bug_type fields.",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_search_org_jsi_pbn(
     ctx: Context,
@@ -295,8 +325,10 @@ async def mist_search_org_jsi_pbn(
     customer_risk: Annotated[str | None, Field(description="Customer risk level to filter by")] = None,
     id: Annotated[str | None, Field(description="PBN ID to search for")] = None,
     bug_type: Annotated[str | None, Field(description="Bug type to filter by")] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
-    page: Annotated[int, Field(description="query parameter 'page'")] = 1,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
+    page: Annotated[
+        int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
+    ] = 1,
     search_after: Annotated[
         str | None,
         Field(
@@ -304,11 +336,16 @@ async def mist_search_org_jsi_pbn(
         ),
     ] = None,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
 ) -> Any:
     return await mist_request(
@@ -335,14 +372,13 @@ async def mist_search_org_jsi_pbn(
 @_mcp_tool(
     name="mist_search_org_jsi_sirt",
     description="GET /api/v1/orgs/{org_id}/jsi/sirt/search\n\nsearchOrgJsiSirt\n\nSearch and get all the SIRT for the onboarded devices. Search can be done on severity, id, updated_after, updated_before, published_after, published_before, models, versions, and text fields.",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    capability=Capability.READ,
 )
 async def mist_search_org_jsi_sirt(
     ctx: Context,
     org_id: Annotated[str, Field(description="path parameter 'org_id'")],
-    severity: Annotated[str | None, Field(description="Severity of the SIRT (Critical, High, Medium, Low)")] = None,
-    id: Annotated[str | None, Field(description="JSA number")] = None,
+    severity: Annotated[str | None, Field(description="Filter results by severity")] = None,
+    id: Annotated[str | None, Field(description="Filter results by identifier")] = None,
     updated_after: Annotated[str | None, Field(description="JSA Updated date to be filtered after this date")] = None,
     updated_before: Annotated[str | None, Field(description="JSA Updated date to be filtered before this date")] = None,
     published_after: Annotated[
@@ -351,13 +387,15 @@ async def mist_search_org_jsi_sirt(
     published_before: Annotated[
         str | None, Field(description="JSA Published date to be filtered before this date")
     ] = None,
-    models: Annotated[str | None, Field(description="Models affected by the SIRT")] = None,
+    models: Annotated[str | None, Field(description="Filter results by models")] = None,
     versions: Annotated[str | None, Field(description="Software version affected by the SIRT")] = None,
     text: Annotated[
         str | None, Field(description="Wildcards search on os_version_affected, affected_models, severity, jsa_id")
     ] = None,
-    limit: Annotated[int, Field(description="query parameter 'limit'")] = 100,
-    page: Annotated[int, Field(description="query parameter 'page'")] = 1,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
+    page: Annotated[
+        int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
+    ] = 1,
     sort: Annotated[
         str, Field(description="On which field the list should be sorted, -prefix represents DESC order")
     ] = "timestamp",
@@ -368,11 +406,16 @@ async def mist_search_org_jsi_sirt(
         ),
     ] = None,
     start: Annotated[
-        str | None, Field(description='Start time (epoch timestamp in seconds, or relative string like "-1d", "-1w")')
+        str | None,
+        Field(
+            description="Lower bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d` or `-1w`"
+        ),
     ] = None,
     end: Annotated[
         str | None,
-        Field(description='End time (epoch timestamp in seconds, or relative string like "-1d", "-2h", "now")'),
+        Field(
+            description="Upper bound of the time range, as an epoch timestamp in seconds or a relative value such as `-1d`, `-2h`, or `now`"
+        ),
     ] = None,
 ) -> Any:
     return await mist_request(

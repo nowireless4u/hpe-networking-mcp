@@ -1,7 +1,7 @@
 """Generated Mist tools — DO NOT EDIT BY HAND.
 
 This file was emitted by ``scripts/_mist_generator.py`` from
-``vendor/mist_openapi.json``. Regenerate via:
+``vendor/mist/mist_openapi.json``. Regenerate via:
 
     uv run python scripts/regenerate_mist_tools.py
 
@@ -16,18 +16,17 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastmcp import Context
-from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
 
 
 @_mcp_tool(
     name="mist_claim_msp_license",
-    description="POST /api/v1/msps/{msp_id}/claim\n\nclaimMspLicense\n\nClaim an Order by Activation Code",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="POST /api/v1/msps/{msp_id}/claim\n\nclaimMspLicense\n\nClaim a license order for this MSP by submitting the activation code from the order.",
+    capability=Capability.WRITE,
 )
 async def mist_claim_msp_license(
     ctx: Context,
@@ -48,9 +47,8 @@ async def mist_claim_msp_license(
 
 @_mcp_tool(
     name="mist_list_msp_licenses",
-    description="GET /api/v1/msps/{msp_id}/licenses\n\nlistMspLicenses\n\nGet List of Msp Licenses",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/msps/{msp_id}/licenses\n\nlistMspLicenses\n\nReturn MSP license entitlement, subscription, amendment, and usage summary information.",
+    capability=Capability.READ,
 )
 async def mist_list_msp_licenses(
     ctx: Context,
@@ -68,9 +66,8 @@ async def mist_list_msp_licenses(
 
 @_mcp_tool(
     name="mist_list_msp_org_licenses",
-    description="GET /api/v1/msps/{msp_id}/stats/licenses\n\nlistMspOrgLicenses\n\nGet List of MSP Licenses",
-    tags={"mist"},
-    annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False),
+    description="GET /api/v1/msps/{msp_id}/stats/licenses\n\nlistMspOrgLicenses\n\nReturn license entitlement, subscription, amendment, and usage statistics for organizations managed by this MSP.",
+    capability=Capability.READ,
 )
 async def mist_list_msp_org_licenses(
     ctx: Context,
@@ -88,9 +85,8 @@ async def mist_list_msp_org_licenses(
 
 @_mcp_tool(
     name="mist_move_or_delete_msp_license_to_another_org",
-    description="PUT /api/v1/msps/{msp_id}/licenses\n\nmoveOrDeleteMspLicenseToAnotherOrg\n\nMove or Delete MSP Licenses",
-    tags={"mist", "mist_write"},
-    annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False),
+    description="PUT /api/v1/msps/{msp_id}/licenses\n\nmoveOrDeleteMspLicenseToAnotherOrg\n\nPerform an MSP license action, such as amending license quantity to an organization, deleting a subscription, undoing an amendment, or annotating a subscription.",
+    capability=Capability.WRITE,
 )
 async def mist_move_or_delete_msp_license_to_another_org(
     ctx: Context,

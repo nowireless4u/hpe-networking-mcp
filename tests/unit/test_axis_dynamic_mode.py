@@ -255,9 +255,8 @@ class TestAxisWriteTagWiring:
     def test_elicitation_middleware_recognizes_axis_write(self):
         """``ElicitationMiddleware.on_initialize`` must read
         ``config.enable_axis_write_tools`` and call ``ctx.enable_components`` for
-        the ``axis_write_delete`` tag — otherwise writes never get the
-        elicitation mode set and ``confirm_write`` returns ``declined`` for
-        every call. Caught in Phase 2 live-testing.
+        the ``axis_write_delete`` tag — otherwise Axis write tools stay
+        hidden even with the enable flag set. Caught in Phase 2 live-testing.
 
         Asserts on the middleware source — full async-init flow is too tightly
         coupled to FastMCP internals to mock cleanly.

@@ -1,0 +1,883 @@
+{
+  "components": {
+    "schemas": {
+      "EndpointInfo": {
+        "properties": {
+          "aruba_user_role": {
+            "description": "Aruba user role of the session",
+            "type": "string"
+          },
+          "aruba_user_vlan": {
+            "description": "Aruba user vlan of the session",
+            "type": "string"
+          },
+          "device_category": {
+            "description": "Device category of the endpoint",
+            "type": "string"
+          },
+          "device_family": {
+            "description": "Device family of the endpoint",
+            "type": "string"
+          },
+          "device_name": {
+            "description": "Device name of the endpoint",
+            "type": "string"
+          },
+          "domain": {
+            "description": "Domain of the endpoint",
+            "type": "string"
+          },
+          "ip": {
+            "description": "IP Address of the endpoint",
+            "type": "string"
+          },
+          "ipv6": {
+            "description": "IPv6 Address list of the endpoint",
+            "type": "object"
+          },
+          "is_conflict": {
+            "description": "Flag indicating if the endpoint has conflict",
+            "type": "boolean"
+          },
+          "is_online": {
+            "description": "Flag indicating if the endpoint is online",
+            "type": "boolean"
+          },
+          "mac": {
+            "description": "MAC Address of the endpoint",
+            "type": "string"
+          },
+          "other_category": {
+            "description": "Other category of the endpoint",
+            "type": "string"
+          },
+          "other_family": {
+            "description": "Other family of the endpoint",
+            "type": "string"
+          },
+          "other_name": {
+            "description": "Other name of the endpoint",
+            "type": "string"
+          },
+          "roles": {
+            "description": "Roles list of the endpoint",
+            "type": "object"
+          },
+          "spt": {
+            "$ref": "#/components/schemas/Spt"
+          },
+          "updated_at": {
+            "description": "Time at which the endpoint is updated",
+            "type": "string"
+          },
+          "user": {
+            "description": "Username of the endpoint",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mac",
+          "ip",
+          "ipv6",
+          "user",
+          "domain",
+          "roles",
+          "spt",
+          "aruba_user_role",
+          "aruba_user_vlan",
+          "device_category",
+          "device_family",
+          "device_name",
+          "is_conflict",
+          "other_category",
+          "other_family",
+          "other_name",
+          "is_online",
+          "updated_at"
+        ],
+        "title": "EndpointInfo",
+        "type": "object"
+      },
+      "EndpointInfoItems": {
+        "properties": {
+          "items": {
+            "description": "List of items matching the filter",
+            "items": {
+              "$ref": "#/components/schemas/EndpointInfo"
+            },
+            "type": "array"
+          }
+        },
+        "title": "EndpointInfoItems",
+        "type": "object"
+      },
+      "EndpointInfoList": {
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/EndpointInfoItems"
+          }
+        },
+        "title": "EndpointInfoList",
+        "type": "object"
+      },
+      "HalLinks": {
+        "properties": {
+          "first": {
+            "description": "URL of first page of results",
+            "type": "string"
+          },
+          "last": {
+            "description": "URL of last page of results",
+            "type": "string"
+          },
+          "next": {
+            "description": "URL of next page of results",
+            "type": "string"
+          },
+          "prev": {
+            "description": "URL of previous page of results",
+            "type": "string"
+          },
+          "self": {
+            "description": "URL of result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "self",
+          "first"
+        ],
+        "title": "HalLinks",
+        "type": "object"
+      },
+      "Level": {
+        "description": "Level",
+        "enum": [
+          "INFO",
+          "ERROR",
+          "WARN"
+        ],
+        "example": "INFO",
+        "title": "Level",
+        "type": "string"
+      },
+      "LoginAudit": {
+        "properties": {
+          "last_failure_login": {
+            "description": "Contains all failure attempts in-between previous successful login and now",
+            "type": "object"
+          },
+          "last_successful_login": {
+            "description": "Contains details of previous successful login",
+            "type": "object"
+          },
+          "timestamp": {
+            "description": "Timestamp at which the query is executed",
+            "type": "string"
+          },
+          "username": {
+            "description": "User name",
+            "type": "string"
+          }
+        },
+        "title": "LoginAudit",
+        "type": "object"
+      },
+      "LoginAuditItems": {
+        "properties": {
+          "items": {
+            "description": "List of items matching the filter",
+            "items": {
+              "$ref": "#/components/schemas/LoginAuditResult"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "LoginAuditItems",
+        "type": "object"
+      },
+      "LoginAuditList": {
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/LoginAuditItems"
+          },
+          "_links": {
+            "$ref": "#/components/schemas/HalLinks"
+          },
+          "count": {
+            "description": "Total number of items matching the filter; returned if calculate_count is true",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "_embedded",
+          "_links"
+        ],
+        "title": "LoginAuditList",
+        "type": "object"
+      },
+      "LoginAuditResult": {
+        "properties": {
+          "last_failure_login": {
+            "description": "Contains all failure attempts in-between previous successful login and now",
+            "type": "object"
+          },
+          "last_successful_login": {
+            "description": "Contains details of previous successful login",
+            "type": "object"
+          },
+          "timestamp": {
+            "description": "Timestamp at which the query is executed",
+            "type": "string"
+          },
+          "username": {
+            "description": "User name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "timestamp",
+          "username",
+          "last_successful_login",
+          "last_failure_login"
+        ],
+        "title": "LoginAuditResult",
+        "type": "object"
+      },
+      "Spt": {
+        "description": "System posture token of the endpoint",
+        "enum": [
+          "HEALTHY",
+          "CHECKUP",
+          "TRANSITION",
+          "QUARANTINE",
+          "INFECTED",
+          "UNKNOWN"
+        ],
+        "example": "HEALTHY",
+        "title": "Spt",
+        "type": "string"
+      },
+      "SystemEvents": {
+        "properties": {
+          "action": {
+            "description": "Action",
+            "type": "string"
+          },
+          "category": {
+            "description": "Category",
+            "type": "string"
+          },
+          "description": {
+            "description": "Description",
+            "type": "string"
+          },
+          "level": {
+            "$ref": "#/components/schemas/Level"
+          },
+          "source": {
+            "description": "Source",
+            "type": "string"
+          },
+          "timestamp": {
+            "description": "Timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "level",
+          "category",
+          "action",
+          "description",
+          "timestamp"
+        ],
+        "title": "SystemEvents",
+        "type": "object"
+      },
+      "SystemEventsItems": {
+        "properties": {
+          "items": {
+            "description": "List of items matching the filter",
+            "items": {
+              "$ref": "#/components/schemas/SystemEvents"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "SystemEventsItems",
+        "type": "object"
+      },
+      "SystemEventsList": {
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/SystemEventsItems"
+          },
+          "_links": {
+            "$ref": "#/components/schemas/HalLinks"
+          },
+          "count": {
+            "description": "Total number of items matching the filter; returned if calculate_count is true",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "_embedded",
+          "_links"
+        ],
+        "title": "SystemEventsList",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "contact": {},
+    "title": "Logs",
+    "version": "6.12.7"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/insight/endpoint/ip-range/{ip_range}": {
+      "get": {
+        "deprecated": false,
+        "description": "",
+        "operationId": "EndpointInfoEndpointIp-rangeByIp_rangeGet",
+        "parameters": [
+          {
+            "description": "IPv4/IPv6 address range, e.g. 192.168.1.1-255 or 2001:db8:a0b:12cd::a-f",
+            "in": "path",
+            "name": "ip_range",
+            "required": true,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EndpointInfoList"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Look up endpoints by IP address range",
+        "tags": [
+          "EndpointInfo"
+        ]
+      }
+    },
+    "/insight/endpoint/ip/{ip}": {
+      "get": {
+        "deprecated": false,
+        "description": "",
+        "operationId": "EndpointInfoEndpointIpByIpGet",
+        "parameters": [
+          {
+            "description": "IPv4/IPv6 address to match with endpoints",
+            "in": "path",
+            "name": "ip",
+            "required": true,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EndpointInfo"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Look up endpoints by IP address",
+        "tags": [
+          "EndpointInfo"
+        ]
+      }
+    },
+    "/insight/endpoint/mac/{mac}": {
+      "get": {
+        "deprecated": false,
+        "description": "Get a single endpoint by MAC address",
+        "operationId": "EndpointInfoEndpointMacByMacGet",
+        "parameters": [
+          {
+            "description": "URL parameter mac",
+            "in": "path",
+            "name": "mac",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EndpointInfo"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get a single endpoint by MAC address",
+        "tags": [
+          "EndpointInfo"
+        ]
+      }
+    },
+    "/insight/endpoint/time-range/{from_time}/{to_time}": {
+      "get": {
+        "deprecated": false,
+        "description": "",
+        "operationId": "EndpointInfoEndpointTime-rangeByFrom_timeByTo_timeGet",
+        "parameters": [
+          {
+            "description": "Start time for search, as UNIX timestamp",
+            "in": "path",
+            "name": "from_time",
+            "required": true,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          },
+          {
+            "description": "End time for search, as UNIX timestamp",
+            "in": "path",
+            "name": "to_time",
+            "required": true,
+            "schema": {
+              "default": "",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EndpointInfoList"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Look up endpoints by time range",
+        "tags": [
+          "EndpointInfo"
+        ]
+      }
+    },
+    "/login-audit/{name}": {
+      "get": {
+        "deprecated": false,
+        "description": "Get previous login details for an admin user",
+        "operationId": "LoginAuditByNameGet",
+        "parameters": [
+          {
+            "description": "User name of admin",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginAuditResult"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Found"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          }
+        },
+        "security": [],
+        "summary": "Get previous login details for an admin user",
+        "tags": [
+          "LoginAudit"
+        ]
+      }
+    },
+    "/system-event": {
+      "get": {
+        "deprecated": false,
+        "description": "Get a list of system events. ",
+        "operationId": "SystemEventsGet",
+        "parameters": [
+          {
+            "description": "JSON filter expression specifying the items to return",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "default": "{}",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort ordering for returned items (default +source)",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "+source",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Zero based offset to start from",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": "0",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Maximum number of items to return (1 – 1000)",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": "25",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Whether to calculate the total item count",
+            "in": "query",
+            "name": "calculate_count",
+            "required": false,
+            "schema": {
+              "default": "false",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemEventsList"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {}
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Forbidden"
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Get a list of system events",
+        "tags": [
+          "SystemEvents"
+        ]
+      },
+      "post": {
+        "deprecated": false,
+        "description": "Create a new system event",
+        "operationId": "SystemEventsPost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SystemEvents"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemEvents"
+                }
+              }
+            },
+            "description": "Created",
+            "headers": {}
+          },
+          "406": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Not Acceptable"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [],
+        "summary": "Create a new system event",
+        "tags": [
+          "SystemEvents"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://clearpass-hostname/api"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Collection of endpoints",
+      "name": "EndpointInfo"
+    },
+    {
+      "description": "Get previous login details for an admin user",
+      "name": "LoginAudit"
+    },
+    {
+      "description": "Collection of system events",
+      "name": "SystemEvents"
+    }
+  ],
+  "x-explorer-enabled": false,
+  "x-headers": [
+    {
+      "key": "Authorization",
+      "value": "Bearer <TOKEN>"
+    }
+  ],
+  "x-readme": {
+    "proxy-enabled": true
+  }
+}

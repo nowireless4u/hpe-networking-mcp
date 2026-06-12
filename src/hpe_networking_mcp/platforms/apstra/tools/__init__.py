@@ -1,22 +1,8 @@
-from mcp.types import ToolAnnotations
+"""Tool modules for the Juniper Apstra platform.
 
-READ_ONLY = ToolAnnotations(
-    readOnlyHint=True,
-    destructiveHint=False,
-    idempotentHint=True,
-    openWorldHint=True,
-)
-
-WRITE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=False,
-    idempotentHint=False,
-    openWorldHint=True,
-)
-
-WRITE_DELETE = ToolAnnotations(
-    readOnlyHint=False,
-    destructiveHint=True,
-    idempotentHint=False,
-    openWorldHint=True,
-)
+Tools are classified with the ``capability=`` kwarg on the ``@tool`` decorator
+(see ``platforms/_common/annotations.py`` and ``docs/tool-annotation-rubric.md``).
+That single classification derives the MCP annotations, the
+``apstra_write[_delete]`` enable tag, and the ``requires_confirmation`` gate
+tag — there are no hand-written ``ToolAnnotations`` constants.
+"""
