@@ -115,7 +115,6 @@ class TestInvokeToolGating:
         from hpe_networking_mcp.platforms._common import meta_tools
 
         spec = self._spec(tags={"requires_confirmation"}, capability=None)
-        registry = {"central_test_tool": spec}
 
         ctx = MagicMock()
         ctx.lifespan_context = {"config": SimpleNamespace(disable_elicitation=False)}
