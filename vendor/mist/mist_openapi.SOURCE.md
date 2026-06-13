@@ -8,9 +8,9 @@
 
 ## Current sync
 
-- **Spec API version**: `2604.1.5` (per the spec's `info.version` field)
-- **Upstream blob SHA**: `94ee6f617ef095699e360bc36f0cc0c1fed4280a`
-- **Vendored at**: 2026-06-05
+- **Spec API version**: `2605.1.0` (per the spec's `info.version` field)
+- **Upstream blob SHA**: `a0003416c614d9a8e0dfe9b6b960984fd908eb82`
+- **Vendored at**: 2026-06-13
 
 ## License
 
