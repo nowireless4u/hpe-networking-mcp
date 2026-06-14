@@ -96,7 +96,9 @@ if not isinstance(health, list) or not health:
     return {"error": f"site {SITE_NAME!r} not found"}   # -> Step 0 fallback
 site = health[0]
 site_id = site["site_id"]
-metrics = site.get("metrics", {})
+# `or {}` (not `.get(k, {})`): Central may return a section as null, not absent
+# — `.get("metrics", {})` would hand back None and the next `.get` would crash.
+metrics = site.get("metrics") or {}
 
 devices_raw = _unwrap(await call_tool("central_invoke_tool",
     {"name": "central_get_devices", "params": {"site_id": str(site_id)}}))
@@ -122,10 +124,10 @@ alert_list = [
 return {
     "site": {"name": site.get("name"), "site_id": site_id,
              "address": site.get("address"),
-             "health": metrics.get("health", {})},          # {Poor,Fair,Good,Summary}
-    "device_summary": metrics.get("devices", {}),            # {Summary:{...}, Details:{by type}}
-    "client_summary": metrics.get("clients", {}).get("Summary", {}),  # {Poor,Fair,Good,Total}
-    "alert_summary": metrics.get("alerts", {}),              # {Critical, Total}
+             "health": metrics.get("health") or {}},         # {Poor,Fair,Good,Summary}
+    "device_summary": metrics.get("devices") or {},          # {Summary:{...}, Details:{by type}}
+    "client_summary": (metrics.get("clients") or {}).get("Summary") or {},  # {Poor,Fair,Good,Total}
+    "alert_summary": metrics.get("alerts") or {},            # {Critical, Total}
     "devices": device_rows,
     "alerts": alert_list,
 }
@@ -155,7 +157,7 @@ with Column(gap=4) as view:
     Heading(f"{site['name']} — site dashboard")
     with Row(gap=4):
         Metric(label="Health", value=site["health"].get("Summary"))
-        Metric(label="Devices", value=device_summary.get("Summary", {}).get("Total"))
+        Metric(label="Devices", value=(device_summary.get("Summary") or {}).get("Total"))
         Metric(label="Clients", value=client_summary.get("Total"))
         Metric(label="Alerts", value=alert_summary.get("Total"),
                description=f'{alert_summary.get("Critical", 0)} critical')
