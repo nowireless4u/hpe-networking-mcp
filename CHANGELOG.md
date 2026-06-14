@@ -222,7 +222,7 @@ New unit tests cover each guard (Central/GreenLake 503 paths, the safe transport
 
 ## [3.3.10.0] - 2026-06-10
 
-**Minor — new bundled skill `central-ucc-quality`: trustworthy UCC (voice/video) call-quality on AOS-10 APs, with a Generative-UI dashboard.** Closes #400. Asking "check call quality on the garage AP" now runs a vetted correlation runbook instead of a naive single-command read.
+**Minor — new bundled skill `central-ucc-quality`: trustworthy UCC (voice/video) call-quality on AOS-10 APs, with a Generative-UI dashboard.** Closes #400. Asking "check call quality on AP HQ-AP-1" now runs a vetted correlation runbook instead of a naive single-command read.
 
 ### Added
 - **`central-ucc-quality` skill** — correlates three live UCM tables from a single atomic `central_show_commands` snapshot to report *genuinely-live* calls (not stale records) with per-stream quality:

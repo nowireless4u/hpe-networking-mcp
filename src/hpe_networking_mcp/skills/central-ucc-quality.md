@@ -331,7 +331,7 @@ def count_by(seq, key):
 poor = [c for c in calls if c["band"] == "POOR"]
 fair = [c for c in calls if c["band"] == "FAIR"]
 payload = {
-    "scope_label": scope_label,                       # e.g. "AP HOME-GARAGE-AP" or "Site HOME — 4 APs"
+    "scope_label": scope_label,                       # e.g. "AP HQ-AP-1" or "Site HQ — 4 APs"
     "summary": {
         "live_calls": len(calls),
         "degraded_calls": len(poor) + len(fair),
@@ -413,17 +413,17 @@ Add a short (3–6 sentence) plain-English read regardless of render mode:
 
 ## Worked example
 
-Operator: *"Check call quality on the garage AP."*
+Operator: *"Check call quality on AP HQ-AP-1."*
 
-1. Step 0 → resolve `HOME-GARAGE-AP` → serial.
+1. Step 0 → resolve `HQ-AP-1` → serial.
 2. Step 1 → one `central_show_commands` with the three commands.
 3. Steps 2–3 → parse + correlate. Say the CDR has 5 streams but datapath
    shows only 2 live (codec populated); the other 3 are stale records →
    `calls` has 2, `stale` has 3.
 4. Step 4 → dashboard (or Markdown): 2 live WiFi-Calling streams, one at
    UCC 67 (POOR, 1.1% loss), one at 86 (GOOD). Worst-first.
-5. Step 5 → *"2 live calls on HOME-GARAGE-AP. One WiFi-Calling stream to
-   141.207.x is degraded — UCC 67 with 1.1% packet loss (the IPsec tunnel
+5. Step 5 → *"2 live calls on HQ-AP-1. One WiFi-Calling stream to
+   203.0.113.x is degraded — UCC 67 with 1.1% packet loss (the IPsec tunnel
    is struggling); the other is healthy at 86. 3 older CDR records were
    stale (no live datapath session) and excluded. Want me to watch this
    client or check another AP?"*
