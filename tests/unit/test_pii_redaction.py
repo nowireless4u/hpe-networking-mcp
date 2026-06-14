@@ -169,9 +169,9 @@ class TestFieldClassification:
         ``ip-address`` / ``ip_address``. IPs are intentionally not in any
         rule, so all three resolve to SKIP — but they must all resolve to
         the *same* SKIP, not behave as different fields."""
-        a, _ = classify_field("IP Address", "172.23.4.21")
-        b, _ = classify_field("ip-address", "172.23.4.21")
-        c, _ = classify_field("ip_address", "172.23.4.21")
+        a, _ = classify_field("IP Address", "192.0.2.21")
+        b, _ = classify_field("ip-address", "192.0.2.21")
+        c, _ = classify_field("ip_address", "192.0.2.21")
         assert a == b == c == FieldClassification.SKIP
 
     def test_aos8_ap_name_with_space_tokenizes_as_hostname(self) -> None:
@@ -1266,7 +1266,7 @@ class TestTokenizeResponse:
                     "Config ID": "1728",
                     "Config Sync Time (sec)": "0",
                     "Configuration State": "UPDATE SUCCESSFUL",
-                    "IP Address": "172.23.4.21",
+                    "IP Address": "192.0.2.21",
                     "IPv6 Address": "None",
                     "Location": "Building1.floor1",
                     "Model": "ArubaMM-VA",
@@ -1286,7 +1286,7 @@ class TestTokenizeResponse:
         assert match is not None
         assert match.group(1) == "HOSTNAME"
         # IP Address remains cleartext (intentional: IPs not tokenized).
-        assert record["IP Address"] == "172.23.4.21"
+        assert record["IP Address"] == "192.0.2.21"
         # Geographic / model / status fields remain cleartext.
         assert record["Model"] == "ArubaMM-VA"
         assert record["Location"] == "Building1.floor1"

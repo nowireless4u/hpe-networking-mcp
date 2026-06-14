@@ -2462,7 +2462,7 @@ Completes the Stage 7 cluster-mode derivation work that v2.5.1.3 left as TBD. Th
 
 ### Validated against live data
 
-Lab probing on ArubaMM-VA at 172.23.4.21 (AOS 8.12.0.5):
+Lab probing on an ArubaMM-VA at 192.0.2.21 (AOS 8.12.0.5):
 
 | Cluster | Origin scope | APs adopted | AOS 10 mode (derived) | AOS 10 target tool flow |
 |---|---|---|---|---|

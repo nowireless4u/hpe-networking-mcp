@@ -110,7 +110,7 @@ interface vlan 2
     apply policy QOS-P-marker routed-in        # bind to the VLAN interface
 
 # Egress / system-wide (queueing + scheduling + DSCP-map)
-qos queue-profile home                         # local-priority -> hw queue
+qos queue-profile branch-1                         # local-priority -> hw queue
     map queue 0 local-priority 0
     ...
     map queue 7 local-priority 5               # voice (lp5) -> strict q7
@@ -118,7 +118,7 @@ qos schedule-profile QOS-P-mpls-scheduler      # per-queue algo + weights
     dwrr queue 0 weight 5
     ...
     strict queue 7 max-bandwidth 768 kbps      # cap voice queue
-apply qos queue-profile home schedule-profile QOS-P-mpls-scheduler
+apply qos queue-profile branch-1 schedule-profile QOS-P-mpls-scheduler
 qos dscp-map 40 local-priority 7 color green   # remap DSCP -> local-priority
 qos dscp-map 47 local-priority 7 color green
 ```
@@ -424,7 +424,7 @@ Maps local-priority (the marker's output) → hardware queue. The CLI form
 array; each entry's `priorities` is a list (a queue can absorb multiple LPs).
 
 ```jsonc
-// qos queue-profile home
+// qos queue-profile branch-1
 //   map queue 0 local-priority 0  ...  map queue 4 local-priority 4
 //   map queue 5 local-priority 7  (q5 absorbs lp7 — scavenger)
 //   map queue 6 local-priority 6
@@ -501,13 +501,13 @@ plus the `qos dscp-map …` block all become **one write** in Central, then a
 scope assignment to activate on devices.
 
 ```jsonc
-// apply qos queue-profile home schedule-profile QOS-P-mpls-scheduler
+// apply qos queue-profile branch-1 schedule-profile QOS-P-mpls-scheduler
 // qos dscp-map 40 local-priority 7 color green
 // qos dscp-map 41 local-priority 7 color green
 // ... (46/EF intentionally skipped — preserves factory voice mapping)
 // qos dscp-map 47 local-priority 7 color green
 {
-  "q-profile":     "home",                          // custom profile name (oneOf branch 1)
+  "q-profile":     "branch-1",                      // custom profile name (oneOf branch 1)
   "sched-profile": "QOS-P-mpls-scheduler",          // custom profile name (oneOf branch 1)
   "dscp-map": [
     {"dscp": 40, "priority": 7, "color": "GREEN"},
