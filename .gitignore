@@ -119,5 +119,10 @@ docs/AOS/
 # Local scratch (vendored-OAS working copies, etc.)
 docs/aox-cx/
 
+# Captured AI session transcripts + local skill drafts kept for authoring
+# reference (e.g. the Generative-UI dashboard session). Local only, never committed.
+docs/genui.md
+docs/skills/
+
 # Pre-regen backup of the Central tool surface (local safety copy, never committed)
 central-tools-backup/
