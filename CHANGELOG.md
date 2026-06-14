@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.13.5] - 2026-06-14
+
+**Patch — feat(skill): `central-site-dashboard` — single-site Central operational dashboard via Generative UI.** The follow-up to the v3.3.13.4 GenUI prewarm/guidance work, and the bigger perceived-latency win: a fixed runbook for "build me a dashboard for site X" so the model fetches once and renders once instead of burning ~20+ exploratory round-trips rediscovering schemas and fighting the response envelope.
+
+### Added
+- **`src/hpe_networking_mcp/skills/central-site-dashboard.md`** (skill #16). Gathers one Central site's health score, device status by type, client counts, and active alerts (3-4 calls), then renders through `generate_prefab_ui`. Bakes in the exact, live-verified response-shape unwraps that trip ad-hoc attempts: `central_get_site_health` `data` is a **list** (take `[0]`); `central_get_devices` returns a **list or the string "No devices found…"**; `central_get_alerts` rows live under `data["items"]` (not `result`) and the call **requires `site_id`**. The gather code was run verbatim against a live tenant before shipping. Central-only / single-site by design; cross-platform + ClearPass overlay are deferred follow-ups. Always emits a text walkthrough beneath the board so it stays useful in non-MCP-Apps clients (where the widget no-ops). Read-only.
+
+### Docs
+- `docs/TOOLS.md` (Bundled skills table) + `INSTRUCTIONS.md` (trigger-phrase → skill mapping) updated with the new skill.
+
 ## [3.3.13.4] - 2026-06-14
 
 **Patch — perf: speed up Generative-UI (Prefab) dashboards.** Two changes that cut the time to a rendered dashboard when `MCP_APP_ENABLE=true`.
