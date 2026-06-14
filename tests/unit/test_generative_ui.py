@@ -106,5 +106,8 @@ def test_description_augmented_with_dashboard_guidance(monkeypatch: pytest.Monke
         assert "dashboard" in desc.lower()
         # The data->globals contract must be spelled out (prevents the NameError: 'data').
         assert "DATA CONTRACT" in desc, f"data contract guidance missing in {mode} mode"
+        # Round-trip-reducing steers: unwrap-the-envelope + one-shot component discovery.
+        assert "DATA SHAPE" in desc, f"envelope-unwrap guidance missing in {mode} mode"
+        assert "search_prefab_components" in desc, f"component-discovery steer missing in {mode} mode"
         # Upstream Prefab authoring instructions must survive the prepend.
         assert "PrefabApp" in desc, f"upstream Prefab instructions lost in {mode} mode"

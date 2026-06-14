@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.13.4] - 2026-06-14
+
+**Patch — perf: speed up Generative-UI (Prefab) dashboards.** Two changes that cut the time to a rendered dashboard when `MCP_APP_ENABLE=true`.
+
+### Added
+- **Build-time sandbox prewarm** (`hpe_networking_mcp.prefab_prewarm`, run from the Dockerfile). The `generate_prefab_ui` renderer runs Prefab Python in a Deno + Pyodide subprocess; the first render per container otherwise pays a cold start that fetches `npm:pyodide` + `deno.land/std` and initializes the WASM runtime. The build now runs one throwaway render so the Deno module graph + Pyodide runtime are baked into the image's `DENO_DIR`. **Measured first-render cold start ~3.0s → ~1.5s**, and the first render no longer needs network egress (relevant for locked-down deployments). Best-effort: a build without network still produces a working image (it just cold-starts at runtime).
+
+### Changed
+- **`generate_prefab_ui` description guidance** extended with two round-trip-reducing steers (the description is what the client uses to drive the tool, so this is where it lands): (1) **unwrap the envelope** — platform reads and `<platform>_invoke_tool` return `{ok, status, data, …}`, so pass the inner `data`, not the raw envelope; (2) **discover components in one call** — `search_prefab_components` with a broad/empty query returns the whole catalog, plus a cheat-sheet of the common dashboard components (`metric`, `charts`, `data_table`, `badge`, `card`, layout, etc.). Both target the wasteful patterns seen in real sessions (repeated component searches + envelope-shape retries).
+
+### Tests
+- `test_prefab_prewarm.py` pins the warmup program compiles + builds a `PrefabApp`, and that `main()` is best-effort (returns 0 on sandbox failure — never fails the build). `test_generative_ui.py` extended to assert the new guidance steers are present in both tool modes.
+
 ## [3.3.13.3] - 2026-06-12
 
 **Patch — fix: regenerate the stale lockfile; pip-audit now clean with zero ignores.** Closes #445. `uv.lock` had not been regenerated since v3.3.6.0, and because `uv sync --frozen` skips the pyproject↔lock consistency check, every container build since the SDK removals (#468/#470) **kept installing pycentral 2.0a17 and pyclearpass 1.0.8** — inert (nothing imports them; the import guards are clean) but shipped, along with the vulnerable requests 2.32.5 chain that pycentral's pin had frozen in place.

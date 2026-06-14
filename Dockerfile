@@ -55,6 +55,14 @@ ENV ENABLE_MIST_WRITE_TOOLS=false
 ENV ENABLE_CENTRAL_WRITE_TOOLS=false
 ENV DISABLE_ELICITATION=false
 
+# Pre-warm the Prefab/Pyodide generative-UI sandbox (see prefab_prewarm.py):
+# bakes the Deno module graph + Pyodide runtime into this layer's DENO_DIR so
+# the first generate_prefab_ui render is ~2x faster (measured ~3.0s -> ~1.5s)
+# and needs no network at first use. Runs as mcpuser with DENO_DIR already set,
+# so the cache lands at the exact runtime path. Best-effort: the module exits 0
+# even without build-time network egress (the image just cold-starts at runtime).
+RUN uv run --no-sync python -m hpe_networking_mcp.prefab_prewarm
+
 EXPOSE 8000
 
 # Health check

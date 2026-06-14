@@ -273,6 +273,17 @@ _GENERATIVE_UI_GUIDANCE = (
     "`top_aps`. There is NO variable named `data` in the sandbox; writing `data[...]` "
     "or `data.get(...)` raises `NameError: name 'data' is not defined`. Embed the real "
     "values you collected (do not invent placeholders).\n\n"
+    "DATA SHAPE (unwrap before passing): platform reads return an envelope — "
+    "`{ok, status, data, message, tool, platform}` — and `<platform>_invoke_tool` "
+    "wraps results the same way. Read the inner `data` first (some tools nest a "
+    "further `result` / `items`); passing the raw envelope renders bookkeeping keys "
+    "instead of your values.\n\n"
+    "COMPONENTS (discover in ONE call): `search_prefab_components` with a broad or "
+    "empty query returns the whole catalog at once — do NOT fan out many narrow "
+    "searches. For network dashboards the common set is: `metric` (KPI cards), "
+    "`charts` (bar / line / area / pie), `histogram`, `data_table` / `table`, "
+    "`badge` + `dot` (status), `card`, `column` / `row` / `grid` (layout), "
+    "`heading` / `text`, `progress` / `ring`, `tabs`, `alert`.\n\n"
     "---\n\n"
 )
 
