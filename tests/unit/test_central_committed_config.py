@@ -36,7 +36,7 @@ def _make_resources(*resources: tuple[str, str]) -> Tree:
 
 
 def _make_tree() -> Tree:
-    """Build Global → EST Sites → HOME with committed resources at each."""
+    """Build Global → EST Sites → HQ with committed resources at each."""
     tree = Tree()
     tree.create_node(
         "global-id",
@@ -64,11 +64,11 @@ def _make_tree() -> Tree:
         },
     )
     tree.create_node(
-        "home-id",
-        "home-id",
+        "hq-id",
+        "hq-id",
         parent="est-id",
         data={
-            "device": {"scope_id": "home-id", "type": "SITE", "meta": {"scope_name": "HOME"}},
+            "device": {"scope_id": "hq-id", "type": "SITE", "meta": {"scope_name": "HQ"}},
             "resources": _make_resources(("ACCESS_SWITCH", "layer2-vlan/105")),
         },
     )
@@ -87,13 +87,13 @@ class TestCentralGetCommittedConfig:
         assert result["scope_id"] == "est-id"
         assert result["scope_name"] == "EST Timezone Sites"
         assert result["type"] == "SITE_COLLECTION"
-        # scope_path goes Global → EST Timezone Sites (NOT inclusive of HOME — HOME is a descendant)
+        # scope_path goes Global → EST Timezone Sites (NOT inclusive of HQ — HQ is a descendant)
         assert result["scope_path"][0]["scope_name"] == "Global"
         assert result["scope_path"][-1]["scope_name"] == "EST Timezone Sites"
 
         committed = result["committed_resources"]
         names = sorted(r["name"] for r in committed)
-        # ONLY EST's directly-committed resources — no rollup from Global, no peek-down to HOME
+        # ONLY EST's directly-committed resources — no rollup from Global, no peek-down to HQ
         assert names == ["policies/apple-tv", "policies/voip-device", "roles/night-night"]
         # Persona attribution stays on each entry
         assert {r["persona"] for r in committed} == {"CAMPUS_AP", "ACCESS_SWITCH"}
@@ -114,7 +114,7 @@ class TestCentralGetCommittedConfig:
         from hpe_networking_mcp.platforms.central.tools.scope import central_get_committed_config
 
         mock_build.return_value = _make_tree()
-        result = await central_get_committed_config(_ctx(), scope_id="home-id", include_details=False)
+        result = await central_get_committed_config(_ctx(), scope_id="hq-id", include_details=False)
 
         for entry in result["committed_resources"]:
             assert "details" not in entry
@@ -126,7 +126,7 @@ class TestCentralGetCommittedConfig:
         from hpe_networking_mcp.platforms.central.tools.scope import central_get_committed_config
 
         mock_build.return_value = _make_tree()
-        result = await central_get_committed_config(_ctx(), scope_id="home-id", include_details=True)
+        result = await central_get_committed_config(_ctx(), scope_id="hq-id", include_details=True)
 
         entry = result["committed_resources"][0]
         # _make_resources gives every node data={"config": "value"} so include_details surfaces it

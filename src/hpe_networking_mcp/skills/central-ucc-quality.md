@@ -128,7 +128,7 @@ sites = await call_tool("central_invoke_tool",
 sites = sites.get("data", sites)            # unwrap the response envelope
 # pick the operator's site key (exact, case-insensitive), then:
 aps = await call_tool("central_invoke_tool",
-    {"name": "central_get_aps", "params": {"site_name": "HOME", "status": "Up"}})
+    {"name": "central_get_aps", "params": {"site_name": "HQ", "status": "Up"}})
 aps = aps.get("data", aps)
 ap_rows = aps.get("result", aps) if isinstance(aps, dict) else aps
 # each row carries the AP name + serial; collect (name, serial) pairs.

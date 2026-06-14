@@ -174,15 +174,15 @@ When tokenization is off, tool responses contain plaintext values — your behav
   ```python
   # ❌ Wrong — `data` is {"items": [...], ...}; this iterates the keys, then 'items'.get(...) raises.
   switches = await call_tool("central_invoke_tool", {"name": "central_get_switches", "params": {}})
-  home = [s for s in (switches.get("data") or []) if s.get("siteName") == "HOME"]
+  hq = [s for s in (switches.get("data") or []) if s.get("siteName") == "HQ"]
   ```
 
   ```python
   # ✅ Correct — reach the rows at data["items"].
   switches = await call_tool("central_invoke_tool", {"name": "central_get_switches", "params": {}})
   rows = (switches.get("data") or {}).get("items", [])
-  home = [s for s in rows if s.get("siteName") == "HOME"]
-  result = {"home_switches": home, "total": len(home)}
+  hq = [s for s in rows if s.get("siteName") == "HQ"]
+  result = {"hq_switches": hq, "total": len(hq)}
   result
   ```
 

@@ -39,7 +39,7 @@ renders once.
 ## Prerequisites
 
 - Central is configured and reachable (`health(platform="central")` if unsure).
-- The operator has named a site (e.g. "HQ", "site HOME"). If they only said
+- The operator has named a site (e.g. "HQ", "BRANCH-1"). If they only said
   "a dashboard" with no site, ask which site first.
 - Generative UI renders only in an MCP-Apps host (Claude Desktop / claude.ai /
   ChatGPT). In a non-apps client (e.g. Claude Code) `generate_prefab_ui` is a
@@ -88,7 +88,7 @@ def _unwrap(r):
     # Standard envelope -> inner data. Tolerates an already-unwrapped value.
     return r["data"] if isinstance(r, dict) and "data" in r and "ok" in r else r
 
-SITE_NAME = "HOME"  # <- the operator's site
+SITE_NAME = "HQ"  # <- replace with the operator's site name
 
 health = _unwrap(await call_tool("central_invoke_tool",
     {"name": "central_get_site_health", "params": {"site_name": SITE_NAME}}))
