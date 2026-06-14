@@ -21,7 +21,7 @@ description: |
   central-scope-audit.
 platforms: [central]
 tags: [central, dashboard, visualization, site, health, devices, alerts, monitoring, generative-ui]
-tools: [health, central_get_site_name_id_mapping, central_get_site_health, central_get_devices, central_get_alerts, generate_prefab_ui, search_prefab_components]
+tools: [health, central_invoke_tool, central_get_site_name_id_mapping, central_get_site_health, central_get_devices, central_get_alerts, generate_prefab_ui, search_prefab_components]
 ---
 
 # Aruba Central single-site operational dashboard
