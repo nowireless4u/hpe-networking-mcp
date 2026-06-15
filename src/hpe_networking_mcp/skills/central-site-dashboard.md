@@ -82,7 +82,14 @@ names (the AP names from the Central device gather). Verified mechanics:
 - **Site scope:** AND a second clause `{"ap_name": {"$in": [<site AP names>]}}`.
   ClearPass does **not** support `$or`, so this is wireless-AP correlation only
   — wired 802.1X sessions (switch NAS) are out of v1 scope (see limitation in
-  Notes). `calculate_count: true` returns the true total in `data["count"]`.
+  Notes).
+- **Count from the data, not `calculate_count`:** paginate (`limit`/`offset`)
+  the full active set and derive `active_count = len(all)` so it matches the
+  `by_role` / `by_ssid` breakdowns. Using `calculate_count` with a capped
+  `limit` would report a total larger than the rows the breakdowns actually saw
+  — a silent under-count of the breakdowns. Only the rendered session *table* is
+  display-capped (first 100, flagged by `sessions_truncated`); the count and
+  breakdowns stay complete.
 - **Role field:** use `arubauserrole` (or `tipsrole`) for the role breakdown —
   `role_name` is empty on these records.
 
@@ -154,16 +161,26 @@ alert_list = [
 # (ClearPass disabled/unreachable — call raised).
 import json
 ap_names = sorted({r["name"] for r in device_rows if r.get("type") == "ACCESS_POINT" and r.get("name")})
-nac = {"status": "no_aps", "active_count": 0, "by_role": {}, "by_ssid": {}, "sessions": []}
+nac = {"status": "no_aps", "active_count": 0, "by_role": {}, "by_ssid": {},
+       "sessions": [], "sessions_truncated": False}
 if ap_names:
     try:
         cp_filter = {"acctstoptime": {"$exists": False}, "ap_name": {"$in": ap_names}}
-        cp = _unwrap(await call_tool("clearpass_invoke_tool", {"name": "clearpass_get_sessions",
-            "params": {"filter": json.dumps(cp_filter), "limit": 500, "calculate_count": True}}))
-        sess = (cp.get("_embedded") or {}).get("items", []) if isinstance(cp, dict) else []
+        # Paginate the FULL active set so active_count + by_role + by_ssid all come
+        # from the SAME complete data — calculate_count would let the count exceed
+        # what the breakdowns saw. Only the rendered table is display-capped (below).
+        all_sess, offset, PAGE, CAP = [], 0, 500, 10000
+        while offset < CAP:
+            cp = _unwrap(await call_tool("clearpass_invoke_tool", {"name": "clearpass_get_sessions",
+                "params": {"filter": json.dumps(cp_filter), "limit": PAGE, "offset": offset}}))
+            page = (cp.get("_embedded") or {}).get("items", []) if isinstance(cp, dict) else []
+            all_sess.extend(page)
+            if len(page) < PAGE:
+                break
+            offset += PAGE
         nac["status"] = "ok"
-        nac["active_count"] = cp.get("count", len(sess)) if isinstance(cp, dict) else len(sess)
-        for s in sess:
+        nac["active_count"] = len(all_sess)                  # consistent with the breakdowns below
+        for s in all_sess:
             role = s.get("arubauserrole") or s.get("tipsrole") or "(none)"
             ssid = s.get("ssid") or "(none)"
             nac["by_role"][role] = nac["by_role"].get(role, 0) + 1
@@ -172,8 +189,9 @@ if ap_names:
             {"user": s.get("username"), "mac": s.get("mac_address"), "ap": s.get("ap_name"),
              "ssid": s.get("ssid"), "role": s.get("arubauserrole") or s.get("tipsrole"),
              "ip": s.get("framedipaddress"), "uptime_s": s.get("acctsessiontime")}
-            for s in sess[:100]
+            for s in all_sess[:100]                          # table display cap only
         ]
+        nac["sessions_truncated"] = len(all_sess) > 100      # count + breakdowns stay complete
     except Exception:
         nac["status"] = "unavailable"
 
@@ -210,6 +228,8 @@ with a broad query — don't fan out. The common set for this board:
   breakdowns, and a `data_table` of `nac["sessions"]`. Gate the whole panel on
   `status == "ok"` so it disappears (not errors) for `no_aps` / `unavailable`;
   at `ok` with 0 active it still renders (an informative "0 active clients").
+  When `nac["sessions_truncated"]`, add a line noting the table shows the first
+  100 while the count + breakdowns are complete.
 
 Build with the context-manager form (children register onto the open
 container), assign a `PrefabApp`, e.g.:
@@ -233,6 +253,8 @@ with Column(gap=4) as view:
             Metric(label="Active clients", value=nac["active_count"])
         DataTable(rows=[{"role": k, "clients": v} for k, v in nac["by_role"].items()])
         DataTable(rows=[{"ssid": k, "clients": v} for k, v in nac["by_ssid"].items()])
+        if nac["sessions_truncated"]:
+            Text(f"Showing first {len(nac['sessions'])} of {nac['active_count']} active sessions (counts above are complete).")
         DataTable(rows=nac["sessions"])
 app = PrefabApp(view=view)
 ```
