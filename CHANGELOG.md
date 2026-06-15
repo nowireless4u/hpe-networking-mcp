@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.13.6] - 2026-06-15
+
+**Patch — feat(skill): ClearPass NAC overlay on `central-site-dashboard`.** The deferred follow-up to v3.3.13.5: the single-site dashboard now adds a ClearPass panel showing the active sessions on that site's APs — active-client count, breakdown by enforcement role + SSID, and a session table — alongside the Central health/devices/clients/alerts.
+
+### Added
+- **ClearPass overlay** in the `central-site-dashboard` skill. ClearPass has no "site" concept, so sessions are correlated to the site by NAS: filter active sessions where `ap_name` ∈ the site's Central AP names. The mechanics are baked in and live-verified (134 active sessions correctly correlated on the test site's APs): active-only is `{"acctstoptime": {"$exists": false}}` (the only filter that works — `$ne`/`state`/empty-string silently return nothing), session rows live under `data["_embedded"]["items"]`, and the role breakdown uses `arubauserrole`/`tipsrole` (`role_name` is empty). The panel is **best-effort**: a `try` around the session call sets `nac["available"] = False` so a disabled/unreachable ClearPass omits the panel rather than failing the dashboard.
+
+### Known limitations (documented in the skill)
+- **Wireless only:** correlation is by `ap_name`; wired 802.1X sessions (switch NAS, matched only by `nasipaddress`) are excluded because ClearPass rejects `$or` in a single filter. Noted as a future extension.
+- Session rows carry client PII (username/MAC/IP) — rendered in the operator's own board (operator is the trust boundary; PII-tokenization middleware redacts in transit when enabled); the text walkthrough stays aggregate.
+
+### Docs
+- `docs/TOOLS.md` + `INSTRUCTIONS.md` skill entries updated (platforms now `central, clearpass`; added NAC trigger phrases).
+
 ## [3.3.13.5] - 2026-06-14
 
 **Patch — feat(skill): `central-site-dashboard` — single-site Central operational dashboard via Generative UI.** The follow-up to the v3.3.13.4 GenUI prewarm/guidance work, and the bigger perceived-latency win: a fixed runbook for "build me a dashboard for site X" so the model fetches once and renders once instead of burning ~20+ exploratory round-trips rediscovering schemas and fighting the response envelope.
