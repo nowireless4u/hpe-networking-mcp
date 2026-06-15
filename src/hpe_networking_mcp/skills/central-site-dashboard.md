@@ -89,7 +89,9 @@ names (the AP names from the Central device gather). Verified mechanics:
   `limit` would report a total larger than the rows the breakdowns actually saw
   — a silent under-count of the breakdowns. Only the rendered session *table* is
   display-capped (first 100, flagged by `sessions_truncated`); the count and
-  breakdowns stay complete.
+  breakdowns stay complete unless pagination hits the 10k runaway guard, in which
+  case set `aggregate_truncated` and surface that the count/breakdowns are partial
+  (never present a capped aggregate as complete).
 - **Role field:** use `arubauserrole` (or `tipsrole`) for the role breakdown —
   `role_name` is empty on these records.
 
@@ -162,13 +164,15 @@ alert_list = [
 import json
 ap_names = sorted({r["name"] for r in device_rows if r.get("type") == "ACCESS_POINT" and r.get("name")})
 nac = {"status": "no_aps", "active_count": 0, "by_role": {}, "by_ssid": {},
-       "sessions": [], "sessions_truncated": False}
+       "sessions": [], "sessions_truncated": False, "aggregate_truncated": False}
 if ap_names:
     try:
         cp_filter = {"acctstoptime": {"$exists": False}, "ap_name": {"$in": ap_names}}
         # Paginate the FULL active set so active_count + by_role + by_ssid all come
         # from the SAME complete data — calculate_count would let the count exceed
         # what the breakdowns saw. Only the rendered table is display-capped (below).
+        # CAP is a runaway guard; if we hit it the aggregates are themselves partial,
+        # so flag aggregate_truncated and surface it (don't present capped counts as complete).
         all_sess, offset, PAGE, CAP = [], 0, 500, 10000
         while offset < CAP:
             cp = _unwrap(await call_tool("clearpass_invoke_tool", {"name": "clearpass_get_sessions",
@@ -178,6 +182,8 @@ if ap_names:
             if len(page) < PAGE:
                 break
             offset += PAGE
+        else:
+            nac["aggregate_truncated"] = True                # hit CAP without exhausting — counts/breakdowns are partial
         nac["status"] = "ok"
         nac["active_count"] = len(all_sess)                  # consistent with the breakdowns below
         for s in all_sess:
@@ -229,7 +235,9 @@ with a broad query — don't fan out. The common set for this board:
   `status == "ok"` so it disappears (not errors) for `no_aps` / `unavailable`;
   at `ok` with 0 active it still renders (an informative "0 active clients").
   When `nac["sessions_truncated"]`, add a line noting the table shows the first
-  100 while the count + breakdowns are complete.
+  100 while the count + breakdowns are complete. When `nac["aggregate_truncated"]`
+  (a very large site that hit the 10k pagination guard), add a clear warning that
+  the count AND breakdowns are themselves partial — don't present them as complete.
 
 Build with the context-manager form (children register onto the open
 container), assign a `PrefabApp`, e.g.:
@@ -251,10 +259,13 @@ with Column(gap=4) as view:
         Heading("ClearPass — active NAC sessions on this site's APs")
         with Row(gap=4):
             Metric(label="Active clients", value=nac["active_count"])
+        if nac["aggregate_truncated"]:
+            Text(f"⚠ Capped at {nac['active_count']} sessions — count and breakdowns below are PARTIAL.")
         DataTable(rows=[{"role": k, "clients": v} for k, v in nac["by_role"].items()])
         DataTable(rows=[{"ssid": k, "clients": v} for k, v in nac["by_ssid"].items()])
         if nac["sessions_truncated"]:
-            Text(f"Showing first {len(nac['sessions'])} of {nac['active_count']} active sessions (counts above are complete).")
+            note = "counts above are partial" if nac["aggregate_truncated"] else "counts above are complete"
+            Text(f"Showing first {len(nac['sessions'])} of {nac['active_count']} active sessions ({note}).")
         DataTable(rows=nac["sessions"])
 app = PrefabApp(view=view)
 ```
