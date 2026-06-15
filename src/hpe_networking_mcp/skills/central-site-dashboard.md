@@ -147,17 +147,21 @@ alert_list = [
     for a in alert_rows
 ]
 
-# --- ClearPass NAC overlay (best-effort: skip cleanly if ClearPass is off) ---
+# --- ClearPass NAC overlay (best-effort) ---
+# nac["status"] distinguishes the three cases so the render + walkthrough don't
+# conflate them: "ok" (queried — panel renders, even with 0 sessions),
+# "no_aps" (wired-only/empty site — nothing to correlate), "unavailable"
+# (ClearPass disabled/unreachable — call raised).
 import json
 ap_names = sorted({r["name"] for r in device_rows if r.get("type") == "ACCESS_POINT" and r.get("name")})
-nac = {"available": False, "active_count": 0, "by_role": {}, "by_ssid": {}, "sessions": []}
+nac = {"status": "no_aps", "active_count": 0, "by_role": {}, "by_ssid": {}, "sessions": []}
 if ap_names:
     try:
         cp_filter = {"acctstoptime": {"$exists": False}, "ap_name": {"$in": ap_names}}
         cp = _unwrap(await call_tool("clearpass_invoke_tool", {"name": "clearpass_get_sessions",
             "params": {"filter": json.dumps(cp_filter), "limit": 500, "calculate_count": True}}))
         sess = (cp.get("_embedded") or {}).get("items", []) if isinstance(cp, dict) else []
-        nac["available"] = True
+        nac["status"] = "ok"
         nac["active_count"] = cp.get("count", len(sess)) if isinstance(cp, dict) else len(sess)
         for s in sess:
             role = s.get("arubauserrole") or s.get("tipsrole") or "(none)"
@@ -171,7 +175,7 @@ if ap_names:
             for s in sess[:100]
         ]
     except Exception:
-        nac["note"] = "ClearPass unavailable — NAC panel skipped"
+        nac["status"] = "unavailable"
 
 return {
     "site": {"name": site.get("name"), "site_id": site_id,
@@ -182,7 +186,7 @@ return {
     "alert_summary": metrics.get("alerts") or {},            # {Critical, Total}
     "devices": device_rows,
     "alerts": alert_list,
-    "nac": nac,                                              # ClearPass overlay (available=False if skipped)
+    "nac": nac,                                              # ClearPass overlay (status: ok | no_aps | unavailable)
 }
 ```
 
@@ -201,10 +205,11 @@ with a broad query — don't fan out. The common set for this board:
 - `charts` — a small bar chart of `device_summary["Details"]` (Good/Fair/Poor per device type), or use `badge` rows if a chart is overkill.
 - `badge` / `dot` — status pills (Good=green, Fair=amber, Poor/Down=red; Critical alerts=red).
 - `column` / `row` / `grid` + `heading` — layout.
-- ClearPass NAC panel (render only when `nac["available"]`): a `metric` for the
-  active-client count, two small `data_table`s for the role + SSID breakdowns,
-  and a `data_table` of `nac["sessions"]`. Gate the whole panel on
-  `nac["available"]` so it disappears (not errors) when ClearPass was skipped.
+- ClearPass NAC panel (render only when `nac["status"] == "ok"`): a `metric` for
+  the active-client count, two small `data_table`s for the role + SSID
+  breakdowns, and a `data_table` of `nac["sessions"]`. Gate the whole panel on
+  `status == "ok"` so it disappears (not errors) for `no_aps` / `unavailable`;
+  at `ok` with 0 active it still renders (an informative "0 active clients").
 
 Build with the context-manager form (children register onto the open
 container), assign a `PrefabApp`, e.g.:
@@ -222,7 +227,7 @@ with Column(gap=4) as view:
     DataTable(rows=devices)
     Heading("Active alerts")
     DataTable(rows=alerts)
-    if nac["available"]:
+    if nac["status"] == "ok":   # APs queried — render even at 0 active (informative)
         Heading("ClearPass — active NAC sessions on this site's APs")
         with Row(gap=4):
             Metric(label="Active clients", value=nac["active_count"])
@@ -240,10 +245,14 @@ is the shape, not a guaranteed API.)
 Whether or not the widget renders, write a short text summary so the answer is
 useful in every client: health score and trend, device count with any Poor/Down
 devices named, client count, and the alert count leading with criticals (name
-the critical alerts). If `nac["available"]`, add a NAC line — active clients on
-the site's APs and the dominant role/SSID; if it was skipped, say so plainly
-("ClearPass not reachable — NAC overlay omitted"). In a non-apps client this
-text IS the dashboard.
+the critical alerts). Then add a NAC line keyed on `nac["status"]`:
+- `ok` → "N active clients on the site's APs" + the dominant role/SSID (or
+  "0 active clients on the site's APs" when N is 0).
+- `no_aps` → "this site has no APs — NAC overlay not applicable" (do NOT say
+  ClearPass was unreachable).
+- `unavailable` → "ClearPass not reachable — NAC overlay omitted".
+
+In a non-apps client this text IS the dashboard.
 
 ## Unhappy paths (trace these)
 
@@ -257,11 +266,14 @@ text IS the dashboard.
   leave the operator with nothing.
 - **Stacked switches** — `aos-s`/`cx` stacks share a `stack_id`; the device
   list may show stack members. That's fine for an overview; don't dedupe.
-- **ClearPass disabled / unreachable** — the `try` around the session call sets
-  `nac["available"] = False`; the panel is omitted and the walkthrough says NAC
-  was unavailable. The Central dashboard still renders fully.
-- **No active NAC sessions / site has no APs** — `nac["active_count"]` is 0 (or
-  `ap_names` is empty so the call is skipped); render "no active sessions",
+- **ClearPass disabled / unreachable** — the `try` sets `nac["status"] =
+  "unavailable"`; the panel is omitted and the walkthrough says NAC was
+  unreachable. The Central dashboard still renders fully.
+- **Site has no APs** (wired-only / empty site) — `ap_names` is empty, the
+  ClearPass call is skipped, `nac["status"] = "no_aps"`. Distinct from
+  unreachable: the walkthrough says NAC is "not applicable", NOT "unreachable".
+- **APs exist but zero active sessions** — `nac["status"] = "ok"` with
+  `active_count == 0`; the panel renders "0 active clients" (a clean state),
   not an error.
 - **Wired sessions not shown** — correlation is by `ap_name` (wireless). Switch
   802.1X sessions (matched only by `nasipaddress`) are NOT in this panel because
