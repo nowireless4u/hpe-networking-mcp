@@ -126,3 +126,7 @@ docs/skills/
 
 # Pre-regen backup of the Central tool surface (local safety copy, never committed)
 central-tools-backup/
+
+# Tool generators are local-only — not tracked or uploaded. The GENERATED tool
+# files under platforms/*/tools/ ARE committed; the generators that emit them are not.
+scripts/generate_edgeconnect_tools.py
