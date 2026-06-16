@@ -1,27 +1,30 @@
 ---
 name: central-site-dashboard
-title: Aruba Central single-site operational dashboard — gather health/devices/clients/alerts, render a live board
+title: Aruba Central single-site operational dashboard — health/devices/clients/alerts + ClearPass NAC overlay, rendered live
 description: |
   PRIMARY TRIGGER — invoke whenever the operator asks to build, render, draw,
   show, or visualize a DASHBOARD, status board, scorecard, or overview for ONE
-  Aruba Central site. This is the fast path: a fixed data-gather runbook (3-4
-  tool calls with the exact response-envelope unwraps baked in) plus a Prefab
-  Generative-UI render — it replaces ad-hoc dashboard building, which burns
-  ~20+ exploratory round-trips rediscovering schemas and fighting the
-  {ok,status,data} envelope.
+  Aruba Central site. This is the fast path: a fixed data-gather runbook (the
+  exact response-envelope unwraps baked in) plus a Prefab Generative-UI render —
+  it replaces ad-hoc dashboard building, which burns ~20+ exploratory
+  round-trips rediscovering schemas and fighting the {ok,status,data} envelope.
 
   Match phrases include: "dashboard for site HQ", "show me a dashboard for
   <site>", "render a status board for <site>", "site overview for <site>",
   "visualize site health for <site>", "give me a scorecard for <site>",
-  "draw a dashboard of <site>'s devices and alerts".
+  "draw a dashboard of <site>'s devices and alerts", "show NAC / who's
+  connected at <site>".
 
-  Scope: ONE Central site (health score, device status by type, client counts,
-  active alerts). Central only — no Mist / ClearPass / UXI overlay in this
-  version. For voice/call-quality use central-ucc-quality; for config drift use
-  central-scope-audit.
-platforms: [central]
-tags: [central, dashboard, visualization, site, health, devices, alerts, monitoring, generative-ui]
-tools: [health, central_invoke_tool, central_get_site_name_id_mapping, central_get_site_health, central_get_devices, central_get_alerts, generate_prefab_ui, search_prefab_components]
+  Scope: ONE Central site — health score, device status by type, client counts,
+  active alerts (Central) PLUS a ClearPass NAC overlay of the active sessions on
+  that site's APs (active-client count, breakdown by enforcement role + SSID,
+  session table). The ClearPass panel is best-effort: it's skipped cleanly when
+  ClearPass is disabled/unreachable. Single-site only — for cross-platform
+  health use infrastructure-health-check; voice/call-quality use
+  central-ucc-quality; config drift use central-scope-audit.
+platforms: [central, clearpass]
+tags: [central, clearpass, dashboard, visualization, site, health, devices, alerts, nac, sessions, monitoring, generative-ui]
+tools: [health, central_invoke_tool, central_get_site_name_id_mapping, central_get_site_health, central_get_devices, central_get_alerts, clearpass_invoke_tool, clearpass_get_sessions, generate_prefab_ui, search_prefab_components]
 ---
 
 # Aruba Central single-site operational dashboard
@@ -30,17 +33,22 @@ tools: [health, central_invoke_tool, central_get_site_name_id_mapping, central_g
 
 Produce one live, interactive dashboard for a single Aruba Central site —
 overall health score, device status broken out by type, client counts, and the
-active alerts — by running a fixed 3-4 call gather and rendering the result
-through the `generate_prefab_ui` Generative-UI tool. The whole point is to skip
-the exploratory flailing: this runbook already knows the exact tools, the
-response-envelope shape, and the dashboard layout, so the model fetches once and
-renders once.
+active alerts, PLUS a ClearPass NAC overlay (the active sessions on that site's
+APs) — by running a fixed gather and rendering the result through the
+`generate_prefab_ui` Generative-UI tool. The whole point is to skip the
+exploratory flailing: this runbook already knows the exact tools, the
+response-envelope shapes, the cross-platform correlation key, and the dashboard
+layout, so the model fetches once and renders once.
 
 ## Prerequisites
 
 - Central is configured and reachable (`health(platform="central")` if unsure).
 - The operator has named a site (e.g. "HQ", "BRANCH-1"). If they only said
   "a dashboard" with no site, ask which site first.
+- ClearPass is OPTIONAL — the NAC overlay is best-effort. If ClearPass is
+  disabled or unreachable, the dashboard still renders with the Central panels
+  and notes that NAC data was unavailable. Never let a missing ClearPass fail
+  the whole dashboard.
 - Generative UI renders only in an MCP-Apps host (Claude Desktop / claude.ai /
   ChatGPT). In a non-apps client (e.g. Claude Code) `generate_prefab_ui` is a
   no-op visual — Step 3's text summary is then the deliverable, so ALWAYS emit
@@ -57,12 +65,39 @@ central_get_site_name_id_mapping  -> data is a DICT: {site_name: {site_id, healt
 central_get_site_health           -> data is a LIST of site dicts          -> take data[0]
 central_get_devices               -> data is a LIST of device dicts        -> OR the string "No devices found..." when empty
 central_get_alerts                -> data is a DICT {items, total, next_cursor} -> rows are under data["items"] (NOT "result")
+clearpass_get_sessions            -> data is a DICT {_embedded:{items:[...]}, count, _links} -> rows are under data["_embedded"]["items"]
 ```
 
 `central_get_alerts` **requires** `site_id` — resolve it first (Step 0).
 
+**ClearPass correlation (the cross-platform key):** ClearPass has no "site"
+concept, so scope its sessions to the site by the NAS. The proven correlation:
+filter active sessions where the session's `ap_name` is one of the site's AP
+names (the AP names from the Central device gather). Verified mechanics:
+
+- **Active only:** `{"acctstoptime": {"$exists": false}}` — this is the ONLY
+  filter that works for "still connected" (states `active`/`stale`). `{"state":
+  ...}`, `$ne`, and empty-string filters silently return nothing. Without this
+  you get the full ~80k-row historical accounting table.
+- **Site scope:** AND a second clause `{"ap_name": {"$in": [<site AP names>]}}`.
+  ClearPass does **not** support `$or`, so this is wireless-AP correlation only
+  — wired 802.1X sessions (switch NAS) are out of v1 scope (see limitation in
+  Notes).
+- **Count from the data, not `calculate_count`:** paginate (`limit`/`offset`)
+  the full active set and derive `active_count = len(all)` so it matches the
+  `by_role` / `by_ssid` breakdowns. Using `calculate_count` with a capped
+  `limit` would report a total larger than the rows the breakdowns actually saw
+  — a silent under-count of the breakdowns. Only the rendered session *table* is
+  display-capped (first 100, flagged by `sessions_truncated`); the count and
+  breakdowns stay complete unless pagination hits the 10k runaway guard, in which
+  case set `aggregate_truncated` and surface that the count/breakdowns are partial
+  (never present a capped aggregate as complete).
+- **Role field:** use `arubauserrole` (or `tipsrole`) for the role breakdown —
+  `role_name` is empty on these records.
+
 Sandbox rules (code mode): sequential `await` only (no `asyncio.gather`); no
-`datetime.now()` / `time.time()` / file I/O. Parse with plain builtins.
+`datetime.now()` / `time.time()` / file I/O. `import json` is available. Parse
+with plain builtins (no `collections.Counter` — group with a plain dict).
 
 ## Procedure
 
@@ -121,6 +156,51 @@ alert_list = [
     for a in alert_rows
 ]
 
+# --- ClearPass NAC overlay (best-effort) ---
+# nac["status"] distinguishes the three cases so the render + walkthrough don't
+# conflate them: "ok" (queried — panel renders, even with 0 sessions),
+# "no_aps" (wired-only/empty site — nothing to correlate), "unavailable"
+# (ClearPass disabled/unreachable — call raised).
+import json
+ap_names = sorted({r["name"] for r in device_rows if r.get("type") == "ACCESS_POINT" and r.get("name")})
+nac = {"status": "no_aps", "active_count": 0, "by_role": {}, "by_ssid": {},
+       "sessions": [], "sessions_truncated": False, "aggregate_truncated": False}
+if ap_names:
+    try:
+        cp_filter = {"acctstoptime": {"$exists": False}, "ap_name": {"$in": ap_names}}
+        # Paginate the FULL active set so active_count + by_role + by_ssid all come
+        # from the SAME complete data — calculate_count would let the count exceed
+        # what the breakdowns saw. Only the rendered table is display-capped (below).
+        # CAP is a runaway guard; if we hit it the aggregates are themselves partial,
+        # so flag aggregate_truncated and surface it (don't present capped counts as complete).
+        all_sess, offset, PAGE, CAP = [], 0, 500, 10000
+        while offset < CAP:
+            cp = _unwrap(await call_tool("clearpass_invoke_tool", {"name": "clearpass_get_sessions",
+                "params": {"filter": json.dumps(cp_filter), "limit": PAGE, "offset": offset}}))
+            page = (cp.get("_embedded") or {}).get("items", []) if isinstance(cp, dict) else []
+            all_sess.extend(page)
+            if len(page) < PAGE:
+                break
+            offset += PAGE
+        else:
+            nac["aggregate_truncated"] = True                # hit CAP without exhausting — counts/breakdowns are partial
+        nac["status"] = "ok"
+        nac["active_count"] = len(all_sess)                  # consistent with the breakdowns below
+        for s in all_sess:
+            role = s.get("arubauserrole") or s.get("tipsrole") or "(none)"
+            ssid = s.get("ssid") or "(none)"
+            nac["by_role"][role] = nac["by_role"].get(role, 0) + 1
+            nac["by_ssid"][ssid] = nac["by_ssid"].get(ssid, 0) + 1
+        nac["sessions"] = [
+            {"user": s.get("username"), "mac": s.get("mac_address"), "ap": s.get("ap_name"),
+             "ssid": s.get("ssid"), "role": s.get("arubauserrole") or s.get("tipsrole"),
+             "ip": s.get("framedipaddress"), "uptime_s": s.get("acctsessiontime")}
+            for s in all_sess[:100]                          # table display cap only
+        ]
+        nac["sessions_truncated"] = len(all_sess) > 100      # count + breakdowns stay complete
+    except Exception:
+        nac["status"] = "unavailable"
+
 return {
     "site": {"name": site.get("name"), "site_id": site_id,
              "address": site.get("address"),
@@ -130,6 +210,7 @@ return {
     "alert_summary": metrics.get("alerts") or {},            # {Critical, Total}
     "devices": device_rows,
     "alerts": alert_list,
+    "nac": nac,                                              # ClearPass overlay (status: ok | no_aps | unavailable)
 }
 ```
 
@@ -138,7 +219,7 @@ return {
 Call `generate_prefab_ui` directly (top-level tool). Pass the Step 1 return as
 the `data` argument — **each top-level key becomes a global** inside `code`
 (`site`, `device_summary`, `client_summary`, `alert_summary`, `devices`,
-`alerts`). There is NO `data` variable in the sandbox.
+`alerts`, `nac`). There is NO `data` variable in the sandbox.
 
 If you need to confirm component names, call `search_prefab_components` ONCE
 with a broad query — don't fan out. The common set for this board:
@@ -148,6 +229,15 @@ with a broad query — don't fan out. The common set for this board:
 - `charts` — a small bar chart of `device_summary["Details"]` (Good/Fair/Poor per device type), or use `badge` rows if a chart is overkill.
 - `badge` / `dot` — status pills (Good=green, Fair=amber, Poor/Down=red; Critical alerts=red).
 - `column` / `row` / `grid` + `heading` — layout.
+- ClearPass NAC panel (render only when `nac["status"] == "ok"`): a `metric` for
+  the active-client count, two small `data_table`s for the role + SSID
+  breakdowns, and a `data_table` of `nac["sessions"]`. Gate the whole panel on
+  `status == "ok"` so it disappears (not errors) for `no_aps` / `unavailable`;
+  at `ok` with 0 active it still renders (an informative "0 active clients").
+  When `nac["sessions_truncated"]`, add a line noting the table shows the first
+  100 while the count + breakdowns are complete. When `nac["aggregate_truncated"]`
+  (a very large site that hit the 10k pagination guard), add a clear warning that
+  the count AND breakdowns are themselves partial — don't present them as complete.
 
 Build with the context-manager form (children register onto the open
 container), assign a `PrefabApp`, e.g.:
@@ -165,6 +255,18 @@ with Column(gap=4) as view:
     DataTable(rows=devices)
     Heading("Active alerts")
     DataTable(rows=alerts)
+    if nac["status"] == "ok":   # APs queried — render even at 0 active (informative)
+        Heading("ClearPass — active NAC sessions on this site's APs")
+        with Row(gap=4):
+            Metric(label="Active clients", value=nac["active_count"])
+        if nac["aggregate_truncated"]:
+            Text(f"⚠ Capped at {nac['active_count']} sessions — count and breakdowns below are PARTIAL.")
+        DataTable(rows=[{"role": k, "clients": v} for k, v in nac["by_role"].items()])
+        DataTable(rows=[{"ssid": k, "clients": v} for k, v in nac["by_ssid"].items()])
+        if nac["sessions_truncated"]:
+            note = "counts above are partial" if nac["aggregate_truncated"] else "counts above are complete"
+            Text(f"Showing first {len(nac['sessions'])} of {nac['active_count']} active sessions ({note}).")
+        DataTable(rows=nac["sessions"])
 app = PrefabApp(view=view)
 ```
 
@@ -176,7 +278,14 @@ is the shape, not a guaranteed API.)
 Whether or not the widget renders, write a short text summary so the answer is
 useful in every client: health score and trend, device count with any Poor/Down
 devices named, client count, and the alert count leading with criticals (name
-the critical alerts). In a non-apps client this text IS the dashboard.
+the critical alerts). Then add a NAC line keyed on `nac["status"]`:
+- `ok` → "N active clients on the site's APs" + the dominant role/SSID (or
+  "0 active clients on the site's APs" when N is 0).
+- `no_aps` → "this site has no APs — NAC overlay not applicable" (do NOT say
+  ClearPass was unreachable).
+- `unavailable` → "ClearPass not reachable — NAC overlay omitted".
+
+In a non-apps client this text IS the dashboard.
 
 ## Unhappy paths (trace these)
 
@@ -190,12 +299,25 @@ the critical alerts). In a non-apps client this text IS the dashboard.
   leave the operator with nothing.
 - **Stacked switches** — `aos-s`/`cx` stacks share a `stack_id`; the device
   list may show stack members. That's fine for an overview; don't dedupe.
+- **ClearPass disabled / unreachable** — the `try` sets `nac["status"] =
+  "unavailable"`; the panel is omitted and the walkthrough says NAC was
+  unreachable. The Central dashboard still renders fully.
+- **Site has no APs** (wired-only / empty site) — `ap_names` is empty, the
+  ClearPass call is skipped, `nac["status"] = "no_aps"`. Distinct from
+  unreachable: the walkthrough says NAC is "not applicable", NOT "unreachable".
+- **APs exist but zero active sessions** — `nac["status"] = "ok"` with
+  `active_count == 0`; the panel renders "0 active clients" (a clean state),
+  not an error.
+- **Wired sessions not shown** — correlation is by `ap_name` (wireless). Switch
+  802.1X sessions (matched only by `nasipaddress`) are NOT in this panel because
+  ClearPass rejects `$or`; call that out if the operator expects wired clients.
 
 ## When NOT to use this skill
 
-- Multi-site / org-wide or cross-platform (Mist/ClearPass/UXI) boards — out of
-  scope for v1; gather per-platform and compose manually, or use
-  `infrastructure-health-check` for a cross-platform health snapshot.
+- Multi-site / org-wide boards, or overlays from Mist / UXI — out of scope;
+  gather per-platform and compose manually, or use `infrastructure-health-check`
+  for a cross-platform health snapshot. (Central + ClearPass single-site IS in
+  scope — that's this skill.)
 - Voice / call-quality dashboards → `central-ucc-quality`.
 - Config drift / scope assignment review → `central-scope-audit` or
   `central-scope-visualizer`.
@@ -209,3 +331,13 @@ the critical alerts). In a non-apps client this text IS the dashboard.
 - This runbook is the code-mode equivalent of pointing `generate_prefab_ui` at
   a known data shape — it exists so small/local models don't have to author the
   gather + unwrap + render from scratch.
+- ClearPass session rows carry client PII (username, MAC, framed IP). That's
+  expected in the operator's own dashboard — the operator is the trust-boundary
+  holder, and the PII-tokenization middleware redacts these in transit when
+  enabled. Do NOT paste real session values into chat outside the rendered
+  board; keep the Step 3 walkthrough aggregate (counts, roles, SSIDs).
+- ClearPass→site correlation is by `ap_name` matching the site's Central AP
+  device names. It depends on ClearPass and Central naming the same APs
+  consistently; an AP whose ClearPass `ap_name` differs from its Central
+  `name` won't be counted. Wired correlation (`nasipaddress`) is a future
+  extension blocked on ClearPass not supporting `$or` in one filter.

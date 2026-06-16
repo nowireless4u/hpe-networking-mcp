@@ -29,7 +29,15 @@ async def clearpass_get_sessions(
 
     Args:
         session_id: Session ID for single-item lookup.
-        filter: JSON filter expression (ClearPass REST API syntax).
+        filter: JSON filter expression (ClearPass REST API syntax). Two
+            live-verified quirks worth keeping in mind (do NOT "simplify"
+            these back into the obvious-but-broken forms):
+            * Active-only sessions: ``{"acctstoptime": {"$exists": false}}`` is
+              the only filter that works. ``$ne``/``state``/empty-string
+              variants silently return nothing.
+            * ClearPass rejects ``$or`` in a single filter — clauses combine as
+              AND only. (E.g. correlating by AP name OR NAS IP must be two
+              queries, not one ``$or``.)
         sort: Sort order (e.g. "+acctstarttime" or "-nasipaddress").
         offset: Pagination offset (default 0).
         limit: Max results per page (default 25).

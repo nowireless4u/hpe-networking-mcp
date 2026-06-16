@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.13.6] - 2026-06-15
+
+**Patch — feat(skill): ClearPass NAC overlay on `central-site-dashboard`.** The deferred follow-up to v3.3.13.5: the single-site dashboard now adds a ClearPass panel showing the active sessions on that site's APs — active-client count, breakdown by enforcement role + SSID, and a session table — alongside the Central health/devices/clients/alerts.
+
+### Added
+- **ClearPass overlay** in the `central-site-dashboard` skill. ClearPass has no "site" concept, so sessions are correlated to the site by NAS: filter active sessions where `ap_name` ∈ the site's Central AP names. The mechanics are baked in and live-verified (134 active sessions correctly correlated on the test site's APs): active-only is `{"acctstoptime": {"$exists": false}}` (the only filter that works — `$ne`/`state`/empty-string silently return nothing), session rows live under `data["_embedded"]["items"]`, and the role breakdown uses `arubauserrole`/`tipsrole` (`role_name` is empty). The panel is **best-effort** with a three-way `nac["status"]` (`ok` / `no_aps` / `unavailable`) so a disabled/unreachable ClearPass omits the panel rather than failing the dashboard, while a wired-only/empty site is distinguished from an outage. Active sessions are **paginated** (not `calculate_count` with a capped `limit`) so `active_count`, `by_role`, and `by_ssid` all derive from the same complete set; the rendered table is display-capped at 100 (`sessions_truncated`) and the 10k pagination guard sets `aggregate_truncated` so a very large site can never present capped counts as complete.
+
+### Security
+- **Transitive dependency CVE bumps** (lockfile only): `cryptography` 47.0.0 → 49.0.0 (GHSA-537c-gmf6-5ccf), `python-multipart` 0.0.27 → 0.0.32 (CVE-2026-53538/53539/53540), `starlette` 1.2.1 → 1.3.1 (CVE-2026-54282/54283). Clears the six advisories the CI Dependency Audit (`pip-audit`) began flagging once they were published; `pip-audit` now passes clean. No `pyproject.toml` constraint changes — all three are pulled transitively via `fastmcp`/`mcp`.
+
+### Known limitations (documented in the skill)
+- **Wireless only:** correlation is by `ap_name`; wired 802.1X sessions (switch NAS, matched only by `nasipaddress`) are excluded because ClearPass rejects `$or` in a single filter. Noted as a future extension.
+- Session rows carry client PII (username/MAC/IP) — rendered in the operator's own board (operator is the trust boundary; PII-tokenization middleware redacts in transit when enabled); the text walkthrough stays aggregate.
+
+### Docs
+- `docs/TOOLS.md` + `INSTRUCTIONS.md` skill entries updated (platforms now `central, clearpass`; added NAC trigger phrases).
+
 ## [3.3.13.5] - 2026-06-14
 
 **Patch — feat(skill): `central-site-dashboard` — single-site Central operational dashboard via Generative UI.** The follow-up to the v3.3.13.4 GenUI prewarm/guidance work, and the bigger perceived-latency win: a fixed runbook for "build me a dashboard for site X" so the model fetches once and renders once instead of burning ~20+ exploratory round-trips rediscovering schemas and fighting the response envelope.
