@@ -127,6 +127,13 @@ docs/skills/
 # Pre-regen backup of the Central tool surface (local safety copy, never committed)
 central-tools-backup/
 
-# Tool generators are local-only — not tracked or uploaded. The GENERATED tool
-# files under platforms/*/tools/ ARE committed; the generators that emit them are not.
+# Tool generators / schema distillers are local-only — not tracked or uploaded.
+# The GENERATED tool files under platforms/*/tools/ (and distilled schema JSON)
+# ARE committed; the scripts that emit them are not. Regeneration is a local
+# maintainer step at release time.
 scripts/generate_edgeconnect_tools.py
+scripts/_mist_generator.py
+scripts/regenerate_mist_tools.py
+scripts/import_central_config_tools.py
+scripts/distill_mist_schemas.py
+scripts/distill_central_config_schemas.py
