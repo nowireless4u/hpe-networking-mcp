@@ -110,7 +110,7 @@ async def edgeconnect_get_ikeless_seed_status_appliance(
 )
 async def edgeconnect_post_ikeless_config(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

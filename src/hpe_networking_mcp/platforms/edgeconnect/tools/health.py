@@ -236,7 +236,7 @@ async def edgeconnect_get_health_mos_period_summary(
 )
 async def edgeconnect_post_health(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -254,7 +254,7 @@ async def edgeconnect_post_health(
 )
 async def edgeconnect_post_health_health_threshold_config(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

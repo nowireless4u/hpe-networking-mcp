@@ -45,7 +45,7 @@ async def edgeconnect_get_exception_tunnel(
 )
 async def edgeconnect_post_exception_tunnel(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -63,7 +63,7 @@ async def edgeconnect_post_exception_tunnel(
 )
 async def edgeconnect_post_exception_tunnel_delete_by_ids(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

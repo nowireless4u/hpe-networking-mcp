@@ -61,7 +61,7 @@ async def edgeconnect_post_gms_gr_node(
             description="Unique identifier for the GRNode to update (format: '<index>.GrNode', e.g., '1.GrNode'). This parameter is required."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if grNodePk is not None:
@@ -88,7 +88,7 @@ async def edgeconnect_post_gms_gr_node_for_ne_pk(
             description="Network Element Primary Key - unique appliance identifier assigned by Orchestrator. Format: '<id>.NE' (e.g., '0.NE', '10.NE')."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:

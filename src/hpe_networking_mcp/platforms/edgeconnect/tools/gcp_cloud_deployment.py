@@ -239,7 +239,7 @@ async def edgeconnect_get_cloud_deployment_gcp_edgeconnects_log(
 )
 async def edgeconnect_post_cloud_deployment_gcp_accounts(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -257,7 +257,7 @@ async def edgeconnect_post_cloud_deployment_gcp_accounts(
 )
 async def edgeconnect_post_cloud_deployment_gcp_edgeconnects(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -281,7 +281,7 @@ async def edgeconnect_post_cloud_deployment_gcp_edgeconnects_instance(
             description="Orchestrator-assigned deployment ID. Must reference an existing GCP deployment that is not currently deploying or destroying."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:
@@ -306,7 +306,7 @@ async def edgeconnect_put_cloud_deployment_gcp_accounts(
         str,
         Field(description="The GCP project ID of the account to update. Must match an existing registered account."),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:
@@ -330,7 +330,7 @@ async def edgeconnect_put_cloud_deployment_gcp_edgeconnects(
     id: Annotated[
         float, Field(description="Orchestrator-assigned deployment ID. Must reference an existing GCP deployment.")
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:
@@ -358,7 +358,7 @@ async def edgeconnect_put_cloud_deployment_gcp_edgeconnects_instance(
         str,
         Field(description="Unique instance identifier (UUID) assigned by Orchestrator when the instance was created."),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if deploymentId is not None:

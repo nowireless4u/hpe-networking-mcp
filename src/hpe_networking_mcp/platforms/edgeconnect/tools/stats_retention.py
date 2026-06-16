@@ -145,7 +145,7 @@ async def edgeconnect_get_gms_stats_stats_retention_notification(
 )
 async def edgeconnect_post_gms_stats_stats_retention_notification(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -197,7 +197,7 @@ async def edgeconnect_put_gms_stats_non_stats_table_retention(
             description="The non-statistics table type to update retention for. Must match an existing table name in nonStatsTableRetention."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if statType is not None:
@@ -224,7 +224,7 @@ async def edgeconnect_put_gms_stats_retention(
             description="The statistics type to update retention for. Must match an existing stat type in the system."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if statType is not None:

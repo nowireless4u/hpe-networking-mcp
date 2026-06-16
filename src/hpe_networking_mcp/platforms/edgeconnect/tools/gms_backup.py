@@ -79,7 +79,7 @@ async def edgeconnect_get_gms_backup_export_template(
 )
 async def edgeconnect_post_gms_backup_config(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -97,7 +97,7 @@ async def edgeconnect_post_gms_backup_config(
 )
 async def edgeconnect_post_gms_backup_test_connection(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

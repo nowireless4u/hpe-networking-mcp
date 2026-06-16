@@ -81,7 +81,7 @@ async def edgeconnect_post_sdwanai_feedback(
         str,
         Field(description="Session authentication token used to identify the user and retrieve active chat session."),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     header_params: dict[str, Any] = {}
     if Authorization is not None:
@@ -103,7 +103,7 @@ async def edgeconnect_post_sdwanai_feedback(
 )
 async def edgeconnect_post_sdwanai_search(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -121,7 +121,7 @@ async def edgeconnect_post_sdwanai_search(
 )
 async def edgeconnect_post_sdwanai_stop(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

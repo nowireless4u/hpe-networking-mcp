@@ -23,7 +23,7 @@ from hpe_networking_mcp.platforms.edgeconnect.client import edgeconnect_request
 @tool(
     name="edgeconnect_get_idle_clear",
     description="GET /idle/clear\n\nIdleTime415\n\nClear idle time",
-    capability=Capability.READ,
+    capability=Capability.OPERATIONAL,
 )
 async def edgeconnect_get_idle_clear(
     ctx: Context,
@@ -39,7 +39,7 @@ async def edgeconnect_get_idle_clear(
 @tool(
     name="edgeconnect_get_idle_increment",
     description="GET /idle/increment\n\nIdleTime416\n\nIncrement session idle counter",
-    capability=Capability.READ,
+    capability=Capability.OPERATIONAL,
 )
 async def edgeconnect_get_idle_increment(
     ctx: Context,

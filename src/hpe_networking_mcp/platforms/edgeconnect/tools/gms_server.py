@@ -157,7 +157,7 @@ async def edgeconnect_get_gmsserver_ping(
 )
 async def edgeconnect_post_gms_operating_system_root_password_changed(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -175,7 +175,7 @@ async def edgeconnect_post_gms_operating_system_root_password_changed(
 )
 async def edgeconnect_put_gms_operating_system_disk_space_full(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

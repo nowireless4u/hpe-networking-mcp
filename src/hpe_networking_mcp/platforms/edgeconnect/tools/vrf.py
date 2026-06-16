@@ -238,7 +238,7 @@ async def edgeconnect_get_vrf_segments(
 )
 async def edgeconnect_post_vrf_config_enable(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -262,7 +262,7 @@ async def edgeconnect_post_vrf_config_maps(
             description="Source routing segment ID for which to create or update DNAT policies. Must be a non-negative integer representing an existing segment."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if srcSegmentId is not None:
@@ -289,6 +289,7 @@ async def edgeconnect_post_vrf_config_security_policies(
             description="Segment map identifier in format 'sourceSegmentId_destinationSegmentId'. Specifies the source and destination routing segments for which to create/update security policies. Both segment IDs must reference existing segments."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     comment: Annotated[
         str | None,
         Field(
@@ -296,7 +297,6 @@ async def edgeconnect_post_vrf_config_security_policies(
             description="Optional audit log comment for tracking changes. Appears in system action logs with prefix 'Audit Log Comment'.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if map is not None:
@@ -319,7 +319,7 @@ async def edgeconnect_post_vrf_config_security_policies(
 )
 async def edgeconnect_post_vrf_config_segments(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -337,7 +337,7 @@ async def edgeconnect_post_vrf_config_segments(
 )
 async def edgeconnect_post_vrf_config_snat_maps(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -361,7 +361,7 @@ async def edgeconnect_put_vrf_config_segments(
             description="Unique identifier of the routing segment to update. Must be a positive integer (1-65400). The default segment (id=0) cannot be modified via this endpoint."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:

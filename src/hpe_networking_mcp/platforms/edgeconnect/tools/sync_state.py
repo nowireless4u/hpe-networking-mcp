@@ -44,7 +44,7 @@ async def edgeconnect_get_cache_sync_state(
 )
 async def edgeconnect_put_cache_sync_state(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

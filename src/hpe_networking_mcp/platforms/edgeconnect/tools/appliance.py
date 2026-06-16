@@ -613,7 +613,7 @@ async def edgeconnect_post_appliance(
             description="Network Element Primary Key - unique appliance identifier assigned by Orchestrator. Format: '<id>.NE' (e.g., '0.NE', '10.NE')."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -640,7 +640,7 @@ async def edgeconnect_post_appliance_change_group(
             description="Target group primary key where appliances will be moved. Format: '<id>.Network' (e.g., '5.Network')."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if groupPk is not None:
@@ -673,7 +673,7 @@ async def edgeconnect_post_appliance_change_password(
             description="The username on the appliance whose password will be changed. Must match an existing user on the appliance."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -696,7 +696,7 @@ async def edgeconnect_post_appliance_change_password(
 )
 async def edgeconnect_post_appliance_denied_delete(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -720,7 +720,7 @@ async def edgeconnect_post_appliance_discovered_add(
             description="Primary key (ID) of the discovered appliance to add. Obtain this value from /appliance/discovered endpoint."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:
@@ -747,7 +747,7 @@ async def edgeconnect_post_appliance_discovered_approve(
             description="Primary key ID of the discovered appliance to approve. Use /appliance/discovered API to retrieve available IDs."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:
@@ -774,7 +774,7 @@ async def edgeconnect_post_appliance_discovered_deny(
             description="Primary key (database ID) of the discovered appliance to deny. This ID is returned from the GET /appliance/discovered endpoint."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[str | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:
@@ -832,7 +832,7 @@ async def edgeconnect_post_appliance_rest(
             description="Appliance API path relative to '/rest/json/'. Leading '/' is optional and will be stripped. May include query parameters after '?'."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -855,7 +855,7 @@ async def edgeconnect_post_appliance_rest(
 )
 async def edgeconnect_post_appliance_stats_config(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

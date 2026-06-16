@@ -244,6 +244,7 @@ async def edgeconnect_get_tunnels_physical_tunnel_ids(
 )
 async def edgeconnect_post_tunnels2_get_tunnels_between_appliances(
     ctx: Context,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     limit: Annotated[
         int | None,
         Field(
@@ -279,7 +280,6 @@ async def edgeconnect_post_tunnels2_get_tunnels_between_appliances(
             description="Regex pattern to filter tunnels by operational state. Matches against tunnel 'oper' status (e.g., 'Up', 'Down').",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if limit is not None:
@@ -308,7 +308,7 @@ async def edgeconnect_post_tunnels2_get_tunnels_between_appliances(
 )
 async def edgeconnect_post_tunnels2_tunnel_counts(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -332,6 +332,7 @@ async def edgeconnect_post_tunnels_physical_config_get_batch(
             description="Network Element Primary Key - unique appliance identifier assigned by Orchestrator. Format: '<id>.NE' (e.g., '0.NE', '10.NE')."
         ),
     ],
+    body: Annotated[list[Any], Field(description="Request body (required)")],
     cached: Annotated[
         str | None,
         Field(
@@ -339,7 +340,6 @@ async def edgeconnect_post_tunnels_physical_config_get_batch(
             description="Data source selection. When 'true', retrieves from GMS cache (faster). When 'false', queries the appliance directly (real-time data).",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -362,6 +362,7 @@ async def edgeconnect_post_tunnels_physical_config_get_batch(
 )
 async def edgeconnect_post_tunnels_physical_state(
     ctx: Context,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     state: Annotated[
         str | None,
         Field(
@@ -369,7 +370,6 @@ async def edgeconnect_post_tunnels_physical_state(
             description="Regex pattern to filter tunnels by operational state (e.g., 'Up', 'Down', 'Up - Active'). Case-insensitive matching is applied.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if state is not None:
@@ -396,6 +396,7 @@ async def edgeconnect_post_tunnels_physical_state_get_batch(
             description="Network Element Primary Key - unique appliance identifier assigned by Orchestrator. Format: '<id>.NE' (e.g., '0.NE', '10.NE')."
         ),
     ],
+    body: Annotated[list[Any], Field(description="Request body (required)")],
     cached: Annotated[
         str | None,
         Field(
@@ -403,7 +404,6 @@ async def edgeconnect_post_tunnels_physical_state_get_batch(
             description="When 'true', retrieves data from Orchestrator cache. When 'false', fetches directly from the appliance.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -432,7 +432,7 @@ async def edgeconnect_post_tunnels_physical_traceroute(
             description="Tunnel name/identifier to perform traceroute on. Must match an existing tunnel name in the configuration."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:
@@ -459,7 +459,7 @@ async def edgeconnect_post_tunnels_physical_traceroute_state(
             description="The unique identifier (name) of the physical tunnel for which to retrieve traceroute state. This corresponds to the tunnel's configured name."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:

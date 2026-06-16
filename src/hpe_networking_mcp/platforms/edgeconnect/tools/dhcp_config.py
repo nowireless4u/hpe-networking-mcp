@@ -405,7 +405,7 @@ async def edgeconnect_get_dhcp_config_utilization_threshold(
 )
 async def edgeconnect_post_dhcp_config(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -429,7 +429,7 @@ async def edgeconnect_post_dhcp_config_dhcp_settings(
             description="Network Element Primary Key - unique appliance identifier assigned by Orchestrator. Format: '<id>.NE' (e.g., '0.NE', '10.NE')."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -456,7 +456,7 @@ async def edgeconnect_post_dhcp_config_profiler(
             description="Network Element Primary Key - unique appliance identifier assigned by Orchestrator. Format: '<id>.NE' (e.g., '0.NE', '10.NE')."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -483,7 +483,7 @@ async def edgeconnect_post_dhcp_config_remote_subnets(
             description="Network Element Primary Key - unique appliance identifier assigned by Orchestrator. Format: '<id>.NE' (e.g., '0.NE', '10.NE')."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -510,7 +510,7 @@ async def edgeconnect_post_dhcp_config_reservation(
             description="Appliance identifier assigned by Orchestrator (e.g., '0.NE'). Required — returns 400 if missing or empty."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -531,6 +531,7 @@ async def edgeconnect_post_dhcp_config_reservation(
 )
 async def edgeconnect_post_dhcp_config_reservations(
     ctx: Context,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     nePk: Annotated[
         str | None,
         Field(
@@ -538,7 +539,6 @@ async def edgeconnect_post_dhcp_config_reservations(
             description="Network Element Primary Key - unique appliance identifier assigned by Orchestrator. Format: '<id>.NE' (e.g., '0.NE', '10.NE'). When omitted, results are returned for all appliances.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -559,7 +559,7 @@ async def edgeconnect_post_dhcp_config_reservations(
 )
 async def edgeconnect_post_dhcp_config_reservations_gms(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -594,7 +594,7 @@ async def edgeconnect_post_dhcp_config_reset(
 async def edgeconnect_post_dhcp_config_utilization_threshold(
     ctx: Context,
     nePk: Annotated[str, Field(description="Appliance primary key, e.g. '0.NE'. Must not be empty.")],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:

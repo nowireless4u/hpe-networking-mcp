@@ -245,6 +245,7 @@ async def edgeconnect_post_tunnels_bonded_config_get_batch(
             description="Network Element Primary Key - unique appliance identifier assigned by Orchestrator. Format: '<id>.NE' (e.g., '0.NE', '10.NE')."
         ),
     ],
+    body: Annotated[list[Any], Field(description="Request body (required)")],
     cached: Annotated[
         str | None,
         Field(
@@ -252,7 +253,6 @@ async def edgeconnect_post_tunnels_bonded_config_get_batch(
             description="Data source selector. When 'true', retrieves data from Orchestrator cache. When 'false', fetches directly from the appliance.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -275,6 +275,7 @@ async def edgeconnect_post_tunnels_bonded_config_get_batch(
 )
 async def edgeconnect_post_tunnels_bonded_state(
     ctx: Context,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     state: Annotated[
         str | None,
         Field(
@@ -282,7 +283,6 @@ async def edgeconnect_post_tunnels_bonded_state(
             description="Filter tunnels by operational state. Uses case-insensitive regex pattern matching against the 'oper' field. Common values: 'Up', 'Down', 'Active'.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if state is not None:
@@ -309,6 +309,7 @@ async def edgeconnect_post_tunnels_bonded_state_get_batch(
             description="Network Element Primary Key - unique appliance identifier assigned by Orchestrator. Format: '<id>.NE' (e.g., '0.NE', '10.NE')."
         ),
     ],
+    body: Annotated[list[Any], Field(description="Request body (required)")],
     cached: Annotated[
         str | None,
         Field(
@@ -316,7 +317,6 @@ async def edgeconnect_post_tunnels_bonded_state_get_batch(
             description="Data source flag. When 'true', retrieves from GMS cache. When 'false' or omitted, retrieves directly from the appliance.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:

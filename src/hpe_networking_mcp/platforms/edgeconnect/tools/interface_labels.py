@@ -64,6 +64,7 @@ async def edgeconnect_get_gms_interface_labels(
 )
 async def edgeconnect_post_gms_interface_labels(
     ctx: Context,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     deleteDependencies: Annotated[
         bool | None,
         Field(
@@ -71,7 +72,6 @@ async def edgeconnect_post_gms_interface_labels(
             description="Auto-remove inactive labels from dependent configurations. When false (default), fails if inactive labels are referenced elsewhere.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if deleteDependencies is not None:

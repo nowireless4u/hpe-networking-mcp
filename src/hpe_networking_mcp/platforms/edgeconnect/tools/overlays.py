@@ -144,7 +144,7 @@ async def edgeconnect_get_gms_overlays_priority(
 )
 async def edgeconnect_post_gms_overlays_config(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -162,7 +162,7 @@ async def edgeconnect_post_gms_overlays_config(
 )
 async def edgeconnect_post_gms_overlays_config_regions(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -180,7 +180,7 @@ async def edgeconnect_post_gms_overlays_config_regions(
 )
 async def edgeconnect_post_gms_overlays_priority(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -201,7 +201,7 @@ async def edgeconnect_put_gms_overlays_config(
     overlayId: Annotated[
         int, Field(description="Unique identifier of the overlay to update. Must reference an existing overlay ID.")
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if overlayId is not None:
@@ -222,7 +222,7 @@ async def edgeconnect_put_gms_overlays_config(
 )
 async def edgeconnect_put_gms_overlays_config_regions(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

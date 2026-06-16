@@ -93,7 +93,7 @@ async def edgeconnect_get_stats_collector_unsupported_appliances(
 )
 async def edgeconnect_post_stats_collector_associations_by_nepks(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -111,7 +111,7 @@ async def edgeconnect_post_stats_collector_associations_by_nepks(
 )
 async def edgeconnect_post_stats_collector_backup_config(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -129,7 +129,7 @@ async def edgeconnect_post_stats_collector_backup_config(
 )
 async def edgeconnect_post_stats_collector_backup_test_connection(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -147,7 +147,7 @@ async def edgeconnect_post_stats_collector_backup_test_connection(
 )
 async def edgeconnect_post_stats_collector_backup_use_gms_config(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

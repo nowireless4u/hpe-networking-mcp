@@ -302,7 +302,7 @@ async def edgeconnect_get_ids_update_signature_from_portal(
 )
 async def edgeconnect_post_ids_signatures_profiles(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -320,7 +320,7 @@ async def edgeconnect_post_ids_signatures_profiles(
 )
 async def edgeconnect_put_ids_auto_signature_update_state(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -338,7 +338,7 @@ async def edgeconnect_put_ids_auto_signature_update_state(
 )
 async def edgeconnect_put_ids_config(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -356,7 +356,7 @@ async def edgeconnect_put_ids_config(
 )
 async def edgeconnect_put_ids_profilestate(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -374,7 +374,7 @@ async def edgeconnect_put_ids_profilestate(
 )
 async def edgeconnect_put_ids_state(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

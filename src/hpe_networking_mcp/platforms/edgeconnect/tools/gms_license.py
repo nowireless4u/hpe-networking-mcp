@@ -118,7 +118,7 @@ async def edgeconnect_get_gms_license_validation(
 )
 async def edgeconnect_post_gms_license(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -136,7 +136,7 @@ async def edgeconnect_post_gms_license(
 )
 async def edgeconnect_post_gms_license_aas_token_validate(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -154,7 +154,7 @@ async def edgeconnect_post_gms_license_aas_token_validate(
 )
 async def edgeconnect_post_gms_license_aas_token_validate_hub(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

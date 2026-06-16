@@ -45,7 +45,7 @@ async def edgeconnect_get_pause_orchestration(
 )
 async def edgeconnect_post_pause_orchestration(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

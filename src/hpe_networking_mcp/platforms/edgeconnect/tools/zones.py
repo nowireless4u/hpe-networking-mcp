@@ -125,7 +125,7 @@ async def edgeconnect_post_zones(
             description="When true, removes deleted zones from overlays, security policies, port profiles, templates, AWS TGNM, Azure VWAN, and SSE connectors. Required parameter."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if deleteDependencies is not None:
@@ -146,7 +146,7 @@ async def edgeconnect_post_zones(
 )
 async def edgeconnect_post_zones_ee_enable(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -164,7 +164,7 @@ async def edgeconnect_post_zones_ee_enable(
 )
 async def edgeconnect_post_zones_next_id(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

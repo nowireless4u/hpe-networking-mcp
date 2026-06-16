@@ -29,7 +29,7 @@ from hpe_networking_mcp.platforms.edgeconnect.client import edgeconnect_request
 )
 async def edgeconnect_post_stats_config_appliance_business_hours(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -47,7 +47,7 @@ async def edgeconnect_post_stats_config_appliance_business_hours(
 )
 async def edgeconnect_post_stats_config_appliance_business_hours_get(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

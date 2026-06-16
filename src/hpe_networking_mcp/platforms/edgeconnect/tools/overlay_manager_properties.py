@@ -61,6 +61,7 @@ async def edgeconnect_get_overlay_manager_properties_default(
 )
 async def edgeconnect_post_overlay_manager_properties(
     ctx: Context,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     isOrchestratorSetting: Annotated[
         bool | None,
         Field(
@@ -68,7 +69,6 @@ async def edgeconnect_post_overlay_manager_properties(
             description="Skip tunnel settings validation when true. Use for orchestrator-only settings (polling, enable flags).",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if isOrchestratorSetting is not None:

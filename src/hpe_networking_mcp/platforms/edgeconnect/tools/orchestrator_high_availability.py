@@ -144,7 +144,7 @@ async def edgeconnect_get_orch_ha_reachability(
 )
 async def edgeconnect_post_orch_ha_reachability(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -168,7 +168,7 @@ async def edgeconnect_put_orch_ha_instances(
             description="Unique identifier of the orchestrator instance to update. Must match an existing registered instance."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:
@@ -189,7 +189,7 @@ async def edgeconnect_put_orch_ha_instances(
 )
 async def edgeconnect_put_orch_ha_notification_config(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

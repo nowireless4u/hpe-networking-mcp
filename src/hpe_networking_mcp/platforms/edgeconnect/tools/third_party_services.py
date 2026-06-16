@@ -262,7 +262,7 @@ async def edgeconnect_delete_third_party_services_service_orchestration_remote_e
             description="The unique identifier of the service provider. Must reference an existing service provider configuration."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if serviceId is not None:
@@ -2615,7 +2615,7 @@ async def edgeconnect_get_third_party_services_zscaler_zscaler_task_status(
 )
 async def edgeconnect_post_gms_vti_cidr(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -2639,7 +2639,7 @@ async def edgeconnect_post_third_party_services_aruba_central_sites_mapping(
             description="Network Element Primary Key - unique appliance identifier assigned by Orchestrator. Format: '<id>.NE' (e.g., '0.NE', '10.NE')."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -2660,7 +2660,7 @@ async def edgeconnect_post_third_party_services_aruba_central_sites_mapping(
 )
 async def edgeconnect_post_third_party_services_aruba_central_subscription(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -2678,7 +2678,7 @@ async def edgeconnect_post_third_party_services_aruba_central_subscription(
 )
 async def edgeconnect_post_third_party_services_awstgnm_aws_appliance_artifact_config(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -2696,7 +2696,7 @@ async def edgeconnect_post_third_party_services_awstgnm_aws_appliance_artifact_c
 )
 async def edgeconnect_post_third_party_services_awstgnm_interfaces(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -2714,7 +2714,7 @@ async def edgeconnect_post_third_party_services_awstgnm_interfaces(
 )
 async def edgeconnect_post_third_party_services_awstgnm_pause_orchestration(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -2732,7 +2732,7 @@ async def edgeconnect_post_third_party_services_awstgnm_pause_orchestration(
 )
 async def edgeconnect_post_third_party_services_awstgnm_subscription(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -2750,7 +2750,7 @@ async def edgeconnect_post_third_party_services_awstgnm_subscription(
 )
 async def edgeconnect_post_third_party_services_awstgnm_tgw_association(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -2768,7 +2768,7 @@ async def edgeconnect_post_third_party_services_awstgnm_tgw_association(
 )
 async def edgeconnect_post_third_party_services_awstgnm_tunnel_setting(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -2786,7 +2786,7 @@ async def edgeconnect_post_third_party_services_awstgnm_tunnel_setting(
 )
 async def edgeconnect_post_third_party_services_awstgnm_vti_cidr(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -2804,7 +2804,7 @@ async def edgeconnect_post_third_party_services_awstgnm_vti_cidr(
 )
 async def edgeconnect_post_third_party_services_awstgnm_zone(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -2822,7 +2822,7 @@ async def edgeconnect_post_third_party_services_awstgnm_zone(
 )
 async def edgeconnect_post_third_party_services_axis_appliance_association(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -2840,7 +2840,7 @@ async def edgeconnect_post_third_party_services_axis_appliance_association(
 )
 async def edgeconnect_post_third_party_services_axis_interfaces(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -2858,7 +2858,7 @@ async def edgeconnect_post_third_party_services_axis_interfaces(
 )
 async def edgeconnect_post_third_party_services_axis_ipsla_rule_destination(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -2876,7 +2876,7 @@ async def edgeconnect_post_third_party_services_axis_ipsla_rule_destination(
 )
 async def edgeconnect_post_third_party_services_axis_ipsla_setting(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -2894,7 +2894,7 @@ async def edgeconnect_post_third_party_services_axis_ipsla_setting(
 )
 async def edgeconnect_post_third_party_services_axis_locations(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -2912,7 +2912,7 @@ async def edgeconnect_post_third_party_services_axis_locations(
 )
 async def edgeconnect_post_third_party_services_axis_pause_orchestration(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -2930,7 +2930,7 @@ async def edgeconnect_post_third_party_services_axis_pause_orchestration(
 )
 async def edgeconnect_post_third_party_services_axis_polling_interval(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -2960,7 +2960,7 @@ async def edgeconnect_post_third_party_services_axis_pop_override(
             description="ID of the WAN interface label for which to configure the POP override. Must be a valid WAN interface label ID."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -2983,7 +2983,7 @@ async def edgeconnect_post_third_party_services_axis_pop_override(
 )
 async def edgeconnect_post_third_party_services_axis_sub_location_config(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3001,7 +3001,7 @@ async def edgeconnect_post_third_party_services_axis_sub_location_config(
 )
 async def edgeconnect_post_third_party_services_axis_subscription(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3019,7 +3019,7 @@ async def edgeconnect_post_third_party_services_axis_subscription(
 )
 async def edgeconnect_post_third_party_services_axis_tunnel_settings(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3037,7 +3037,7 @@ async def edgeconnect_post_third_party_services_axis_tunnel_settings(
 )
 async def edgeconnect_post_third_party_services_azure_interfaces(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3055,7 +3055,7 @@ async def edgeconnect_post_third_party_services_azure_interfaces(
 )
 async def edgeconnect_post_third_party_services_azure_lan_interfaces(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3073,7 +3073,7 @@ async def edgeconnect_post_third_party_services_azure_lan_interfaces(
 )
 async def edgeconnect_post_third_party_services_azure_lan_side_connectivity_appliance_association(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3091,7 +3091,7 @@ async def edgeconnect_post_third_party_services_azure_lan_side_connectivity_appl
 )
 async def edgeconnect_post_third_party_services_azure_lan_side_connectivity_azure_configuration(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3109,7 +3109,7 @@ async def edgeconnect_post_third_party_services_azure_lan_side_connectivity_azur
 )
 async def edgeconnect_post_third_party_services_azure_lan_side_connectivity_lan_side_subscription(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3127,7 +3127,7 @@ async def edgeconnect_post_third_party_services_azure_lan_side_connectivity_lan_
 )
 async def edgeconnect_post_third_party_services_azure_lan_side_connectivity_pause_orchestration(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3145,7 +3145,7 @@ async def edgeconnect_post_third_party_services_azure_lan_side_connectivity_paus
 )
 async def edgeconnect_post_third_party_services_azure_pause_orchestration(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3163,7 +3163,7 @@ async def edgeconnect_post_third_party_services_azure_pause_orchestration(
 )
 async def edgeconnect_post_third_party_services_azure_subscription(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3181,7 +3181,7 @@ async def edgeconnect_post_third_party_services_azure_subscription(
 )
 async def edgeconnect_post_third_party_services_azure_tunnel_setting(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3199,7 +3199,7 @@ async def edgeconnect_post_third_party_services_azure_tunnel_setting(
 )
 async def edgeconnect_post_third_party_services_azure_virtual_wan_association(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3217,7 +3217,7 @@ async def edgeconnect_post_third_party_services_azure_virtual_wan_association(
 )
 async def edgeconnect_post_third_party_services_clearpass_accounts(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3235,7 +3235,7 @@ async def edgeconnect_post_third_party_services_clearpass_accounts(
 )
 async def edgeconnect_post_third_party_services_clearpass_event_login(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3253,7 +3253,7 @@ async def edgeconnect_post_third_party_services_clearpass_event_login(
 )
 async def edgeconnect_post_third_party_services_clearpass_event_logout(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3271,7 +3271,7 @@ async def edgeconnect_post_third_party_services_clearpass_event_logout(
 )
 async def edgeconnect_post_third_party_services_clearpass_pause_orchestration(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3289,7 +3289,7 @@ async def edgeconnect_post_third_party_services_clearpass_pause_orchestration(
 )
 async def edgeconnect_post_third_party_services_netskope_appliance_association(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3307,7 +3307,7 @@ async def edgeconnect_post_third_party_services_netskope_appliance_association(
 )
 async def edgeconnect_post_third_party_services_netskope_interface_tunnel_setting(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3325,7 +3325,7 @@ async def edgeconnect_post_third_party_services_netskope_interface_tunnel_settin
 )
 async def edgeconnect_post_third_party_services_netskope_interfaces(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3343,7 +3343,7 @@ async def edgeconnect_post_third_party_services_netskope_interfaces(
 )
 async def edgeconnect_post_third_party_services_netskope_ipsla_rule_destination(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3361,7 +3361,7 @@ async def edgeconnect_post_third_party_services_netskope_ipsla_rule_destination(
 )
 async def edgeconnect_post_third_party_services_netskope_ipsla_setting(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3379,7 +3379,7 @@ async def edgeconnect_post_third_party_services_netskope_ipsla_setting(
 )
 async def edgeconnect_post_third_party_services_netskope_orchestrated_list(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3397,7 +3397,7 @@ async def edgeconnect_post_third_party_services_netskope_orchestrated_list(
 )
 async def edgeconnect_post_third_party_services_netskope_pause_orchestration(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3424,7 +3424,7 @@ async def edgeconnect_post_third_party_services_netskope_pop_override(
     labelId: Annotated[
         str, Field(description="WAN interface label ID. Must be a valid WAN label configured in interface labels.")
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -3447,7 +3447,7 @@ async def edgeconnect_post_third_party_services_netskope_pop_override(
 )
 async def edgeconnect_post_third_party_services_netskope_subscription(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3471,7 +3471,7 @@ async def edgeconnect_post_third_party_services_service_orchestration_bio_breako
             description="Unique identifier of the service provider. Must be a valid numeric ID referencing an existing service provider in the serviceorchestrationproviders table."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if serviceId is not None:
@@ -3498,7 +3498,7 @@ async def edgeconnect_post_third_party_services_service_orchestration_interfaces
             description="Unique identifier of the service provider. Must be a valid existing service provider ID from the service orchestration configuration."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if serviceId is not None:
@@ -3525,7 +3525,7 @@ async def edgeconnect_post_third_party_services_service_orchestration_ipsla_rule
             description="Unique identifier of the third-party service provider to update. Must reference an existing service provider configuration."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if serviceId is not None:
@@ -3552,7 +3552,7 @@ async def edgeconnect_post_third_party_services_service_orchestration_ipsla_sett
             description="Unique identifier of the service provider to update. Must reference an existing service provider."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if serviceId is not None:
@@ -3579,7 +3579,7 @@ async def edgeconnect_post_third_party_services_service_orchestration_pause_orch
             description="Unique identifier of the third-party service provider. Obtained from the /serviceProviders endpoint."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if serviceId is not None:
@@ -3606,7 +3606,7 @@ async def edgeconnect_post_third_party_services_service_orchestration_remote_end
             description="Unique numeric identifier of the service provider. Must reference an existing service provider created via POST /thirdPartyServices/serviceOrchestration/serviceProviders."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if serviceId is not None:
@@ -3633,7 +3633,7 @@ async def edgeconnect_post_third_party_services_service_orchestration_remote_end
             description="Unique identifier of the service provider. Must reference an existing service provider configuration."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if serviceId is not None:
@@ -3660,7 +3660,7 @@ async def edgeconnect_post_third_party_services_service_orchestration_remote_end
             description="Unique identifier of the service provider to add endpoints to. Must reference an existing service provider."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if serviceId is not None:
@@ -3681,6 +3681,7 @@ async def edgeconnect_post_third_party_services_service_orchestration_remote_end
 )
 async def edgeconnect_post_third_party_services_service_orchestration_service_providers(
     ctx: Context,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     serviceId: Annotated[
         str | None,
         Field(
@@ -3688,7 +3689,6 @@ async def edgeconnect_post_third_party_services_service_orchestration_service_pr
             description="Numeric ID of service provider for update operations. Omit this parameter to create a new provider.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if serviceId is not None:
@@ -3715,7 +3715,7 @@ async def edgeconnect_post_third_party_services_service_orchestration_tunnel_set
             description="Unique identifier of the Service Provider. Must be a valid integer corresponding to an existing service provider entry."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if serviceId is not None:
@@ -3736,7 +3736,7 @@ async def edgeconnect_post_third_party_services_service_orchestration_tunnel_set
 )
 async def edgeconnect_post_third_party_services_zscaler_appliance_association(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3754,7 +3754,7 @@ async def edgeconnect_post_third_party_services_zscaler_appliance_association(
 )
 async def edgeconnect_post_third_party_services_zscaler_configuration(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3772,7 +3772,7 @@ async def edgeconnect_post_third_party_services_zscaler_configuration(
 )
 async def edgeconnect_post_third_party_services_zscaler_countries(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[str, Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3790,7 +3790,7 @@ async def edgeconnect_post_third_party_services_zscaler_countries(
 )
 async def edgeconnect_post_third_party_services_zscaler_interface_tunnel_setting(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3808,7 +3808,7 @@ async def edgeconnect_post_third_party_services_zscaler_interface_tunnel_setting
 )
 async def edgeconnect_post_third_party_services_zscaler_ipsla_rule_destination(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3826,7 +3826,7 @@ async def edgeconnect_post_third_party_services_zscaler_ipsla_rule_destination(
 )
 async def edgeconnect_post_third_party_services_zscaler_ipsla_setting(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3844,7 +3844,7 @@ async def edgeconnect_post_third_party_services_zscaler_ipsla_setting(
 )
 async def edgeconnect_post_third_party_services_zscaler_location_config(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3862,7 +3862,7 @@ async def edgeconnect_post_third_party_services_zscaler_location_config(
 )
 async def edgeconnect_post_third_party_services_zscaler_orchestrate_gateway_options(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3880,7 +3880,7 @@ async def edgeconnect_post_third_party_services_zscaler_orchestrate_gateway_opti
 )
 async def edgeconnect_post_third_party_services_zscaler_orchestrated_list(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3898,7 +3898,7 @@ async def edgeconnect_post_third_party_services_zscaler_orchestrated_list(
 )
 async def edgeconnect_post_third_party_services_zscaler_pause_orchestration(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3928,7 +3928,7 @@ async def edgeconnect_post_third_party_services_zscaler_remote_endpoint_exceptio
             description="Numeric identifier for the WAN interface label. Must be a valid WAN interface label configured in the system."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -3951,7 +3951,7 @@ async def edgeconnect_post_third_party_services_zscaler_remote_endpoint_exceptio
 )
 async def edgeconnect_post_third_party_services_zscaler_subscription(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3969,7 +3969,7 @@ async def edgeconnect_post_third_party_services_zscaler_subscription(
 )
 async def edgeconnect_post_third_party_services_zscaler_timezones(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[str, Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -3991,7 +3991,7 @@ async def edgeconnect_put_third_party_services_clearpass_accounts(
         int,
         Field(description="Unique identifier of the ClearPass account to update. Must reference an existing account."),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:

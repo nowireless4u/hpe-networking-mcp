@@ -102,7 +102,7 @@ async def edgeconnect_post_gms_group(
             description="Unique identifier of the group to update in format '{number}.Network'. Only user-defined groups (3.Network onwards) can be updated."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:
@@ -123,7 +123,7 @@ async def edgeconnect_post_gms_group(
 )
 async def edgeconnect_post_gms_group_new(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

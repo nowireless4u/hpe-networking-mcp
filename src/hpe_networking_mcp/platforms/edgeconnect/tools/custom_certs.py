@@ -118,7 +118,7 @@ async def edgeconnect_get_custom_cert_settings(
 )
 async def edgeconnect_post_custom_cert(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -142,7 +142,7 @@ async def edgeconnect_post_custom_cert_appliance_connectivity(
             description="When true, tests connectivity using custom CA certificates. When false, uses the default trust store."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if custom is not None:
@@ -163,7 +163,7 @@ async def edgeconnect_post_custom_cert_appliance_connectivity(
 )
 async def edgeconnect_post_custom_cert_auto_sync(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -181,7 +181,7 @@ async def edgeconnect_post_custom_cert_auto_sync(
 )
 async def edgeconnect_post_custom_cert_enable(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -221,7 +221,7 @@ async def edgeconnect_post_custom_cert_orchestrator_connectivity(
             description="When true, uses custom CA certificates for the connectivity test. When false, uses the default system trust store."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if custom is not None:
@@ -242,7 +242,7 @@ async def edgeconnect_post_custom_cert_orchestrator_connectivity(
 )
 async def edgeconnect_post_custom_cert_verify(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

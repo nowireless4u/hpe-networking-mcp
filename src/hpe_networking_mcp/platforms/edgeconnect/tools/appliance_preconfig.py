@@ -155,7 +155,7 @@ async def edgeconnect_get_gms_appliance_preconfiguration_default(
 )
 async def edgeconnect_post_gms_appliance_preconfiguration(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -239,7 +239,7 @@ async def edgeconnect_post_gms_appliance_preconfiguration_apply_discovered(
 )
 async def edgeconnect_post_gms_appliance_preconfiguration_find_match(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -257,7 +257,7 @@ async def edgeconnect_post_gms_appliance_preconfiguration_find_match(
 )
 async def edgeconnect_post_gms_appliance_preconfiguration_validate(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -281,7 +281,7 @@ async def edgeconnect_put_gms_appliance_preconfiguration(
             description="Unique identifier of the preconfiguration to update. Must reference an existing preconfiguration."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if preconfigId is not None:

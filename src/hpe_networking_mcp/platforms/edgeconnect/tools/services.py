@@ -60,7 +60,7 @@ async def edgeconnect_get_gms_third_party_services(
 )
 async def edgeconnect_post_gms_services(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

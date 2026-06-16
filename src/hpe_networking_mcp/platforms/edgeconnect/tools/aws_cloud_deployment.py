@@ -206,7 +206,7 @@ async def edgeconnect_get_cloud_deployment_aws_edgeconnects_log(
 )
 async def edgeconnect_post_cloud_deployment_aws_accounts(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -224,7 +224,7 @@ async def edgeconnect_post_cloud_deployment_aws_accounts(
 )
 async def edgeconnect_post_cloud_deployment_aws_edgeconnects(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -248,7 +248,7 @@ async def edgeconnect_post_cloud_deployment_aws_edgeconnects_instance(
             description="Orchestrator-assigned deployment ID. Obtain from GET /cloudDeployment/aws/edgeconnects or POST response."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:
@@ -275,7 +275,7 @@ async def edgeconnect_put_cloud_deployment_aws_accounts(
             description="UUID of the AWS account to update. Obtained from GET /cloudDeployment/aws/accounts or POST response."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:
@@ -302,7 +302,7 @@ async def edgeconnect_put_cloud_deployment_aws_edgeconnects(
             description="Orchestrator-assigned deployment ID. Obtain from GET /cloudDeployment/aws/edgeconnects or POST response."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:

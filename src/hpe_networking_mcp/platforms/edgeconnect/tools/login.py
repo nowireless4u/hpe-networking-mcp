@@ -82,7 +82,7 @@ async def edgeconnect_get_authentication_login_status(
 @tool(
     name="edgeconnect_get_authentication_logout",
     description="GET /authentication/logout\n\nauthentication127\n\nLogout and terminate the current HTTP session",
-    capability=Capability.READ,
+    capability=Capability.OPERATIONAL,
 )
 async def edgeconnect_get_authentication_logout(
     ctx: Context,
@@ -211,7 +211,7 @@ async def edgeconnect_get_authentication_saml2_logout(
 )
 async def edgeconnect_post_authentication_login(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -229,7 +229,7 @@ async def edgeconnect_post_authentication_login(
 )
 async def edgeconnect_post_authentication_login_token(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -247,7 +247,7 @@ async def edgeconnect_post_authentication_login_token(
 )
 async def edgeconnect_post_authentication_password_validation(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -265,7 +265,7 @@ async def edgeconnect_post_authentication_password_validation(
 )
 async def edgeconnect_post_authentication_saml2_consume(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -283,7 +283,7 @@ async def edgeconnect_post_authentication_saml2_consume(
 )
 async def edgeconnect_post_authentication_user_auth_type(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -301,7 +301,7 @@ async def edgeconnect_post_authentication_user_auth_type(
 )
 async def edgeconnect_post_authentication_user_auth_type_token(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

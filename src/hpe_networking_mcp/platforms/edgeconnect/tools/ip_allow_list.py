@@ -77,7 +77,7 @@ async def edgeconnect_get_gms_ip_allow_list_use_socket_ip(
 )
 async def edgeconnect_post_gms_ip_allow_list_external(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -95,7 +95,7 @@ async def edgeconnect_post_gms_ip_allow_list_external(
 )
 async def edgeconnect_post_gms_ip_allow_list_use_socket_ip(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

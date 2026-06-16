@@ -278,7 +278,7 @@ async def edgeconnect_get_gms_remote_auth_type(
 )
 async def edgeconnect_post_gms_remote_auth_jwt(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -296,7 +296,7 @@ async def edgeconnect_post_gms_remote_auth_jwt(
 )
 async def edgeconnect_post_gms_remote_auth_oauth(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -314,7 +314,7 @@ async def edgeconnect_post_gms_remote_auth_oauth(
 )
 async def edgeconnect_post_gms_remote_auth_radius(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -332,7 +332,7 @@ async def edgeconnect_post_gms_remote_auth_radius(
 )
 async def edgeconnect_post_gms_remote_auth_saml(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -350,7 +350,7 @@ async def edgeconnect_post_gms_remote_auth_saml(
 )
 async def edgeconnect_post_gms_remote_auth_tacacs(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -371,7 +371,7 @@ async def edgeconnect_put_gms_remote_auth_jwt(
     id: Annotated[
         int, Field(description="Unique identifier of the JWT configuration to update in the gmsConfig table.")
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:
@@ -398,7 +398,7 @@ async def edgeconnect_put_gms_remote_auth_oauth(
             description="Unique identifier of the OAuth server configuration to update. Must reference an existing OAuth server."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:
@@ -425,7 +425,7 @@ async def edgeconnect_put_gms_remote_auth_saml(
             description="Unique identifier of the SAML server configuration to update. Must reference an existing SAML server."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:

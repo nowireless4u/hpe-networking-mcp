@@ -79,7 +79,7 @@ async def edgeconnect_get_security_ddos_protection_profiles_appliance(
 )
 async def edgeconnect_post_security_advanced_settings(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

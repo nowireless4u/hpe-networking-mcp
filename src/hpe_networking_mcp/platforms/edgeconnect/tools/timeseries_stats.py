@@ -2130,6 +2130,7 @@ async def edgeconnect_post_stats3_timeseries_appliance(
             description="Traffic category filter. optimized_traffic (1): WAN optimized traffic. pass_through_shaped (2): Shaped but not optimized. pass_through_unshaped (3): Unshaped passthrough. all_traffic (4): Combined total."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     startTime: Annotated[
         int | None,
         Field(
@@ -2172,7 +2173,6 @@ async def edgeconnect_post_stats3_timeseries_appliance(
             description="Retrieve last N minutes of data. When provided, calculates endTime as current time and startTime as (current - latest*60). Overrides startTime/endTime parameters.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -2229,6 +2229,7 @@ async def edgeconnect_post_stats3_timeseries_dscp(
     dscp: Annotated[
         int, Field(description="DSCP (Differentiated Services Code Point) value for QoS filtering. Valid range: 0-63.")
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     limit: Annotated[
         int | None,
         Field(
@@ -2252,7 +2253,6 @@ async def edgeconnect_post_stats3_timeseries_dscp(
             description="Retrieve stats for last N minutes from current time. When provided, overrides startTime/endTime.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -2289,7 +2289,7 @@ async def edgeconnect_post_stats3_timeseries_dscp(
 )
 async def edgeconnect_post_stats_timeseries_addos_max_timestamp(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -2313,7 +2313,7 @@ async def edgeconnect_post_stats_timeseries_addos_segment_flow_utilization(
             description="UNIX epoch timestamp in milliseconds indicating the starting time boundary for data retrieval. Must be a valid positive integer."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if timestamp is not None:
@@ -2340,7 +2340,7 @@ async def edgeconnect_post_stats_timeseries_addos_segment_zone_flow_utilization(
             description="EPOCH timestamp (signed 64-bit) in seconds indicating the time boundary for data retrieval. Use the value from /stats/timeseries/addos/maxTimestamp API to get the latest available timestamp."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if timestamp is not None:
@@ -2379,7 +2379,7 @@ async def edgeconnect_post_stats_timeseries_addos_segment_zone_protocol(
             description="Classification type for grouping baseline data. Specifies whether to group by zone or source."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if timestamp is not None:
@@ -2410,6 +2410,7 @@ async def edgeconnect_post_stats_timeseries_addos_segment_zone_view(
             description="UNIX epoch timestamp (seconds) for the baseline data snapshot. Use the /stats/timeseries/addos/maxTimestamp endpoint to get the latest available timestamp."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     zoneId: Annotated[
         int | None,
         Field(
@@ -2424,7 +2425,6 @@ async def edgeconnect_post_stats_timeseries_addos_segment_zone_view(
             description="Segment identifier for filtering results. If not provided or set to -1, returns data for all segments.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if timestamp is not None:
@@ -2455,7 +2455,7 @@ async def edgeconnect_post_stats_timeseries_addos_total_flow_utilization(
             description="EPOCH timestamp (seconds) indicating the time boundary for querying baseline data. Must be a valid timestamp from available hourly baseline records."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if timestamp is not None:
@@ -2491,7 +2491,7 @@ async def edgeconnect_post_stats_timeseries_addos_trends_baseline_all_zone(
     protocol: Annotated[int, Field(description="Network protocol filter for ADDoS statistics.")],
     metric: Annotated[int, Field(description="Flow metric type for ADDoS baseline measurement.")],
     classification: Annotated[int, Field(description="Classification type for grouping ADDoS baseline data.")],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -2556,7 +2556,7 @@ async def edgeconnect_post_stats_timeseries_addos_trends_baseline_segment(
             description="Classification type for grouping statistics. Valid values: 1 (Zone-based classification), 2 (Source-based classification)."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -2617,7 +2617,7 @@ async def edgeconnect_post_stats_timeseries_addos_trends_baseline_segment_zone(
             description="Classification type for baseline grouping. Values: 1=Zone-based classification, 2=Source-based classification."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -2656,7 +2656,7 @@ async def edgeconnect_post_stats_timeseries_addos_trends_baseline_zone(
     protocol: Annotated[int, Field(description="Network protocol filter for baseline data.")],
     metric: Annotated[int, Field(description="Flow metric type to retrieve for baseline analysis.")],
     classification: Annotated[int, Field(description="Classification type for grouping baseline data.")],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -2705,6 +2705,7 @@ async def edgeconnect_post_stats_timeseries_apdex(
             description="When true, returns stats for all probes/paths. When false, returns only best path stats (filtered by current_best_path=true)."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     limit: Annotated[
         int | None,
         Field(
@@ -2715,7 +2716,6 @@ async def edgeconnect_post_stats_timeseries_apdex(
     format: Annotated[
         str | None, Field(default=None, description="Response format option (reserved for future use).")
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -2756,6 +2756,7 @@ async def edgeconnect_post_stats_timeseries_appliance(
             description="Traffic category filter. OPTIMIZED_TRAFFIC(1)=WAN optimized, PASS_THROUGH_SHAPED(2)=shaped but not optimized, PASS_THROUGH_UNSHAPED(3)=neither, ALL_TRAFFIC(4)=combined."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     startTime: Annotated[
         int | None,
         Field(
@@ -2797,7 +2798,6 @@ async def edgeconnect_post_stats_timeseries_appliance(
             description="Retrieve stats for most recent N minutes. When provided, overrides startTime/endTime: endTime=now, startTime=now-(latest*60).",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -2838,6 +2838,7 @@ async def edgeconnect_post_stats_timeseries_application2(
             description="Application name to filter statistics. Required, cannot be empty. Examples: HTTP, DNS, SSL, SMTP."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     startTime: Annotated[
         int | None,
         Field(
@@ -2879,7 +2880,6 @@ async def edgeconnect_post_stats_timeseries_application2(
             default=None, description="Maximum number of data points to return. Useful for limiting large result sets."
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if application is not None:
@@ -2930,6 +2930,7 @@ async def edgeconnect_post_stats_timeseries_application_performance(
             description="Data aggregation granularity. Determines the time interval for data points. 'minute' returns raw minute-level data, 'hour' and 'day' return aggregated data."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     tunnelName: Annotated[
         str | None,
         Field(
@@ -2948,7 +2949,6 @@ async def edgeconnect_post_stats_timeseries_application_performance(
         str | None,
         Field(default=None, description="Response format. Currently only JSON is supported for this endpoint."),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if tunnelName is not None:
@@ -3019,6 +3019,7 @@ async def edgeconnect_post_stats_timeseries_ddos_peak_and_peak_drop_rate(
             description="Classification filter for stats grouping. 1=Zone-based statistics, 2=Source-based statistics."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     limit: Annotated[
         int | None,
         Field(
@@ -3026,7 +3027,6 @@ async def edgeconnect_post_stats_timeseries_ddos_peak_and_peak_drop_rate(
             description="Maximum number of records to return per statId. Limits the result set size for each statistics category.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3084,6 +3084,7 @@ async def edgeconnect_post_stats_timeseries_ddos_src_ip_sample10(
     zoneId: Annotated[int, Field(description="Zone identifier used to filter statistics by security zone.")],
     metric: Annotated[int, Field(description="Flow metric type for filtering DDoS statistics.")],
     statIds: Annotated[str, Field(description="Statistics identifier for data filtering. Valid values are 8 or 9.")],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     limit: Annotated[
         int | None,
         Field(
@@ -3091,7 +3092,6 @@ async def edgeconnect_post_stats_timeseries_ddos_src_ip_sample10(
             description="Maximum number of rows to return. Default is 10000. For minute granularity with time ranges exceeding 43200 seconds (12 hours), the limit is automatically set to 43200.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3148,6 +3148,7 @@ async def edgeconnect_post_stats_timeseries_ddos_top_talkers(
             description="Comma-separated stat IDs to filter results. Flow Count IDs: 10, 11, 12, 15. Violation Count IDs: 13, 14."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     limit: Annotated[
         int | None,
         Field(
@@ -3155,7 +3156,6 @@ async def edgeconnect_post_stats_timeseries_ddos_top_talkers(
             description="Maximum number of top talker records to return. When omitted, returns all matching records.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3222,6 +3222,7 @@ async def edgeconnect_post_stats_timeseries_ddos_total_stats(
             description="Classification filter for data grouping. 1=Zone-based classification, 2=Source-based classification."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     limit: Annotated[
         int | None,
         Field(
@@ -3229,7 +3230,6 @@ async def edgeconnect_post_stats_timeseries_ddos_total_stats(
             description="Maximum number of data rows to return. Optional parameter for pagination. When omitted, returns all matching records.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3296,6 +3296,7 @@ async def edgeconnect_post_stats_timeseries_dscp(
             description="DSCP (Differentiated Services Code Point) value for QoS filtering. Range: 0-63. Common values: 0=Best Effort, 46=EF (Expedited Forwarding)."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     limit: Annotated[
         int | None,
         Field(default=None, description="Maximum records to return. Used for pagination or limiting response size."),
@@ -3321,7 +3322,6 @@ async def edgeconnect_post_stats_timeseries_dscp(
             description="Retrieve data for last N minutes from current time. When provided, overrides startTime and endTime (endTime=now, startTime=now-latest*60).",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3376,6 +3376,7 @@ async def edgeconnect_post_stats_timeseries_flow(
             description="TCP acceleration status filter. Case-insensitive. TCP_ACCELERATED=1, TCP_NOT_ACCELERATED=2, NON_TCP=3."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     startTime: Annotated[
         int | None,
         Field(
@@ -3415,7 +3416,6 @@ async def edgeconnect_post_stats_timeseries_flow(
             description="Retrieve stats for last N minutes from current time. When provided, automatically calculates: endTime=now, startTime=now-(latest*60). Overrides startTime/endTime parameters.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3464,7 +3464,7 @@ async def edgeconnect_post_stats_timeseries_memory(
             description="End of the time range in EPOCH seconds (Unix timestamp). Must be non-negative and greater than startTime."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3509,6 +3509,7 @@ async def edgeconnect_post_stats_timeseries_secure_web_services_allowed_denied_c
             description="Filter by traffic disposition. Set to true for allowed categories, false for denied categories."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     top: Annotated[
         int | None,
         Field(
@@ -3516,7 +3517,6 @@ async def edgeconnect_post_stats_timeseries_secure_web_services_allowed_denied_c
             description="Maximum number of category results to return. Limits the top N categories by traffic volume.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3569,6 +3569,7 @@ async def edgeconnect_post_stats_timeseries_secure_web_services_allowed_denied_c
             description="Filter for traffic disposition. Set to true for allowed URLs, false for denied/blocked URLs."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     top: Annotated[
         int | None,
         Field(
@@ -3576,7 +3577,6 @@ async def edgeconnect_post_stats_timeseries_secure_web_services_allowed_denied_c
             description="Maximum number of URL results to return. Limits the response size for top talkers analysis.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3627,6 +3627,7 @@ async def edgeconnect_post_stats_timeseries_secure_web_services_allowed_denied_u
         bool,
         Field(description="Filter for URL access status. Set to true to retrieve allowed URLs, false for denied URLs."),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     top: Annotated[
         int | None,
         Field(
@@ -3634,7 +3635,6 @@ async def edgeconnect_post_stats_timeseries_secure_web_services_allowed_denied_u
             description="Maximum number of results to return. Defaults to 50 if not specified or if value exceeds 50.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3683,6 +3683,7 @@ async def edgeconnect_post_stats_timeseries_secure_web_services_allowed_denied_u
         bool,
         Field(description="Filter for URL access status. Set to true to retrieve allowed URLs, false for denied URLs."),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     top: Annotated[
         int | None,
         Field(
@@ -3690,7 +3691,6 @@ async def edgeconnect_post_stats_timeseries_secure_web_services_allowed_denied_u
             description="Maximum number of results to return. Limits the result set size for performance optimization.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3737,7 +3737,7 @@ async def edgeconnect_post_stats_timeseries_secure_web_services_config_stats(
             description="Data aggregation granularity. Determines how data is grouped: 'minute' for raw data, 'hour' for hourly aggregation, 'day' for daily aggregation."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3777,11 +3777,11 @@ async def edgeconnect_post_stats_timeseries_secure_web_services_src_ip(
     granularity: Annotated[
         str, Field(description="Data aggregation granularity specifying the time interval for statistics grouping.")
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     top: Annotated[
         int | None,
         Field(default=None, description="Maximum number of source IPs to return. Default and maximum value is 50."),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3826,6 +3826,7 @@ async def edgeconnect_post_stats_timeseries_secure_web_services_src_ip_url(
             description="Data aggregation interval determining the time granularity of statistics. Valid values: 'minute', 'hour', 'day', 'month' (case-insensitive)."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     top: Annotated[
         int | None,
         Field(
@@ -3833,7 +3834,6 @@ async def edgeconnect_post_stats_timeseries_secure_web_services_src_ip_url(
             description="Maximum number of results to return. If not provided or exceeds 50, defaults to 50.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3872,6 +3872,7 @@ async def edgeconnect_post_stats_timeseries_shaper(
             description="Time interval for data aggregation. Valid values: minute, hour, day, month. The value is case-insensitive."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     trafficClass: Annotated[
         int | None,
         Field(
@@ -3907,7 +3908,6 @@ async def edgeconnect_post_stats_timeseries_shaper(
             description="Maximum number of data points to return per appliance. Default is 10000 if not specified.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3954,7 +3954,7 @@ async def edgeconnect_post_stats_timeseries_syn_cookie_ip_reputation(
             description="End time boundary as Unix epoch timestamp in seconds. Must be >= 0 and greater than startTime."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3993,6 +3993,7 @@ async def edgeconnect_post_stats_timeseries_traffic_class(
             description="QoS traffic class priority level (1-10). Class 1 is highest priority, class 10 is lowest. Must be between 1 and 10 inclusive."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     startTime: Annotated[
         int | None,
         Field(
@@ -4034,7 +4035,6 @@ async def edgeconnect_post_stats_timeseries_traffic_class(
             description="Output format. Set to 'CSV' for downloadable spreadsheet file (application/vnd.ms-excel). Default returns JSON.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if granularity is not None:
@@ -4079,6 +4079,7 @@ async def edgeconnect_post_stats_timeseries_user2(
         int, Field(description="End of the time range in Unix epoch seconds. Must be greater than startTime.")
     ],
     user: Annotated[str, Field(description="Username to filter statistics. Required parameter that cannot be empty.")],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     latest: Annotated[
         int | None,
         Field(
@@ -4104,7 +4105,6 @@ async def edgeconnect_post_stats_timeseries_user2(
             description="Maximum number of records to return. Capped at server-configured LIMIT_OF_ROW. Default applies server maximum if not specified.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:

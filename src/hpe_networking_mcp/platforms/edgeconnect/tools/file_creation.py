@@ -41,7 +41,7 @@ async def edgeconnect_post_file_creation_fine_uploader(
             description="Name of the file being uploaded. Must match pattern: alphanumeric, underscore, hyphen, dot followed by allowed extensions (.csv, .jpg, .jpeg, .gif, .png, .gip, .zip, .log, .gz, .img)."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if type is not None:

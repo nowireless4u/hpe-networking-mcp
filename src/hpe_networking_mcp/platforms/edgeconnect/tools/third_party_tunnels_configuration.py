@@ -205,6 +205,7 @@ async def edgeconnect_post_tunnels_pass_through_config_get_batch(
             description="Network Element Primary Key - unique appliance identifier assigned by Orchestrator. Format: '<id>.NE' (e.g., '0.NE', '10.NE')."
         ),
     ],
+    body: Annotated[list[Any], Field(description="Request body (required)")],
     cached: Annotated[
         str | None,
         Field(
@@ -212,7 +213,6 @@ async def edgeconnect_post_tunnels_pass_through_config_get_batch(
             description="Data retrieval mode. When 'true', retrieves data from Orchestrator cache. When 'false', fetches directly from the appliance.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -241,6 +241,7 @@ async def edgeconnect_post_tunnels_pass_through_state_get_batch(
             description="Network Element Primary Key - unique appliance identifier assigned by Orchestrator. Format: '<id>.NE' (e.g., '0.NE', '10.NE')."
         ),
     ],
+    body: Annotated[list[Any], Field(description="Request body (required)")],
     cached: Annotated[
         str | None,
         Field(
@@ -248,7 +249,6 @@ async def edgeconnect_post_tunnels_pass_through_state_get_batch(
             description="Controls data source: 'true' retrieves from Orchestrator cache (faster), 'false' fetches real-time data from the appliance (slower but current).",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -271,6 +271,7 @@ async def edgeconnect_post_tunnels_pass_through_state_get_batch(
 )
 async def edgeconnect_post_tunnels_third_party_state(
     ctx: Context,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     state: Annotated[
         str | None,
         Field(
@@ -278,7 +279,6 @@ async def edgeconnect_post_tunnels_third_party_state(
             description="Regular expression pattern to filter tunnels by operational state. Matches against the 'oper' field using case-insensitive partial matching.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if state is not None:

@@ -1507,6 +1507,7 @@ async def edgeconnect_get_stats_aggregate_tunnel(
 )
 async def edgeconnect_post_stats2_aggregate_apdex(
     ctx: Context,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     timestamp: Annotated[
         int | None,
         Field(
@@ -1514,7 +1515,6 @@ async def edgeconnect_post_stats2_aggregate_apdex(
             description="EPOCH timestamp (seconds) defining the minimum time boundary for data retrieval. Only records with timestamp >= this value are returned.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if timestamp is not None:
@@ -1553,6 +1553,7 @@ async def edgeconnect_post_stats2_aggregate_application(
             description="Data aggregation granularity. Determines which statistics table is queried (minute, hourly, or daily)."
         ),
     ],
+    body: Annotated[list[Any], Field(description="Request body (required)")],
     application: Annotated[
         str | None,
         Field(
@@ -1588,7 +1589,6 @@ async def edgeconnect_post_stats2_aggregate_application(
             description="Limit results to top N applications by the specified metric. Requires 'metric' parameter. Returns top+1 results.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -1635,6 +1635,7 @@ async def edgeconnect_post_stats2_aggregate_application2(
             description="End time boundary for the data query as a Unix EPOCH timestamp in milliseconds. Must be greater than startTime."
         ),
     ],
+    body: Annotated[list[Any], Field(description="Request body (required)")],
     application: Annotated[
         str | None,
         Field(
@@ -1656,7 +1657,6 @@ async def edgeconnect_post_stats2_aggregate_application2(
             description="When true, if no data is found in the specified time range, automatically fetches data from one hour prior. Useful for near-real-time dashboards.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -1698,6 +1698,7 @@ async def edgeconnect_post_stats2_aggregate_application_performance(
             description="Time granularity for data aggregation. Determines how statistics are bucketed and averaged."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     limit: Annotated[
         int | None,
         Field(
@@ -1705,7 +1706,6 @@ async def edgeconnect_post_stats2_aggregate_application_performance(
             description="Maximum number of results to return. When not specified, all matching records are returned.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -1744,6 +1744,7 @@ async def edgeconnect_post_stats2_aggregate_dns(
             description="End time boundary for data range in seconds since EPOCH (Unix timestamp). Must be greater than startTime."
         ),
     ],
+    body: Annotated[list[Any], Field(description="Request body (required)")],
     isSource: Annotated[
         int | None,
         Field(
@@ -1790,7 +1791,6 @@ async def edgeconnect_post_stats2_aggregate_dns(
             description="Number of sub-domain levels to include in grouping (1-4). Default is 2. Controls domain hierarchy depth in results.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -1845,6 +1845,7 @@ async def edgeconnect_post_stats2_aggregate_interface_overlay(
             description="Data granularity level determining which statistics table to query. Affects data resolution and aggregation."
         ),
     ],
+    body: Annotated[list[Any], Field(description="Request body (required)")],
     overlay: Annotated[
         str | None,
         Field(
@@ -1852,7 +1853,6 @@ async def edgeconnect_post_stats2_aggregate_interface_overlay(
             description="Filter by overlay ID. Use '0' for physical tunnels only, omit for all bonded and physical tunnels, or specify an overlay ID for specific bonded tunnels.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -1892,6 +1892,7 @@ async def edgeconnect_post_stats2_aggregate_ipsla(
         ),
     ],
     granularity: Annotated[str, Field(description="Time interval granularity for data aggregation. Case-insensitive.")],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     configKey: Annotated[
         str | None,
         Field(
@@ -1912,7 +1913,6 @@ async def edgeconnect_post_stats2_aggregate_ipsla(
             description="Maximum number of data rows to return. Defaults to 10000 if not specified or if the value exceeds 10000.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -1956,6 +1956,7 @@ async def edgeconnect_post_stats2_aggregate_mos(
     granularity: Annotated[
         str, Field(description="Time granularity for data aggregation. Determines the rollup interval for statistics.")
     ],
+    body: Annotated[list[Any], Field(description="Request body (required)")],
     top: Annotated[
         int | None,
         Field(
@@ -1977,7 +1978,6 @@ async def edgeconnect_post_stats2_aggregate_mos(
             description="Groups results by network element (appliance). Default is true, adding an extra level of nesting by appliance nePk in the response.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -2026,7 +2026,7 @@ async def edgeconnect_post_stats2_aggregate_overlays_bandwidth(
             description="Time interval granularity for data aggregation. Determines the resolution of returned statistics data points."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -2058,6 +2058,7 @@ async def edgeconnect_post_stats2_aggregate_ports(
     endTime: Annotated[
         int, Field(description="End of time range as Unix epoch seconds (exclusive). Must be greater than startTime.")
     ],
+    body: Annotated[list[Any], Field(description="Request body (required)")],
     isSource: Annotated[
         int | None,
         Field(
@@ -2103,7 +2104,6 @@ async def edgeconnect_post_stats2_aggregate_ports(
             description="When true and no data found in specified time range, automatically retries with time range shifted back by one hour.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -2152,6 +2152,7 @@ async def edgeconnect_post_stats2_aggregate_shaper(
             description="Data aggregation granularity determining which stats table to query (minute, hour, day, or month)."
         ),
     ],
+    body: Annotated[list[Any], Field(description="Request body (required)")],
     direction: Annotated[
         int | None,
         Field(
@@ -2166,7 +2167,6 @@ async def edgeconnect_post_stats2_aggregate_shaper(
             description="Maximum number of rows to return, ordered by totalBytes descending. If omitted, returns all results.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -2205,6 +2205,7 @@ async def edgeconnect_post_stats2_aggregate_top_talkers(
             description="End of the time range in seconds since UNIX epoch. Must be >= 0 and greater than startTime."
         ),
     ],
+    body: Annotated[list[Any], Field(description="Request body (required)")],
     top: Annotated[
         int | None,
         Field(
@@ -2226,7 +2227,6 @@ async def edgeconnect_post_stats2_aggregate_top_talkers(
             description="When true and no data found in the specified range, automatically queries one hour earlier (startTime-3600, endTime-3600).",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -2270,6 +2270,7 @@ async def edgeconnect_post_stats2_aggregate_tunnel(
     granularity: Annotated[
         str, Field(description="Time granularity for data aggregation. Determines which statistics table is queried.")
     ],
+    body: Annotated[list[Any], Field(description="Request body (required)")],
     metric: Annotated[
         str | None,
         Field(
@@ -2298,7 +2299,6 @@ async def edgeconnect_post_stats2_aggregate_tunnel(
             description="Group statistics by appliance (network element). When true, response includes nePk in each stats object. Default: true.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -2343,6 +2343,7 @@ async def edgeconnect_post_stats2_aggregate_user2(
             description="Unix epoch timestamp (seconds) for the end of the time range. Must be greater than startTime."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     user2: Annotated[
         str | None,
         Field(
@@ -2363,7 +2364,6 @@ async def edgeconnect_post_stats2_aggregate_user2(
             description="When true and no data is found in the specified time range, automatically fetches data from one hour prior. Default is false.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -2404,6 +2404,7 @@ async def edgeconnect_post_stats3_aggregate_appliance(
     metric: Annotated[
         str, Field(description="Metric type determining which stats to aggregate and sort by. Required parameter.")
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     trafficType: Annotated[
         str | None,
         Field(default=None, description="Filter stats by traffic type. When omitted, returns all traffic types."),
@@ -2421,7 +2422,6 @@ async def edgeconnect_post_stats3_aggregate_appliance(
     format: Annotated[
         str | None, Field(default=None, description="Response format. Use 'csv' to download as Excel-compatible file.")
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -2480,6 +2480,7 @@ async def edgeconnect_post_stats3_aggregate_interface(
             description="Filter statistics by traffic category. Required parameter to specify which traffic type to include in results."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     format: Annotated[
         str | None,
         Field(
@@ -2487,7 +2488,6 @@ async def edgeconnect_post_stats3_aggregate_interface(
             description="Output format for the response. When set to 'csv', returns data as downloadable CSV file instead of JSON.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -2538,6 +2538,7 @@ async def edgeconnect_post_stats3_aggregate_tunnel(
             description="Metric type to sort and aggregate stats by. Required parameter that determines which statistics columns are returned."
         ),
     ],
+    body: Annotated[list[Any], Field(description="Request body (required)")],
     top: Annotated[
         int | None,
         Field(
@@ -2559,7 +2560,6 @@ async def edgeconnect_post_stats3_aggregate_tunnel(
             description="Group results by network element (appliance). When true, response includes nePk field in each stats object. Default is true.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -2604,6 +2604,7 @@ async def edgeconnect_post_stats_aggregate_application2(
             description="EPOCH timestamp (milliseconds) marking the end of the query time range. Must be non-negative and greater than startTime."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     application: Annotated[
         str | None,
         Field(
@@ -2639,7 +2640,6 @@ async def edgeconnect_post_stats_aggregate_application2(
             description="Enable automatic retry with shifted time range. When true and no data found, the query retries with startTime and endTime shifted back by 3600000ms (1 hour).",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -2681,6 +2681,7 @@ async def edgeconnect_post_stats_aggregate_boost(
     granularity: Annotated[
         str, Field(description="Time-based aggregation level. Controls grouping interval for statistics.")
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     format: Annotated[
         str | None, Field(default=None, description="Output format. Set to 'csv' for downloadable CSV file.")
     ] = None,
@@ -2688,7 +2689,6 @@ async def edgeconnect_post_stats_aggregate_boost(
         bool | None,
         Field(default=None, description="Group results by appliance. When true, includes nePk in response."),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -2721,6 +2721,7 @@ async def edgeconnect_post_stats_aggregate_dns(
         int, Field(description="Query start time as Unix epoch seconds. Must be non-negative and less than endTime.")
     ],
     endTime: Annotated[int, Field(description="Query end time as Unix epoch seconds. Must be greater than startTime.")],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     isSource: Annotated[
         int | None,
         Field(
@@ -2765,7 +2766,6 @@ async def edgeconnect_post_stats_aggregate_dns(
             description="Domain depth for grouping. Value 2 yields 'example.com', value 3 yields 'sub.example.com'.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -2817,6 +2817,7 @@ async def edgeconnect_post_stats_aggregate_dscp(
     endTime: Annotated[
         int, Field(description="EPOCH timestamp for data range end. Must be >= 0 and greater than startTime.")
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     dscp: Annotated[
         int | None,
         Field(default=None, description="DSCP value filter (0-63). Omit to return stats for all DSCP values."),
@@ -2842,7 +2843,6 @@ async def edgeconnect_post_stats_aggregate_dscp(
             description="Group results by appliance. Default: true. When false, aggregates across all appliances.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if granularity is not None:
@@ -2899,6 +2899,7 @@ async def edgeconnect_post_stats_aggregate_flow(
             description="End of time range as Unix epoch timestamp in milliseconds. Must be >= 0 and strictly greater than startTime."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     flowType: Annotated[
         str | None,
         Field(
@@ -2945,7 +2946,6 @@ async def edgeconnect_post_stats_aggregate_flow(
             description="When true (default), groups stats by appliance with nested structure. When false, returns flat aggregated results.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if granularity is not None:
@@ -2984,6 +2984,7 @@ async def edgeconnect_post_stats_aggregate_flow(
 )
 async def edgeconnect_post_stats_aggregate_flow_active(
     ctx: Context,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     top: Annotated[
         int | None,
         Field(
@@ -2991,7 +2992,6 @@ async def edgeconnect_post_stats_aggregate_flow_active(
             description="Maximum number of appliance results to return. When not specified, returns all matching appliances.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if top is not None:
@@ -3025,6 +3025,7 @@ async def edgeconnect_post_stats_aggregate_interface(
     granularity: Annotated[
         str, Field(description="Time granularity for data aggregation. Determines the time bucket size for statistics.")
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     trafficType: Annotated[
         str | None,
         Field(
@@ -3039,7 +3040,6 @@ async def edgeconnect_post_stats_aggregate_interface(
             description="Response format. If set to 'csv', returns data as a downloadable CSV file. Otherwise returns JSON.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3084,6 +3084,7 @@ async def edgeconnect_post_stats_aggregate_interface_overlay(
             description="Time granularity for data aggregation. Determines which stats table is queried (minute, hourly, or daily)."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     interfaceName: Annotated[
         str | None,
         Field(
@@ -3105,7 +3106,6 @@ async def edgeconnect_post_stats_aggregate_interface_overlay(
             description="Response format. If set to 'csv', returns data as a downloadable CSV file. Otherwise returns JSON.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3151,6 +3151,7 @@ async def edgeconnect_post_stats_aggregate_jitter(
     granularity: Annotated[
         str, Field(description="Data aggregation interval. Determines how stats are grouped temporally.")
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     ip: Annotated[
         bool | None,
         Field(
@@ -3185,7 +3186,6 @@ async def edgeconnect_post_stats_aggregate_jitter(
             description="Response format. Use 'csv' to download results as CSV file. Omit for JSON response.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3235,6 +3235,7 @@ async def edgeconnect_post_stats_aggregate_mos(
     granularity: Annotated[
         str, Field(description="Time interval for data aggregation. Determines statistical granularity.")
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     top: Annotated[int | None, Field(default=None, description="Limit results to top N tunnels by MOS value.")] = None,
     overlay: Annotated[
         str | None,
@@ -3251,7 +3252,6 @@ async def edgeconnect_post_stats_aggregate_mos(
         bool | None,
         Field(default=None, description="Group statistics by appliance. Adds nesting level by appliance in response."),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3296,6 +3296,7 @@ async def edgeconnect_post_stats_aggregate_ports(
             description="End of time range in seconds since EPOCH. Must be greater than startTime. Validated by validateTime() method."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     isSource: Annotated[
         int | None,
         Field(
@@ -3341,7 +3342,6 @@ async def edgeconnect_post_stats_aggregate_ports(
             description="Fallback mechanism: if true and no data found in time range, automatically queries (startTime-3600, endTime-3600). Useful for dashboards.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3386,6 +3386,7 @@ async def edgeconnect_post_stats_aggregate_security_policy(
             description="Data aggregation interval. Case-insensitive. Maps to database tables: minute, hourly, daily, monthly."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     top: Annotated[int | None, Field(default=None, description="Limit results to top N zone pairs by traffic.")] = None,
     format: Annotated[
         str | None,
@@ -3398,7 +3399,6 @@ async def edgeconnect_post_stats_aggregate_security_policy(
             description="When true, results include nePk for per-appliance breakdown. When false or null, defaults to true.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3441,6 +3441,7 @@ async def edgeconnect_post_stats_aggregate_top_talkers(
             description="End of time range as Unix epoch timestamp in seconds. Required. Must be >= 0 and > startTime."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     top: Annotated[
         int | None,
         Field(
@@ -3469,7 +3470,6 @@ async def edgeconnect_post_stats_aggregate_top_talkers(
             description="When true and no data exists for the time range, automatically queries data from one hour prior (startTime-3600, endTime-3600).",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3518,6 +3518,7 @@ async def edgeconnect_post_stats_aggregate_top_talkers_destinations(
             description="Maximum number of top destination results to return, ordered by total LAN bandwidth (LANRX_BYTES + LANTX_BYTES) descending."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     sourceIp: Annotated[
         str | None,
         Field(
@@ -3525,7 +3526,6 @@ async def edgeconnect_post_stats_aggregate_top_talkers_destinations(
             description="Filter results by source IP address. Use 'Others' to query destinations for empty/unknown source IPs. When omitted, returns all destinations regardless of source.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3558,6 +3558,7 @@ async def edgeconnect_post_stats_aggregate_traffic_behavior(
     endTime: Annotated[
         int, Field(description="End time in Unix epoch seconds. Must be non-negative and greater than startTime.")
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     behavioralCate: Annotated[
         str | None,
         Field(
@@ -3604,7 +3605,6 @@ async def edgeconnect_post_stats_aggregate_traffic_behavior(
             description="Include appliance-level breakdown in response. Only used when nePk is provided. Default: true.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3650,6 +3650,7 @@ async def edgeconnect_post_stats_aggregate_traffic_class(
     granularity: Annotated[
         str, Field(description="Time interval for data aggregation. Case-insensitive (e.g., 'MINUTE', 'Hour').")
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     trafficClass: Annotated[
         int | None,
         Field(
@@ -3689,7 +3690,6 @@ async def edgeconnect_post_stats_aggregate_traffic_class(
             description="Group statistics by appliance. When true (default), response is keyed by nePk or IP.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3741,6 +3741,7 @@ async def edgeconnect_post_stats_aggregate_tunnel(
             description="Time granularity for aggregation. Valid values: minute, hour, day, month. Case-insensitive."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     ip: Annotated[
         bool | None,
         Field(default=None, description="When true, uses IP address as grouping key instead of nePk. Default: false."),
@@ -3780,7 +3781,6 @@ async def edgeconnect_post_stats_aggregate_tunnel(
             description="When true, groups results by appliance in nested structure. When false, returns flat list. Default: true.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:
@@ -3829,6 +3829,7 @@ async def edgeconnect_post_stats_aggregate_user2(
             description="End of the time range as Unix epoch timestamp in seconds. Must be >= 0 and greater than startTime."
         ),
     ],
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     user: Annotated[
         str | None,
         Field(
@@ -3860,7 +3861,6 @@ async def edgeconnect_post_stats_aggregate_user2(
         str | None,
         Field(default=None, description="Response format. Use 'csv' for CSV file download, otherwise returns JSON."),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if startTime is not None:

@@ -526,7 +526,7 @@ async def edgeconnect_post_alarm_acknowledgement_appliance(
             description="Network Element Primary Key - unique appliance identifier assigned by Orchestrator. Format: '<id>.NE' (e.g., '0.NE', '10.NE')."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -547,7 +547,7 @@ async def edgeconnect_post_alarm_acknowledgement_appliance(
 )
 async def edgeconnect_post_alarm_acknowledgement_gms(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -565,7 +565,7 @@ async def edgeconnect_post_alarm_acknowledgement_gms(
 )
 async def edgeconnect_post_alarm_alarm_config(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -583,6 +583,7 @@ async def edgeconnect_post_alarm_alarm_config(
 )
 async def edgeconnect_post_alarm_appliance(
     ctx: Context,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     view: Annotated[
         str | None,
         Field(
@@ -621,7 +622,6 @@ async def edgeconnect_post_alarm_appliance(
             description="End time boundary in milliseconds since EPOCH (Unix timestamp * 1000). Only alarms occurring before this time are returned.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if view is not None:
@@ -658,7 +658,7 @@ async def edgeconnect_post_alarm_clearance_appliance(
             description="Network Element Primary Key - unique appliance identifier assigned by Orchestrator. Format: '<id>.NE' (e.g., '0.NE', '10.NE')."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -679,7 +679,7 @@ async def edgeconnect_post_alarm_clearance_appliance(
 )
 async def edgeconnect_post_alarm_clearance_gms(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -697,7 +697,7 @@ async def edgeconnect_post_alarm_clearance_gms(
 )
 async def edgeconnect_post_alarm_correlation_settings(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -715,7 +715,7 @@ async def edgeconnect_post_alarm_correlation_settings(
 )
 async def edgeconnect_post_alarm_customization_severity(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -733,7 +733,7 @@ async def edgeconnect_post_alarm_customization_severity(
 )
 async def edgeconnect_post_alarm_delay_email(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -757,7 +757,7 @@ async def edgeconnect_post_alarm_note_appliance(
             description="Network Element Primary Key - unique appliance identifier assigned by Orchestrator. Format: '<id>.NE' (e.g., '0.NE', '10.NE')."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -778,7 +778,7 @@ async def edgeconnect_post_alarm_note_appliance(
 )
 async def edgeconnect_post_alarm_note_gms(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -796,7 +796,7 @@ async def edgeconnect_post_alarm_note_gms(
 )
 async def edgeconnect_post_alarm_notification(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -814,7 +814,7 @@ async def edgeconnect_post_alarm_notification(
 )
 async def edgeconnect_post_alarm_suppress(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -832,7 +832,7 @@ async def edgeconnect_post_alarm_suppress(
 )
 async def edgeconnect_put_alarm_customization_severity(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -850,7 +850,7 @@ async def edgeconnect_put_alarm_customization_severity(
 )
 async def edgeconnect_put_alarm_delay_email(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

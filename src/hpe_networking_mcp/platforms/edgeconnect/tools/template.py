@@ -218,7 +218,7 @@ async def edgeconnect_post_template_appliance_association(
             description="Network Element Primary Key - unique appliance identifier assigned by Orchestrator. Format: '<id>.NE' (e.g., '0.NE', '10.NE')."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -239,7 +239,7 @@ async def edgeconnect_post_template_appliance_association(
 )
 async def edgeconnect_post_template_appliance_association2(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -257,7 +257,7 @@ async def edgeconnect_post_template_appliance_association2(
 )
 async def edgeconnect_post_template_delete_template_group(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -275,7 +275,7 @@ async def edgeconnect_post_template_delete_template_group(
 )
 async def edgeconnect_post_template_template_create(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -299,7 +299,7 @@ async def edgeconnect_post_template_template_groups(
             description="Target template group name. Must not be empty. If this matches the 'name' in the request body, the group is updated; otherwise a new group is created."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if templateGroup is not None:
@@ -320,7 +320,7 @@ async def edgeconnect_post_template_template_groups(
 )
 async def edgeconnect_post_template_template_groups_priorities(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -341,7 +341,7 @@ async def edgeconnect_post_template_template_selection(
     templateGroup: Annotated[
         str, Field(description="Name of the template group to update. Must not be null or empty.")
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if templateGroup is not None:

@@ -70,7 +70,7 @@ async def edgeconnect_get_edge_ha_groups(
 )
 async def edgeconnect_post_edge_ha_groups(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -91,7 +91,7 @@ async def edgeconnect_put_edge_ha_groups(
     id: Annotated[
         int, Field(description="Unique identifier of the HA group to update. Must reference an existing group.")
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:

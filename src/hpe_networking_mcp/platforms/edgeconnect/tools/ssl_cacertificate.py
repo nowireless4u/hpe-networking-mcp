@@ -63,7 +63,7 @@ async def edgeconnect_get_ssl_cacertificate(
 )
 async def edgeconnect_post_ssl_cacertificate_get_text(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -81,7 +81,7 @@ async def edgeconnect_post_ssl_cacertificate_get_text(
 )
 async def edgeconnect_post_ssl_cacertificate_validation(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -99,7 +99,7 @@ async def edgeconnect_post_ssl_cacertificate_validation(
 )
 async def edgeconnect_post_ssl_certificate_get_info(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -117,7 +117,7 @@ async def edgeconnect_post_ssl_certificate_get_info(
 )
 async def edgeconnect_post_ssl_certificate_get_text(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

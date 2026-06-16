@@ -93,7 +93,7 @@ async def edgeconnect_get_rbac_role_menu_assigned(
 )
 async def edgeconnect_post_rbac_role(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

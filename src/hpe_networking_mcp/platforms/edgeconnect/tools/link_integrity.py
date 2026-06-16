@@ -54,7 +54,7 @@ async def edgeconnect_get_link_integrity_test_status(
 )
 async def edgeconnect_post_link_integrity_test_run(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

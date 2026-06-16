@@ -137,7 +137,7 @@ async def edgeconnect_get_cluster_profiles(
 )
 async def edgeconnect_post_cluster_init_for_edge_ha(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -155,7 +155,7 @@ async def edgeconnect_post_cluster_init_for_edge_ha(
 )
 async def edgeconnect_post_cluster_profiles(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -173,7 +173,7 @@ async def edgeconnect_post_cluster_profiles(
 )
 async def edgeconnect_put_cluster_profile_mapping(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -191,7 +191,7 @@ async def edgeconnect_put_cluster_profile_mapping(
 )
 async def edgeconnect_put_cluster_profiles(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

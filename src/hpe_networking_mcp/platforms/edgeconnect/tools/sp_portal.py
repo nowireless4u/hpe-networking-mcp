@@ -871,7 +871,7 @@ async def edgeconnect_get_sp_portal_ztp(
 )
 async def edgeconnect_post_sp_portal_account_license_appliance_ecsp_assign(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -889,7 +889,7 @@ async def edgeconnect_post_sp_portal_account_license_appliance_ecsp_assign(
 )
 async def edgeconnect_post_sp_portal_account_license_appliance_ecsp_unassign(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -907,7 +907,7 @@ async def edgeconnect_post_sp_portal_account_license_appliance_ecsp_unassign(
 )
 async def edgeconnect_post_sp_portal_account_secondary(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -925,7 +925,7 @@ async def edgeconnect_post_sp_portal_account_secondary(
 )
 async def edgeconnect_post_sp_portal_config(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -943,7 +943,7 @@ async def edgeconnect_post_sp_portal_config(
 )
 async def edgeconnect_post_sp_portal_create_case_with_portal(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -961,7 +961,7 @@ async def edgeconnect_post_sp_portal_create_case_with_portal(
 )
 async def edgeconnect_post_sp_portal_internet_db_geo_locate_ip(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -1011,7 +1011,7 @@ async def edgeconnect_post_sp_portal_registration_account(
 )
 async def edgeconnect_post_sp_portal_ztp(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

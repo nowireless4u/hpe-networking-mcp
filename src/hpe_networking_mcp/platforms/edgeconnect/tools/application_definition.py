@@ -411,7 +411,7 @@ async def edgeconnect_get_application_definition_updated_time(
 )
 async def edgeconnect_post_application_definition_app_express_app_config(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -429,7 +429,7 @@ async def edgeconnect_post_application_definition_app_express_app_config(
 )
 async def edgeconnect_post_application_definition_app_express_group_association(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -447,7 +447,7 @@ async def edgeconnect_post_application_definition_app_express_group_association(
 )
 async def edgeconnect_post_application_definition_app_express_group_config(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -493,7 +493,7 @@ async def edgeconnect_post_application_definition_application_tags(
 )
 async def edgeconnect_post_application_definition_application_tags_wildcard(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -511,7 +511,7 @@ async def edgeconnect_post_application_definition_application_tags_wildcard(
 )
 async def edgeconnect_post_application_definition_applications_wildcard(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -532,7 +532,7 @@ async def edgeconnect_post_application_definition_auto_updates(
     base: Annotated[
         str, Field(description='The auto-update configuration base path. Must be exactly "autoUpdateFromPortal".')
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if base is not None:
@@ -559,7 +559,7 @@ async def edgeconnect_post_application_definition_compound_classification(
             description="Unique identifier of the compound application definition. Must be > 0 and match the id in the request body. IDs > 50000 are portal-modified user records requiring existing portal data."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:
@@ -580,7 +580,7 @@ async def edgeconnect_post_application_definition_compound_classification(
 )
 async def edgeconnect_post_application_definition_compound_classification_reorder(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -601,7 +601,7 @@ async def edgeconnect_post_application_definition_dns_classification(
     domain: Annotated[
         str, Field(description="The domain name to create or update. Must match the domain field in the request body.")
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if domain is not None:
@@ -622,7 +622,7 @@ async def edgeconnect_post_application_definition_dns_classification(
 )
 async def edgeconnect_post_application_definition_dns_classification2_delete_domain(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -640,7 +640,7 @@ async def edgeconnect_post_application_definition_dns_classification2_delete_dom
 )
 async def edgeconnect_post_application_definition_dns_classification2_domain(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -670,7 +670,7 @@ async def edgeconnect_post_application_definition_ip_intelligence_classification
             description="Ending IPv4 address in 32-bit unsigned integer format. Must be greater than or equal to ipStart and match ip_end in request body. Valid range: 0 to 4294967295."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if ipStart is not None:
@@ -693,7 +693,7 @@ async def edgeconnect_post_application_definition_ip_intelligence_classification
 )
 async def edgeconnect_post_application_definition_ip_intelligence_confidence(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -723,7 +723,7 @@ async def edgeconnect_post_application_definition_meter_flow_classification(
             description="Unique meter flow identifier (mid). Must match the mid value in the request body. This ID corresponds to an existing DPI application from the portal template data."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if flowType is not None:
@@ -758,7 +758,7 @@ async def edgeconnect_post_application_definition_port_protocol_classification(
             description="Protocol number. Use 6 for TCP, 17 for UDP. For IP Protocol applications (port=0), any valid IP protocol number is accepted."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if port is not None:
@@ -787,7 +787,7 @@ async def edgeconnect_post_application_definition_saas_classification(
             description="SaaS application ID. Use -1 to create a new application. For existing applications, must be >= 25000 (user-defined) and match the saasId in request body."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:

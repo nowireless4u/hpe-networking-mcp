@@ -153,7 +153,7 @@ async def edgeconnect_get_ip_objects_service_group(
 )
 async def edgeconnect_post_ip_objects_address_group(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -171,7 +171,7 @@ async def edgeconnect_post_ip_objects_address_group(
 )
 async def edgeconnect_post_ip_objects_address_group_bulk_upload(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -205,7 +205,7 @@ async def edgeconnect_post_ip_objects_address_group_merge(
 )
 async def edgeconnect_post_ip_objects_service_group(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -223,7 +223,7 @@ async def edgeconnect_post_ip_objects_service_group(
 )
 async def edgeconnect_post_ip_objects_service_group_bulk_upload(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -257,7 +257,7 @@ async def edgeconnect_post_ip_objects_service_group_merge(
 )
 async def edgeconnect_put_ip_objects_address_group(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -275,7 +275,7 @@ async def edgeconnect_put_ip_objects_address_group(
 )
 async def edgeconnect_put_ip_objects_service_group(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

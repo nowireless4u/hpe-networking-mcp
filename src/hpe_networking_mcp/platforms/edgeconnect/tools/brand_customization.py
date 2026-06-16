@@ -109,7 +109,7 @@ async def edgeconnect_get_brand_customization_image(
 )
 async def edgeconnect_post_brand_customization(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -139,7 +139,7 @@ async def edgeconnect_post_brand_customization_image(
             description="The file name for the uploaded image. Max 30 characters. Must have a valid image extension."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if type is not None:
@@ -162,7 +162,7 @@ async def edgeconnect_post_brand_customization_image(
 )
 async def edgeconnect_put_brand_customization(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -190,7 +190,7 @@ async def edgeconnect_put_brand_customization_image(
         str,
         Field(description="The file name for the uploaded image. Must be ≤30 characters with a valid image extension."),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if type is not None:

@@ -98,7 +98,7 @@ async def edgeconnect_get_port_profiles_is_label_in_use(
 )
 async def edgeconnect_post_port_profiles_config(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -122,7 +122,7 @@ async def edgeconnect_put_port_profiles_config(
             description="The unique identifier (UUID) of the Deployment Profile to update. Must match an existing profile."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:

@@ -28,7 +28,7 @@ from hpe_networking_mcp.platforms.edgeconnect.client import edgeconnect_request
 )
 async def edgeconnect_post_model_spec(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -46,7 +46,7 @@ async def edgeconnect_post_model_spec(
 )
 async def edgeconnect_post_model_spec_port_list(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

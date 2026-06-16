@@ -88,6 +88,7 @@ async def edgeconnect_post_debug_files_cancel(
 )
 async def edgeconnect_post_debug_files_delete(
     ctx: Context,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     nePk: Annotated[
         str | None,
         Field(
@@ -95,7 +96,6 @@ async def edgeconnect_post_debug_files_delete(
             description="Network Element Primary Key - unique appliance identifier assigned by Orchestrator. Format: '<id>.NE' (e.g., '0.NE', '10.NE'). When omitted, results are returned for all appliances.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:
@@ -116,7 +116,7 @@ async def edgeconnect_post_debug_files_delete(
 )
 async def edgeconnect_post_debug_files_proxy_config(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

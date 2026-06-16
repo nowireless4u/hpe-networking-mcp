@@ -45,7 +45,7 @@ async def edgeconnect_get_rest_api_config(
 )
 async def edgeconnect_post_rest_api_config(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

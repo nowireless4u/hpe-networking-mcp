@@ -70,7 +70,7 @@ async def edgeconnect_get_rbac_legacy_api(
 )
 async def edgeconnect_post_rbac_legacy_api(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -94,7 +94,7 @@ async def edgeconnect_put_rbac_legacy_api(
             description="Database ID of the legacy API entry to update. Must be a non-empty string representing a valid existing entry."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:

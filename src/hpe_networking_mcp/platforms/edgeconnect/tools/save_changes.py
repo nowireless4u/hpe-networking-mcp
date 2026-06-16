@@ -29,6 +29,7 @@ from hpe_networking_mcp.platforms.edgeconnect.client import edgeconnect_request
 )
 async def edgeconnect_post_appliance_save_changes(
     ctx: Context,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     nePk: Annotated[
         str | None,
         Field(
@@ -36,7 +37,6 @@ async def edgeconnect_post_appliance_save_changes(
             description="Network Element Primary Key - unique appliance identifier assigned by Orchestrator. Format: '<id>.NE' (e.g., '0.NE', '10.NE'). When omitted, results are returned for all appliances.",
         ),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if nePk is not None:

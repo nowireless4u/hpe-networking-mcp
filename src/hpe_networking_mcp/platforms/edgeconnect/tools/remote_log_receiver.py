@@ -118,7 +118,7 @@ async def edgeconnect_get_remote_log_receiver_websocket_status(
 )
 async def edgeconnect_post_remote_log_receiver(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -142,7 +142,7 @@ async def edgeconnect_post_remote_log_receiver_subscribe(
             description="Unique identifier of an existing remote log receiver. Must reference a valid, configured receiver."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if receiverId is not None:
@@ -163,7 +163,7 @@ async def edgeconnect_post_remote_log_receiver_subscribe(
 )
 async def edgeconnect_put_remote_log_receiver(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[list[Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

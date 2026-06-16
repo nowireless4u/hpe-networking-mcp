@@ -29,7 +29,7 @@ from hpe_networking_mcp.platforms.edgeconnect.client import edgeconnect_request
 )
 async def edgeconnect_post_upgrade_appliances(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -47,7 +47,7 @@ async def edgeconnect_post_upgrade_appliances(
 )
 async def edgeconnect_post_validate_appliance_upgrade(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

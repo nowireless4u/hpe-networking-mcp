@@ -148,7 +148,7 @@ async def edgeconnect_post_users(
     newUser: Annotated[
         bool, Field(description="Set to true to create a new user, false to update existing user. Required parameter.")
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if newUser is not None:
@@ -169,7 +169,7 @@ async def edgeconnect_post_users(
 )
 async def edgeconnect_post_users_forgot_password(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -193,7 +193,7 @@ async def edgeconnect_post_users_password(
             description="The username of the account whose password is being changed. Must match an existing user in the system."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if username is not None:
@@ -214,7 +214,7 @@ async def edgeconnect_post_users_password(
 )
 async def edgeconnect_post_users_reset_password(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,

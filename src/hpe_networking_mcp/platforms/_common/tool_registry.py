@@ -89,6 +89,7 @@ _GATE_CONFIG_ATTR: dict[str, str | None] = {
     "axis": "enable_axis_write_tools",
     "central": "enable_central_write_tools",
     "clearpass": "enable_clearpass_write_tools",
+    "edgeconnect": "enable_edgeconnect_write_tools",
     "greenlake": None,
     "mist": "enable_mist_write_tools",
     "uxi": "enable_uxi_write_tools",

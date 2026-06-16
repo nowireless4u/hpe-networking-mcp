@@ -368,7 +368,7 @@ async def edgeconnect_get_stats_collector_job_scheduled(
 )
 async def edgeconnect_post_gms_job(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -386,7 +386,7 @@ async def edgeconnect_post_gms_job(
 )
 async def edgeconnect_post_gms_job_report_viewport(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -435,7 +435,7 @@ async def edgeconnect_put_gms_job(
             description="Unique identifier of the job to update. Must reference an existing scheduled job that is not a runNow job."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:

@@ -586,7 +586,7 @@ async def edgeconnect_get_cloud_deployment_azure_route_server_log(
 )
 async def edgeconnect_post_cloud_deployment_azure_accounts(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -604,7 +604,7 @@ async def edgeconnect_post_cloud_deployment_azure_accounts(
 )
 async def edgeconnect_post_cloud_deployment_azure_edgeconnects(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -628,7 +628,7 @@ async def edgeconnect_post_cloud_deployment_azure_edgeconnects_instance(
             description="Orchestrator-assigned deployment ID for the existing Azure cloud deployment. Must be a valid deployment ID that exists and belongs to the Azure provider."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:
@@ -649,7 +649,7 @@ async def edgeconnect_post_cloud_deployment_azure_edgeconnects_instance(
 )
 async def edgeconnect_post_cloud_deployment_azure_load_balancer(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
@@ -667,11 +667,11 @@ async def edgeconnect_post_cloud_deployment_azure_load_balancer(
 )
 async def edgeconnect_post_cloud_deployment_azure_nva_edgeconnects(
     ctx: Context,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     deploy: Annotated[
         bool | None,
         Field(default=None, description="Flag to trigger deployment. When true, deployment is queued for execution."),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if deploy is not None:
@@ -692,11 +692,11 @@ async def edgeconnect_post_cloud_deployment_azure_nva_edgeconnects(
 )
 async def edgeconnect_post_cloud_deployment_azure_route_server(
     ctx: Context,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
     deploy: Annotated[
         bool | None,
         Field(default=None, description="Flag to trigger deployment. When true, initiates the deployment process."),
     ] = None,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
 ) -> Any:
     query_params: dict[str, Any] = {}
     if deploy is not None:
@@ -721,7 +721,7 @@ async def edgeconnect_put_cloud_deployment_azure_accounts(
         str,
         Field(description="Orchestrator-assigned Azure account UUID to update. Must not be null or whitespace-only."),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:
@@ -748,7 +748,7 @@ async def edgeconnect_put_cloud_deployment_azure_edgeconnects(
             description="Orchestrator-assigned deployment ID. Identifies which Azure Cloud Hub deployment to update."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:
@@ -775,7 +775,7 @@ async def edgeconnect_put_cloud_deployment_azure_load_balancer(
             description="Orchestrator-assigned unique deployment ID. Must reference an existing azure_load_balancer deployment."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:
@@ -802,7 +802,7 @@ async def edgeconnect_put_cloud_deployment_azure_nva_edgeconnects(
             description="Orchestrator-assigned deployment ID to update. Must reference an existing azure_nva deployment."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:
@@ -829,7 +829,7 @@ async def edgeconnect_put_cloud_deployment_azure_route_server(
             description="Unique Orchestrator-assigned deployment ID. Identifies the Azure Route Server deployment to update."
         ),
     ],
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[dict[str, Any], Field(description="Request body (required)")],
 ) -> Any:
     query_params: dict[str, Any] = {}
     if id is not None:

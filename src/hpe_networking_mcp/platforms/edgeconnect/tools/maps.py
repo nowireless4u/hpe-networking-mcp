@@ -45,7 +45,7 @@ async def edgeconnect_get_maps_get_uploaded_maps(
 )
 async def edgeconnect_post_maps_delete_uploaded_map(
     ctx: Context,
-    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request body")] = None,
+    body: Annotated[str, Field(description="Request body (required)")],
 ) -> Any:
     return await edgeconnect_request(
         ctx,
