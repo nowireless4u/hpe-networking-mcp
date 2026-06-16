@@ -167,7 +167,7 @@ class EdgeConnectClient:
                 json={
                     "user": self._config.user,
                     "password": self._config.password,
-                    "token": "",
+                    "token": "",  # nosec B105 — login API requires empty field, not a credential
                     "loginType": self._config.login_type,
                 },
                 timeout=_AUTH_TIMEOUT,
