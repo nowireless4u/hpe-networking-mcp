@@ -192,13 +192,6 @@
           "action": {
             "$ref": "#/components/schemas/Action"
           },
-          "checksums_32": {
-            "description": "SHA256 checksums of 32-bit Agentless OnGuard Wrapper EXEs",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
           "checksums_64": {
             "description": "SHA256 checksums of 64-bit Agentless OnGuard Wrapper EXEs",
             "items": {
@@ -262,13 +255,6 @@
         "properties": {
           "action": {
             "$ref": "#/components/schemas/Action"
-          },
-          "checksums_32": {
-            "description": "SHA256 checksums of 32-bit Agentless OnGuard Wrapper EXEs",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
           },
           "checksums_64": {
             "description": "SHA256 checksums of 64-bit Agentless OnGuard Wrapper EXEs",
@@ -348,13 +334,6 @@
           "action": {
             "$ref": "#/components/schemas/Action"
           },
-          "checksums_32": {
-            "description": "SHA256 checksums of 32-bit Agentless OnGuard Wrapper EXEs",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
           "checksums_64": {
             "description": "SHA256 checksums of 64-bit Agentless OnGuard Wrapper EXEs",
             "items": {
@@ -421,13 +400,6 @@
         "properties": {
           "action": {
             "$ref": "#/components/schemas/Action"
-          },
-          "checksums_32": {
-            "description": "SHA256 checksums of 32-bit Agentless OnGuard Wrapper EXEs",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
           },
           "checksums_64": {
             "description": "SHA256 checksums of 64-bit Agentless OnGuard Wrapper EXEs",
@@ -496,7 +468,6 @@
           "download_url",
           "validate_url_cert",
           "override_checksum",
-          "checksums_32",
           "checksums_64"
         ],
         "title": "AgentlessOnGuardSettingsResult",
@@ -506,13 +477,6 @@
         "properties": {
           "action": {
             "$ref": "#/components/schemas/Action"
-          },
-          "checksums_32": {
-            "description": "SHA256 checksums of 32-bit Agentless OnGuard Wrapper EXEs",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
           },
           "checksums_64": {
             "description": "SHA256 checksums of 64-bit Agentless OnGuard Wrapper EXEs",
@@ -2519,14 +2483,6 @@
           "VPNDeviceNamesMacOS": {
             "description": "VPN Device Names (macOS)",
             "type": "string"
-          },
-          "WiredAllowedSubnets": {
-            "description": "[Deprecated] Allowed Subnets for Wired access",
-            "type": "string"
-          },
-          "WirelessAllowedSubnets": {
-            "description": "[Deprecated] Allowed Subnets for Wireless access",
-            "type": "string"
           }
         },
         "title": "OnGuardGlobalSettings",
@@ -2597,14 +2553,6 @@
           },
           "VPNDeviceNamesMacOS": {
             "description": "VPN Device Names (macOS)",
-            "type": "string"
-          },
-          "WiredAllowedSubnets": {
-            "description": "[Deprecated] Allowed Subnets for Wired access",
-            "type": "string"
-          },
-          "WirelessAllowedSubnets": {
-            "description": "[Deprecated] Allowed Subnets for Wireless access",
             "type": "string"
           }
         },
@@ -2688,14 +2636,6 @@
           "VPNDeviceNamesMacOS": {
             "description": "VPN Device Names (macOS)",
             "type": "string"
-          },
-          "WiredAllowedSubnets": {
-            "description": "[Deprecated] Allowed Subnets for Wired access",
-            "type": "string"
-          },
-          "WirelessAllowedSubnets": {
-            "description": "[Deprecated] Allowed Subnets for Wireless access",
-            "type": "string"
           }
         },
         "required": [
@@ -2714,9 +2654,7 @@
           "UseCurrentOSLanguage",
           "UseWindowsCredentials",
           "VPNDeviceNames",
-          "VPNDeviceNamesMacOS",
-          "WiredAllowedSubnets",
-          "WirelessAllowedSubnets"
+          "VPNDeviceNamesMacOS"
         ],
         "title": "OnGuardGlobalSettingsResult",
         "type": "object"
@@ -3095,13 +3033,10 @@
         "enum": [
           "Windows 10",
           "Windows 11",
-          "Windows 7",
-          "Windows 8",
-          "Windows Server 2008",
-          "Windows Server 2012",
           "Windows Server 2016",
           "Windows Server 2019",
-          "Windows Server 2022"
+          "Windows Server 2022",
+          "Windows Server 2025"
         ],
         "example": "Windows 10",
         "title": "OperatingSystem",
@@ -3789,7 +3724,7 @@
   "info": {
     "contact": {},
     "title": "Endpoint Visibility",
-    "version": "6.12.7"
+    "version": "6.14.0"
   },
   "openapi": "3.0.0",
   "paths": {
