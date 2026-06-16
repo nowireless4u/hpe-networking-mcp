@@ -1134,10 +1134,6 @@
             "description": "Boolean to always use NetBIOS name instead of the domain part in username for authentication",
             "type": "boolean"
           },
-          "authorization_token": {
-            "description": "Authorization Token of Authentication Source",
-            "type": "string"
-          },
           "base_DN": {
             "description": "Base DN of Authentication Source",
             "type": "string"
@@ -1303,10 +1299,6 @@
             "description": "Boolean to always use NetBIOS name instead of the domain part in username for authentication",
             "type": "boolean"
           },
-          "authorization_token": {
-            "description": "Authorization Token of Authentication Source",
-            "type": "string"
-          },
           "base_DN": {
             "description": "Base DN of Authentication Source",
             "type": "string"
@@ -1471,10 +1463,6 @@
           "always_use_netBIOS_name": {
             "description": "Boolean to always use NetBIOS name instead of the domain part in username for authentication",
             "type": "boolean"
-          },
-          "authorization_token": {
-            "description": "Authorization Token of Authentication Source",
-            "type": "string"
           },
           "base_DN": {
             "description": "Base DN of Authentication Source",
@@ -1662,7 +1650,6 @@
           "realm",
           "server_principal",
           "server_principal_password",
-          "authorization_token",
           "protocol",
           "secret",
           "client_certificate",
@@ -1677,10 +1664,6 @@
           "always_use_netBIOS_name": {
             "description": "Boolean to always use NetBIOS name instead of the domain part in username for authentication",
             "type": "boolean"
-          },
-          "authorization_token": {
-            "description": "Authorization Token of Authentication Source",
-            "type": "string"
           },
           "base_DN": {
             "description": "Base DN of Authentication Source",
@@ -3772,10 +3755,9 @@
       "PrivacyProtocol": {
         "description": "Privacy protocol of the network device",
         "enum": [
-          "DES_CBC",
           "AES_128"
         ],
-        "example": "DES_CBC",
+        "example": "AES_128",
         "title": "PrivacyProtocol",
         "type": "string"
       },
@@ -6598,7 +6580,7 @@
   "info": {
     "contact": {},
     "title": "Policy Elements",
-    "version": "6.12.7"
+    "version": "6.14.0"
   },
   "openapi": "3.0.0",
   "paths": {
