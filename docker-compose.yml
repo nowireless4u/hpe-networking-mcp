@@ -16,6 +16,8 @@ services:
       - ENABLE_APSTRA_WRITE_TOOLS=${ENABLE_APSTRA_WRITE_TOOLS:-false}
       - ENABLE_AXIS_WRITE_TOOLS=${ENABLE_AXIS_WRITE_TOOLS:-false}
       - ENABLE_AOS8_WRITE_TOOLS=${ENABLE_AOS8_WRITE_TOOLS:-false}
+      - ENABLE_UXI_WRITE_TOOLS=${ENABLE_UXI_WRITE_TOOLS:-false}
+      - ENABLE_EDGECONNECT_WRITE_TOOLS=${ENABLE_EDGECONNECT_WRITE_TOOLS:-false}
       - DISABLE_ELICITATION=${DISABLE_ELICITATION:-false}
       # PII tokenization (opt-in). When true, sensitive fields (PSKs, RADIUS
       # secrets, hostnames, emails, usernames, serials) are replaced with
@@ -59,6 +61,17 @@ services:
       - aos8_password
       - aos8_port
       - aos8_verify_ssl
+      # Aruba UXI (remove lines for platforms you don't use)
+      - uxi_client_id
+      - uxi_client_secret
+      # Aruba EdgeConnect / Silver Peak Orchestrator (remove lines for platforms you don't use)
+      # Provide edgeconnect_api_key OR edgeconnect_user + edgeconnect_password.
+      - edgeconnect_host
+      - edgeconnect_api_key
+      - edgeconnect_user
+      - edgeconnect_password
+      - edgeconnect_login_type
+      - edgeconnect_verify_ssl
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "uv", "run", "--no-sync", "python", "-c", "import httpx; r = httpx.get('http://localhost:8000/mcp', timeout=5); assert r.status_code in (200, 405, 406)"]
@@ -125,3 +138,21 @@ secrets:
     file: ./secrets/aos8_port
   aos8_verify_ssl:
     file: ./secrets/aos8_verify_ssl
+  # Aruba UXI
+  uxi_client_id:
+    file: ./secrets/uxi_client_id
+  uxi_client_secret:
+    file: ./secrets/uxi_client_secret
+  # Aruba EdgeConnect / Silver Peak Orchestrator
+  edgeconnect_host:
+    file: ./secrets/edgeconnect_host
+  edgeconnect_api_key:
+    file: ./secrets/edgeconnect_api_key
+  edgeconnect_user:
+    file: ./secrets/edgeconnect_user
+  edgeconnect_password:
+    file: ./secrets/edgeconnect_password
+  edgeconnect_login_type:
+    file: ./secrets/edgeconnect_login_type
+  edgeconnect_verify_ssl:
+    file: ./secrets/edgeconnect_verify_ssl
