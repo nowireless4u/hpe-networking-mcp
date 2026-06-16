@@ -29,7 +29,17 @@ _PROBE_ANNOTATIONS = ToolAnnotations(
     openWorldHint=True,
 )
 
-_ALL_PLATFORMS: tuple[str, ...] = ("mist", "central", "greenlake", "clearpass", "apstra", "axis", "aos8", "uxi")
+_ALL_PLATFORMS: tuple[str, ...] = (
+    "mist",
+    "central",
+    "greenlake",
+    "clearpass",
+    "apstra",
+    "axis",
+    "aos8",
+    "uxi",
+    "edgeconnect",
+)
 
 
 def _normalize_platform_filter(
@@ -222,6 +232,25 @@ async def _probe_uxi(ctx: Context) -> dict[str, Any]:
         return {"status": "degraded", "message": f"UXI probe failed: {e}"}
 
 
+async def _probe_edgeconnect(ctx: Context) -> dict[str, Any]:
+    """Probe the Aruba EdgeConnect (Orchestrator) platform.
+
+    Returns status dict with ok/degraded/unavailable per the cross-platform
+    contract. Probes via the client's authenticated GET /authentication/loginStatus.
+    """
+    client = ctx.lifespan_context.get("edgeconnect_client")
+    if client is None:
+        return {
+            "status": "unavailable",
+            "message": "EdgeConnect is not configured or failed to initialize",
+        }
+    try:
+        await client.health_check()
+        return {"status": "ok", "message": "EdgeConnect Orchestrator API reachable"}
+    except Exception as e:
+        return {"status": "degraded", "message": f"EdgeConnect probe failed: {e}"}
+
+
 _PROBES = {
     "mist": _probe_mist,
     "central": _probe_central,
@@ -231,6 +260,7 @@ _PROBES = {
     "axis": _probe_axis,
     "aos8": _probe_aos8,
     "uxi": _probe_uxi,
+    "edgeconnect": _probe_edgeconnect,
 }
 
 

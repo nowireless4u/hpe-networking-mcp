@@ -29,6 +29,10 @@ Secret file mapping:
     /run/secrets/apstra_verify_ssl (optional, default true)
     /run/secrets/uxi_client_id
     /run/secrets/uxi_client_secret
+    /run/secrets/edgeconnect_host
+    /run/secrets/edgeconnect_api_key (or edgeconnect_user + edgeconnect_password)
+    /run/secrets/edgeconnect_login_type (optional, default 0)
+    /run/secrets/edgeconnect_verify_ssl (optional, default true)
 """
 
 import os
@@ -114,6 +118,23 @@ class UXISecrets:
 
 
 @dataclass
+class EdgeConnectSecrets:
+    """Aruba EdgeConnect (Silver Peak) Orchestrator credentials.
+
+    Two auth modes: provide ``api_key`` for header (``X-Auth-Token``) auth, OR
+    ``user`` + ``password`` for session login. ``login_type`` selects the auth
+    backend for user/pass login: 0=local, 1=radius, 2=tacacs.
+    """
+
+    host: str
+    api_key: str | None = None
+    user: str | None = None
+    password: str | None = None
+    login_type: int = 0
+    verify_ssl: bool = True
+
+
+@dataclass
 class ServerConfig:
     """Global server configuration."""
 
@@ -127,6 +148,7 @@ class ServerConfig:
     enable_axis_write_tools: bool = False
     enable_aos8_write_tools: bool = False
     enable_uxi_write_tools: bool = False
+    enable_edgeconnect_write_tools: bool = False
     disable_elicitation: bool = False
     debug: bool = False
     log_file: str | None = None
@@ -181,6 +203,7 @@ class ServerConfig:
     axis: AxisSecrets | None = None
     aos8: AOS8Secrets | None = None
     uxi: UXISecrets | None = None
+    edgeconnect: EdgeConnectSecrets | None = None
 
     @property
     def enabled_platforms(self) -> list[str]:
@@ -201,6 +224,8 @@ class ServerConfig:
             platforms.append("aos8")
         if self.uxi:
             platforms.append("uxi")
+        if self.edgeconnect:
+            platforms.append("edgeconnect")
         return platforms
 
 
@@ -468,6 +493,60 @@ def _load_uxi() -> UXISecrets | None:
     return UXISecrets(client_id=client_id, client_secret=client_secret)
 
 
+def _load_edgeconnect() -> EdgeConnectSecrets | None:
+    """Load EdgeConnect Orchestrator credentials from Docker secrets.
+
+    Requires ``edgeconnect_host`` plus EITHER ``edgeconnect_api_key`` OR both
+    ``edgeconnect_user`` and ``edgeconnect_password``. Optional secrets:
+    ``edgeconnect_login_type`` (0=local/1=radius/2=tacacs, default 0) and
+    ``edgeconnect_verify_ssl`` (default True).
+
+    Returns:
+        EdgeConnectSecrets when host + a usable auth pair are present; None
+        otherwise (logged at INFO with the missing-secret reason).
+    """
+    host = _read_secret("edgeconnect_host")
+    api_key = _read_secret("edgeconnect_api_key")
+    user = _read_secret("edgeconnect_user")
+    password = _read_secret("edgeconnect_password")
+    login_type_str = _read_secret("edgeconnect_login_type")
+    verify_ssl_str = _read_secret("edgeconnect_verify_ssl")
+
+    if not host:
+        logger.info("EdgeConnect: disabled (missing secret: edgeconnect_host)")
+        return None
+
+    has_api_key = bool(api_key)
+    has_user_pass = bool(user and password)
+    if not (has_api_key or has_user_pass):
+        logger.info("EdgeConnect: disabled (need edgeconnect_api_key OR edgeconnect_user + edgeconnect_password)")
+        return None
+
+    try:
+        login_type = int(login_type_str) if login_type_str else 0
+    except ValueError:
+        logger.warning("EdgeConnect: invalid edgeconnect_login_type '{}', defaulting to 0", login_type_str)
+        login_type = 0
+
+    verify_ssl = verify_ssl_str.lower() not in ("false", "0", "no") if verify_ssl_str else True
+
+    auth_mode = "api_key" if has_api_key else "user/password"
+    logger.info(
+        "EdgeConnect: credentials loaded (host: {}, auth: {}, verify_ssl: {})",
+        host,
+        auth_mode,
+        verify_ssl,
+    )
+    return EdgeConnectSecrets(
+        host=host,
+        api_key=api_key,
+        user=user,
+        password=password,
+        login_type=login_type,
+        verify_ssl=verify_ssl,
+    )
+
+
 def load_config() -> ServerConfig:
     """Load server configuration from Docker secrets and environment variables.
 
@@ -496,6 +575,7 @@ def load_config() -> ServerConfig:
     enable_axis_write = os.getenv("ENABLE_AXIS_WRITE_TOOLS", "false").lower() in _truthy
     enable_aos8_write = os.getenv("ENABLE_AOS8_WRITE_TOOLS", "false").lower() in _truthy
     enable_uxi_write = os.getenv("ENABLE_UXI_WRITE_TOOLS", "false").lower() in _truthy
+    enable_edgeconnect_write = os.getenv("ENABLE_EDGECONNECT_WRITE_TOOLS", "false").lower() in _truthy
     disable_elicit = os.getenv("DISABLE_ELICITATION", "false").lower() in _truthy
     debug = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
     log_file = os.getenv("LOG_FILE") or None
@@ -566,6 +646,7 @@ def load_config() -> ServerConfig:
     axis = _load_axis()
     aos8 = _load_aos8()
     uxi = _load_uxi()
+    edgeconnect = _load_edgeconnect()
 
     config = ServerConfig(
         port=port,
@@ -578,6 +659,7 @@ def load_config() -> ServerConfig:
         enable_axis_write_tools=enable_axis_write,
         enable_aos8_write_tools=enable_aos8_write,
         enable_uxi_write_tools=enable_uxi_write,
+        enable_edgeconnect_write_tools=enable_edgeconnect_write,
         disable_elicitation=disable_elicit,
         debug=debug,
         log_file=log_file,
@@ -594,6 +676,7 @@ def load_config() -> ServerConfig:
         axis=axis,
         aos8=aos8,
         uxi=uxi,
+        edgeconnect=edgeconnect,
     )
 
     if not config.enabled_platforms:

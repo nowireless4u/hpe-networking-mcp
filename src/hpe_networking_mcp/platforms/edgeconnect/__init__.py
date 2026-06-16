@@ -1,0 +1,64 @@
+"""Aruba EdgeConnect (Silver Peak) Orchestrator platform module.
+
+Spec-driven: the tool surface is generated from the vendored Orchestrator
+OpenAPI spec at ``vendor/edgeconnect/EdgeConnect-9-7-REST-API.json``. Each
+generated tool follows the ``edgeconnect_<method>_<path-slug>`` naming
+convention and calls into ``client.edgeconnect_request`` for transport.
+
+Regenerate the tool surface from the current vendored spec via:
+
+    uv run python scripts/generate_edgeconnect_tools.py
+
+Tool regeneration is a deliberate release-time step so the maintainer reviews
+the tool diff before tagging.
+"""
+
+from __future__ import annotations
+
+import importlib
+import pkgutil
+
+from fastmcp import FastMCP
+from loguru import logger
+
+from hpe_networking_mcp.config import ServerConfig
+
+
+def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
+    """Load every generated EdgeConnect tool module and register them with FastMCP.
+
+    Walks ``platforms.edgeconnect.tools`` and imports each ``<tag>.py`` submodule;
+    the ``@tool(...)`` decorators in each module record the tool with FastMCP via
+    the shared ``_registry.tool`` shim.
+
+    Returns the count of underlying tool modules that registered (does not
+    include the 3 meta-tools).
+    """
+    from hpe_networking_mcp.platforms._common.meta_tools import build_meta_tools
+    from hpe_networking_mcp.platforms.edgeconnect import _registry
+    from hpe_networking_mcp.platforms.edgeconnect import tools as tools_pkg
+
+    _registry.mcp = mcp
+
+    loaded: list[str] = []
+    for _finder, modname, _ispkg in pkgutil.iter_modules(tools_pkg.__path__):
+        if modname.startswith("_"):
+            continue
+        full_path = f"{tools_pkg.__name__}.{modname}"
+        try:
+            importlib.import_module(full_path)
+            loaded.append(modname)
+        except Exception as exc:
+            logger.warning("EdgeConnect: failed to load tool module {} -- {}", modname, exc)
+
+    # Meta-tools are always registered (issue #302). In code mode they're
+    # reachable via ``await call_tool("edgeconnect_list_tools", ...)`` from
+    # inside ``execute()`` even though they're hidden from the top-level catalog.
+    build_meta_tools("edgeconnect", mcp)
+    logger.info(
+        "EdgeConnect: registered {} generated tool module(s) + 3 meta-tools ({} mode)",
+        len(loaded),
+        config.tool_mode,
+    )
+
+    return len(loaded)

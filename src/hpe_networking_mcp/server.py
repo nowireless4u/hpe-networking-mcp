@@ -166,6 +166,21 @@ async def lifespan(server: FastMCP):
         context["uxi_client"] = None
         context["uxi_config"] = None
 
+    # --- EdgeConnect ---
+    if config.edgeconnect:
+        try:
+            from hpe_networking_mcp.platforms.edgeconnect.client import EdgeConnectClient
+
+            context["edgeconnect_client"] = EdgeConnectClient(config.edgeconnect)
+            context["edgeconnect_config"] = config.edgeconnect
+        except Exception as e:
+            logger.warning("EdgeConnect: failed to initialize — {}", e)
+            context["edgeconnect_client"] = None
+            context["edgeconnect_config"] = None
+    else:
+        context["edgeconnect_client"] = None
+        context["edgeconnect_config"] = None
+
     # --- Verify every enabled platform via the shared probe helpers from
     # platforms/health.py. One source of truth: startup log output and the
     # runtime ``health`` tool report the same status. Probes that fail do
@@ -235,6 +250,12 @@ async def lifespan(server: FastMCP):
                 await uxi.aclose()
             except Exception as e:  # noqa: BLE001
                 logger.warning("UXI: aclose failed during shutdown — {}", e)
+        edgeconnect = context.get("edgeconnect_client")
+        if edgeconnect is not None:
+            try:
+                await edgeconnect.aclose()
+            except Exception as e:  # noqa: BLE001
+                logger.warning("EdgeConnect: aclose failed during shutdown — {}", e)
         logger.info("Server shutdown complete")
 
 
@@ -366,6 +387,8 @@ def create_server(config: ServerConfig) -> FastMCP:
         _register_aos8_tools(mcp, config)
     if config.uxi:
         _register_uxi_tools(mcp, config)
+    if config.edgeconnect:
+        _register_edgeconnect_tools(mcp, config)
 
     # --- MCP-Apps providers (experimental, env-gated by MCP_APP_ENABLE) ---
     # One switch enables every MCP-Apps capability. Both providers emit `ui://`
@@ -458,6 +481,10 @@ def create_server(config: ServerConfig) -> FastMCP:
         mcp.add_transform(Visibility(False, tags={"aos8_write", "aos8_write_delete"}, components={"tool"}))
     if not config.enable_uxi_write_tools:
         mcp.add_transform(Visibility(False, tags={"uxi_write", "uxi_write_delete"}, components={"tool"}))
+    if not config.enable_edgeconnect_write_tools:
+        mcp.add_transform(
+            Visibility(False, tags={"edgeconnect_write", "edgeconnect_write_delete"}, components={"tool"})
+        )
 
     # --- Tool-mode-specific catalog transforms ---
     if config.tool_mode == "dynamic":
@@ -508,7 +535,7 @@ _SKILLS_FIRST_GATE = (
 _SEARCH_DESCRIPTION = _SKILLS_FIRST_GATE + (
     "Find or list available HPE networking tools by name, function, or "
     "description across mist, central, aos8, clearpass, apstra, axis, "
-    "greenlake, and uxi platforms. Use this to discover the exact tool name "
+    "greenlake, uxi, and edgeconnect platforms. Use this to discover the exact tool name "
     "for any networking task — listing sites, getting devices, searching "
     "events, managing config, checking health, etc. Returns matching tools "
     "ranked by relevance. Prefer this over guessing tool names: each "
@@ -519,7 +546,7 @@ _SEARCH_DESCRIPTION = _SKILLS_FIRST_GATE + (
 _TAGS_DESCRIPTION = _SKILLS_FIRST_GATE + (
     "Browse the HPE networking tool catalog grouped by category tag — "
     "platform name (mist / central / aos8 / clearpass / apstra / axis / "
-    "greenlake / uxi), read/write classification, or feature area. Use to scope "
+    "greenlake / uxi / edgeconnect), read/write classification, or feature area. Use to scope "
     "the tool catalog by category before drilling in with `search` or "
     "`get_schema`. Returns tag names and the tools registered under each."
 )
@@ -527,7 +554,7 @@ _TAGS_DESCRIPTION = _SKILLS_FIRST_GATE + (
 _GET_SCHEMA_DESCRIPTION = _SKILLS_FIRST_GATE + (
     "Get full parameter schemas, enum values, types, and descriptions for "
     "one or more HPE networking tools (mist, central, aos8, clearpass, "
-    "apstra, axis, greenlake, uxi). Use after `search` or `tags` to confirm a "
+    "apstra, axis, greenlake, uxi, edgeconnect). Use after `search` or `tags` to confirm a "
     "tool's exact input shape before invoking it. Each schema returned "
     "includes the parameter list, defaults, optional/required markers, "
     "and any nested object or enum types."
@@ -611,7 +638,7 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
         "`call_tool` reaches three things:\n"
         "  - `<platform>_invoke_tool(name=<tool>, params=<dict>)` — the "
         "universal way to call ANY per-platform tool (mist / central / "
-        "greenlake / clearpass / apstra / axis / aos8). The ~1000 "
+        "greenlake / clearpass / apstra / axis / aos8 / uxi / edgeconnect). The ~1000 "
         "spec-driven Mist tools are reachable ONLY this way — a direct "
         "`call_tool('mist_get_self', ...)` raises `Unknown tool`. Prefer "
         "`<platform>_invoke_tool` for every per-platform tool.\n"
@@ -770,6 +797,14 @@ def _register_uxi_tools(mcp: FastMCP, config: ServerConfig) -> None:
 
     count = register_tools(mcp, config)
     logger.info("UXI: registered {} tools", count)
+
+
+def _register_edgeconnect_tools(mcp: FastMCP, config: ServerConfig) -> None:
+    """Register all EdgeConnect (Orchestrator) platform tools."""
+    from hpe_networking_mcp.platforms.edgeconnect import register_tools
+
+    count = register_tools(mcp, config)
+    logger.info("EdgeConnect: registered {} tools", count)
 
 
 def _register_sync_tools(mcp: FastMCP) -> None:

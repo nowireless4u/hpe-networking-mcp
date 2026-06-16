@@ -3,24 +3,25 @@
 Complete reference for all tools registered by the HPE Networking MCP Server.
 Tools are namespaced by platform: `mist_*` (Juniper Mist), `central_*` (Aruba Central),
 `greenlake_*` (HPE GreenLake), `clearpass_*` (Aruba ClearPass), `apstra_*`
-(Juniper Apstra), and `axis_*` (Axis Atmos Cloud).
+(Juniper Apstra), `axis_*` (Axis Atmos Cloud), `aos8_*` (Aruba OS 8),
+`uxi_*` (Aruba UXI), and `edgeconnect_*` (Aruba EdgeConnect / Silver Peak Orchestrator).
 
 ## Code mode (default since v3.0.0.0)
 
 The server ships with `MCP_TOOL_MODE=code` by default since v3.0.0.0. At session start the AI sees **6 tools**:
 
-- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 1962 underlying tools
+- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 3178 underlying tools
 - **`tags(detail="brief")`** — browse the catalog by platform / module
 - **`search(query, tags=[...], detail)`** — BM25 search the catalog
 - **`get_schema(tools=[...], detail)`** — fetch parameter shape for named tools
 - **`skills_list(filter=...)`** — list bundled multi-step runbooks (since v2.3.0.0)
 - **`skills_load(name=...)`** — load a runbook to execute
 
-All 1962 per-platform tools documented below still exist and are reachable via `await call_tool(name, params)` inside `execute()`. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the discovery tools (`tags`, `search`, `get_schema`).
+All 3178 per-platform tools documented below still exist and are reachable via `await call_tool(name, params)` inside `execute()`. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the discovery tools (`tags`, `search`, `get_schema`).
 
 **Why code mode is the default since v3.0.0.0**: smallest initial token cost, single-round-trip multi-step orchestration, and validated against small local LLMs (Qwen3 4B Q4_K_M; see [#246](https://github.com/nowireless4u/hpe-networking-mcp/issues/246) reassessment).
 
-Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface (per-platform discovery — see next section). The `static` mode was REMOVED in v3.0.0.0 — at 1962 tools / ~64K tokens it was no longer practical.
+Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface (per-platform discovery — see next section). The `static` mode was REMOVED in v3.0.0.0 — at 3178 tools / ~64K tokens it was no longer practical.
 
 ## Dynamic mode (opt-in since v3.0.0.0; was the v2.x default)
 
@@ -31,7 +32,7 @@ With `MCP_TOOL_MODE=dynamic` the AI sees **24 tools**:
   - `site_health_check(site_name=...)`
   - `site_rf_check(site_name=...)`
   - `manage_wlan_profile(...)`
-- **3 meta-tools per platform** (× 8 platforms = 24)
+- **3 meta-tools per platform** (× 9 platforms = 27)
   - `<platform>_list_tools(filter=...)` — list candidates
   - `<platform>_get_tool_schema(name=...)` — fetch parameter schema
   - `<platform>_invoke_tool(name=..., arguments={...})` — invoke by name
@@ -39,7 +40,7 @@ With `MCP_TOOL_MODE=dynamic` the AI sees **24 tools**:
   - `skills_list(filter=...)` — list bundled multi-step runbooks
   - `skills_load(name=...)` — load a runbook to execute
 
-The 1962 per-platform tools are reachable via `<platform>_invoke_tool(name=..., arguments={...})`. Best when an orchestrator wants explicit per-tool dispatch rather than the sandboxed Python composition that code mode provides.
+The 3178 per-platform tools are reachable via `<platform>_invoke_tool(name=..., arguments={...})`. Best when an orchestrator wants explicit per-tool dispatch rather than the sandboxed Python composition that code mode provides.
 
 ## Code mode details (the default — see above for surface summary)
 
@@ -96,7 +97,7 @@ If you do try to dispatch to a discovery tool by mistake, `SandboxErrorCatchMidd
 - **`code` (default since v3.0.0.0)** — best for orchestrators driving small / local LLMs, multi-step aggregations, cross-platform joins, filter/map/reduce workflows. Smallest initial token cost. Validated against Qwen3 4B Q4_K_M via OpenClaw (see #246 reassessment).
 - **`dynamic` (opt-in since v3.0.0.0; was the v2.x default)** — best when the orchestrator wants explicit per-tool dispatch via `<platform>_invoke_tool` rather than sandboxed Python composition. Stable, production-tested for lookup-style questions.
 
-The `static` mode was REMOVED in v3.0.0.0 — at 1962 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` raises ValueError at startup.
+The `static` mode was REMOVED in v3.0.0.0 — at 3178 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` raises ValueError at startup.
 
 ## Overview
 
@@ -110,12 +111,13 @@ The `static` mode was REMOVED in v3.0.0.0 — at 1962 tools / ~64K tokens it was
 | Axis Atmos Cloud | 12 | 13 | -- | 25 |
 | Aruba OS 8 | 26 | 12 | 9 | 47 |
 | HPE UXI | 11 | 10 | -- | 21 |
+| Aruba EdgeConnect | 660 | 556 | -- | 1216 |
 | Cross-Platform | 3 | 1 | 3 | 7 |
 
 Write tools are disabled by default per platform. Enable them with environment variables:
 `ENABLE_MIST_WRITE_TOOLS=true`, `ENABLE_CENTRAL_WRITE_TOOLS=true`,
 `ENABLE_CLEARPASS_WRITE_TOOLS=true`, `ENABLE_APSTRA_WRITE_TOOLS=true`,
-`ENABLE_AXIS_WRITE_TOOLS=true`, or `ENABLE_UXI_WRITE_TOOLS=true`. Elicitation applies in both tool modes — the AI still gets a confirmation prompt before a destructive call, whether it invoked the tool inside `execute()` (code mode, default) or via `<platform>_invoke_tool` (dynamic mode).
+`ENABLE_AXIS_WRITE_TOOLS=true`, `ENABLE_UXI_WRITE_TOOLS=true`, or `ENABLE_EDGECONNECT_WRITE_TOOLS=true`. Elicitation applies in both tool modes — the AI still gets a confirmation prompt before a destructive call, whether it invoked the tool inside `execute()` (code mode, default) or via `<platform>_invoke_tool` (dynamic mode).
 
 ## Cross-platform static tools
 
