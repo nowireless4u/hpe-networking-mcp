@@ -447,7 +447,7 @@
   "info": {
     "contact": {},
     "title": "Session Control",
-    "version": "6.12.7"
+    "version": "6.14.0"
   },
   "openapi": "3.0.0",
   "paths": {

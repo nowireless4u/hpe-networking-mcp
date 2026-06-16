@@ -272,7 +272,11 @@
         "description": "Authentication Protocol of system monitoring settings",
         "enum": [
           "MD5",
-          "SHA"
+          "SHA",
+          "SHA-224",
+          "SHA-256",
+          "SHA-384",
+          "SHA-512"
         ],
         "example": "MD5",
         "title": "AuthProtocol",
@@ -439,11 +443,10 @@
       "PrivacyProtocol": {
         "description": "Privacy Protocol of system monitoring settings",
         "enum": [
-          "DES",
           "AES",
           "AES-256"
         ],
-        "example": "DES",
+        "example": "AES",
         "title": "PrivacyProtocol",
         "type": "string"
       },
@@ -1175,7 +1178,7 @@
   "info": {
     "contact": {},
     "title": "Local Server Configuration",
-    "version": "6.12.7"
+    "version": "6.14.0"
   },
   "openapi": "3.0.0",
   "paths": {
