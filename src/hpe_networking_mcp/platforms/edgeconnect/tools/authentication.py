@@ -1,9 +1,9 @@
 """Generated EdgeConnect tools — DO NOT EDIT BY HAND.
 
-Emitted by ``scripts/generate_edgeconnect_tools.py`` from
-``vendor/edgeconnect/EdgeConnect-9-7-REST-API.json``. Regenerate via:
-
-    uv run python scripts/generate_edgeconnect_tools.py
+Generated from ``vendor/edgeconnect/EdgeConnect-9-7-REST-API.json`` by the
+maintainer-local EdgeConnect generator. These generated modules are committed
+and are the runtime source of truth; regeneration is a release-time maintainer
+workflow (the generator is intentionally not committed — see ``.gitignore``).
 
 Tag: ``authentication``
 Operations in this file: 1
