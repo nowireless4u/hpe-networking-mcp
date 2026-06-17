@@ -273,6 +273,7 @@ async def edgeconnect_post_authentication_saml2_consume(
         "/authentication/saml2/consume",
         query_params=None,
         body=body,
+        body_mode="form",
     )
 
 

@@ -179,6 +179,7 @@ async def edgeconnect_post_ip_objects_address_group_bulk_upload(
         "/ipObjects/addressGroup/bulkUpload",
         query_params=None,
         body=body,
+        body_mode="multipart",
     )
 
 
@@ -231,6 +232,7 @@ async def edgeconnect_post_ip_objects_service_group_bulk_upload(
         "/ipObjects/serviceGroup/bulkUpload",
         query_params=None,
         body=body,
+        body_mode="multipart",
     )
 
 

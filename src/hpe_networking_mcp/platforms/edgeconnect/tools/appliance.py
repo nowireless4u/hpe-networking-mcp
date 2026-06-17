@@ -785,6 +785,7 @@ async def edgeconnect_post_appliance_discovered_deny(
         "/appliance/discovered/deny",
         query_params=query_params or None,
         body=body,
+        body_mode="text",
     )
 
 

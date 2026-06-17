@@ -10,6 +10,7 @@ import inspect
 
 import httpx
 import pytest
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.config import EdgeConnectSecrets
 from hpe_networking_mcp.platforms.edgeconnect.client import EdgeConnectClient
@@ -124,3 +125,41 @@ class TestSessionAuth:
 
         assert login_count == 2  # initial + one re-login on 401
         assert data_attempts == 2
+
+
+@pytest.mark.unit
+class TestBodyEncoding:
+    """Non-JSON bodies must be sent with the right Content-Type, not JSON-encoded."""
+
+    def _client(self):
+        return EdgeConnectClient(_api_key_secrets())
+
+    async def test_json_body_default(self):
+        client = self._client()
+        calls = _install_mock_transport(client, lambda r: httpx.Response(200, json={}))
+        await client.request("POST", "/x", json_body={"a": 1})
+        req = calls[-1]
+        assert "application/json" in req.headers["content-type"]
+        assert req.content == b'{"a": 1}' or b'"a"' in req.content
+
+    async def test_text_body_sends_text_plain_unquoted(self):
+        client = self._client()
+        calls = _install_mock_transport(client, lambda r: httpx.Response(200, json={}))
+        await client.request("POST", "/appliance/discovered/deny", json_body="a comment", body_mode="text")
+        req = calls[-1]
+        assert req.headers["content-type"] == "text/plain"
+        assert req.content == b"a comment"  # raw, not JSON-quoted ("a comment")
+
+    async def test_form_body_urlencoded(self):
+        client = self._client()
+        calls = _install_mock_transport(client, lambda r: httpx.Response(200, json={}))
+        await client.request("POST", "/authentication/saml2/consume", json_body={"SAMLResponse": "x"}, body_mode="form")
+        req = calls[-1]
+        assert "application/x-www-form-urlencoded" in req.headers["content-type"]
+        assert b"SAMLResponse=x" in req.content
+
+    async def test_multipart_unsupported_raises(self):
+        client = self._client()
+        _install_mock_transport(client, lambda r: httpx.Response(200, json={}))
+        with pytest.raises(ToolError):
+            await client.request("POST", "/brandCustomization/image", json_body={"f": 1}, body_mode="multipart")

@@ -54,4 +54,5 @@ async def edgeconnect_post_file_creation_fine_uploader(
         "/fileCreation/fineUploader",
         query_params=query_params or None,
         body=body,
+        body_mode="multipart",
     )

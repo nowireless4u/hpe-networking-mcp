@@ -3780,6 +3780,7 @@ async def edgeconnect_post_third_party_services_zscaler_countries(
         "/thirdPartyServices/zscaler/countries",
         query_params=None,
         body=body,
+        body_mode="text",
     )
 
 
@@ -3977,6 +3978,7 @@ async def edgeconnect_post_third_party_services_zscaler_timezones(
         "/thirdPartyServices/zscaler/timezones",
         query_params=None,
         body=body,
+        body_mode="text",
     )
 
 

@@ -212,6 +212,7 @@ class EdgeConnectClient:
         params: dict[str, Any] | None = None,
         json_body: Any = None,
         headers: dict[str, Any] | None = None,
+        body_mode: str = "json",
         timeout: float | None = None,
     ) -> httpx.Response:
         """Send an authenticated request, refreshing auth once on 401.
@@ -223,8 +224,12 @@ class EdgeConnectClient:
             method: HTTP method (GET/POST/PUT/DELETE).
             path: Path under ``/gms/rest`` (e.g. ``/appliance``).
             params: Optional additional query parameters.
-            json_body: Optional JSON request body.
+            json_body: Optional request body (encoding selected by ``body_mode``).
             headers: Optional extra request headers (merged over the auth headers).
+            body_mode: How to encode the body — ``"json"`` (default, ``json=`` +
+                ``application/json``), ``"text"`` (``content=`` + ``text/plain``),
+                ``"form"`` (``data=`` + ``x-www-form-urlencoded``), or
+                ``"multipart"`` (not supported — raises 501).
             timeout: Per-call timeout override in seconds.
 
         Returns:
@@ -232,21 +237,37 @@ class EdgeConnectClient:
         """
         token = await self._tokens.get_token()
         merged_params = {**_SOURCE_PARAM, **(params or {})}
-        kwargs: dict[str, Any] = {
-            "headers": {**self._auth_headers(token), **(headers or {})},
-            "params": merged_params,
-        }
-        if json_body is not None:
-            kwargs["json"] = json_body
-        if timeout is not None:
-            kwargs["timeout"] = timeout
 
-        response = await self._http.request(method, path, **kwargs)
+        def _build_kwargs(tok: str) -> dict[str, Any]:
+            if body_mode == "multipart":
+                raise ToolError(
+                    {
+                        "status_code": 501,
+                        "message": f"multipart/form-data upload is not supported via this MCP tool "
+                        f"({method} {path}); use the Orchestrator API/UI directly.",
+                    }
+                )
+            hdrs = {**self._auth_headers(tok), **(headers or {})}
+            kw: dict[str, Any] = {"params": merged_params}
+            if json_body is not None:
+                if body_mode == "text":
+                    kw["content"] = json_body if isinstance(json_body, (str, bytes)) else str(json_body)
+                    hdrs["Content-Type"] = "text/plain"
+                elif body_mode == "form":
+                    kw["data"] = json_body
+                    hdrs["Content-Type"] = "application/x-www-form-urlencoded"
+                else:  # json
+                    kw["json"] = json_body
+            kw["headers"] = hdrs
+            if timeout is not None:
+                kw["timeout"] = timeout
+            return kw
+
+        response = await self._http.request(method, path, **_build_kwargs(token))
         if response.status_code == 401:
             logger.info("EdgeConnect: 401 on {} {} — refreshing auth once", method, path)
             token = await self._tokens.refresh()
-            kwargs["headers"] = {**self._auth_headers(token), **(headers or {})}
-            response = await self._http.request(method, path, **kwargs)
+            response = await self._http.request(method, path, **_build_kwargs(token))
         response.raise_for_status()
         return response
 
@@ -286,6 +307,7 @@ async def edgeconnect_request(
     query_params: dict[str, Any] | None = None,
     header_params: dict[str, Any] | None = None,
     body: Any = None,
+    body_mode: str = "json",
 ) -> Any:
     """Transport shim for generated tools — fetch client, send, return parsed JSON.
 
@@ -318,7 +340,9 @@ async def edgeconnect_request(
             }
         )
     try:
-        response = await client.request(method, path, params=query_params, headers=header_params, json_body=body)
+        response = await client.request(
+            method, path, params=query_params, headers=header_params, json_body=body, body_mode=body_mode
+        )
     except ToolError:
         raise
     except Exception as exc:

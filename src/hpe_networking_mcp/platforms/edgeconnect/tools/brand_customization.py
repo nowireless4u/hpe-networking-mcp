@@ -152,6 +152,7 @@ async def edgeconnect_post_brand_customization_image(
         "/brandCustomization/image",
         query_params=query_params or None,
         body=body,
+        body_mode="multipart",
     )
 
 
@@ -203,4 +204,5 @@ async def edgeconnect_put_brand_customization_image(
         "/brandCustomization/image",
         query_params=query_params or None,
         body=body,
+        body_mode="multipart",
     )
