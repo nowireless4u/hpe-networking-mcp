@@ -325,6 +325,9 @@ def create_server(config: ServerConfig) -> FastMCP:
     from hpe_networking_mcp.middleware.sandbox_error_catch import (
         SandboxErrorCatchMiddleware,
     )
+    from hpe_networking_mcp.middleware.unknown_tool_suggest import (
+        UnknownToolSuggestMiddleware,
+    )
     from hpe_networking_mcp.middleware.validation_catch import ValidationCatchMiddleware
     from hpe_networking_mcp.redaction.token_store import TokenStore
 
@@ -337,6 +340,8 @@ def create_server(config: ServerConfig) -> FastMCP:
     #   NullStrip           — drop nulls before validation
     #   ValidationCatch     — Pydantic ValidationError → readable string return
     #   SandboxErrorCatch   — code-mode MontyRuntimeError on execute → string return
+    #   UnknownToolSuggest  — top-level "Unknown tool" → structured "did you
+    #                         mean" candidate list (#489)
     #   PIITokenization     — detokenize inbound args / tokenize outbound results
     #                         (always normalizes MACs even when toggle is off)
     #   Elicitation         — write-tool confirmation gate; user sees real values
@@ -357,6 +362,7 @@ def create_server(config: ServerConfig) -> FastMCP:
             NullStripMiddleware(),
             ValidationCatchMiddleware(),
             SandboxErrorCatchMiddleware(),
+            UnknownToolSuggestMiddleware(),
             PIITokenizationMiddleware(token_store, enabled=config.enable_pii_tokenization),
             ElicitationMiddleware(),
             RetryMiddleware(),
