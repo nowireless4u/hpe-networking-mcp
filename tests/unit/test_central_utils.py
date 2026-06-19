@@ -7,11 +7,35 @@ import pytest
 from hpe_networking_mcp.platforms.central.utils import (
     FilterField,
     _safe_float,
+    as_collection,
     build_odata_filter,
     compute_time_window,
     process_site_health_data,
     transform_to_site_data,
 )
+
+
+@pytest.mark.unit
+class TestAsCollection:
+    """The uniform collection envelope contract (#491)."""
+
+    def test_wraps_list_under_items(self):
+        rows = [{"a": 1}, {"a": 2}]
+        assert as_collection(rows) == {"items": rows}
+
+    def test_empty_and_none_normalize_to_empty_items(self):
+        assert as_collection([]) == {"items": []}
+        assert as_collection(None) == {"items": []}
+
+    def test_preserves_non_none_metadata_siblings(self):
+        out = as_collection([{"a": 1}], total=42, next=2)
+        assert out == {"items": [{"a": 1}], "total": 42, "next": 2}
+
+    def test_drops_none_valued_metadata(self):
+        out = as_collection([{"a": 1}], total=5, next=None)
+        assert out == {"items": [{"a": 1}], "total": 5}
+        assert "next" not in out
+
 
 # ---------------------------------------------------------------------------
 # build_odata_filter

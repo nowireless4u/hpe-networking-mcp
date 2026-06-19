@@ -9,6 +9,7 @@ from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.models import Device
 from hpe_networking_mcp.platforms.central.utils import (
     FilterField,
+    as_collection,
     as_comma_separated,
     build_odata_filter,
     clean_device_data,
@@ -39,7 +40,7 @@ async def central_get_devices(
     is_provisioned: bool | None = None,
     site_assigned: bool | None = None,
     sort: str | None = None,
-) -> list[Device] | str:
+) -> dict:
     """
     Returns a filtered list of devices from Central using OData v4.0 filter syntax.
 
@@ -99,9 +100,7 @@ async def central_get_devices(
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching devices: {e}"}) from e
 
-    if not devices:
-        return "No devices found matching the specified criteria."
-    return clean_device_data(devices)
+    return as_collection(clean_device_data(devices) if devices else [])
 
 
 @tool(capability=Capability.READ)

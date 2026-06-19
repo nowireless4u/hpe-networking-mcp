@@ -12,25 +12,24 @@ pytestmark = pytest.mark.integration
 
 
 async def test_get_wlans_returns_results(live_ctx):
-    """Verify central_get_wlans returns WLAN data."""
+    """Verify central_get_wlans returns the uniform {"items": [...]} collection (#491)."""
     result = await central_get_wlans(live_ctx)
-    assert isinstance(result, (list, str))
-    if isinstance(result, list):
-        assert len(result) > 0
+    assert isinstance(result, dict)
+    assert isinstance(result["items"], list)
 
 
 async def test_get_wlans_all_have_name(live_ctx):
     """Verify all returned WLANs have a name field."""
-    result = await central_get_wlans(live_ctx)
-    if isinstance(result, str):
+    items = (await central_get_wlans(live_ctx))["items"]
+    if not items:
         pytest.skip("No WLANs available")
-    assert all(w.get("wlanName") or w.get("essid") for w in result)
+    assert all(w.get("wlanName") or w.get("essid") for w in items)
 
 
 async def test_get_wlan_stats_for_known_wlan(live_ctx):
     """Get throughput stats for the first WLAN found."""
-    wlans = await central_get_wlans(live_ctx)
-    if isinstance(wlans, str) or not wlans:
+    wlans = (await central_get_wlans(live_ctx))["items"]
+    if not wlans:
         pytest.skip("No WLANs available")
     wlan_name = wlans[0].get("wlanName") or wlans[0].get("essid")
     if not wlan_name:
@@ -44,8 +43,8 @@ async def test_get_wlan_stats_for_known_wlan(live_ctx):
 
 async def test_get_wlan_stats_custom_time_window(live_ctx):
     """Verify custom start/end time overrides time_range."""
-    wlans = await central_get_wlans(live_ctx)
-    if isinstance(wlans, str) or not wlans:
+    wlans = (await central_get_wlans(live_ctx))["items"]
+    if not wlans:
         pytest.skip("No WLANs available")
     wlan_name = wlans[0].get("wlanName") or wlans[0].get("essid")
     if not wlan_name:

@@ -57,9 +57,9 @@ async def central_get_alerts(
     cursor: int | None = None,
 ) -> PaginatedAlerts | str:
     """
-    REQUIRES site_id — call central_get_site_health(site_name="<site name>") and extract
-    site_id from the returned SiteData. Do NOT call this tool without a site_id; it will
-    fail validation.
+    REQUIRES site_id — call central_get_site_health(site_name="<site name>") and read
+    site_id from the first item (data["items"][0]["site_id"]). Do NOT call this tool
+    without a site_id; it will fail validation.
 
     Returns a filtered list of alerts for a specific site. Use this to drill into active
     issues by device type or category after identifying the target site.
@@ -73,7 +73,7 @@ async def central_get_alerts(
 
     Parameters:
         - site_id: Site identifier. Obtain by calling
-          central_get_site_health(site_name="<name>") and reading site_id from the result.
+          central_get_site_health(site_name="<name>") and reading data["items"][0]["site_id"].
         - status: "Active" (default) for unresolved/open alerts, "Cleared" for resolved
           ones, "Deferred" for snoozed ones. Case-insensitive; "Open" is accepted as a
           synonym for "Active".

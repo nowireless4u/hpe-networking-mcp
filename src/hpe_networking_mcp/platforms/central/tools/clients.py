@@ -9,6 +9,7 @@ from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.models import Client
 from hpe_networking_mcp.platforms.central.utils import (
     FilterField,
+    as_collection,
     build_odata_filter,
     clean_client_data,
     coerce_enum,
@@ -44,7 +45,7 @@ async def central_get_clients(
     ] = None,
     start_query_time: str | None = None,
     end_query_time: str | None = None,
-) -> list[Client] | str:
+) -> dict:
     """
     Returns a filtered list of clients from Central using OData v4.0 filter syntax.
 
@@ -94,9 +95,7 @@ async def central_get_clients(
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error occurred while fetching clients: {e}"}) from e
 
-    if not clients:
-        return "No clients found matching the specified criteria."
-    return clean_client_data(clients)
+    return as_collection(clean_client_data(clients) if clients else [])
 
 
 @tool(capability=Capability.READ)

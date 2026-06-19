@@ -126,11 +126,12 @@ The operator names an AP (by name/serial), a site, or a gateway.
 sites = await call_tool("central_invoke_tool",
     {"name": "central_get_site_name_id_mapping", "params": {}})
 sites = sites.get("data", sites)            # unwrap the response envelope
-# pick the operator's site key (exact, case-insensitive), then:
+site_rows = sites.get("items", []) if isinstance(sites, dict) else []
+# pick the operator's site from site_rows (match item["site_name"], case-insensitive), then:
 aps = await call_tool("central_invoke_tool",
     {"name": "central_get_aps", "params": {"site_name": "HQ", "status": "Up"}})
 aps = aps.get("data", aps)
-ap_rows = aps.get("result", aps) if isinstance(aps, dict) else aps
+ap_rows = aps.get("items", []) if isinstance(aps, dict) else aps   # uniform {"items": [...]} (#491)
 # each row carries the AP name + serial; collect (name, serial) pairs.
 targets = [{"name": a.get("deviceName") or a.get("name"),
             "serial": a.get("serial") or a.get("serialNumber")} for a in ap_rows]
