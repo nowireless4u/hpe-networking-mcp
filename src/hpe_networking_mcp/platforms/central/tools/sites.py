@@ -117,8 +117,8 @@ async def central_get_site_health(
 
     Parameters:
         site_name: One site name or a list of site names to filter by (exact match).
-            Accepts either a single string (e.g. "Owls Nest") or a list of strings
-            (e.g. ["Owls Nest", "HQ"]). If omitted, all sites are returned (use sparingly).
+            Accepts either a single string (e.g. "HQ") or a list of strings
+            (e.g. ["HQ", "BRANCH-1"]). If omitted, all sites are returned (use sparingly).
     """
     wanted = normalize_site_name_filter(site_name)
     sites_data = await fetch_site_data_parallel(get_central_conn(ctx))

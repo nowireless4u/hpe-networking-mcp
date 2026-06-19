@@ -406,8 +406,8 @@ One sentence describing why this color was chosen. Examples:
 ## Activity
 
 **Central** (N total events, M write actions):
-- alice@corp.com — 12 events: 3 logins, 9 reads, 0 writes
-- bob@corp.com — 4 events: 1 login, 1 write (`Update Site` at HQ)
+- alice@example.com — 12 events: 3 logins, 9 reads, 0 writes
+- bob@example.com — 4 events: 1 login, 1 write (`Update Site` at HQ)
 - system — 23 events: routine (skip detail)
 
 **Mist** (N total events, M write actions):
@@ -529,7 +529,7 @@ When producing the executive output, the AI MUST:
   exec-relevant.
 - **No audit-log per-user breakdown.** *"A change was made overnight by
   the engineering team"* is enough; exec doesn't need to know it was
-  alice@corp.com vs bob@corp.com.
+  alice@example.com vs bob@example.com.
 - **Length under 100 words.** A 30-second read. If you're writing more
   than 100 words you're including operational detail that belongs in
   engineer mode.

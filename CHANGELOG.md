@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.1.1] - 2026-06-19
+
+**Patch — fix(docs): scrub parrot-able example values from shipped artifacts (#492).** Part 2 of #492 (the confabulation root cause was already addressed structurally by #488–#491). A small model that exhausted discovery had fabricated a site with a realistic-looking ID; this pass removes example values realistic enough to be regurgitated as live data, replacing them with self-evidently synthetic placeholders. An audit of shipped runtime artifacts (`INSTRUCTIONS.md`, `skills/*.md`, tool docstrings) found **no** parrot-able hex/numeric IDs — only a few realistic names/addresses.
+
+### Changed
+- `central_get_site_health` docstring: example site name `"Owls Nest"` → generic `"HQ"` / `"BRANCH-1"`.
+- `central-qos-policy` skill: example destination subnet `165.130.0.0` (real public space) → `203.0.113.0` (RFC 5737 documentation range), preserving the dotted-mask lesson.
+- Example emails `@corp.com` → `@example.com` (RFC 2606 reserved) in `INSTRUCTIONS.md` and the `morning-coffee-report` skill.
+
+### Scope
+- Hand-authored shipped artifacts only. Spec-derived examples in **generated** `mist_*` / `edgeconnect_*` docstrings (e.g. a sample MAC / email from the OpenAPI spec) are out of scope — they are regenerated from upstream and would be overwritten (related: #500). AOS firmware version strings (e.g. `8.12.0.1`) are real, meaningful values, not addresses, and are unchanged.
+
 ## [3.4.1.0] - 2026-06-19
 
 **Minor — fix(code-mode): uniform `{items: [...]}` collection shape for Central reads (#491).** Central's hand-curated collection reads returned a mix of shapes — a bare list (`central_get_aps`), a name-keyed dict (`central_get_site_name_id_mapping`), and an empty-result string — so a model that assumed one shape silently mis-read another (e.g. treating the name-keyed mapping as a list → "0 sites"). All such reads now expose a single contract: rows live under `data["items"]`, even when empty (`{"items": []}`). This is a **behavior change** to those tools' output (hence the minor bump).
