@@ -66,6 +66,23 @@ class Skill:
             "tools": list(self.tools),
         }
 
+    def to_summary(self) -> dict[str, Any]:
+        """Return a compact listing entry for ``skills_list`` (#490).
+
+        Omits the (often multi-paragraph) ``description`` and the full
+        ``tools`` array — both live behind ``skills_load``. Keeps just enough
+        to judge relevance and load the right skill. Across ~15 matching
+        skills this is roughly a 90% payload reduction versus
+        ``to_metadata``, which otherwise floods a small model's context on
+        its very first tool result.
+        """
+        return {
+            "name": self.name,
+            "title": self.title,
+            "platforms": list(self.platforms),
+            "tags": list(self.tags),
+        }
+
 
 def _as_str_tuple(value: Any) -> tuple[str, ...]:
     """Coerce a frontmatter list-or-None field to a tuple of strings."""
@@ -223,10 +240,12 @@ _SKILLS_LIST_DESC = (
     "procedures for AOS 8 → Central migration, infrastructure health "
     "checks, RF / channel-planning checks, change pre-check / post-check, "
     "WLAN sync validation, scope audits (mist / central), and morning "
-    "network reports. Returns skill metadata only — if a skill matches, "
-    "call `skills_load(name)` for the full runbook and follow it. Optional "
-    "`platform` / `tag` filters each accept a string or list of strings. "
-    "Only proceed to `search` / `execute` / platform tools when "
+    "network reports. Returns a compact listing (name / title / tags / "
+    "platforms) — if a skill matches, call `skills_load(name)` for its full "
+    "description, tool list, and runbook body, then follow it. Optional "
+    "`platform` / `tag` filters each accept a string or list of strings; pass "
+    "`detail=true` to include each skill's full description and tool list "
+    "inline. Only proceed to `search` / `execute` / platform tools when "
     "`skills_list` returns no applicable skill."
 )
 
@@ -262,11 +281,15 @@ def _make_skills_list_fn(registry: SkillRegistry):
         ctx: Context = None,  # type: ignore[assignment]
         platform: str | list[str] | None = None,
         tag: str | list[str] | None = None,
+        detail: bool = False,
     ) -> dict[str, Any]:
         results = registry.filter(platform=platform, tag=tag)
         skills: list[dict[str, Any]] = []
         for s in results:
-            entry = s.to_metadata()
+            # Compact by default (#490): full description + tools[] live behind
+            # skills_load, so the first discovery result doesn't flood a small
+            # model's context. detail=True restores the full metadata.
+            entry = s.to_metadata() if detail else s.to_summary()
             # The literal next call to make for this skill — issue #336.
             entry["load_with"] = f"skills_load(name={s.name!r})"
             skills.append(entry)

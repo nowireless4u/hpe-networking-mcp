@@ -372,6 +372,34 @@ class TestDiscoveryToolFactories:
             assert entry["load_with"] == f"skills_load(name={entry['name']!r})"
 
     @pytest.mark.asyncio
+    async def test_skills_list_compact_by_default(self):
+        """#490: the default listing is compact — name / title / tags /
+        platforms / load_with only. The full description and tools[] live
+        behind skills_load so the first result doesn't flood a small model."""
+        from hpe_networking_mcp.skills._engine import SkillsListDiscoveryTool
+
+        reg = SkillRegistry([_skill("alpha", platforms=("mist",), tags=("health",))])
+        tool = SkillsListDiscoveryTool(reg)(get_catalog=None)
+        entry = (await tool.fn())["skills"][0]
+
+        assert set(entry) == {"name", "title", "platforms", "tags", "load_with"}
+        assert "description" not in entry
+        assert "tools" not in entry
+
+    @pytest.mark.asyncio
+    async def test_skills_list_detail_true_includes_full_metadata(self):
+        """#490: detail=true restores the full description + tools[] inline."""
+        from hpe_networking_mcp.skills._engine import SkillsListDiscoveryTool
+
+        reg = SkillRegistry([_skill("alpha", platforms=("mist",), tags=("health",))])
+        tool = SkillsListDiscoveryTool(reg)(get_catalog=None)
+        entry = (await tool.fn(detail=True))["skills"][0]
+
+        assert "description" in entry
+        assert "tools" in entry
+        assert entry["load_with"] == "skills_load(name='alpha')"
+
+    @pytest.mark.asyncio
     async def test_skills_list_factory_empty_result_has_fallback_next_step(self):
         """Issue #336: with no matches, next_step tells the AI to fall back
         to per-platform tools rather than (wrongly) pushing skills_load."""
