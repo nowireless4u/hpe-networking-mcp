@@ -587,7 +587,11 @@ class _ArgTolerantFunctionTool(FunctionTool):
         args = dict(arguments or {})
         platform = args.pop("platform", None)
         if platform is not None and "tags" in props:
-            plats = [platform] if isinstance(platform, str) else list(platform)
+            # Only list/tuple/set means "multiple platforms". Any other value
+            # (str, or a malformed scalar like int/bool) is treated as one —
+            # never list() a non-iterable scalar, which would raise TypeError
+            # and re-create the very dead-end this fix removes (#488).
+            plats = list(platform) if isinstance(platform, (list, tuple, set)) else [platform]
             existing = args.get("tags") or []
             if isinstance(existing, str):
                 existing = [existing]

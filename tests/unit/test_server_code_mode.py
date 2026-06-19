@@ -229,6 +229,15 @@ class TestDiscoveryArgTolerance:
         assert "central_get_sites" in text
         assert "mist_get_self" not in text  # filtered out by the platform->tags fold
 
+    async def test_tolerant_search_handles_scalar_nonstring_platform(self) -> None:
+        """#495 (Casey): a malformed non-string scalar `platform` (e.g. 123 / True)
+        must NOT raise — `list(123)` would TypeError and re-create the dead-end.
+        It is coerced to a single tag, so the call still runs."""
+        tool = self._search_tool(tolerant=True)
+        for bad in (123, True):
+            result = await tool.run({"query": "get", "platform": bad})
+            assert result.content  # ran without raising
+
     async def test_tolerant_search_plain_query_unaffected(self) -> None:
         """A normal call with no extra args still works unchanged."""
         tool = self._search_tool(tolerant=True)
