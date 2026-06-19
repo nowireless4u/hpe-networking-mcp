@@ -170,6 +170,39 @@ def registry() -> SkillRegistry:
 
 
 @pytest.mark.unit
+class TestRegistryMatch:
+    """Free-text skill matching that drives structural skills-first (#493)."""
+
+    def test_matches_on_tag_tokens(self, registry):
+        matches = registry.match("sync wlan")
+        assert [s.name for s in matches] == ["alpha-sync"]
+
+    def test_matches_on_name_token(self, registry):
+        matches = registry.match("health")
+        assert [s.name for s in matches] == ["alpha-health"]
+
+    def test_ranks_by_overlap(self, registry):
+        # "alpha" hits both alpha-* skills; "sync" additionally hits alpha-sync,
+        # so alpha-sync (overlap 2) must rank above alpha-health (overlap 1).
+        matches = registry.match("alpha sync")
+        assert matches[0].name == "alpha-sync"
+        assert {s.name for s in matches} == {"alpha-sync", "alpha-health"}
+
+    def test_respects_limit(self, registry):
+        assert len(registry.match("alpha", limit=1)) == 1
+
+    def test_no_match_returns_empty(self, registry):
+        assert registry.match("nonexistent zzzz") == []
+
+    def test_empty_query_returns_empty(self, registry):
+        assert registry.match("") == []
+
+    def test_generic_filler_tokens_do_not_match(self, registry):
+        # "the", "for", "all" are stopwords; "list"/"get" are generic verbs.
+        assert registry.match("list all the get") == []
+
+
+@pytest.mark.unit
 class TestRegistryFilter:
     def test_no_filter_returns_all(self, registry):
         assert {s.name for s in registry.filter()} == {

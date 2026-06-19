@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.1.2] - 2026-06-19
+
+**Patch — feat(code-mode): surface matching skills as `search` result data (#493).** Skills-first was enforced only through untrusted channels — the server `instructions` blob and prepended tool-description prose — which frontier models do not reliably honor. This makes it structural: when a code-mode `search` query matches a bundled skill, the match list is **prepended to the search result** as an observation the model acts on, not an instruction it must trust. Completes the code-mode small-model hardening set (#488–#493).
+
+### Added
+- `SkillRegistry.match(query, limit=3)`: lightweight token-overlap matcher (skill name / title / tags / platforms), ties broken by name. Short domain terms like `rf` survive; generic fillers/verbs are stopworded.
+- `_SkillAwareSearchTool` (`server.py`): the code-mode `search` tool now prepends a `MATCHING SKILLS` block (each with its `skills_load(name=…)` call) when the query matches a bundled skill. Inert when no skill matches. Inherits the #488 arg-tolerance and #496 `platform` advertisement.
+
+### Notes
+- The existing prose skills-first gate (`_SKILLS_FIRST_GATE` on the discovery descriptions, `execute` PREREQUISITE) is retained as a complementary hint for models that do honor it — this PR adds the durable, model-agnostic mechanism alongside it.
+
 ## [3.4.1.1] - 2026-06-19
 
 **Patch — fix(docs): scrub parrot-able example values from shipped artifacts (#492).** Part 2 of #492 (the confabulation root cause was already addressed structurally by #488–#491). A small model that exhausted discovery had fabricated a site with a realistic-looking ID; this pass removes example values realistic enough to be regurgitated as live data, replacing them with self-evidently synthetic placeholders. An audit of shipped runtime artifacts (`INSTRUCTIONS.md`, `skills/*.md`, tool docstrings) found **no** parrot-able hex/numeric IDs — only a few realistic names/addresses.

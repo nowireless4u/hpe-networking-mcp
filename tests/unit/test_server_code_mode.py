@@ -281,6 +281,79 @@ class TestDiscoveryArgTolerance:
 
 
 @pytest.mark.unit
+class TestSkillAwareSearch:
+    """#493: `search` surfaces matching bundled skills as result data, so
+    skills-first is structural (an observation in the result) rather than
+    prose in the tool description that frontier models ignore.
+    """
+
+    @staticmethod
+    def _catalog():
+        from fastmcp.tools.tool import Tool
+
+        async def central_get_sites() -> dict:
+            return {}
+
+        return [Tool.from_function(fn=central_get_sites, name="central_get_sites", tags={"central"})]
+
+    def _search_tool(self):
+        from fastmcp.experimental.transforms.code_mode import Search
+
+        catalog = self._catalog()
+
+        async def get_catalog(ctx=None):
+            return catalog
+
+        base = Search(default_detail="brief")(get_catalog)
+        return srv._make_skill_aware_search(base)
+
+    @staticmethod
+    def _registry():
+        from hpe_networking_mcp.skills._engine import Skill, SkillRegistry
+
+        return SkillRegistry(
+            [
+                Skill(
+                    name="central-site-dashboard",
+                    title="Single-site Central dashboard",
+                    description="d",
+                    platforms=("central",),
+                    tags=("dashboard", "site"),
+                )
+            ]
+        )
+
+    async def test_matching_query_prepends_skill_block(self, monkeypatch) -> None:
+        monkeypatch.setattr(srv, "_SEARCH_SKILL_REGISTRY", self._registry())
+        tool = self._search_tool()
+        assert isinstance(tool, srv._SkillAwareSearchTool)
+        result = await tool.run({"query": "central site dashboard"})
+        text = result.content[0].text
+        assert "MATCHING SKILLS" in text
+        assert "central-site-dashboard" in text
+        assert "skills_load(name='central-site-dashboard')" in text
+
+    async def test_non_matching_query_has_no_skill_block(self, monkeypatch) -> None:
+        monkeypatch.setattr(srv, "_SEARCH_SKILL_REGISTRY", self._registry())
+        tool = self._search_tool()
+        result = await tool.run({"query": "switches"})
+        assert "MATCHING SKILLS" not in result.content[0].text
+
+    async def test_no_registry_is_inert(self, monkeypatch) -> None:
+        monkeypatch.setattr(srv, "_SEARCH_SKILL_REGISTRY", None)
+        tool = self._search_tool()
+        result = await tool.run({"query": "central site dashboard"})
+        assert "MATCHING SKILLS" not in result.content[0].text
+
+    async def test_arg_tolerance_still_applies(self, monkeypatch) -> None:
+        # #488 behavior is inherited: an extra `platform` arg must not reject.
+        monkeypatch.setattr(srv, "_SEARCH_SKILL_REGISTRY", self._registry())
+        tool = self._search_tool()
+        result = await tool.run({"query": "sites", "platform": "central", "junk": 1})
+        assert result.content
+
+
+@pytest.mark.unit
 @pytest.mark.parametrize("init_path", PLATFORM_INIT_FILES)
 def test_platform_init_registers_meta_tools_unconditionally(init_path: str) -> None:
     """v3.0.1.15 (issue #302): each platform's register_tools must call

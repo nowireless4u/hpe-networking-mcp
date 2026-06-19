@@ -175,6 +175,66 @@ def _coerce_filter(value: str | list[str] | None) -> set[str] | None:
     return {str(v) for v in value}
 
 
+# Generic filler/verb tokens that don't discriminate between skills. Kept
+# deliberately small: discriminating domain terms that happen to be short
+# (e.g. "rf") or appear in skill names (e.g. "check", "scope") are NOT
+# stopworded — over-pruning misses real matches.
+_MATCH_STOPWORDS = frozenset(
+    {
+        "the",
+        "for",
+        "all",
+        "and",
+        "with",
+        "from",
+        "this",
+        "that",
+        "any",
+        "are",
+        "what",
+        "which",
+        "how",
+        "please",
+        "need",
+        "give",
+        "get",
+        "show",
+        "list",
+        "find",
+        "to",
+        "of",
+        "is",
+        "in",
+        "on",
+        "or",
+        "no",
+        "my",
+        "we",
+        "it",
+        "be",
+        "as",
+        "at",
+        "by",
+        "do",
+        "an",
+    }
+)
+
+
+def _match_tokens(text: str) -> set[str]:
+    """Tokenize free text into significant lowercase tokens for skill matching.
+
+    Min length 2 so short domain terms like ``rf`` survive; stopwords drop
+    generic fillers/verbs that would otherwise cause spurious overlap.
+    """
+    out: set[str] = set()
+    for raw in text.replace("-", " ").replace("_", " ").replace("/", " ").split():
+        tok = "".join(c for c in raw.lower() if c.isalnum())
+        if len(tok) >= 2 and tok not in _MATCH_STOPWORDS:
+            out.add(tok)
+    return out
+
+
 class SkillRegistry:
     """In-memory skill index built once at server startup."""
 
@@ -208,6 +268,28 @@ class SkillRegistry:
         if wanted_tags is not None:
             results = [s for s in results if any(t in wanted_tags for t in s.tags)]
         return results
+
+    def match(self, query: str, *, limit: int = 3) -> list[Skill]:
+        """Free-text match a query to bundled skills, best first (#493).
+
+        Lightweight token-overlap scoring against each skill's name / title /
+        tags / platforms. Returns skills sharing at least one significant
+        token with the query, most-overlapping first (ties broken by name),
+        capped at ``limit``. Drives the structural skills-first surfacing in
+        code-mode ``search`` results — a skill match arrives as observation
+        data, not prose the model must trust.
+        """
+        q_tokens = _match_tokens(query or "")
+        if not q_tokens:
+            return []
+        scored: list[tuple[int, Skill]] = []
+        for skill in self.all():
+            searchable = " ".join([skill.name, skill.title, " ".join(skill.tags), " ".join(skill.platforms)])
+            overlap = len(q_tokens & _match_tokens(searchable))
+            if overlap:
+                scored.append((overlap, skill))
+        scored.sort(key=lambda pair: (-pair[0], pair[1].name))
+        return [skill for _score, skill in scored[:limit]]
 
     def lookup(self, name: str) -> Skill | list[Skill] | None:
         """Return one ``Skill`` on exact match, a list on multiple substring
