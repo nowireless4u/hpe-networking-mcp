@@ -59,7 +59,9 @@ async def central_get_wlans(
         raise ToolError({"status_code": 502, "message": f"Error fetching WLANs: {e}"}) from e
 
     if isinstance(resp, dict):
-        return as_collection(resp.get("items", []))
+        # Preserve any upstream pagination/summary siblings (total, next, …)
+        # alongside the normalized items list (Casey, #501).
+        return as_collection(resp.get("items", []), **{k: v for k, v in resp.items() if k != "items"})
     if isinstance(resp, list):
         return as_collection(resp)
     return as_collection([])
