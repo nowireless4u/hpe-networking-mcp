@@ -251,6 +251,34 @@ class TestDiscoveryArgTolerance:
         result = await tool.run({"tools": ["central_get_sites"], "platform": "central"})
         assert result.content
 
+    def test_search_advertises_platform_in_published_schema(self) -> None:
+        """#496 (idea from @gaoflow #494): `search` advertises the optional
+        `platform` arg in its published input schema so schema-introspecting
+        clients use it deliberately — alongside the runtime tolerance."""
+        tool = self._search_tool(tolerant=True)
+        props = tool.parameters["properties"]
+        assert "platform" in props
+        # It's optional (not required) and documents the platform names.
+        assert "platform" not in tool.parameters.get("required", [])
+        assert "central" in props["platform"]["description"]
+
+    def test_get_schema_does_not_advertise_platform(self) -> None:
+        """`platform` is only advertised where a `tags` filter can act on it.
+        get_schema has no `tags` param, so it must NOT advertise `platform`
+        (advertising an arg it silently drops would be misleading)."""
+        tool = self._get_schema_tool()
+        assert "platform" not in tool.parameters.get("properties", {})
+
+    async def test_advertised_platform_still_folds_at_runtime(self) -> None:
+        """Advertising `platform` must not change runtime behavior — it still
+        folds into tags and scopes results (run() validates against the
+        signature, not the published schema)."""
+        tool = self._search_tool(tolerant=True)
+        result = await tool.run({"query": "get", "platform": "central"})
+        text = result.content[0].text
+        assert "central_get_sites" in text
+        assert "mist_get_self" not in text
+
 
 @pytest.mark.unit
 @pytest.mark.parametrize("init_path", PLATFORM_INIT_FILES)

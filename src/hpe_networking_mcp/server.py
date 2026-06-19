@@ -601,14 +601,47 @@ class _ArgTolerantFunctionTool(FunctionTool):
         return await super().run(args)
 
 
+# Published-schema description for the optional `platform` argument (#496).
+_PLATFORM_ARG_SCHEMA: dict[str, Any] = {
+    "anyOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}],
+    "default": None,
+    "description": (
+        "Optional platform to scope results to — one name (e.g. 'central') or a "
+        "list. One of: mist, central, greenlake, clearpass, apstra, axis, aos8, "
+        "uxi, edgeconnect. Folded into the tag filter."
+    ),
+}
+
+
+def _advertise_platform_arg(tool: _ArgTolerantFunctionTool) -> None:
+    """Surface the tolerated ``platform`` arg in the published input schema (#496).
+
+    ``_ArgTolerantFunctionTool`` already *accepts* a ``platform`` argument and
+    folds it into ``tags`` (#488), but a model that introspects the schema has
+    no signal that ``platform`` is a first-class way to scope a call — it only
+    works for models that pass it blind. Advertising it lets schema-aware
+    clients use it deliberately. Only tools that actually have a ``tags`` filter
+    can act on ``platform``, so we add it solely where ``tags`` exists (in
+    practice: ``search``). Runtime behavior is unchanged — ``run`` validates
+    against the function signature, not this schema. Idea from @gaoflow (#494).
+    """
+    params = tool.parameters
+    props = params.get("properties") if isinstance(params, dict) else None
+    if props is not None and "tags" in props and "platform" not in props:
+        props["platform"] = dict(_PLATFORM_ARG_SCHEMA)
+
+
 def _make_arg_tolerant(tool: FunctionTool) -> _ArgTolerantFunctionTool:
     """Reconstruct a produced discovery Tool as the arg-tolerant subclass.
 
     fastmcp's discovery-tool factories always build a plain ``FunctionTool``;
     we copy its validated field values into ``_ArgTolerantFunctionTool`` so the
-    argument-normalizing ``run`` override takes effect (issue #488).
+    argument-normalizing ``run`` override takes effect (issue #488), then
+    advertise the optional ``platform`` arg in the published schema (#496).
     """
-    return _ArgTolerantFunctionTool(**{f: getattr(tool, f) for f in type(tool).model_fields})
+    tolerant = _ArgTolerantFunctionTool(**{f: getattr(tool, f) for f in type(tool).model_fields})
+    _advertise_platform_arg(tolerant)
+    return tolerant
 
 
 def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:

@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0.2] - 2026-06-19
+
+**Patch — feat(code-mode): advertise the optional `platform` arg in the `search` schema (#496).** Follow-up to #488/#495: the discovery tools already *tolerate* a `platform` argument (folding it into the tag filter), but the published input schema didn't surface it, so only models passing it blind benefited. `search` now advertises `platform` as an optional parameter, letting schema-introspecting clients scope a search deliberately. Idea contributed by @gaoflow (#494).
+
+### Added
+- `search`'s published input schema now includes an optional `platform` parameter (string or list of strings) documenting the accepted platform names. It is advertised only on discovery tools that have a `tags` filter to act on it (in practice, `search`) — `tags`/`get_schema` are unchanged. Runtime behavior is identical: `run()` validates against the function signature, not the published schema, so the existing fold-into-tags tolerance (incl. list/scalar handling) is unaffected. (#496)
+
 ## [3.4.0.1] - 2026-06-19
 
 **Patch — fix(code-mode): `search` / `tags` / `get_schema` tolerate extra args (#488).** Small local models routinely call the discovery entry point with a natural-but-undeclared argument, e.g. `search(query="sites list central", platform="central")`. fastmcp validates discovery-tool arguments against the function signature, so any unknown kwarg raised `Unexpected keyword argument` and the **entire** call was rejected — dead-ending discovery and (per external small-model testing) cascading into give-up or confabulation. This is a structural fix at the tool-behavior layer; it does not rely on guidance text.
