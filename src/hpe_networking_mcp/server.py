@@ -650,6 +650,55 @@ def _make_arg_tolerant(tool: FunctionTool) -> _ArgTolerantFunctionTool:
     return tolerant
 
 
+# Set during _register_code_mode so the skill-aware `search` tool — which is
+# reconstructed via model_fields and therefore can't carry instance state —
+# can reach the skill registry at request time (issue #493).
+_SEARCH_SKILL_REGISTRY: Any = None
+
+
+def _render_skill_matches(matches: list) -> str:
+    """Render matched skills as an observation block prepended to search results (#493)."""
+    lines = ["MATCHING SKILLS (vetted runbooks — load with skills_load before improvising):"]
+    for s in matches:
+        lines.append(f"- {s.name} — {s.title}  ->  skills_load(name={s.name!r})")
+    return "\n".join(lines)
+
+
+class _SkillAwareSearchTool(_ArgTolerantFunctionTool):
+    """`search` that surfaces matching bundled skills as result data (issue #493).
+
+    Skills-first was previously enforced only through untrusted channels — the
+    server ``instructions`` blob and prepended description prose, which frontier
+    models do not reliably honor. This makes it structural: when the query
+    matches a bundled skill, the match list is prepended to the search result
+    as an observation the model acts on, not an instruction it must trust.
+    Builds on the arg-tolerant ``run`` (#488); inert if no registry is set or
+    no skill matches.
+    """
+
+    async def run(self, arguments: dict[str, Any]) -> ToolResult:
+        result = await super().run(arguments)
+        registry = _SEARCH_SKILL_REGISTRY
+        query = (arguments or {}).get("query", "")
+        if registry is None or not isinstance(query, str):
+            return result
+        matches = registry.match(query)
+        if not matches:
+            return result
+        from mcp.types import TextContent
+
+        result.content = [TextContent(type="text", text=_render_skill_matches(matches)), *result.content]
+        return result
+
+
+def _make_skill_aware_search(tool: FunctionTool) -> _SkillAwareSearchTool:
+    """Reconstruct the produced `search` tool as the skill-aware subclass (#493),
+    preserving the #488 arg-tolerance and #496 platform advertisement."""
+    aware = _SkillAwareSearchTool(**{f: getattr(tool, f) for f in type(tool).model_fields})
+    _advertise_platform_arg(aware)
+    return aware
+
+
 def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
     """Install the FastMCP CodeMode transform for ``MCP_TOOL_MODE=code``.
 
@@ -685,7 +734,7 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
         def __call__(self, get_catalog):
             tool = super().__call__(get_catalog)
             tool.description = _SEARCH_DESCRIPTION
-            return _make_arg_tolerant(tool)
+            return _make_skill_aware_search(tool)
 
     class _HpeGetTags(GetTags):
         def __call__(self, get_catalog):
@@ -772,6 +821,10 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
     )
 
     skill_registry = SkillRegistry.from_directory()
+    # Expose the registry to the skill-aware `search` tool so it can surface
+    # matching skills as result data at request time (issue #493).
+    global _SEARCH_SKILL_REGISTRY
+    _SEARCH_SKILL_REGISTRY = skill_registry
     logger.info("Skills: registered {} skill(s) (code mode discovery layer)", len(skill_registry.all()))
 
     # Heterogeneous discovery-tool factories (the _Hpe* subclasses, the Skills
