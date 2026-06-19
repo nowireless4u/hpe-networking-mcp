@@ -182,3 +182,52 @@ class TestProbeAOS8:
         result = await _probe_aos8(ctx)
         assert result["status"] == "degraded"
         assert "conductor unreachable" in result["message"]
+
+
+@pytest.mark.unit
+class TestProbeCentral:
+    async def test_probe_central_unavailable_when_conn_none(self):
+        from hpe_networking_mcp.platforms.health import _probe_central
+
+        ctx = _make_ctx({"central_conn": None})
+        result = await _probe_central(ctx)
+        assert result["status"] == "unavailable"
+
+    async def test_probe_central_ok_awaits_async_command(self):
+        """Regression: CentralClient.command is async; the probe must AWAIT it.
+        With the un-awaited bug, resp is a coroutine and resp.get(...) raised
+        "'coroutine' object has no attribute 'get'" → always-degraded Central."""
+        from hpe_networking_mcp.platforms.health import _probe_central
+
+        class _FakeConn:
+            async def command(self, method, path, api_params=None):
+                return {"code": 200, "msg": {"items": []}}
+
+        ctx = _make_ctx({"central_conn": _FakeConn()})
+        result = await _probe_central(ctx)
+        assert result["status"] == "ok"
+        assert result["http_status"] == 200
+
+    async def test_probe_central_degraded_on_non_2xx(self):
+        from hpe_networking_mcp.platforms.health import _probe_central
+
+        class _FakeConn:
+            async def command(self, method, path, api_params=None):
+                return {"code": 503, "msg": {"error": "upstream"}}
+
+        ctx = _make_ctx({"central_conn": _FakeConn()})
+        result = await _probe_central(ctx)
+        assert result["status"] == "degraded"
+        assert "503" in result["message"]
+
+    async def test_probe_central_degraded_on_exception(self):
+        from hpe_networking_mcp.platforms.health import _probe_central
+
+        class _BoomConn:
+            async def command(self, method, path, api_params=None):
+                raise RuntimeError("central unreachable")
+
+        ctx = _make_ctx({"central_conn": _BoomConn()})
+        result = await _probe_central(ctx)
+        assert result["status"] == "degraded"
+        assert "central unreachable" in result["message"]

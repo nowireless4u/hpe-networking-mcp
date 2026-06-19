@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.1.3] - 2026-06-19
+
+**Patch — fix(health): await the async Central command in the health probe.** `_probe_central` called `conn.command(...)` without awaiting it (the `CentralClient.command` coroutine), so `resp.get("code")` raised `'coroutine' object has no attribute 'get'` and the `health` tool **always reported Central as `degraded`** even when the tenant was fully reachable. Missed during the Central async migration (v3.3.11.0); every other probe awaits correctly.
+
+### Fixed
+- `platforms/health.py`: `resp = await conn.command(...)` in `_probe_central`. Live-verified against the tenant (`status: ok, http_status: 200`). Added `_probe_central` unit tests (ok / non-2xx degraded / exception degraded / unavailable) — the ok-path test pins the regression by requiring the async `command` to be awaited.
+
 ## [3.4.1.2] - 2026-06-19
 
 **Patch — feat(code-mode): surface matching skills as `search` result data (#493).** Skills-first was enforced only through untrusted channels — the server `instructions` blob and prepended tool-description prose — which frontier models do not reliably honor. This makes it structural: when a code-mode `search` query matches a bundled skill, the match list is **prepended to the search result** as an observation the model acts on, not an instruction it must trust. Completes the code-mode small-model hardening set (#488–#493).

@@ -102,7 +102,7 @@ async def _probe_central(ctx: Context) -> dict[str, Any]:
     if conn is None:
         return {"status": "unavailable", "message": "Central is not configured or failed to initialize"}
     try:
-        resp = conn.command(
+        resp = await conn.command(
             "GET",
             "network-monitoring/v1/sites-health",
             api_params={"limit": 1},
