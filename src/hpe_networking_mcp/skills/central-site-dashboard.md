@@ -57,15 +57,17 @@ layout, so the model fetches once and renders once.
 ## Response-shape contract (READ FIRST — this is what trips ad-hoc attempts)
 
 Every `central_*` read returns the standard envelope; `<platform>_invoke_tool`
-wraps results the same way. Read the inner `data`, and note the shapes are
-**not uniform** across these three reads:
+wraps results the same way. Read the inner `data`. As of v3.4.x the Central
+collection reads share **one uniform shape** — rows are always under
+`data["items"]` (#491) — so you no longer special-case bare lists, name-keyed
+dicts, or empty-result strings:
 
 ```text
-central_get_site_name_id_mapping  -> data is a DICT: {site_name: {site_id, health, total_devices, total_clients, total_alerts}}
-central_get_site_health           -> data is a LIST of site dicts          -> take data[0]
-central_get_devices               -> data is a LIST of device dicts        -> OR the string "No devices found..." when empty
-central_get_alerts                -> data is a DICT {items, total, next_cursor} -> rows are under data["items"] (NOT "result")
-clearpass_get_sessions            -> data is a DICT {_embedded:{items:[...]}, count, _links} -> rows are under data["_embedded"]["items"]
+central_get_site_name_id_mapping  -> data is {"items": [ {site_name, site_id, health, total_devices, total_clients, total_alerts} ]}
+central_get_site_health           -> data is {"items": [ <site dict> ]}      -> take data["items"][0]
+central_get_devices               -> data is {"items": [ <device dict> ]}    -> empty is {"items": []} (no "No devices" string)
+central_get_alerts                -> data is {"items": [...], total, next_cursor} -> rows under data["items"]
+clearpass_get_sessions            -> data is {_embedded:{items:[...]}, count, _links} -> rows under data["_embedded"]["items"]
 ```
 
 `central_get_alerts` **requires** `site_id` — resolve it first (Step 0).
@@ -108,8 +110,8 @@ metric in one call, so it doubles as the resolver. Only fall back to
 `central_get_site_name_id_mapping` when the operator's name is partial or
 ambiguous and you need to pick the exact key.
 
-**If the health `data` comes back `None` or an empty list:** the name didn't
-match (a bogus site name returns `data: None`, not an error). Call
+**If the health `data["items"]` comes back empty:** the name didn't match (a
+bogus site name returns `{"items": []}`, not an error). Call
 `central_get_site_name_id_mapping`, show the operator the available site names
 (case-insensitive contains-match on their input), and ask them to confirm.
 
@@ -127,9 +129,10 @@ SITE_NAME = "HQ"  # <- replace with the operator's site name
 
 health = _unwrap(await call_tool("central_invoke_tool",
     {"name": "central_get_site_health", "params": {"site_name": SITE_NAME}}))
-if not isinstance(health, list) or not health:
+health_items = health.get("items", []) if isinstance(health, dict) else []
+if not health_items:
     return {"error": f"site {SITE_NAME!r} not found"}   # -> Step 0 fallback
-site = health[0]
+site = health_items[0]
 site_id = site["site_id"]
 # `or {}` (not `.get(k, {})`): Central may return a section as null, not absent
 # — `.get("metrics", {})` would hand back None and the next `.get` would crash.
@@ -137,7 +140,7 @@ metrics = site.get("metrics") or {}
 
 devices_raw = _unwrap(await call_tool("central_invoke_tool",
     {"name": "central_get_devices", "params": {"site_id": str(site_id)}}))
-devices = devices_raw if isinstance(devices_raw, list) else []   # "" / "No devices..." -> []
+devices = devices_raw.get("items", []) if isinstance(devices_raw, dict) else []   # empty -> {"items": []}
 
 alerts_raw = _unwrap(await call_tool("central_invoke_tool",
     {"name": "central_get_alerts", "params": {"site_id": str(site_id), "limit": 25}}))
@@ -289,9 +292,9 @@ In a non-apps client this text IS the dashboard.
 
 ## Unhappy paths (trace these)
 
-- **Site not found** — health list empty → Step 0 fallback (list names, ask).
-- **No devices** — `central_get_devices` returns "No devices found..." (a string,
-  not a list) → `devices = []`; the table renders empty, the summary says so.
+- **Site not found** — `health["items"]` empty → Step 0 fallback (list names, ask).
+- **No devices** — `central_get_devices` returns `{"items": []}` →
+  `devices = []`; the table renders empty, the summary says so.
 - **No alerts** — `data["items"]` is `[]` → "No active alerts" (a clean, good
   state, not an error).
 - **Generative UI unavailable** — `generate_prefab_ui` no-ops in non-apps

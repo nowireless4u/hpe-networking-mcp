@@ -77,8 +77,8 @@ iterating any response:
 | `mist_list_org_sites` (via `mist_invoke_tool`) | bare JSON array of site dicts | `for site in resp["data"]` |
 | `mist_list_site_devices_stats` (via `mist_invoke_tool`) | bare JSON array of device-stat dicts | `for ap in resp["data"]` |
 | `mist_get_site_current_channel_planning` (via `mist_invoke_tool`) | dict | `resp["data"]["rftemplate"]`, `["band_5"]`, … |
-| `central_get_site_name_id_mapping` | dict keyed by site name | `resp["data"][site_name]["site_id"]` |
-| `central_get_aps` | dict with an inner `result` **list** | `for ap in resp["data"]["result"]` |
+| `central_get_site_name_id_mapping` | `{"items": [ {site_name, site_id, …} ]}` | find the item where `item["site_name"]` matches, take `item["site_id"]` |
+| `central_get_aps` | `{"items": [ <ap dict> ]}` (#491) | `for ap in resp["data"]["items"]` |
 | `central_get_ap_details` | dict with an inner `result` **dict** | `resp["data"]["result"]["radios"]` (see nested-shape note below) |
 
 **Central `radios[].radioStats` is a LIST, not a dict.** Each radio in

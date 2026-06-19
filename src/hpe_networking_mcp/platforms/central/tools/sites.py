@@ -7,8 +7,8 @@ from pydantic import Field
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.models import SiteData
 from hpe_networking_mcp.platforms.central.utils import (
+    as_collection,
     fetch_site_data_parallel,
     get_central_conn,
     groups_to_map,
@@ -100,7 +100,7 @@ async def central_get_sites(
 async def central_get_site_health(
     ctx: Context,
     site_name: str | list[str] | None = None,
-) -> list[SiteData]:
+) -> dict:
     """
     Returns health metrics and device/client counts for sites.
 
@@ -123,8 +123,8 @@ async def central_get_site_health(
     wanted = normalize_site_name_filter(site_name)
     sites_data = await fetch_site_data_parallel(get_central_conn(ctx))
     if wanted:
-        return [sites_data[name] for name in wanted if name in sites_data]
-    return list(sites_data.values())
+        return as_collection([sites_data[name] for name in wanted if name in sites_data])
+    return as_collection(list(sites_data.values()))
 
 
 @tool(capability=Capability.READ)
@@ -141,7 +141,9 @@ async def central_get_site_name_id_mapping(ctx: Context) -> dict:
     The health score also helps identify sites with issues before drilling down
     further.
 
-    Returns a dict where each key is a site name and the value contains:
+    Returns ``{"items": [...]}`` where each item is a site, sorted worst-health
+    first, with:
+    - site_name: The site's display name.
     - site_id: Unique identifier used in other API calls.
     - health: Overall health score (0-100, weighted average:
       Good=100, Fair=50, Poor=0).
@@ -150,27 +152,24 @@ async def central_get_site_name_id_mapping(ctx: Context) -> dict:
     - total_alerts: Total number of alerts at the site.
     """
     sites = await monitoring_api.get_all_sites(central_conn=get_central_conn(ctx))
-    mapping = {}
+    rows = []
     for site in sites:
         health_obj = groups_to_map(site.get("health", {}))
         summary = None
         if all(k in health_obj for k in ["Poor", "Fair", "Good"]):
             summary = round((health_obj["Poor"] * 0) + (health_obj["Fair"] * 0.5) + (health_obj["Good"] * 1))
-        mapping[site["siteName"]] = {
-            "site_id": site.get("id"),
-            "health": summary,
-            "total_devices": site.get("devices", {}).get("count", 0),
-            "total_clients": site.get("clients", {}).get("count", 0),
-            "total_alerts": site.get("alerts", {}).get("total", 0),
-        }
-    mapping = dict(
-        sorted(
-            mapping.items(),
-            key=lambda item: item[1]["health"] if item[1]["health"] is not None else float("inf"),
-            reverse=False,
+        rows.append(
+            {
+                "site_name": site["siteName"],
+                "site_id": site.get("id"),
+                "health": summary,
+                "total_devices": site.get("devices", {}).get("count", 0),
+                "total_clients": site.get("clients", {}).get("count", 0),
+                "total_alerts": site.get("alerts", {}).get("total", 0),
+            }
         )
-    )
-    return mapping
+    rows.sort(key=lambda r: r["health"] if r["health"] is not None else float("inf"))
+    return as_collection(rows)
 
 
 @tool(capability=Capability.READ)

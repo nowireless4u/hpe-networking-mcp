@@ -19,6 +19,28 @@ from hpe_networking_mcp.platforms.central.models import (
     SiteMetrics,
 )
 
+
+def as_collection(items: Any, **metadata: Any) -> dict[str, Any]:
+    """Wrap a list of records in the uniform collection envelope (#491).
+
+    Every hand-curated Central read that returns a collection exposes it as
+    ``{"items": [...]}`` so a model can always reach the rows via
+    ``data["items"]`` — no more guessing between a bare list, a name-keyed
+    dict, and a paginated wrapper (the shape inconsistency that caused #491).
+    Optional pagination/summary siblings (``total``, ``next``, …) are kept
+    when provided and non-None, so nothing is lost relative to the upstream
+    paginated shape.
+
+    Args:
+        items: The list of records (``None`` is normalized to an empty list).
+        **metadata: Optional sibling keys (e.g. ``total``, ``next``) included
+            only when their value is not None.
+    """
+    out: dict[str, Any] = {"items": list(items) if items else []}
+    out.update({k: v for k, v in metadata.items() if v is not None})
+    return out
+
+
 # Exponential backoff for retry_central_command's transient-failure path.
 # Without a delay, all retries fire in <1s and a brief upstream flap
 # (e.g. the degrading audit endpoint near its sunset) defeats every attempt.

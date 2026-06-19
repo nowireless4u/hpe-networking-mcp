@@ -9,6 +9,7 @@ from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.utils import (
     FilterField,
+    as_collection,
     as_comma_separated,
     build_odata_filter,
     get_central_conn,
@@ -43,7 +44,7 @@ async def central_get_aps(
     firmware_version: str | list[str] | None = None,
     deployment: Literal["Standalone", "Cluster", "Unspecified"] | None = None,
     sort: str | None = None,
-) -> list[dict] | str:
+) -> dict:
     """
     List access points with AP-specific filters.
 
@@ -91,7 +92,7 @@ async def central_get_aps(
     except Exception as e:
         raise ToolError({"status_code": 502, "message": f"Error fetching access points: {e}"}) from e
 
-    return aps or []
+    return as_collection(aps)
 
 
 @tool(capability=Capability.READ)
@@ -99,7 +100,7 @@ async def central_get_ap_wlans(
     ctx: Context,
     serial_number: str,
     wlan_name: str | None = None,
-) -> list[dict] | str:
+) -> dict:
     """
     Get WLANs currently active on a specific AP.
 
@@ -124,9 +125,7 @@ async def central_get_ap_wlans(
     if wlan_name:
         items = [w for w in items if w.get("wlanName") == wlan_name]
 
-    if not items:
-        return f"No WLANs found for AP '{serial_number}'."
-    return items
+    return as_collection(items)
 
 
 @tool(capability=Capability.READ)

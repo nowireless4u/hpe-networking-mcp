@@ -7,7 +7,12 @@ from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central import monitoring_api
 from hpe_networking_mcp.platforms.central._registry import tool
-from hpe_networking_mcp.platforms.central.utils import get_central_conn, resolve_time_window, retry_central_command
+from hpe_networking_mcp.platforms.central.utils import (
+    as_collection,
+    get_central_conn,
+    resolve_time_window,
+    retry_central_command,
+)
 
 
 @tool(capability=Capability.READ)
@@ -18,7 +23,7 @@ async def central_get_wlans(
     filter: str | None = None,
     sort: str | None = None,
     limit: int = 100,
-) -> list[dict] | str:
+) -> dict:
     """
     List all WLANs/SSIDs configured in Aruba Central.
 
@@ -54,13 +59,10 @@ async def central_get_wlans(
         raise ToolError({"status_code": 502, "message": f"Error fetching WLANs: {e}"}) from e
 
     if isinstance(resp, dict):
-        items = resp.get("items", [])
-        if items:
-            return items
-        return "No WLANs found."
+        return as_collection(resp.get("items", []))
     if isinstance(resp, list):
-        return resp if resp else "No WLANs found."
-    return "No WLANs found."
+        return as_collection(resp)
+    return as_collection([])
 
 
 TIME_RANGE = Literal["last_1h", "last_6h", "last_24h", "last_7d", "last_30d", "today", "yesterday"]

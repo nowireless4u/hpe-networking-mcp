@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.1.0] - 2026-06-19
+
+**Minor — fix(code-mode): uniform `{items: [...]}` collection shape for Central reads (#491).** Central's hand-curated collection reads returned a mix of shapes — a bare list (`central_get_aps`), a name-keyed dict (`central_get_site_name_id_mapping`), and an empty-result string — so a model that assumed one shape silently mis-read another (e.g. treating the name-keyed mapping as a list → "0 sites"). All such reads now expose a single contract: rows live under `data["items"]`, even when empty (`{"items": []}`). This is a **behavior change** to those tools' output (hence the minor bump).
+
+### Changed
+- `central_get_aps`, `central_get_ap_wlans`, `central_get_clients`, `central_get_devices`, `central_get_wlans`, and `central_get_site_health` now return `{"items": [...]}` instead of a bare list (or a "No X found" string when empty — empty is now `{"items": []}`).
+- `central_get_site_name_id_mapping` now returns `{"items": [ {site_name, site_id, health, total_devices, total_clients, total_alerts} ]}` (sorted worst-health first) instead of a dict keyed by site name. The site name moves into each item as `site_name`.
+- New `as_collection()` helper in `central/utils.py` builds the envelope and preserves optional pagination siblings (`total`/`next`) when present.
+- The `mrt_*` monitoring family already returned `{"items": [...]}` (raw API passthrough) and is unchanged; the rule is now uniform across hand-curated and monitoring reads: **read `data["items"]`**.
+
+### Scope
+- Covers the **Central hand-curated reads**. Spec-driven `mist_*` / `edgeconnect_*` reads mirror their upstream API shapes and are **not** in scope (a separate, generator-level effort tracked in #500). Time-series/trend reads (e.g. `central_get_wlan_stats`) return sample arrays, not entity collections, and are unchanged.
+
+### Docs / consumers updated
+- `INSTRUCTIONS.md` collection-shape guidance; `docs/TOOLS.md` entries; skills `central-site-dashboard`, `cross-platform-rf-check`, `central-ucc-quality` (code blocks + shape tables); `central_get_alerts` docstring site_id guidance.
+
 ## [3.4.0.4] - 2026-06-19
 
 **Patch — fix(code-mode): compact `skills_list` payload (#490).** `skills_list` returned every matching skill's full multi-paragraph description **and** complete tool array — ~30k+ characters for ~15 skills — as a small model's *first* tool result (it's the prerequisite call before `execute`), flooding the context before any work began. The default listing is now compact, with full detail one `skills_load` away.
