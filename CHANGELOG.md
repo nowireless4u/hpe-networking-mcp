@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0.4] - 2026-06-19
+
+**Patch — fix(code-mode): compact `skills_list` payload (#490).** `skills_list` returned every matching skill's full multi-paragraph description **and** complete tool array — ~30k+ characters for ~15 skills — as a small model's *first* tool result (it's the prerequisite call before `execute`), flooding the context before any work began. The default listing is now compact, with full detail one `skills_load` away.
+
+### Changed
+- `skills_list` returns a compact entry per skill — `name`, `title`, `tags`, `platforms`, `load_with` — by default (new `Skill.to_summary()`). The full `description` and `tools[]` remain available via `skills_load` (unchanged) or by passing the new `detail=true` parameter to `skills_list`. ~90% payload reduction with no loss of discoverability. (#490)
+
 ## [3.4.0.3] - 2026-06-19
 
 **Patch — fix(code-mode): `Unknown tool` errors return a structured "did you mean" candidate list (#489).** A model that guessed a plausible-but-wrong tool name (e.g. `central_list_sites` when the real tool is `central_get_sites`) got a bare `Unknown tool` string with no recovery affordance — and (per external small-model testing) either looped on the identical call ~12× or concluded the platform was "unavailable" and gave up. The error now carries real, registered candidate names as **data**, so the model self-corrects. Structural fix — no reliance on guidance text.
