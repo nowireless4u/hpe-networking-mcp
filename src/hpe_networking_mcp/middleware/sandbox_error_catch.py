@@ -31,12 +31,17 @@ Syntax errors from stray indentation in model-generated code are another.
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 import mcp.types
 from fastmcp.exceptions import ToolError
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from loguru import logger
+
+from hpe_networking_mcp.platforms._common.tool_suggest import (
+    unknown_tool_payload_from_text,
+)
 
 # pydantic_monty ships in the fastmcp[code-mode] extra. If it's missing,
 # code mode itself can't run, so we don't need this middleware to act —
@@ -89,7 +94,13 @@ class SandboxErrorCatchMiddleware(Middleware):
             if not isinstance(cause, MontyError):
                 # Not a sandbox failure — let the masked ToolError propagate.
                 raise
-            error_text = f"Sandbox error: {cause}"
+            # An "Unknown tool: X" inside execute() is the single most common
+            # sandbox error (a model guessing a tool name). Turn it into a
+            # structured "did you mean" payload with real candidate names so
+            # the model self-corrects instead of looping on the same call
+            # (#489). The candidates are data, not an imperative.
+            suggestion = unknown_tool_payload_from_text(str(cause))
+            error_text = json.dumps(suggestion) if suggestion is not None else f"Sandbox error: {cause}"
             logger.debug("SandboxErrorCatch: caught on {} → {}", tool_name, error_text)
             # Re-raise so the wire response sets isError=true. Middleware
             # sits outside the masking layer, so this propagates with the

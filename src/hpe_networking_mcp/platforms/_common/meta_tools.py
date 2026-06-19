@@ -31,6 +31,7 @@ from hpe_networking_mcp.platforms._common.tool_registry import (
     ToolSpec,
     is_tool_enabled,
 )
+from hpe_networking_mcp.platforms._common.tool_suggest import suggest_tools
 
 # Parameter names we strip from the Pydantic validation model because
 # ``_invoke_tool`` injects them itself.
@@ -357,6 +358,7 @@ def build_meta_tools(
                 "status": "not_found",
                 "message": f"{platform} has no tool named {name!r}.",
                 "hint": f"Call {platform}_list_tools to see available tools.",
+                "candidates": suggest_tools(name, platform=platform)["candidates"],
             }
         config = ctx.lifespan_context.get("config")
         if not is_tool_enabled(spec, config):
@@ -437,6 +439,7 @@ def build_meta_tools(
                 "status": "not_found",
                 "message": f"{platform} has no tool named {name!r}.",
                 "hint": f"Call {platform}_list_tools to see available tools.",
+                "candidates": suggest_tools(name, platform=platform)["candidates"],
             }
         config = ctx.lifespan_context.get("config")
         if not is_tool_enabled(spec, config):

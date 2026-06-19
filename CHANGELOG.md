@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0.3] - 2026-06-19
+
+**Patch — fix(code-mode): `Unknown tool` errors return a structured "did you mean" candidate list (#489).** A model that guessed a plausible-but-wrong tool name (e.g. `central_list_sites` when the real tool is `central_get_sites`) got a bare `Unknown tool` string with no recovery affordance — and (per external small-model testing) either looped on the identical call ~12× or concluded the platform was "unavailable" and gave up. The error now carries real, registered candidate names as **data**, so the model self-corrects. Structural fix — no reliance on guidance text.
+
+### Added
+- `platforms/_common/tool_suggest.py`: fuzzy tool-name suggester (`difflib` over the live `REGISTRIES`), scoped to the requested name's platform prefix where determinable. Returns `{error, requested, candidates, dispatch}`.
+- `UnknownToolSuggestMiddleware`: catches an `Unknown tool` error for any **top-level** call (a model treating a per-platform tool as first-class) and re-raises it as the structured payload.
+
+### Changed
+- `SandboxErrorCatchMiddleware` now converts an in-sandbox `Unknown tool: X` into the structured payload (the ~12×-retry case). Non-actionable cases — e.g. a model calling the top-level `search` tool from inside `execute` (#208), where there is no platform-tool to suggest — fall through to the existing readable error text unchanged.
+- The `<platform>_invoke_tool` / `<platform>_get_tool_schema` `not_found` responses now include a `candidates` list for a wrong inner tool name.
+
 ## [3.4.0.2] - 2026-06-19
 
 **Patch — feat(code-mode): advertise the optional `platform` arg in the `search` schema (#496).** Follow-up to #488/#495: the discovery tools already *tolerate* a `platform` argument (folding it into the tag filter), but the published input schema didn't surface it, so only models passing it blind benefited. `search` now advertises `platform` as an optional parameter, letting schema-introspecting clients scope a search deliberately. Idea contributed by @gaoflow (#494).
