@@ -320,10 +320,10 @@ value is **dotted-quad / dotted-mask, NOT CIDR** (a host = `/255.255.255.255`).
 Carry the source config's dotted masks through unchanged (don't convert to CIDR).
 
 ```jsonc
-// match any any 203.0.113.0/255.255.0.0 count   (network destination)
+// match any any 203.0.113.0/255.255.255.0 count   (network destination)
 {"position": 20, "count": true, "ip-header": {"protocol": "PROTOCOL_ANY"},
  "destination": {"type": "ADDRESS_SUBNET_MASK",
-                 "subnet-address": {"network-subnet-address": "203.0.113.0/255.255.0.0"}}}
+                 "subnet-address": {"network-subnet-address": "203.0.113.0/255.255.255.0"}}}
 
 // match any any 10.16.46.254 count   (host -> /255.255.255.255)
 {"position": 5, "count": true, "ip-header": {"protocol": "PROTOCOL_ANY"},
