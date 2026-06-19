@@ -2,7 +2,7 @@
 
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 from fastmcp import FastMCP
 from loguru import logger
@@ -575,7 +575,10 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
             GetTags,
             MontySandboxProvider,
             Search,
+            ToolDetailLevel,
         )
+        from fastmcp.server.context import Context
+        from fastmcp.tools import Tool
         from pydantic_monty import ResourceLimits
     except ImportError as e:
         logger.error(
@@ -593,7 +596,47 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
 
     class _HpeSearch(Search):
         def __call__(self, get_catalog):
-            tool = super().__call__(get_catalog)
+            base_tool = super().__call__(get_catalog)
+            base_search = base_tool.fn
+            default_detail = self._default_detail
+            default_limit = self._default_limit
+
+            async def search(
+                query: Annotated[str, "Search query to find available tools"],
+                platform: Annotated[
+                    str | None,
+                    "Optional platform tag such as mist, central, greenlake, clearpass, "
+                    "apstra, axis, aos8, uxi, or edgeconnect",
+                ] = None,
+                tags: Annotated[
+                    list[str] | None,
+                    "Filter to tools with any of these tags before searching",
+                ] = None,
+                detail: Annotated[
+                    ToolDetailLevel,
+                    "'brief' for names and descriptions, 'detailed' for parameter schemas "
+                    "as markdown, 'full' for complete JSON schemas",
+                ] = default_detail,
+                limit: Annotated[
+                    int | None,
+                    "Maximum number of results to return",
+                ] = default_limit,
+                ctx: Context = None,  # type: ignore[assignment]  # ty:ignore[invalid-parameter-default]
+            ) -> str:
+                """Search for available tools by query.
+
+                Returns matching tools ranked by relevance.
+                """
+                effective_tags = tags
+                if platform:
+                    platform_tag = platform.strip().lower()
+                    if platform_tag:
+                        effective_tags = list(tags or [])
+                        if platform_tag not in effective_tags:
+                            effective_tags.append(platform_tag)
+                return await base_search(query=query, tags=effective_tags, detail=detail, limit=limit, ctx=ctx)
+
+            tool = Tool.from_function(fn=search, name=self._name)
             tool.description = _SEARCH_DESCRIPTION
             return tool
 

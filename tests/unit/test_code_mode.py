@@ -11,6 +11,7 @@ suite stays offline-friendly.
 
 from __future__ import annotations
 
+import asyncio
 from unittest.mock import patch
 
 import pytest
@@ -249,6 +250,36 @@ class TestCodeModeRegistrationHook:
             # Should not raise — just log and return.
             _register_code_mode(m)
             assert m.transforms == [], "no transform should be added when imports fail"
+
+
+@pytest.mark.unit
+class TestCodeModeSearchTool:
+    """Regression coverage for HPE's wrapped top-level ``search`` discovery tool."""
+
+    def test_search_accepts_platform_argument_and_filters_by_tag(self):
+        from fastmcp import FastMCP
+
+        from hpe_networking_mcp.server import _register_code_mode
+
+        mcp = FastMCP("test-code-mode-search-platform")
+
+        @mcp.tool(name="central_list_sites", description="List Aruba Central sites", tags={"central"})
+        async def central_list_sites():  # pragma: no cover - catalog-only fixture
+            return []
+
+        @mcp.tool(name="mist_list_sites", description="List Juniper Mist sites", tags={"mist"})
+        async def mist_list_sites():  # pragma: no cover - catalog-only fixture
+            return []
+
+        _register_code_mode(mcp)
+
+        search_tool = asyncio.run(mcp.get_tool("search"))
+        assert "platform" in search_tool.parameters["properties"]
+
+        result = asyncio.run(mcp.call_tool("search", {"query": "sites", "platform": "central"}))
+        rendered = result.structured_content["result"]
+        assert "central_list_sites" in rendered
+        assert "mist_list_sites" not in rendered
 
 
 # NOTE: per-platform register_tools behavior (skipping build_meta_tools in code
