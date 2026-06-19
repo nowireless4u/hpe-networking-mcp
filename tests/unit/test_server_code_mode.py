@@ -167,6 +167,83 @@ PLATFORM_INIT_FILES = (
 
 
 @pytest.mark.unit
+class TestDiscoveryArgTolerance:
+    """#488: discovery tools must not be hard-rejected when a small model
+    passes an extra/misnamed arg (e.g. ``platform``). The whole call failing
+    dead-ends the discovery entry point and blocks everything downstream.
+
+    ``_ArgTolerantFunctionTool`` drops unknown keys before validation and
+    folds ``platform`` into the existing ``tags`` filter (platforms are
+    catalog tags), so the call succeeds and stays relevance-scoped.
+    """
+
+    @staticmethod
+    def _catalog():
+        from fastmcp.tools.tool import Tool
+
+        async def central_get_sites() -> dict:
+            return {}
+
+        async def mist_get_self() -> dict:
+            return {}
+
+        return [
+            Tool.from_function(fn=central_get_sites, name="central_get_sites", tags={"central"}),
+            Tool.from_function(fn=mist_get_self, name="mist_get_self", tags={"mist"}),
+        ]
+
+    def _search_tool(self, *, tolerant: bool):
+        from fastmcp.experimental.transforms.code_mode import Search
+
+        catalog = self._catalog()
+
+        async def get_catalog(ctx=None):
+            return catalog
+
+        base = Search(default_detail="brief")(get_catalog)
+        return srv._make_arg_tolerant(base) if tolerant else base
+
+    def _get_schema_tool(self):
+        from fastmcp.experimental.transforms.code_mode import GetSchemas
+
+        catalog = self._catalog()
+
+        async def get_catalog(ctx=None):
+            return catalog
+
+        return srv._make_arg_tolerant(GetSchemas(default_detail="detailed")(get_catalog))
+
+    async def test_base_search_rejects_platform_arg(self) -> None:
+        """Repro: the unwrapped fastmcp Search tool rejects `platform` outright."""
+        tool = self._search_tool(tolerant=False)
+        with pytest.raises(Exception):  # noqa: B017,PT011 — fastmcp raises ValidationError
+            await tool.run({"query": "sites", "platform": "central"})
+
+    async def test_tolerant_search_accepts_and_folds_platform(self) -> None:
+        """`platform` is accepted, folded into tags, and a junk key is dropped —
+        and the fold actually scopes results to the central-tagged tool."""
+        tool = self._search_tool(tolerant=True)
+        assert isinstance(tool, srv._ArgTolerantFunctionTool)
+        result = await tool.run({"query": "get", "platform": "central", "bogus": 1})
+        text = result.content[0].text
+        assert "central_get_sites" in text
+        assert "mist_get_self" not in text  # filtered out by the platform->tags fold
+
+    async def test_tolerant_search_plain_query_unaffected(self) -> None:
+        """A normal call with no extra args still works unchanged."""
+        tool = self._search_tool(tolerant=True)
+        result = await tool.run({"query": "get"})
+        assert result.content
+
+    async def test_tolerant_get_schema_drops_unknown_platform(self) -> None:
+        """A discovery tool with no `tags` param (get_schema) simply drops the
+        unknown `platform` key rather than rejecting the whole call."""
+        tool = self._get_schema_tool()
+        result = await tool.run({"tools": ["central_get_sites"], "platform": "central"})
+        assert result.content
+
+
+@pytest.mark.unit
 @pytest.mark.parametrize("init_path", PLATFORM_INIT_FILES)
 def test_platform_init_registers_meta_tools_unconditionally(init_path: str) -> None:
     """v3.0.1.15 (issue #302): each platform's register_tools must call

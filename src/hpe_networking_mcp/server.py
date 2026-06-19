@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import Any
 
 from fastmcp import FastMCP
+from fastmcp.tools.function_tool import FunctionTool
+from fastmcp.tools.tool import ToolResult
 from loguru import logger
 
 from hpe_networking_mcp.config import ServerConfig
@@ -561,6 +563,50 @@ _GET_SCHEMA_DESCRIPTION = _SKILLS_FIRST_GATE + (
 )
 
 
+class _ArgTolerantFunctionTool(FunctionTool):
+    """Discovery tool that tolerates extra / misnamed args (issue #488).
+
+    Small local models routinely call e.g.
+    ``search(query="sites", platform="central")``. fastmcp's generated
+    discovery tools validate incoming arguments against the function
+    signature (``type_adapter.validate_python``), so any unknown kwarg raises
+    ``Unexpected keyword argument`` and the **entire** call is rejected —
+    which dead-ends the discovery entry point and blocks everything
+    downstream. The published JSON schema is not the validator, so relaxing
+    ``additionalProperties`` would not help.
+
+    This subclass normalizes arguments before validation:
+      - a ``platform`` arg is folded into the existing ``tags`` filter
+        (platforms are catalog tags), preserving the model's intent; and
+      - any remaining key not in the published schema is dropped,
+    so the call succeeds instead of being rejected wholesale.
+    """
+
+    async def run(self, arguments: dict[str, Any]) -> ToolResult:
+        props = (self.parameters or {}).get("properties", {})
+        args = dict(arguments or {})
+        platform = args.pop("platform", None)
+        if platform is not None and "tags" in props:
+            plats = [platform] if isinstance(platform, str) else list(platform)
+            existing = args.get("tags") or []
+            if isinstance(existing, str):
+                existing = [existing]
+            args["tags"] = list(existing) + [str(p).lower() for p in plats]
+        # Drop any unknown keys so validate_python doesn't reject the call.
+        args = {k: v for k, v in args.items() if k in props}
+        return await super().run(args)
+
+
+def _make_arg_tolerant(tool: FunctionTool) -> _ArgTolerantFunctionTool:
+    """Reconstruct a produced discovery Tool as the arg-tolerant subclass.
+
+    fastmcp's discovery-tool factories always build a plain ``FunctionTool``;
+    we copy its validated field values into ``_ArgTolerantFunctionTool`` so the
+    argument-normalizing ``run`` override takes effect (issue #488).
+    """
+    return _ArgTolerantFunctionTool(**{f: getattr(tool, f) for f in type(tool).model_fields})
+
+
 def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
     """Install the FastMCP CodeMode transform for ``MCP_TOOL_MODE=code``.
 
@@ -589,25 +635,26 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
     # client semantic tool_search surfaces our discovery tools on queries
     # like "list mist sites" / "search central tools" (issue #302). The
     # parent classes' __init__ doesn't accept a description argument, so we
-    # mutate the returned Tool object before it goes upstream.
+    # mutate the returned Tool object before it goes upstream, then
+    # reconstruct it as the arg-tolerant subclass (issue #488).
 
     class _HpeSearch(Search):
         def __call__(self, get_catalog):
             tool = super().__call__(get_catalog)
             tool.description = _SEARCH_DESCRIPTION
-            return tool
+            return _make_arg_tolerant(tool)
 
     class _HpeGetTags(GetTags):
         def __call__(self, get_catalog):
             tool = super().__call__(get_catalog)
             tool.description = _TAGS_DESCRIPTION
-            return tool
+            return _make_arg_tolerant(tool)
 
     class _HpeGetSchemas(GetSchemas):
         def __call__(self, get_catalog):
             tool = super().__call__(get_catalog)
             tool.description = _GET_SCHEMA_DESCRIPTION
-            return tool
+            return _make_arg_tolerant(tool)
 
     limits = ResourceLimits(
         max_duration_secs=max_duration_secs,

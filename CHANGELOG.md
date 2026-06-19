@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0.1] - 2026-06-19
+
+**Patch — fix(code-mode): `search` / `tags` / `get_schema` tolerate extra args (#488).** Small local models routinely call the discovery entry point with a natural-but-undeclared argument, e.g. `search(query="sites list central", platform="central")`. fastmcp validates discovery-tool arguments against the function signature, so any unknown kwarg raised `Unexpected keyword argument` and the **entire** call was rejected — dead-ending discovery and (per external small-model testing) cascading into give-up or confabulation. This is a structural fix at the tool-behavior layer; it does not rely on guidance text.
+
+### Fixed
+- The three code-mode discovery tools (`search`, `tags`, `get_schema`) now normalize incoming arguments before validation via a new `_ArgTolerantFunctionTool` (`server.py`): a `platform` argument is **folded into the existing `tags` filter** (platforms are catalog tags, so intent is preserved and results stay relevance-scoped), and any other unknown key is dropped rather than failing the call. The published JSON schema is not fastmcp's validator, so relaxing `additionalProperties` would not have helped — the fix overrides the tool's `run()` to pre-filter arguments. (#488)
+
 ## [3.4.0.0] - 2026-06-16
 
 **Minor — feat(edgeconnect): new platform — Aruba EdgeConnect (Silver Peak) Orchestrator.** Adds a 9th platform with **1216 spec-driven tools** generated from the vendored Orchestrator OpenAPI spec, bringing the total to **3178 underlying tools**. SD-WAN orchestration: appliances, alarms, time-series + aggregate stats, configuration templates, HA/reachability, licensing, and more — all reachable in code mode via `await call_tool("edgeconnect_invoke_tool", ...)`.
