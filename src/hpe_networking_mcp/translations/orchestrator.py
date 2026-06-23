@@ -20,6 +20,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any
 
+from hpe_networking_mcp.translations.readers.aos8 import aos8_read_wlan
 from hpe_networking_mcp.translations.readers.mist import mist_read_wlan
 from hpe_networking_mcp.translations.writers.central import central_write_wlan
 from hpe_networking_mcp.translations.writers.central_radius import central_write_server_group
@@ -33,6 +34,7 @@ WLAN = "wlan"
 # (source_platform, kind) -> reader(source_obj, **ctx) -> canonical
 _READERS: dict[tuple[str, str], Callable[..., Any]] = {
     ("mist", WLAN): mist_read_wlan,
+    ("aos8", WLAN): aos8_read_wlan,
 }
 
 # (target_platform, kind) -> ordered list of writer(canon, **ctx) -> [call descriptors].
