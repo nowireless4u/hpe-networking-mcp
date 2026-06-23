@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.2.0] - 2026-06-22
+
+**Minor — feat(translations): canonical reader/writer translation engine (forward direction).** Foundation of the rebuilt translation engine (References #279): a hub-and-spoke canonical model that replaces pairwise mappers for new source/target pairs. Readers turn a platform's config into a platform-neutral `CanonicalWlan`; writers turn that into ordered target API-call descriptors; an orchestrator plans + executes them with ensure-or-create idempotency. This ships the **forward** direction end-to-end — **Mist→Central** and **AOS8→Central** WLAN + RADIUS — live-verified against the tenants. It is **additive and not yet wired into any tool/skill** (the existing JSON `emit_calls` engine still backs the AOS8-JSON translations); the cutover that repoints the tooling is a later PR. No user-facing tool changes, so tool counts / version-gated docs are unchanged.
+
+### Added
+- `translations/canonical/wlan.py` — neutral WLAN model. Security is a granular `(key_mgmt, wpa_version, cipher)` triplet capturing every AOS8/Central opmode (open/OWE/WEP, WPA1/2/3 personal+enterprise, SAE, MPSK, AES-CCM/TKIP/GCM-256/CNSA). Facets for VLAN, rates, performance, isolation, WMM, forward-mode (bridged/tunneled/hybrid + dual-mode + gateway-cluster names), and assignment (org-wide/site/site-collection/device-group).
+- `translations/readers/mist.py` — Mist WLAN → canonical (security classification, RADIUS auth/acct/CoA incl. `{{var}}` hosts, VLAN, assignment from the WLAN template's `applies`).
+- `translations/readers/aos8.py` — AOS8 (source-only) → canonical. Joins `virtual_ap ↔ ssid_prof ↔ aaa_prof`; walks `aaa_prof → server_group_prof (keyed by sg_name) → rad_server` into canonical auth/acct/CoA; opmode→triplet; operator `target_mode` → forward/dual.
+- `translations/writers/central.py` — canonical → Central `wlan-ssids`: library create + config-assignment to GLOBAL/SITE/SITE_COLLECTION/DEVICE_COLLECTION; tunneled/hybrid `overlay-wlan` gateway-cluster binding; dual-mode (ESSID alias + bridge+tunnel profiles + overlay). Triplet → exact Central opmode.
+- `translations/writers/central_radius.py` — canonical RADIUS → `{ssid}_nac` server-group + positional auth-servers (auth/acct/CoA consolidated by unique host); `{{var}}` host → `ALIAS_AUTH_SERVER_ADDRESS` alias shell + bare-name reference.
+- `translations/orchestrator.py` — reader/writer registry, pure `plan()` (merges writer outputs, re-bases `depends_on`), async `execute()` with ensure-or-create idempotency, and Central scope resolution from the scope tree. Execution is dependency-aware: it blocks before any write on unresolved assignment scopes **and** unresolved gateway clusters, and skips any call whose `depends_on` prerequisites did not complete (`blocked_dependency_failed`) so a prerequisite failure can't leave a half-built Central config.
+- 101 unit tests across the canonical reader/writers/orchestrator.
+
+### Security
+- `uv.lock`: bumped transitive `msgpack` 1.1.2 → 1.2.1 (GHSA-6v7p-g79w-8964) and `pydantic-settings` 2.14.0 → 2.14.2 (GHSA-4xgf-cpjx-pc3j) to clear pip-audit.
+
+### Notes
+- Live-verified: Mist `ZZRADTEST` and AOS8 `/md/Campus/West` WLANs (OWE/WPA2-DOT1X/WPA3-SAE/MPSK) round-trip to Central (auth-servers + server-group + wlan-ssids, correct opmode/refs/VLAN), idempotent re-run skips, cleanup clean.
+
 ## [3.4.1.3] - 2026-06-19
 
 **Patch — fix(health): await the async Central command in the health probe.** `_probe_central` called `conn.command(...)` without awaiting it (the `CentralClient.command` coroutine), so `resp.get("code")` raised `'coroutine' object has no attribute 'get'` and the `health` tool **always reported Central as `degraded`** even when the tenant was fully reachable. Missed during the Central async migration (v3.3.11.0); every other probe awaits correctly.
