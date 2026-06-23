@@ -127,3 +127,46 @@ async def test_execute_assignment_path() -> None:
     actions = [r["action"] for r in res]
     assert "created" in actions and "assigned" in actions
     assert fake.assignments[0]["scope-id"] == "GID"
+
+
+@pytest.mark.asyncio
+async def test_execute_blocks_on_unresolved_clusters() -> None:
+    # Casey #1: a tunneled WLAN with no gateway cluster binding must block before
+    # any write — unresolved clusters count toward plan.unresolved.
+    from hpe_networking_mcp.translations.canonical.wlan import CanonicalWlan, ForwardMode, KeyMgmt, Security
+
+    fake = FakeCentral()
+    canon = CanonicalWlan(ssid="T", security=Security(key_mgmt=KeyMgmt.OPEN), forward=ForwardMode.TUNNELED)
+    p = orch.TranslationPlan("mist", "central", orch.WLAN, canon, orch.from_canonical("central", orch.WLAN, canon))
+    assert any(u["kind"] == "gateway_cluster" for u in p.unresolved)
+    res = await orch.execute(fake.command, p)
+    assert res[0]["action"] == "blocked_unresolved"
+    assert fake.objects == {}
+
+
+class FailingCentral(FakeCentral):
+    """FakeCentral that fails POSTs to a given path substring."""
+
+    def __init__(self, fail_substr: str) -> None:
+        super().__init__()
+        self.fail_substr = fail_substr
+
+    async def command(self, method, path, api_params=None, api_data=None):
+        if method == "POST" and self.fail_substr in path:
+            self.calls.append((method, path))
+            return {"code": 400, "msg": "boom"}
+        return await super().command(method, path, api_params=api_params, api_data=api_data)
+
+
+@pytest.mark.asyncio
+async def test_execute_blocks_dependents_on_failure() -> None:
+    # Casey #2: if a prerequisite (server-group) create fails, the dependent
+    # WLAN create must NOT run — it is blocked_dependency_failed.
+    fake = FailingCentral("server-groups")
+    p = orch.plan("mist", "central", orch.WLAN, _eap_wlan())
+    res = await orch.execute(fake.command, p)
+    by = {r["path"].split("/")[-1]: r["action"] for r in res}
+    assert by["EAP_nac"] == "failed"  # the server-group create fails
+    assert by["EAP"] == "blocked_dependency_failed"  # WLAN depends on it → blocked
+    # the WLAN was never POSTed
+    assert "network-config/v1alpha1/wlan-ssids/EAP" not in [p for _, p in fake.calls]

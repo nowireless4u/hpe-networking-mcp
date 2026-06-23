@@ -71,8 +71,17 @@ class TranslationPlan:
 
     @property
     def unresolved(self) -> list[dict[str, Any]]:
-        """Assignment scopes the caller could not resolve to a Central scope-id."""
-        return [c["unresolved"] for c in self.calls if c.get("unresolved")]
+        """Anything the caller could not resolve — assignment scopes AND gateway
+        clusters. A tunneled/hybrid/dual overlay with no cluster binding is as
+        incomplete as a WLAN assigned to a non-existent scope; both must block
+        before any write (the writer flags clusters via ``unresolved_clusters``)."""
+        out = [c["unresolved"] for c in self.calls if c.get("unresolved")]
+        out += [
+            {"kind": "gateway_cluster", "name": c["path"].split("/")[-1]}
+            for c in self.calls
+            if c.get("unresolved_clusters")
+        ]
+        return out
 
     def preview(self) -> str:
         """Human-readable dry-run rendering of the ordered calls."""
@@ -263,23 +272,38 @@ async def execute(
         return [{"path": "-", "action": "blocked_unresolved", "detail": plan.unresolved}]
 
     results: list[dict[str, Any]] = []
-    for call in plan.calls:
+    # Indices whose call completed successfully (created / assigned / already
+    # exists / would-run in a dry run). A call is only attempted once every index
+    # in its depends_on has completed — otherwise a prerequisite failure (e.g. the
+    # auth-server create) would leave the dependent WLAN/assignment to run against
+    # a half-built config.
+    done: set[int] = set()
+    for i, call in enumerate(plan.calls):
         path, method, body = call["path"], call["method"], call.get("body", {})
         is_assignment = path == _CONFIG_ASSIGNMENTS
+
+        unmet = [d for d in call.get("depends_on", []) if d not in done]
+        if unmet:
+            results.append({"path": path, "action": "blocked_dependency_failed", "depends_on": unmet})
+            continue
 
         if ensure_or_create and method == "POST":
             already = await _assignment_exists(command, body) if is_assignment else await _exists(command, path)
             if already:
                 results.append({"path": path, "action": "skipped_exists", "code": 200})
+                done.add(i)
                 continue
 
         if dry_run:
             results.append({"path": path, "action": "planned", "code": None})
+            done.add(i)
             continue
 
         r = await command(method, path, api_params=call.get("query") or None, api_data=body)
         code = r.get("code", 0)
         ok = 200 <= code < 300
+        if ok:
+            done.add(i)
         action = ("assigned" if is_assignment else "created") if ok else "failed"
         row: dict[str, Any] = {"path": path, "action": action, "code": code}
         if not ok:

@@ -84,7 +84,7 @@ def _consolidate_hosts(canon: CanonicalWlan) -> list[dict[str, Any]]:
                 "auth_port": None,
                 "acct_port": None,
                 "coa_port": None,
-                "secret": None,
+                "secret": None,  # nosec B105 — None placeholder; the real RADIUS secret is filled below
             }
             order.append(host)
         return by_host[host]

@@ -15,8 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `translations/readers/aos8.py` — AOS8 (source-only) → canonical. Joins `virtual_ap ↔ ssid_prof ↔ aaa_prof`; walks `aaa_prof → server_group_prof (keyed by sg_name) → rad_server` into canonical auth/acct/CoA; opmode→triplet; operator `target_mode` → forward/dual.
 - `translations/writers/central.py` — canonical → Central `wlan-ssids`: library create + config-assignment to GLOBAL/SITE/SITE_COLLECTION/DEVICE_COLLECTION; tunneled/hybrid `overlay-wlan` gateway-cluster binding; dual-mode (ESSID alias + bridge+tunnel profiles + overlay). Triplet → exact Central opmode.
 - `translations/writers/central_radius.py` — canonical RADIUS → `{ssid}_nac` server-group + positional auth-servers (auth/acct/CoA consolidated by unique host); `{{var}}` host → `ALIAS_AUTH_SERVER_ADDRESS` alias shell + bare-name reference.
-- `translations/orchestrator.py` — reader/writer registry, pure `plan()` (merges writer outputs, re-bases `depends_on`), async `execute()` with ensure-or-create idempotency, and Central scope resolution from the scope tree.
-- 99 unit tests across the canonical reader/writers/orchestrator.
+- `translations/orchestrator.py` — reader/writer registry, pure `plan()` (merges writer outputs, re-bases `depends_on`), async `execute()` with ensure-or-create idempotency, and Central scope resolution from the scope tree. Execution is dependency-aware: it blocks before any write on unresolved assignment scopes **and** unresolved gateway clusters, and skips any call whose `depends_on` prerequisites did not complete (`blocked_dependency_failed`) so a prerequisite failure can't leave a half-built Central config.
+- 101 unit tests across the canonical reader/writers/orchestrator.
+
+### Security
+- `uv.lock`: bumped transitive `msgpack` 1.1.2 → 1.2.1 (GHSA-6v7p-g79w-8964) and `pydantic-settings` 2.14.0 → 2.14.2 (GHSA-4xgf-cpjx-pc3j) to clear pip-audit.
 
 ### Notes
 - Live-verified: Mist `ZZRADTEST` and AOS8 `/md/Campus/West` WLANs (OWE/WPA2-DOT1X/WPA3-SAE/MPSK) round-trip to Central (auth-servers + server-group + wlan-ssids, correct opmode/refs/VLAN), idempotent re-run skips, cleanup clean.
