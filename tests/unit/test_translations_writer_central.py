@@ -11,6 +11,8 @@ import pytest
 
 from hpe_networking_mcp.translations.canonical.wlan import (
     Assignment,
+    AuthSource,
+    AuthSourceKind,
     CanonicalWlan,
     Cipher,
     ForwardMode,
@@ -89,13 +91,40 @@ def test_mpsk_local_opmode() -> None:
 
 
 def _ent(wpa=WpaVersion.WPA2, **rad) -> Security:
-    return Security(key_mgmt=KeyMgmt.ENTERPRISE, wpa_version=wpa, radius=RadiusConfig(**rad))
+    return Security(
+        key_mgmt=KeyMgmt.ENTERPRISE,
+        wpa_version=wpa,
+        auth_source=AuthSource(kind=AuthSourceKind.RADIUS_GROUP),
+        radius=RadiusConfig(**rad),
+    )
 
 
 def test_enterprise_references_server_group() -> None:
     sec = _ent(auth_servers=[RadiusServer(host="10.1.1.1")])
     body = central_write_wlan(_wlan(ssid="EAP", security=sec))[0]["body"]
     assert body["auth-server-group"] == server_group_name("EAP") == "EAP_nac"
+
+
+def test_nac_wlan_no_server_group_ref_and_flagged_unresolved() -> None:
+    # Mist NAC enterprise WLAN: no {ssid}_nac reference (nothing creates it), and
+    # the create is flagged unresolved (nac_profile) so execution blocks.
+    sec = Security(
+        key_mgmt=KeyMgmt.ENTERPRISE,
+        wpa_version=WpaVersion.WPA2,
+        auth_source=AuthSource(kind=AuthSourceKind.NAC),
+    )
+    calls = central_write_wlan(_wlan(ssid="NACWLAN", security=sec))
+    create = calls[0]
+    assert "auth-server-group" not in create["body"]
+    assert "acct-server-group" not in create["body"]
+    assert create["unresolved"] == {"kind": "nac_profile", "name": "NACWLAN"}
+
+
+def test_radius_group_wlan_is_not_flagged_unresolved() -> None:
+    sec = _ent(auth_servers=[RadiusServer(host="10.1.1.1")])
+    create = central_write_wlan(_wlan(security=sec))[0]
+    assert create["body"]["auth-server-group"] == "CORP_nac"
+    assert create.get("unresolved") is None
 
 
 def test_acct_server_group_only_when_acct_present() -> None:

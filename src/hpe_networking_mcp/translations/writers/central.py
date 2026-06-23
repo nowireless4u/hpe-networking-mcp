@@ -15,6 +15,7 @@ from __future__ import annotations
 from typing import Any
 
 from hpe_networking_mcp.translations.canonical.wlan import (
+    AuthSourceKind,
     CanonicalWlan,
     Cipher,
     FastRoam,
@@ -133,9 +134,13 @@ def _wlan_body(canon: CanonicalWlan) -> dict[str, Any]:
         body["wpa3-transition-mode-enable"] = True
 
     # --- enterprise / MAC auth: reference the server-group ({ssid}_nac) ---
-    # The group itself (+ its auth-servers) is built by the separate RADIUS
-    # writer; here the WLAN only references it by name.
-    if sec.key_mgmt == KeyMgmt.ENTERPRISE or sec.mac_auth:
+    # ONLY for an external-RADIUS auth source. A NAC-backed WLAN (Mist NAC) gets
+    # NO {ssid}_nac reference here — that group is never created (central_radius
+    # emits nothing for NAC), so referencing it would dangle. The Central NAC
+    # reference is a separate (future) writer; central_write_wlan flags such a
+    # WLAN as unresolved so execution blocks rather than inventing the reference.
+    is_radius_group = bool(sec.auth_source and sec.auth_source.kind == AuthSourceKind.RADIUS_GROUP)
+    if is_radius_group and (sec.key_mgmt == KeyMgmt.ENTERPRISE or sec.mac_auth):
         body["auth-server-group"] = server_group_name(canon.ssid)
     if sec.mac_auth:
         body["mac-authentication"] = True
@@ -364,16 +369,21 @@ def central_write_wlan(
     # The no-query POST adds it to the library (live-confirmed, and matches the
     # validated central_manage_wlan_profile tool). The library profile is then
     # made effective by config-assignment to a scope in step 2.
-    calls.append(
-        {
-            "method": "POST",
-            "path": f"{_WLAN_SSIDS}/{profile}",
-            "query": {},
-            "body": _wlan_body(canon),
-            "purpose": f"Create Central wlan-ssids '{profile}' (library)",
-            "depends_on": [],
-        }
-    )
+    # A NAC-backed auth source has no Central writer yet (NAC is its own future
+    # canonical+writer) — flag the create as unresolved so execution blocks
+    # rather than creating an enterprise WLAN with no valid auth backend.
+    sec = canon.security
+    create_call: dict[str, Any] = {
+        "method": "POST",
+        "path": f"{_WLAN_SSIDS}/{profile}",
+        "query": {},
+        "body": _wlan_body(canon),
+        "purpose": f"Create Central wlan-ssids '{profile}' (library)",
+        "depends_on": [],
+    }
+    if sec.auth_source and sec.auth_source.kind == AuthSourceKind.NAC:
+        create_call["unresolved"] = {"kind": "nac_profile", "name": canon.ssid}
+    calls.append(create_call)
 
     # 1b) tunneled / hybrid SSIDs bind to their gateway cluster(s) via overlay-wlan.
     # Assignments must then depend on the overlay (not just the WLAN create): a
