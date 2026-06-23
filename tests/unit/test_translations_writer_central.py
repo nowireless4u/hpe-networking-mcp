@@ -12,13 +12,15 @@ import pytest
 from hpe_networking_mcp.translations.canonical.wlan import (
     Assignment,
     CanonicalWlan,
+    Cipher,
+    KeyMgmt,
     MpskSource,
     RadiusConfig,
     RadiusServer,
     Security,
-    SecurityMode,
     Vlan,
     VlanMode,
+    WpaVersion,
 )
 from hpe_networking_mcp.translations.writers.central import central_write_wlan, server_group_name
 
@@ -26,7 +28,7 @@ pytestmark = pytest.mark.unit
 
 
 def _wlan(**kw) -> CanonicalWlan:
-    base = {"ssid": "CORP", "security": Security(mode=SecurityMode.OPEN)}
+    base = {"ssid": "CORP", "security": Security(key_mgmt=KeyMgmt.OPEN)}
     base.update(kw)
     return CanonicalWlan(**base)
 
@@ -43,31 +45,50 @@ def test_open_wlan_create_only_when_unassigned() -> None:
 
 
 @pytest.mark.parametrize(
-    "mode,expected",
+    "key_mgmt,wpa,cipher,expected",
     [
-        (SecurityMode.OPEN, "OPEN"),
-        (SecurityMode.PSK, "WPA2_PERSONAL"),
-        (SecurityMode.SAE, "WPA3_PERSONAL"),
-        (SecurityMode.MPSK, "WPA2_MPSK_AES"),
-        (SecurityMode.ENTERPRISE, "WPA2_ENTERPRISE"),
+        (KeyMgmt.OPEN, WpaVersion.NONE, Cipher.NONE, "OPEN"),
+        (KeyMgmt.OWE, WpaVersion.NONE, Cipher.NONE, "ENHANCED_OPEN"),
+        (KeyMgmt.WEP_STATIC, WpaVersion.NONE, Cipher.WEP, "STATIC_WEP"),
+        (KeyMgmt.WEP_DYNAMIC, WpaVersion.NONE, Cipher.WEP, "DYNAMIC_WEP"),
+        (KeyMgmt.PSK, WpaVersion.WPA, Cipher.AES_CCM, "WPA_PERSONAL"),
+        (KeyMgmt.PSK, WpaVersion.WPA2, Cipher.AES_CCM, "WPA2_PERSONAL"),
+        (KeyMgmt.PSK, WpaVersion.WPA_WPA2, Cipher.AES_CCM, "BOTH_WPA_WPA2_PSK"),
+        (KeyMgmt.SAE, WpaVersion.WPA3, Cipher.AES_CCM, "WPA3_SAE"),
+        (KeyMgmt.ENTERPRISE, WpaVersion.WPA, Cipher.AES_CCM, "WPA_ENTERPRISE"),
+        (KeyMgmt.ENTERPRISE, WpaVersion.WPA2, Cipher.AES_CCM, "WPA2_ENTERPRISE"),
+        (KeyMgmt.ENTERPRISE, WpaVersion.WPA_WPA2, Cipher.AES_CCM, "BOTH_WPA_WPA2_DOT1X"),
+        (KeyMgmt.ENTERPRISE, WpaVersion.WPA3, Cipher.AES_CCM, "WPA3_ENTERPRISE_CCM_128"),
+        (KeyMgmt.ENTERPRISE, WpaVersion.WPA3, Cipher.GCM_256, "WPA3_ENTERPRISE_GCM_256"),
+        (KeyMgmt.ENTERPRISE, WpaVersion.WPA3, Cipher.CNSA, "WPA3_ENTERPRISE_CNSA"),
+        (KeyMgmt.MPSK, WpaVersion.WPA2, Cipher.AES_CCM, "WPA2_MPSK_AES"),
     ],
 )
-def test_opmode_mapping(mode, expected) -> None:
-    sec = Security(mode=mode)
-    if mode in (SecurityMode.PSK, SecurityMode.SAE):
+def test_opmode_mapping(key_mgmt, wpa, cipher, expected) -> None:
+    sec = Security(key_mgmt=key_mgmt, wpa_version=wpa, cipher=cipher)
+    if key_mgmt in (KeyMgmt.PSK, KeyMgmt.SAE):
         sec.psk = "x"
     calls = central_write_wlan(_wlan(security=sec))
     assert calls[0]["body"]["opmode"] == expected
 
 
+def test_mpsk_local_opmode() -> None:
+    sec = Security(key_mgmt=KeyMgmt.MPSK, wpa_version=WpaVersion.WPA2, mpsk_source=MpskSource.LOCAL)
+    assert central_write_wlan(_wlan(security=sec))[0]["body"]["opmode"] == "WPA2_MPSK_LOCAL"
+
+
+def _ent(wpa=WpaVersion.WPA2, **rad) -> Security:
+    return Security(key_mgmt=KeyMgmt.ENTERPRISE, wpa_version=wpa, radius=RadiusConfig(**rad))
+
+
 def test_enterprise_references_server_group() -> None:
-    sec = Security(mode=SecurityMode.ENTERPRISE, radius=RadiusConfig(auth_servers=[RadiusServer(host="10.1.1.1")]))
+    sec = _ent(auth_servers=[RadiusServer(host="10.1.1.1")])
     body = central_write_wlan(_wlan(ssid="EAP", security=sec))[0]["body"]
     assert body["auth-server-group"] == server_group_name("EAP") == "EAP_nac"
 
 
 def test_acct_server_group_only_when_acct_present() -> None:
-    sec = Security(mode=SecurityMode.ENTERPRISE, radius=RadiusConfig(auth_servers=[RadiusServer(host="10.1.1.1")]))
+    sec = _ent(auth_servers=[RadiusServer(host="10.1.1.1")])
     body = central_write_wlan(_wlan(security=sec))[0]["body"]
     assert "acct-server-group" not in body
     sec.radius.acct_servers = [RadiusServer(host="10.1.1.1")]
@@ -76,9 +97,24 @@ def test_acct_server_group_only_when_acct_present() -> None:
 
 
 def test_mpsk_cloud_sets_cloud_auth_no_values() -> None:
-    sec = Security(mode=SecurityMode.MPSK, mpsk_source=MpskSource.CLOUD)
+    sec = Security(key_mgmt=KeyMgmt.MPSK, wpa_version=WpaVersion.WPA2, mpsk_source=MpskSource.CLOUD)
     body = central_write_wlan(_wlan(security=sec))[0]["body"]
     assert body["personal-security"] == {"mpsk-cloud-auth": True}
+
+
+def test_numeric_vlan_uses_vlan_ranges() -> None:
+    body = central_write_wlan(_wlan(vlan=Vlan(mode=VlanMode.ID, id=100)))[0]["body"]
+    assert body["vlan-selector"] == "VLAN_RANGES"
+    assert body["vlan-id-range"] == ["100"]
+
+
+@pytest.mark.parametrize(
+    "forward,expected",
+    [(None, "FORWARD_MODE_BRIDGE")],
+)
+def test_forward_mode_default_bridge(forward, expected) -> None:
+    body = central_write_wlan(_wlan())[0]["body"]
+    assert body["forward-mode"] == "FORWARD_MODE_BRIDGE"
 
 
 def test_named_vlan() -> None:

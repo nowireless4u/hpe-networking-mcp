@@ -16,10 +16,13 @@ from typing import Any
 
 from hpe_networking_mcp.translations.canonical.wlan import (
     CanonicalWlan,
+    Cipher,
     FastRoam,
+    ForwardMode,
+    KeyMgmt,
     MpskSource,
-    SecurityMode,
     VlanMode,
+    WpaVersion,
 )
 
 # canonical band set -> Central rf-band enum
@@ -46,6 +49,30 @@ _RATE_TEMPLATE_TO_CENTRAL: dict[str, dict[str, list[str]]] = {
 _WLAN_SSIDS = "network-config/v1alpha1/wlan-ssids"
 _CONFIG_ASSIGNMENTS = "network-config/v1alpha1/config-assignments"
 
+# canonical ForwardMode -> Central forward-mode enum.
+_FORWARD_MODE = {
+    ForwardMode.BRIDGED: "FORWARD_MODE_BRIDGE",
+    ForwardMode.TUNNELED: "FORWARD_MODE_L2",
+    ForwardMode.HYBRID: "FORWARD_MODE_MIXED",
+}
+
+# WPA generation -> Central personal/enterprise opmode (non-WPA3 cases).
+_PERSONAL_BY_WPA = {
+    WpaVersion.WPA: "WPA_PERSONAL",
+    WpaVersion.WPA2: "WPA2_PERSONAL",
+    WpaVersion.WPA_WPA2: "BOTH_WPA_WPA2_PSK",
+}
+_ENTERPRISE_BY_WPA = {
+    WpaVersion.WPA: "WPA_ENTERPRISE",
+    WpaVersion.WPA2: "WPA2_ENTERPRISE",
+    WpaVersion.WPA_WPA2: "BOTH_WPA_WPA2_DOT1X",
+}
+# WPA3-Enterprise opmode by cipher.
+_WPA3_ENTERPRISE_BY_CIPHER = {
+    Cipher.GCM_256: "WPA3_ENTERPRISE_GCM_256",
+    Cipher.CNSA: "WPA3_ENTERPRISE_CNSA",
+}
+
 
 def server_group_name(ssid: str) -> str:
     """The Central server-group name a WLAN's enterprise/MAC auth references."""
@@ -53,17 +80,28 @@ def server_group_name(ssid: str) -> str:
 
 
 def _opmode(canon: CanonicalWlan) -> str:
+    """Map the neutral (key_mgmt, wpa_version, cipher) triplet → Central opmode enum."""
     sec = canon.security
-    if sec.mode == SecurityMode.OPEN:
+    km, wpa, cipher = sec.key_mgmt, sec.wpa_version, sec.cipher
+
+    if km == KeyMgmt.OPEN:
         return "OPEN"
-    if sec.mode == SecurityMode.PSK:
-        return "WPA2_PERSONAL"
-    if sec.mode == SecurityMode.SAE:
-        return "WPA3_PERSONAL"
-    if sec.mode == SecurityMode.MPSK:
-        return "WPA2_MPSK_AES"
-    if sec.mode == SecurityMode.ENTERPRISE:
-        return "WPA3_ENTERPRISE_CCM_128" if sec.wpa2_wpa3_transition else "WPA2_ENTERPRISE"
+    if km == KeyMgmt.OWE:
+        return "ENHANCED_OPEN"
+    if km == KeyMgmt.WEP_STATIC:
+        return "STATIC_WEP"
+    if km == KeyMgmt.WEP_DYNAMIC:
+        return "DYNAMIC_WEP"
+    if km == KeyMgmt.SAE:
+        return "WPA3_SAE"
+    if km == KeyMgmt.MPSK:
+        return "WPA2_MPSK_LOCAL" if sec.mpsk_source == MpskSource.LOCAL else "WPA2_MPSK_AES"
+    if km == KeyMgmt.PSK:
+        return _PERSONAL_BY_WPA.get(wpa, "WPA2_PERSONAL")
+    if km == KeyMgmt.ENTERPRISE:
+        if wpa == WpaVersion.WPA3:
+            return _WPA3_ENTERPRISE_BY_CIPHER.get(cipher, "WPA3_ENTERPRISE_CCM_128")
+        return _ENTERPRISE_BY_WPA.get(wpa, "WPA2_ENTERPRISE")
     return "OPEN"
 
 
@@ -76,14 +114,14 @@ def _wlan_body(canon: CanonicalWlan) -> dict[str, Any]:
         "essid": {"name": canon.ssid, "use-alias": False},
         "enable": canon.enabled,
         "hide-ssid": canon.hidden,
-        "forward-mode": "FORWARD_MODE_BRIDGE",
+        "forward-mode": _FORWARD_MODE.get(canon.forward, "FORWARD_MODE_BRIDGE"),
         "opmode": _opmode(canon),
     }
 
     # --- personal / MPSK ---
-    if sec.mode in (SecurityMode.PSK, SecurityMode.SAE) and sec.psk:
+    if sec.key_mgmt in (KeyMgmt.PSK, KeyMgmt.SAE) and sec.psk:
         body["personal-security"] = {"wpa-passphrase": sec.psk, "passphrase-format": "STRING"}
-    if sec.mode == SecurityMode.MPSK and sec.mpsk_source == MpskSource.CLOUD:
+    if sec.key_mgmt == KeyMgmt.MPSK and sec.mpsk_source == MpskSource.CLOUD:
         # Central manages the keys for cloud MPSK — enable cloud-auth, copy NO values.
         body["personal-security"] = {"mpsk-cloud-auth": True}
     if sec.wpa2_wpa3_transition:
@@ -92,7 +130,7 @@ def _wlan_body(canon: CanonicalWlan) -> dict[str, Any]:
     # --- enterprise / MAC auth: reference the server-group ({ssid}_nac) ---
     # The group itself (+ its auth-servers) is built by the separate RADIUS
     # writer; here the WLAN only references it by name.
-    if sec.mode == SecurityMode.ENTERPRISE or sec.mac_auth:
+    if sec.key_mgmt == KeyMgmt.ENTERPRISE or sec.mac_auth:
         body["auth-server-group"] = server_group_name(canon.ssid)
     if sec.mac_auth:
         body["mac-authentication"] = True
@@ -103,13 +141,17 @@ def _wlan_body(canon: CanonicalWlan) -> dict[str, Any]:
         if sec.radius.interim_interval:
             body["radius-interim-accounting-interval"] = sec.radius.interim_interval
 
-    # --- VLAN ---
-    if canon.vlan.mode in (VlanMode.NAMED, VlanMode.DYNAMIC) and (canon.vlan.name or canon.vlan.id is not None):
+    # --- VLAN: named → NAMED_VLAN/vlan-name; numeric id → VLAN_RANGES/vlan-id-range ---
+    if canon.vlan.mode in (VlanMode.NAMED, VlanMode.DYNAMIC) and canon.vlan.name:
         body["vlan-selector"] = "NAMED_VLAN"
-        body["vlan-name"] = canon.vlan.name or str(canon.vlan.id)
+        body["vlan-name"] = canon.vlan.name
     elif canon.vlan.mode == VlanMode.ID and canon.vlan.id is not None:
-        body["vlan-selector"] = "NAMED_VLAN"
-        body["vlan-name"] = str(canon.vlan.id)
+        body["vlan-selector"] = "VLAN_RANGES"
+        body["vlan-id-range"] = [str(canon.vlan.id)]
+    elif canon.vlan.mode == VlanMode.NAMED and canon.vlan.id is not None:
+        # named mode but only a numeric id resolved → treat as a range
+        body["vlan-selector"] = "VLAN_RANGES"
+        body["vlan-id-range"] = [str(canon.vlan.id)]
 
     # --- RF band ---
     if canon.bands:

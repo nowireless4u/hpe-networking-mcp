@@ -13,10 +13,11 @@ import pytest
 from hpe_networking_mcp.translations.canonical.wlan import (
     CanonicalWlan,
     CoaServer,
+    KeyMgmt,
     RadiusConfig,
     RadiusServer,
     Security,
-    SecurityMode,
+    WpaVersion,
 )
 from hpe_networking_mcp.translations.writers.central_radius import central_write_server_group, member_name
 
@@ -24,7 +25,8 @@ pytestmark = pytest.mark.unit
 
 
 def _eap(radius: RadiusConfig | None) -> CanonicalWlan:
-    return CanonicalWlan(ssid="EAP", security=Security(mode=SecurityMode.ENTERPRISE, radius=radius))
+    sec = Security(key_mgmt=KeyMgmt.ENTERPRISE, wpa_version=WpaVersion.WPA2, radius=radius)
+    return CanonicalWlan(ssid="EAP", security=sec)
 
 
 def _by_path(calls: list[dict]) -> dict[str, dict]:
@@ -33,7 +35,7 @@ def _by_path(calls: list[dict]) -> dict[str, dict]:
 
 def test_no_radius_returns_empty() -> None:
     assert central_write_server_group(_eap(None)) == []
-    assert central_write_server_group(CanonicalWlan(ssid="OPEN", security=Security(mode=SecurityMode.OPEN))) == []
+    assert central_write_server_group(CanonicalWlan(ssid="OPEN", security=Security(key_mgmt=KeyMgmt.OPEN))) == []
 
 
 def test_single_auth_server_basic() -> None:

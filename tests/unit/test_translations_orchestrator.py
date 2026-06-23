@@ -105,9 +105,9 @@ async def test_execute_dry_run_writes_nothing() -> None:
 async def test_execute_blocks_on_unresolved_scope() -> None:
     fake = FakeCentral()
     # site assignment with no resolver -> unresolved
-    from hpe_networking_mcp.translations.canonical.wlan import Assignment, CanonicalWlan, Security, SecurityMode
+    from hpe_networking_mcp.translations.canonical.wlan import Assignment, CanonicalWlan, KeyMgmt, Security
 
-    canon = CanonicalWlan(ssid="X", security=Security(mode=SecurityMode.OPEN), assignment=Assignment(sites=["GHOST"]))
+    canon = CanonicalWlan(ssid="X", security=Security(key_mgmt=KeyMgmt.OPEN), assignment=Assignment(sites=["GHOST"]))
     p = orch.TranslationPlan("mist", "central", orch.WLAN, canon, orch.from_canonical("central", orch.WLAN, canon))
     assert p.unresolved
     res = await orch.execute(fake.command, p)
@@ -118,9 +118,9 @@ async def test_execute_blocks_on_unresolved_scope() -> None:
 @pytest.mark.asyncio
 async def test_execute_assignment_path() -> None:
     fake = FakeCentral()
-    from hpe_networking_mcp.translations.canonical.wlan import Assignment, CanonicalWlan, Security, SecurityMode
+    from hpe_networking_mcp.translations.canonical.wlan import Assignment, CanonicalWlan, KeyMgmt, Security
 
-    canon = CanonicalWlan(ssid="X", security=Security(mode=SecurityMode.OPEN), assignment=Assignment(org_wide=True))
+    canon = CanonicalWlan(ssid="X", security=Security(key_mgmt=KeyMgmt.OPEN), assignment=Assignment(org_wide=True))
     calls = orch.from_canonical("central", orch.WLAN, canon, global_scope_id="GID")
     p = orch.TranslationPlan("mist", "central", orch.WLAN, canon, calls)
     res = await orch.execute(fake.command, p)

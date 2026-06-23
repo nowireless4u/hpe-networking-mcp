@@ -29,14 +29,38 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class SecurityMode(StrEnum):
-    """Platform-neutral auth mode (maps to Central opmode / Mist auth.type+pairwise)."""
+class KeyMgmt(StrEnum):
+    """Platform-neutral key-management / auth method (one axis of the opmode triplet)."""
 
-    OPEN = "open"
-    PSK = "psk"  # WPA2-Personal
+    OPEN = "open"  # no auth
+    OWE = "owe"  # enhanced-open / opportunistic wireless encryption
+    WEP_STATIC = "wep_static"  # legacy static WEP
+    WEP_DYNAMIC = "wep_dynamic"  # legacy 802.1X dynamic WEP
+    PSK = "psk"  # pre-shared key (WPA*-Personal)
     SAE = "sae"  # WPA3-Personal
     ENTERPRISE = "enterprise"  # 802.1X / EAP
     MPSK = "mpsk"  # multi-PSK
+
+
+class WpaVersion(StrEnum):
+    """WPA generation (one axis of the opmode triplet)."""
+
+    NONE = "none"  # open / OWE / WEP carry no WPA generation
+    WPA = "wpa"  # WPA1
+    WPA2 = "wpa2"
+    WPA3 = "wpa3"
+    WPA_WPA2 = "wpa_wpa2"  # mixed WPA1+WPA2 (Central BOTH_WPA_WPA2_*)
+
+
+class Cipher(StrEnum):
+    """Data cipher (one axis of the opmode triplet)."""
+
+    NONE = "none"
+    WEP = "wep"
+    TKIP = "tkip"
+    AES_CCM = "aes_ccm"  # CCMP-128 — the standard AES default
+    GCM_256 = "gcm_256"  # WPA3 192-bit
+    CNSA = "cnsa"  # WPA3 Suite-B / CNSA
 
 
 class MpskSource(StrEnum):
@@ -63,8 +87,11 @@ class FastRoam(StrEnum):
 
 
 class ForwardMode(StrEnum):
-    BRIDGED = "bridged"
-    TUNNELED = "tunneled"  # sync is bridged-only; tunneled flagged + skipped
+    """Operator-decided target forward mode (AOS8 is per-SSID; Mist is bridged)."""
+
+    BRIDGED = "bridged"  # Central FORWARD_MODE_BRIDGE (local breakout, no cluster)
+    TUNNELED = "tunneled"  # Central FORWARD_MODE_L2 (+ overlay-wlan cluster bind)
+    HYBRID = "hybrid"  # Central FORWARD_MODE_MIXED (split-tunnel, + overlay)
 
 
 class RadiusServer(BaseModel):
@@ -105,13 +132,19 @@ class AuthSource(BaseModel):
 
 
 class Security(BaseModel):
+    """Neutral security config. The ``(key_mgmt, wpa_version, cipher)`` triplet is
+    the granular opmode — readers fill it from the native opmode, the Central
+    writer maps it back to a single Central opmode enum."""
+
     model_config = ConfigDict(extra="forbid")
-    mode: SecurityMode
+    key_mgmt: KeyMgmt
+    wpa_version: WpaVersion = WpaVersion.NONE
+    cipher: Cipher = Cipher.AES_CCM
     wpa2_wpa3_transition: bool = False
     psk: str | None = None  # personal modes; tokenized in transit
-    mpsk_source: MpskSource | None = None  # set when mode == MPSK
+    mpsk_source: MpskSource | None = None  # set when key_mgmt == MPSK
     mac_auth: bool = False
-    auth_source: AuthSource | None = None  # set when mode == ENTERPRISE
+    auth_source: AuthSource | None = None  # set when key_mgmt == ENTERPRISE
     radius: RadiusConfig | None = None  # populated when auth_source.kind == radius_group
 
 
@@ -200,7 +233,14 @@ class CanonicalWlan(BaseModel):
     performance: Performance = Field(default_factory=Performance)
     isolation: Isolation = Field(default_factory=Isolation)
     wmm: Wmm = Field(default_factory=Wmm)
-    forward: ForwardMode = ForwardMode.BRIDGED
+
+    # --- forwarding / tunneling ---
+    forward: ForwardMode = ForwardMode.BRIDGED  # operator-decided target
+    dual_mode: bool = False  # AOS8 bridged_and_tunneled: same SSID in BOTH modes
+    # Neutral names of the gateway cluster(s) a tunneled/hybrid/dual SSID tunnels
+    # to (the overlay-wlan binding). Empty for bridged. The writer/orchestrator
+    # resolves these names → the Central gw-cluster-list entries + scope-ids.
+    gateway_clusters: list[str] = Field(default_factory=list)
 
     # captive portal — out of scope v1 (WLAN.md: NEEDS REVIEW). Flagged, not dropped.
     portal_deferred: bool = False

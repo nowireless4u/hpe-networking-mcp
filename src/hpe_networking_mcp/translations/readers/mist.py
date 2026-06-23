@@ -17,20 +17,22 @@ from hpe_networking_mcp.translations.canonical.wlan import (
     AuthSource,
     AuthSourceKind,
     CanonicalWlan,
+    Cipher,
     CoaServer,
     FastRoam,
     ForwardMode,
     Isolation,
+    KeyMgmt,
     MpskSource,
     Performance,
     RadiusConfig,
     RadiusServer,
     Rates,
     Security,
-    SecurityMode,
     Vlan,
     VlanMode,
     Wmm,
+    WpaVersion,
 )
 
 # Mist interface values that mean "bridged" (everything else = tunneled).
@@ -38,6 +40,11 @@ _BRIDGED_INTERFACES = {"", "all", "ethernet"}
 
 
 def _security(wlan: dict[str, Any]) -> Security:
+    """Classify a Mist WLAN into the neutral (key_mgmt, wpa_version, cipher) triplet.
+
+    Mist auth is coarse (open / psk / eap, with pairwise hints), so each maps to a
+    sensible triplet — WPA2/AES-CCM defaults, WPA3 when pairwise/transition says so.
+    """
     auth = wlan.get("auth") or {}
     atype = auth.get("type", "open")
     pairwise = auth.get("pairwise") or []
@@ -45,29 +52,37 @@ def _security(wlan: dict[str, Any]) -> Security:
     dyn_psk = wlan.get("dynamic_psk")
     has_dyn_psk = bool(dyn_psk) and dyn_psk not in ({}, [])
     transition = ("wpa3" in pairwise) and ("wpa2-ccmp" in pairwise)
+    has_wpa3 = "wpa3" in pairwise
 
-    sec = Security(mode=SecurityMode.OPEN)
+    # default triplet (open)
+    key_mgmt = KeyMgmt.OPEN
+    wpa = WpaVersion.NONE
+    cipher = Cipher.NONE
 
-    if atype == "open":
-        sec.mode = SecurityMode.OPEN
-    elif atype == "psk":
+    if atype == "psk":
+        cipher = Cipher.AES_CCM
         if has_dyn_psk:
-            sec.mode = SecurityMode.MPSK
-            source = None
-            if isinstance(dyn_psk, dict):
-                source = dyn_psk.get("source")
-            sec.mpsk_source = MpskSource.LOCAL if source == "local" else MpskSource.CLOUD
-        elif pairwise == ["wpa3"]:
-            sec.mode = SecurityMode.SAE
+            key_mgmt, wpa = KeyMgmt.MPSK, WpaVersion.WPA2
+        elif pairwise == ["wpa3"] or (has_wpa3 and not transition):
+            key_mgmt, wpa = KeyMgmt.SAE, WpaVersion.WPA3
+        elif transition:
+            key_mgmt, wpa = KeyMgmt.SAE, WpaVersion.WPA3  # WPA2-PSK ↔ WPA3-SAE transition
         else:
-            sec.mode = SecurityMode.PSK
+            key_mgmt, wpa = KeyMgmt.PSK, WpaVersion.WPA2
     elif atype == "eap":
-        sec.mode = SecurityMode.ENTERPRISE
+        key_mgmt = KeyMgmt.ENTERPRISE
+        wpa = WpaVersion.WPA3 if has_wpa3 else WpaVersion.WPA2
+        cipher = Cipher.AES_CCM
 
+    sec = Security(key_mgmt=key_mgmt, wpa_version=wpa, cipher=cipher)
     sec.wpa2_wpa3_transition = transition
     sec.mac_auth = bool(auth.get("enable_mac_auth"))
 
-    if sec.mode in (SecurityMode.PSK, SecurityMode.SAE):
+    if key_mgmt == KeyMgmt.MPSK:
+        source = dyn_psk.get("source") if isinstance(dyn_psk, dict) else None
+        sec.mpsk_source = MpskSource.LOCAL if source == "local" else MpskSource.CLOUD
+
+    if key_mgmt in (KeyMgmt.PSK, KeyMgmt.SAE):
         psk = auth.get("psk")
         if psk:
             sec.psk = psk
@@ -75,7 +90,7 @@ def _security(wlan: dict[str, Any]) -> Security:
     # Enterprise auth source: Mist NAC → the separate NAC translation; otherwise
     # external RADIUS server group. The actual NAC/server-group object is its own
     # canonical+writer; here we only record the reference + any inline RADIUS.
-    if sec.mode == SecurityMode.ENTERPRISE or sec.mac_auth:
+    if key_mgmt == KeyMgmt.ENTERPRISE or sec.mac_auth:
         if mist_nac:
             sec.auth_source = AuthSource(kind=AuthSourceKind.NAC, ref=None)
         else:

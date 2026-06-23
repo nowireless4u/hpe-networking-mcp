@@ -13,9 +13,10 @@ import pytest
 from hpe_networking_mcp.translations.canonical.wlan import (
     AuthSourceKind,
     ForwardMode,
+    KeyMgmt,
     MpskSource,
-    SecurityMode,
     VlanMode,
+    WpaVersion,
 )
 from hpe_networking_mcp.translations.readers.mist import mist_read_wlan
 
@@ -26,36 +27,43 @@ def test_open_wlan() -> None:
     c = mist_read_wlan({"ssid": "GUEST", "auth": {"type": "open"}})
     assert c.ssid == "GUEST"
     assert c.profile_name == "GUEST"
-    assert c.security.mode == SecurityMode.OPEN
+    assert c.security.key_mgmt == KeyMgmt.OPEN
     assert c.security.auth_source is None
 
 
 def test_psk_wlan_keeps_passphrase() -> None:
     c = mist_read_wlan({"ssid": "CORP", "auth": {"type": "psk", "psk": "s3cret-pass"}})
-    assert c.security.mode == SecurityMode.PSK
+    assert c.security.key_mgmt == KeyMgmt.PSK
+    assert c.security.wpa_version == WpaVersion.WPA2
     assert c.security.psk == "s3cret-pass"
+
+
+def test_enterprise_wpa3_from_pairwise() -> None:
+    c = mist_read_wlan({"ssid": "EAP3", "auth": {"type": "eap", "pairwise": ["wpa3"]}})
+    assert c.security.key_mgmt == KeyMgmt.ENTERPRISE
+    assert c.security.wpa_version == WpaVersion.WPA3
 
 
 def test_sae_wpa3_only() -> None:
     c = mist_read_wlan({"ssid": "SAE", "auth": {"type": "psk", "pairwise": ["wpa3"], "psk": "x"}})
-    assert c.security.mode == SecurityMode.SAE
+    assert c.security.key_mgmt == KeyMgmt.SAE
 
 
 def test_mpsk_cloud_is_default_source() -> None:
     c = mist_read_wlan({"ssid": "MPSK", "auth": {"type": "psk"}, "dynamic_psk": {"enabled": True}})
-    assert c.security.mode == SecurityMode.MPSK
+    assert c.security.key_mgmt == KeyMgmt.MPSK
     assert c.security.mpsk_source == MpskSource.CLOUD
 
 
 def test_mpsk_local_source() -> None:
     c = mist_read_wlan({"ssid": "MPSK-L", "auth": {"type": "psk"}, "dynamic_psk": {"enabled": True, "source": "local"}})
-    assert c.security.mode == SecurityMode.MPSK
+    assert c.security.key_mgmt == KeyMgmt.MPSK
     assert c.security.mpsk_source == MpskSource.LOCAL
 
 
 def test_enterprise_with_mist_nac_is_nac_source() -> None:
     c = mist_read_wlan({"ssid": "NAC", "auth": {"type": "eap"}, "mist_nac": {"enabled": True}})
-    assert c.security.mode == SecurityMode.ENTERPRISE
+    assert c.security.key_mgmt == KeyMgmt.ENTERPRISE
     assert c.security.auth_source is not None
     assert c.security.auth_source.kind == AuthSourceKind.NAC
     assert c.security.radius is None
