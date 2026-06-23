@@ -13,6 +13,7 @@ from hpe_networking_mcp.translations.canonical.wlan import (
     Assignment,
     CanonicalWlan,
     Cipher,
+    ForwardMode,
     KeyMgmt,
     MpskSource,
     RadiusConfig,
@@ -25,6 +26,16 @@ from hpe_networking_mcp.translations.canonical.wlan import (
 from hpe_networking_mcp.translations.writers.central import central_write_wlan, server_group_name
 
 pytestmark = pytest.mark.unit
+
+_GW = [
+    {
+        "cluster": "C1",
+        "cluster-type": "CLUSTER_ID",
+        "cluster-scope-id": "9",
+        "cluster-redundancy-type": "PRIMARY",
+        "tunnel-type": "GRE",
+    }
+]
 
 
 def _wlan(**kw) -> CanonicalWlan:
@@ -108,13 +119,53 @@ def test_numeric_vlan_uses_vlan_ranges() -> None:
     assert body["vlan-id-range"] == ["100"]
 
 
-@pytest.mark.parametrize(
-    "forward,expected",
-    [(None, "FORWARD_MODE_BRIDGE")],
-)
-def test_forward_mode_default_bridge(forward, expected) -> None:
+def test_forward_mode_default_bridge() -> None:
     body = central_write_wlan(_wlan())[0]["body"]
     assert body["forward-mode"] == "FORWARD_MODE_BRIDGE"
+
+
+def test_tunneled_emits_overlay_with_clusters() -> None:
+    calls = central_write_wlan(_wlan(forward=ForwardMode.TUNNELED), gateway_cluster_list=_GW)
+    assert calls[0]["body"]["forward-mode"] == "FORWARD_MODE_L2"
+    overlay = calls[1]
+    assert overlay["path"].endswith("/overlay-wlan/CORP")
+    assert overlay["body"]["essid-name"] == "CORP"
+    assert overlay["body"]["use-essid-alias"] is False
+    assert overlay["body"]["gw-cluster-list"] == _GW
+    assert overlay["unresolved_clusters"] is False
+    assert overlay["depends_on"] == [0]
+
+
+def test_hybrid_is_forward_mode_mixed() -> None:
+    calls = central_write_wlan(_wlan(forward=ForwardMode.HYBRID), gateway_cluster_list=_GW)
+    assert calls[0]["body"]["forward-mode"] == "FORWARD_MODE_MIXED"
+    assert calls[1]["path"].endswith("/overlay-wlan/CORP")
+
+
+def test_tunneled_without_clusters_flags_unresolved() -> None:
+    calls = central_write_wlan(_wlan(forward=ForwardMode.TUNNELED))
+    assert calls[1]["unresolved_clusters"] is True
+
+
+def test_bridged_emits_no_overlay() -> None:
+    calls = central_write_wlan(_wlan(forward=ForwardMode.BRIDGED))
+    assert not any("overlay-wlan" in c["path"] for c in calls)
+
+
+def test_dual_mode_alias_two_profiles_and_overlay() -> None:
+    calls = central_write_wlan(_wlan(dual_mode=True), gateway_cluster_list=_GW)
+    paths = [c["path"] for c in calls]
+    assert paths[0].endswith("/aliases/CORP")
+    assert calls[0]["body"]["type"] == "ALIAS_ESSID"
+    assert calls[0]["body"]["default-value"] == {"essid-value": {"name": "CORP"}}
+    assert paths[1].endswith("/wlan-ssids/CORP-bridge")
+    assert calls[1]["body"]["forward-mode"] == "FORWARD_MODE_BRIDGE"
+    assert calls[1]["body"]["essid"] == {"use-alias": True, "alias": "CORP"}
+    assert paths[2].endswith("/wlan-ssids/CORP-tunnel")
+    assert calls[2]["body"]["forward-mode"] == "FORWARD_MODE_L2"
+    assert paths[3].endswith("/overlay-wlan/CORP-tunnel")
+    assert calls[3]["body"]["use-essid-alias"] is True
+    assert calls[3]["body"]["essid-alias-name"] == "CORP"
 
 
 def test_named_vlan() -> None:

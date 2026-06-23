@@ -48,6 +48,11 @@ _RATE_TEMPLATE_TO_CENTRAL: dict[str, dict[str, list[str]]] = {
 
 _WLAN_SSIDS = "network-config/v1alpha1/wlan-ssids"
 _CONFIG_ASSIGNMENTS = "network-config/v1alpha1/config-assignments"
+_OVERLAY_WLAN = "network-config/v1alpha1/overlay-wlan"
+_ALIASES = "network-config/v1alpha1/aliases"
+
+# Forward modes that tunnel to a gateway cluster (need an overlay-wlan binding).
+_OVERLAY_FORWARD = {ForwardMode.TUNNELED, ForwardMode.HYBRID}
 
 # canonical ForwardMode -> Central forward-mode enum.
 _FORWARD_MODE = {
@@ -221,6 +226,87 @@ def _assign_call(profile: str, scope_id: str | None, kind: str, name: str) -> di
     }
 
 
+def _overlay_call(
+    profile: str,
+    essid: str,
+    gw_cluster_list: list[dict[str, Any]] | None,
+    *,
+    use_alias: bool = False,
+    depends_on: list[int] | None = None,
+) -> dict[str, Any]:
+    """One overlay-wlan call binding a tunneled/hybrid SSID to its gateway cluster(s).
+
+    ``gw-cluster-list`` entries are resolved by the caller (neutral cluster names →
+    Central ``{cluster, cluster-type, cluster-scope-id, cluster-redundancy-type,
+    tunnel-type}``). ``unresolved_clusters`` flags a missing/empty list — a
+    tunneled SSID with no cluster binding is incomplete.
+    """
+    body: dict[str, Any] = {
+        "profile": profile,
+        "overlay-profile-type": "WIRELESS_PROFILE",
+        "use-essid-alias": use_alias,
+        "gw-cluster-list": gw_cluster_list or [],
+    }
+    body["essid-alias-name" if use_alias else "essid-name"] = essid
+    return {
+        "method": "POST",
+        "path": f"{_OVERLAY_WLAN}/{profile}",
+        "query": {},
+        "body": body,
+        "purpose": f"Bind '{profile}' to gateway cluster(s) (overlay-wlan)",
+        "depends_on": depends_on or [],
+        "unresolved_clusters": not gw_cluster_list,
+    }
+
+
+def _dual_mode_calls(
+    canon: CanonicalWlan,
+    gw_cluster_list: list[dict[str, Any]] | None,
+) -> list[dict[str, Any]]:
+    """AOS8 bridged_and_tunneled: one SSID as two profiles sharing an ESSID alias.
+
+    Emits: the ESSID alias, a bridge profile + a tunnel profile (both referencing
+    the alias), and the tunnel variant's overlay-wlan cluster binding. Scope
+    placement (which sites bridge vs tunnel) is the consuming skill's job via
+    config-assignment of each variant — kept out of the writer.
+    """
+    profile = canon.profile_name or canon.ssid
+    essid = canon.ssid
+    name_bridge, name_tunnel = f"{profile}-bridge", f"{profile}-tunnel"
+    calls: list[dict[str, Any]] = []
+
+    # 0) ESSID alias both profiles reference (so one SSID exists in two modes)
+    calls.append(
+        {
+            "method": "POST",
+            "path": f"{_ALIASES}/{essid}",
+            "query": {},
+            "body": {"type": "ALIAS_ESSID", "default-value": {"essid-value": {"name": essid}}},
+            "purpose": f"Create ESSID alias '{essid}' (dual-mode)",
+            "depends_on": [],
+        }
+    )
+    # 1) bridge variant, 2) tunnel variant — both reference the alias
+    for nm, fwd in ((name_bridge, ForwardMode.BRIDGED), (name_tunnel, ForwardMode.TUNNELED)):
+        body = _wlan_body(canon)
+        body["ssid"] = nm
+        body["essid"] = {"use-alias": True, "alias": essid}
+        body["forward-mode"] = _FORWARD_MODE[fwd]
+        calls.append(
+            {
+                "method": "POST",
+                "path": f"{_WLAN_SSIDS}/{nm}",
+                "query": {},
+                "body": body,
+                "purpose": f"Create dual {fwd.value} profile '{nm}'",
+                "depends_on": [0],
+            }
+        )
+    # 3) overlay binding for the tunnel variant (references the alias)
+    calls.append(_overlay_call(name_tunnel, essid, gw_cluster_list, use_alias=True, depends_on=[2]))
+    return calls
+
+
 def central_write_wlan(
     canon: CanonicalWlan,
     *,
@@ -228,6 +314,7 @@ def central_write_wlan(
     site_name_to_scope_id: dict[str, str] | None = None,
     site_collection_name_to_scope_id: dict[str, str] | None = None,
     device_group_name_to_scope_id: dict[str, str] | None = None,
+    gateway_cluster_list: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """Emit the ordered Central calls to mirror a WLAN: create + assign.
 
@@ -258,6 +345,11 @@ def central_write_wlan(
     Returns:
         A list of call descriptors: ``{method, path, query, body, purpose, depends_on}``.
     """
+    # Dual-mode (AOS8 bridged_and_tunneled) has its own shape: alias + two
+    # profiles + tunnel overlay. Scope placement is the skill's job.
+    if canon.dual_mode:
+        return _dual_mode_calls(canon, gateway_cluster_list)
+
     profile = canon.profile_name or canon.ssid
     sites = site_name_to_scope_id or {}
     collections = site_collection_name_to_scope_id or {}
@@ -279,6 +371,10 @@ def central_write_wlan(
             "depends_on": [],
         }
     )
+
+    # 1b) tunneled / hybrid SSIDs bind to their gateway cluster(s) via overlay-wlan.
+    if canon.forward in _OVERLAY_FORWARD:
+        calls.append(_overlay_call(profile, canon.ssid, gateway_cluster_list, depends_on=[0]))
 
     # 2) assignment(s) — one config-assignment per resolved scope facet.
     if asg.org_wide:
