@@ -197,14 +197,17 @@ def _wlan_body(canon: CanonicalWlan) -> dict[str, Any]:
     return body
 
 
-def _assign_call(profile: str, scope_id: str | None, kind: str, name: str) -> dict[str, Any]:
+def _assign_call(profile: str, scope_id: str | None, kind: str, name: str, depends_on: list[int]) -> dict[str, Any]:
     """One config-assignment call descriptor.
 
     The body shape is identical for every scope-type — Central infers the
     scope-type (GLOBAL / SITE_COLLECTION / SITE / DEVICE_COLLECTION) from the
     scope-id, so only the id varies (live-confirmed against the SITE path).
     ``unresolved`` carries the unresolved scope name when the caller couldn't
-    map it, so the consuming skill can create the scope first.
+    map it, so the consuming skill can create the scope first. ``depends_on`` is
+    the prerequisite that must exist before assigning — the WLAN create for a
+    bridged SSID, or the overlay binding for a tunneled/hybrid one (so a failed
+    overlay blocks the assignment rather than activating an unbound WLAN).
     """
     return {
         "method": "POST",
@@ -221,7 +224,7 @@ def _assign_call(profile: str, scope_id: str | None, kind: str, name: str) -> di
             ]
         },
         "purpose": f"Assign '{profile}' to {kind} '{name}'",
-        "depends_on": [0],
+        "depends_on": list(depends_on),
         "unresolved": None if scope_id else {"kind": kind, "name": name},
     }
 
@@ -373,17 +376,23 @@ def central_write_wlan(
     )
 
     # 1b) tunneled / hybrid SSIDs bind to their gateway cluster(s) via overlay-wlan.
+    # Assignments must then depend on the overlay (not just the WLAN create): a
+    # failed overlay must block the assignment, or we'd activate a tunneled WLAN
+    # with no gateway-cluster binding. Bridged WLANs depend on the create only.
     if canon.forward in _OVERLAY_FORWARD:
         calls.append(_overlay_call(profile, canon.ssid, gateway_cluster_list, depends_on=[0]))
+        assign_dep = [len(calls) - 1]
+    else:
+        assign_dep = [0]
 
     # 2) assignment(s) — one config-assignment per resolved scope facet.
     if asg.org_wide:
-        calls.append(_assign_call(profile, global_scope_id, "global", "GLOBAL"))
+        calls.append(_assign_call(profile, global_scope_id, "global", "GLOBAL", assign_dep))
     for name in asg.sites:
-        calls.append(_assign_call(profile, sites.get(name), "site", name))
+        calls.append(_assign_call(profile, sites.get(name), "site", name, assign_dep))
     for name in asg.site_collections:
-        calls.append(_assign_call(profile, collections.get(name), "site-collection", name))
+        calls.append(_assign_call(profile, collections.get(name), "site-collection", name, assign_dep))
     for name in asg.device_groups:
-        calls.append(_assign_call(profile, groups.get(name), "device-group", name))
+        calls.append(_assign_call(profile, groups.get(name), "device-group", name, assign_dep))
 
     return calls

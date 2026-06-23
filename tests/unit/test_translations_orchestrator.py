@@ -159,6 +159,38 @@ class FailingCentral(FakeCentral):
 
 
 @pytest.mark.asyncio
+async def test_execute_overlay_failure_blocks_assignment() -> None:
+    # Casey round 2: a failed overlay-wlan must block the WLAN's scope assignment
+    # (else a tunneled WLAN goes active with no gateway-cluster binding).
+    from hpe_networking_mcp.translations.canonical.wlan import Assignment, CanonicalWlan, ForwardMode, KeyMgmt, Security
+
+    gw = [
+        {
+            "cluster": "C1",
+            "cluster-type": "CLUSTER_ID",
+            "cluster-scope-id": "9",
+            "cluster-redundancy-type": "PRIMARY",
+            "tunnel-type": "GRE",
+        }
+    ]
+    canon = CanonicalWlan(
+        ssid="T",
+        security=Security(key_mgmt=KeyMgmt.OPEN),
+        forward=ForwardMode.TUNNELED,
+        assignment=Assignment(org_wide=True),
+    )
+    calls = orch.from_canonical("central", orch.WLAN, canon, gateway_cluster_list=gw, global_scope_id="GID")
+    p = orch.TranslationPlan("mist", "central", orch.WLAN, canon, calls)
+    assert not p.unresolved  # clusters resolved -> not blocked up front
+    fake = FailingCentral("overlay-wlan")
+    res = await orch.execute(fake.command, p)
+    actions = [r["action"] for r in res]
+    assert "failed" in actions  # overlay create fails
+    assert actions[-1] == "blocked_dependency_failed"  # assignment blocked
+    assert fake.assignments == []  # nothing assigned
+
+
+@pytest.mark.asyncio
 async def test_execute_blocks_dependents_on_failure() -> None:
     # Casey #2: if a prerequisite (server-group) create fails, the dependent
     # WLAN create must NOT run — it is blocked_dependency_failed.

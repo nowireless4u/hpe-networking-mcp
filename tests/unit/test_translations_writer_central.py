@@ -136,6 +136,23 @@ def test_tunneled_emits_overlay_with_clusters() -> None:
     assert overlay["depends_on"] == [0]
 
 
+def test_tunneled_assignment_depends_on_overlay() -> None:
+    # assignment must depend on the overlay (index 1), not just the WLAN create,
+    # so a failed overlay blocks the assignment (no unbound tunneled WLAN).
+    canon = _wlan(forward=ForwardMode.TUNNELED, assignment=Assignment(org_wide=True))
+    calls = central_write_wlan(canon, gateway_cluster_list=_GW, global_scope_id="GID")
+    assert calls[1]["path"].endswith("/overlay-wlan/CORP")
+    assign = calls[2]
+    assert assign["path"].endswith("/config-assignments")
+    assert assign["depends_on"] == [1]
+
+
+def test_bridged_assignment_depends_on_create_only() -> None:
+    canon = _wlan(assignment=Assignment(org_wide=True))
+    calls = central_write_wlan(canon, global_scope_id="GID")
+    assert calls[1]["depends_on"] == [0]
+
+
 def test_hybrid_is_forward_mode_mixed() -> None:
     calls = central_write_wlan(_wlan(forward=ForwardMode.HYBRID), gateway_cluster_list=_GW)
     assert calls[0]["body"]["forward-mode"] == "FORWARD_MODE_MIXED"
