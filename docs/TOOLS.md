@@ -1749,7 +1749,8 @@ Tools that span multiple platforms. Each replaces several individual tool calls 
 | target_platform | str | Yes | Where to mirror it — `central` or `mist`. |
 | ssid | str | Yes | The source SSID to translate. |
 | target_mode | str | No | AOS8 forward mode — `bridged` (default) / `tunneled` / `hybrid` / `bridged_and_tunneled`. |
-| gateway_clusters | list[str] | No | Neutral cluster names for tunneled/hybrid/dual overlays. |
+| gateway_clusters | list[str] | No | Neutral cluster names (AOS8 source hint only). |
+| gateway_cluster_list | list[dict] | No | Resolved Central overlay entries (`{cluster, cluster-type, cluster-scope-id, cluster-redundancy-type, tunnel-type}`) for tunneled/hybrid/dual WLANs. Without it, an overlay WLAN's cluster binding is reported `unresolved` and apply blocks. |
 | source_override / context_override | dict | No | Bypass the live fetch (tests, or AOS8 source). |
 | confirmed | bool | No | (`apply` only) popup-less confirmation fallback when the client can't elicit. |
 

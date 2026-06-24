@@ -156,3 +156,47 @@ async def test_build_plan_rejects_unknown_platforms() -> None:
                 source_override={"ssid": "X"},
                 context_override={"writer_ctx": {}},
             )
+
+
+_AOS8_VAP = {"profile-name": "V", "ssid_prof": {"profile-name": "SP"}}
+_AOS8_SP = {"profile-name": "SP", "essid": {"essid": "TUN"}, "opmode": {"opensystem": True}}
+_AOS8_RDR = {"reader_ctx": {"ssid_profiles": [_AOS8_SP]}, "writer_ctx": {}}
+_GCL = [
+    {
+        "cluster": "C1",
+        "cluster-type": "CLUSTER_ID",
+        "cluster-scope-id": "9",
+        "cluster-redundancy-type": "PRIMARY",
+        "tunnel-type": "GRE",
+    }
+]
+
+
+async def _aos8_tunneled_plan(gcl):
+    return await tw._build_plan(
+        _ctx(),
+        "aos8",
+        "central",
+        "TUN",
+        target_mode="tunneled",
+        gateway_clusters=["C1"],
+        gateway_cluster_list=gcl,
+        source_override=_AOS8_VAP,
+        context_override=_AOS8_RDR,
+    )
+
+
+@pytest.mark.asyncio
+async def test_tunneled_with_cluster_list_resolves_overlay() -> None:
+    # Casey #509: a supplied gateway_cluster_list flows to the overlay call and
+    # clears the unresolved-cluster flag.
+    plan = await _aos8_tunneled_plan(_GCL)
+    overlay = next(c for c in plan.calls if "/overlay-wlan/" in c["path"])
+    assert overlay["body"]["gw-cluster-list"] == _GCL
+    assert not any(u["kind"] == "gateway_cluster" for u in plan.unresolved)
+
+
+@pytest.mark.asyncio
+async def test_tunneled_without_cluster_list_blocks() -> None:
+    plan = await _aos8_tunneled_plan(None)
+    assert any(u["kind"] == "gateway_cluster" for u in plan.unresolved)

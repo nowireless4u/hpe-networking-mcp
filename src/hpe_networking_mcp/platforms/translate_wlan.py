@@ -121,6 +121,7 @@ async def _build_plan(
     *,
     target_mode: str,
     gateway_clusters: list[str] | None,
+    gateway_cluster_list: list[dict] | None = None,
     source_override: dict | None,
     context_override: dict | None,
 ) -> orchestrator.TranslationPlan:
@@ -156,6 +157,13 @@ async def _build_plan(
     writer_ctx = co.get("writer_ctx")
     if writer_ctx is None:
         writer_ctx = await (_central_writer_ctx(ctx) if target_platform == "central" else _mist_writer_ctx(ctx))
+
+    # Central overlay (tunneled/hybrid/dual) binds to gateway cluster(s) via the
+    # resolved gw-cluster-list. Those entries (cluster-type/scope/tunnel-type) are
+    # operator/topology decisions, so the caller supplies them as a public param
+    # rather than the tool guessing — explicit param wins over any context_override.
+    if target_platform == "central" and gateway_cluster_list is not None:
+        writer_ctx = {**(writer_ctx or {}), "gateway_cluster_list": gateway_cluster_list}
 
     return orchestrator.plan(
         source_platform, target_platform, orchestrator.WLAN, source_obj, reader_ctx=reader_ctx, writer_ctx=writer_ctx
@@ -231,6 +239,7 @@ async def _preview_impl(
     *,
     target_mode: str,
     gateway_clusters: list[str] | None,
+    gateway_cluster_list: list[dict] | None = None,
     source_override: dict | None,
     context_override: dict | None,
 ) -> dict[str, Any]:
@@ -241,6 +250,7 @@ async def _preview_impl(
         ssid,
         target_mode=target_mode,
         gateway_clusters=gateway_clusters,
+        gateway_cluster_list=gateway_cluster_list,
         source_override=source_override,
         context_override=context_override,
     )
@@ -261,6 +271,7 @@ async def _apply_impl(
     *,
     target_mode: str,
     gateway_clusters: list[str] | None,
+    gateway_cluster_list: list[dict] | None = None,
     source_override: dict | None,
     context_override: dict | None,
     confirmed: bool,
@@ -284,6 +295,7 @@ async def _apply_impl(
         ssid,
         target_mode=target_mode,
         gateway_clusters=gateway_clusters,
+        gateway_cluster_list=gateway_cluster_list,
         source_override=source_override,
         context_override=context_override,
     )
@@ -325,6 +337,7 @@ def register(mcp: FastMCP) -> None:
         ssid: str,
         target_mode: str = "bridged",
         gateway_clusters: list[str] | None = None,
+        gateway_cluster_list: list[dict] | None = None,
         source_override: dict | None = None,
         context_override: dict | None = None,
     ) -> dict[str, Any]:
@@ -337,7 +350,12 @@ def register(mcp: FastMCP) -> None:
             target_platform: where to mirror it — 'central' | 'mist'.
             ssid: the source SSID to translate.
             target_mode: AOS8 forward mode — bridged | tunneled | hybrid | bridged_and_tunneled.
-            gateway_clusters: neutral cluster names for tunneled/hybrid/dual overlays.
+            gateway_clusters: neutral cluster NAMES (AOS8 source hint only).
+            gateway_cluster_list: resolved Central overlay entries for tunneled/hybrid/
+                dual WLANs — ``[{cluster, cluster-type, cluster-scope-id,
+                cluster-redundancy-type, tunnel-type}]``. These are topology decisions,
+                so the caller/skill supplies them; without them an overlay WLAN's
+                cluster binding is reported in ``unresolved`` and apply will block.
             source_override / context_override: bypass the live fetch (tests / AOS8).
 
         Returns:
@@ -351,6 +369,7 @@ def register(mcp: FastMCP) -> None:
             ssid,
             target_mode=target_mode,
             gateway_clusters=gateway_clusters,
+            gateway_cluster_list=gateway_cluster_list,
             source_override=source_override,
             context_override=context_override,
         )
@@ -363,6 +382,7 @@ def register(mcp: FastMCP) -> None:
         ssid: str,
         target_mode: str = "bridged",
         gateway_clusters: list[str] | None = None,
+        gateway_cluster_list: list[dict] | None = None,
         source_override: dict | None = None,
         context_override: dict | None = None,
         confirmed: bool = False,
@@ -375,6 +395,8 @@ def register(mcp: FastMCP) -> None:
 
         Same args as ``translate_wlan_preview`` plus ``confirmed`` (the popup-less
         fallback honored only when the client can't present an elicitation prompt).
+        For tunneled/hybrid/dual WLANs pass ``gateway_cluster_list`` or the apply
+        will block on the unresolved cluster binding.
         """
         return await _apply_impl(
             ctx,
@@ -383,6 +405,7 @@ def register(mcp: FastMCP) -> None:
             ssid,
             target_mode=target_mode,
             gateway_clusters=gateway_clusters,
+            gateway_cluster_list=gateway_cluster_list,
             source_override=source_override,
             context_override=context_override,
             confirmed=confirmed,
