@@ -194,7 +194,7 @@ def mist_write_wlan(
         "unresolved": unresolved or None,
     }
 
-    wlan_call = {
+    wlan_call: dict[str, Any] = {
         "method": "POST",
         "path": f"/api/v1/orgs/{org_id}/wlans",
         "query": {},
@@ -204,4 +204,10 @@ def mist_write_wlan(
         "inject": {"template_id": "template_id"},  # body[template_id] = captured.template_id
         "idempotent": False,
     }
+    # WEP has no clean Mist mapping in this writer — block rather than emit an
+    # empty/invalid auth block (a silent create with unintended auth defaults).
+    if canon.security.key_mgmt in (KeyMgmt.WEP_STATIC, KeyMgmt.WEP_DYNAMIC):
+        wlan_call["unresolved"] = [
+            {"kind": "unsupported_auth", "name": f"{ssid} (WEP is not supported by the Mist writer)"}
+        ]
     return [template_call, wlan_call]

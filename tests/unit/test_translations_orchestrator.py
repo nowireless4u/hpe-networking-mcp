@@ -291,3 +291,17 @@ async def test_mist_unresolved_scope_flattens_and_blocks() -> None:
     res = await orch.execute(fake.command, p)
     assert res[0]["action"] == "blocked_unresolved"
     assert fake.bodies == []  # nothing written
+
+
+@pytest.mark.asyncio
+async def test_aos8_wep_to_mist_blocks() -> None:
+    # Casey #508 r2: a WEP WLAN has no Mist mapping -> plan flags it unsupported
+    # and execute() blocks before any write.
+    vap = {"profile-name": "V", "ssid_prof": {"profile-name": "SP"}}
+    sp = {"profile-name": "SP", "essid": {"essid": "LEGACY"}, "opmode": {"static-wep": True}}
+    p = orch.plan("aos8", "mist", orch.WLAN, vap, reader_ctx={"ssid_profiles": [sp]}, writer_ctx={"org_id": "ORG"})
+    assert any(u["kind"] == "unsupported_auth" for u in p.unresolved)
+    fake = CapturingClient()
+    res = await orch.execute(fake.command, p)
+    assert res[0]["action"] == "blocked_unresolved"
+    assert fake.bodies == []

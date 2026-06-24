@@ -130,6 +130,16 @@ def test_vlan_id_and_named() -> None:
     assert bn["dynamic_vlan"]["vlans"] == {"CORP": ""}
 
 
+@pytest.mark.parametrize("km", [KeyMgmt.WEP_STATIC, KeyMgmt.WEP_DYNAMIC])
+def test_wep_is_flagged_unsupported(km) -> None:
+    # WEP has no Mist mapping → the WLAN call is flagged unresolved so the plan
+    # blocks instead of emitting an empty auth block.
+    calls = _calls(Security(key_mgmt=km, wpa_version=WpaVersion.NONE))
+    assert calls[1]["unresolved"] == [
+        {"kind": "unsupported_auth", "name": "CORP (WEP is not supported by the Mist writer)"}
+    ]
+
+
 def test_template_applies_and_unresolved() -> None:
     canon = _wlan(Security(key_mgmt=KeyMgmt.OPEN), assignment=Assignment(org_wide=True, sites=["HOME", "GHOST"]))
     calls = mist_write_wlan(canon, org_id="ORG", site_name_to_id={"HOME": "site-1"})
