@@ -71,8 +71,8 @@ class TestInferPlatform:
     def test_cross_platform_site_health_check(self):
         assert _infer_platform("site_health_check") is None
 
-    def test_cross_platform_manage_wlan_profile(self):
-        assert _infer_platform("manage_wlan_profile") is None
+    def test_cross_platform_translate_wlan(self):
+        assert _infer_platform("translate_wlan_apply") is None
 
 
 # ---------------------------------------------------------------------------
@@ -192,10 +192,10 @@ class TestResponseEnvelopeMiddleware:
         assert result.structured_content["platform"] is None
 
     @pytest.mark.asyncio
-    async def test_wraps_manage_wlan_profile_with_status(self):
+    async def test_wraps_translate_wlan_apply_with_status(self):
         """Status code present in raw response is lifted into the envelope."""
         middleware = ResponseEnvelopeMiddleware()
-        ctx = _make_context("manage_wlan_profile")
+        ctx = _make_context("translate_wlan_apply")
         raw = {"status_code": 200, "wlan": "Corp"}
         call_next = AsyncMock(return_value=_make_tool_result(structured=raw))
 

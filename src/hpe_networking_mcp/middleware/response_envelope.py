@@ -1,8 +1,8 @@
 """Response envelope middleware — wraps tool responses in a uniform shape.
 
 v3.0.0.0 scope: applies to **every tool** in the catalog. The v2.5.1.0
-prototype was scoped to the 4 cross-platform tools (``health``,
-``site_health_check``, ``site_rf_check``, ``manage_wlan_profile``) to
+prototype was scoped to a few cross-platform tools (``health``,
+``site_health_check``, ``site_rf_check``) to
 validate the pattern; Zach's OpenClaw + Qwen3 4B test (#246 reassessment
 comment) confirmed the envelope worked for the small-local-model use case
 that motivated v3 in the first place. Allowlist removed in v3.0.0.0.

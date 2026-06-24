@@ -6,10 +6,10 @@ description: |
   drift — same SSID, different security mode; same network, different VLAN
   assignment; one platform missing a WLAN entirely. Use when the user asks
   "are our WLANs in sync?", "did the WLAN sync run cleanly?", or after
-  running `manage_wlan_profile` to verify the result.
+  running `translate_wlan_apply` to verify the result.
 platforms: [mist, central]
 tags: [wlan, sync, drift-detection, audit]
-tools: [health, mist_list_org_wlans, mist_list_site_wlans, central_get_wlans, manage_wlan_profile]
+tools: [health, mist_list_org_wlans, mist_list_site_wlans, central_get_wlans, translate_wlan_preview, translate_wlan_apply]
 ---
 
 # Mist ↔ Central WLAN consistency check
@@ -22,7 +22,12 @@ divergent settings. Output a per-WLAN comparison table the operator can
 act on.
 
 This skill is *read-only*. It identifies drift; it does NOT correct it.
-Use `manage_wlan_profile` to apply corrections after reviewing this report.
+To correct drift after reviewing this report, use the canonical translation
+engine: `translate_wlan_preview(source_platform, target_platform, ssid)` to see
+the exact target calls, check its `unresolved` list (create any missing
+scopes/clusters first), then `translate_wlan_apply(..., confirmed=true)` to write
+(it is gated by the target platform's `ENABLE_*_WRITE_TOOLS` flag and prompts for
+confirmation).
 
 ## Prerequisites
 

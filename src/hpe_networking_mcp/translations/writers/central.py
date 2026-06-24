@@ -2,7 +2,7 @@
 
 Produces the Central ``wlan-ssids`` create call (global) plus scope
 assignment(s), from a ``CanonicalWlan``. The field construction is the
-validated ``platforms/wlan_mapper.mist_to_central`` logic + ``docs/mappings/WLAN.md``,
+validated Mist↔Central mapping logic (formerly ``platforms/wlan_mapper``) + ``docs/mappings/WLAN.md``,
 re-housed to read the canonical model.
 
 Auth source: an enterprise/MAC-auth WLAN references a Central server-group by

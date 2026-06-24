@@ -20,7 +20,7 @@ Two modes are supported (the `static` mode was removed in v3.0.0.0):
 
 - **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 3178 underlying tools are reachable from inside a sandboxed Python `execute()` block via `await call_tool("<platform>_invoke_tool", {"name": "<tool>", "params": {...}})` — see the in-sandbox dispatch note below; the ~1000 spec-driven Mist tools are reachable **only** through `mist_invoke_tool`, not by direct name. The smallest initial surface; best for orchestrators driving small / local LLMs.
 - **`MCP_TOOL_MODE=dynamic`** (opt-in since v3.0.0.0; was the v2.x default) — 24 tools visible:
-    - **4 cross-platform tools**: `health`, `site_health_check`, `site_rf_check`, `manage_wlan_profile`
+    - **cross-platform tools**: `health`, `site_health_check`, `site_rf_check`, `translate_wlan_preview`, `translate_wlan_apply`
     - **3 meta-tools per platform × 9 platforms** = 27: `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`
     - **2 skills tools** (since v2.3.0.0): `skills_list`, `skills_load`
 
@@ -75,11 +75,12 @@ Use the cross-platform tools directly when they apply — they replace several p
 - `health(platform=...)` — platform reachability / status. **Registered in every mode.**
 - `site_health_check(site_name=...)` — unified site health across Mist + Central + ClearPass. **Dynamic mode only.**
 - `site_rf_check(site_name=...)` — unified per-AP, per-band RF state (channels, power, utilization, noise floor) across Mist + Central; includes a pre-rendered ASCII RF dashboard. **Dynamic mode only.** **Use for any channel-planning / spectrum / RF-health / "how are my 5/6 GHz channels" question** — do NOT fall back to Mist-only or Central-only RF tools without a reason.
-- `manage_wlan_profile(...)` — the mandatory entry point for any WLAN create/copy/sync request. **Dynamic mode only.**
+- `translate_wlan_preview(source_platform, target_platform, ssid, ...)` — the entry point to preview a WLAN translation (Mist↔Central, AOS8→either) via the canonical engine; read-only, secrets redacted. **Registered in every mode (incl. code).**
+- `translate_wlan_apply(source_platform, target_platform, ssid, ..., confirmed=...)` — executes the translation against the target; gated by the target's `ENABLE_*_WRITE_TOOLS` flag + confirmation. **Registered in every mode (incl. code).**
 
-> **Code mode caveat:** of the four cross-platform tools above, only `health` is registered in `code` mode — `site_health_check`, `site_rf_check`, and `manage_wlan_profile` are deliberately NOT (code mode's premise is that the AI composes per-platform tools itself). In code mode:
+> **Code mode caveat:** of the cross-platform tools above, `health`, `translate_wlan_preview`, and `translate_wlan_apply` are registered in `code` mode (reachable from `execute()` via `call_tool`); `site_health_check` and `site_rf_check` are deliberately NOT (code mode's premise is that the AI composes per-platform tools itself). In code mode:
 > - **RF / channel-planning check** → load the `cross-platform-rf-check` skill (`skills_load(name="cross-platform-rf-check")`) — it is the runbook equivalent of `site_rf_check`, walking the per-platform Mist + Central RF tools in the right order.
-> - **Site health / WLAN management** → compose the per-platform tools directly (use `search` / `tags` to find them).
+> - **Site health** → compose the per-platform tools directly (use `search` / `tags` to find them). **WLAN sync/migration** → use `translate_wlan_preview` / `translate_wlan_apply` (or the `wlan-sync-validation` skill).
 
 **Static mode was removed in v3.0.0.0.** Setting `MCP_TOOL_MODE=static` now raises `ValueError` at startup; switch to `dynamic` (per-platform meta-tools) or `code` (sandboxed Python `execute`) per the discovery section above.
 
@@ -130,7 +131,7 @@ When `ENABLE_PII_TOKENIZATION=true` (operator-controlled, off by default), the M
 
 - **You do not have access to the plaintext.** A token is a reference, not the value itself. Never attempt to "guess" or "decode" what's behind a token.
 - **The same plaintext gets the same token within a session.** If two WLANs return the same `[[PSK:...]]` token, they share a PSK — useful for findings like *"three sites use the same key, recommend rotation."*
-- **Tokens are round-trippable into write tools.** Pass the token verbatim as the parameter value (e.g. `manage_wlan_profile(psk="[[PSK:550e8400-...]]", ...)`); the middleware substitutes the real plaintext before calling the platform API. This is how WLAN sync, migration, and rotation flows work without exposing secrets to you.
+- **Tokens are round-trippable into write tools.** Pass the token verbatim as the parameter value (e.g. `central_manage_wlan_profile(payload={"personal-security": {"wpa-passphrase": "[[PSK:550e8400-...]]"}}, ...)`); the middleware substitutes the real plaintext before calling the platform API. This is how WLAN sync, migration, and rotation flows work without exposing secrets to you.
 - **Common kinds:** `PSK` (WPA/SAE keys, passphrases, VRRP passphrases), `RAD` (RADIUS / RadSec shared secrets, EAP-tunneled passwords), `TACACS` (TACACS+ shared secrets, TACACS+-tunneled passwords), `COA` (RFC-3576 / dynamic-authorization endpoints + shared secrets), `SNMP` (SNMP communities, v3 auth/priv), `PASSWORD` (admin/manager/CLI passwords), `APITOKEN` (API tokens, OAuth credentials, **AWS-signed URLs**), `CERT` (certificates), `KEY` (private keys, keytabs), `VPNPSK` (VPN/IPSec PSKs), `HOSTNAME` (device/AP names, FQDNs, RADIUS/TACACS server addresses), `USER`/`EMAIL`/`PHONE` (user-identifying), `SERIAL`/`IMEI`/`IMSI`/`ICCID` (hardware).
 - **NOT tokenized — pass through as cleartext (v3.0.1.12 refinement):** MAC addresses (normalized to `aa:bb:cc:dd:ee:ff`); SSIDs (broadcast); all platform UUID `*_id` fields (`org_id`, `site_id`, `device_id`, `template_id`, etc. — already opaque); geographic data (`address`, `city`, `state`, `zip`, `latitude`, `longitude`, etc. — typically public on company websites); **all IP addresses** — internal RFC1918, public WAN, CIDR ranges (internal subnet topology is generally known to anyone on-network and CIDR / route analysis is a core audit task — note the carve-outs above where IPs inside AAA-server contexts *do* tokenize); **schema labels** `vlan_name`, `subnet_name`, `org_name`, `site_name`, `scope_name`, `device_group_name` (network-architecture identifiers, not personally-identifying; audit utility benefits from cleartext). Treat all of these as you would any normal string value.
 - **Always-on detections (v2.3.1.2):** emails are tokenized regardless of which field they appear in (so `name: "user@example.com"` becomes `name: "[[EMAIL:...]]"`). AWS-signed URLs (containing `X-Amz-Security-Token`, `X-Amz-Credential`, or `X-Amz-Signature`) are tokenized whole as `APITOKEN` because they include temporary AWS credentials.
@@ -548,32 +549,16 @@ These two platforms have similar concepts with different names. Do NOT generaliz
 
 ## Cross-Platform WLAN Management
 
-**MANDATORY**: When the user asks to add, copy, sync, port, migrate, or create a WLAN — regardless of whether it involves one or both platforms — ALWAYS call `manage_wlan_profile` first. This tool checks both Mist and Central for the SSID and returns the correct workflow. Do NOT call `central_manage_wlan_profile`, `mist_create_org_wlan`, or `mist_create_site_wlan` directly for WLAN create operations. Doing so will produce incorrect configurations because:
-1. Opmode values differ between platforms and require translation
-2. RADIUS server groups, aliases, and template variables need resolution
-3. VLAN names vs IDs need mapping
-4. Template/scope assignments must be checked and replicated
-5. Data rate profiles need translation
+**MANDATORY**: When the user asks to add, copy, sync, port, or migrate a WLAN *from one platform to another* (Mist↔Central, or AOS8→either), use the canonical translation engine — do NOT hand-map by calling `central_manage_wlan_profile`, `mist_create_org_wlan`, etc. directly. The engine handles opmode translation, RADIUS server-groups/aliases/template-variables, VLAN name↔ID, scope/template assignment, and data-rate profiles automatically (the things hand-mapping gets wrong).
 
-**Prompts**:
-- Use `sync_wlans_mist_to_central` to sync Mist WLANs to Central
-- Use `sync_wlans_central_to_mist` to sync Central WLANs to Mist
-- Use `sync_wlans_bidirectional` to compare and sync both directions
+**Workflow**:
+1. `translate_wlan_preview(source_platform, target_platform, ssid)` — review the exact target calls. Read-only; secrets are redacted.
+2. Check the returned `unresolved` list. If non-empty (a target site / site-collection / device-group / gateway-cluster the engine couldn't resolve), create those scopes first — the apply will block otherwise.
+3. `translate_wlan_apply(source_platform, target_platform, ssid, confirmed=true)` — executes against the target. Gated by the target's `ENABLE_*_WRITE_TOOLS` flag and a confirmation prompt. Idempotent for Central (re-run skips existing); Mist creates are NOT idempotent (re-run duplicates).
 
-**Rules**:
-- Only sync bridged (non-tunneled) SSIDs. Skip tunneled SSIDs automatically.
-- From Mist: only sync WLANs that are in templates (not site-level). Always look up which template the WLAN belongs to and which site groups the template is assigned to.
-- From Central: deduplicate — if same SSID appears in multiple scopes, create only one Mist WLAN
-- Assignment mapping: Global→org, site collection→site group, specific sites→specific sites. Always check and replicate assignments — do not just create the profile without assigning it.
+`source_platform`: `mist` | `central` | `aos8` (AOS8 source needs `source_override`/`context_override`). `target_platform`: `central` | `mist`. For AOS8 forward-mode pass `target_mode` (bridged|tunneled|hybrid|bridged_and_tunneled) + `gateway_clusters`.
 
-### Resolution Workflows
-The sync prompts handle these resolution steps automatically:
-- **Central aliases**: SSID aliases (`essid.use-alias`), PSK aliases (`wpa-passphrase-alias`), and server host aliases are resolved via `central_get_aliases`. Aliases can have per-site values.
-- **Central server groups**: `auth-server-group` and `acct-server-group` are resolved via `central_get_server_groups` to get actual RADIUS server FQDN/IP addresses.
-- **Central named VLANs**: `vlan-name` is resolved via `central_get_named_vlan` to get actual VLAN IDs.
-- **Mist template variables**: RADIUS server hosts using `{{variable}}` patterns are resolved from site settings `vars` via `mist_get_site_setting(site_id=...)`.
-- **Central → Mist RADIUS**: use template variables (`{{auth_srv1}}`) in Mist WLANs — never hardcode IPs. Define resolved addresses in each site's `vars` dict.
-- **Mist → Central RADIUS**: match or create server groups. For per-site variation, create Central aliases matching Mist variable names.
+To audit drift before syncing, load the `wlan-sync-validation` skill. For a single-platform WLAN create (no translation), call that platform's tool directly (e.g. `central_manage_wlan_profile`).
 
 ## Cross-Platform Site Groups / Site Collections
 Mist **site groups** and Central **site collections** serve the same purpose: grouping sites for bulk template/policy assignment. When the user asks to create, update, or delete a site group or site collection **without specifying a platform**, perform the operation on **both** platforms:

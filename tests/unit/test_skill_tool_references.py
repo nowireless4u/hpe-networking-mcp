@@ -132,7 +132,8 @@ _CROSS_PLATFORM_TOOLS: frozenset[str] = frozenset(
         "health",
         "site_health_check",
         "site_rf_check",
-        "manage_wlan_profile",
+        "translate_wlan_preview",
+        "translate_wlan_apply",
         "skills_list",
         "skills_load",
     }

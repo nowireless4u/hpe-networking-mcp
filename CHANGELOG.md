@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.4.0] - 2026-06-24
+
+**Minor — feat(translations): wire the canonical engine into usable tools; retire the old dynamic WLAN-sync surface (cutover).** The canonical translation engine (3.4.2.0 + 3.4.3.0) was fully built but unwired. This exposes it through two cross-platform bridge tools and removes the legacy hand-mapping path. References #279.
+
+### Added
+- `translate_wlan_preview` — read-only: given `(source_platform, target_platform, ssid)` it fetches the source WLAN + all engine context server-side (reusing the engine's own resolvers) and returns the ordered target calls for review. Secrets (PSK, RADIUS/CoA) are **redacted** and call bodies are omitted from preview output. Sources: `mist` / `central` / `aos8` (AOS8 via `source_override`); targets: `central` / `mist`.
+- `translate_wlan_apply` — executes the translation against the target. **Gated**: checks the target platform's `ENABLE_*_WRITE_TOOLS` flag at runtime (the target varies per call, so a static write-tag can't express it) and fires the universal elicitation confirmation before writing. Idempotent for Central (ensure-or-create); Mist creates are not idempotent.
+- Both are registered in **every** mode (incl. code) — reachable from `execute()` via `call_tool(...)`, like `health` — because the engine can't be imported inside the sandbox.
+
+### Removed (breaking)
+- `manage_wlan_profile` (cross-platform), the `sync_wlans_*` prompts, and the internal `wlan_mapper` / `_wlan_helpers` mapping modules. These were dynamic-mode-only and returned hand-mapping *instructions* for the AI — exactly the workflow the engine replaces. Anyone scripting `manage_wlan_profile` should switch to `translate_wlan_preview` / `translate_wlan_apply`. The per-platform `central_manage_wlan_profile` write tool is unaffected.
+
+### Changed
+- `wlan-sync-validation` skill repointed: drift correction now uses `translate_wlan_preview` → `translate_wlan_apply`.
+
 ## [3.4.3.0] - 2026-06-23
 
 **Minor — feat(translations): reverse direction — Central reader + Mist writer (Central→Mist, AOS8→Mist).** Builds on the 3.4.2.0 forward foundation (References #279): adds the inverse so a Central WLAN (or an AOS8 WLAN) can be translated *to* Mist through the same canonical model + orchestrator. Still **additive / not wired into any tool** — the cutover is a later PR. Live-verified end-to-end: a Central enterprise WLAN round-trips to Mist (template + WLAN created, inline RADIUS, correct opmode/VLAN), cleaned up both sides.

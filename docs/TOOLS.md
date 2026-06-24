@@ -27,11 +27,12 @@ Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface (per-platform disc
 
 With `MCP_TOOL_MODE=dynamic` the AI sees **24 tools**:
 
-- **4 cross-platform static tools**
+- **cross-platform static tools**
   - `health(platform=...)`
   - `site_health_check(site_name=...)`
   - `site_rf_check(site_name=...)`
-  - `manage_wlan_profile(...)`
+  - `translate_wlan_preview(source_platform, target_platform, ssid, ...)`
+  - `translate_wlan_apply(source_platform, target_platform, ssid, ..., confirmed=...)`
 - **3 meta-tools per platform** (× 9 platforms = 27)
   - `<platform>_list_tools(filter=...)` — list candidates
   - `<platform>_get_tool_schema(name=...)` — fetch parameter schema
@@ -74,7 +75,7 @@ Three tool calls inside one `execute`. In dynamic mode this same workflow would 
 
 ### Cross-platform aggregators are NOT registered in code mode
 
-`site_health_check`, `site_rf_check`, and `manage_wlan_profile` exist to work around dynamic mode's "AI reaches for one platform and stops" problem. Code mode's premise is that the LLM can compose per-platform tools itself — keeping aggregators would contradict it and make head-to-head measurement with dynamic mode meaningless. `health` stays registered in every mode.
+`site_health_check` and `site_rf_check` exist to work around dynamic mode's "AI reaches for one platform and stops" problem. Code mode's premise is that the LLM can compose per-platform tools itself — keeping those aggregators would contradict it and make head-to-head measurement with dynamic mode meaningless. `health`, `translate_wlan_preview`, and `translate_wlan_apply` stay registered in every mode (incl. code) — they wrap a probe / the translation engine that the sandbox can't import, so they must be reachable via `call_tool`.
 
 ### Sandbox limits
 
@@ -128,12 +129,13 @@ Always registered regardless of `MCP_TOOL_MODE`:
   and `clearpass_test_connection` tools (both removed in v2.0).
 - **`site_health_check`** — cross-platform site aggregator.
 - **`site_rf_check`** — cross-platform RF / channel-planning aggregator.
-- **`manage_wlan_profile`** — cross-platform WLAN orchestrator.
+- **`translate_wlan_preview`** / **`translate_wlan_apply`** — cross-platform WLAN translation bridge (canonical engine).
 
-In **code mode**, the three aggregators (`site_health_check`,
-`site_rf_check`, `manage_wlan_profile`) are NOT registered — code mode's
-premise is that the LLM composes per-platform calls itself. `health` is
-registered in every mode.
+In **code mode**, the two aggregators (`site_health_check`,
+`site_rf_check`) are NOT registered — code mode's premise is that the LLM
+composes per-platform calls itself. `health` and the `translate_wlan_*`
+tools are registered in every mode (they wrap a probe / the translation
+engine the sandbox can't import).
 
 ## Tool error contract (preferred for new tools — v3.2.0.1+)
 
@@ -1737,34 +1739,22 @@ Tools that span multiple platforms. Each replaces several individual tool calls 
 
 **Typical use:** "Show me 5 GHz / 6 GHz channels at site X", "How is RF doing at site X?", "Channel planning report for site X", "Are any APs on the same channel?" Use this *instead of* picking one vendor's RF tools — even when only one platform's APs are at the site, the cross-platform call is cheap and surfaces both sides cleanly.
 
-### `manage_wlan_profile`
+### `translate_wlan_preview` / `translate_wlan_apply`
 
-> **Primary entry point for all WLAN operations.** Automatically checks both Mist and Central for the SSID and returns the correct workflow. Detects cross-platform scenarios without relying on AI instructions.
+> **WLAN translation bridge over the canonical engine.** Translate a WLAN between platforms (Mist↔Central, AOS8→either). `translate_wlan_preview` is read-only (secrets redacted, call bodies omitted); `translate_wlan_apply` executes against the target, gated by the target's `ENABLE_*_WRITE_TOOLS` flag + confirmation. Both fetch the source WLAN + all engine context server-side; both are registered in every mode (reachable from `execute()` via `call_tool`). Replaces the removed `manage_wlan_profile` + `sync_wlans_*` prompts (v3.4.4.0).
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| ssid | str | Yes | The SSID name to create, update, delete, or sync. |
-| action_type | str | Yes | `create`, `update`, `delete`, or `sync`. |
-| target_platform | str | No | `central`, `mist`, or `both` (default). |
-| payload | dict | No | WLAN profile payload for create/update. Empty dict for sync/delete. |
+| source_platform | str | Yes | Where the WLAN lives now — `mist`, `central`, or `aos8` (AOS8 via `source_override`). |
+| target_platform | str | Yes | Where to mirror it — `central` or `mist`. |
+| ssid | str | Yes | The source SSID to translate. |
+| target_mode | str | No | AOS8 forward mode — `bridged` (default) / `tunneled` / `hybrid` / `bridged_and_tunneled`. |
+| gateway_clusters | list[str] | No | Neutral cluster names (AOS8 source hint only). |
+| gateway_cluster_list | list[dict] | No | Resolved Central overlay entries (`{cluster, cluster-type, cluster-scope-id, cluster-redundancy-type, tunnel-type}`) for tunneled/hybrid/dual WLANs. Without it, an overlay WLAN's cluster binding is reported `unresolved` and apply blocks. |
+| source_override / context_override | dict | No | Bypass the live fetch (tests, or AOS8 source). |
+| confirmed | bool | No | (`apply` only) popup-less confirmation fallback when the client can't elicit. |
 
-**Behavior by scenario:**
-
-| Scenario | Response |
-|----------|----------|
-| SSID in Mist only, target Central | Mist→Central sync workflow with field mapping and scope assignment |
-| SSID in Central only, target Mist | Central→Mist sync workflow with alias resolution |
-| SSID on both platforms | Returns both configs, asks user to choose source |
-| New SSID (neither platform) | Directs to platform-specific create tool |
-| action_type="sync" | Compares both platforms regardless of target |
-
-### Prompts
-
-| Prompt | Parameters | Description |
-|--------|-----------|-------------|
-| `sync_wlans_mist_to_central` | (none) | Sync WLAN profiles from Mist to Central with full field mapping and scope assignment. |
-| `sync_wlans_central_to_mist` | (none) | Sync WLAN profiles from Central to Mist with alias resolution and template variables. |
-| `sync_wlans_bidirectional` | (none) | Compare WLANs across both platforms, show field-level differences, sync in either direction. |
+**`preview` returns** `{supported, canonical (redacted), calls (no bodies), unresolved, preview}`. Check `unresolved` (missing target scopes/clusters) before applying. **`apply` returns** `{results, unresolved, preview}` — idempotent for Central; Mist creates are not.
 
 ---
 
