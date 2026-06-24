@@ -226,5 +226,5 @@ note which level takes precedence (closest scope wins).
 committed locally, and the inheritance depth.
         """.strip()
 
-    # Cross-platform WLAN sync prompts are registered in
-    # platforms/sync_prompts.py (shared between Mist and Central)
+    # Cross-platform WLAN sync is handled by the canonical translation engine via
+    # the translate_wlan_preview / translate_wlan_apply tools (platforms/translate_wlan.py).

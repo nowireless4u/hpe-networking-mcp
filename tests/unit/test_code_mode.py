@@ -89,8 +89,8 @@ class TestCodeModeConfig:
 
 @pytest.mark.unit
 class TestCodeModeCrossPlatformGating:
-    """Cross-platform aggregators (``site_health_check`` / ``site_rf_check`` /
-    ``manage_wlan_profile``) are NOT registered when ``tool_mode == "code"``.
+    """Cross-platform aggregators (``site_health_check`` / ``site_rf_check``) are
+    NOT registered when ``tool_mode == "code"``.
 
     We assert the gating path in ``server.create_server`` by patching the
     registration helpers and checking call counts.
@@ -113,8 +113,6 @@ class TestCodeModeCrossPlatformGating:
             # Capture the cross-platform-aggregator registration points.
             "health": "hpe_networking_mcp.server._register_site_health_check",
             "rf": "hpe_networking_mcp.server._register_site_rf_check",
-            "sync_tools": "hpe_networking_mcp.server._register_sync_tools",
-            "sync_prompts": "hpe_networking_mcp.server._register_sync_prompts",
             "code_mode": "hpe_networking_mcp.server._register_code_mode",
             # Skills registration — patched at source because server.py
             # imports skills.register lazily inside create_server.
@@ -135,8 +133,6 @@ class TestCodeModeCrossPlatformGating:
         mocks = self._run_create_server("dynamic")
         assert mocks["health"].call_count == 1
         assert mocks["rf"].call_count == 1
-        assert mocks["sync_tools"].call_count == 1
-        assert mocks["sync_prompts"].call_count == 1
         assert mocks["code_mode"].call_count == 0
         assert mocks["skills_register"].call_count == 1, (
             "skills.register must be called in dynamic mode (skills via @mcp.tool)"
@@ -146,8 +142,6 @@ class TestCodeModeCrossPlatformGating:
         mocks = self._run_create_server("code")
         assert mocks["health"].call_count == 0, "site_health_check must NOT register in code mode"
         assert mocks["rf"].call_count == 0, "site_rf_check must NOT register in code mode"
-        assert mocks["sync_tools"].call_count == 0, "manage_wlan_profile must NOT register in code mode"
-        assert mocks["sync_prompts"].call_count == 0, "sync prompts must NOT register in code mode"
         assert mocks["code_mode"].call_count == 1, "CodeMode transform hook must be invoked"
         assert mocks["skills_register"].call_count == 0, (
             "skills.register must NOT be called in code mode — skills are wired "

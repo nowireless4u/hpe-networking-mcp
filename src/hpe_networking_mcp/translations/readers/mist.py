@@ -2,9 +2,9 @@
 
 Extracts a platform-neutral ``CanonicalWlan`` from a Mist WLAN object (org- or
 site-level) plus, optionally, its WLAN template (for the assignment facet).
-Mirrors the field map in ``docs/mappings/WLAN.md`` and the validated
-``platforms/wlan_mapper.py`` logic, but produces canonical — the Central
-construction lives in the Central *writer*, not here.
+Mirrors the field map in ``docs/mappings/WLAN.md`` and the validated Mist↔Central
+mapping logic (formerly ``platforms/wlan_mapper``), but produces canonical — the
+Central construction lives in the Central *writer*, not here.
 """
 
 from __future__ import annotations
