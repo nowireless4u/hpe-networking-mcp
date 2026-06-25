@@ -134,6 +134,8 @@ _CROSS_PLATFORM_TOOLS: frozenset[str] = frozenset(
         "site_rf_check",
         "translate_wlan_preview",
         "translate_wlan_apply",
+        "translate_config_preview",
+        "translate_config_apply",
         "skills_list",
         "skills_load",
     }

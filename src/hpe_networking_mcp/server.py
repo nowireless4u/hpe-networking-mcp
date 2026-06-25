@@ -465,6 +465,15 @@ def create_server(config: ServerConfig) -> FastMCP:
 
         _register_translate_wlan(mcp)
 
+    # --- Cross-platform CONFIG translation bridge (AOS 8 → Central, every mode).
+    # Same rationale as translate_wlan: wraps the canonical engine for the 12
+    # non-WLAN config kinds (vlan / role / policy / net_group / AAA chain /
+    # gateway_cluster), reachable from the code-mode sandbox via call_tool. ---
+    if config.central:
+        from hpe_networking_mcp.platforms.translate_config import register as _register_translate_config
+
+        _register_translate_config(mcp)
+
     # --- Skills (markdown-defined multi-step procedures, always visible) ---
     # In dynamic mode, register via @mcp.tool — they appear at the top level
     # via the standard catalog. In CODE mode (default since v3.0.0.0), we
