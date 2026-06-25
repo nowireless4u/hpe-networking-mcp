@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.5.0] - 2026-06-24
+
+**Minor — feat(translations): migrate all 12 AOS 8 → Central config kinds onto the canonical engine + retire the legacy JSON engine.** The non-WLAN config translations (`vlan_id`, `named_vlan`, `net_group`, `role`, `policy`, the AAA chain — `auth_server` / `server_group` / `dot1x_auth` / `mac_auth` / `captive_portal` / `aaa_profile` — and `gateway_cluster`) moved from the old JSON `emit_calls` engine to the canonical reader/writer architecture, exposed through new cross-platform bridge tools, with the legacy engine fully removed. References #279, #419/#420.
+
+### Added
+- **`translate_config_preview` / `translate_config_apply`** — cross-platform bridge tools for AOS 8 → Central config translation, one `kind` per call (the 12 kinds above). Registered in every mode (incl. code, reachable via `call_tool`). `translate_config_preview` returns `{canonical, calls, unresolved, preview}` with secrets redacted (call bodies kept, PII-scrubbed, so operators review the real Central POST payloads). `translate_config_apply` is gated by `ENABLE_CENTRAL_WRITE_TOOLS` + the universal confirmation, is idempotent (ensure-or-create), and **blocks `kind="auth_server"` with a 403** until AOS 8 secret tokenization ships.
+- Canonical models + AOS 8 readers (one module per kind under `translations/readers/aos8/`) + Central writers (`central_config` / `central_auth` / `central_policy`) on the `central_common` call-emitter backbone (create / config-assignment / LOCAL-override).
+- Golden per-kind regression tests + `translate_config` bridge tests.
+
+### Changed
+- **Policy translation defect fixes** (#419/#420): the policy writer now emits a `policy-groups/policy-group/policy-group-list/{name}` registration (a policy is not effective without it), and an AOS 8 action with no Central mapping **fail-closes to `ACTION_DENY` + flags the policy unresolved** instead of the old silent fall-through to `ACTION_ALLOW`. Preserved (test-pinned): `validuser` → `ASSOCIATION_INTERFACE`, port single-vs-range operator shape, net-group `{type: ADDRESS_ALIAS, net-group}` (Design A), any-any → 2 rules, role injection.
+- **aos-migration Stage 9b** repointed onto `translate_config_preview` (per-record) + `translate_wlan_preview` (§2g WLAN); frontmatter tools list + kind table updated; cross-record write-hazard detection reconstructed client-side.
+- Central tool count 660 → 659 (removed `central_translation_preview`); total underlying tools 3178 → 3177.
+
+### Removed
+- The legacy JSON translation engine: `engine.py`, `loader.py`, `lint.py`, `transforms.py`, `AUTHORING.md`, the 13 `targets/central/*.json`, the 9 `preprocessing/aos8_*.py`, and the `central_translation_preview` tool — superseded by the canonical engine.
+
 ## [3.4.4.0] - 2026-06-24
 
 **Minor — feat(translations): wire the canonical engine into usable tools; retire the old dynamic WLAN-sync surface (cutover).** The canonical translation engine (3.4.2.0 + 3.4.3.0) was fully built but unwired. This exposes it through two cross-platform bridge tools and removes the legacy hand-mapping path. References #279.
