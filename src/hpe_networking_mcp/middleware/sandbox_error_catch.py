@@ -97,28 +97,159 @@ def _clock_error_hint(cause_text: str) -> str | None:
 
 _NAMEERROR_RE = re.compile(r"name ['\"]([^'\"]+)['\"] is not defined")
 
+# Python builtins monty does NOT provide in the sandbox. A NameError on one of
+# these is an "unavailable builtin", not a cross-block-state slip — telling them
+# apart keeps the hint accurate (#513: `getattr(object(), ...)` raises NameError
+# on `object`, which previously got the misleading "recompute from a previous
+# block" advice).
+_UNAVAILABLE_BUILTINS: frozenset[str] = frozenset(
+    {
+        "object",
+        "open",
+        "eval",
+        "exec",
+        "compile",
+        "input",
+        "globals",
+        "locals",
+        "vars",
+        "help",
+        "breakpoint",
+        "__import__",
+        "memoryview",
+        "bytearray",
+    }
+)
+
 
 def _nameerror_hint(cause_text: str) -> str | None:
     """Return guidance for a sandbox ``NameError``.
 
-    The single most common cause is a model splitting work across multiple
-    ``execute()`` calls and referencing a variable defined in an earlier
-    block — but each ``execute()`` runs in a FRESH, stateless sandbox, so
-    nothing persists between calls (observed: Haiku 4.5 referencing an
-    `org_id` set in a prior block). The hint also covers the plain-typo case.
+    Two distinct causes share the ``NameError`` shape:
+
+    * An **unavailable builtin** (``object`` / ``open`` / ...) — the sandbox
+      doesn't bind it (#513).
+    * A **cross-block-state slip** — the model referenced a variable defined in
+      a PREVIOUS ``execute()`` call, but each call is a fresh, stateless sandbox
+      (observed: Haiku 4.5 referencing an `org_id` from a prior block).
+
     Returns ``None`` for non-NameError causes.
     """
     m = _NAMEERROR_RE.search(cause_text)
     if m is None:
         return None
     name = m.group(1)
+    if name in _UNAVAILABLE_BUILTINS:
+        return (
+            f"Hint: `{name}` is a Python builtin the sandbox does NOT provide "
+            "(file/OS and reflection builtins are unavailable). Use plain data, "
+            "literals, and the injected `call_tool` instead."
+        )
     return (
-        f"Hint: `{name}` is undefined. Each `execute()` call runs in a FRESH, "
-        "stateless sandbox — variables defined in a PREVIOUS `execute()` block "
-        "do NOT carry over. Do all the work for one task inside a SINGLE "
-        f"`execute()` block, or recompute/re-fetch `{name}` at the top of this "
-        "block before using it. (If it's simply a typo, fix the name.)"
+        f"Hint: `{name}` is undefined. Most often this is because each `execute()` "
+        "call runs in a FRESH, stateless sandbox — variables defined in a PREVIOUS "
+        "`execute()` block do NOT carry over. Do all the work for one task inside a "
+        f"SINGLE block, or recompute/re-fetch `{name}` here first. (It could also be "
+        "an unsupported builtin or a typo.)"
     )
+
+
+_MODULE_RE = re.compile(r"no module named ['\"]([^'\"]+)['\"]", re.IGNORECASE)
+
+# Targeted builtin substitutes for the stdlib modules small models reach for
+# most (#514). Anything not listed falls back to the generic guidance.
+_MODULE_SUBSTITUTES: dict[str, str] = {
+    "collections": "use a plain dict (`d[k] = d.get(k, 0) + 1` for Counter, "
+    "`d.setdefault(k, []).append(v)` for defaultdict)",
+    "statistics": "compute directly (mean = `sum(xs) / len(xs)`)",
+    "itertools": "use loops / comprehensions",
+    "functools": "use an explicit loop instead of reduce",
+    "random": "not available; take the first N items instead of sampling",
+}
+
+
+def _module_hint(cause_text: str) -> str | None:
+    """``ModuleNotFoundError`` — most stdlib modules are absent (#514)."""
+    m = _MODULE_RE.search(cause_text)
+    if m is None:
+        return None
+    module = m.group(1)
+    sub = _MODULE_SUBSTITUTES.get(module)
+    tail = f" For `{module}`, {sub}." if sub else " Most stdlib modules are absent."
+    return (
+        f"Hint: the sandbox has no `{module}` module.{tail} Available modules: `json`, "
+        "`re`, `math`, `datetime`. Otherwise use builtins (`dict`/`set`/`sorted`/`sum`/"
+        "`min`/`max`/`enumerate`/`zip`) and f-strings."
+    )
+
+
+def _strformat_hint(cause_text: str) -> str | None:
+    """``str.format()`` is unsupported — only f-strings work (#515)."""
+    if "object has no attribute 'format'" not in cause_text:
+        return None
+    return "Hint: the sandbox supports f-strings, not `str.format()`. Rewrite `'{} {}'.format(a, b)` as `f'{a} {b}'`."
+
+
+def _json_default_hint(cause_text: str) -> str | None:
+    """``json.dumps(default=...)`` is unsupported (#516)."""
+    if "unexpected keyword argument 'default'" not in cause_text:
+        return None
+    return (
+        "Hint: the sandbox `json.dumps` does not accept `default=`. Drop it and "
+        "pre-convert non-serializable values (e.g. `str(x)`) before dumping."
+    )
+
+
+def _next_iter_hint(cause_text: str) -> str | None:
+    """``next(<generator>, default)`` fails in the sandbox (#517)."""
+    if "object is not an iterator" not in cause_text:
+        return None
+    return (
+        "Hint: `next(<generator/list>, default)` doesn't work in the sandbox. Use a "
+        "comprehension + index (`hits = [x for x in xs if cond]; hits[0] if hits else "
+        "default`) or `next(iter(seq), default)`."
+    )
+
+
+def _dict_union_hint(cause_text: str) -> str | None:
+    """``dict | dict`` is unsupported — use spread (#518)."""
+    if "unsupported operand type(s) for |: 'dict' and 'dict'" not in cause_text:
+        return None
+    return "Hint: the sandbox doesn't support `dict | dict`. Merge with `{**a, **b}`."
+
+
+_SHAPE_RE = re.compile(r"'(\w+)' object has no attribute '(get|keys|items|values)'")
+
+
+def _shape_hint(cause_text: str) -> str | None:
+    """Dict-method on a non-dict — usually envelope/collection mis-navigation (#532)."""
+    m = _SHAPE_RE.search(cause_text)
+    if m is None:
+        return None
+    typ = m.group(1)
+    return (
+        f"Hint: you're calling a dict method on a `{typ}` (often a string from "
+        "iterating a dict's keys). `call_tool` results are wrapped in an envelope — "
+        "read the payload via `result['data']`. Collection shape varies: "
+        "`<platform>_list_tools` → `result['data']['tools']`; many monitoring reads → "
+        "`result['data']['items']`; some reads are a bare list under `result['data']`. "
+        "Check `isinstance(x, dict)` before calling `.get()`."
+    )
+
+
+# Ordered hint rules — first match wins. Order matters where causes overlap:
+# clock runs before module (the absent `time` module is a clock dead-end), and
+# the NameError builtin/state split is handled inside `_nameerror_hint`.
+_HINT_FNS = (
+    _clock_error_hint,
+    _nameerror_hint,
+    _module_hint,
+    _strformat_hint,
+    _json_default_hint,
+    _next_iter_hint,
+    _dict_union_hint,
+    _shape_hint,
+)
 
 
 class SandboxErrorCatchMiddleware(Middleware):
@@ -171,11 +302,12 @@ class SandboxErrorCatchMiddleware(Middleware):
             else:
                 error_text = f"Sandbox error: {cause}"
                 # Append a self-correcting hint for the common small-model
-                # sandbox-model mistakes (clock dead-ends, cross-block state).
-                # The error result is the one channel the model reliably acts
-                # on, unlike advisory INSTRUCTIONS.md content. The causes are
-                # mutually exclusive, so the first match wins.
-                for hint_fn in (_clock_error_hint, _nameerror_hint):
+                # sandbox mistakes (clock/time, cross-block state, missing
+                # modules/builtins, str.format, json default=, next(gen),
+                # dict|, envelope/shape navigation). The error result is the one
+                # channel the model reliably acts on, unlike advisory
+                # INSTRUCTIONS.md content. First matching rule wins.
+                for hint_fn in _HINT_FNS:
                     hint = hint_fn(str(cause))
                     if hint is not None:
                         error_text = f"{error_text}\n\n{hint}"

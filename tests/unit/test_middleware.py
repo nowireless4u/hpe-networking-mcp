@@ -555,6 +555,96 @@ class TestSandboxErrorCatchMiddleware:
         assert "line 4" in text
 
 
+async def _monty_error_from_code(code: str):
+    """Run real failing code in monty (production os=OSAccess()) and return the
+    raised MontyError, so hint tests pin behavior against actual sandbox errors.
+    """
+    import pydantic_monty
+    from pydantic_monty import OSAccess
+
+    try:
+        await pydantic_monty.Monty(code).run_async(os=OSAccess())
+    except pydantic_monty.MontyError as e:
+        return e
+    raise AssertionError(f"expected MontyError from: {code!r}")  # pragma: no cover
+
+
+@pytest.mark.unit
+class TestSandboxHintRules:
+    """#513/#514/#515/#516/#517/#518/#532 — each common sandbox dead-end gets a
+    self-correcting hint in the error result (the channel the model acts on).
+    Driven by REAL monty errors, not synthetic strings.
+    """
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ("code", "needle"),
+        [
+            ("return object()", "builtin the sandbox does NOT provide"),  # #513
+            ("import collections\nreturn 1", "no `collections` module"),  # #514
+            ("return '{}'.format(1)", "f-strings, not `str.format()`"),  # #515
+            ("import json\nreturn json.dumps({}, default=str)", "does not accept `default=`"),  # #516
+            ("return next((x for x in [] if x > 1), 'd')", "doesn't work in the sandbox"),  # #517
+            ("return {'a': 1} | {'b': 2}", "doesn't support `dict | dict`"),  # #518
+            ("return 'x'.get('y')", "dict method on a `str`"),  # #532
+        ],
+    )
+    async def test_dead_end_gets_hint(self, code: str, needle: str):
+        cause = await _monty_error_from_code(code)
+        middleware = SandboxErrorCatchMiddleware()
+        ctx = _make_call_tool_context("execute")
+
+        async def _raise(_ctx):
+            raise _wrap_in_tool_error(cause)
+
+        with pytest.raises(ToolError) as exc_info:
+            await middleware.on_call_tool(ctx, _raise)
+        assert needle in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    async def test_collections_hint_includes_substitute(self):
+        cause = await _monty_error_from_code("import collections\nreturn 1")
+        middleware = SandboxErrorCatchMiddleware()
+        ctx = _make_call_tool_context("execute")
+
+        async def _raise(_ctx):
+            raise _wrap_in_tool_error(cause)
+
+        with pytest.raises(ToolError) as exc_info:
+            await middleware.on_call_tool(ctx, _raise)
+        assert "plain dict" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    async def test_missing_builtin_not_given_statelessness_advice(self):
+        """#513 regression — `object` must NOT get the cross-block-state hint."""
+        cause = await _monty_error_from_code("return object()")
+        middleware = SandboxErrorCatchMiddleware()
+        ctx = _make_call_tool_context("execute")
+
+        async def _raise(_ctx):
+            raise _wrap_in_tool_error(cause)
+
+        with pytest.raises(ToolError) as exc_info:
+            await middleware.on_call_tool(ctx, _raise)
+        text = str(exc_info.value)
+        assert "stateless" not in text.lower()
+        assert "builtin" in text.lower()
+
+    @pytest.mark.asyncio
+    async def test_real_undefined_variable_still_gets_statelessness_hint(self):
+        """A genuine cross-block variable (not a builtin) keeps the state hint."""
+        cause = await _monty_error_from_code("return org_id")
+        middleware = SandboxErrorCatchMiddleware()
+        ctx = _make_call_tool_context("execute")
+
+        async def _raise(_ctx):
+            raise _wrap_in_tool_error(cause)
+
+        with pytest.raises(ToolError) as exc_info:
+            await middleware.on_call_tool(ctx, _raise)
+        assert "stateless" in str(exc_info.value).lower()
+
+
 # ---------------------------------------------------------------------------
 # RetryMiddleware
 # ---------------------------------------------------------------------------

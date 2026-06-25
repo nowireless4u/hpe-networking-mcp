@@ -274,12 +274,18 @@ The `execute()` sandbox uses `pydantic-monty` for its Python parser. It supports
 |---|---|---|
 | `yield` / `yield from` | `NotImplementedError: monty syntax parser does not yet support yield expressions` | Use an explicit stack/list loop and `return` |
 | `async def` (any function) | unawaited-coroutine footgun (sandbox already runs in async context) | Inline the code at the top level inside `execute()` |
-| `import hashlib` | `ModuleNotFoundError` | Accept a pre-computed digest as an input parameter |
+| most stdlib modules (`collections`, `itertools`, `functools`, `statistics`, `random`, `hashlib`, `base64`, `uuid`, `decimal`, `csv`, …) | `ModuleNotFoundError: No module named '<x>'` | Only `json`, `re`, `math`, `datetime` exist. Use builtins: a plain `dict` for `Counter`/`defaultdict`, `sum(xs)/len(xs)` for `statistics.mean`, loops/comprehensions for `itertools`/`functools` |
 | `import hpe_networking_mcp.*` | `ModuleNotFoundError` | Use platform tools via `await call_tool(name, params)` |
+| `"{} {}".format(a, b)` | `AttributeError: 'str' object has no attribute 'format'` | Use f-strings: `f"{a} {b}"` (format specs like `f"{x:.2f}"` / `f"{n:,}"` work) |
+| `json.dumps(obj, default=str)` | `TypeError: JSONEncoder.__init__() got an unexpected keyword argument 'default'` | Drop `default=`; pre-convert non-serializable values (e.g. `str(x)`) before dumping |
+| `next((x for x in xs if c), default)` | `TypeError: '<x>' object is not an iterator` | Use `hits = [x for x in xs if c]; hits[0] if hits else default`, or `next(iter(seq), default)` |
+| `a \| b` (dict union) | `TypeError: unsupported operand type(s) for \|: 'dict' and 'dict'` | Merge with `{**a, **b}` |
 | `datetime.utcnow()` | `AttributeError: 'datetime.datetime' object has no attribute 'utcnow'` | Use `datetime.now(datetime.timezone.utc)` — the sandbox clock works; `utcnow` simply isn't implemented |
 | `time.time()` / `import time` | `ModuleNotFoundError: No module named 'time'` | Use `datetime.now().timestamp()`; the `time` module doesn't exist in the sandbox |
+| missing builtins (`object`, `open`, `eval`, `exec`, …) | `NameError: name '<x>' is not defined` | File/OS and reflection builtins are unavailable — use plain data + `call_tool` |
 | `os.environ`, `subprocess`, file I/O | `RuntimeError: OS access blocked` | Accept config values as parameters |
 | `asyncio.gather()` | unavailable | Use sequential `await` calls — same wall-clock cost matters less here than in production async code |
+| `.get()` on a `call_tool` result (or a list/string) | `AttributeError: '<type>' object has no attribute 'get'` | Results are envelope-wrapped — read `result["data"]`. Collections vary: `<platform>_list_tools` → `result["data"]["tools"]`; many monitoring reads → `result["data"]["items"]`; some are a bare list. `isinstance(x, dict)` before `.get()` |
 
 **This list grows as more failures surface.** If you hit a sandbox error not listed here, file an issue with the exact error message — both the documented blocklist and the `tests/unit/test_skill_snippet_sandbox_compat.py` lint update from the same evidence.
 
