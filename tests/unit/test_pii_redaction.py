@@ -1795,3 +1795,64 @@ class TestShowCommandOutputSweep:
         swept = out["results"][0]["output"]
         assert "aa:bb:cc:dd:ee:ff" in swept
         assert "AABB.CCDD.EEFF" not in swept
+
+
+# ---------------------------------------------------------------------------
+# #523 — unknown-token error envelope + non-JSON free-text sweep
+# ---------------------------------------------------------------------------
+
+
+class TestUnknownTokenEnvelope:
+    """#523 — referencing tokens from a dead session must return a structured
+    envelope (ok:false, status:400), not a text-only result that code-mode
+    callers crash on with ``'str' object has no attribute 'get'``."""
+
+    def test_unknown_token_error_is_structured_envelope(self) -> None:
+        from hpe_networking_mcp.middleware.pii_tokenization import _make_unknown_token_error
+
+        result = _make_unknown_token_error(["[[PSK:dead-uuid]]"], "central_invoke_tool")
+        env = result.structured_content
+        assert env is not None
+        assert env["ok"] is False
+        assert env["status"] == 400
+        assert env["tool"] == "central_invoke_tool"
+        assert env["platform"] == "central"
+        assert env["data"]["unknown_tokens"] == ["[[PSK:dead-uuid]]"]
+        # text channel still carries the readable message
+        assert result.content and "[[PSK:dead-uuid]]" in result.content[0].text
+
+
+class TestFreeTextNonJsonSweep:
+    """#523 — bare prose content blocks (non-JSON) now get the pattern-based
+    free-text sweep instead of passing through untouched."""
+
+    def _tokenizer(self) -> Tokenizer:
+        return Tokenizer(SessionKeymap(), session_id="test-session-523-freetext", max_entries=100)
+
+    def test_scan_free_text_tokenizes_email_with_tokenizer(self) -> None:
+        from hpe_networking_mcp.redaction.walker import scan_free_text
+
+        out = scan_free_text("contact admin@example.com for access", self._tokenizer())
+        assert "admin@example.com" not in out
+        assert "[[EMAIL:" in out
+
+    def test_scan_free_text_normalizes_mac_without_tokenizer(self) -> None:
+        from hpe_networking_mcp.redaction.walker import scan_free_text
+
+        out = scan_free_text("seen AABB.CCDD.EEFF on port 1", None)
+        assert "aa:bb:cc:dd:ee:ff" in out
+        assert "AABB.CCDD.EEFF" not in out
+
+    def test_process_text_block_sweeps_non_json_prose(self) -> None:
+        from hpe_networking_mcp.middleware.pii_tokenization import _process_text_block
+
+        # Non-JSON prose with an embedded MAC — previously passed through as-is.
+        out = _process_text_block("device AABB.CCDD.EEFF rebooted", None)
+        assert "aa:bb:cc:dd:ee:ff" in out
+
+    def test_process_text_block_still_walks_json(self) -> None:
+        from hpe_networking_mcp.middleware.pii_tokenization import _process_text_block
+
+        text = json.dumps({"results": [{"output": "mac AABB.CCDD.EEFF"}]})
+        out = _process_text_block(text, self._tokenizer())
+        assert "aa:bb:cc:dd:ee:ff" in out

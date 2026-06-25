@@ -26,29 +26,9 @@ from fastmcp.server.middleware import Middleware, MiddlewareContext
 from loguru import logger
 from mcp.shared.exceptions import McpError
 
-# Normalized suffixes whose VALUES are redacted from confirmation-prompt
-# parameter summaries. Keys are normalized (lowercased, separators stripped)
-# before matching, so ``api_key`` / ``apiKey`` / ``api-key`` all redact; the
-# suffix match catches compound names (``clientSecret``, ``refreshToken``,
-# ``radiusSharedSecret``). Over-redaction is acceptable; leaking is not.
-_SENSITIVE_KEY_SUFFIXES = (
-    "password",
-    "secret",
-    "token",
-    "key",
-    "psk",
-    "passphrase",
-    "community",
-    "credential",
-    "credentials",
-)
+from hpe_networking_mcp.redaction.safe_summary import is_sensitive_key as _is_sensitive_key
+
 _PARAM_SUMMARY_MAX_LEN = 300
-
-
-def _is_sensitive_key(key: str) -> bool:
-    """True when a (normalized) parameter key names secret material."""
-    normalized = "".join(ch for ch in key.lower() if ch.isalnum())
-    return any(normalized == suffix or normalized.endswith(suffix) for suffix in _SENSITIVE_KEY_SUFFIXES)
 
 
 def _sanitized_param_summary(params: dict | None) -> str:

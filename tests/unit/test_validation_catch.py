@@ -155,3 +155,49 @@ class TestValidationCatchEnvelope:
 
         result = await middleware.on_call_tool(ctx, succeeding_next)
         assert result is expected
+
+
+class _SecretModel(BaseModel):
+    """Model with a sensitive field name to test value redaction."""
+
+    password: int
+
+
+def _trigger_secret_validation_error(secret_value: str) -> ValidationError:
+    try:
+        _SecretModel(password=secret_value)  # type: ignore[arg-type]
+    except ValidationError as e:
+        return e
+    raise AssertionError("expected ValidationError")
+
+
+class TestValidationCatchRedaction:
+    """#523/#534 — a validation failure must not echo a secret-bearing or
+    oversized rejected input into the model-visible response OR the logs.
+    """
+
+    async def test_secret_value_redacted_in_response(self):
+        middleware = ValidationCatchMiddleware()
+        ctx = _make_context("central_invoke_tool")
+        err = _trigger_secret_validation_error("supersecret-value")
+
+        async def raising_next(_: Any) -> Any:
+            raise err
+
+        result = await middleware.on_call_tool(ctx, raising_next)
+        message = result.structured_content["message"]
+        assert "supersecret-value" not in message
+        assert "***redacted***" in message
+
+    async def test_secret_value_not_in_logs(self, loguru_capture):
+        """#534 — the log channel must not leak the rejected secret either."""
+        middleware = ValidationCatchMiddleware()
+        ctx = _make_context("central_invoke_tool")
+        err = _trigger_secret_validation_error("supersecret-value")
+
+        async def raising_next(_: Any) -> Any:
+            raise err
+
+        await middleware.on_call_tool(ctx, raising_next)
+        joined = "\n".join(loguru_capture)
+        assert "supersecret-value" not in joined

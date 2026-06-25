@@ -33,6 +33,7 @@ from loguru import logger
 from pydantic import ValidationError
 
 from hpe_networking_mcp.middleware.response_envelope import _build_envelope, _infer_platform
+from hpe_networking_mcp.redaction.safe_summary import summarize_validation_errors
 
 # HTTP-style status code for parameter validation failures. Matches what
 # the envelope's ``status`` field would carry if the tool itself had
@@ -60,18 +61,12 @@ class ValidationCatchMiddleware(Middleware):
             return await call_next(context)  # type: ignore[no-any-return]
         except ValidationError as e:
             tool_name = getattr(context.message, "name", "unknown")
-            # Format the ValidationError details into a readable string —
-            # mirrors what Pydantic's ``str(e)`` gives us but trimmed.
-            error_lines = [f"Error: validation failed for tool '{tool_name}':"]
-            for err in e.errors():
-                loc = ".".join(str(x) for x in err.get("loc", []))
-                msg = err.get("msg", "invalid")
-                err_input = err.get("input")
-                if err_input is not None:
-                    error_lines.append(f"  - {loc}: {msg} (got: {err_input!r})")
-                else:
-                    error_lines.append(f"  - {loc}: {msg}")
-            error_text = "\n".join(error_lines)
+            # Build the message via the shared redactor (#523/#534): sensitive
+            # field VALUES are redacted by name and complex/long inputs are
+            # summarized by type/shape. The SAME redacted text feeds both the
+            # model-visible response AND the log, so neither channel can leak a
+            # password / token / PSK or dump a huge rejected payload.
+            error_text = summarize_validation_errors(tool_name, e.errors())
             logger.debug("ValidationCatchMiddleware: caught {} → {}", tool_name, error_text)
 
             # Build a proper envelope so code-mode callers receive a dict

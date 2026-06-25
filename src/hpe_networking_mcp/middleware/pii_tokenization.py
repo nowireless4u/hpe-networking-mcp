@@ -34,10 +34,12 @@ from fastmcp.tools.tool import ToolResult
 from loguru import logger
 from mcp.types import TextContent
 
+from hpe_networking_mcp.middleware.response_envelope import _build_envelope, _infer_platform
 from hpe_networking_mcp.redaction.tokenizer import Tokenizer
 from hpe_networking_mcp.redaction.walker import (
     detokenize_arguments,
     iter_kinds_in_string,
+    scan_free_text,
     tokenize_response,
 )
 
@@ -96,7 +98,7 @@ class PIITokenizationMiddleware(Middleware):
                         tool_name,
                         sorted(set(unknown)),
                     )
-                    return _make_unknown_token_error(unknown)
+                    return _make_unknown_token_error(unknown, tool_name)
 
                 if new_args is not context.message.arguments:
                     logger.info(
@@ -207,23 +209,26 @@ def _process_content_blocks(
 
 
 def _process_text_block(text: str, tokenizer: Tokenizer | None) -> str:
-    """Parse text as JSON; if it parses, walk + re-serialize; else return as-is.
+    """Parse text as JSON; if it parses to a structure, walk + re-serialize.
+    Otherwise (non-JSON prose or a JSON scalar) run the free-text sweep.
 
     Mist / Central / etc. tools serialize structured responses with
-    ``json.dumps(data)`` so most text blocks ARE JSON. The free-text
-    sweep would still catch in-text secrets even when the block is
-    plain prose, but we apply it only on the JSON-parsed path so we
-    don't re-tokenize values that the structured walker already
-    handled.
+    ``json.dumps(data)`` so most text blocks ARE JSON and go through the
+    structured walker. Bare prose blocks (diagram source, error fallback
+    strings) previously passed through untouched (issue #523); they now get
+    the pattern-based free-text sweep (PEM / email tokenization + MAC
+    normalization), which is safe on arbitrary prose because it only matches
+    those structured patterns, not ordinary words.
     """
     try:
         parsed = json.loads(text)
     except (ValueError, TypeError):
-        return text
+        return scan_free_text(text, tokenizer)
 
     if not isinstance(parsed, (dict, list)):
-        # JSON scalar — no structure to walk
-        return text
+        # JSON scalar (e.g. a bare quoted string) — no structure to walk, but
+        # still sweep the literal text for embedded PII.
+        return scan_free_text(text, tokenizer)
 
     walked = tokenize_response(parsed, tokenizer)
     return json.dumps(walked)
@@ -258,13 +263,15 @@ def _kinds_used_in_args(arguments: dict) -> set[str]:
     return kinds
 
 
-def _make_unknown_token_error(unknown_tokens: list[str]) -> ToolResult:
+def _make_unknown_token_error(unknown_tokens: list[str], tool_name: str) -> ToolResult:
     """Build a ToolResult error when the AI references unknown tokens.
 
-    The model gets a short string explanation in the tool's content
-    block. We deliberately list the unknown tokens (they're not
-    sensitive — they don't map to anything) so the model can correct
-    itself if it copy-pasted from a stale conversation.
+    Returns a structured envelope (``ok: false``, ``status: 400``) so code-mode
+    callers receive a dict via ``call_tool(...)`` and branch cleanly instead of
+    hitting ``'str' object has no attribute 'get'`` on a text-only result
+    (issue #523). The unknown tokens are listed (they're not sensitive — they
+    map to nothing) so the model can self-correct after copy-pasting from a
+    stale conversation.
     """
     distinct = sorted(set(unknown_tokens))
     msg = (
@@ -273,4 +280,12 @@ def _make_unknown_token_error(unknown_tokens: list[str]) -> ToolResult:
         f"previous session that has ended: {distinct}. "
         "Re-fetch the source data so a fresh tokenization can be issued."
     )
-    return ToolResult(content=[TextContent(type="text", text=msg)])
+    envelope = _build_envelope(
+        ok=False,
+        data={"unknown_tokens": distinct},
+        status=400,
+        message=msg,
+        tool=tool_name,
+        platform=_infer_platform(tool_name),
+    )
+    return ToolResult(content=[TextContent(type="text", text=msg)], structured_content=envelope)

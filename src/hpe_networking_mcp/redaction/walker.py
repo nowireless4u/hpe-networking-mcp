@@ -159,6 +159,29 @@ def _scan_free_text(text: str, tokenizer: Tokenizer) -> str:
     return result
 
 
+def scan_free_text(text: str, tokenizer: Tokenizer | None) -> str:
+    """Public free-text sweep for non-JSON content blocks (issue #523).
+
+    ``tokenize_response`` only walks dict/list structures, so a tool that
+    returns a bare prose string (diagram source, error fallback strings) never
+    had its embedded PII swept. This applies the same pattern-based sweep used
+    for description-style fields:
+
+    - With a ``tokenizer``: PEM blocks, emails (tokenized), and MACs
+      (normalized). Pattern-based — ordinary prose words are untouched, so this
+      is safe to run over arbitrary text.
+    - Without one (PII tokenization disabled): MAC normalization only, which is
+      always-on.
+
+    Returns ``text`` unchanged for non-strings / empties.
+    """
+    if not isinstance(text, str) or not text:
+        return text
+    if tokenizer is not None:
+        return _scan_free_text(text, tokenizer)
+    return normalize_macs_in_value(text)
+
+
 def _rewrite_wrapper_key(key: str, tokenizer: Tokenizer) -> str:
     """Rewrite a wrapper dict key by tokenizing any embedded sensitive
     substring matching one of ``WRAPPER_KEY_PATTERNS``.

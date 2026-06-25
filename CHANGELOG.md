@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.5.3] - 2026-06-25
+
+**Patch — fix(security): low-noise, secret-safe error envelopes for validation + PII middleware (#523, #534).** Validation failures and PII-token errors could echo secret-bearing or oversized inputs into model-visible text and debug logs, and unknown-token errors were text-only (code-mode callers crashed on them).
+
+### Added
+- **`redaction/safe_summary.py`** — one shared secret-safe summarizer: `is_sensitive_key` (normalized suffix match), `safe_value_summary` (redacts sensitive field values, summarizes dict/list by shape, caps long scalars), and `summarize_validation_errors`. The sensitive-key suffix list (previously duplicated in `middleware/elicitation.py`) now lives here; elicitation imports it.
+- **`redaction/walker.scan_free_text`** — public pattern-based free-text sweep (PEM/email tokenization + MAC normalization) for non-JSON content blocks.
+
+### Fixed
+- **#534 / #523 — validation errors no longer leak secrets to responses or logs.** `ValidationCatchMiddleware` builds its message via the shared summarizer, and the SAME redacted text feeds both the model-visible response and the `logger.debug` call — so a rejected `password` / `token` / `psk` value is never echoed, and large rejected payloads are summarized by type/shape instead of dumped.
+- **#523 — unknown PII-token errors return a structured envelope** (`ok: false`, `status: 400`, `message`, `tool`, `platform`, `data.unknown_tokens`) instead of a text-only result, so code-mode `call_tool(...)` callers branch cleanly instead of hitting `'str' object has no attribute 'get'`.
+- **#523 — non-JSON content blocks now get the free-text PII sweep.** Bare prose blocks (diagram source, error fallback strings) previously passed through untokenized; they now run through `scan_free_text` (pattern-based, so ordinary prose is untouched).
+
 ## [3.4.5.2] - 2026-06-25
 
 **Patch — fix(safety): two small-model safety bugs in the middleware chain (#520, #521).** Both are most dangerous for small/local models that branch literally on the envelope contract and lean on the universal `<platform>_invoke_tool` dispatch.
