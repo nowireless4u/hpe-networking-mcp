@@ -885,3 +885,104 @@ class TestRetryMiddleware:
         with pytest.raises(RuntimeError, match="boom"):
             await middleware.on_call_tool(ctx, call_next)
         assert call_next.call_count == 1  # no retry on unknown exception
+
+
+def _make_meta_retry_context(meta_name: str, target: str | None):
+    """Retry context for a ``<platform>_invoke_tool`` call whose underlying
+    target is named in ``message.arguments['name']`` (None → omitted)."""
+    message = MagicMock()
+    message.name = meta_name
+    message.arguments = {"params": {}} if target is None else {"name": target, "params": {}}
+    context = MagicMock()
+    context.message = message
+    context.fastmcp_context = None  # meta path never consults FastMCP tags
+    return context
+
+
+@pytest.mark.unit
+class TestRetryMetaInvokeWriteSafety:
+    """#521 — ``<platform>_invoke_tool`` is tagged only ``<platform>_meta``, so
+    retry write-safety must be resolved from the UNDERLYING target named in the
+    ``name`` argument, NOT the meta-tool's own tags. Fail closed (treat as a
+    write → no 5xx retry) when the target can't be resolved.
+    """
+
+    def setup_method(self):
+        from types import SimpleNamespace
+
+        from hpe_networking_mcp.platforms._common.annotations import Capability
+        from hpe_networking_mcp.platforms._common.tool_registry import REGISTRIES
+
+        self._registry = REGISTRIES.setdefault("central", {})
+        self._added = ("central_get_widget_521", "central_manage_widget_521")
+        self._registry["central_get_widget_521"] = SimpleNamespace(tags=set(), capability=Capability.READ)
+        self._registry["central_manage_widget_521"] = SimpleNamespace(
+            tags={"central_write_delete"}, capability=Capability.WRITE_DELETE
+        )
+
+    def teardown_method(self):
+        for name in self._added:
+            self._registry.pop(name, None)
+
+    @pytest.mark.asyncio
+    async def test_meta_invoke_write_target_503_not_retried(self):
+        from hpe_networking_mcp.middleware.retry import RetryMiddleware
+
+        middleware = RetryMiddleware(max_attempts=3, initial_delay=0.0, max_delay=0.0)
+        ctx = _make_meta_retry_context("central_invoke_tool", "central_manage_widget_521")
+        call_next = AsyncMock(return_value=_toolresult_with_status(503))
+
+        await middleware.on_call_tool(ctx, call_next)
+
+        assert call_next.call_count == 1  # write resolved from name arg → no 5xx retry
+
+    @pytest.mark.asyncio
+    async def test_meta_invoke_read_target_503_is_retried(self):
+        from hpe_networking_mcp.middleware.retry import RetryMiddleware
+
+        middleware = RetryMiddleware(max_attempts=3, initial_delay=0.0, max_delay=0.0)
+        ctx = _make_meta_retry_context("central_invoke_tool", "central_get_widget_521")
+        call_next = AsyncMock(side_effect=[_toolresult_with_status(503), _toolresult_ok()])
+
+        result = await middleware.on_call_tool(ctx, call_next)
+
+        assert call_next.call_count == 2  # read target → 5xx retried
+        assert result.structured_content["ok"] is True
+
+    @pytest.mark.asyncio
+    async def test_meta_invoke_unknown_target_503_not_retried(self):
+        from hpe_networking_mcp.middleware.retry import RetryMiddleware
+
+        middleware = RetryMiddleware(max_attempts=3, initial_delay=0.0, max_delay=0.0)
+        ctx = _make_meta_retry_context("central_invoke_tool", "central_nonexistent_tool")
+        call_next = AsyncMock(return_value=_toolresult_with_status(503))
+
+        await middleware.on_call_tool(ctx, call_next)
+
+        assert call_next.call_count == 1  # unresolvable → fail closed (no retry)
+
+    @pytest.mark.asyncio
+    async def test_meta_invoke_missing_name_arg_503_not_retried(self):
+        from hpe_networking_mcp.middleware.retry import RetryMiddleware
+
+        middleware = RetryMiddleware(max_attempts=3, initial_delay=0.0, max_delay=0.0)
+        ctx = _make_meta_retry_context("central_invoke_tool", None)
+        call_next = AsyncMock(return_value=_toolresult_with_status(503))
+
+        await middleware.on_call_tool(ctx, call_next)
+
+        assert call_next.call_count == 1  # no name arg → fail closed
+
+    @pytest.mark.asyncio
+    async def test_meta_invoke_read_target_429_retried(self):
+        from hpe_networking_mcp.middleware.retry import RetryMiddleware
+
+        middleware = RetryMiddleware(max_attempts=3, initial_delay=0.0, max_delay=0.0)
+        ctx = _make_meta_retry_context("central_invoke_tool", "central_manage_widget_521")
+        call_next = AsyncMock(side_effect=[_toolresult_with_status(429), _toolresult_ok()])
+
+        result = await middleware.on_call_tool(ctx, call_next)
+
+        # 429 is always safe to retry, even for writes (server asked us to slow down)
+        assert call_next.call_count == 2
+        assert result.structured_content["ok"] is True

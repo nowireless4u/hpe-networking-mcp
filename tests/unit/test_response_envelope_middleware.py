@@ -289,6 +289,83 @@ class TestResponseEnvelopeMiddleware:
         assert envelope["ok"] is True
 
 
+@pytest.mark.unit
+class TestBlockedStateEnvelope:
+    """#520 — known blocked/error control payloads must surface as a FAILED
+    envelope (``ok: false``) so small/local models don't read ``ok: true`` and
+    report a refused or confirmation-pending write as success.
+    """
+
+    @pytest.mark.asyncio
+    async def test_forbidden_marks_ok_false(self):
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context("central_invoke_tool")
+        raw = {"status": "forbidden", "message": "writes are disabled for central"}
+        call_next = AsyncMock(return_value=_make_tool_result(structured=raw))
+
+        env = (await middleware.on_call_tool(ctx, call_next)).structured_content
+        assert env["ok"] is False
+        assert env["status"] == 403
+        assert env["message"] == "writes are disabled for central"
+        assert env["data"] == raw  # original payload preserved under data
+
+    @pytest.mark.asyncio
+    async def test_confirmation_required_marks_ok_false_4xx(self):
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context("central_invoke_tool")
+        raw = {"status": "confirmation_required", "message": "confirm then retry with confirmed=true"}
+        call_next = AsyncMock(return_value=_make_tool_result(structured=raw))
+
+        env = (await middleware.on_call_tool(ctx, call_next)).structured_content
+        assert env["ok"] is False
+        assert 400 <= env["status"] < 500  # never 5xx → can't trip retry's 5xx path
+
+    @pytest.mark.asyncio
+    async def test_declined_marks_ok_false(self):
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context("translate_wlan_apply")
+        raw = {"status": "declined", "message": "Action declined by user."}
+        call_next = AsyncMock(return_value=_make_tool_result(structured=raw))
+
+        env = (await middleware.on_call_tool(ctx, call_next)).structured_content
+        assert env["ok"] is False
+        assert env["message"] == "Action declined by user."
+
+    @pytest.mark.asyncio
+    async def test_tool_error_prefers_inner_status_code(self):
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context("mist_invoke_tool")
+        raw = {"status": "tool_error", "status_code": 503, "message": "upstream 503"}
+        call_next = AsyncMock(return_value=_make_tool_result(structured=raw))
+
+        env = (await middleware.on_call_tool(ctx, call_next)).structured_content
+        assert env["ok"] is False
+        assert env["status"] == 503  # the real upstream code, not the 502 default
+
+    @pytest.mark.asyncio
+    async def test_data_record_with_status_field_not_misflagged(self):
+        """A genuine data record whose `status` reads a blocked-word but lacks a
+        string `message` must stay ok=true (no false positive)."""
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context("central_invoke_tool")
+        raw = {"job_id": "j1", "status": "cancelled", "progress": 100}  # no `message`
+        call_next = AsyncMock(return_value=_make_tool_result(structured=raw))
+
+        env = (await middleware.on_call_tool(ctx, call_next)).structured_content
+        assert env["ok"] is True
+        assert env["data"] == raw
+
+    @pytest.mark.asyncio
+    async def test_unknown_status_string_stays_ok(self):
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context("central_invoke_tool")
+        raw = {"status": "active", "message": "device is up"}
+        call_next = AsyncMock(return_value=_make_tool_result(structured=raw))
+
+        env = (await middleware.on_call_tool(ctx, call_next)).structured_content
+        assert env["ok"] is True
+
+
 def _text(payload: object) -> list[TextContent]:
     """One JSON TextContent block, the way FastMCP serializes a tool return."""
     return [TextContent(type="text", text=json.dumps(payload))]

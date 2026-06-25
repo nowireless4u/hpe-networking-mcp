@@ -131,13 +131,65 @@ def _exception_status_code(exc: BaseException) -> int | None:
         return None
 
 
+def _spec_is_write(spec: Any) -> bool:
+    """Classify a registry ``ToolSpec`` as a write (True) or a safe read.
+
+    Mirrors the direct-call tag convention (``*_write`` / ``*_write_delete``)
+    and additionally honors the ``capability`` facet: only ``READ`` /
+    ``DIAGNOSTIC`` are 5xx-retry-safe; ``WRITE`` / ``WRITE_DELETE`` /
+    ``OPERATIONAL`` are not (OPERATIONAL actions like reboot are not
+    idempotent). An unclassified, untagged spec is treated as a read — the
+    same as the direct-call path, so this never regresses real reads.
+    """
+    from hpe_networking_mcp.platforms._common.annotations import Capability
+
+    tags: set[str] = set(getattr(spec, "tags", None) or set())
+    if any(tag.endswith("_write") or tag.endswith("_write_delete") for tag in tags):
+        return True
+    capability = getattr(spec, "capability", None)
+    if capability is not None:
+        return capability not in (Capability.READ, Capability.DIAGNOSTIC)
+    return False
+
+
+def _meta_invoke_is_write(meta_name: str, arguments: Any) -> bool:
+    """Resolve write-safety for a ``<platform>_invoke_tool`` meta-dispatch.
+
+    The visible meta-tool is tagged only ``<platform>_meta``, so its FastMCP
+    tags say nothing about the UNDERLYING tool named in the ``name`` argument
+    — a destructive write dispatched this way would otherwise look retry-safe
+    (issue #521). Resolve the target from ``REGISTRIES[platform][name]`` and
+    classify that. **Fail closed**: if the target can't be resolved (no
+    ``name`` arg, unknown platform, or missing spec), treat it as a write so
+    a 5xx is NOT retried.
+    """
+    from hpe_networking_mcp.platforms._common.tool_registry import REGISTRIES
+
+    platform = meta_name[: -len("_invoke_tool")]
+    target = (arguments or {}).get("name") if isinstance(arguments, dict) else None
+    if not isinstance(target, str) or not target:
+        return True  # no resolvable target → fail closed (no 5xx retry)
+    registry = REGISTRIES.get(platform)
+    spec = registry.get(target) if registry else None
+    if spec is None:
+        return True  # unresolvable target → fail closed
+    return _spec_is_write(spec)
+
+
 async def _is_write_tool(context: MiddlewareContext[mcp.types.CallToolRequestParams], name: str) -> bool:
     """Look up the tool's tags via FastMCP and return True if any tag ends
     in ``_write`` or ``_write_delete`` (the cross-platform convention).
     Falls back to False if the lookup fails — better to retry once
     erroneously than to mis-classify a real read as a write and skip
     the retry entirely.
+
+    Special case: ``<platform>_invoke_tool`` meta-dispatch. The meta-tool's
+    own tags don't reflect the underlying target, so resolve write-safety
+    from the ``name`` argument instead (issue #521).
     """
+    if name.endswith("_invoke_tool"):
+        return _meta_invoke_is_write(name, getattr(context.message, "arguments", None))
+
     ctx = context.fastmcp_context
     if ctx is None:
         return False

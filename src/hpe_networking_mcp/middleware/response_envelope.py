@@ -87,6 +87,45 @@ _ENVELOPE_REQUIRED_KEYS: frozenset[str] = frozenset({"ok", "data", "tool"})
 # is populated consistently with what RetryMiddleware would see.
 _STATUS_CODE_KEYS: tuple[str, ...] = ("status_code", "code", "http_status")
 
+# Known blocked/error string-statuses our own layers return as plain dicts
+# (``<platform>_invoke_tool`` and the ``confirm_gated_invoke`` gate), mapped to
+# the HTTP status the envelope should carry. Wrapping these with ``ok: true``
+# (the old behavior) lets a small/local model treat a refused write or a
+# confirmation-pending action as success — dangerous on write paths (#520).
+# All these payloads carry a string ``message``; we require it as a corroborator
+# so a genuine data record whose ``status`` field happens to read "cancelled"
+# isn't mis-flagged. User-choice / pending states map to 4xx (never 5xx) so they
+# can't accidentally trip RetryMiddleware's 5xx-retry path.
+_BLOCKED_STATUS_HTTP: dict[str, int] = {
+    "not_found": 404,
+    "forbidden": 403,
+    "invalid_params": 400,
+    "tool_error": 502,
+    "confirmation_required": 409,
+    "confirmation_unavailable": 409,
+    "declined": 409,
+    "cancelled": 409,
+}
+
+
+def _blocked_state(raw: Any) -> tuple[int, str] | None:
+    """Detect a known blocked/error control payload.
+
+    Returns ``(http_status, message)`` when ``raw`` is one of our structured
+    blocked/error dicts, else ``None``. Requires both a known string ``status``
+    AND a string ``message`` to avoid false-positives on real data records.
+    A numeric ``status_code`` in the payload (e.g. a ``tool_error`` wrapping a
+    Mist 503) takes precedence over the mapped default.
+    """
+    if not isinstance(raw, dict):
+        return None
+    status = raw.get("status")
+    message = raw.get("message")
+    if not (isinstance(status, str) and status in _BLOCKED_STATUS_HTTP and isinstance(message, str)):
+        return None
+    http_status = _extract_status(raw) or _BLOCKED_STATUS_HTTP[status]
+    return http_status, message
+
 
 def _infer_platform(tool_name: str) -> str | None:
     """Derive ``platform`` from a tool name's prefix.
@@ -240,16 +279,32 @@ class ResponseEnvelopeMiddleware(Middleware):
             logger.debug("response_envelope: {} already enveloped, pass-through", tool_name)
             return result  # type: ignore[return-value]
 
-        envelope = _build_envelope(
-            ok=True,
-            data=raw,
-            status=_extract_status(raw),
-            message=None,
-            tool=tool_name,
-            platform=platform,
-        )
-
-        logger.debug("response_envelope: wrapped {} (platform={})", tool_name, platform)
+        # Known blocked/error control payloads (forbidden / not_found /
+        # confirmation_required / declined / ...) must surface as a FAILED
+        # envelope so models don't read ``ok: true`` and report a refused or
+        # pending write as success (#520).
+        blocked = _blocked_state(raw)
+        if blocked is not None:
+            status, message = blocked
+            envelope = _build_envelope(
+                ok=False,
+                data=raw,
+                status=status,
+                message=message,
+                tool=tool_name,
+                platform=platform,
+            )
+            logger.debug("response_envelope: {} blocked/error state ({}), ok=false", tool_name, status)
+        else:
+            envelope = _build_envelope(
+                ok=True,
+                data=raw,
+                status=_extract_status(raw),
+                message=None,
+                tool=tool_name,
+                platform=platform,
+            )
+            logger.debug("response_envelope: wrapped {} (platform={})", tool_name, platform)
 
         return ToolResult(
             content=result.content,

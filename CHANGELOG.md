@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.5.2] - 2026-06-25
+
+**Patch — fix(safety): two small-model safety bugs in the middleware chain (#520, #521).** Both are most dangerous for small/local models that branch literally on the envelope contract and lean on the universal `<platform>_invoke_tool` dispatch.
+
+### Fixed
+- **#520 — response envelope no longer marks blocked/error states as `ok: true`.** Known control payloads from `<platform>_invoke_tool` and the confirmation gate (`forbidden`, `not_found`, `invalid_params`, `tool_error`, `confirmation_required`, `confirmation_unavailable`, `declined`, `cancelled`) now produce a failed envelope (`ok: false`) with the appropriate HTTP `status` and a promoted top-level `message`. Previously a refused or confirmation-pending write was wrapped `ok: true`, so a model could report a change that never happened. Detection requires both a known string `status` AND a string `message` so genuine data records aren't mis-flagged; user-choice/pending states map to 4xx so they can't trip the 5xx retry path.
+- **#521 — RetryMiddleware no longer risks retrying writes dispatched through `<platform>_invoke_tool`.** The meta-tool is tagged only `<platform>_meta`, so a destructive write invoked through it previously looked retry-safe and a 5xx could be retried. Retry now resolves the underlying target from the `name` argument (`REGISTRIES[platform][name]`) and classifies by its capability/tags; if the target can't be resolved it **fails closed** (treated as a write → no 5xx retry). 429 remains retried for all tools (server-requested backoff is always safe).
+
 ## [3.4.5.1] - 2026-06-25
 
 **Patch — fix(code-mode): give the `execute()` sandbox a working clock + self-correcting errors for the common small-model mistakes.** Two failure modes reported from Claude Haiku 4.5 code-mode sessions: `datetime.utcnow()` (a 24h-window report) and `NameError: name 'org_id' is not defined` (a variable referenced across two `execute()` blocks). Both are structural — steering via INSTRUCTIONS.md is unreliable because MCP-server content is treated as advisory — so the fixes live in the sandbox/middleware layer, not the docs alone.
