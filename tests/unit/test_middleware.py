@@ -374,6 +374,103 @@ class TestSandboxErrorCatchMiddleware:
         assert text != "Error calling tool 'execute'"
 
     @pytest.mark.asyncio
+    async def test_utcnow_deadend_gets_self_correcting_hint(self):
+        """A model reaching for `datetime.utcnow()` (which monty doesn't
+        implement, even with the clock enabled) must get a self-correcting
+        error pointing at the working substitute + the real current time.
+        The error result is the channel the model reliably acts on, unlike
+        advisory INSTRUCTIONS.md content.
+        """
+        import pydantic_monty
+        from pydantic_monty import OSAccess
+
+        monty = pydantic_monty.Monty("import datetime\nreturn datetime.datetime.utcnow()")
+        cause = None
+        try:
+            await monty.run_async(os=OSAccess())
+        except pydantic_monty.MontyError as e:
+            cause = e
+        assert cause is not None, "expected utcnow() to raise in the sandbox"
+
+        middleware = SandboxErrorCatchMiddleware()
+        ctx = _make_call_tool_context("execute")
+
+        async def _raise(_ctx):
+            raise _wrap_in_tool_error(cause)
+
+        with pytest.raises(ToolError) as exc_info:
+            await middleware.on_call_tool(ctx, _raise)
+
+        text = str(exc_info.value)
+        assert "utcnow" in text.lower()  # original cause preserved
+        assert "datetime.now(datetime.timezone.utc)" in text  # working substitute
+        assert "current utc time is" in text.lower()  # stamped real time
+        assert "duration" in text.lower()  # the avoid-computing-a-window nudge
+
+    @pytest.mark.asyncio
+    async def test_time_module_deadend_gets_hint(self):
+        """`import time` → ModuleNotFoundError; the hint must fire for it too."""
+        cause = await _make_monty_error("No module named 'time'")
+
+        middleware = SandboxErrorCatchMiddleware()
+        ctx = _make_call_tool_context("execute")
+
+        async def _raise(_ctx):
+            raise _wrap_in_tool_error(cause)
+
+        with pytest.raises(ToolError) as exc_info:
+            await middleware.on_call_tool(ctx, _raise)
+
+        assert "datetime.now().timestamp()" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    async def test_non_clock_error_gets_no_clock_hint(self):
+        """A non-clock sandbox error must NOT acquire the clock hint."""
+        cause = await _make_monty_error("some unrelated runtime failure")
+
+        middleware = SandboxErrorCatchMiddleware()
+        ctx = _make_call_tool_context("execute")
+
+        async def _raise(_ctx):
+            raise _wrap_in_tool_error(cause)
+
+        with pytest.raises(ToolError) as exc_info:
+            await middleware.on_call_tool(ctx, _raise)
+
+        assert "datetime.now" not in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    async def test_nameerror_gets_statelessness_hint(self):
+        """A model referencing a variable from a previous execute() block
+        (each call is a FRESH sandbox) hits NameError. The hint must name the
+        missing variable and explain the cross-block statelessness — the exact
+        Haiku 4.5 `org_id` failure.
+        """
+        import pydantic_monty
+
+        monty = pydantic_monty.Monty("return org_id")
+        cause = None
+        try:
+            await monty.run_async()
+        except pydantic_monty.MontyError as e:
+            cause = e
+        assert cause is not None and "org_id" in str(cause)
+
+        middleware = SandboxErrorCatchMiddleware()
+        ctx = _make_call_tool_context("execute")
+
+        async def _raise(_ctx):
+            raise _wrap_in_tool_error(cause)
+
+        with pytest.raises(ToolError) as exc_info:
+            await middleware.on_call_tool(ctx, _raise)
+
+        text = str(exc_info.value)
+        assert "org_id" in text
+        assert "stateless" in text.lower()
+        assert "single" in text.lower() or "previous" in text.lower()
+
+    @pytest.mark.asyncio
     async def test_does_not_catch_on_non_execute_tools(self):
         """Sandbox errors only happen on `execute`. The middleware must NOT
         intercept anything on other tools — those have their own contract.

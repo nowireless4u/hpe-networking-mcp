@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.5.1] - 2026-06-25
+
+**Patch — fix(code-mode): give the `execute()` sandbox a working clock + self-correcting errors for the common small-model mistakes.** Two failure modes reported from Claude Haiku 4.5 code-mode sessions: `datetime.utcnow()` (a 24h-window report) and `NameError: name 'org_id' is not defined` (a variable referenced across two `execute()` blocks). Both are structural — steering via INSTRUCTIONS.md is unreliable because MCP-server content is treated as advisory — so the fixes live in the sandbox/middleware layer, not the docs alone.
+
+### Added
+- **`ClockEnabledMontySandboxProvider`** (`code_sandbox.py`) — subclasses fastmcp's `MontySandboxProvider` to pass `os=OSAccess()` to monty, enabling the sandbox clock: `datetime.now()`, `datetime.now(datetime.timezone.utc)`, and `datetime.date.today()` now work inside `execute()`. The filesystem and environ stay fully sandboxed (verified live: host env vars and host files do not leak; `open` is unbound) — only the read-only clock is added.
+
+### Changed
+- **`SandboxErrorCatchMiddleware`** now appends a self-correcting hint to the error result (the channel models reliably act on) for the common dead-ends:
+  - clock/time: `datetime.utcnow()` (monty has no `utcnow`) and `time.time()` (no `time` module) → points at `datetime.now(datetime.timezone.utc)` / `datetime.now().timestamp()` and stamps the real current UTC time.
+  - cross-block state: `NameError: name 'X' is not defined` → explains that each `execute()` call is a fresh, stateless sandbox and that work must be self-contained in one block (or `X` recomputed).
+- `execute` tool description + INSTRUCTIONS.md sandbox reference: corrected the (previously inaccurate) clock guidance and added an explicit STATELESS note. Sandbox-compat lint no longer bans `datetime.now()`; it bans `datetime.utcnow()`.
+
 ## [3.4.5.0] - 2026-06-24
 
 **Minor — feat(translations): migrate all 12 AOS 8 → Central config kinds onto the canonical engine + retire the legacy JSON engine.** The non-WLAN config translations (`vlan_id`, `named_vlan`, `net_group`, `role`, `policy`, the AAA chain — `auth_server` / `server_group` / `dot1x_auth` / `mac_auth` / `captive_portal` / `aaa_profile` — and `gateway_cluster`) moved from the old JSON `emit_calls` engine to the canonical reader/writer architecture, exposed through new cross-platform bridge tools, with the legacy engine fully removed. References #279, #419/#420.

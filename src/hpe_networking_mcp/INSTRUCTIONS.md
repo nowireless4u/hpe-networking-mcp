@@ -256,6 +256,8 @@ This applies even to "small" lists — anything > ~30 items is risky for small m
 
 The `execute()` sandbox uses `pydantic-monty` for its Python parser. It supports a subset of Python 3 — most data manipulation works, but several common modules and constructs are blocked. Authoring code that runs first try means staying inside the supported surface.
 
+**Each `execute()` call is STATELESS** — it runs in a fresh sandbox, so variables, imports, and results from a previous `execute()` block do NOT persist. Do all the work for one task inside a single block; never reference a variable (e.g. `org_id`) defined in an earlier call, or you'll hit `NameError: name '…' is not defined`.
+
 **Known-working** (verified in shipped skills + tests):
 - Built-in types: `str`, `int`, `float`, `bool`, `list`, `dict`, `set`, `tuple`, `None`
 - Comprehensions: list / dict / set / generator (the LATTER is fine when consumed eagerly via `list(...)`; bare generators that need `yield` syntax are NOT — see below)
@@ -263,6 +265,7 @@ The `execute()` sandbox uses `pydantic-monty` for its Python parser. It supports
 - Operators, slicing, f-strings, basic string methods
 - `json` (verified — Stage 9b uses it for body inspection)
 - `re` (verified — used by Stage 9b filtering helpers)
+- The clock: `datetime.now()`, `datetime.now(datetime.timezone.utc)`, `datetime.date.today()` (verified — the sandbox grants a read-only host clock; see the blocked table for the `utcnow()` / `time` gaps)
 - The injected `await call_tool(name, params)` for platform tool dispatch
 
 **Known-blocked** — using any of these returns a sandbox error:
@@ -273,7 +276,8 @@ The `execute()` sandbox uses `pydantic-monty` for its Python parser. It supports
 | `async def` (any function) | unawaited-coroutine footgun (sandbox already runs in async context) | Inline the code at the top level inside `execute()` |
 | `import hashlib` | `ModuleNotFoundError` | Accept a pre-computed digest as an input parameter |
 | `import hpe_networking_mcp.*` | `ModuleNotFoundError` | Use platform tools via `await call_tool(name, params)` |
-| `datetime.now()`, `time.time()` | `RuntimeError: OS access blocked` | Accept ISO-8601 timestamps as parameters; or hardcode literal ISO strings |
+| `datetime.utcnow()` | `AttributeError: 'datetime.datetime' object has no attribute 'utcnow'` | Use `datetime.now(datetime.timezone.utc)` — the sandbox clock works; `utcnow` simply isn't implemented |
+| `time.time()` / `import time` | `ModuleNotFoundError: No module named 'time'` | Use `datetime.now().timestamp()`; the `time` module doesn't exist in the sandbox |
 | `os.environ`, `subprocess`, file I/O | `RuntimeError: OS access blocked` | Accept config values as parameters |
 | `asyncio.gather()` | unavailable | Use sequential `await` calls — same wall-clock cost matters less here than in production async code |
 

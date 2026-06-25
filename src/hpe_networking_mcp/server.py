@@ -727,10 +727,11 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
             CodeMode,
             GetSchemas,
             GetTags,
-            MontySandboxProvider,
             Search,
         )
         from pydantic_monty import ResourceLimits
+
+        from hpe_networking_mcp.code_sandbox import ClockEnabledMontySandboxProvider
     except ImportError as e:
         logger.error(
             "MCP_TOOL_MODE=code requires fastmcp[code-mode] + pydantic-monty ({}); "
@@ -784,6 +785,10 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
     execute_description = (
         "Run Python in a sandbox to compose multiple platform tool calls. "
         "Use `return` to produce output.\n\n"
+        "STATELESS: each `execute()` call runs in a FRESH sandbox — variables, "
+        "imports, and results from a previous `execute()` block do NOT persist. "
+        "Do all the work for one task in a SINGLE block; never reference a "
+        "variable (e.g. `org_id`) defined in an earlier call.\n\n"
         "PREREQUISITE — call `skills_list` at the outer surface BEFORE "
         "using `execute`. If a bundled skill covers the request, "
         "`skills_load` it and follow that runbook; only write your own "
@@ -818,11 +823,14 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
         "Use them BEFORE writing your code block when the client surfaces "
         "them; otherwise use the `<platform>_list_tools` path above.\n\n"
         "Known sandbox limits: `asyncio.gather()` is unavailable — use "
-        "sequential `await` calls. OS-access functions are blocked, "
-        "including `datetime.now()`, `time.time()`, file I/O, `os.environ`, "
-        "and `subprocess`. For timestamps, accept ISO strings as parameters "
-        "or hardcode literal ISO-8601 strings rather than computing them "
-        "inside the sandbox. Not every stdlib module exists in the sandbox — "
+        "sequential `await` calls. The clock IS available: "
+        "`datetime.now()`, `datetime.now(datetime.timezone.utc)`, and "
+        "`datetime.date.today()` work. But `datetime.utcnow()` does NOT exist "
+        "in the sandbox (use `datetime.now(datetime.timezone.utc)`), there is "
+        "no `time` module (use `datetime.now().timestamp()`), and file I/O, "
+        "`os.environ`, and `subprocess` are blocked. Many search/report tools "
+        'also accept a `duration` argument (e.g. "1d") so you often don\'t '
+        "need to compute a window at all. Not every stdlib module exists in the sandbox — "
         "e.g. `import collections` (Counter/defaultdict) raises "
         "ModuleNotFoundError. Use builtins instead: a plain `dict` for "
         "counting/grouping, plus `set`, `sorted`, `sum`, and `min`/`max`."
@@ -889,7 +897,11 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
 
     mcp.add_transform(
         CodeMode(
-            sandbox_provider=MontySandboxProvider(limits=limits),
+            # ClockEnabledMontySandboxProvider passes os=OSAccess() so sandbox
+            # code can call datetime.now()/date.today() (the stock provider
+            # blocks the clock); the FS/env stay fully sandboxed. See
+            # code_sandbox.py.
+            sandbox_provider=ClockEnabledMontySandboxProvider(limits=limits),
             discovery_tools=discovery_tools,
             execute_description=execute_description,
         )

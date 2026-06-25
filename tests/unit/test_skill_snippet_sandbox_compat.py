@@ -73,11 +73,15 @@ _FORBIDDEN_PATTERNS: list[tuple[re.Pattern[str], str, str]] = [
     (
         # OS-access functions explicitly listed as blocked in
         # `server.py:execute_description`. These are the most-cited offenders.
-        re.compile(r"\b(?:datetime\.now|time\.time|os\.environ|subprocess\b|asyncio\.gather)\b"),
+        # NOTE: `datetime.now()` is NOT banned — the clock-enabled sandbox
+        # provider (code_sandbox.py) makes it work. `datetime.utcnow()` and
+        # `time.time()` stay banned (monty has no utcnow / no time module).
+        re.compile(r"\b(?:datetime\.utcnow|time\.time|os\.environ|subprocess\b|asyncio\.gather)\b"),
         "OS-access / asyncio.gather",
-        "The sandbox blocks `datetime.now()`, `time.time()`, `os.environ`, "
-        "`subprocess`, and `asyncio.gather()`. Use sequential `await` calls "
-        "for parallelism; accept ISO-8601 strings as parameters for timestamps.",
+        "The sandbox blocks `datetime.utcnow()`, `time.time()`, `os.environ`, "
+        "`subprocess`, and `asyncio.gather()`. Use `datetime.now(datetime.timezone.utc)` "
+        "for UTC and `datetime.now().timestamp()` for epoch; use sequential "
+        "`await` calls for parallelism.",
     ),
 ]
 
