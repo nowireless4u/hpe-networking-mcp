@@ -1014,7 +1014,7 @@ For every row of the Stage 8 disposition matrix where Disposition is `direct-tra
 
 **Run this stage when the operator asks for a deterministic, engine-produced preview of what the migration will emit per object — e.g. "give me a breakdown of what the policies will look like in Central and where they'll land."** Stage 9 (above) is the *narrative* AI-authored API call sequence; Stage 9b is the *deterministic* engine output. Operators reviewing migration impact should read both — Stage 9 for the ordered cutover plan, Stage 9b for the actual JSON bodies and rule-by-rule per-object detail.
 
-**This stage uses the `translate_config_preview` tool** — a read-only bridge to the canonical translation engine that runs server-side and returns the ordered Central calls per object. **Read-only — no API writes** (the gated `translate_config_apply` is the write path). The bridge is **per-record**: one call per source object, returning `{canonical, calls, unresolved, preview}` (call **bodies are omitted** for PII safety — read counts/fields off the PII-safe `canonical` instead). The WLAN SSID preview (§2g) uses the sibling `translate_wlan_preview` tool.
+**This stage uses the `translate_config_preview` tool** — a read-only bridge to the canonical translation engine that runs server-side and returns the ordered Central calls per object. **Read-only — no API writes** (the gated `translate_config_apply` is the write path). The bridge is **per-record**: one call per source object, returning `{canonical, calls, unresolved, preview}`. Call **bodies are included but PII-scrubbed** (secret values → `***REDACTED***`), so you can render the real Central POST payloads; counts/fields are also available on the PII-safe `canonical`. The WLAN SSID preview (§2g) uses the sibling `translate_wlan_preview` tool.
 
 **Preconditions (soft — Stage 9b runs against partial inputs):**
 
@@ -1334,7 +1334,7 @@ result = {
         {
             "acl": r["id"],
             "calls": r["call_count"],
-            # bodies are omitted from `calls`; rule count comes off the PII-safe canonical.
+            # rule count comes off the PII-safe canonical (simplest source of truth).
             "rules": len(r["canonical"].get("rules", [])),
             # an unmapped action fail-closes to ACTION_DENY + flags unresolved — surface it.
             "unmapped_actions": r["canonical"].get("unmapped_actions", []),
@@ -1383,7 +1383,7 @@ result = {
         {
             "alias": r["id"],
             "calls": r["call_count"],
-            # counts/family from the PII-safe canonical (bodies omitted from `calls`).
+            # counts/family from the PII-safe canonical (simplest source of truth).
             "items": len(r["canonical"].get("items", [])),
             "family": r["canonical"].get("address_family"),
             "unresolved": r["unresolved"],
@@ -1577,7 +1577,7 @@ Tag the §2h result with `aaa_status` so the report says *why* (live vs intentio
 
 **Dependency order is also the preview order** (so the operator reads prerequisites first): `auth_server` → `server_group` → {`dot1x_auth`, `mac_auth`, `captive_portal`} → `aaa_profile`. Server-groups reference auth-servers by name; the aaa-profile references server-groups + the dot1x/mac/captive profiles + roles by name — each prerequisite must exist in Central before the object that references it.
 
-> **PII — handled by the bridge, but stay alert:** the `auth_server` Central body carries the shared secret (`rad_key` / `tacacs_key` → `shared-secret-config.plaintext-value`). `translate_config_preview` already protects this two ways: it **omits call bodies** entirely and **redacts the secret in `canonical`** (you'll see `***REDACTED***`). So preview output is safe to render as-is. Two hard rules remain:
+> **PII — handled by the bridge, but stay alert:** the `auth_server` Central body carries the shared secret (`rad_key` / `tacacs_key` → `shared-secret-config.plaintext-value`). `translate_config_preview` redacts that secret in **both** the `canonical` and the included call `body` (you'll see `***REDACTED***`), so preview output is safe to render as-is. Two hard rules remain:
 > - In summaries, show **presence only** (e.g. `shared_secret: present`), never the value — and never reconstruct the secret from the source record into the report.
 > - The **write path is PII-gated at the tool layer**: `translate_config_apply` returns a 403 for `kind="auth_server"` until secret tokenization ships. Don't try to route around it — create auth-servers manually for now.
 

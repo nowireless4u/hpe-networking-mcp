@@ -311,16 +311,30 @@ async def _exists(command: ClientCall, path: str) -> bool:
 
 
 async def _assignment_exists(command: ClientCall, body: dict[str, Any]) -> bool:
-    """True if the config-assignment in ``body`` is already present."""
-    entry = body["config-assignment"][0]
+    """True only if EVERY packed config-assignment entry is already present.
+
+    A body packs one entry per device-function (e.g. a VLAN assigns to both
+    ``MOBILITY_GW`` and ``CAMPUS_AP`` in one POST). Skipping when only the first
+    entry exists would leave Central half-assigned, so require all of them —
+    matching on ``device-function`` too (omitting it would treat a MOBILITY_GW-only
+    assignment as satisfying a MOBILITY_GW+CAMPUS_AP request).
+    """
+    entries = body.get("config-assignment") or []
+    if not entries:
+        return False
     r = await command("GET", _CONFIG_ASSIGNMENTS)
     rows = r["msg"].get("config-assignment", []) if isinstance(r.get("msg"), dict) else []
-    return any(
-        row.get("scope-id") == entry.get("scope-id")
-        and row.get("profile-type") == entry.get("profile-type")
-        and row.get("profile-instance") == entry.get("profile-instance")
-        for row in rows
-    )
+
+    def _present(entry: dict[str, Any]) -> bool:
+        return any(
+            row.get("scope-id") == entry.get("scope-id")
+            and row.get("device-function") == entry.get("device-function")
+            and row.get("profile-type") == entry.get("profile-type")
+            and row.get("profile-instance") == entry.get("profile-instance")
+            for row in rows
+        )
+
+    return all(_present(e) for e in entries)
 
 
 async def execute(

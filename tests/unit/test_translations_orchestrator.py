@@ -305,3 +305,40 @@ async def test_aos8_wep_to_mist_blocks() -> None:
     res = await orch.execute(fake.command, p)
     assert res[0]["action"] == "blocked_unresolved"
     assert fake.bodies == []
+
+
+@pytest.mark.asyncio
+async def test_execute_partial_assignment_not_skipped() -> None:
+    # Casey #510: a config-assignment packs one entry per device-function. A VLAN
+    # assigns to BOTH MOBILITY_GW and CAMPUS_AP in one POST. If only the MOBILITY_GW
+    # entry already exists, the POST must NOT be skipped (skipping would leave Central
+    # half-assigned). _assignment_exists requires ALL packed entries present.
+    fake = FakeCentral()
+    p = orch.plan("aos8", "central", orch.VLAN_ID, {"id": 108}, writer_ctx={"scope_id": "S1"})
+    assign = next(c for c in p.calls if c["path"] == _CONFIG_ASSIGNMENTS)
+    entries = assign["body"]["config-assignment"]
+    assert {e["device-function"] for e in entries} == {"MOBILITY_GW", "CAMPUS_AP"}
+
+    # Pre-seed ONLY the MOBILITY_GW entry + the layer2-vlan library object.
+    fake.assignments.append(dict(entries[0]))  # MOBILITY_GW only
+    fake.objects["network-config/v1alpha1/layer2-vlan/108"] = {"name": "108", "vlan": "108"}
+
+    res = await orch.execute(fake.command, p)
+    actions = {r["path"]: r["action"] for r in res}
+    # layer2-vlan create skipped (already exists); assignment still POSTed (CAMPUS_AP missing).
+    assert actions["network-config/v1alpha1/layer2-vlan/108"] == "skipped_exists"
+    assert actions[_CONFIG_ASSIGNMENTS] == "assigned"
+
+
+@pytest.mark.asyncio
+async def test_execute_full_assignment_skipped() -> None:
+    # Counterpart: when EVERY packed entry already exists, the POST is skipped.
+    fake = FakeCentral()
+    p = orch.plan("aos8", "central", orch.VLAN_ID, {"id": 108}, writer_ctx={"scope_id": "S1"})
+    assign = next(c for c in p.calls if c["path"] == _CONFIG_ASSIGNMENTS)
+    fake.assignments.extend(dict(e) for e in assign["body"]["config-assignment"])  # both DFs
+    fake.objects["network-config/v1alpha1/layer2-vlan/108"] = {"name": "108", "vlan": "108"}
+
+    res = await orch.execute(fake.command, p)
+    actions = {r["path"]: r["action"] for r in res}
+    assert actions[_CONFIG_ASSIGNMENTS] == "skipped_exists"
