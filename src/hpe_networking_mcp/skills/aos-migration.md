@@ -1130,38 +1130,39 @@ When rendering the final report, surface `scope_status` so the operator sees whi
 
 #### Step 2 — Run the engine-driven preview per translation
 
-`translate_config_preview` is **per-record** — one call per source object. Define this adapter once and reuse it in every §2x section; it loops a record list through the bridge and aggregates into the report shape (record count + per-record `canonical` / `calls` / `unresolved`). Bodies are omitted from `calls` for PII safety, so read field/rule/item counts off `canonical`.
+`translate_config_preview` is **per-record** — one call per source object. The sandbox forbids defining `async def` helpers (wrapping creates an unawaited coroutine), so each §2x section **inlines** the per-record `await` loop. These two **synchronous** helpers keep the inline loops short — `cfg_args` builds the tool params, `cfg_row` shapes one preview response into a uniform row, and `cfg_batch` aggregates. Each record's create-call body is included (PII-scrubbed); counts come off `canonical`.
 
 ```python
-async def preview_kind(kind, records, scope_id, extra_ctx=None):
-    """Run translate_config_preview per record; aggregate into a batch summary.
+def cfg_args(kind, rec, scope_id, extra_ctx=None):
+    a = {"source_platform": "aos8", "target_platform": "central",
+         "kind": kind, "source_record": rec, "scope_id": scope_id}
+    if extra_ctx:
+        a["extra_ctx"] = extra_ctx
+    return a
 
-    Returns {kind, record_count, translatable, results:[{id, canonical, calls,
-    unresolved, call_count}]}. `translatable` = records whose plan has no
-    unresolved scopes/clusters/actions (i.e. apply would proceed).
-    """
-    results = []
-    for rec in records:
-        args = {
-            "source_platform": "aos8", "target_platform": "central",
-            "kind": kind, "source_record": rec, "scope_id": scope_id,
-        }
-        if extra_ctx:
-            args["extra_ctx"] = extra_ctx
-        resp = await call_tool("translate_config_preview", args)
-        p = resp.get("data", resp)
-        canon = p.get("canonical") or {}
-        # primary identity per kind (vlan_id has no `name`; everything else does)
-        rid = canon.get("name") or canon.get("vlan_name") or canon.get("vlan_id") or "<unknown>"
-        results.append({
-            "id": rid, "canonical": canon, "calls": p.get("calls", []),
-            "unresolved": p.get("unresolved", []), "call_count": len(p.get("calls", [])),
-        })
-    return {
-        "kind": kind, "record_count": len(records),
-        "translatable": sum(1 for r in results if not r["unresolved"]),
-        "results": results,
-    }
+def cfg_row(p):
+    """One translate_config_preview response -> a uniform per-record row."""
+    c = p.get("canonical") or {}
+    # primary identity per kind (vlan_id has no `name`; everything else does)
+    rid = c.get("name") or c.get("vlan_name") or c.get("vlan_id") or "<unknown>"
+    return {"id": rid, "canonical": c, "calls": p.get("calls", []),
+            "unresolved": p.get("unresolved", []), "call_count": len(p.get("calls", []))}
+
+def cfg_batch(kind, rows):
+    """Aggregate per-record rows into the report shape. `translatable` = rows whose
+    plan has no unresolved scopes/clusters/actions (i.e. apply would proceed)."""
+    return {"kind": kind, "record_count": len(rows),
+            "translatable": sum(1 for r in rows if not r["unresolved"]), "results": rows}
+```
+
+The per-record loop each §2x runs (shown once; the others differ only in `kind` / records / `extra_ctx`):
+
+```python
+rows = []
+for rec in records:                                   # the kind's filtered record list
+    resp = await call_tool("translate_config_preview", cfg_args(kind, rec, scope_id))
+    rows.append(cfg_row(resp.get("data", resp)))
+batch = cfg_batch(kind, rows)
 ```
 
 **The `stage1_<obj>_records` flat lists are derived from `config_by_scope` by flattening — and each record MUST be stamped with its origin scope as `_source_scope`** so identity keys stay collision-safe:
@@ -1194,7 +1195,11 @@ Without the `_source_scope` stamp, the composite `<source_scope>/<vap-name>` and
 # (typically VLAN 1) get re-emitted at every site/site-collection scope.
 vlan_records = [r for r in stage1_vlan_id_records if not (r.get("_flags") or {}).get("inherited")]
 
-batch = await preview_kind("vlan_id", vlan_records, scope_lookup["Global"])  # or your Stage-7 Central scope_id
+rows = []
+for rec in vlan_records:
+    resp = await call_tool("translate_config_preview", cfg_args("vlan_id", rec, scope_lookup["Global"]))  # or Stage-7 scope_id
+    rows.append(cfg_row(resp.get("data", resp)))
+batch = cfg_batch("vlan_id", rows)
 result = {
     "kind": "vlan_id",
     "record_count": batch["record_count"],
@@ -1235,7 +1240,11 @@ for vn in vlan_names:
     else:
         unbound_names.append(nm)
 
-batch = await preview_kind("named_vlan", merged, scope_lookup["Global"])  # or your Stage-7 Central scope_id
+rows = []
+for rec in merged:
+    resp = await call_tool("translate_config_preview", cfg_args("named_vlan", rec, scope_lookup["Global"]))
+    rows.append(cfg_row(resp.get("data", resp)))
+batch = cfg_batch("named_vlan", rows)
 result = {
     "kind": "named_vlan",
     "record_count": batch["record_count"],
@@ -1266,7 +1275,11 @@ roles_with_eth_acl = [
     if any((b.get("acl_type") == "eth") for b in (r.get("role__acl") or []))
 ]
 
-batch = await preview_kind("role", role_records, scope_lookup["Global"])  # or your Stage-7 Central scope_id
+rows = []
+for rec in role_records:
+    resp = await call_tool("translate_config_preview", cfg_args("role", rec, scope_lookup["Global"]))
+    rows.append(cfg_row(resp.get("data", resp)))
+batch = cfg_batch("role", rows)
 result = {
     "kind": "role",
     "record_count": batch["record_count"],
@@ -1304,9 +1317,14 @@ acl_records = [r for r in candidate_acls if _has_rules(r)]
 empty_acls = [r.get("accname", "<unknown>") for r in candidate_acls if not _has_rules(r)]
 
 # role_records drives the role-attribution reverse-index (extra_ctx, not a body field).
-batch = await preview_kind(
-    "policy", acl_records, scope_lookup["Global"], extra_ctx={"role_records": role_records}
-)
+rows = []
+for rec in acl_records:
+    resp = await call_tool(
+        "translate_config_preview",
+        cfg_args("policy", rec, scope_lookup["Global"], extra_ctx={"role_records": role_records}),
+    )
+    rows.append(cfg_row(resp.get("data", resp)))
+batch = cfg_batch("policy", rows)
 result = {
     "kind": "policy",
     "record_count": batch["record_count"],
@@ -1351,7 +1369,11 @@ empty_or_system = [
     if not _is_translatable(r)
 ]
 
-batch = await preview_kind("net_group", netdst_records, scope_lookup["Global"])  # or your Stage-7 Central scope_id
+rows = []
+for rec in netdst_records:
+    resp = await call_tool("translate_config_preview", cfg_args("net_group", rec, scope_lookup["Global"]))
+    rows.append(cfg_row(resp.get("data", resp)))
+batch = cfg_batch("net_group", rows)
 result = {
     "kind": "net_group",
     "record_count": batch["record_count"],
@@ -1593,7 +1615,11 @@ for kind, records in aaa_chain:
     # auth_server: optionally correlate co-located CoA via the matching aaa_prof's
     # rfc3576_client[] → extra_ctx={"coa_servers": [...]} (folds AUTH_AND_COA). Omitted
     # here for brevity; pass it when you have the aaa_prof CoA list for these servers.
-    batch = await preview_kind(kind, recs, resolved_central_scope_id)
+    rows = []
+    for rec in recs:
+        resp = await call_tool("translate_config_preview", cfg_args(kind, rec, resolved_central_scope_id))
+        rows.append(cfg_row(resp.get("data", resp)))
+    batch = cfg_batch(kind, rows)
     aaa_previews.append({
         "kind": kind,
         "record_count": batch["record_count"],
