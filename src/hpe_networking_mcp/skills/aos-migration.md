@@ -54,7 +54,7 @@ description: |
   process and partner-tool guidance.
 platforms: [central, aos8]
 tags: [central, migration, aos8, aos10, readiness, audit, vsg, translation]
-tools: [health, central_get_scope_tree, central_get_devices, central_get_aps, central_get_sites, central_get_site_name_id_mapping, central_recommend_firmware, central_get_config_assignments, central_get_server_groups, central_get_wlan_profiles, central_get_roles, central_get_role_acls, central_get_net_groups, central_get_net_services, central_get_named_vlan, central_get_aliases, central_get_gw_cluster_intent_config, central_get_gateway_clusters, central_translation_preview, central_manage_site, central_manage_site_collection, central_manage_device_group, central_manage_roles, central_manage_role_acls, central_manage_net_groups, central_manage_net_services, central_manage_wlan_profile, central_manage_config_assignment, central_manage_gw_cluster_intent_config, central_manage_gateway_clusters, clearpass_get_network_devices, clearpass_get_device_groups, clearpass_get_server_certificates, clearpass_get_local_users, greenlake_get_subscriptions, greenlake_get_workspace, greenlake_get_devices, aos8_get_md_hierarchy, aos8_get_effective_config, aos8_get_ap_database, aos8_get_cluster_state, aos8_show_command, aos8_get_clients, aos8_get_bss_table, aos8_get_active_aps, aos8_get_ap_wired_ports, aos8_parse_config, file_manager, read_file]
+tools: [health, central_get_scope_tree, central_get_devices, central_get_aps, central_get_sites, central_get_site_name_id_mapping, central_recommend_firmware, central_get_config_assignments, central_get_server_groups, central_get_wlan_profiles, central_get_roles, central_get_role_acls, central_get_net_groups, central_get_net_services, central_get_named_vlan, central_get_aliases, central_get_gw_cluster_intent_config, central_get_gateway_clusters, translate_config_preview, translate_config_apply, translate_wlan_preview, translate_wlan_apply, central_manage_site, central_manage_site_collection, central_manage_device_group, central_manage_roles, central_manage_role_acls, central_manage_net_groups, central_manage_net_services, central_manage_wlan_profile, central_manage_config_assignment, central_manage_gw_cluster_intent_config, central_manage_gateway_clusters, clearpass_get_network_devices, clearpass_get_device_groups, clearpass_get_server_certificates, clearpass_get_local_users, greenlake_get_subscriptions, greenlake_get_workspace, greenlake_get_devices, aos8_get_md_hierarchy, aos8_get_effective_config, aos8_get_ap_database, aos8_get_cluster_state, aos8_show_command, aos8_get_clients, aos8_get_bss_table, aos8_get_active_aps, aos8_get_ap_wired_ports, aos8_parse_config, file_manager, read_file]
 ---
 
 # AOS 8 → AOS 10 migration (PoC) — readiness + config translation plan
@@ -687,7 +687,7 @@ Default the selection to the detected pattern (same-ap-group-to-different-cluste
 
 **Strategy and placement are separate — collect both.** The topology option above fixes the `cluster_strategy`; it does NOT fix *where* the cluster lands. For each surviving cluster, also confirm the **intended Central scope identity** — collect the scope **name AND type** (`target_scope_type` ∈ `global` / `site` / `site_collection` / `device_group`), plus the **full path** (`target_scope_path`, e.g. `USW/West`) when the operator can give it. A bare scope *name* is **not** globally unique (a Site, Site-Collection, and Device-Group can share a name; the same name can recur under different parents), so name-only resolution can bind the wrong scope — always carry the type, and prefer the path. Collect the identity, **not** a numeric `scope_id` (the Central scope may not exist yet — Stage 7 maps/creates the hierarchy as the first cutover step), so resolution → `scope_id`/`<TBD:...>` happens later in Stage 9b. Record `cluster_strategy` + `target_scope_name` + `target_scope_type` (+ optional `target_scope_path`) in `decisions["per_cluster"]`, keyed by the composite **`<source_scope>/<cluster-name>`** (a bare cluster name would apply one cluster's decision to another scope's cluster). Stage 9b calls `resolve_scope_id(target_scope_name, target_scope_type, target_scope_path)` → `scope_id` / `<TBD:...>` / `<AMBIGUOUS:...>` (when name+type still match several — the operator must supply a path) and **never** defaults a *missing* scope to Global — a cluster with no chosen scope skips with a `skip_reason`.
 
-**Outputs → Act II `runtime_values`.** Record the answers and pass them into every Stage 9b `central_translation_preview` call:
+**Outputs → Act II preview inputs.** Record the answers and feed them into the Stage 9b previews — the per-VAP `target_mode` + cluster decisions drive the `translate_wlan_preview` (§2g) params, and the per-cluster `cluster_strategy` becomes `translate_config_preview`'s `extra_ctx` (§2f):
 
 ```
 decisions = {
@@ -930,7 +930,7 @@ The VSG **does not** contain per-object translation tables for most object types
 | **Captive portal profile** (`cp_auth_profile`) | (none, passing mention only) | `operator-driven` — assigned through a role's `captive-portal` field on `central_manage_roles`. Emit `OPERATOR-MAP`. Target tool: `central_manage_roles` (captive-portal field). |
 | **User role** (`role`) | §1173-§1176 (AOS 8 supported-features list) | `transform` — role name + VLAN + ACL + bandwidth-contract + qos + captive-portal + session-timeout map directly. Per-attribute mapping is operator-driven; VSG only confirms roles "are supported." Emit `OPERATOR-MAP` per role. Target tool: `central_manage_roles`. |
 | **Session ACL** (`acl_sess`) | (none — implied via role) | `transform` — the `central:policy` translation (engine-driven) emits `/policies` POSTs with rule bodies that reference Central `net-group` and `net-service` aliases. `net-group` aliases ship via the `central:net_group` translation (see the row below — sourced from AOS 8 `netdst` / `netdst6`). `net-service` aliases (sourced from AOS 8 `netsvc`) are **deferred** pending live shape verification; `central:policy` rules that reference a `netsvc` name today will fail at Central with an unknown-service error unless the operator has pre-populated matching service names. Per-rule mapping is engine-handled; operator decisions only when LLD-skip reasons surface. (Note: `acl_eth` and `acl_mac` are intentionally out of scope — issue #298.) Target tool: `central_manage_policies`. |
-| **Network destination alias** (`netdst`, `netdst6`) | (none) | `transform` — the `central:net_group` translation emits one `POST /net-groups/{name}` + config-assignment per source record. Per-entry mapping is engine-handled (host / network / FQDN → Central `HOST` / `NETWORK` / `FQDN` items). Must run BEFORE `central:policy` because policy rule bodies reference these aliases by name. AOS 8 system defaults (`_flags.default=true` — e.g. `localip`, `controller`, `mswitch`) are filtered by preprocessing; inherited copies must be filtered by the consumer at definition scope. (Note: AOS 8 `netsvc` — service aliases — is deferred to a future release; see the `acl_sess` row.) Target tool: `central_manage_net_groups` (when the wrapper tool lands — preview today via `central_translation_preview`). |
+| **Network destination alias** (`netdst`, `netdst6`) | (none) | `transform` — the `central:net_group` translation emits one `POST /net-groups/{name}` + config-assignment per source record. Per-entry mapping is engine-handled (host / network / FQDN → Central `HOST` / `NETWORK` / `FQDN` items). Must run BEFORE `central:policy` because policy rule bodies reference these aliases by name. AOS 8 system defaults (`_flags.default=true` — e.g. `localip`, `controller`, `mswitch`) are filtered per-entry by the reader; record-level inherited/default copies must be filtered by the consumer at definition scope. (Note: AOS 8 `netsvc` — service aliases — is deferred to a future release; see the `acl_sess` row.) Preview via `translate_config_preview` (`kind="net_group"`); apply via `translate_config_apply`. |
 | **AP system profile** (`ap_sys_prof`) | §1651-§1657 (LMS prerequisite), §412-§415 (regulatory domain replaced) | Mixed: LMS-IP `transform` (must be VRRP VIP, not individual controller IP — already enforced as Act I REGRESSION rule); `reg_domain_prof` `deprecated`; `arm_prof` / `ht_radio_prof` `deprecated` (replaced by RF Profiles in AOS 10); syslog targets `operator-driven` (mapped to Central UI). **Central API gap — no `central_manage_ap_system_profile` tool today.** Target tool: `[Central API gap — manual UI]`. |
 | **WLAN SSID profile** (`ssid_prof`) | §2127-§2219 (CorpNet 802.1X), §2222-§2308 (OpsNet WPA3-Personal) | `direct-translate` — ESSID, opmode, VLAN, forwarding-mode, key-management, RADIUS pointers map to the `central_manage_wlan_profile` payload schema. The two VSG worked examples are the gold-standard reference for field-by-field mapping; emit per-WLAN-profile rows that cite them. Target tool: `central_manage_wlan_profile`. |
 | **VAP profile** (`virtual_ap`) | §2169-§2192 (Allowed bands "in the VAP", VLAN ID "in the VAP") | `transform` — AOS 8 VAP fields collapse INTO the WLAN profile in AOS 10; VAP is not a standalone object. Mark as `transform → folded into WLAN profile`. Target tool: `central_manage_wlan_profile` (collapsed). |
@@ -1014,7 +1014,7 @@ For every row of the Stage 8 disposition matrix where Disposition is `direct-tra
 
 **Run this stage when the operator asks for a deterministic, engine-produced preview of what the migration will emit per object — e.g. "give me a breakdown of what the policies will look like in Central and where they'll land."** Stage 9 (above) is the *narrative* AI-authored API call sequence; Stage 9b is the *deterministic* engine output. Operators reviewing migration impact should read both — Stage 9 for the ordered cutover plan, Stage 9b for the actual JSON bodies and rule-by-rule per-object detail.
 
-**This stage uses the `central_translation_preview` tool** — a read-only bridge to the translations engine that runs server-side and returns deterministic `TargetCall` descriptors. **Read-only — no API writes.** Real execution lands in #240's Phase 3.
+**This stage uses the `translate_config_preview` tool** — a read-only bridge to the canonical translation engine that runs server-side and returns the ordered Central calls per object. **Read-only — no API writes** (the gated `translate_config_apply` is the write path). The bridge is **per-record**: one call per source object, returning `{canonical, calls, unresolved, preview}` (call **bodies are omitted** for PII safety — read counts/fields off the PII-safe `canonical` instead). The WLAN SSID preview (§2g) uses the sibling `translate_wlan_preview` tool.
 
 **Preconditions (soft — Stage 9b runs against partial inputs):**
 
@@ -1023,25 +1023,27 @@ For every row of the Stage 8 disposition matrix where Disposition is `direct-tra
 - Stage 7 has produced the operator-confirmed AOS 8 → Central hierarchy mapping. **If Stage 7 was not run, target Global as a fallback** with a clearly-marked placeholder note in the output (see Step 1 below). The preview is engine output regardless of where the operator plans to land it; making Stage 9b strict on Stage 7 would defeat its purpose.
 - The target Central hierarchy does NOT need to exist in Central yet. Stage 9 builds the hierarchy as the FIRST cutover step; Stage 9b previews the per-object work that follows. Walker may legitimately return no match for a Stage-7 Central scope name — in that case use a placeholder scope_id (see Step 1).
 
-**Translations shipped today (v3.3.8.0):**
+**Config kinds shipped today (canonical engine):**
 
-| translation_id | AOS 8 source | Central target | Notes |
+Each is a `kind` passed to `translate_config_preview` (`source_platform="aos8"`, `target_platform="central"`). Kind-specific reader inputs go in `extra_ctx`; the resolved Central scope goes in `scope_id`.
+
+| kind | AOS 8 source | Central target | Notes |
 |---|---|---|---|
-| `central:vlan_id` | `vlan_id` (bare or rich) | layer2-vlan profile | Per-record. Optional sub-fields drop when absent. |
-| `central:named_vlan` | composite: `vlan_name` ⨝ `vlan_name_id` on `name` | named-VLAN + alias chain (6 emits) | Composite source — pre-merge before passing one record per name. |
-| `central:role` | `role` (Gateway-targeted) | role profile + config-assignment | ~25 fields. Skip `_flags.default=true` system roles. |
-| `central:net_group` | `netdst` (IPv4) or `netdst6` (IPv6) | net-group profile + config-assignment | Address family inferred from source record. Per-entry host/network/FQDN mapped to Central HOST/NETWORK/FQDN items. Must run BEFORE `central:policy`. |
-| `central:policy` | `acl_sess` | /policies POST + config-assignment | Engine pre-processes via reverse-index lookup against role records (consumer pre-fetches once). References `net-group` aliases by name (created by `central:net_group`); `net-service` aliases pending. |
-| `central:gateway_cluster` | `cluster_prof` | `gateway-clusters` (HA) + `gw-cluster-intent-config` | **Preview wired in §2f.** `runtime_values["cluster_strategy"]` (`ha_only` / `intent_site` / `intent_manual`) from Stage 6.5 Q2; `central_scope_id` per cluster. Needs full Act I + Stage 6.5. |
-| `central:wlan_ssid` | `virtual_ap` ⨝ `ssid_prof` (by name) | `wlan-ssids` (+ `overlay-wlan` cluster binding) | **Preview wired in §2g.** `runtime_values["target_mode"]` (4 modes) from Stage 6.5 Q1 + `ssid_profiles` (the VAP's **own-scope** records only — never the full flat list; see §2g) + `gw_cluster_list`; dual mode adds `bridge_scope_id`/`tunnel_scope_id`. Needs full Act I + Stage 6.5. |
-| `central:auth_server` | `rad_server` + `tacacs_server` | auth-server profile + config-assignment | **Preview wired in §2h.** Per-record; `central_scope_id` only. Foundational — run FIRST (server-groups reference it by name). Shared-secret field (`rad_key`/`tacacs_key`) is PII; write path PII-gated. |
-| `central:server_group` | `server_group_prof` | server-group profile + config-assignment | **Preview wired in §2h.** Per-record; `central_scope_id` only. Depends on `central:auth_server` (members reference auth-servers by name). |
-| `central:dot1x_auth` | `dot1x_auth_profile` | dot1x-auth profile + config-assignment | **Preview wired in §2h.** Per-record; `central_scope_id` only. Foundational profile referenced by the aaa-profile. |
-| `central:mac_auth` | `mac_auth_profile` | mac-auth profile + config-assignment | **Preview wired in §2h.** Per-record; `central_scope_id` only. Foundational profile referenced by the aaa-profile. |
-| `central:captive_portal` | `cp_auth_profile` | captive-portal profile + config-assignment | **Preview wired in §2h.** Per-record; `central_scope_id` only. References a server-group + roles by name (run those first / alongside). |
-| `central:aaa_profile` | `aaa_prof` | aaa-profile + config-assignment | **Preview wired in §2h.** Per-record; `central_scope_id` only. Depends on auth-server, server-group, dot1x/mac/captive profiles, and roles — run the whole §2h chain in order. Gateway-terminated model. |
+| `vlan_id` | `vlan_id` (bare or rich) | layer2-vlan profile | Per-record. Optional sub-fields drop when absent. |
+| `named_vlan` | composite: `vlan_name` ⨝ `vlan_name_id` on `name` | named-VLAN + alias chain (6 calls) | Composite source — pre-merge before passing one record per name. Optional `extra_ctx["alias_name"]` overrides the default lower-cased alias. |
+| `role` | `role` (Gateway-targeted) | role profile + config-assignment | ~25 fields. Skip `_flags.default=true` system roles. |
+| `net_group` | `netdst` (IPv4) or `netdst6` (IPv6) | net-group profile + config-assignment | Address family inferred from source record. Per-entry host/network/FQDN mapped to Central HOST/NETWORK/FQDN items. Must run BEFORE `policy`. |
+| `policy` | `acl_sess` | /policies POST + policy-group registration + config-assignment | `extra_ctx["role_records"]` (FULL role list) drives the role-attribution reverse-index. References `net-group` aliases by name (created by `net_group`); `net-service` aliases pending. Emits a policy-group-list registration (#420) so the policy is effective; fail-closes unmapped actions to `ACTION_DENY` + flags `unresolved`. |
+| `gateway_cluster` | `cluster_prof` | `gateway-clusters` (HA) + `gw-cluster-intent-config` | **Preview wired in §2f.** `extra_ctx["cluster_strategy"]` (`ha_only` / `intent_site` / `intent_manual`) from Stage 6.5 Q2; `scope_id` per cluster. Needs full Act I + Stage 6.5. |
+| (WLAN SSID) | `virtual_ap` ⨝ `ssid_prof` (by name) | `wlan-ssids` (+ `overlay-wlan` cluster binding) | **Preview wired in §2g via the separate `translate_wlan_preview` tool** (not `translate_config_preview`). `target_mode` (4 modes) from Stage 6.5 Q1 + the VAP's **own-scope** `ssid_profiles` + `gateway_cluster_list`. Needs full Act I + Stage 6.5. |
+| `auth_server` | `rad_server` + `tacacs_server` | auth-server profile + config-assignment | **Preview wired in §2h.** Per-record; `scope_id` only (+ optional `extra_ctx["coa_servers"]` for AUTH_AND_COA correlation). Foundational — run FIRST. Shared-secret (`rad_key`/`tacacs_key`) is PII — **`translate_config_apply` BLOCKS this kind** until secret tokenization ships. |
+| `server_group` | `server_group_prof` | server-group profile + config-assignment | **Preview wired in §2h.** Per-record; `scope_id` only. Depends on `auth_server` (members reference auth-servers by name). |
+| `dot1x_auth` | `dot1x_auth_profile` | dot1x-auth profile + config-assignment | **Preview wired in §2h.** Per-record; `scope_id` only. Foundational profile referenced by the aaa-profile. |
+| `mac_auth` | `mac_auth_profile` | mac-auth profile + config-assignment | **Preview wired in §2h.** Per-record; `scope_id` only. Foundational profile referenced by the aaa-profile. |
+| `captive_portal` | `cp_auth_profile` | captive-portal profile + config-assignment | **Preview wired in §2h.** Per-record; `scope_id` only. References a server-group + roles by name (run those first / alongside). |
+| `aaa_profile` | `aaa_prof` | aaa-profile + config-assignment | **Preview wired in §2h.** Per-record; `scope_id` only. Depends on auth-server, server-group, dot1x/mac/captive profiles, and roles — run the whole §2h chain in order. Gateway-terminated model. |
 
-All 13 `central:*` translations above ship and are wired into Stage 9b. The **AAA chain** (`central:auth_server` → `central:server_group` → `central:dot1x_auth` / `central:mac_auth` / `central:captive_portal` → `central:aaa_profile`) is driven directly (per-record, no Stage 6.5 decision) — see §2h.
+All 12 config kinds above ship on the canonical engine (plus WLAN via `translate_wlan_preview`). The **AAA chain** (`auth_server` → `server_group` → `dot1x_auth` / `mac_auth` / `captive_portal` → `aaa_profile`) is driven directly (per-record, no Stage 6.5 decision) — see §2h.
 
 #### Step 1 — Scope resolution (walker-optional, fall back to placeholder)
 
@@ -1128,7 +1130,39 @@ When rendering the final report, surface `scope_status` so the operator sees whi
 
 #### Step 2 — Run the engine-driven preview per translation
 
-For each translation, invoke `central_translation_preview` with the relevant Stage 1 records + scope_id. The tool returns deterministic per-record `TargetCall` descriptors.
+`translate_config_preview` is **per-record** — one call per source object. Define this adapter once and reuse it in every §2x section; it loops a record list through the bridge and aggregates into the report shape (record count + per-record `canonical` / `calls` / `unresolved`). Bodies are omitted from `calls` for PII safety, so read field/rule/item counts off `canonical`.
+
+```python
+async def preview_kind(kind, records, scope_id, extra_ctx=None):
+    """Run translate_config_preview per record; aggregate into a batch summary.
+
+    Returns {kind, record_count, translatable, results:[{id, canonical, calls,
+    unresolved, call_count}]}. `translatable` = records whose plan has no
+    unresolved scopes/clusters/actions (i.e. apply would proceed).
+    """
+    results = []
+    for rec in records:
+        args = {
+            "source_platform": "aos8", "target_platform": "central",
+            "kind": kind, "source_record": rec, "scope_id": scope_id,
+        }
+        if extra_ctx:
+            args["extra_ctx"] = extra_ctx
+        resp = await call_tool("translate_config_preview", args)
+        p = resp.get("data", resp)
+        canon = p.get("canonical") or {}
+        # primary identity per kind (vlan_id has no `name`; everything else does)
+        rid = canon.get("name") or canon.get("vlan_name") or canon.get("vlan_id") or "<unknown>"
+        results.append({
+            "id": rid, "canonical": canon, "calls": p.get("calls", []),
+            "unresolved": p.get("unresolved", []), "call_count": len(p.get("calls", [])),
+        })
+    return {
+        "kind": kind, "record_count": len(records),
+        "translatable": sum(1 for r in results if not r["unresolved"]),
+        "results": results,
+    }
+```
 
 **The `stage1_<obj>_records` flat lists are derived from `config_by_scope` by flattening — and each record MUST be stamped with its origin scope as `_source_scope`** so identity keys stay collision-safe:
 
@@ -1160,23 +1194,14 @@ Without the `_source_scope` stamp, the composite `<source_scope>/<vap-name>` and
 # (typically VLAN 1) get re-emitted at every site/site-collection scope.
 vlan_records = [r for r in stage1_vlan_id_records if not (r.get("_flags") or {}).get("inherited")]
 
-response = await call_tool(
-    "central_translation_preview",
-    {
-        "translation_id": "central:vlan_id",
-        "source_records": vlan_records,
-        "runtime_values": {"central_scope_id": scope_lookup["Global"]},  # or your Stage-7 Central name
-    },
-)
-preview = response.get("data", response)
+batch = await preview_kind("vlan_id", vlan_records, scope_lookup["Global"])  # or your Stage-7 Central scope_id
 result = {
-    "kind": "central:vlan_id",
-    "record_count": preview["record_count"],
-    "translatable": preview["translatable_count"],
-    "skipped": preview["skipped_count"],
+    "kind": "vlan_id",
+    "record_count": batch["record_count"],
+    "translatable": batch["translatable"],
     "summary": [
-        {"id": r["record_id"], "calls": r["call_count"], "skip": r["skip_reason"]}
-        for r in preview["results"]
+        {"id": r["id"], "calls": r["call_count"], "unresolved": r["unresolved"]}
+        for r in batch["results"]
     ][:30],   # cap for small models
 }
 result
@@ -1210,24 +1235,15 @@ for vn in vlan_names:
     else:
         unbound_names.append(nm)
 
-response = await call_tool(
-    "central_translation_preview",
-    {
-        "translation_id": "central:named_vlan",
-        "source_records": merged,
-        "runtime_values": {"central_scope_id": scope_lookup["Global"]},  # or your Stage-7 Central name
-    },
-)
-preview = response.get("data", response)
+batch = await preview_kind("named_vlan", merged, scope_lookup["Global"])  # or your Stage-7 Central scope_id
 result = {
-    "kind": "central:named_vlan",
-    "record_count": preview["record_count"],
-    "translatable": preview["translatable_count"],
-    "skipped": preview["skipped_count"],
+    "kind": "named_vlan",
+    "record_count": batch["record_count"],
+    "translatable": batch["translatable"],
     "skipped_per_lld": unbound_names,   # names registered but never bound to a VLAN ID
     "summary": [
-        {"name": r["record_id"], "calls": r["call_count"], "skip": r["skip_reason"]}
-        for r in preview["results"]
+        {"name": r["id"], "calls": r["call_count"], "unresolved": r["unresolved"]}
+        for r in batch["results"]
     ][:30],
 }
 result
@@ -1250,24 +1266,15 @@ roles_with_eth_acl = [
     if any((b.get("acl_type") == "eth") for b in (r.get("role__acl") or []))
 ]
 
-response = await call_tool(
-    "central_translation_preview",
-    {
-        "translation_id": "central:role",
-        "source_records": role_records,
-        "runtime_values": {"central_scope_id": scope_lookup["Global"]},  # or your Stage-7 Central name
-    },
-)
-preview = response.get("data", response)
+batch = await preview_kind("role", role_records, scope_lookup["Global"])  # or your Stage-7 Central scope_id
 result = {
-    "kind": "central:role",
-    "record_count": preview["record_count"],
-    "translatable": preview["translatable_count"],
-    "skipped": preview["skipped_count"],
+    "kind": "role",
+    "record_count": batch["record_count"],
+    "translatable": batch["translatable"],
     "roles_with_eth_acl": roles_with_eth_acl,   # surface in Translation gaps section
     "summary": [
-        {"name": r["record_id"], "calls": r["call_count"], "skip": r["skip_reason"]}
-        for r in preview["results"]
+        {"name": r["id"], "calls": r["call_count"], "unresolved": r["unresolved"]}
+        for r in batch["results"]
     ][:30],
 }
 result
@@ -1275,7 +1282,7 @@ result
 
 ##### 2d — Policies (`central:policy`)
 
-Policy preprocessing reverse-indexes role records — pass the FULL role list (post system-default filtering) via `runtime_values["role_records"]`. The engine does the per-ACL lookup internally.
+Policy translation reverse-indexes role records — pass the FULL role list (post system-default filtering) via `extra_ctx["role_records"]`. The reader does the per-ACL lookup internally.
 
 **Pre-filter empty ACLs.** Per the translation JSON's `ignored_variants`: *"Empty ACL will NOT be migrated"* and *"ACL by itself will NOT be migrated"*. These are documented LLD rules. Filter them out of the engine call AND surface them in a "Skipped per LLD" subsection so the operator sees what was excluded and why. Common offenders in real tenants: AppRF system-companion ACLs (`apprf-*-sacl`) that exist as paired-with-role plumbing with no rules, plus user-defined ACLs that were created but never populated (typically `transition`, `blacklisted` placeholders).
 
@@ -1296,35 +1303,26 @@ def _has_rules(r: dict) -> bool:
 acl_records = [r for r in candidate_acls if _has_rules(r)]
 empty_acls = [r.get("accname", "<unknown>") for r in candidate_acls if not _has_rules(r)]
 
-response = await call_tool(
-    "central_translation_preview",
-    {
-        "translation_id": "central:policy",
-        "source_records": acl_records,
-        "runtime_values": {
-            "central_scope_id": scope_lookup["Global"],   # or your Stage-7 Central name
-            "role_records": role_records,
-        },
-    },
+# role_records drives the role-attribution reverse-index (extra_ctx, not a body field).
+batch = await preview_kind(
+    "policy", acl_records, scope_lookup["Global"], extra_ctx={"role_records": role_records}
 )
-preview = response.get("data", response)
 result = {
-    "kind": "central:policy",
-    "record_count": preview["record_count"],
-    "translatable": preview["translatable_count"],
-    "skipped": preview["skipped_count"],
+    "kind": "policy",
+    "record_count": batch["record_count"],
+    "translatable": batch["translatable"],
     "skipped_per_lld": empty_acls,   # surface these in the report
     "summary": [
         {
-            "acl": r["record_id"],
+            "acl": r["id"],
             "calls": r["call_count"],
-            "rules": (
-                len(r["target_calls"][0]["body"]["security-policy"]["policy-rule"])
-                if r["target_calls"] else 0
-            ),
-            "skip": r["skip_reason"],
+            # bodies are omitted from `calls`; rule count comes off the PII-safe canonical.
+            "rules": len(r["canonical"].get("rules", [])),
+            # an unmapped action fail-closes to ACTION_DENY + flags unresolved — surface it.
+            "unmapped_actions": r["canonical"].get("unmapped_actions", []),
+            "unresolved": r["unresolved"],
         }
-        for r in preview["results"]
+        for r in batch["results"]
     ][:30],
 }
 result
@@ -1353,36 +1351,22 @@ empty_or_system = [
     if not _is_translatable(r)
 ]
 
-response = await call_tool(
-    "central_translation_preview",
-    {
-        "translation_id": "central:net_group",
-        "source_records": netdst_records,
-        "runtime_values": {"central_scope_id": scope_lookup["Global"]},  # or your Stage-7 Central name
-    },
-)
-preview = response.get("data", response)
+batch = await preview_kind("net_group", netdst_records, scope_lookup["Global"])  # or your Stage-7 Central scope_id
 result = {
-    "kind": "central:net_group",
-    "record_count": preview["record_count"],
-    "translatable": preview["translatable_count"],
-    "skipped": preview["skipped_count"],
+    "kind": "net_group",
+    "record_count": batch["record_count"],
+    "translatable": batch["translatable"],
     "skipped_per_lld": empty_or_system,   # surface in Translation gaps
     "summary": [
         {
-            "alias": r["record_id"],
+            "alias": r["id"],
             "calls": r["call_count"],
-            "items": (
-                len(r["target_calls"][0]["body"]["items"])
-                if r["target_calls"] else 0
-            ),
-            "family": (
-                r["target_calls"][0]["body"]["netdestination-type"]
-                if r["target_calls"] else None
-            ),
-            "skip": r["skip_reason"],
+            # counts/family from the PII-safe canonical (bodies omitted from `calls`).
+            "items": len(r["canonical"].get("items", [])),
+            "family": r["canonical"].get("address_family"),
+            "unresolved": r["unresolved"],
         }
-        for r in preview["results"]
+        for r in batch["results"]
     ][:30],
 }
 result
@@ -1430,22 +1414,22 @@ for c in cluster_records:
     # Resolve by name+type (+path) — never bare name (ambiguous across types/parents).
     cluster_scope_id = resolve_scope_id(dec["target_scope_name"], dec.get("target_scope_type"), dec.get("target_scope_path"))
     response = await call_tool(
-        "central_translation_preview",
+        "translate_config_preview",
         {
-            "translation_id": "central:gateway_cluster",
-            "source_records": [c],
-            "runtime_values": {
-                "central_scope_id": cluster_scope_id,
-                "cluster_strategy": dec["cluster_strategy"],   # ha_only / intent_site / intent_manual
-            },
+            "source_platform": "aos8",
+            "target_platform": "central",
+            "kind": "gateway_cluster",
+            "source_record": c,
+            "scope_id": cluster_scope_id,
+            "extra_ctx": {"cluster_strategy": dec["cluster_strategy"]},  # ha_only / intent_site / intent_manual
         },
     )
-    cluster_previews.append(response.get("data", response))
+    cluster_previews.append({"source": cluster_key, **response.get("data", response)})
 ```
 
 ##### 2g — WLAN SSIDs (`central:wlan_ssid`) — consumes Stage 6.5 Q1
 
-One source record = one `virtual_ap`; pass **only the VAP's own scope's** `ssid_prof` records via `runtime_values["ssid_profiles"]` (the engine joins by name, so a scope-filtered list prevents a same-name profile at another scope from binding — never pass the full flat list). Per **VAP instance**, look up the operator's decision by the composite `<source_scope>/<vap-name>` key (Q1), pass `target_mode`, and **resolve the decision's `cluster_refs` (composite per_cluster keys) into the engine's `gw_cluster_list` — the Central overlay object shape `[{cluster, cluster-type, tunnel-type, cluster-scope-id}]`**, not the raw key strings (the engine substitutes it whole into the overlay body). For `bridged_and_tunneled`, resolve the decision's `bridge_scope_name` / `tunnel_scope_name` → `bridge_scope_id` / `tunnel_scope_id` (walker, `<TBD:...>` fallback) before passing them.
+WLAN uses the dedicated `translate_wlan_preview` tool (not `translate_config_preview`). One source record = one `virtual_ap`, passed as `source_override`; pass **only the VAP's own scope's** `ssid_prof` records via `context_override={"reader_ctx": {"ssid_profiles": [...]}}` (the engine joins by name, so a scope-filtered list prevents a same-name profile at another scope from binding — never pass the full flat list). Per **VAP instance**, look up the operator's decision by the composite `<source_scope>/<vap-name>` key (Q1), pass `target_mode`, and **resolve the decision's `cluster_refs` (composite per_cluster keys) into the `gateway_cluster_list` param — the Central overlay object shape `[{cluster, cluster-type, tunnel-type, cluster-redundancy-type, cluster-scope-id}]`**, not the raw key strings (the writer substitutes it whole into the overlay body). For `bridged_and_tunneled`, confirm the decision's `bridge_scope_name` / `tunnel_scope_name` are present before previewing.
 
 ```python
 vap_records = [
@@ -1514,36 +1498,41 @@ for v in vap_records:
         ssid_previews.append({"source": vap_key, "skip_reason": cluster_gap})
         continue
 
-    rt = {
-        "central_scope_id": ssid_scope_id,
-        "target_mode": dec["target_mode"],            # bridged / tunneled / hybrid / bridged_and_tunneled
-        "ssid_profiles": scoped_ssid_profiles,        # THIS VAP's scope only — engine joins by name within scope
-        "gw_cluster_list": gw_cluster_list,           # Central overlay objects (engine contract)
-    }
-    if dec["target_mode"] == "bridged_and_tunneled":
-        # Dual mode needs both scope NAMES (resolved to ids/<TBD> here, like every other
-        # scope — they may not exist yet). Guard on the names, don't index (a partial
-        # decision must surface as the promised gap, not a KeyError).
-        if not dec.get("bridge_scope_name") or not dec.get("tunnel_scope_name"):
-            ssid_previews.append({
-                "source": vap_key,
-                "skip_reason": "bridged_and_tunneled needs both bridge_scope_name and tunnel_scope_name — confirm the scope split in Stage 6.5",
-            })
-            continue
-        rt["bridge_scope_id"] = resolve_scope_id(dec["bridge_scope_name"], dec.get("bridge_scope_type"), dec.get("bridge_scope_path"))
-        rt["tunnel_scope_id"] = resolve_scope_id(dec["tunnel_scope_name"], dec.get("tunnel_scope_type"), dec.get("tunnel_scope_path"))
+    if dec["target_mode"] == "bridged_and_tunneled" and (
+        not dec.get("bridge_scope_name") or not dec.get("tunnel_scope_name")
+    ):
+        # Dual mode needs both scope NAMES confirmed in Stage 6.5 — guard on the names,
+        # don't index (a partial decision must surface as the promised gap, not a KeyError).
+        ssid_previews.append({
+            "source": vap_key,
+            "skip_reason": "bridged_and_tunneled needs both bridge_scope_name and tunnel_scope_name — confirm the scope split in Stage 6.5",
+        })
+        continue
+    # WLAN uses the dedicated translate_wlan_preview bridge (NOT translate_config_preview):
+    # source_override = this VAP; the engine joins ssid_prof by name within the VAP's own
+    # scope (scoped_ssid_profiles). gateway_cluster_list is the resolved Central overlay
+    # objects the tunneled/hybrid/dual SSID binds to (built above).
     response = await call_tool(
-        "central_translation_preview",
-        {"translation_id": "central:wlan_ssid", "source_records": [v], "runtime_values": rt},
+        "translate_wlan_preview",
+        {
+            "source_platform": "aos8",
+            "target_platform": "central",
+            "ssid": v.get("profile-name") or sp_ref,
+            "target_mode": dec["target_mode"],            # bridged / tunneled / hybrid / bridged_and_tunneled
+            "gateway_clusters": [cref.split("/")[-1] for cref in dec.get("cluster_refs", [])],
+            "gateway_cluster_list": gw_cluster_list,      # Central overlay objects
+            "source_override": v,
+            "context_override": {"reader_ctx": {"ssid_profiles": scoped_ssid_profiles}},
+        },
     )
-    ssid_previews.append(response.get("data", response))
+    ssid_previews.append({"source": vap_key, "intended_scope": ssid_scope_id, **response.get("data", response)})
 ```
 
-Surface each VAP's emitted calls (the wlan-ssids profile(s) + any overlay-wlan binding) in the consolidated report; a `skip_reason` here is a Stage 6.5 input gap (e.g. dual mode missing a scope) — surface it verbatim.
+Surface each VAP's emitted calls (the wlan-ssids profile(s) + any overlay-wlan binding) in the consolidated report; a `skip_reason` here is a Stage 6.5 input gap (e.g. dual mode missing a scope) — surface it verbatim. `translate_wlan_preview` returns `{canonical, calls, unresolved, preview}` (same shape as `translate_config_preview`); `unresolved` flags a tunneled SSID whose gateway-cluster binding couldn't be built.
 
 ##### 2h — AAA chain (`central:auth_server` → `server_group` → `dot1x_auth` / `mac_auth` / `captive_portal` → `aaa_profile`)
 
-These six translations ship and preview via `central_translation_preview`. Unlike 2f/2g they are **driven directly** — per-record, `central_scope_id` only, **no Stage 6.5 decision** — so they need the AAA objects from Stage 1 but **not** the questionnaire. They model the **gateway-terminated (tunnel / hybrid) AAA**: the gateway `aaa-profile` a tunnel-mode `wlan-ssid` binds to. For a fully **bridged / controllerless** design the AAA folds inline into the `wlan-ssid` instead (deferred — see §2g notes / the bridge-mode AAA backlog item); if **every** surviving SSID is Bridged, run §2h for completeness but mark it **informational** in the report (the gateway aaa-profile won't be referenced).
+These six kinds preview via `translate_config_preview`. Unlike 2f/2g they are **driven directly** — per-record, `scope_id` only, **no Stage 6.5 decision** — so they need the AAA objects from Stage 1 but **not** the questionnaire. They model the **gateway-terminated (tunnel / hybrid) AAA**: the gateway `aaa-profile` a tunnel-mode `wlan-ssid` binds to. For a fully **bridged / controllerless** design the AAA folds inline into the `wlan-ssid` instead (deferred — see §2g notes / the bridge-mode AAA backlog item); if **every** surviving SSID is Bridged, run §2h for completeness but mark it **informational** in the report (the gateway aaa-profile won't be referenced).
 
 **Where "every surviving SSID is Bridged" comes from:** read it off the **Stage 6.5 Q1 decisions** that §2g consumes — the gateway AAA is referenced only when at least one VAP's `target_mode` is `tunneled` / `hybrid` / `bridged_and_tunneled`. **Distinguish three states** (do NOT collapse the last two — "all Bridged" and "Stage 6.5 never ran" are different operator situations):
 
@@ -1566,46 +1555,9 @@ Tag the §2h result with `aaa_status` so the report says *why* (live vs intentio
 
 **Dependency order is also the preview order** (so the operator reads prerequisites first): `auth_server` → `server_group` → {`dot1x_auth`, `mac_auth`, `captive_portal`} → `aaa_profile`. Server-groups reference auth-servers by name; the aaa-profile references server-groups + the dot1x/mac/captive profiles + roles by name — each prerequisite must exist in Central before the object that references it.
 
-> **PII — MANDATORY redaction:** `central:auth_server` preview bodies carry the shared-secret field (`rad_key` / `tacacs_key`). Read-only does **not** mean safe to display — a shared secret rendered into an operator-facing report is an exposure regardless of whether the preview wrote anything. **You MUST redact the secret before rendering anything operator-facing:**
-> - In any sample TargetCall body for `central:auth_server` (Step 3), replace the `rad_key` / `tacacs_key` value with the literal `"<redacted: present>"` (or `"<redacted: absent>"` when the source field was empty) — never the actual value.
-> - In summaries, show **presence only** (e.g. `shared_secret: present`), never the value.
-> - The **write path stays PII-gated** — do not enable auth-server writes until the secret-tokenization prerequisite ships (see the spec `draft_notes`).
-> Treat this as a hard rule: when in doubt, redact.
-
-Use this helper to redact before rendering any `central:auth_server` sample body. It walks the body recursively and masks the RADIUS and TACACS shared-secret fields, handling both the bare-string form and the one-level wrapper form (where the secret sits under a nested key):
-
-```python
-import copy
-
-# Redact ONLY the two RADIUS/TACACS shared-secret fields, not every field whose
-# name ends in "key" — an unrelated nested "key" must not be masked. The secret
-# arrives either as a bare string or as a one-level wrapper, so mask the whole value
-# in both cases. Field names are composed from prefix+suffix (-> the RADIUS and
-# TACACS *_key fields); the variable is named _REDACT_FIELDS (not *_SECRET_*) so a
-# secret-scanner doesn't treat the assignment as a credential and mask the line.
-_REDACT_FIELDS = {f"{prefix}_key" for prefix in ("rad", "tacacs")}
-
-def redact_secrets(body):
-    """Return a deep copy of an engine TargetCall body with shared secrets masked.
-    Apply to central:auth_server sample bodies BEFORE rendering them to the operator."""
-    def _present(value):
-        if isinstance(value, dict):
-            return bool(value.get("key"))          # nested-wrapper form
-        return value not in (None, "")             # bare scalar form
-    def _walk(node):
-        if isinstance(node, dict):
-            return {
-                k: (("<redacted: present>" if _present(v) else "<redacted: absent>")
-                    if k in _REDACT_FIELDS else _walk(v))
-                for k, v in node.items()
-            }
-        if isinstance(node, list):
-            return [_walk(x) for x in node]
-        return node
-    return _walk(copy.deepcopy(body))
-
-# Step 3: sample_body = redact_secrets(preview["results"][0]["target_calls"][0]["body"])  # for central:auth_server
-```
+> **PII — handled by the bridge, but stay alert:** the `auth_server` Central body carries the shared secret (`rad_key` / `tacacs_key` → `shared-secret-config.plaintext-value`). `translate_config_preview` already protects this two ways: it **omits call bodies** entirely and **redacts the secret in `canonical`** (you'll see `***REDACTED***`). So preview output is safe to render as-is. Two hard rules remain:
+> - In summaries, show **presence only** (e.g. `shared_secret: present`), never the value — and never reconstruct the secret from the source record into the report.
+> - The **write path is PII-gated at the tool layer**: `translate_config_apply` returns a 403 for `kind="auth_server"` until secret tokenization ships. Don't try to route around it — create auth-servers manually for now.
 
 ```python
 def _aaa_translatable(r: dict) -> bool:
@@ -1614,25 +1566,23 @@ def _aaa_translatable(r: dict) -> bool:
     flags = r.get("_flags") or {}
     return not (flags.get("inherited") or flags.get("system") or flags.get("default"))
 
-# (translation_id, source record list) in EXECUTION = PREVIEW order. auth_server
-# combines both REST source shapes (RADIUS + TACACS) — the engine tags _type per record.
+# (kind, source record list) in EXECUTION = PREVIEW order. auth_server combines both
+# REST source shapes (RADIUS + TACACS) — the reader tags the type per record.
 aaa_chain = [
-    ("central:auth_server",    stage1_rad_server_records + stage1_tacacs_server_records),
-    ("central:server_group",   stage1_server_group_prof_records),
-    ("central:dot1x_auth",     stage1_dot1x_auth_profile_records),
-    ("central:mac_auth",       stage1_mac_auth_profile_records),
-    ("central:captive_portal", stage1_cp_auth_profile_records),
-    ("central:aaa_profile",    stage1_aaa_prof_records),
+    ("auth_server",    stage1_rad_server_records + stage1_tacacs_server_records),
+    ("server_group",   stage1_server_group_prof_records),
+    ("dot1x_auth",     stage1_dot1x_auth_profile_records),
+    ("mac_auth",       stage1_mac_auth_profile_records),
+    ("captive_portal", stage1_cp_auth_profile_records),
+    ("aaa_profile",    stage1_aaa_prof_records),
 ]
 aaa_previews = []
-for tid, records in aaa_chain:
+for kind, records in aaa_chain:
     recs = [r for r in records if _aaa_translatable(r)]
     if not recs:
         # No user-defined records at this scope is normal (e.g. no TACACS, or AAA
         # lives at a parent scope). Record it so the report shows the family ran.
-        # Keep target_collisions in the shape so Step 3 can treat every entry uniformly.
-        aaa_previews.append({"kind": tid, "record_count": 0, "translatable": 0, "skipped": 0,
-                             "target_collisions": [],
+        aaa_previews.append({"kind": kind, "record_count": 0, "translatable": 0,
                              "note": "no user-defined records at this scope (all system/default/inherited, or none configured)"})
         continue
     # Resolve the binding scope the SAME way as every other object — the gateway-terminated
@@ -1640,29 +1590,20 @@ for tid, records in aaa_chain:
     # resolved scope / <TBD:...> from resolve_scope_id() (via the Stage-7 mapping), NEVER a
     # silent Global default. Substitute the real resolved id on your run.
     resolved_central_scope_id = resolve_scope_id(*aaa_landing_scope_identity)   # (name, type, path)
-    response = await call_tool(
-        "central_translation_preview",
-        {
-            "translation_id": tid,
-            "source_records": recs,
-            "runtime_values": {"central_scope_id": resolved_central_scope_id},
-        },
-    )
-    preview = response.get("data", response)
+    # auth_server: optionally correlate co-located CoA via the matching aaa_prof's
+    # rfc3576_client[] → extra_ctx={"coa_servers": [...]} (folds AUTH_AND_COA). Omitted
+    # here for brevity; pass it when you have the aaa_prof CoA list for these servers.
+    batch = await preview_kind(kind, recs, resolved_central_scope_id)
     aaa_previews.append({
-        "kind": tid,
-        "record_count": preview["record_count"],
-        "translatable": preview["translatable_count"],
-        "skipped": preview["skipped_count"],
-        # auth_server bodies include the shared secret — note its PRESENCE, not value (and
-        # redact rad_key/tacacs_key in any rendered sample body — see the MANDATORY note).
+        "kind": kind,
+        "record_count": batch["record_count"],
+        "translatable": batch["translatable"],
+        # auth_server secrets are redacted in `canonical` by the bridge and apply is
+        # PII-blocked — show presence only, never the value.
         "summary": [
-            {"id": r["record_id"], "calls": r["call_count"], "skip": r["skip_reason"]}
-            for r in preview["results"]
+            {"id": r["id"], "calls": r["call_count"], "unresolved": r["unresolved"]}
+            for r in batch["results"]
         ][:30],
-        # PRESERVE collisions for Step 3's Write-hazards section (e.g. two server-groups
-        # folding to one Central name) — dropping it here hides a write hazard (issue #439).
-        "target_collisions": preview.get("target_collisions", []),
     })
 aaa_previews
 ```
@@ -1673,7 +1614,7 @@ Surface each family's emitted calls in the consolidated report under an **AAA ch
 
 #### Step 3 — Render the consolidated preview report
 
-Combine all preview result dicts from Step 2 (VLANs / named-VLANs / roles / policies / net-groups, plus gateway-clusters and WLAN-SSIDs when the full Act I + Stage 6.5 flow ran, plus the §2h AAA chain when the AAA objects were collected) into a single operator-facing report. The report has THREE parts: (a) summary table, (b) per-record detail tables, (c) **sample TargetCall bodies** as JSON code blocks. Operators reviewing the migration need (c) — the actual JSON the migration will POST — not just counts.
+Combine all preview result dicts from Step 2 (VLANs / named-VLANs / roles / policies / net-groups, plus gateway-clusters and WLAN-SSIDs when the full Act I + Stage 6.5 flow ran, plus the §2h AAA chain when the AAA objects were collected) into a single operator-facing report. The report has THREE parts: (a) summary table, (b) per-record detail tables, (c) **sample call bodies** as JSON code blocks (each preview record's `calls[i]["body"]` — the actual Central POST payload, already PII-scrubbed by the bridge). Operators reviewing the migration need (c) — the JSON the migration will POST — not just counts.
 
 ```
 ## Engine-driven translation preview (read-only)
@@ -1681,17 +1622,17 @@ Combine all preview result dicts from Step 2 (VLANs / named-VLANs / roles / poli
 **Source scope:** /md/Campus/West (AOS 8)
 **Target scope_id:** `197674231` (Central Site `USW/West`, resolved from the Stage 7 mapping) — _resolved_
    ← OR: `<TBD:USW/West>` _placeholder; target scope not yet created in Central_ (the source scope resolves to its mapped Central scope, NOT a Global default)
-**Translations run:** central:vlan_id, central:named_vlan, central:role, central:policy
-**Tool:** central_translation_preview (read-only; no API writes)
+**Kinds run:** vlan_id, named_vlan, role, policy
+**Tool:** translate_config_preview (+ translate_wlan_preview for §2g) — read-only; no API writes
 
 ### Summary
 
-| Translation | Records | Translatable | Skipped per LLD | Calls (sum) |
+| Kind | Records | Translatable | Skipped per LLD | Calls (sum) |
 |---|---|---|---|---|
-| central:vlan_id | 8 | 8 | 0 | 16 |
-| central:named_vlan | 6 | 4 | 2 (unbound names: USER-VLAN, IOT-VLAN) | 24 |
-| central:role | 6 | 6 | 0 | 12 |
-| central:policy | 13 | 6 | 7 (empty rule lists: apprf-*, transition, blacklisted) | 12 |
+| vlan_id | 8 | 8 | 0 | 16 |
+| named_vlan | 6 | 4 | 2 (unbound names: USER-VLAN, IOT-VLAN) | 24 |
+| role | 6 | 6 | 0 | 12 |
+| policy | 13 | 6 | 7 (empty rule lists: apprf-*, transition, blacklisted) | 18 |
 
 ### Per-record detail
 
@@ -1714,7 +1655,7 @@ Combine all preview result dicts from Step 2 (VLANs / named-VLANs / roles / poli
 
 ### Sample TargetCall bodies
 
-For at least the FIRST record of each translation, emit the engine's `target_calls[0].body` as a JSON code block. This shows the operator the actual wire payload.
+For at least the FIRST record of each kind, emit that preview record's `calls[0]["body"]` as a JSON code block (the create call's payload — already PII-scrubbed by the bridge). This shows the operator the actual wire payload.
 
 #### Policy: `captiveportalbridge` (representative)
 
@@ -1748,30 +1689,42 @@ For at least the FIRST record of each translation, emit the engine's `target_cal
 
 ### Write hazards (target collisions)
 
-If any translation's preview returned a non-empty `target_collisions` (distinct source records that resolve to the **same** Central object — e.g. two named-VLANs whose names case-fold to one alias, or two server-groups folding to one name), list them here verbatim. These would overwrite/409 each other at execution time, so the operator must rename or merge the source records before cutover. Omit the section when every translation returned `target_collisions: []`.
+The per-record bridge doesn't cross-check records, so detect collisions client-side: scan every preview record's `calls` for **distinct source records that POST the same non-assignment path** (e.g. two named-VLANs whose names case-fold to one `/aliases/<name>`, or two server-groups folding to one name). The shared `/config-assignments` collection is NOT a collision (its object identity is in the body, not the path), so exclude it. Distinct records hitting one path overwrite/409 each other at execution — list them verbatim so the operator renames or merges before cutover. Omit the section when no path collides.
+
+```python
+from collections import defaultdict
+hits = defaultdict(list)
+for batch in all_preview_batches:                     # every preview_kind result you produced
+    for r in batch["results"]:
+        for c in r["calls"]:
+            if c["path"].endswith("/config-assignments"):
+                continue
+            hits[c["path"]].append((batch["kind"], r["id"]))
+collisions = {p: v for p, v in hits.items() if len({rid for _, rid in v}) > 1}
+```
 
 | Target object | Colliding source records | Hazard |
 |---|---|---|
-| `/aliases/user-vlan` (NAMED_VLAN alias) | `USER-VLAN`, `user-vlan` | both fold to alias `user-vlan` — second POST overwrites the first |
+| `/aliases/user-vlan` (named_vlan alias) | `USER-VLAN`, `user-vlan` | both fold to alias `user-vlan` — second POST overwrites the first |
 
 ### Drill-down available
 
-- *"Show me the body for ACL `<name>`"* — re-run with that single record; dump the full `target_calls[0].body` (and `target_calls[1].body` for the config-assignment if relevant).
-- *"Dump all bodies for `<translation_id>`"* — emit every record's body. May be large; warn the operator first if `record_count > 10`.
+- *"Show me the body for ACL `<name>`"* — re-run that single record; dump `calls[0]["body"]` (and `calls[i]["body"]` for the policy-group + config-assignment if relevant).
+- *"Dump all bodies for `<kind>`"* — emit every record's `calls` bodies. May be large; warn the operator first if `record_count > 10`.
 - *"Show me the diff between two records"* — run preview for both, dump body fields side-by-side.
 ```
 
 **Output rules:**
 
-- **Use the engine's deterministic counts** — never hand-fabricate. If the tool returns `translatable_count=8`, that's the number; do not narrate "approximately 8" or "8 or 9".
-- **Surface every skip_reason verbatim** — these are the operator's signals about what won't migrate (empty ACLs, missing role attribution, etc.). Surface `skipped_per_lld` lists separately (these are pre-engine filters; engine never saw them).
-- **Cap the per-record detail table at ~30 rows per translation.** Bodies appear in the "Sample TargetCall bodies" section, not in the table. The drill-down prompts let the operator request specific bodies.
-- **Always emit at least 1 sample body per translation** in Step 3 unless `translatable_count == 0`. Picking the FIRST translatable record is fine; the goal is to give the operator a concrete sense of what gets POSTed. **EXCEPTION — `central:auth_server`: redact secrets before rendering.** A sample `central:auth_server` body MUST replace the `rad_key` / `tacacs_key` value with `"<redacted: present>"` (or `"<redacted: absent>"` if the source field was empty) — never the actual shared secret (see §2h's MANDATORY-redaction note). This is the one place a sample body is edited before display; everywhere else it's verbatim engine output.
-- **For runs with `record_count == 0` for a given translation,** emit a one-line note (e.g. *"central:vlan_id: 0 records at this scope"*) instead of an empty section.
-- **Surface `target_collisions` as write hazards.** If any translation's preview returns a non-empty `target_collisions`, render the "Write hazards" section above — distinct source records colliding on one Central object overwrite/409 each other at execution and must be reconciled before cutover.
-- **Mark every placeholder scope_id loudly.** A body that contains `"scope-id": "<TBD:..."` is NOT executable — say so in the report header so the operator knows the migration plan needs the target hierarchy created first.
+- **Use the deterministic counts** — never hand-fabricate. `record_count` / `translatable` from `preview_kind` are exact; do not narrate "approximately 8".
+- **Surface every `unresolved` entry verbatim** — these are the engine's signals about what can't execute yet (unresolved scope, unbound gateway cluster, unmapped policy action). Surface `skipped_per_lld` lists separately (these are pre-engine consumer filters; the engine never saw them).
+- **Cap the per-record detail table at ~30 rows per kind.** Bodies appear in the "Sample call bodies" section, not in the table. The drill-down prompts let the operator request specific bodies.
+- **Always emit at least 1 sample body per kind** in Step 3 unless the kind had 0 records. Picking the FIRST record's `calls[0]["body"]` is fine; the goal is a concrete sense of what gets POSTed. `auth_server` bodies are already secret-redacted by the bridge (`***REDACTED***`) — render as-is; never reconstruct the secret from the source record.
+- **For runs with `record_count == 0` for a given kind,** emit a one-line note (e.g. *"vlan_id: 0 records at this scope"*) instead of an empty section.
+- **Surface path collisions as write hazards.** Run the collision scan above; if any non-assignment path is POSTed by distinct records, render the "Write hazards" section — they overwrite/409 each other at execution and must be reconciled before cutover.
+- **Mark every placeholder scope loudly.** A call whose `unresolved` flags a `<TBD:...>` / missing scope is NOT executable — say so in the report header so the operator knows the target hierarchy must be created first.
 
-**Findings produced:** if `skipped_count > 0` (engine-skipped) OR `skipped_per_lld` is non-empty (pre-filtered) for any translation, surface the skip reasons as a finding under Act II's "Translation gaps" subsection.
+**Findings produced:** if any kind has records with non-empty `unresolved` OR a non-empty `skipped_per_lld` (pre-filtered), surface those reasons as a finding under Act II's "Translation gaps" subsection.
 
 ---
 

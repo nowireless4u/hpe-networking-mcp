@@ -46,10 +46,11 @@ async def _preview(ctx, kind, record, *, scope_id="S1", extra_ctx=None):
 
 
 @pytest.mark.asyncio
-async def test_preview_shape_and_bodies_omitted() -> None:
+async def test_preview_shape_and_scrubbed_bodies_present() -> None:
     out = await _preview(_ctx(), "role", _ROLE)
     assert "aos8:role" in out["supported"]["readers"]
-    assert all("body" not in c for c in out["calls"])
+    # config bodies are kept (PII-scrubbed) so the operator sees the real POST payload
+    assert out["calls"][0]["body"]["name"] == "employee"
     assert out["calls"][0]["path"].endswith("/roles/employee")
     assert out["calls"][-1]["path"].endswith("/config-assignments")
 
@@ -58,8 +59,10 @@ async def test_preview_shape_and_bodies_omitted() -> None:
 async def test_preview_redacts_auth_server_secret() -> None:
     out = await _preview(_ctx(), "auth_server", _AUTH)
     assert "supersecret" not in str(out)
-    body = out["canonical"]["body"]
-    assert body["shared-secret-config"]["plaintext-value"] == tc._REDACT
+    # redacted in both the canonical AND the call body.
+    assert out["canonical"]["body"]["shared-secret-config"]["plaintext-value"] == tc._REDACT
+    create = out["calls"][0]
+    assert create["body"]["shared-secret-config"]["plaintext-value"] == tc._REDACT
 
 
 @pytest.mark.asyncio

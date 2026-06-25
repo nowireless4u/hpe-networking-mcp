@@ -59,12 +59,19 @@ def _scrub(value: Any) -> Any:
 
 
 def _preview_calls(calls: list[dict]) -> list[dict]:
-    """Call descriptors without bodies (bodies can carry plaintext secrets)."""
+    """Call descriptors with PII-scrubbed bodies.
+
+    Unlike ``translate_wlan`` (whose every body can carry a PSK, so it omits
+    bodies wholesale), config bodies are secret-free except ``auth_server`` — and
+    ``_scrub`` redacts that — so the migration preview keeps the actual Central
+    POST bodies (operators review the real wire payload), with secrets masked.
+    """
     return [
         {
             "method": c["method"],
             "path": c["path"],
             "query": c.get("query") or None,
+            "body": _scrub(c.get("body")),
             "purpose": c.get("purpose"),
             "depends_on": c.get("depends_on"),
             "unresolved": c.get("unresolved"),
