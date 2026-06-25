@@ -20,10 +20,33 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any
 
-from hpe_networking_mcp.translations.readers.aos8 import aos8_read_wlan
+from hpe_networking_mcp.translations.readers.aos8 import (
+    aos8_read_aaa_profile,
+    aos8_read_auth_server,
+    aos8_read_captive_portal,
+    aos8_read_dot1x_auth,
+    aos8_read_gateway_cluster,
+    aos8_read_mac_auth,
+    aos8_read_named_vlan,
+    aos8_read_net_group,
+    aos8_read_policy,
+    aos8_read_role,
+    aos8_read_server_group,
+    aos8_read_vlan_id,
+    aos8_read_wlan,
+)
 from hpe_networking_mcp.translations.readers.central import central_read_wlan
 from hpe_networking_mcp.translations.readers.mist import mist_read_wlan
 from hpe_networking_mcp.translations.writers.central import central_write_wlan
+from hpe_networking_mcp.translations.writers.central_auth import central_write_profile
+from hpe_networking_mcp.translations.writers.central_config import (
+    central_write_gateway_cluster,
+    central_write_named_vlan,
+    central_write_net_group,
+    central_write_role,
+    central_write_vlan_id,
+)
+from hpe_networking_mcp.translations.writers.central_policy import central_write_policy
 from hpe_networking_mcp.translations.writers.central_radius import central_write_server_group
 from hpe_networking_mcp.translations.writers.mist import mist_write_wlan
 
@@ -33,11 +56,37 @@ from hpe_networking_mcp.translations.writers.mist import mist_write_wlan
 
 WLAN = "wlan"
 
+# AOS 8 → Central config kinds (migrated from the legacy JSON engine).
+VLAN_ID = "vlan_id"
+NAMED_VLAN = "named_vlan"
+NET_GROUP = "net_group"
+ROLE = "role"
+AUTH_SERVER = "auth_server"
+SERVER_GROUP = "server_group"
+DOT1X_AUTH = "dot1x_auth"
+MAC_AUTH = "mac_auth"
+CAPTIVE_PORTAL = "captive_portal"
+AAA_PROFILE = "aaa_profile"
+GATEWAY_CLUSTER = "gateway_cluster"
+POLICY = "policy"
+
 # (source_platform, kind) -> reader(source_obj, **ctx) -> canonical
 _READERS: dict[tuple[str, str], Callable[..., Any]] = {
     ("mist", WLAN): mist_read_wlan,
     ("aos8", WLAN): aos8_read_wlan,
     ("central", WLAN): central_read_wlan,
+    ("aos8", VLAN_ID): aos8_read_vlan_id,
+    ("aos8", NAMED_VLAN): aos8_read_named_vlan,
+    ("aos8", NET_GROUP): aos8_read_net_group,
+    ("aos8", ROLE): aos8_read_role,
+    ("aos8", AUTH_SERVER): aos8_read_auth_server,
+    ("aos8", SERVER_GROUP): aos8_read_server_group,
+    ("aos8", DOT1X_AUTH): aos8_read_dot1x_auth,
+    ("aos8", MAC_AUTH): aos8_read_mac_auth,
+    ("aos8", CAPTIVE_PORTAL): aos8_read_captive_portal,
+    ("aos8", AAA_PROFILE): aos8_read_aaa_profile,
+    ("aos8", GATEWAY_CLUSTER): aos8_read_gateway_cluster,
+    ("aos8", POLICY): aos8_read_policy,
 }
 
 # (target_platform, kind) -> ordered list of writer(canon, **ctx) -> [call descriptors].
@@ -46,6 +95,18 @@ _READERS: dict[tuple[str, str], Callable[..., Any]] = {
 _WRITERS: dict[tuple[str, str], list[Callable[..., list[dict[str, Any]]]]] = {
     ("central", WLAN): [central_write_server_group, central_write_wlan],
     ("mist", WLAN): [mist_write_wlan],
+    ("central", VLAN_ID): [central_write_vlan_id],
+    ("central", NAMED_VLAN): [central_write_named_vlan],
+    ("central", NET_GROUP): [central_write_net_group],
+    ("central", ROLE): [central_write_role],
+    ("central", AUTH_SERVER): [central_write_profile],
+    ("central", SERVER_GROUP): [central_write_profile],
+    ("central", DOT1X_AUTH): [central_write_profile],
+    ("central", MAC_AUTH): [central_write_profile],
+    ("central", CAPTIVE_PORTAL): [central_write_profile],
+    ("central", AAA_PROFILE): [central_write_profile],
+    ("central", GATEWAY_CLUSTER): [central_write_gateway_cluster],
+    ("central", POLICY): [central_write_policy],
 }
 
 
