@@ -284,8 +284,8 @@ def register(mcp: FastMCP) -> None:
                 override the default lower-cased alias name).
 
         Returns:
-            {supported, canonical (secrets redacted), calls (bodies omitted),
-            unresolved, preview}.
+            {supported, canonical (secrets redacted), calls (with PII/secret-scrubbed
+            bodies — the real Central POST payloads), unresolved, preview}.
         """
         return await _preview_impl(
             ctx,
