@@ -8,7 +8,8 @@ chain (``auth_server`` / ``server_group`` / ``dot1x_auth`` / ``mac_auth`` /
 these tools bridge it.
 
 * ``translate_config_preview`` — read-only: run the planner over one AOS 8 source
-  record and return the ordered Central calls (secrets redacted, bodies omitted).
+  record and return the ordered Central calls (PII-scrubbed bodies kept, so the
+  operator reviews the real wire payload — only ``auth_server`` carries a secret).
 * ``translate_config_apply`` — execute the plan against Central. Gated on
   ``ENABLE_CENTRAL_WRITE_TOOLS`` + the universal elicitation confirmation. Secret-
   bearing kinds (``auth_server``) are blocked until AOS 8 secret tokenization
@@ -229,8 +230,7 @@ async def _apply_impl(
     )
     gate = await confirm_gated_invoke(
         ctx,
-        f"Apply {kind} '{obj_name}' translation {source_platform}→{target_platform} "
-        f"({len(plan.calls)} write call(s))",
+        f"Apply {kind} '{obj_name}' translation {source_platform}→{target_platform} ({len(plan.calls)} write call(s))",
         {"kind": kind, "source_platform": source_platform, "target_platform": target_platform, "confirmed": confirmed},
     )
     if gate is not None:

@@ -123,7 +123,6 @@ TOOLS = {
         "central_resync_device_config",
     ],
     "firmware": ["central_recommend_firmware"],
-    "translation_preview": ["central_translation_preview"],
     "wids": ["central_get_wids_monitored_aps"],
     "application_experience": [
         "central_get_app_bandwidth_contracts",

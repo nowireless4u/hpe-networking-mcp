@@ -55,7 +55,7 @@ def _has_provenance(text: str) -> bool:
 
 
 # AOS 8 session-ACL action keywords → value the engine's _build_action expects
-# (keys of translations.preprocessing.aos8_policy._AOS8_ACTION_TO_CENTRAL).
+# (keys of translations.readers.aos8.policy._AOS8_ACTION_TO_CENTRAL).
 _ACTIONS = {
     "permit": "permit",
     "deny": "deny",

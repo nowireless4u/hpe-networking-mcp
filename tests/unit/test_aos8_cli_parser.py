@@ -15,8 +15,7 @@ from __future__ import annotations
 import pytest
 
 from hpe_networking_mcp.platforms.aos8.cli_parser import parse_aos8_cli
-from hpe_networking_mcp.translations.engine import emit_calls
-from hpe_networking_mcp.translations.loader import load_translations
+from hpe_networking_mcp.translations import orchestrator
 
 pytestmark = pytest.mark.unit
 
@@ -267,16 +266,17 @@ def test_parsed_acl_feeds_central_policy_translation() -> None:
     acl_record = parsed["acl_sess"][0]
     role_records = parsed["role"]
 
-    translation = load_translations()["central:policy"]
-    calls = emit_calls(
-        translation,
-        acl_record,
+    plan = orchestrator.plan(
         "aos8",
-        runtime_values={"central_scope_id": "scope-abc", "role_records": role_records},
+        "central",
+        orchestrator.POLICY,
+        acl_record,
+        reader_ctx={"role_records": role_records},
+        writer_ctx={"scope_id": "scope-abc"},
     )
 
-    assert calls, "expected at least one target call from the policy translation"
-    body = calls[0].body
+    assert plan.calls, "expected at least one target call from the policy translation"
+    body = plan.calls[0]["body"]
     assert body is not None
     assert body["name"] == "corp-acl"
 
