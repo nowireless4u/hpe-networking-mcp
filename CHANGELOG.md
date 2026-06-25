@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.4.5.4] - 2026-06-25
 
-**Patch — fix(code-mode): self-correcting hints for the common small-model sandbox dead-ends + fix a #512 regression (#513, #514, #515, #516, #517, #518, #532).** `SandboxErrorCatchMiddleware`'s hint logic is now an ordered rule table; each common raw sandbox error is turned into an actionable, self-correcting message in the error result (the channel models reliably act on).
+**Patch — fix(code-mode): self-correcting hints for the common small-model sandbox dead-ends + fix the #513 regression (introduced in v3.4.5.1 / #512) (#513, #514, #515, #516, #517, #518, #532).** `SandboxErrorCatchMiddleware`'s hint logic is now an ordered rule table; each common raw sandbox error is turned into an actionable, self-correcting message in the error result (the channel models reliably act on).
 
 ### Fixed
 - **#513 (regression in v3.4.5.1)** — the `NameError` hint no longer misfires on unavailable builtins. `object` / `open` / `eval` / … now get an "unavailable builtin" message instead of the misleading "recompute from a previous block" advice; genuine cross-block variables still get the statelessness hint.
