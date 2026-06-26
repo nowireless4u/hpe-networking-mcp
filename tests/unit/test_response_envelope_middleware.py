@@ -74,6 +74,12 @@ class TestInferPlatform:
     def test_cross_platform_translate_wlan(self):
         assert _infer_platform("translate_wlan_apply") is None
 
+    def test_uxi_tool(self):
+        assert _infer_platform("uxi_list_sensors") == "uxi"
+
+    def test_edgeconnect_tool(self):
+        assert _infer_platform("edgeconnect_get_appliances") == "edgeconnect"
+
 
 # ---------------------------------------------------------------------------
 # _extract_status
@@ -90,6 +96,14 @@ class TestExtractStatus:
 
     def test_http_status_key(self):
         assert _extract_status({"http_status": 503}) == 503
+
+    def test_status_key_int_clearpass(self):
+        # #522 — ClearPass-style `{"status": 503}` is now picked up too.
+        assert _extract_status({"status": 503}) == 503
+
+    def test_status_key_string_ignored(self):
+        # A string `status` (control payload like "forbidden") is NOT a code.
+        assert _extract_status({"status": "forbidden"}) is None
 
     def test_priority_status_code_over_others(self):
         # Should pick status_code first (mirrors retry.py's _extract_status_code)
@@ -364,6 +378,76 @@ class TestBlockedStateEnvelope:
 
         env = (await middleware.on_call_tool(ctx, call_next)).structured_content
         assert env["ok"] is True
+
+
+@pytest.mark.unit
+class TestPartialEnvelopeNormalization:
+    """#533 — a partial envelope (only {ok, data, tool}) must be completed, not
+    passed through with status/message/platform missing."""
+
+    @pytest.mark.asyncio
+    async def test_partial_envelope_is_completed(self):
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context("central_get_sites")
+        partial = {"ok": True, "data": {"sites": []}, "tool": "central_get_sites"}
+        call_next = AsyncMock(return_value=_make_tool_result(structured=partial))
+
+        env = (await middleware.on_call_tool(ctx, call_next)).structured_content
+        assert set(env.keys()) == {"ok", "status", "data", "message", "tool", "platform"}
+        assert env["ok"] is True
+        assert env["data"] == {"sites": []}
+        assert env["status"] is None
+        assert env["message"] is None
+        assert env["platform"] == "central"  # inferred from tool name
+
+    @pytest.mark.asyncio
+    async def test_partial_envelope_preserves_provided_values(self):
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context("central_invoke_tool")
+        partial = {"ok": False, "data": None, "tool": "central_invoke_tool", "message": "boom"}
+        call_next = AsyncMock(return_value=_make_tool_result(structured=partial))
+
+        env = (await middleware.on_call_tool(ctx, call_next)).structured_content
+        assert env["ok"] is False
+        assert env["message"] == "boom"
+        assert env["status"] is None  # filled
+
+    @pytest.mark.asyncio
+    async def test_complete_envelope_passes_through_unchanged(self):
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context("health")
+        complete = {
+            "ok": True,
+            "data": {},
+            "status": None,
+            "message": None,
+            "tool": "health",
+            "platform": None,
+        }
+        original = _make_tool_result(structured=complete)
+        call_next = AsyncMock(return_value=original)
+
+        result = await middleware.on_call_tool(ctx, call_next)
+        assert result is original  # untouched
+
+
+@pytest.mark.unit
+class TestStatusExtractionAlignment:
+    """#522 — Retry and the envelope must read HTTP status identically."""
+
+    def test_retry_and_envelope_agree(self):
+        from hpe_networking_mcp.middleware.retry import _extract_status_code
+
+        for payload in (
+            {"status_code": 503},
+            {"code": 404},
+            {"status": 500},
+            {"http_status": 502},
+            {"status": "forbidden"},
+            {"no": "status"},
+            {"status_code": "200"},
+        ):
+            assert _extract_status(payload) == _extract_status_code(payload)
 
 
 def _text(payload: object) -> list[TextContent]:

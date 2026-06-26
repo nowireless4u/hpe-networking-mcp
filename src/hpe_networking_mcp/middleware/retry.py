@@ -38,6 +38,8 @@ from fastmcp.server.middleware import Middleware, MiddlewareContext
 from fastmcp.tools.tool import ToolResult
 from loguru import logger
 
+from hpe_networking_mcp.middleware.status_extraction import extract_http_status
+
 # Status codes we treat as transient. 5xx = server failure; 429 = rate limit.
 _TRANSIENT_STATUS_CODES = frozenset({500, 502, 503, 504})
 _RATE_LIMIT_STATUS_CODE = 429
@@ -68,16 +70,12 @@ def _get_float_env(name: str, default: float) -> float:
 def _extract_status_code(value: Any) -> int | None:
     """Return the HTTP status code from a tool-result dict, or None if absent.
 
-    Looks for the three response-dict shapes our platforms use:
-    Mist/GreenLake (``status_code``), Central (``code``), ClearPass (``status``).
+    Delegates to the shared :func:`extract_http_status` so Retry and the
+    response envelope read status identically (#522): Mist/GreenLake
+    (``status_code``), Central (``code``), ClearPass (``status``),
+    ``http_status``.
     """
-    if not isinstance(value, dict):
-        return None
-    for key in ("status_code", "code", "status"):
-        candidate = value.get(key)
-        if isinstance(candidate, int) and 100 <= candidate < 600:
-            return candidate
-    return None
+    return extract_http_status(value)
 
 
 def _extract_retry_after_seconds(value: Any, max_delay: float) -> float | None:

@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.5.5] - 2026-06-25
+
+**Patch — fix(envelope): consistent status extraction + partial-envelope normalization (#522, #533).** Group E of the small-model robustness backlog — keeps the response-envelope contract uniform so small/local models can branch on it reliably.
+
+### Fixed
+- **#522** — `ResponseEnvelopeMiddleware` and `RetryMiddleware` now share one HTTP-status extractor (`middleware/status_extraction.py`), so the envelope's `status` matches what Retry sees — including ClearPass-style `{"status": 503}` payloads (the envelope previously missed the `status` key). `_PLATFORM_PREFIXES` now includes `uxi_` and `edgeconnect_`, so wrapped UXI/EdgeConnect responses carry the correct `platform`.
+- **#533** — a partial envelope-shaped payload (only `{ok, data, tool}`) is now **normalized** to the full `{ok, status, data, message, tool, platform}` shape (preserving provided values, inferring `tool`/`platform`) instead of bypassing the middleware and shipping a contract-incomplete shape. Complete envelopes still pass through untouched.
+
 ## [3.4.5.4] - 2026-06-25
 
 **Patch — fix(code-mode): self-correcting hints for the common small-model sandbox dead-ends + fix the #513 regression (introduced in v3.4.5.1 / #512) (#513, #514, #515, #516, #517, #518, #532).** `SandboxErrorCatchMiddleware`'s hint logic is now an ordered rule table; each common raw sandbox error is turned into an actionable, self-correcting message in the error result (the channel models reliably act on).
