@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.5.6] - 2026-06-26
+
+**Patch — fix(mist): register generated tools with FastMCP so they're discoverable (#524, #525).** Group F of the small-model robustness backlog. The ~1037 spec-driven Mist tools were never registered with FastMCP — `search` / `tags` / `get_tool_schema` couldn't see them, `get_tool_schema` returned `input_schema: null`, and a direct `call_tool("mist_...")` raised `Unknown tool`. Root cause: a one-line import-order bug.
+
+### Fixed
+- **#524 / #525 — Mist tool registration.** `mist/tools/__init__` eager-imports every submodule, but Mist's `register_tools` imported that package **before** wiring `_registry.mcp = mcp`, so every `@tool` decorator recorded its `ToolSpec` but skipped `mcp.tool()` — leaving all Mist tools registry-only (Central wires `mcp` first, which is why only Mist was affected). Moving `_registry.mcp = mcp` ahead of the tools import registers all ~1037 Mist tools with FastMCP, exactly like every other platform: `search`/`tags`/`get_tool_schema` now find them, schemas resolve, and they're callable both directly by name and via `mist_invoke_tool`.
+
+### Changed
+- `execute` tool description + INSTRUCTIONS.md: removed the now-obsolete #328 carve-out ("Mist reachable ONLY via `mist_invoke_tool`; a direct call raises `Unknown tool`") — that described the bug. Per-platform tools (Mist included) are callable both ways.
+- Added a source-order regression guard (`test_mist_register_wires_mcp_before_importing_tools`) so the ordering can't silently regress.
+
+### Note
+- #526 (tags description / tags-only search) and #527 (safety metadata in search rows) are CodeMode-discovery-behavior items tracked for a separate follow-up; this PR resolves the Mist-visibility root cause they partly depend on.
+
 ## [3.4.5.5] - 2026-06-25
 
 **Patch — fix(envelope): consistent status extraction + partial-envelope normalization (#522, #533).** Group E of the small-model robustness backlog — keeps the response-envelope contract uniform so small/local models can branch on it reliably.

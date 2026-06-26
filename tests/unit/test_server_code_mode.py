@@ -1,14 +1,14 @@
 """Regression tests for the code-mode `execute_description` literal.
 
 The string is hand-coded in `server.py` and tells the sandboxed `execute()`
-LLM how to reach platform tools via `call_tool`. The contract (corrected
-in #328): every per-platform tool is dispatched via
-`<platform>_invoke_tool` — NOT by bare tool name. The ~1000 spec-driven
-Mist tools are registered but not listed in the sandbox's resolvable
-catalog, so `call_tool("mist_get_self", ...)` raises `Unknown tool`; only
-`mist_invoke_tool` reaches them. The description must steer the LLM to the
-`<platform>_invoke_tool` pattern and must name every platform so the LLM
-knows the full set.
+LLM how to reach platform tools via `call_tool`. The contract (current, as of
+#524): every per-platform tool is callable BOTH directly by bare name AND via
+`<platform>_invoke_tool` — both resolve for every platform, Mist included. The
+old #328 carve-out ("Mist reachable ONLY via invoke_tool; a direct call raises
+`Unknown tool`") was a symptom of an import-order bug that left the ~1000 Mist
+tools registry-only; with that fixed (#524) Mist registers with FastMCP exactly
+like Central, so direct calls resolve. The description must name every platform
+and present `<platform>_invoke_tool` as a valid dispatch path.
 
 These tests guard that contract so the drift cannot recur silently.
 """
@@ -73,19 +73,36 @@ def test_execute_description_warns_unavailable_stdlib_modules() -> None:
 
 
 @pytest.mark.unit
-def test_execute_description_steers_to_invoke_tool() -> None:
-    """#328: the description must steer the LLM to `<platform>_invoke_tool`
-    as the dispatch path — NOT bare-name `call_tool("mist_get_self", ...)`,
-    which raises `Unknown tool` for the unlisted spec-driven Mist tools."""
+def test_execute_description_presents_invoke_tool_path() -> None:
+    """#524: the description must present `<platform>_invoke_tool` as a valid
+    dispatch path. It must NOT claim a direct Mist call raises `Unknown tool` —
+    that was the pre-#524 import-order bug, now fixed (Mist registers like
+    Central, so direct calls resolve)."""
     body = _read_execute_description_block()
-    assert "_invoke_tool" in body, (
-        "execute_description must direct the LLM to `<platform>_invoke_tool` "
-        "as the universal per-platform dispatch path (issue #328)."
+    assert "_invoke_tool" in body, "execute_description must present `<platform>_invoke_tool` as a dispatch path."
+    # The stale #328 footgun warning must be gone — Mist direct calls work now.
+    assert "Unknown tool" not in body, (
+        "execute_description must NOT warn that a direct Mist call raises `Unknown tool` — "
+        "fixed in #524; Mist tools register with FastMCP like every other platform."
     )
-    # And it must explicitly warn that direct Mist dispatch fails — that is
-    # the concrete footgun the operator transcript hit.
-    assert "Unknown tool" in body and "mist" in body.lower(), (
-        "execute_description must warn that a direct call_tool('mist_...') raises `Unknown tool` (issue #328)."
+
+
+def test_mist_register_wires_mcp_before_importing_tools() -> None:
+    """#524 regression guard: ``mist/__init__.register_tools`` MUST set
+    ``_registry.mcp = mcp`` BEFORE importing the ``tools`` package.
+
+    ``mist/tools/__init__`` eager-imports every submodule, so the ``@tool``
+    decorators fire at import time. If ``_registry.mcp`` isn't wired first they
+    record the ToolSpec but skip ``mcp.tool()``, leaving all ~1037 Mist tools
+    registry-only and invisible to FastMCP discovery (search / tags /
+    get_tool_schema). This is a source-order check because the failure mode is
+    an import-time ordering accident that unit-level import caching would mask.
+    """
+    src = Path("src/hpe_networking_mcp/platforms/mist/__init__.py").read_text(encoding="utf-8")
+    assert "_registry.mcp = mcp" in src and "import tools as tools_pkg" in src
+    assert src.index("_registry.mcp = mcp") < src.index("import tools as tools_pkg"), (
+        "mist register_tools must wire _registry.mcp BEFORE importing the "
+        "eager-importing tools package (#524), else Mist tools never register with FastMCP."
     )
 
 

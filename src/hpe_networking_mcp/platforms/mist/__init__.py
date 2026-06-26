@@ -39,9 +39,18 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
     """
     from hpe_networking_mcp.platforms._common.meta_tools import build_meta_tools
     from hpe_networking_mcp.platforms.mist import _registry
-    from hpe_networking_mcp.platforms.mist import tools as tools_pkg
 
+    # Wire the FastMCP holder BEFORE importing the tool package. mist/tools
+    # eager-imports every submodule (``from . import (...)``), so the ``@tool``
+    # decorators fire at import time — if ``_registry.mcp`` isn't set yet they
+    # record the ToolSpec but SKIP ``mcp.tool()``, leaving all ~1037 generated
+    # tools registry-only and invisible to FastMCP discovery (search / tags /
+    # get_tool_schema return nothing / null schemas). Central wires mcp before
+    # importing its tool modules; this ordering makes Mist consistent with every
+    # other platform. Fixes #524 (discovery) and #525 (schemas).
     _registry.mcp = mcp
+
+    from hpe_networking_mcp.platforms.mist import tools as tools_pkg
 
     loaded: list[str] = []
     for _finder, modname, _ispkg in pkgutil.iter_modules(tools_pkg.__path__):
