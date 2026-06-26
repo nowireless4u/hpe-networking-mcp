@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.5.8] - 2026-06-26
+
+**Patch — feat(discovery): safety metadata in discovery output + accurate `tags` behavior (#526, #527).** Final group of the small-model robustness backlog — completes the code-mode discovery story now that Mist is visible (#524).
+
+### Added
+- **#527 — safety facets in discovery output.** New `tool_safety(spec)` (registry) exposes `capability` (read/diagnostic/write/write_delete/operational), `requires_confirmation`, and `write_gate` (`ENABLE_<PLATFORM>_WRITE_TOOLS`). `<platform>_list_tools` rows now carry a `safety` dict, and top-level `search` brief rows get a compact `[write_delete, confirm]` marker (reads stay unmarked) — so a model sees write/delete/confirmation before selecting a tool.
+
+### Changed
+- **#526 — `tags` description accuracy.** `tags` returns each tag with a tool COUNT by default; the description now says so and points at `detail="full"` to list the tools under each tag (the behavior already existed).
+- **#526 — tags-only search guidance.** `search(tags=[...], query="")` previously returned "No tools matched" (ranking needs query terms). It now returns a clear note: pass a non-empty `query` (tags then narrow it) or use `tags(detail="full")`.
+
 ## [3.4.5.7] - 2026-06-26
 
 **Patch — chore(platforms): future-proof tool registration against the #524 ordering trap.** Follow-up to the Mist registration fix (#524): make sure no future platform can reintroduce the "tools recorded in the registry but never registered with FastMCP" bug.

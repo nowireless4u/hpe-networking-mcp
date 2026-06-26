@@ -572,7 +572,8 @@ _TAGS_DESCRIPTION = _SKILLS_FIRST_GATE + (
     "platform name (mist / central / aos8 / clearpass / apstra / axis / "
     "greenlake / uxi / edgeconnect), read/write classification, or feature area. Use to scope "
     "the tool catalog by category before drilling in with `search` or "
-    "`get_schema`. Returns tag names and the tools registered under each."
+    "`get_schema`. By default returns each tag name with a tool COUNT; pass "
+    '`detail="full"` to list the actual tools under each tag.'
 )
 
 _GET_SCHEMA_DESCRIPTION = _SKILLS_FIRST_GATE + (
@@ -693,18 +694,83 @@ class _SkillAwareSearchTool(_ArgTolerantFunctionTool):
     """
 
     async def run(self, arguments: dict[str, Any]) -> ToolResult:
+        from mcp.types import TextContent
+
         result = await super().run(arguments)
+        args = arguments or {}
+        query = args.get("query", "")
+        tags = args.get("tags")
+        detail = args.get("detail", "brief")
+
+        # #527: annotate brief result rows with compact safety markers so a
+        # model sees write/delete/confirmation BEFORE selecting a tool. Only
+        # the brief format is line-oriented (`- name: desc`); detailed/full are
+        # left as-is.
+        if detail == "brief":
+            result.content = [
+                TextContent(type="text", text=_annotate_search_safety(b.text))
+                if isinstance(b, TextContent) and b.text
+                else b
+                for b in result.content
+            ]
+
+        # #526: a tags-only call (tags set, query blank) returns "No tools
+        # matched" because ranking needs query terms. Guide the model to a
+        # usable path instead of a dead end.
+        if tags and isinstance(query, str) and not query.strip():
+            note = (
+                "Tags-only search isn't supported — relevance ranking needs query terms. "
+                "Either pass a non-empty `query` (the `tags` filter then narrows it, e.g. "
+                'search(query="site", tags=["central"])), or call `tags(detail="full")` to '
+                "list every tool under a tag."
+            )
+            result.content = [TextContent(type="text", text=note), *result.content]
+            return result
+
         registry = _SEARCH_SKILL_REGISTRY
-        query = (arguments or {}).get("query", "")
         if registry is None or not isinstance(query, str):
             return result
         matches = registry.match(query)
         if not matches:
             return result
-        from mcp.types import TextContent
-
         result.content = [TextContent(type="text", text=_render_skill_matches(matches)), *result.content]
         return result
+
+
+def _safety_marker(tool_name: str) -> str:
+    """Compact safety marker for a tool name, or '' for a safe read / unknown (#527)."""
+    from hpe_networking_mcp.platforms._common.tool_registry import REGISTRIES, tool_safety
+
+    for registry in REGISTRIES.values():
+        spec = registry.get(tool_name)
+        if spec is None:
+            continue
+        safety = tool_safety(spec)
+        if safety["capability"] == "read" and not safety["requires_confirmation"]:
+            return ""  # safe read — keep the row clean (absence == safe)
+        bits = [safety["capability"]]
+        if safety["requires_confirmation"]:
+            bits.append("confirm")
+        return f"  [{', '.join(bits)}]"
+    return ""  # cross-platform tool / not in any registry — leave untouched
+
+
+def _annotate_search_safety(text: str) -> str:
+    """Append safety markers to brief search rows (#527).
+
+    Brief rows are ``- <name>: <desc>`` or ``- <name>``. Resolve each name in
+    the registries and append a marker for write/delete/operational or
+    confirmation-gated tools. Rows that don't resolve (headers, cross-platform
+    tools) are left untouched; already-marked rows are skipped (idempotent).
+    """
+    out: list[str] = []
+    for line in text.split("\n"):
+        if line.startswith("- ") and not line.rstrip().endswith("]"):
+            name = line[2:].split(":", 1)[0].strip()
+            if name and " " not in name:
+                line += _safety_marker(name)
+        out.append(line)
+    return "\n".join(out)
 
 
 def _make_skill_aware_search(tool: FunctionTool) -> _SkillAwareSearchTool:

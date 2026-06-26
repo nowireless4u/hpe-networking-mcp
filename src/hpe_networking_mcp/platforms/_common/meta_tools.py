@@ -30,6 +30,7 @@ from hpe_networking_mcp.platforms._common.tool_registry import (
     REGISTRIES,
     ToolSpec,
     is_tool_enabled,
+    tool_safety,
 )
 from hpe_networking_mcp.platforms._common.tool_suggest import suggest_tools
 
@@ -321,6 +322,9 @@ def build_meta_tools(
                     "category": spec.category,
                     "summary": _tool_summary(spec),
                     "params": _param_summary(fm_tool),
+                    # Safety facets so the model can see write/delete/confirmation
+                    # before selecting a tool (#527).
+                    "safety": tool_safety(spec),
                 }
             )
 

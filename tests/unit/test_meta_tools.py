@@ -175,6 +175,25 @@ class TestListTools:
         required_entry = by_name["apstra_fake_required_tool"]
         assert required_entry["params"] == {"required_field": "string"}
 
+    async def test_entries_include_safety_metadata(self, mcp_with_meta_tools):
+        """#527: every list_tools entry carries compact safety facets so a model
+        sees write/delete/confirmation before selecting a tool."""
+        tool = await mcp_with_meta_tools.get_tool("apstra_list_tools")
+        result = await tool.fn(_fake_ctx(ServerConfig(enable_apstra_write_tools=True)))
+        by_name = {e["name"]: e for e in result["tools"]}
+
+        read = by_name["apstra_get_blueprints"]["safety"]
+        assert read["capability"] == "read"
+        assert read["requires_confirmation"] is False
+        assert read["write_gate"] is None
+
+        # The stub sets capability=READ on a write-tagged tool (artificial; in
+        # production classify() keeps them consistent), so assert the meaningful
+        # signal — the write gate is derived from the platform write tag.
+        write = by_name["apstra_create_virtual_network"]["safety"]
+        assert write["write_gate"] == "ENABLE_APSTRA_WRITE_TOOLS"
+        assert set(write) == {"capability", "requires_confirmation", "write_gate"}
+
 
 @pytest.mark.unit
 class TestGetToolSchema:

@@ -141,6 +141,37 @@ def is_tool_enabled(spec: ToolSpec, config: Any) -> bool:
     return bool(getattr(config, gate_attr, False))
 
 
+def tool_safety(spec: ToolSpec) -> dict[str, Any]:
+    """Compact safety facets for a tool, for discovery output (#527).
+
+    Lets a model see — before selecting a tool — whether it writes/deletes,
+    needs confirmation, and which env flag gates it. Keys:
+
+    * ``capability`` — ``read`` / ``diagnostic`` / ``write`` / ``write_delete``
+      / ``operational``. From ``spec.capability`` when set, else inferred from
+      governance tags (so even not-yet-classified tools report something).
+    * ``requires_confirmation`` — the universal gate fires before dispatch.
+    * ``write_gate`` — ``ENABLE_<PLATFORM>_WRITE_TOOLS`` when the tool is
+      write-gated, else ``None``.
+    """
+    tags = spec.tags or set()
+    capability = spec.capability.value if spec.capability is not None else None
+    if capability is None:
+        if any(t.endswith("_write_delete") for t in tags):
+            capability = "write_delete"
+        elif any(t.endswith("_write") for t in tags):
+            capability = "write"
+        else:
+            capability = "read"
+    write_gated = bool(tags & _WRITE_TAG_BY_PLATFORM.get(spec.platform, set()))
+    gate_attr = _GATE_CONFIG_ATTR.get(spec.platform)
+    return {
+        "capability": capability,
+        "requires_confirmation": "requires_confirmation" in tags,
+        "write_gate": f"ENABLE_{spec.platform.upper()}_WRITE_TOOLS" if (write_gated and gate_attr) else None,
+    }
+
+
 def _derive_category(func: Callable[..., Any]) -> str:
     """Short module name as the registry category (e.g. ``connectors``)."""
     module = getattr(func, "__module__", "")
