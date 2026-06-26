@@ -39,8 +39,11 @@ from fastmcp.tools.tool import ToolResult
 from loguru import logger
 from mcp.types import TextContent
 
+from hpe_networking_mcp.middleware.status_extraction import extract_http_status
+
 # Platform prefixes used to derive the ``platform`` envelope field. Cross-platform
 # tools (those without one of these prefixes) end up with ``platform: null``.
+# Must cover every registered platform — UXI and EdgeConnect were missing (#522).
 _PLATFORM_PREFIXES: tuple[str, ...] = (
     "mist_",
     "central_",
@@ -49,6 +52,8 @@ _PLATFORM_PREFIXES: tuple[str, ...] = (
     "apstra_",
     "axis_",
     "aos8_",
+    "uxi_",
+    "edgeconnect_",
 )
 
 # Discovery tools that ship with their own ``x-fastmcp-wrap-result`` output
@@ -82,10 +87,8 @@ _NO_ENVELOPE_TOOLS: frozenset[str] = frozenset(
 # Keys an existing envelope-shaped dict must contain (idempotency check).
 _ENVELOPE_REQUIRED_KEYS: frozenset[str] = frozenset({"ok", "data", "tool"})
 
-# Keys to inspect when extracting an HTTP status code from a raw tool result.
-# Mirrors ``retry.py:_extract_status_code`` so the envelope's ``status`` field
-# is populated consistently with what RetryMiddleware would see.
-_STATUS_CODE_KEYS: tuple[str, ...] = ("status_code", "code", "http_status")
+# Canonical envelope keys, in order, used to normalize partial envelopes (#533).
+_ENVELOPE_KEYS: tuple[str, ...] = ("ok", "status", "data", "message", "tool", "platform")
 
 # Known blocked/error string-statuses our own layers return as plain dicts
 # (``<platform>_invoke_tool`` and the ``confirm_gated_invoke`` gate), mapped to
@@ -141,17 +144,11 @@ def _infer_platform(tool_name: str) -> str | None:
 def _extract_status(raw: Any) -> int | None:
     """Best-effort HTTP-status extraction from a raw tool result.
 
-    Looks for ``status_code`` / ``code`` / ``http_status`` at the top level.
-    Returns ``None`` when the tool's response doesn't carry an HTTP status
-    (most non-HTTP-bound tools).
+    Delegates to the shared :func:`extract_http_status` so the envelope's
+    ``status`` field stays aligned with what RetryMiddleware sees (#522) —
+    including ClearPass-style ``{"status": 503}`` payloads.
     """
-    if not isinstance(raw, dict):
-        return None
-    for key in _STATUS_CODE_KEYS:
-        value = raw.get(key)
-        if isinstance(value, int):
-            return value
-    return None
+    return extract_http_status(raw)
 
 
 def _is_envelope_shape(value: Any) -> bool:
@@ -275,9 +272,25 @@ class ResponseEnvelopeMiddleware(Middleware):
             raw = _payload_from_content(result.content)
 
         if raw is not None and _is_envelope_shape(raw):
-            # Tool already returned an envelope — respect it.
-            logger.debug("response_envelope: {} already enveloped, pass-through", tool_name)
-            return result  # type: ignore[return-value]
+            if set(_ENVELOPE_KEYS).issubset(raw.keys()):
+                # Complete envelope already — respect it untouched.
+                logger.debug("response_envelope: {} already enveloped, pass-through", tool_name)
+                return result  # type: ignore[return-value]
+            # PARTIAL envelope (only {ok, data, tool}) would otherwise skip
+            # normalization and ship a shape missing status/message/platform,
+            # which the small-model contract relies on (#533). Complete it:
+            # preserve provided values, fill the missing canonical keys
+            # (tool/platform inferred).
+            normalized = {
+                "ok": raw.get("ok"),
+                "status": raw.get("status"),
+                "data": raw.get("data"),
+                "message": raw.get("message"),
+                "tool": raw.get("tool", tool_name),
+                "platform": raw.get("platform", platform),
+            }
+            logger.debug("response_envelope: {} partial envelope, normalized", tool_name)
+            return ToolResult(content=result.content, structured_content=normalized)
 
         # Known blocked/error control payloads (forbidden / not_found /
         # confirmation_required / declined / ...) must surface as a FAILED
