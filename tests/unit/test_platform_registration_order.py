@@ -22,20 +22,37 @@ from pathlib import Path
 import pytest
 
 _PLATFORMS_DIR = Path("src/hpe_networking_mcp/platforms")
-_PLATFORMS = (
-    "mist",
-    "central",
-    "greenlake",
-    "clearpass",
-    "apstra",
-    "axis",
-    "aos8",
-    "uxi",
-    "edgeconnect",
-    "_template",
-)
+
+
+def _discover_platforms() -> list[str]:
+    """Every platform package, discovered from the filesystem.
+
+    A new platform must be guarded automatically — hard-coding the list would
+    re-open the exact "future platform forgets the rule" gap this test closes
+    (Casey's review on #540). A platform package is any subdirectory whose
+    ``__init__.py`` defines ``register_tools`` (the wiring point); that excludes
+    shared infra like ``_common`` and includes ``_template``.
+    """
+    found: list[str] = []
+    for child in sorted(_PLATFORMS_DIR.iterdir()):
+        if not child.is_dir() or child.name == "__pycache__":
+            continue
+        init = child / "__init__.py"
+        if init.exists() and "def register_tools" in init.read_text(encoding="utf-8"):
+            found.append(child.name)
+    return found
+
+
+_PLATFORMS = _discover_platforms()
 
 pytestmark = pytest.mark.unit
+
+
+def test_platform_discovery_is_sane() -> None:
+    """Guard the guard: discovery must find the known platforms, so the
+    parametrized checks below can't silently degrade to a vacuous pass."""
+    assert {"mist", "central", "edgeconnect", "_template"}.issubset(_PLATFORMS), _PLATFORMS
+    assert len(_PLATFORMS) >= 9, f"expected all platforms to be discovered, got {_PLATFORMS}"
 
 
 @pytest.mark.parametrize("platform", _PLATFORMS)
