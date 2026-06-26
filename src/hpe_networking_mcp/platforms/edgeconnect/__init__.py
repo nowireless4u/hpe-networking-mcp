@@ -35,9 +35,14 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
     """
     from hpe_networking_mcp.platforms._common.meta_tools import build_meta_tools
     from hpe_networking_mcp.platforms.edgeconnect import _registry
-    from hpe_networking_mcp.platforms.edgeconnect import tools as tools_pkg
 
+    # Wire the FastMCP holder BEFORE importing the tools package, so the
+    # ``@tool`` decorators always register with FastMCP (not just record specs).
+    # Safe today because ``tools/__init__`` is lazy, but ordering it correctly
+    # removes the latent Mist-class trap if it ever eager-imports (#524).
     _registry.mcp = mcp
+
+    from hpe_networking_mcp.platforms.edgeconnect import tools as tools_pkg
 
     loaded: list[str] = []
     for _finder, modname, _ispkg in pkgutil.iter_modules(tools_pkg.__path__):

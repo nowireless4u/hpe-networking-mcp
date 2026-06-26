@@ -42,6 +42,14 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
     from hpe_networking_mcp.platforms._common.meta_tools import build_meta_tools
     from hpe_networking_mcp.platforms._template import _registry
 
+    # ORDER MATTERS: wire the FastMCP holder BEFORE importing ANY tool module.
+    # The ``@tool`` decorator records a ToolSpec AND (only if ``_registry.mcp``
+    # is set) calls ``mcp.tool()`` to register with FastMCP. If a tool module is
+    # imported while ``_registry.mcp`` is still None, its tools land in the
+    # platform registry but NEVER register with FastMCP — invisible to
+    # search / tags / get_tool_schema and uncallable by name. This bit Mist
+    # (#524): it imported an eager-loading ``tools`` package before this line.
+    # Always set ``_registry.mcp = mcp`` first; only then import tool modules.
     _registry.mcp = mcp
 
     loaded: list[str] = []

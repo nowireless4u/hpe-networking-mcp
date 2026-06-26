@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.5.7] - 2026-06-26
+
+**Patch — chore(platforms): future-proof tool registration against the #524 ordering trap.** Follow-up to the Mist registration fix (#524): make sure no future platform can reintroduce the "tools recorded in the registry but never registered with FastMCP" bug.
+
+### Changed
+- **Template hardened** — `platforms/_template/__init__.py` now carries an explicit ORDER-MATTERS comment: `_registry.mcp = mcp` must be set before importing any tool module (or `@tool` records the spec but skips `mcp.tool()`). The template was already correct; this makes the contract impossible to miss when copying it.
+- **EdgeConnect defensive reorder** — it statically imported its `tools` package before wiring `_registry.mcp` (safe only because its `tools/__init__` is lazy). Wired `mcp` first to remove the latent Mist-class trap if that `__init__` ever eager-imports.
+
+### Added
+- **`tests/unit/test_platform_registration_order.py`** — parametrized over every platform: a static `tools`-package import must come after `_registry.mcp = mcp`, and any eager `tools/__init__` requires mcp to be wired first. Source-level (caching-safe) so a future platform can't silently reintroduce #524.
+
 ## [3.4.5.6] - 2026-06-26
 
 **Patch — fix(mist): register generated tools with FastMCP so they're discoverable (#524, #525).** Group F of the small-model robustness backlog. The ~1037 spec-driven Mist tools were never registered with FastMCP — `search` / `tags` / `get_tool_schema` couldn't see them, `get_tool_schema` returned `input_schema: null`, and a direct `call_tool("mist_...")` raised `Unknown tool`. Root cause: a one-line import-order bug.
