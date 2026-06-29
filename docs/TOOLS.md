@@ -47,7 +47,7 @@ The 3177 per-platform tools are reachable via `<platform>_invoke_tool(name=..., 
 
 ## Code mode details (the default — see above for surface summary)
 
-With `MCP_TOOL_MODE=code` the server replaces the exposed catalog with a 4-tool surface: `tags`, `search`, `get_schema`, and `execute`. The LLM writes async Python inside `execute`; `call_tool(tool_name, params)` dispatches through the real FastMCP call_tool so every middleware (NullStrip, Elicitation, Pydantic coercion) keeps working. Multi-step workflows collapse from N MCP round-trips to one.
+With `MCP_TOOL_MODE=code` the server replaces the exposed catalog with a 6-tool surface: `tags`, `search`, `get_schema`, `skills_list`, `skills_load`, and `execute`. The LLM writes async Python inside `execute`; `call_tool(tool_name, params)` dispatches through the real FastMCP call_tool so every middleware (NullStrip, Elicitation, Pydantic coercion) keeps working. Multi-step workflows collapse from N MCP round-trips to one.
 
 ### Four-tier progressive disclosure
 
@@ -61,15 +61,16 @@ With `MCP_TOOL_MODE=code` the server replaces the exposed catalog with a 4-tool 
 ### Example — cross-platform join in one call
 
 ```python
-me = await call_tool("mist_get_self", {"action_type": "account_info"})
-org_id = me["result"]["privileges"][0]["org_id"]
+# call_tool returns the universal envelope {ok, status, data, ...}; read the payload from ["data"].
+me = await call_tool("mist_get_self", {})
+org_id = me["data"]["privileges"][0]["org_id"]
 
 mist_aps = await call_tool("mist_search_device", {"org_id": org_id, "device_type": "ap", "limit": 5})
 central_aps = await call_tool("central_get_aps", {"site_name": "HQ", "status": "ONLINE"})
 
 return {
-    "mist_count": len(mist_aps["result"]["results"]),
-    "central_count": len(central_aps["result"]),
+    "mist_count": len(mist_aps["data"]["results"]),
+    "central_count": len(central_aps["data"]["items"]),  # Central collection reads land under data["items"] (#491)
 }
 ```
 
@@ -83,15 +84,14 @@ Three tool calls inside one `execute`. In dynamic mode this same workflow would 
 
 The `pydantic-monty` sandbox restricts duration (30s), memory (128 MB), and recursion depth (50). Several Python features the LLM may reach for are also unavailable:
 
-- **`asyncio.gather()`** — fails with `TypeError: 'list' object is not an iterator`. Use sequential `await` calls instead.
-- **OS-access functions** — `datetime.now()`, `time.time()`, file I/O (`open`, `Path.read_text`), `os.environ`, and `subprocess` all raise `NotImplementedError`. For timestamps, accept ISO strings as parameters or hardcode literal ISO-8601 strings.
-- **Some introspection** — `hasattr`, `type`, and parts of the introspection surface aren't available; the LLM discovers these via error messages.
-
-The `execute` tool description tells the LLM these limits up front so it shouldn't waste turns rediscovering them.
+- **The clock works** (since v3.4.5.1) — `datetime.now()`, `datetime.now(datetime.timezone.utc)`, and `datetime.date.today()` return the real time. But `datetime.utcnow()` is NOT implemented (use `datetime.now(datetime.timezone.utc)`) and there is no `time` module (use `datetime.now().timestamp()`).
+- **Most stdlib modules are absent** — only `json`, `re`, `math`, `datetime` exist; `collections`, `itertools`, `functools`, `statistics`, etc. raise `ModuleNotFoundError`. Use builtins: a plain `dict` for `Counter`/`defaultdict`, `sum(xs)/len(xs)` for `statistics.mean`.
+- **Blocked**: file I/O (`open`, `Path.read_text`), `os.environ`, `subprocess`, `asyncio.gather()`, `str.format()` (use f-strings), `json.dumps(default=)`, `next(<generator>, default)`, and `dict | dict` (use `{**a, **b}`).
+- The `execute` tool description and INSTRUCTIONS.md sandbox table list these up front, and `SandboxErrorCatchMiddleware` turns the common dead-ends into self-correcting error messages so the LLM doesn't waste turns rediscovering them.
 
 ### What `call_tool` can dispatch to
 
-Inside `execute()`, `call_tool(name, params)` only resolves names from the backend platform catalog — every tool whose name starts with `mist_` / `central_` / `greenlake_` / `clearpass_` / `apstra_` / `axis_`, plus the cross-platform `health`. The discovery tools (`tags` / `search` / `get_schema`) are NOT callable from inside `execute()` — they live at the outer MCP surface for planning. Use them BEFORE writing your code block, then chain platform tools inside.
+Inside `execute()`, `call_tool(name, params)` resolves any registered platform tool — every name starting with `mist_` / `central_` / `greenlake_` / `clearpass_` / `apstra_` / `axis_` / `aos8_` / `uxi_` / `edgeconnect_` (Mist included, since v3.4.5.6), plus cross-platform `health` and the `translate_*` tools, and each platform's `<platform>_list_tools` / `<platform>_get_tool_schema` / `<platform>_invoke_tool` meta-tools. A per-platform tool is callable either directly by name or via `<platform>_invoke_tool`. The TOP-LEVEL discovery tools (`tags` / `search` / `get_schema` / `skills_list` / `skills_load`) are NOT callable from inside `execute()` — they live at the outer MCP surface for planning; use them (or the in-sandbox `<platform>_list_tools`) BEFORE chaining platform tools.
 
 If you do try to dispatch to a discovery tool by mistake, `SandboxErrorCatchMiddleware` returns a string like `Sandbox error: Exception: Unknown tool: search` so you can fix the call on the next turn (rather than seeing a generic masked error). See v2.2.0.4 release notes / #208.
 

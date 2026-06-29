@@ -5,29 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.4.5.9] - 2026-06-28
+## [3.4.6.0] - 2026-06-29
 
-**Minor — GreenLake bulk device onboarding write tool.** Adds `greenlake_bulk_add_devices`, the first GreenLake write tool, enabling an AI assistant to onboard up to 10,000 devices from a CSV file in a single call with full rate-limiting, resume-on-failure, and optional subscription/service/location/tags assignment.
+**Minor — GreenLake bulk device onboarding (`greenlake_bulk_add_devices`) with a choose-your-source data flow.** First GreenLake write tool: onboard up to 10,000 devices from a CSV in one call, with rate-limiting, resume-on-failure, and optional subscription/service/location/tags assignment. The operator chooses how to provide the list — **file upload** (read server-side; never enters model context — best for large lists), **copy/paste**, or a local path. Builds on PR #379.
 
 ### Added
-- `greenlake_bulk_add_devices` — bulk-add GreenLake devices from a local CSV path or inline CSV text. Processes 5 devices/batch at 5 POST/min; enrichment PATCHes at 20/min. Resumes from a `.cache.json` checkpoint on re-invocation. Returns an 18-field envelope with per-phase counts and per-row failure reasons.
-- `ENABLE_GREENLAKE_WRITE_TOOLS` environment variable — gates `greenlake_bulk_add_devices` (default `false`). Wired into `ElicitationMiddleware` and `Visibility` transform alongside all other platforms.
+- `greenlake_bulk_add_devices` — bulk-add GreenLake devices. Three mutually-exclusive sources: **`csv_filename`** (operator-uploaded file, read SERVER-SIDE via the `FileUpload` provider so a 10k-row CSV never enters model context), **`csv_text`** (paste — the AI sees it; small lists only), and **`csv_path`** (local / CLI). 5 devices/batch at 5 POST/min; enrichment PATCHes at 20/min. Resumes from a `.cache.json` checkpoint. Returns an 18-field envelope with per-phase counts + per-row failure reasons. The tool description instructs the AI to ASK the operator which source to use (upload vs paste, with the paste-sees-the-data caveat).
+- **Server-side upload read** — `create_server` surfaces the `FileUpload` provider on `lifespan_context` (`file_upload_provider`) so tools can call `provider.on_read(name, ctx)`; `bulk_add._read_uploaded_csv` is the first context-clean server-side read of an upload (400 no-capability / 404 not-found / 502 read-fail).
+- `ENABLE_GREENLAKE_WRITE_TOOLS` — gates the tool (default `false`); wired into `ElicitationMiddleware` + the `Visibility` transform like every other platform.
 - `aiolimiter>=1.2.1` dependency for async rate limiting.
 
-### Fixed
-- **Resume cache stale-row filtering** — `setup_resume()` now filters the loaded cache to only serials present in the current CSV run before computing pending rows and building the result envelope. Previously, editing the CSV between runs (removing rows, retrying with a smaller file) would leave stale entries that inflated succeeded/failed counts and prevented cache deletion.
-- **Optional CSV columns now truly case-insensitive** — `location`, `tags`, and `region` added to `ALIASES` so `Location`, `LOCATION`, `Tags`, `TAGS`, etc. all resolve to the canonical key that enrichment reads. `sub_key` alias corrected: `normalize_header` strips underscores so the lookup key is `"subkey"`, not `"sub_key"`.
-- **`post_raw` / `patch_raw` missing `await`** — `_get_auth_headers()` was called without `await` in both raw HTTP helpers, returning a coroutine instead of the auth dict and breaking all authenticated POST/PATCH calls at runtime.
-- **Inline CSV cache key now hashes full content** — was hashing only the first 1000 characters, causing collisions for generated CSVs with identical prefixes.
+### Notes
+- Write gate + `confirm_gated_invoke` confirmation fire before any API call. All failure paths `raise ToolError` (structured). `AsyncLimiter` is per-invocation (no cross-loop reuse). GreenLake: 10 → 11 tools (hidden until the write flag is set).
+- **Pending live verification:** the device-add write path (async-operation result envelope, `202`+`Location`, PATCH bodies) is built against the documented API shapes; real captured responses from a GreenLake hardware run should be attached before merge.
 
-### Technical details
-- Write gate: `ENABLE_GREENLAKE_WRITE_TOOLS=true` required; `confirm_gated_invoke` elicitation called with device count before any API call.
-- `ToolError` used on all input/precondition failure paths (was: `return "Error: ..."` strings, which the envelope middleware wrapped as `ok: True`).
-- `AsyncLimiter` instantiated per coroutine invocation (not at module level) to avoid `RuntimeWarning: This AsyncLimiter instance is being re-used across loops`.
-- Return envelope: manual `"ok": True` removed — let `response_envelope.py` wrap the dict.
-- `bulk_add.py` refactored from 542 to 452 lines by extracting `setup_resume` / `build_result_envelope` / `make_patch_limiter` into `_bulk_assignment.py`.
+## [3.4.5.10] - 2026-06-29
 
-GreenLake: 10 → 11 tools. Server-wide unchanged (tool is hidden until `ENABLE_GREENLAKE_WRITE_TOOLS=true`). Updated README, docs/TOOLS.md, INSTRUCTIONS.md. 154 unit tests.
+**Patch — docs(skills): runbook state-machine + Generative-UI fallback guard (#531).** Last item of the small-model robustness audit (#513–#534).
+
+### Added
+- **`aos-migration.md` checkpoint ledger** — a compact "state machine at a glance" table near the top of the 2100-line runbook: per stage, the required inputs, the cached artifact it produces, allowed next stages, and stop/branch conditions, plus the hard-stops collected in one place. Keeps a small/local model from losing its place or re-collecting Act I data.
+- **`tests/unit/test_genui_skill_fallbacks.py`** — discovers every skill referencing `generate_prefab_ui` and asserts each teaches the safe render contract: call it as a TOP-LEVEL tool (not from inside `execute()`), describe a no-Generative-UI fallback, and mandate a text summary regardless of render. Both current Generative-UI skills (`central-site-dashboard`, `central-ucc-quality`) already comply; the test locks it in for future ones.
+
+## [3.4.5.9] - 2026-06-26
+
+**Patch — docs(code-mode): refresh code-mode docs to current behavior (#528, #519).** Group G docs cleanup, re-scoped: several original premises were mooted by the v3.4.5.x fixes (bare per-platform calls and top-level `return` both work now), so this corrects what's genuinely stale rather than applying obsolete rewrites.
+
+### Changed
+- **#528 — `docs/TOOLS.md` code-mode section.** Surface count 4 → 6 tools (added `skills_list` / `skills_load`); the example now unwraps the universal envelope via `["data"]` (was the pre-envelope `["result"]`) and shows Central collection reads under `data["items"]` (#491); the `call_tool` dispatch note lists all 9 platforms (Mist now callable by name, #524) + the meta-tools. Corrected now-false sandbox-limit claims: `datetime.now()` / `date.today()` WORK (v3.4.5.1), `type()` is available; replaced with the accurate stdlib/builtin guidance and the self-correcting-error note.
+- **#519 — INSTRUCTIONS.md sandbox table.** Added substitute rows for the unsupported syntax constructs `with` / `match` / `class` / `del`.
+
+### Security
+- Bump transitive `joserfc` 1.6.4 → 1.7.2 (via `authlib` / `fastmcp`) — resolves **CVE-2026-48990** flagged by the dependency audit. Lock-only change.
+
+### Note
+- #529 (prompts/skills "use invoke_tool, not bare calls; avoid top-level `return`") is moot after #524/#539 — bare per-platform calls and top-level `return` are both supported — and the referenced prompt tools all exist; closed with that note rather than rewriting working guidance.
 
 ## [3.4.5.8] - 2026-06-26
 
